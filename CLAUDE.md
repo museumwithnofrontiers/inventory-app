@@ -108,7 +108,7 @@ Never hardcode lists of image models — always use the registry.
 ## Development Environment
 
 Development tools run inside **Docker**
-- .docker/Dockerfile.dev is the canonical environment
+- .docker/Dockerfile (the `dev` target) is the canonical environment
 - No host-side PHP/Node tools
 
 Documentation website tools run inside **Docker**
