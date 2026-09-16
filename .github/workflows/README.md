@@ -14,7 +14,6 @@ The `/.github/workflows` directory contains GitHub Actions workflows for continu
     - [Build](#build)
     - [Deploy to OVH](#deploy-to-ovh)
     - [Deploy Documentation to GitHub Pages](#deploy-documentation-to-github-pages)
-    - [Publish API Client Package](#publish-api-client-package)
     - [Deploy Dataset Viewers to OVH](#deploy-dataset-viewers-to-ovh)
   - [Automation Workflows](#automation-workflows)
     - [Dependabot Configuration](#dependabot-configuration)
@@ -58,13 +57,12 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 | `scripts/importer/**` | `importer` | `importer-validation` |
 | `scripts/site-i18n/**` | `site-i18n` | `site-i18n-validation` |
 | `scripts/exporters/**` | `exporters` | `exporter-validation` |
-| `spa/**` | `spa` | `spa-frontend-validation` |
 
 **Jobs**
 
 1. **detect-changes** (*Detect Changed Paths*) - Classifies changed files using `git diff` against the PR base SHA
    - Checks out the repository with full Git history (`fetch-depth: 0`)
-   - Emits outputs: `backend`, `root-frontend`, `spa`, `importer`, `site-i18n`, `exporters` (true/false)
+   - Emits outputs: `backend`, `root-frontend`, `importer`, `site-i18n`, `exporters` (true/false)
    - Also emits `exporter-datasets`, a JSON array of every directory under `scripts/exporters/` holding a `package.json`, used as the `exporter-validation` matrix
 
 2. **dependency-review** (*Dependency Review (PR)*) - Reviews dependency changes introduced by the pull request
@@ -104,11 +102,7 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
    - Runs `npm run type-check`, `npm run lint:check` and `npm test` (Vitest unit tests)
    - Every test in these suites is a pure function over legacy row shapes, so no database, VPN or credentials are involved
 
-9. **spa-frontend-validation** *(when `spa=true`)* (*Frontend Validation - SPA (Vue 3)*) - SPA (Vue 3) validation
-   - Uses the `setup-node-project` composite action with `working-directory: spa`, authenticated against GitHub Packages with `GITHUB_TOKEN`
-   - Runs `npm run lint`, `npm run build` and `npm run test:all`
-
-10. **ci-success** (*CI Success*) - Aggregates all check results
+9. **ci-success** (*CI Success*) - Aggregates all check results
    - `needs` every other job and runs with `if: always()`
    - Always requires `dependency-review` to have succeeded
    - For each path group that changed, requires the matching job(s) to have succeeded
@@ -118,7 +112,6 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 **Permissions**
 
 - `contents: read` - For reading repository contents
-- `packages: read` - For accessing GitHub Packages (SPA dependencies)
 
 **Branch protection**
 
@@ -155,19 +148,17 @@ Audits the full dependency tree of every PHP and npm project in the repository o
    - Runs `composer audit`
 
 2. **enumerate-npm-projects** (*Enumerate npm Projects*) - Builds the `audit-npm` matrix from the checkout
-   - Finds every `package.json` in the tree (excluding `node_modules`) and emits `projects`: a JSON array of `{name, directory, registry}` objects
-   - `registry` is set only for `/spa` and the viewers, the projects that install an `@metanull` package from GitHub Packages; everything else gets an empty value, which `setup-node` reads as the public default
+   - Finds every `package.json` in the tree (excluding `node_modules`) and emits `projects`: a JSON array of `{name, directory}` objects. Every project resolves from the public npm registry, so no `registry` field is needed
    - No project or directory is named in this workflow — a new tool under `scripts/`, or a forked exporter or viewer, is audited from the day it lands with no edit here. `.github/dependabot.yml` covers the same directories by glob, so the two agree by construction
 
-   | Contributes | Registry |
-   | --- | --- |
-   | `Root` (`.`) | public npm |
-   | `SPA` (`spa`) | npm.pkg.github.com |
-   | `Importer` (`scripts/importer`) | public npm |
-   | `Site i18n` (`scripts/site-i18n`) | public npm |
-   | `Exporter (<dataset>)`, per `package.json` under `scripts/exporters/*/` | public npm |
-   | `Viewer (<dataset>)`, per `package.json` under `scripts/viewers/*/` | npm.pkg.github.com |
-   | any other `package.json` under `scripts/` | public npm |
+   | Contributes |
+   | --- |
+   | `Root` (`.`) |
+   | `Importer` (`scripts/importer`) |
+   | `Site i18n` (`scripts/site-i18n`) |
+   | `Exporter (<dataset>)`, per `package.json` under `scripts/exporters/*/` |
+   | `Viewer (<dataset>)`, per `package.json` under `scripts/viewers/*/` |
+   | any other `package.json` under `scripts/` |
 
    > **Both sides read the tree.** This matrix finds every `package.json`; [`.github/dependabot.yml`](#dependabot-configuration) covers the same directories with `directories:` globs. "Gets a weekly audit" and "gets dependency updates" are therefore the same set by construction — not because a check compares two hand-written lists, but because neither list is hand-written.
    >
@@ -186,7 +177,6 @@ Audits the full dependency tree of every PHP and npm project in the repository o
 **Permissions**
 
 - `contents: read` - For reading repository contents
-- `packages: read` - For accessing GitHub Packages (SPA and viewer dependencies)
 - `issues: write` - For opening or commenting on the tracking issue
 
 **Usage**
@@ -203,7 +193,7 @@ Actions > Dependency Audit (Full Tree) > Run workflow
 
 ### Build
 
-Builds the Laravel application and the SPA demo, packages them, publishes a GitHub pre-release, and uploads the deployment tarball consumed by `Deploy to OVH`.
+Builds the Laravel application, packages it, publishes a GitHub pre-release, and uploads the deployment tarball consumed by `Deploy to OVH`.
 
 **Workflow properties**
 
@@ -223,18 +213,16 @@ Builds the Laravel application and the SPA demo, packages them, publishes a GitH
 2. Installs PHP dependencies with `composer install --no-dev --optimize-autoloader`
 3. Publishes Filament assets (`php artisan filament:assets`)
 4. Installs and builds the backend assets with Vite (`npm ci`, `npm run build`)
-5. Installs and builds the SPA demo (`spa/`), authenticated against GitHub Packages
-6. Validates that `public/build`, `public/cli`, `public/css/filament` and `public/js/filament` exist
-7. Creates the deployment package and a `VERSION` file (app version, API client version, commit SHA, build number, timestamps), also copied to `public/version.json`
-8. Produces both `inventory-app.zip` and `release.tar.gz`
-9. Generates the release tag `<package.json version>.<run_number>`
-10. Creates a GitHub pre-release with `inventory-app.zip` attached
-11. Uploads the artifact `release-${{ github.sha }}` (containing `release.tar.gz`) with 7-day retention
+5. Validates that `public/build`, `public/css/filament` and `public/js/filament` exist
+6. Creates the deployment package and a `VERSION` file (app version, commit SHA, build number, timestamps)
+7. Produces both `inventory-app.zip` and `release.tar.gz`
+8. Generates the release tag `<package.json version>.<run_number>`
+9. Creates a GitHub pre-release with `inventory-app.zip` attached
+10. Uploads the artifact `release-${{ github.sha }}` (containing `release.tar.gz`) with 7-day retention
 
 **Permissions**
 
 - `contents: write` - For creating releases
-- `packages: read` - For accessing GitHub Packages (SPA dependencies)
 
 **Usage**
 
@@ -284,7 +272,7 @@ Deploys the tarball produced by `Build` to the OVH VPS over SSH, by running [`sc
 
 ### Deploy Documentation to GitHub Pages
 
-Generates and deploys the Jekyll-based static documentation website to GitHub Pages. This workflow calls Python scripts to generate commit history and API client documentation.
+Generates and deploys the Jekyll-based static documentation website to GitHub Pages. This workflow calls a Python script to generate commit history documentation.
 
 See [/docs/README.md](../../docs/README.md) for complete Jekyll site documentation.
 
@@ -307,7 +295,6 @@ See [/docs/README.md](../../docs/README.md) for complete Jekyll site documentati
    - Sets up Ruby 3.2.3 (working directory `docs`)
    - Installs Ruby dependencies with `bundle install`
    - **Generates commit history documentation** - Calls `python scripts/generate-commit-docs.py`. See [/scripts/README.md](../../scripts/README.md#generating-the-git-commit-history)
-   - **Generates API client documentation** - Calls `python scripts/generate-client-docs.py`. See [/scripts/README.md](../../scripts/README.md#generating-the-api-client-npm-packages-static-documentation)
    - Builds Jekyll site with `bundle exec jekyll build`
    - Uploads `docs/_site` as the GitHub Pages artifact
 
@@ -325,9 +312,8 @@ See [/docs/README.md](../../docs/README.md) for complete Jekyll site documentati
 
 **Scripts called**
 
-This workflow depends on the following scripts:
+This workflow depends on the following script:
 - `generate-commit-docs.py` - Converts Git commit history into Jekyll markdown pages. See [/scripts/README.md](../../scripts/README.md#generating-the-git-commit-history)
-- `generate-client-docs.py` - Converts TypeScript API client docs into Jekyll markdown pages. See [/scripts/README.md](../../scripts/README.md#generating-the-api-client-npm-packages-static-documentation)
 
 For Jekyll site documentation, see [/docs/README.md](../../docs/README.md)
 
@@ -349,76 +335,9 @@ This workflow runs automatically on push to `main`. For manual deployment:
 
 ---
 
-### Publish API Client Package
-
-Regenerates the TypeScript API client from the OpenAPI specification and publishes it to GitHub Packages when the generated client actually changed.
-
-**Workflow properties**
-
-| Property | Value |
-| --- | --- |
-| **Workflow** | `publish-api-client.yml` |
-| **Workflow name** | `Publish API Client` |
-| **Trigger** | Push to `main` limited to the paths `app/**`, `routes/api.php`, `config/scramble.php` |
-| **Manual trigger** | Yes (`workflow_dispatch`) |
-| **Runner** | `ubuntu-latest` (GitHub-hosted) |
-| **Concurrency** | Group: `publish-api-client-${{ github.ref }}`, cancel-in-progress: `true` |
-
-**Jobs**
-
-1. **build-api-client** (*Build API Client Package*) - Regenerates the client
-   - Detects whether the run is on GitHub Actions or under `act`, via the `detect-environment` composite action
-   - Sets up Node.js 20 (GitHub Packages registry) and Java 17 (required by the OpenAPI generator)
-   - Generates the client from `docs/_openapi/api.json` via the `generate-api-client` composite action, which also reports `has-changes`
-   - Uploads the `api-client` artifact (1-day retention) only when there are changes and the run is on GitHub Actions
-   - Outputs: `has-changes`, `is_github`, `is_act`
-
-2. **publish-api-client** *(needs `build-api-client`)* (*Publish API Client to GitHub Packages*) - Publishes the package
-   - Only runs when `has-changes == 'true'` and `is_github == 'true'`
-   - Downloads the `api-client` artifact
-   - Publishes it via the `publish-npm-package` composite action, authenticated with the `GH_PACKAGE_TOKEN` secret
-
-**Permissions**
-
-- `contents: read` - For reading repository contents
-- `packages: write` - For publishing to GitHub Packages
-
-**Secrets**
-
-| Secret | Description |
-| --- | --- |
-| `GH_PACKAGE_TOKEN` | Token used to publish `@metanull/inventory-app-api-client` to GitHub Packages |
-
-**Usage**
-
-This workflow runs automatically when API-affecting paths change on `main`. For manual publishing:
-
-```bash
-# Trigger via GitHub UI: Actions > Publish API Client > Run workflow
-```
-
-Alternatively, you can generate and publish manually using the scripts:
-
-```powershell
-# See: /scripts/README.md#publishing-the-api-client-npm-package-to-the-github-packages-npm-registry
-. ./scripts/publish-api-client.ps1 -Credential (Get-Credential)
-```
-
-See also [/scripts/README.md](../../scripts/README.md#generating-the-api-client-npm-package) for `generate-api-client.ps1`.
-
-**Links**
-
-| Reference | URL |
-| --- | --- |
-| GitHub Packages | [https://github.com/features/packages](https://github.com/features/packages) |
-| API Client Package | [https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client](https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client) |
-| Publishing Node.js Packages | [https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages](https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages) |
-
----
-
 ### Deploy Dataset Viewers to OVH
 
-One workflow per dataset viewer. Each builds its Vite viewer against the **latest published** `@metanull/<dataset>-data` package and copies the build output to the OVH VPS over SSH.
+One workflow per dataset viewer. Each builds its Vite viewer against the **latest published** `@museumwnf/<dataset>-data` package and copies the build output to the OVH VPS over SSH.
 
 **Workflows**
 
@@ -429,15 +348,6 @@ One workflow per dataset viewer. Each builds its Vite viewer against the **lates
 | `sharinghistory` | `deploy-viewer-sharinghistory-ovh.yml` | `scripts/viewers/sharinghistory/**` | `/sharinghistory/` | `/opt/sharinghistory/` | https://inventory.metanull.eu/sharinghistory/ |
 | `amulets` | `deploy-viewer-amulets-ovh.yml` | `scripts/viewers/amulets/**` | `/amulets/` | `/opt/amulets/` | https://inventory.metanull.eu/amulets/ |
 | `carpets` | `deploy-viewer-carpets-ovh.yml` | `scripts/viewers/carpets/**` | `/carpets/` | `/opt/carpets/` | https://inventory.metanull.eu/carpets/ |
-
-> **Neither `amulets` nor `carpets` is deployable yet.**
-> `@metanull/amulets-data` and `@metanull/carpets-data` have not been
-> published, so step 3 below carries `if: false` in both workflows and neither
-> Nginx alias block exists on the VPS. Do not dispatch them. Both are lifted
-> per dataset in the same change that publishes that package — see
-> [`scripts/viewers/amulets/README.md`](../../scripts/viewers/amulets/README.md#what-must-change-once-the-package-is-published)
-> and
-> [`scripts/viewers/carpets/README.md`](../../scripts/viewers/carpets/README.md#what-must-change-once-the-package-is-published).
 
 **Workflow properties** (identical apart from the dataset name)
 
@@ -451,9 +361,9 @@ One workflow per dataset viewer. Each builds its Vite viewer against the **lates
 
 **Job: build-and-deploy** (*Build and Deploy `<dataset>` Viewer*)
 
-1. Sets up Node.js `lts/Krypton` against GitHub Packages for the `@metanull` scope
+1. Sets up Node.js `lts/Krypton` (no registry scoping needed — the data package is public on npmjs)
 2. Installs viewer dependencies with `npm ci`
-3. Runs `npm install @metanull/<dataset>-data@latest` — the newest data package is always pulled, regardless of what `package-lock.json` pins, so the viewer reflects current data
+3. Runs `npm install @museumwnf/<dataset>-data@latest` — the newest data package is always pulled, regardless of what `package-lock.json` pins, so the viewer reflects current data
 4. Builds with `npm run build -- --base=/<dataset>/`
 5. Sets up SSH, checks VPS connectivity and verifies SSH authentication
 6. Copies `dist/` to the target directory on the VPS with `scp`
@@ -461,8 +371,7 @@ One workflow per dataset viewer. Each builds its Vite viewer against the **lates
 
 **Permissions**
 
-- `contents: read` - For reading repository contents
-- `packages: read` - Required to pull `@metanull/<dataset>-data` from GitHub Packages
+- `contents: read` - For reading repository contents. `@museumwnf/<dataset>-data` is public on npmjs, so no `packages: read` permission is needed here.
 
 **Secrets**
 
@@ -490,47 +399,22 @@ Dependabot is configured in `.github/dependabot.yml` to keep dependencies up to 
 | `npm` | `/` | Weekly | registry.npmjs.org (public) |
 | `npm` | `/scripts/*` | Weekly | registry.npmjs.org (public) |
 | `npm` | `/scripts/exporters/*` | Weekly | registry.npmjs.org (public) |
-| `npm` | `/spa`, `/scripts/viewers/*` | Weekly | npm.pkg.github.com (GitHub) |
+| `npm` | `/scripts/viewers/*` | Weekly | registry.npmjs.org (public) |
 | `github-actions` | `/` | Weekly | github.com (public) |
 
 `/scripts/*` is one level deep on purpose: `scripts/exporters` and `scripts/viewers` hold no manifest of their own, and their children are matched by the two patterns below it.
 
-**The registry split is structural, not a rule to remember.** Only `/spa` (`@metanull/inventory-app-api-client`) and the viewers (`@metanull/<dataset>-data`) consume an `@metanull` package, so only their entry carries `registries: [npm-github]` — which is also what hands the PAT to the update job. Exporters and tools read from the public registry and sit in entries that carry no credential at all, so a new project inherits the right answer from where its directory lives rather than from a reviewer noticing.
+**No entry carries a `registries:` key.** Every npm project resolves from the public registry — the viewers install `@museumwnf/<dataset>-data` from npmjs like everything else — so no entry needs a credential, and a new project inherits the right answer from where its directory lives rather than from a reviewer noticing.
 
 **One pull request per directory.** A glob does not couple the projects it matches: Dependabot's default for a multi-directory entry is a separate PR per directory, so a failing bump in one exporter does not block the others. Setting `group-by: dependency-name` on a group would collapse them into a single cross-directory PR — avoid that unless PR volume ever becomes the problem.
 
 > **History.** This file used to carry one hand-written entry per project (20 in all), policed by a blocking `Dependabot Coverage` job running `scripts/check-dependabot-coverage.sh`. That machinery existed because Dependabot config was believed unable to enumerate directories — true when it was written, but the `directories:` key with glob support shipped in [June 2024](https://github.blog/changelog/2024-06-25-simplified-dependabot-yml-configuration-with-multi-directory-key-directories-and-wildcard-glob-support/). The hand-maintenance had already failed twice in practice (`scripts/viewers/amulets` in PR #1566, patched in #1572), and the check never caught the one real outage — every viewer's job aborted for months over a missing registry `scope` (#1609) while the coverage check passed, because it validated the config's shape rather than whether the job ran. Both the script and the gate were removed once the globs replaced them.
-
-**GitHub Packages registry access**
-
-The `npm` ecosystems that consume `@metanull` packages reference the GitHub Packages registry (`npm.pkg.github.com`), which requires authentication even for packages in the same organization. The registry token is configured as:
-
-```yaml
-registries:
-  npm-github:
-    type: npm-registry
-    url: https://npm.pkg.github.com
-    token: ${{secrets.DEPENDABOT_GITHUB_PACKAGES_TOKEN}}
-```
-
-Dependabot version updates run on Dependabot's own infrastructure, **not** on GitHub Actions runners. This means the automatically provided `GITHUB_TOKEN` is **not** available as a secret in `dependabot.yml`. Instead, a Personal Access Token (PAT) must be stored as a **Dependabot secret**.
-
-> **Note**: The `${{secrets.GITHUB_TOKEN}}` approach only works when "Dependabot on Actions runners" is enabled in the repository settings (**Settings > Code security > Dependabot**). This feature is not available on all GitHub plans and is not always accessible for free public repositories.
-
-**Setup instructions**
-
-1. Create a Personal Access Token (classic) with `read:packages` scope
-2. Store it as a **Dependabot secret** (not a regular Actions secret) named `DEPENDABOT_GITHUB_PACKAGES_TOKEN` under **Settings > Secrets and variables > Dependabot**
-
-> Note: Dependabot secrets (under the Dependabot tab) are separate from Actions secrets (under the Actions tab). A secret in the Actions tab is **not** accessible to Dependabot.
 
 **Links**
 
 | Reference | URL |
 | --- | --- |
 | Dependabot configuration options | [https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file](https://docs.github.com/en/code-security/dependabot/dependabot-version-updates/configuration-options-for-the-dependabot.yml-file) |
-| Dependabot on Actions runners | [https://docs.github.com/en/code-security/dependabot/working-with-dependabot/about-dependabot-on-github-actions-runners](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/about-dependabot-on-github-actions-runners) |
-| Configuring access to private registries | [https://docs.github.com/en/code-security/dependabot/working-with-dependabot/configuring-access-to-private-registries-for-dependabot](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/configuring-access-to-private-registries-for-dependabot) |
 
 ---
 
@@ -588,9 +472,6 @@ Repeated setup and publishing steps live in [`.github/actions`](../actions) and 
 | --- | --- | --- | --- |
 | `setup-backend` | Installs PHP (default 8.5) with the project's extensions, installs Composer dependencies, creates `.env` from `.env.local.example`, generates the app key and migrates the database | Inputs: `php-version`, `tools`, `coverage` | `continuous-integration.yml` |
 | `setup-node-project` | Installs Node.js `lts/Krypton`, enables Corepack and runs `npm ci` in a given directory | Inputs: `working-directory`, `registry-url`, `node-auth-token` | `continuous-integration.yml`, `dependency-audit.yml` |
-| `detect-environment` | Detects whether the run is on GitHub Actions or under `act` | Outputs: `is_github`, `is_act`, `environment` | `publish-api-client.yml` |
-| `generate-api-client` | Generates the TypeScript client from the OpenAPI spec, computes the next dev version, applies the templates in `.github/templates/api-client/`, and reports whether the core files changed | Inputs: `openapi_spec_path`, `output_directory`; Output: `has-changes` | `publish-api-client.yml` |
-| `publish-npm-package` | Normalizes the package version for npm, configures registry authentication, and publishes with the `dev` or `latest` tag | Inputs: `package_directory`, `registry`, `token` | `publish-api-client.yml` |
 
 ---
 
@@ -605,14 +486,12 @@ Several workflows interact with scripts, composite actions and other workflows:
 | `build.yml` | - | `deploy-ovh.yml` (via `workflow_run`) |
 | `deploy-ovh.yml` | `build.yml` artifact, `scripts/deploy.sh` | - |
 | `continuous-deployment_github-pages.yml` | [/scripts/README.md](../../scripts/README.md) scripts | - |
-| `publish-api-client.yml` | `detect-environment`, `generate-api-client`, `publish-npm-package`, `.github/templates/api-client/` | - |
-| `deploy-viewer-*-ovh.yml` | `@metanull/<dataset>-data` on GitHub Packages | - |
+| `deploy-viewer-*-ovh.yml` | `@museumwnf/<dataset>-data` on npmjs (public) | - |
 | `merge-dependabot-pr.yml` | - | - |
 
 **Scripts used by workflows:**
 
 - `generate-commit-docs.py` - Used by `continuous-deployment_github-pages.yml`. See [/scripts/README.md](../../scripts/README.md#generating-the-git-commit-history)
-- `generate-client-docs.py` - Used by `continuous-deployment_github-pages.yml`. See [/scripts/README.md](../../scripts/README.md#generating-the-api-client-npm-packages-static-documentation)
 - `deploy.sh` - Uploaded to the VPS and executed by `deploy-ovh.yml`. See [/scripts/README.md](../../scripts/README.md#deployment-scripts)
 
 ---

@@ -8,9 +8,6 @@ cd /workspace
 echo "Generating commit documentation..."
 python3 scripts/generate-commit-docs.py
 
-echo "Generating client documentation..."
-python3 scripts/generate-client-docs.py
-
 echo "Starting Jekyll..."
 cd /workspace/docs
 exec bundle exec jekyll serve --host 0.0.0.0 --watch --force_polling

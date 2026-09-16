@@ -4,7 +4,7 @@
  *
  * Reads the inventory database and writes the data package that replaces the
  * legacy `exhibitions.museumwnf.org/water_in_islam` API instance
- * (`@metanull/water-in-islam-data`).
+ * (`@museumwnf/water-in-islam-data`).
  *
  * This exporter is single-purpose: it always exports thematic gallery 56. The
  * scope is not configurable — legacy pinned it in a per-deployment `.env`
@@ -83,7 +83,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') })
 // form stays in the data as legacy identity.
 const SUBDIRECTORY = 'water-in-islam'
 const EXHIBITION_BACKWARD_COMPATIBILITY = 'mwnf3_thematic_gallery:thg_gallery:56'
-const PACKAGE_NAME = '@metanull/water-in-islam-data'
+const PACKAGE_NAME = '@museumwnf/water-in-islam-data'
 
 const program = new Command()
 
@@ -239,7 +239,7 @@ program
 
           try {
             const registry =
-              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://npm.pkg.github.com'
+              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the
             // project output directory, so it survives --force cleans.

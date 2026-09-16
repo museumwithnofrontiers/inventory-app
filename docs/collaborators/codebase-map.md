@@ -25,8 +25,6 @@ Use this map to find the part of the repository that owns a task.
 | `.legacy-code/` | Legacy application sources kept for behavioural reference. |
 | `.new-architecture/` | The website platform repositories, checked out for reference. |
 | `docs/` | Jekyll documentation site. |
-| `api-client/` | Generated TypeScript management API client. Do not edit by hand. |
-| `spa/` | Vue sample application for API client integration. |
 | `tests/Filament/` | Filament `/admin` tests. |
 | `tests/Api/` | Management API tests. |
 | `tests/Unit/` | Model, request, service, and helper unit tests. |
@@ -44,7 +42,7 @@ repository. Clone them when you need them:
 git submodule update --init .legacy-database .legacy-code
 ```
 
-`.new-architecture/` holds the public [website platform](https://github.com/metanull/website-template)
+`.new-architecture/` holds the public [website platform](https://github.com/museumwithnofrontiers/website-template)
 repositories — `viewer-core`, `viewer-layout`, `viewer-i18n`,
 `viewer-workflows`, `website-template` and one repository per website — which
 are useful to read while working on the exporters and viewers under

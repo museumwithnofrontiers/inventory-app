@@ -9,7 +9,7 @@
                 </span>
                 Inventory Portal
             </h1>
-            <p class="mt-2 text-gray-600 max-w-3xl">Unified Blade management interface mirroring the core domains of the API and SPA client.</p>
+            <p class="mt-2 text-gray-600 max-w-3xl">Unified Blade management interface mirroring the core domains of the API.</p>
         </header>
 
         
@@ -260,21 +260,7 @@
                     </x-ui.card>
                 @endauth
 
-                @if(config('interface.show_spa_link'))
-                <x-ui.card 
-                    href="{{ config('interface.spa_url') }}"
-                    title="SPA Client"
-                    description="Vue.js client showcasing reactive workflows."
-                    iconColor="purple"
-                    padding="p-5">
-                    <x-slot:icon>
-                        <x-heroicon-o-window class="w-6 h-6" />
-                    </x-slot:icon>
-                    Launch
-                </x-ui.card>
-                @endif
-
-                <x-ui.card 
+                <x-ui.card
                     href="https://github.com/metanull/inventory-app"
                     title="Source Code"
                     description="Explore repository & contributions."

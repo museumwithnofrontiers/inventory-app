@@ -3,7 +3,7 @@
  * Static JSON Exporter CLI — Carpets
  *
  * Reads the inventory database and writes the data package that replaces the
- * legacy carpets.museumwnf.org API instance (`@metanull/carpets-data`).
+ * legacy carpets.museumwnf.org API instance (`@museumwnf/carpets-data`).
  *
  * This exporter is single-purpose: it always exports thematic gallery 9. The
  * scope is not configurable — legacy pinned it in a per-deployment `.env`
@@ -57,7 +57,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') })
 // Site identity — hardcoded on purpose, see the header comment.
 const SUBDIRECTORY = 'carpets'
 const GALLERY_BACKWARD_COMPATIBILITY = 'mwnf3_thematic_gallery:thg_gallery:9'
-const PACKAGE_NAME = '@metanull/carpets-data'
+const PACKAGE_NAME = '@museumwnf/carpets-data'
 
 const program = new Command()
 
@@ -197,7 +197,7 @@ program
 
           try {
             const registry =
-              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://npm.pkg.github.com'
+              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the
             // project output directory, so it survives --force cleans.

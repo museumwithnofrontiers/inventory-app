@@ -53,14 +53,14 @@ theme URL pasted after the `#` lands on the same page.
 
 ## Where the data comes from
 
-`@metanull/the-use-of-colours-in-art-data` is published to GitHub Packages and
-declared in `package.json`, so `npm install` is all a normal build needs.
-Installing it requires a token with `read:packages`.
+`@museumwnf/the-use-of-colours-in-art-data` is published to npmjs and
+declared in `package.json`, so `npm install` is all a normal build needs —
+no registry auth required.
 
 `vite.config.js` resolves the `@inventory-data` alias in this order:
 
 1. `DATA_PACKAGE` — an npm package name **or** a directory path (explicit wins).
-2. `@metanull/the-use-of-colours-in-art-data`, if installed. **This is the
+2. `@museumwnf/the-use-of-colours-in-art-data`, if installed. **This is the
    normal path** — CI, the deploy workflow and a plain `npm install` all land here.
 3. `../../exporters/the-use-of-colours-in-art/output/the-use-of-colours-in-art`
    — a local exporter run, for working against data that has not been published

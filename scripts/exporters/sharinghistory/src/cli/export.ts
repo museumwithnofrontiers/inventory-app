@@ -7,7 +7,7 @@
  *
  * This exporter is single-purpose: it always exports the Sharing History
  * dataset — the `awe` project ("Arab World – Europe", lowercase SH
- * keyspace), as `@metanull/sharinghistory-data`. The scope is not
+ * keyspace), as `@museumwnf/sharinghistory-data`. The scope is not
  * configurable. It has no dynasty exporter (SH has no dynasty entity) but
  * keeps the usage-scoped glossary exporter (SH content carries glossary
  * spelling links).
@@ -50,7 +50,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') })
 // dataset; there are no scope arguments to pass or get wrong.
 const SUBDIRECTORY = 'sharinghistory'
 const PROJECT_KEYS = ['awe']
-const PACKAGE_NAME = '@metanull/sharinghistory-data'
+const PACKAGE_NAME = '@museumwnf/sharinghistory-data'
 
 const program = new Command()
 
@@ -186,7 +186,7 @@ program
             const registry =
               options.npmRegistry ||
               process.env['NPM_REGISTRY'] ||
-              'https://npm.pkg.github.com'
+              'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the project
             // output directory, so it survives --force cleans.

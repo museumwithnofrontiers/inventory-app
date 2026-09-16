@@ -14,9 +14,7 @@ This monorepo contains the backend and frontend for the Museum With No Frontiers
 - Documentation site (docs/, Jekyll)
 
 ### Secondary components (out-of-scope unless explicitly asked):
-- /api-client/ (auto‑generated TypeScript client)
 - /web (legacy Jetstream/Blade/Livewire UI)
-- /spa (Vue 3 demo app)
 
 If unsure whether something is in-scope you must ask the quesiton to the user.
 

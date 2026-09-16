@@ -27,7 +27,7 @@ php artisan openapi:generate
 
 Triggered by:
 
-- **Manually:** Before publishing API client or updating API docs
+- **Manually:** Before updating API docs
 - **Recommended:** Run after adding/modifying API endpoints
 
 ## How to update?
@@ -108,14 +108,3 @@ To validate the OpenAPI specification:
 # Or use CLI tools
 npx @apidevtools/swagger-cli validate docs/_openapi/api.json
 ```
-
-## TypeScript Client Generation
-
-The OpenAPI spec is used to generate the TypeScript client:
-
-```bash
-# Generate client from spec
-. ./scripts/generate-api-client.ps1
-```
-
-This reads `docs/_openapi/api.json` and generates TypeScript code in `api-client/` directory.

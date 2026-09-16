@@ -3,7 +3,7 @@
  * Static JSON Exporter CLI — Amulets and Talismans
  *
  * Reads the inventory database and writes the data package that replaces the
- * legacy amulets.museumwnf.org API instance (`@metanull/amulets-data`).
+ * legacy amulets.museumwnf.org API instance (`@museumwnf/amulets-data`).
  *
  * This exporter is single-purpose: it always exports thematic gallery 4. The
  * scope is not configurable — legacy pinned it in a per-deployment `.env`
@@ -54,7 +54,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') })
 // Site identity — hardcoded on purpose, see the header comment.
 const SUBDIRECTORY = 'amulets'
 const GALLERY_BACKWARD_COMPATIBILITY = 'mwnf3_thematic_gallery:thg_gallery:4'
-const PACKAGE_NAME = '@metanull/amulets-data'
+const PACKAGE_NAME = '@museumwnf/amulets-data'
 
 const program = new Command()
 
@@ -183,7 +183,7 @@ program
 
           try {
             const registry =
-              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://npm.pkg.github.com'
+              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the
             // project output directory, so it survives --force cleans.

@@ -33,7 +33,7 @@ function manager(fileContent?: string) {
   const publisher = new PublishManager({
     outputDir: '.',
     versionFile,
-    packageName: '@metanull/water-in-islam-data',
+    packageName: '@museumwnf/water-in-islam-data',
     projectKeys: ['water-in-islam'],
     logger: new Logger('test'),
     registry: 'https://npm.pkg.github.com',
@@ -91,7 +91,7 @@ describe('choosing the next version', () => {
     expect(command).toBe('npm')
     expect(args).toEqual([
       'view',
-      '@metanull/water-in-islam-data',
+      '@museumwnf/water-in-islam-data',
       'version',
       '--registry',
       'https://npm.pkg.github.com',
@@ -134,7 +134,7 @@ describe('licence', () => {
     const publisher = new PublishManager({
       outputDir: '.',
       versionFile,
-      packageName: '@metanull/water-in-islam-data',
+      packageName: '@museumwnf/water-in-islam-data',
       projectKeys: ['water-in-islam'],
       logger: new Logger('test'),
       license: 'MIT',
@@ -144,7 +144,7 @@ describe('licence', () => {
 
   it('generates a README with a Terms of use section linking the notice', () => {
     const { publisher } = manager('1.0.0')
-    const readme = publisher.generateReadme('@metanull/water-in-islam-data')
+    const readme = publisher.generateReadme('@museumwnf/water-in-islam-data')
     expect(readme).toContain('## Terms of use')
     expect(readme).toContain('https://www.museumwnf.org/about/legal-notice')
   })
@@ -155,7 +155,7 @@ describe('licence', () => {
     const publisher = new PublishManager({
       outputDir,
       versionFile,
-      packageName: '@metanull/water-in-islam-data',
+      packageName: '@museumwnf/water-in-islam-data',
       projectKeys: ['water-in-islam'],
       logger: new Logger('test'),
     })

@@ -109,7 +109,6 @@ class InfoController extends Controller
                 'DateTime' => now()->format('l j F Y H:i:s'),
             ],
             'repository_url' => null,
-            'api_client_version' => null,
             'app_version' => '1.0.0-dev',
             'commit_sha' => null,
         ]);

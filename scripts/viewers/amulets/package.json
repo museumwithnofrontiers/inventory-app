@@ -10,13 +10,13 @@
     "sync-i18n": "node tools/sync-i18n.mjs"
   },
   "dependencies": {
-    "@metanull/amulets-data": "^1.0.2",
-    "marked": "^18.0.11",
+    "@museumwnf/amulets-data": "^1.0.13",
+    "marked": "^18.0.12",
     "vue": "^3.5.42",
-    "vue-router": "^5.3.0"
+    "vue-router": "^5.3.1"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.8",
-    "vite": "^8.2.2"
+    "vite": "^8.3.0"
   }
 }

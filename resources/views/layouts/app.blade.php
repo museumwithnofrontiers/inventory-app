@@ -68,8 +68,6 @@
                 </div>
             @endif
 
-            {{-- Interface switch removed per requirements: SPA link now only in Resources menu when enabled --}}
-
             <!-- Page Heading -->
             @if (isset($header))
                 <header class="bg-white shadow">

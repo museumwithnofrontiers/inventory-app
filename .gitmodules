@@ -36,40 +36,40 @@
 	shallow = true
 [submodule ".new-architecture/viewer-core"]
 	path = .new-architecture/viewer-core
-	url = https://github.com/metanull/viewer-core
+	url = https://github.com/museumwithnofrontiers/viewer-core
 [submodule ".new-architecture/viewer-layout"]
 	path = .new-architecture/viewer-layout
-	url = https://github.com/metanull/viewer-layout
+	url = https://github.com/museumwithnofrontiers/viewer-layout
 [submodule ".new-architecture/viewer-workflows"]
 	path = .new-architecture/viewer-workflows
-	url = https://github.com/metanull/viewer-workflows
+	url = https://github.com/museumwithnofrontiers/viewer-workflows
 [submodule ".new-architecture/website-template"]
 	path = .new-architecture/website-template
-	url = https://github.com/metanull/website-template
+	url = https://github.com/museumwithnofrontiers/website-template
 [submodule ".new-architecture/islamicart"]
 	path = .new-architecture/islamicart
-	url = https://github.com/metanull/islamicart
+	url = https://github.com/museumwithnofrontiers/islamicart
 [submodule ".new-architecture/baroqueart"]
 	path = .new-architecture/baroqueart
-	url = https://github.com/metanull/baroqueart
+	url = https://github.com/museumwithnofrontiers/baroqueart
 [submodule ".new-architecture/sharinghistory"]
 	path = .new-architecture/sharinghistory
-	url = https://github.com/metanull/sharinghistory
+	url = https://github.com/museumwithnofrontiers/sharinghistory
 [submodule ".new-architecture/carpets"]
 	path = .new-architecture/carpets
-	url = https://github.com/metanull/carpets
+	url = https://github.com/museumwithnofrontiers/carpets
 [submodule ".new-architecture/water-in-islam"]
 	path = .new-architecture/water-in-islam
-	url = https://github.com/metanull/water-in-islam
+	url = https://github.com/museumwithnofrontiers/water-in-islam
 [submodule ".new-architecture/amulets"]
 	path = .new-architecture/amulets
-	url = https://github.com/metanull/amulets
+	url = https://github.com/museumwithnofrontiers/amulets
 [submodule ".new-architecture/the-use-of-colours-in-art"]
 	path = .new-architecture/the-use-of-colours-in-art
-	url = https://github.com/metanull/the-use-of-colours-in-art
+	url = https://github.com/museumwithnofrontiers/the-use-of-colours-in-art
 [submodule ".new-architecture/viewer-i18n"]
 	path = .new-architecture/viewer-i18n
-	url = https://github.com/metanull/viewer-i18n
+	url = https://github.com/museumwithnofrontiers/viewer-i18n
 [submodule ".legacy-code/office4"]
 	path = .legacy-code/office4
 	url = https://bitbucket.org/mwnf/office4

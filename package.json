@@ -20,9 +20,9 @@
         "@eslint/js": "^10.0.1",
         "@tailwindcss/postcss": "^4.3.3",
         "@tailwindcss/upgrade": "^4.3.3",
-        "@types/node": "^26.4.1",
-        "autoprefixer": "^10.5.5",
-        "baseline-browser-mapping": "^2.11.21",
+        "@types/node": "^26.5.1",
+        "autoprefixer": "^10.6.0",
+        "baseline-browser-mapping": "^2.11.23",
         "concurrently": "^10.0.5",
         "eslint": "^10.10.0",
         "eslint-config-prettier": "^10.1.8",
@@ -34,7 +34,7 @@
         "stylelint": "^17.15.0",
         "stylelint-config-standard": "^40.0.0",
         "tailwindcss": "^4.3.3",
-        "vite": "^8.2.2"
+        "vite": "^8.3.0"
     },
     "packageManager": "npm@12.0.2",
     "engines": {

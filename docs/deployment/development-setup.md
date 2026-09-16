@@ -77,11 +77,34 @@ sudo apt install php8.2 php8.2-cli php8.2-curl php8.2-gd php8.2-mbstring \
 
 Verify these extensions are enabled:
 
+**Linux/macOS:**
+
 ```bash
 php -m | grep -E "(fileinfo|zip|sqlite3|pdo_sqlite|gd|exif|openssl|curl|mbstring)"
 ```
 
+**Windows (PowerShell)**, where `grep` is not available:
+
+```powershell
+php -m | Select-String -Pattern "fileinfo|zip|sqlite3|pdo_sqlite|gd|exif|openssl|curl|mbstring"
+```
+
 ### 1.3 Composer Installation
+
+#### Windows
+
+```powershell
+# Option 1: Using Chocolatey
+choco install composer
+
+# Option 2: Manual installation
+# Download and run Composer-Setup.exe from https://getcomposer.org/download/
+
+# Verify installation
+composer --version
+```
+
+#### macOS/Linux
 
 ```bash
 # Download and install Composer
@@ -180,6 +203,8 @@ VITE_APP_URL=http://localhost:8000
 
 ### 2.5 Database Setup
 
+**Linux/macOS:**
+
 ```bash
 # Create SQLite database file
 touch database/database.sqlite
@@ -191,7 +216,22 @@ php artisan migrate
 php artisan db:seed
 ```
 
+**Windows (PowerShell)**, where `touch` does not exist:
+
+```powershell
+# Create SQLite database file
+New-Item -ItemType File -Path database/database.sqlite -Force
+
+# Run migrations
+php artisan migrate
+
+# Seed database with test data
+php artisan db:seed
+```
+
 ### 2.6 Storage Setup
+
+**Linux/macOS:**
 
 ```bash
 # Create symbolic link for storage
@@ -201,6 +241,19 @@ php artisan storage:link
 mkdir -p storage/app/uploads/images
 mkdir -p storage/app/available/images
 mkdir -p storage/app/pictures
+```
+
+**Windows (PowerShell)**, where `mkdir` has no `-p` flag and errors if the
+directory already exists:
+
+```powershell
+# Create symbolic link for storage
+php artisan storage:link
+
+# Create image storage directories
+New-Item -ItemType Directory -Force -Path storage/app/uploads/images
+New-Item -ItemType Directory -Force -Path storage/app/available/images
+New-Item -ItemType Directory -Force -Path storage/app/pictures
 ```
 
 ## Step 3: Development Servers
@@ -312,7 +365,18 @@ composer dev
 
 ### 5.2 Code Quality
 
+**Linux/macOS:**
+
 ```bash
+# Check code style
+./vendor/bin/pint
+npm run lint
+npm run type-check
+```
+
+**Windows (PowerShell):**
+
+```powershell
 # Check code style
 .\vendor\bin\pint
 npm run lint
@@ -390,10 +454,23 @@ npm run test:integration
 
 ### 6.3 API Testing
 
+**Linux/macOS:**
+
 ```bash
 # Test API endpoints
 curl -X GET http://localhost:8000/api/projects \
      -H "Accept: application/json" \
+     -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**Windows (PowerShell)**, where the trailing `\` line continuation is bash
+syntax — use a backtick, and call `curl.exe` directly so it isn't resolved to
+the `Invoke-WebRequest` alias:
+
+```powershell
+# Test API endpoints
+curl.exe -X GET http://localhost:8000/api/projects `
+     -H "Accept: application/json" `
      -H "Authorization: Bearer YOUR_TOKEN"
 ```
 
@@ -444,9 +521,23 @@ php artisan db:seed --class=FeatureSeeder
 
 #### Port Already in Use
 
+**Linux/macOS:**
+
 ```bash
 # Kill process using port 8000
 lsof -ti:8000 | xargs kill -9
+
+# Or use different port
+php artisan serve --port=8001
+```
+
+**Windows (PowerShell)**, where `lsof`/`xargs` do not exist:
+
+```powershell
+# Kill process using port 8000
+Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue |
+    Select-Object -ExpandProperty OwningProcess -Unique |
+    ForEach-Object { Stop-Process -Id $_ -Force }
 
 # Or use different port
 php artisan serve --port=8001
@@ -475,12 +566,25 @@ composer dump-autoload
 
 #### NPM Issues
 
+**Linux/macOS:**
+
 ```bash
 # Clear npm cache
 npm cache clean --force
 
 # Delete node_modules and reinstall
 rm -rf node_modules package-lock.json
+npm install
+```
+
+**Windows (PowerShell):**
+
+```powershell
+# Clear npm cache
+npm cache clean --force
+
+# Delete node_modules and reinstall
+Remove-Item -Recurse -Force node_modules, package-lock.json
 npm install
 ```
 
@@ -498,12 +602,25 @@ php artisan optimize:clear
 
 #### Slow Frontend Compilation
 
+**Linux/macOS:**
+
 ```bash
 # Use Vite optimization
 npm run dev -- --host
 
 # Increase Node.js memory limit
 export NODE_OPTIONS="--max-old-space-size=4096"
+```
+
+**Windows (PowerShell)**, where `export` is bash syntax and does not work as
+written in PowerShell:
+
+```powershell
+# Use Vite optimization
+npm run dev -- --host
+
+# Increase Node.js memory limit
+$env:NODE_OPTIONS = "--max-old-space-size=4096"
 ```
 
 ## Step 9: Development Scripts

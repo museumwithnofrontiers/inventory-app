@@ -7,7 +7,6 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./resources/js', import.meta.url)),
-      '@metanull/inventory-app-api-client': fileURLToPath(new URL('./api-client', import.meta.url)),
     },
   },
   define: {

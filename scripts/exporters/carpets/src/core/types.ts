@@ -129,6 +129,14 @@ export interface Partner {
   parent_id: string | null
   /** Legacy project keys (e.g. `ISL`, `DCA`) the partner belongs to. */
   project_ids: string[]
+  /**
+   * Project UUIDs the partner belongs to — same membership as `project_ids`,
+   * shipped under a new field name during the transition (epic #1727
+   * decision 4) so old and new consumers can never silently misread the
+   * array. `project_ids` (legacy key strings) stays untouched until the
+   * cleanup wave.
+   */
+  project_uuids: string[]
   /** Exported items this partner holds. */
   item_count: number
   /** Legacy `portal_display === 'y'` — drives the home page featured strip. */

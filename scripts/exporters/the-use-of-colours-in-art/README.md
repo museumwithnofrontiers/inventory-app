@@ -3,8 +3,8 @@
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for the rebuilt **The Use of Colours in Art** website — no API
 server, no auth, no runtime database dependency. Optionally packages and
-publishes that output as a private npm package
-(`@metanull/the-use-of-colours-in-art-data`) on GitHub Packages.
+publishes that output as a public npm package
+(`@museumwnf/the-use-of-colours-in-art-data`) on npmjs.
 
 This is the first of the DXA **exhibition** exporters
 ([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
@@ -119,13 +119,13 @@ curated texts, so a `de` build becomes possible the day someone flips the flag.
 
 | File | Contents |
 |---|---|
-| `manifest.json` | Export metadata, the languages present, item and theme counts |
+| `manifest.json` | Export metadata, the languages present, item and theme counts. Also `projects`: one entry per referenced project UUID, with a per-language name and the three URL columns (epic #1727 phase 2, additive) |
 | `exhibition.json` | Site anchor: slug, legacy host, titles/subtitles/headlines/abouts, enabled languages, logos, partner strip, chrome flags, sibling sites |
 | `themes.json` | 5 themes + 10 sub-themes, 194 curated pictures with cover pictures and related-picture links |
 | `related_content.json` | The 10 categorized reading-list entries |
 | `items.json` | The 171 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 293 THG facet tags with their category (artist 45, dynasty 18, material 97, subject 34, type 99) |
-| `partners.json` | The 85 museums and institutions (75 on legacy's partner list + 11 institutions, minus the overlap). One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids` from the curated hierarchy where the data has one |
+| `partners.json` | The 85 museums and institutions (75 on legacy's partner list + 11 institutions, minus the overlap). One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
 | `countries.json` | The 35 countries the members, their holders and the timeline reference |
 | `languages.json` | The 10 languages the site can display (de/en as `site_language`, plus 8 carried by borrowed records and partners) |
 | `dynasties.json` | The 16 dynasties member items reference |
@@ -187,7 +187,7 @@ docker compose --profile jobs run --rm exporter the-use-of-colours-in-art --forc
 ```
 
 Add `--publish` to bump the version, generate `package.json`/`README.md` and
-push to GitHub Packages — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
+push to npmjs — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
 
 The compose service points at the **staging** database (`staging-mysql`), which
 is where the exporter should be developed and verified.
@@ -198,7 +198,7 @@ before running anything that way.
 ## Naming
 
 The folder and package are `the-use-of-colours-in-art` /
-`@metanull/the-use-of-colours-in-art-data` — the kebab-cased legacy slug fixed by
+`@museumwnf/the-use-of-colours-in-art-data` — the kebab-cased legacy slug fixed by
 decision Q4. The data keeps the underscore form
 (`the_use_of_colours_in_art`), because that is the legacy public URL path and
 therefore identity. Never derive one from the other.

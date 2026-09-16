@@ -10,7 +10,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 // The data package is resolved at build time, in this order:
 //
 //   1. DATA_PACKAGE — an npm package name *or* a directory path. Explicit wins.
-//   2. @metanull/amulets-data — the published package. This is what `npm
+//   2. @museumwnf/amulets-data — the published package. This is what `npm
 //      install` brings in, and what CI and the deploy workflow build against.
 //   3. ../../exporters/amulets/output/amulets — a local exporter run, for
 //      working against data that has not been published yet:
@@ -47,7 +47,7 @@ function resolveDataPackage() {
     )
   }
 
-  const published = asPackage('@metanull/amulets-data')
+  const published = asPackage('@museumwnf/amulets-data')
   if (published) return published
 
   const local = asDirectory('../../exporters/amulets/output/amulets')
@@ -56,7 +56,7 @@ function resolveDataPackage() {
   throw new Error(
     'No Amulets data package found.\n' +
     '\n' +
-    'This viewer reads @metanull/amulets-data when it is installed, and falls\n' +
+    'This viewer reads @museumwnf/amulets-data when it is installed, and falls\n' +
     'back to the exporter output at scripts/exporters/amulets/output/amulets.\n' +
     'Neither is present. Produce the local export with:\n' +
     '\n' +

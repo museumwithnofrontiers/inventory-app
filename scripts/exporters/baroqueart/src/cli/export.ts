@@ -6,7 +6,7 @@
  * for consumption by frontend applications (the new Discover Baroque Art site).
  *
  * This exporter is single-purpose: it always exports the Discover Baroque
- * Art dataset — the BAR project, as `@metanull/baroqueart-data`. The scope
+ * Art dataset — the BAR project, as `@museumwnf/baroqueart-data`. The scope
  * is not configurable. It has no dynasty exporter (dynasties are a Discover
  * Islamic Art concept — all legacy dynasty rows are ISL).
  *
@@ -48,7 +48,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') })
 // dataset; there are no scope arguments to pass or get wrong.
 const SUBDIRECTORY = 'baroqueart'
 const PROJECT_KEYS = ['BAR']
-const PACKAGE_NAME = '@metanull/baroqueart-data'
+const PACKAGE_NAME = '@museumwnf/baroqueart-data'
 
 const program = new Command()
 
@@ -182,7 +182,7 @@ program
             const registry =
               options.npmRegistry ||
               process.env['NPM_REGISTRY'] ||
-              'https://npm.pkg.github.com'
+              'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the project
             // output directory, so it survives --force cleans.

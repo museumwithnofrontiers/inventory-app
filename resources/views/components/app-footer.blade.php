@@ -2,7 +2,6 @@
     $versionInfo = is_callable($app_version_info) ? $app_version_info() : (array)($app_version_info ?? []);
     $appName = config('app.name', 'Inventory App');
     $appVersion = $versionInfo['app_version'] ?? 'dev';
-    $apiClientVersion = $versionInfo['api_client_version'] ?? null;
     $buildTimestamp = $versionInfo['build_timestamp'] ?? null;
     
     // Format build timestamp if available
@@ -41,10 +40,5 @@
                 <span> ({{ $formattedBuildDate }})</span>
             @endif
         </div>
-        @if ($apiClientVersion)
-            <div>
-                <span>API Client Version: {{ $apiClientVersion }}</span>
-            </div>
-        @endif
     </div>
 </footer>

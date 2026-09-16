@@ -2,7 +2,6 @@ name: Dependency Audit (Full Tree)
 
 permissions:
   contents: read
-  packages: read
   issues: write
 
 on:
@@ -58,35 +57,25 @@ jobs:
       # Importer by name and glob only scripts/exporters and scripts/viewers;
       # scripts/site-i18n matched none of those and silently received no audit
       # at all from the day it landed.
-      #
-      # `registry` is set only for the projects that install an @metanull
-      # package from GitHub Packages — /spa (inventory-app-api-client) and the
-      # viewers (<dataset>-data). Everything else resolves from the public
-      # registry and gets an empty value, which setup-node treats as "default".
       - name: Enumerate npm projects
         id: enumerate
         run: |
           PROJECTS="$(
             {
               [ -f package.json ] && echo "."
-              find spa scripts -name node_modules -prune -o -name package.json -print 2>/dev/null \
+              find scripts -name node_modules -prune -o -name package.json -print 2>/dev/null \
                 | sed 's|/package\.json$||'
             } | sort -u | jq -R -s -c '
               split("\n") | map(select(length > 0)) | map({
                 name: (
                   if   . == "."                        then "Root"
-                  elif . == "spa"                      then "SPA"
                   elif . == "scripts/importer"         then "Importer"
                   elif . == "scripts/site-i18n"        then "Site i18n"
                   elif startswith("scripts/exporters/") then "Exporter (\(split("/") | last))"
                   elif startswith("scripts/viewers/")   then "Viewer (\(split("/") | last))"
                   else (split("/") | last) end
                 ),
-                directory: .,
-                registry: (
-                  if . == "spa" or startswith("scripts/viewers/")
-                  then "https://npm.pkg.github.com/" else "" end
-                )
+                directory: .
               })'
           )"
 
@@ -110,8 +99,6 @@ jobs:
         uses: ./.github/actions/setup-node-project
         with:
           working-directory: ${{ matrix.project.directory }}
-          registry-url: ${{ matrix.project.registry }}
-          node-auth-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: "Check > npm > Audit Vulnerabilities"
         working-directory: ${{ matrix.project.directory }}

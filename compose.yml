@@ -228,7 +228,7 @@ services:
     networks: [inventory]
 
   # ---------------------------------------------------------------------------
-  # tools — npm, vite, api-client generation. One-shot:
+  # tools — npm, vite. One-shot:
   #   docker compose run --rm tools npm ci
   # ---------------------------------------------------------------------------
   tools:
@@ -266,7 +266,6 @@ services:
     profiles: [docs]
     volumes:
       - ./docs:/workspace/docs
-      - ./api-client:/workspace/api-client:ro
       - ./scripts:/workspace/scripts:ro
       - ./.git:/workspace/.git:ro
       - docs-bundle:/usr/local/bundle
@@ -457,6 +456,18 @@ services:
     entrypoint: ["/bin/sh", "/var/www/app/scripts/exporters/docker-entrypoint.sh"]
     volumes:
       - .:/var/www/app
+      # `--publish` runs `npm publish` as root (this image's default user, no
+      # `user:` override) inside the container, so HOME=/root and npm reads
+      # /root/.npmrc. Mounting the operator's own npm session — written by
+      # `npm login` on the HOST, never by anything in this repo — is what lets
+      # a first publish of a new package name authenticate; the interactive
+      # 2FA/OTP prompt (or web-login URL) that npmjs still asks for on top of
+      # it reaches the terminal because `docker compose run` keeps a TTY
+      # attached. No token is ever written to a tracked file.
+      #   Windows: PowerShell does not export $HOME to child processes, so
+      #   `${HOME}` below resolves to nothing there unless you set it first —
+      #   see scripts/exporters/*/NPM_PUBLISH.md.
+      - ${HOME}/.npmrc:/root/.npmrc:ro
       # Each exporter's dependencies live in a named volume rather than the
       # host tree: tsx pulls in esbuild, whose binary is platform-specific, so
       # a node_modules installed on a Windows host cannot run in this container.

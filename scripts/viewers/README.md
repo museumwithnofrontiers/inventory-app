@@ -2,26 +2,26 @@
 
 One viewer per public website ("dataset"): a lightweight, standalone Vue 3 +
 Vite single-page application that consumes its dataset's static JSON
-data-package (`@metanull/<dataset>-data`, produced by the matching exporter —
+data-package (`@museumwnf/<dataset>-data`, produced by the matching exporter —
 see [`../exporters/`](../exporters/README.md)) at **build time**. The
 deployed site is pure static files: no database, no Laravel API, no server
 runtime.
 
 ```
-@metanull/<dataset>-data ──(npm install + vite build)──▶ dist/ ──(GitHub Actions)──▶ https://inventory.metanull.eu/<dataset>/
+@museumwnf/<dataset>-data ──(npm install + vite build)──▶ dist/ ──(GitHub Actions)──▶ https://inventory.metanull.eu/<dataset>/
 ```
 
 ## Datasets
 
 | Directory | Package consumed | Live URL | Deploy workflow |
 |---|---|---|---|
-| [`islamicart/`](islamicart/README.md) | `@metanull/islamicart-data` | https://inventory.metanull.eu/islamicart/ | `.github/workflows/deploy-viewer-islamicart-ovh.yml` |
-| [`baroqueart/`](baroqueart/README.md) | `@metanull/baroqueart-data` | https://inventory.metanull.eu/baroqueart/ | `.github/workflows/deploy-viewer-baroqueart-ovh.yml` |
-| [`sharinghistory/`](sharinghistory/README.md) | `@metanull/sharinghistory-data` | https://inventory.metanull.eu/sharinghistory/ | `.github/workflows/deploy-viewer-sharinghistory-ovh.yml` |
-| [`amulets/`](amulets/README.md) | `@metanull/amulets-data` | https://inventory.metanull.eu/amulets/ | `.github/workflows/deploy-viewer-amulets-ovh.yml` |
-| [`carpets/`](carpets/README.md) | `@metanull/carpets-data` | https://inventory.metanull.eu/carpets/ | `.github/workflows/deploy-viewer-carpets-ovh.yml` |
-| [`the-use-of-colours-in-art/`](the-use-of-colours-in-art/README.md) | `@metanull/the-use-of-colours-in-art-data` | https://inventory.metanull.eu/the-use-of-colours-in-art/ | `.github/workflows/deploy-viewer-the-use-of-colours-in-art-ovh.yml` |
-| [`water-in-islam/`](water-in-islam/README.md) | `@metanull/water-in-islam-data` | https://inventory.metanull.eu/water-in-islam/ | `.github/workflows/deploy-viewer-water-in-islam-ovh.yml` |
+| [`islamicart/`](islamicart/README.md) | `@museumwnf/islamicart-data` | https://inventory.metanull.eu/islamicart/ | `.github/workflows/deploy-viewer-islamicart-ovh.yml` |
+| [`baroqueart/`](baroqueart/README.md) | `@museumwnf/baroqueart-data` | https://inventory.metanull.eu/baroqueart/ | `.github/workflows/deploy-viewer-baroqueart-ovh.yml` |
+| [`sharinghistory/`](sharinghistory/README.md) | `@museumwnf/sharinghistory-data` | https://inventory.metanull.eu/sharinghistory/ | `.github/workflows/deploy-viewer-sharinghistory-ovh.yml` |
+| [`amulets/`](amulets/README.md) | `@museumwnf/amulets-data` | https://inventory.metanull.eu/amulets/ | `.github/workflows/deploy-viewer-amulets-ovh.yml` |
+| [`carpets/`](carpets/README.md) | `@museumwnf/carpets-data` | https://inventory.metanull.eu/carpets/ | `.github/workflows/deploy-viewer-carpets-ovh.yml` |
+| [`the-use-of-colours-in-art/`](the-use-of-colours-in-art/README.md) | `@museumwnf/the-use-of-colours-in-art-data` | https://inventory.metanull.eu/the-use-of-colours-in-art/ | `.github/workflows/deploy-viewer-the-use-of-colours-in-art-ovh.yml` |
+| [`water-in-islam/`](water-in-islam/README.md) | `@museumwnf/water-in-islam-data` | https://inventory.metanull.eu/water-in-islam/ | `.github/workflows/deploy-viewer-water-in-islam-ovh.yml` |
 
 The first three viewers are **verification tools** for their packages. The
 other four are DXA rebuilds
@@ -88,12 +88,12 @@ npm run build     # production build into dist/
 To pick up a new data-package version locally:
 
 ```bash
-npm install @metanull/<dataset>-data@latest
+npm install @museumwnf/<dataset>-data@latest
 ```
 
 then **restart the dev server** — Vite's dependency pre-bundle cache serves
-the old package contents otherwise. Installing from GitHub Packages requires
-a `~/.npmrc` with a token that can read the `@metanull` scope.
+the old package contents otherwise. `@museumwnf/<dataset>-data` is public on
+npmjs, so no registry auth is needed to install it.
 
 The three DXA viewers also accept a **local exporter run** as a fallback, for
 working against data that has not been published yet: with no installed package
@@ -107,7 +107,7 @@ OVH VPS. It triggers on **any push to `main` touching
 `scripts/viewers/<dataset>/**`**, and on **manual dispatch**
 (`gh workflow run deploy-viewer-<dataset>-ovh.yml`, or the Actions UI). The
 workflow runs `npm ci`, then **always installs
-`@metanull/<dataset>-data@latest`** — deliberately overriding whatever the
+`@museumwnf/<dataset>-data@latest`** — deliberately overriding whatever the
 lockfile pins, so a deploy always reflects the newest published data —
 builds with `--base=/<dataset>/`, and copies `dist/` to `/opt/<dataset>/`
 over SSH. Nginx serves it from an alias block in
@@ -121,9 +121,9 @@ location /<dataset> {
 }
 ```
 
-The workflow's `GITHUB_TOKEN` can only install the package if the package is
-linked to this repo and granted Actions access — see the publishing gotchas
-in [`../exporters/README.md`](../exporters/README.md).
+`@museumwnf/<dataset>-data` is public on npmjs, so the workflow needs no
+registry credential to install it — see the publishing gotchas in
+[`../exporters/README.md`](../exporters/README.md).
 
 ### Shipping a content (data-only) update
 
@@ -151,9 +151,8 @@ development**; keep them bumped to the latest published version so a fresh
 4. Copy and adapt the deploy workflow; add the Nginx alias block on the
    server; dispatch and verify the live URL.
 5. Nothing to add to [`.github/dependabot.yml`](../../.github/dependabot.yml):
-   its `directories: ["/spa", "/scripts/viewers/*"]` pattern picks the new
-   viewer up on the next run, and that entry is the one carrying
-   `registries: [npm-github]` — which the viewer needs, because it installs
-   `@metanull/<dataset>-data` from GitHub Packages. Placing the directory under
-   `scripts/viewers/` is what grants it the registry; there is no per-viewer
-   entry to forget.
+   its dataset-viewers entry globs `directories: ["/scripts/viewers/*"]`, so
+   placing the new viewer under `scripts/viewers/` is enough to pick it up on
+   the next run — there is no per-viewer entry to forget. That entry carries
+   no `registries:` key, since `@museumwnf/<dataset>-data` is public on
+   npmjs, like every other npm project in this repository.

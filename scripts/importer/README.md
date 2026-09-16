@@ -589,10 +589,12 @@ inventory-app database by hand. Two artisan commands (run against
 inventory-app, not this importer) do that lookup:
 
 ```bash
-# Resolve a legacy numeric id, project KEY, or exact English title to a
-# collection's UUID, internal_name, type, parent and per-language titles.
+# Resolve a legacy numeric id, legacy slug, project KEY, or exact English
+# title to a collection's UUID, internal_name, type, parent and per-language
+# titles.
 php artisan importer:find-collection gallery 9
 php artisan importer:find-collection gallery carpets
+php artisan importer:find-collection exhibition the-use-of-colours-in-art
 php artisan importer:find-collection exhibition 47
 php artisan importer:find-collection project ISL
 php artisan importer:find-collection project "Discover Islamic Art"
@@ -604,18 +606,31 @@ php artisan importer:list-collections exhibition --json
 php artisan importer:list-collections project
 ```
 
-`{kind}` is one of `project`, `gallery`, or `exhibition`. `{selector}` is
-either the legacy numeric id (galleries/exhibitions, matched against the
-`mwnf3_thematic_gallery:thg_gallery:{id}` / Sharing History
-`mwnf3_sharing_history:sh_exhibitions:{id}` `backward_compatibility`
-patterns these importers write — see `phase-10/thg-gallery-importer.ts` and
-`phase-03/sh-exhibition-importer.ts`), the legacy project KEY (matched
-against `mwnf3:projects:{KEY}` / `mwnf3_sharing_history:sh_projects:{key}`,
-written by `domain/transformers/project-transformer.ts` and
-`sh-project-transformer.ts`), or the exact, case-sensitive English title —
-in every case restricted to that kind. Zero or more than one match exits
-non-zero with a clear message (listing the candidates when there's more than
-one).
+`{kind}` is one of `project`, `gallery`, or `exhibition`. For `gallery`/
+`exhibition`, `{selector}` may be any of three forms — all are tried and the
+command requires exactly one collection to match overall (ambiguous or zero
+matches exit non-zero, listing candidates when ambiguous):
+
+- the legacy numeric id, matched against the
+  `mwnf3_thematic_gallery:thg_gallery:{id}` / Sharing History
+  `mwnf3_sharing_history:sh_exhibitions:{id}` `backward_compatibility`
+  patterns these importers write — see `phase-10/thg-gallery-importer.ts` and
+  `phase-03/sh-exhibition-importer.ts`;
+- the exact, case-sensitive legacy slug — the raw legacy `thg_gallery.link`
+  value (e.g. `carpets`, `the-use-of-colours-in-art`), stored verbatim as
+  `extra.thg_gallery.slug` by `phase-10/thg-gallery-importer.ts`. This is
+  *not* the same string as `internal_name` (`gallery_carpets`,
+  `exhibition_the_use_of_colours_in_art`), which slugifies the same value
+  further (lower-cases, collapses `-`/`_`/whitespace to a single `_`) — the
+  two coincide for simple slugs but diverge whenever the legacy slug itself
+  contains a hyphen;
+- the exact, case-sensitive English title.
+
+For `project`, `{selector}` is the legacy project KEY (matched against
+`mwnf3:projects:{KEY}` / `mwnf3_sharing_history:sh_projects:{key}`, written by
+`domain/transformers/project-transformer.ts` and `sh-project-transformer.ts`),
+falling back to the exact, case-sensitive English title when the KEY doesn't
+match.
 
 Because collection UUIDs are deterministic (`uuidv5` of the collection's
 `backward_compatibility`, via `src/utils/deterministic-uuid.ts` — see that

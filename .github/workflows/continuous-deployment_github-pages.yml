@@ -65,10 +65,6 @@ jobs:
         run: |
           python scripts/generate-commit-docs.py
 
-      - name: Generate client documentation
-        run: |
-          python scripts/generate-client-docs.py
-
       - name: Build Jekyll site
         run: |
           cd docs

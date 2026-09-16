@@ -27,7 +27,7 @@ class ListCollections extends Command
      *
      * @var string
      */
-    protected $description = 'List legacy id, English title, UUID and internal_name for every collection of a kind';
+    protected $description = 'List legacy id, slug, English title, UUID and internal_name for every collection of a kind';
 
     public function handle(): int
     {
@@ -57,6 +57,7 @@ class ListCollections extends Command
                     $kind,
                     $collection->backward_compatibility
                 ),
+                'slug' => CollectionLookupService::slug($collection),
                 'english_title' => $titles[CollectionLookupService::ENGLISH_LANGUAGE_ID] ?? null,
                 'id' => $collection->id,
                 'internal_name' => $collection->internal_name,
@@ -70,9 +71,10 @@ class ListCollections extends Command
         }
 
         $this->table(
-            ['Legacy selector', 'English title', 'UUID', 'internal_name'],
+            ['Legacy selector', 'Slug', 'English title', 'UUID', 'internal_name'],
             $rows->map(fn (array $row): array => [
                 $row['legacy_selector'] ?? '—',
+                $row['slug'] ?? '—',
                 $row['english_title'] ?? '—',
                 $row['id'],
                 $row['internal_name'],

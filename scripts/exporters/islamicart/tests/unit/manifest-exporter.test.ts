@@ -14,7 +14,15 @@ import type { ExportContext } from '../../src/core/types.js'
 function contextWith(rows: Record<string, unknown[]>): ExportContext {
   const query = vi.fn(async (sql: string) => {
     if (sql.includes('FROM item_translations')) return rows.itemLanguages
+    // buildLangCodeMap's own unconditional `id, backward_compatibility`
+    // select — distinct from the top-level `languages` list query below.
+    if (sql.startsWith('SELECT id, backward_compatibility FROM languages')) return rows.langCodeMap ?? []
+    // The primary-project-name lookup (siteNames) and the projects-section
+    // title lookup (buildProjectsSection) both join collection_translations,
+    // but only the latter starts from `projects p` — check it first.
+    if (sql.includes('JOIN collection_translations')) return rows.projectTitles ?? []
     if (sql.includes('FROM collection_translations')) return rows.names
+    if (sql.includes('FROM projects')) return rows.projects ?? []
     if (sql.includes('FROM languages')) return rows.languages
     throw new Error(`Unexpected query: ${sql}`)
   })
@@ -72,6 +80,101 @@ describe('ManifestExporter', () => {
       { code: 'fr', label: 'Français' },
     ])
     expect(manifest.site.names).toEqual({ en: 'Discover Islamic Art', fr: 'Découvrir l’art islamique' })
+  })
+
+  // Epic #1727 phase 2: the manifest carries one `projects` entry per
+  // referenced project UUID — for a project-scoped exporter that is exactly
+  // `context.projectIds`, additive alongside the untouched `projectKeys`/
+  // `projectIds` arrays.
+  it('builds manifest.projects with per-language names and the three URL columns', async () => {
+    const context = contextWith({
+      languages: [],
+      itemLanguages: [],
+      names: [],
+      langCodeMap: [
+        { id: 'eng', backward_compatibility: 'en' },
+        { id: 'fra', backward_compatibility: 'fr' },
+      ],
+      projects: [
+        {
+          id: 'isl-uuid',
+          backward_compatibility: 'mwnf3:projects:ISL',
+          site_url: 'https://islamicart.museumwnf.org',
+          related_database_url: null,
+          artistic_introduction_url: 'https://islamicart.museumwnf.org/gai/ISL/',
+        },
+        {
+          id: 'epm-uuid',
+          backward_compatibility: 'mwnf3:projects:EPM',
+          site_url: null,
+          related_database_url: null,
+          artistic_introduction_url: null,
+        },
+      ],
+      projectTitles: [
+        { project_id: 'isl-uuid', language_id: 'eng', title: 'Discover Islamic Art' },
+        { project_id: 'isl-uuid', language_id: 'fra', title: 'Découvrir l’art islamique' },
+        { project_id: 'epm-uuid', language_id: 'eng', title: null },
+      ],
+    })
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as {
+      projectKeys: string[]
+      projectIds: string[]
+      projects: Record<
+        string,
+        {
+          name: Record<string, string>
+          site_url: string | null
+          related_database_url: string | null
+          artistic_introduction_url: string | null
+        }
+      >
+    }
+    // Additive: the legacy arrays stay untouched.
+    expect(manifest.projectKeys).toEqual(['ISL', 'EPM'])
+    expect(manifest.projectIds).toEqual(['isl-uuid', 'epm-uuid'])
+    expect(manifest.projects).toEqual({
+      'isl-uuid': {
+        name: { en: 'Discover Islamic Art', fr: 'Découvrir l’art islamique' },
+        site_url: 'https://islamicart.museumwnf.org',
+        related_database_url: null,
+        artistic_introduction_url: 'https://islamicart.museumwnf.org/gai/ISL/',
+      },
+      'epm-uuid': {
+        // Project has no translation title in this fixture (null tolerated).
+        name: {},
+        site_url: null,
+        related_database_url: null,
+        artistic_introduction_url: null,
+      },
+    })
+  })
+
+  it('reports an empty projects section when there are no projects in scope', async () => {
+    const context = contextWith({ languages: [], itemLanguages: [], names: [] })
+    context.projectIds = []
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { projects: Record<string, unknown> }
+    expect(manifest.projects).toEqual({})
   })
 
   // Story #1690: the site's "Source: <origin><path>" credit is composed from

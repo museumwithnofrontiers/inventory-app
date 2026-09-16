@@ -58,7 +58,7 @@ This starts the Laravel server, asset watcher, and queue worker. Access the main
                            Authentication & Permissions
 ```
 
-The Filament `/admin` panel is the primary production UI. The Vue.js SPA demo exists as a reference for external API consumers and is not part of the core deployment.
+The Filament `/admin` panel is the primary production UI.
 
 ## Security
 

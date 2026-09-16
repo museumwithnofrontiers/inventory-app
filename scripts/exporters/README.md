@@ -2,26 +2,31 @@
 
 One exporter per public website ("dataset"). Each exporter reads the
 inventory-app MySQL database (read-only) and produces a static, denormalized
-JSON **data-package**, published as a private npm package on GitHub Packages.
-The matching viewer (see [`../viewers/`](../viewers/README.md)) consumes that
-package at build time — the public websites never talk to the database or the
-Laravel API.
+JSON **data-package**, published as a public npm package on npmjs
+(`registry.npmjs.org`), under the `@museumwnf` scope. The matching viewer
+(see [`../viewers/`](../viewers/README.md)) consumes that package at build
+time — the public websites never talk to the database or the Laravel API.
+
+> These packages used to be private packages on GitHub Packages, under the
+> `@metanull` scope. They moved to npmjs as part of milestone M1 (epics
+> #1720–#1722, completed 2026-09-15) so that a public website can install
+> them with no credential at all.
 
 ```
-legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter, per dataset)──▶ @metanull/<dataset>-data ──▶ viewer
+legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter, per dataset)──▶ @museumwnf/<dataset>-data ──▶ viewer
 ```
 
 ## Datasets
 
 | Directory | Legacy scope | Package | Consumed by |
 |---|---|---|---|
-| [`islamicart/`](islamicart/README.md) | project `ISL` + `EPM` (one dataset) | `@metanull/islamicart-data` | `scripts/viewers/islamicart` |
-| [`baroqueart/`](baroqueart/README.md) | project `BAR` | `@metanull/baroqueart-data` | `scripts/viewers/baroqueart` |
-| [`sharinghistory/`](sharinghistory/README.md) | project `awe` (SH keyspace, lowercase) | `@metanull/sharinghistory-data` | `scripts/viewers/sharinghistory` |
-| [`amulets/`](amulets/README.md) | THG **gallery 4** (membership union) | `@metanull/amulets-data` | `scripts/viewers/amulets` |
-| [`carpets/`](carpets/README.md) | THG **gallery 9** (membership union, DCA-native + borrowed) | `@metanull/carpets-data` | `scripts/viewers/carpets` |
-| [`the-use-of-colours-in-art/`](the-use-of-colours-in-art/README.md) | THG **exhibition 47** (membership union + curated theme tree) | `@metanull/the-use-of-colours-in-art-data` | `scripts/viewers/the-use-of-colours-in-art` |
-| [`water-in-islam/`](water-in-islam/README.md) | THG **exhibition 56** (membership union + curated theme tree) | `@metanull/water-in-islam-data` | *(viewer not built yet)* |
+| [`islamicart/`](islamicart/README.md) | project `ISL` + `EPM` (one dataset) | `@museumwnf/islamicart-data` | `scripts/viewers/islamicart` |
+| [`baroqueart/`](baroqueart/README.md) | project `BAR` | `@museumwnf/baroqueart-data` | `scripts/viewers/baroqueart` |
+| [`sharinghistory/`](sharinghistory/README.md) | project `awe` (SH keyspace, lowercase) | `@museumwnf/sharinghistory-data` | `scripts/viewers/sharinghistory` |
+| [`amulets/`](amulets/README.md) | THG **gallery 4** (membership union) | `@museumwnf/amulets-data` | `scripts/viewers/amulets` |
+| [`carpets/`](carpets/README.md) | THG **gallery 9** (membership union, DCA-native + borrowed) | `@museumwnf/carpets-data` | `scripts/viewers/carpets` |
+| [`the-use-of-colours-in-art/`](the-use-of-colours-in-art/README.md) | THG **exhibition 47** (membership union + curated theme tree) | `@museumwnf/the-use-of-colours-in-art-data` | `scripts/viewers/the-use-of-colours-in-art` |
+| [`water-in-islam/`](water-in-islam/README.md) | THG **exhibition 56** (membership union + curated theme tree) | `@museumwnf/water-in-islam-data` | *(viewer not built yet)* |
 
 Each directory is a **self-contained Node/TypeScript project** (own
 `package.json`, `tsconfig.json`, `vitest.config.ts`, `.env`). See the README
@@ -69,7 +74,9 @@ change.
 
 ```
 output/<dataset>/
-├── manifest.json            # projectIds/projectKeys (parallel arrays), languages, export metadata
+├── manifest.json            # projectIds/projectKeys (parallel arrays), languages, export metadata,
+│                            #   and projects: name/site_url/related_database_url/
+│                            #   artistic_introduction_url per referenced project UUID (epic #1727 phase 2)
 ├── items.json               # objects, monuments, monument details
 ├── collections.json         # projects, exhibitions, themes, pages, galleries…
 ├── partners.json / countries.json / languages.json
@@ -146,34 +153,39 @@ Prerequisites, one-time:
 - `.env` in the exporter directory (`cp .env.example .env` if present):
   `BASE_URL` (the public base URL of the inventory app's storage, prepended to
   image paths in the exported JSON) and
-  `PACKAGE_REPO_URL=https://github.com/metanull/inventory-app` (see gotcha 1
-  below). `DB_*` matters only for host-side runs; the compose service supplies
-  its own.
-- npm authentication for the `@metanull` scope on
-  `https://npm.pkg.github.com` — a PAT with `write:packages`. Put it in the
-  **repo-root `.npmrc`** (gitignored) so it is inside the bind mount; a token
-  that lives only in your host `~/.npmrc` is not visible to the container.
-  **npm will not find it on its own.** It reads a project `.npmrc` from the
-  *current directory* only — not from ancestors — and `--publish` runs
-  `npm publish` from `output/<dataset>/`, so without help the publish builds
-  the tarball and then dies with `npm error code ENEEDAUTH`. Point npm at the
-  file explicitly, which keeps the credential where it is:
+  `PACKAGE_REPO_URL=https://github.com/metanull/inventory-app` (good package
+  metadata; npmjs does not require it to install a version). `DB_*` matters
+  only for host-side runs; the compose service supplies its own.
+- npmjs authentication, done **on the host** first — this is a manual, local
+  publish, not run from CI (see [`docs/deployment/release-and-propagation.md`](../../docs/deployment/release-and-propagation.md)
+  §5.3):
 
   ```bash
-  docker compose run --rm -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc \
-      exporter <dataset> --force --publish
+  npm login
   ```
 
-  The same variable is what makes `npm view @metanull/<dataset>-data version`
-  work in the `tools` container — the only reliable way to read the version
-  that is actually published.
+  That writes a session token to your **host** `~/.npmrc`. The `exporter`
+  service mounts that file read-only into the container (`${HOME}/.npmrc:/root/.npmrc:ro`
+  in `compose.yml`) — the container never runs `npm login` itself and no
+  token is ever written to a tracked file. **Windows** — PowerShell does not
+  export `$HOME` to child processes, so `${HOME}` in `compose.yml` resolves
+  to nothing unless you set it first, in every new shell:
+
+  ```powershell
+  $env:HOME = $env:USERPROFILE
+  ```
+
+  `docker compose run` keeps a TTY attached, so if npmjs asks for a 2FA
+  one-time code or a web-login confirmation, the prompt appears right there
+  in the terminal. Details, including the first-publish `--access public`
+  requirement for a new `@museumwnf` package name, are in each dataset's
+  `NPM_PUBLISH.md`.
 
 Then, per dataset (exports are **read-only**, but always check what `BASE_URL`
 points at first) — the command is identical for every dataset:
 
 ```bash
-docker compose run --rm -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc \
-    exporter <dataset> --force --publish
+docker compose run --rm exporter <dataset> --force --publish
 ```
 
 Each exporter is single-purpose: its dataset scope — output subdirectory,
@@ -186,7 +198,7 @@ collections (see [`islamicart/README.md`](islamicart/README.md)).
 A single `--publish` run does everything: auto-increments the patch version
 persisted in `output/.version-<dataset>` (or use `--package-version` for an
 explicit semver), generates `package.json`/`README.md` in the output
-directory, and runs `npm publish` against GitHub Packages. There is **no**
+directory, and runs `npm publish` against npmjs. There is **no**
 separate manual `npm publish` step. Details in each dataset's
 `NPM_PUBLISH.md`.
 
@@ -194,15 +206,15 @@ Publishing is where the exporter's job ends — consumers install the package
 on their own schedule. (For updating the viewers in this repo after a
 publish, see [`../viewers/README.md`](../viewers/README.md#deployment).)
 
-Three gotchas, learned the hard way:
+Two gotchas, learned the hard way (a third — package visibility — no longer
+applies: while these packages lived on GitHub Packages, a published version
+also had to be granted read access in that package's *Manage Actions access*
+settings on GitHub, UI-only and one-time, or the deploy workflow's
+`GITHUB_TOKEN` got a 403 on install. `@museumwnf` packages on npmjs are
+public, so no such grant exists any more — the deploy workflows install with
+a plain `npm install @museumwnf/<dataset>-data@latest`, no token involved):
 
-1. The published package must carry a `repository` field pointing at this
-   repo (`PACKAGE_REPO_URL` in `.env`) **and** the repo must be granted read
-   access in the package's *Manage Actions access* settings on GitHub
-   (UI-only, one-time) — otherwise the deploy workflow's `GITHUB_TOKEN` gets
-   403 on install. Versions published *before* the repo link stay
-   inaccessible forever; publish a new version instead.
-2. Version state lives in `<dataset>/output/.version-<dataset>` — one counter
+1. Version state lives in `<dataset>/output/.version-<dataset>` — one counter
    per exporter, not one shared file — and it is not committed. **The registry
    is asked first and wins whenever it is ahead**, so a missing or stale counter
    no longer collides; that check is in `PublishManager.getNextVersion`, pinned
@@ -228,12 +240,14 @@ Three gotchas, learned the hard way:
 
    ```bash
    docker compose --profile tools run --rm --no-deps -w /var/www/app \
-       -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc \
-       tools npm view @metanull/<dataset>-data version
+       tools npm view @museumwnf/<dataset>-data version
    ```
 
-3. **Publishing changes nothing that is live.** Each viewer installs
-   `@metanull/<dataset>-data@latest` at *build* time, so the new package only
+   No credential needed for this one — `@museumwnf` packages are public, so
+   reading their version works without any npm login.
+
+2. **Publishing changes nothing that is live.** Each viewer installs
+   `@museumwnf/<dataset>-data@latest` at *build* time, so the new package only
    reaches production on the next deploy —
    `gh workflow run deploy-viewer-<dataset>-ovh.yml --ref main`. A merge that
    triggers a viewer deploy *before* the package is published builds against
@@ -274,6 +288,7 @@ are the three scripts the job runs; a fork that drops or renames one contributes
 a silently empty check rather than failing.
 
 Do **not** add `registries:` anywhere for an exporter. Exporters read the
-database and write JSON, so they consume no `@metanull` package; the exporter
-glob is deliberately an entry that carries no credential, which keeps the
-Dependabot PAT away from jobs that have no use for it.
+database and write JSON, so they consume no `@museumwnf` package; the exporter
+glob is deliberately an entry that carries no credential. No npm project in
+this repository consumes a package from GitHub Packages any more, so no
+Dependabot entry needs one either.

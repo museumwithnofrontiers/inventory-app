@@ -23,7 +23,6 @@ class VersionResource extends JsonResource
             'repository' => $data['repository'] ?? null,
             'build_timestamp' => $data['build_timestamp'] ?? null,
             'repository_url' => $data['repository_url'] ?? null,
-            'api_client_version' => $data['api_client_version'] ?? null,
             'app_version' => $data['app_version'] ?? '1.0.0-dev',
             'commit_sha' => $data['commit_sha'] ?? null,
         ];

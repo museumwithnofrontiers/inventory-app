@@ -3,8 +3,8 @@
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for the rebuilt **Amulets and Talismans** website — no API
 server, no auth, no runtime database dependency. Optionally packages and
-publishes that output as a private npm package (`@metanull/amulets-data`) on
-GitHub Packages.
+publishes that output as a public npm package (`@museumwnf/amulets-data`) on
+npmjs.
 
 This is the first of the DXA gallery exporters
 ([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
@@ -113,11 +113,11 @@ pse, sau, syr and tun.
 
 | File | Contents |
 |---|---|
-| `manifest.json` | Export metadata, the gallery's UI languages, item count |
+| `manifest.json` | Export metadata, the gallery's UI languages, item count. Also `projects`: one entry per referenced project UUID, with a per-language name and the three URL columns (epic #1727 phase 2, additive) |
 | `gallery.json` | Site anchor: slug, legacy host, names, banner/homepage item, chrome flags, sibling galleries |
 | `items.json` | The 45 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 115 THG facet tags with their category (artist/dynasty/material/subject/type) |
-| `partners.json` | The 26 museums holding member items. One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids` from the curated hierarchy where the data has one |
+| `partners.json` | The 26 museums holding member items. One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
 | `countries.json` | The 31 countries the members, their holders and the timeline reference |
 | `languages.json` | The 9 languages the site can display, flagged `site_language` |
 | `dynasties.json` | The 10 dynasties member items reference |
@@ -144,7 +144,7 @@ docker compose --profile jobs run --rm exporter amulets --force
 ```
 
 Add `--publish` to bump the version, generate `package.json`/`README.md` and
-push to GitHub Packages — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
+push to npmjs — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
 
 The compose service points at the **staging** database
 (`staging-mysql`), which is where the exporter should be developed and
@@ -154,7 +154,7 @@ it before running anything that way.
 
 ## Naming
 
-The folder and package are `amulets` / `@metanull/amulets-data` — the site's
+The folder and package are `amulets` / `@museumwnf/amulets-data` — the site's
 public identity (`amulets.museumwnf.org`) and the name fixed by decision Q4.
 The legacy slug is `amulets_and_talismans`, and that is what `gallery.json`
 carries as `slug`: data values keep legacy identity verbatim, folder names do

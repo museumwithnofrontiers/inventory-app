@@ -4,7 +4,7 @@
  *
  * Reads the inventory database and writes the data package that replaces the
  * legacy `exhibitions.museumwnf.org/the_use_of_colours_in_art` API instance
- * (`@metanull/the-use-of-colours-in-art-data`).
+ * (`@museumwnf/the-use-of-colours-in-art-data`).
  *
  * This exporter is single-purpose: it always exports thematic gallery 47. The
  * scope is not configurable — legacy pinned it in a per-deployment `.env`
@@ -67,7 +67,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') })
 // form stays in the data as legacy identity.
 const SUBDIRECTORY = 'the-use-of-colours-in-art'
 const EXHIBITION_BACKWARD_COMPATIBILITY = 'mwnf3_thematic_gallery:thg_gallery:47'
-const PACKAGE_NAME = '@metanull/the-use-of-colours-in-art-data'
+const PACKAGE_NAME = '@museumwnf/the-use-of-colours-in-art-data'
 
 const program = new Command()
 
@@ -223,7 +223,7 @@ program
 
           try {
             const registry =
-              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://npm.pkg.github.com'
+              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the
             // project output directory, so it survives --force cleans.

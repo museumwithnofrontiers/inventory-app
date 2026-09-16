@@ -4,7 +4,7 @@ import { createRequire } from 'module'
 import { dirname } from 'path'
 
 export default defineConfig(() => {
-  const dataPackage = process.env.DATA_PACKAGE || '@metanull/baroqueart-data'
+  const dataPackage = process.env.DATA_PACKAGE || '@museumwnf/baroqueart-data'
 
   const require = createRequire(import.meta.url)
   let dataPackageDir

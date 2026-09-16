@@ -4,7 +4,6 @@ use App\Enums\Permission;
 use App\Http\Controllers\Pub\PictureController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\SettingsController;
-use App\Http\Controllers\SpaController;
 use App\Http\Controllers\UserManagementController;
 use App\Http\Controllers\Web\AuthorController;
 use App\Http\Controllers\Web\AvailableImageController as WebAvailableImageController;
@@ -240,14 +239,6 @@ Route::middleware(['throttle:pub-pictures'])
             ->where('filename', '[0-9a-f-]+\.jpg')
             ->name('picture');
     });
-
-// Vue.js SPA Route - serves the client app at /cli (demo client)
-// IMPORTANT: This route works in PRODUCTION (Apache with .htaccess) but NOT with 'php artisan serve'
-// For development, use 'composer dev' which runs Vite dev server on port 5174
-// The optional parameter with .* constraint requires web server rewrites to work properly
-Route::get('/cli/{any?}', [SpaController::class, 'index'])
-    ->where('any', '.*')
-    ->name('spa');
 
 // Expose our OpenApi/Swagger documentation as JSON with caching
 Route::get('/api.json', function (Generator $generator) {

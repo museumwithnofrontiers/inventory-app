@@ -8,10 +8,10 @@ use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
- * Resolve a legacy numeric id, project KEY, or exact English title to the
- * inventory-app Collection UUID the importer assigned it, without querying
- * the database by hand. See app/Support/Importer/CollectionLookupService.php
- * for the resolution rules.
+ * Resolve a legacy numeric id, legacy slug, project KEY, or exact English
+ * title to the inventory-app Collection UUID the importer assigned it,
+ * without querying the database by hand. See
+ * app/Support/Importer/CollectionLookupService.php for the resolution rules.
  */
 class FindCollection extends Command
 {
@@ -22,7 +22,7 @@ class FindCollection extends Command
      */
     protected $signature = 'importer:find-collection
         {kind : project|gallery|exhibition}
-        {selector : A legacy numeric id (gallery/exhibition), a project KEY, or the exact, case-sensitive English title}
+        {selector : A legacy numeric id or legacy slug (gallery/exhibition), a project KEY, or the exact, case-sensitive English title}
         {--json : Output as JSON instead of a table}';
 
     /**
@@ -30,7 +30,7 @@ class FindCollection extends Command
      *
      * @var string
      */
-    protected $description = 'Resolve a legacy id or exact English title to a collection UUID, internal_name, type, parent and titles';
+    protected $description = 'Resolve a legacy id, slug or exact English title to a collection UUID, internal_name, type, parent and titles';
 
     public function handle(): int
     {

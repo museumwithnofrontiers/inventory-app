@@ -2,7 +2,6 @@ name: Build
 
 permissions:
   contents: write  # To create releases
-  packages: read   # Need read permissions for GitHub Packages
 
 on:
   push:
@@ -41,7 +40,6 @@ jobs:
       uses: actions/setup-node@v7
       with:
         node-version: "lts/Krypton"
-        registry-url: https://npm.pkg.github.com/
         cache: "npm"
     
     - name: Install PHP dependencies
@@ -64,26 +62,10 @@ jobs:
       run: |
         npm run build
 
-    - name: Install SPA demo dependencies
-      working-directory: spa
-      env:
-        NODE_AUTH_TOKEN: ${{secrets.GITHUB_TOKEN}}
-      run: |
-        npm ci --no-audit --no-fund
-
-    - name: Build SPA demo application
-      working-directory: spa
-      env:
-        VITE_API_BASE_URL: ${{ vars.APP_URL || 'http://localhost:8000' }}/api
-        VITE_APP_TITLE: ${{ vars.APP_NAME || 'Inventory App' }}
-      run: |
-        npm run build
-    
     - name: Validate Build
       run: |
         assetPaths=(
           "public/build"
-          "public/cli"
           "public/css/filament"
           "public/js/filament"
         )
@@ -181,19 +163,10 @@ jobs:
           echo "::error::Error reading version from package.json"
           exit 1
         fi
-          if [ -f "api-client/package.json" ]; then
-            apiclientVersion=$(jq -r '.version' api-client/package.json)
-            echo "  :white_check_mark: API client version: $apiclientVersion"
-          echo "api_client_version=$apiclientVersion" >> $GITHUB_ENV
-        else
-          echo "::error::Error reading version from api-client/package.json"
-          exit 1
-        fi
         buildTimestamp=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
         uniqueBuildId="${appVersion}.${GITHUB_RUN_NUMBER}"
         jq -n \
           --arg app_version "$appVersion" \
-          --arg api_client_version "$apiclientVersion" \
           --arg commit_sha '${{ github.sha }}' \
           --arg build_timestamp "$buildTimestamp" \
           --arg build_number '${{ github.run_number }}' \
@@ -201,13 +174,9 @@ jobs:
           --arg repository '${{ github.repository }}' \
           --arg repository_url '${{ github.server_url }}/${{ github.repository }}' \
           --arg branch '${{ github.ref_name }}' \
-          '{app_version: $app_version, api_client_version: $api_client_version, commit_sha: $commit_sha, build_timestamp: $build_timestamp, build_number: $build_number, unique_build_id: $unique_build_id, repository: $repository, repository_url: $repository_url, branch: $branch}' \
+          '{app_version: $app_version, commit_sha: $commit_sha, build_timestamp: $build_timestamp, build_number: $build_number, unique_build_id: $unique_build_id, repository: $repository, repository_url: $repository_url, branch: $branch}' \
           > "$deployDir/VERSION"
         echo "  :white_check_mark: VERSION file created"
-        
-        # Copy VERSION to public/version.json for SPA access
-        cp "$deployDir/VERSION" "$deployDir/public/version.json"
-        echo "  :white_check_mark: VERSION copied to public/version.json"
         echo "::endgroup::"
         
         echo "::group::Creating deployment archives"

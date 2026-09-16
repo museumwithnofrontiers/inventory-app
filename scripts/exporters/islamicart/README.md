@@ -3,8 +3,7 @@
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for public-facing frontends to consume — no API server, no
 auth, no runtime database dependency. Optionally packages and publishes that
-output as a private npm package (`@metanull/islamicart-data`) on GitHub
-Packages, for any consumer to install.
+output as a public npm package (`@museumwnf/islamicart-data`) on npmjs, for any consumer to install.
 
 This exporter produces the Discover Islamic Art data-package (one exporter
 per dataset lives under `scripts/exporters/<dataset>`).
@@ -22,7 +21,7 @@ npm run export -- `
 The dataset scope is hardcoded — this exporter is single-purpose and takes
 no scope arguments: it always exports the projects `ISL` (Discover Islamic
 Art) **and** `EPM` (Explore Islamic Art Collections) together as
-`@metanull/islamicart-data`. They are one dataset: an ISL-only export would
+`@museumwnf/islamicart-data`. They are one dataset: an ISL-only export would
 silently drop the EPM project collection and every `partner_group:museums:*`
 collection, which is exactly why the keys are not configurable.
 `manifest.json` always lists `"projectKeys": ["ISL", "EPM"]`.
@@ -40,12 +39,12 @@ files, written to `output/islamicart/`:
 
 | File | Exporter | Contents |
 |---|---|---|
-| `manifest.json` | `ManifestExporter` | Metadata about the export itself (project keys, generated-at timestamp, available languages) and `site` — the languages the items carry, in switcher order with native labels, and the project's name per language: what the website reads before it mounts |
+| `manifest.json` | `ManifestExporter` | Metadata about the export itself (project keys, generated-at timestamp, available languages) and `site` — the languages the items carry, in switcher order with native labels, and the project's name per language: what the website reads before it mounts. Also `projects`: one entry per referenced project UUID, with a per-language name and the three URL columns (epic #1727 phase 2, additive) |
 | `languages.json` | `LanguageExporter` | Language reference data |
 | `countries.json` | `CountryExporter` | Country reference data + translations |
 | `dynasties.json` | `DynastyExporter` | Dynasty reference data + translations |
 | `timelines.json` | `TimelineExporter` | Timelines and their events |
-| `partners.json` | `PartnerExporter` | Museums/institutions + translations + images. One shape across every dataset (metanull/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured` |
+| `partners.json` | `PartnerExporter` | Museums/institutions + translations + images. One shape across every dataset (metanull/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured`/`project_uuids` (epic #1727 phase 2, additive) |
 | `items.json` | `ItemExporter` | Items (objects/monuments/details), with images, dynasty/tag links, related-item links |
 | `collections.json` | `CollectionExporter` | Collections (exhibitions/themes/galleries), with images and item membership |
 | `glossary.json` | `GlossaryExporter` | Glossary terms + translations |
@@ -104,10 +103,10 @@ npm run export -- --force --publish
 | `--base-url <url>` | Base URL prepended to image paths (default: `BASE_URL` env var, then `./images`) |
 | `--publish` | Bump version, generate `package.json`/`README.md`, and `npm publish` the output as an npm package |
 | `--package-version <semver>` | Set an explicit version instead of auto-incrementing |
-| `--npm-registry <url>` | Override the publish registry (default: `NPM_REGISTRY` env var, then GitHub Packages) |
+| `--npm-registry <url>` | Override the publish registry (default: `NPM_REGISTRY` env var, then npmjs) |
 
 See [`NPM_PUBLISH.md`](NPM_PUBLISH.md) for the full publishing workflow —
-version-file mechanics, package structure, GitHub Packages authentication,
+version-file mechanics, package structure, npmjs authentication,
 and the consumer-side install/import story.
 
 ## How this fits together
@@ -116,7 +115,7 @@ and the consumer-side install/import story.
 inventory-app DB
       │  (exporter reads directly — no API involved)
       ▼
-scripts/exporters/islamicart  ──npm publish──▶  @metanull/islamicart-data (GitHub Packages)
+scripts/exporters/islamicart  ──npm publish──▶  @museumwnf/islamicart-data (npmjs)
                                                        │  npm install
                                                        ▼
                                                  any consumer
@@ -146,8 +145,7 @@ regardless, then reports every failure at the end); `--publish` is skipped
 entirely if any exporter errored. Check the per-exporter error line in the
 final summary for which one failed and why.
 
-**`npm publish` fails with "not authorized"** — GitHub Packages
-authentication isn't configured; see [`NPM_PUBLISH.md`](NPM_PUBLISH.md#github-packages-authentication).
+**`npm publish` fails with "not authorized"** — not logged in to npmjs; see [`NPM_PUBLISH.md`](NPM_PUBLISH.md#npmjs-authentication).
 
 **Database connection fails** — same `DB_*` variables and troubleshooting as
 the [importer](../importer/README.md#troubleshooting); this exporter has no

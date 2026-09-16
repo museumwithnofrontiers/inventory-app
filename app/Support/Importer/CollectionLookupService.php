@@ -9,8 +9,8 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 
 /**
  * Resolves a "kind" (project|gallery|exhibition) plus a legacy selector (a
- * legacy numeric id, a project KEY, or an exact English title) to the
- * Collection row(s) the importer created for it.
+ * legacy numeric id, a legacy slug, a project KEY, or an exact English title)
+ * to the Collection row(s) the importer created for it.
  *
  * Backing facts (confirmed against the importer sources, not invented):
  * - Galleries/exhibitions: scripts/importer/src/importers/phase-10/thg-gallery-importer.ts
@@ -33,6 +33,16 @@ use Illuminate\Database\Eloquent\Collection as EloquentCollection;
  * (galleries-root, exhibitions-root, artintro-root, ...), so kind=project
  * additionally restricts to collections whose `backward_compatibility` carries
  * one of the two recognised project prefixes.
+ *
+ * - Gallery/exhibition legacy slug: `thg-gallery-importer.ts` also stores the
+ *   raw legacy `thg_gallery.link` value verbatim as `extra.thg_gallery.slug`
+ *   (`buildAnchor()`) — e.g. "carpets", "the-use-of-colours-in-art". This is
+ *   distinct from `internal_name` (`{type}_{slugify(link)}`, e.g.
+ *   "gallery_carpets", "exhibition_the_use_of_colours_in_art"), which further
+ *   slugifies the same value (lower-cases, collapses `-`/`_`/whitespace to a
+ *   single `_`) — the two coincide for simple slugs but diverge whenever the
+ *   legacy slug itself contains a hyphen, so the raw `extra.thg_gallery.slug`
+ *   is the correct source for an exact, case-sensitive slug selector.
  */
 class CollectionLookupService
 {
@@ -125,9 +135,14 @@ class CollectionLookupService
     /**
      * Resolve a selector to the matching collection(s) of a kind.
      *
-     * - gallery/exhibition: a purely numeric selector is matched against the
-     *   legacy-id backward_compatibility pattern(s); anything else is matched
-     *   as an exact, case-sensitive English title.
+     * - gallery/exhibition: three selector forms are acceptable — a legacy
+     *   numeric id, the exact legacy slug (`extra.thg_gallery.slug`,
+     *   case-sensitive), and an exact, case-sensitive English title. All
+     *   applicable forms are tried and merged into one set of *distinct*
+     *   collections, rather than trying them in a priority order — a priority
+     *   order could silently prefer the wrong match if two different forms
+     *   happened to point at two different collections. Callers decide what
+     *   "not found" (0) or "ambiguous" (>1) means for the merged set.
      * - project: the selector is first matched as the legacy KEY (exact
      *   backward_compatibility match, case-sensitive for the mwnf3 pattern,
      *   lower-cased for the Sharing History pattern); if nothing matches, it
@@ -150,11 +165,16 @@ class CollectionLookupService
             return self::byEnglishTitle($kind, $selector);
         }
 
+        $matches = self::emptyCollection();
+
         if (ctype_digit($selector)) {
-            return self::byLegacyId($kind, $selector);
+            $matches = $matches->merge(self::byLegacyId($kind, $selector));
         }
 
-        return self::byEnglishTitle($kind, $selector);
+        $matches = $matches->merge(self::bySlug($kind, $selector));
+        $matches = $matches->merge(self::byEnglishTitle($kind, $selector));
+
+        return $matches->unique('id')->values();
     }
 
     /**
@@ -189,6 +209,24 @@ class CollectionLookupService
         ];
 
         return self::baseQuery(self::KIND_PROJECT)->whereIn('backward_compatibility', $candidates)->get();
+    }
+
+    /**
+     * Match gallery/exhibition collections by their exact, case-sensitive
+     * legacy slug (`extra.thg_gallery.slug`).
+     *
+     * @return EloquentCollection<int, Collection>
+     */
+    public static function bySlug(string $kind, string $slug): EloquentCollection
+    {
+        // Same case-sensitivity caveat as byEnglishTitle(): the JSON path
+        // comparison at the DB level uses the column's collation (case
+        // insensitive on MySQL), so filter the candidate set again in PHP.
+        return self::baseQuery($kind)
+            ->where('extra->thg_gallery->slug', $slug)
+            ->get()
+            ->filter(fn (Collection $collection): bool => self::slug($collection) === $slug)
+            ->values();
     }
 
     /**
@@ -236,6 +274,25 @@ class CollectionLookupService
         }
 
         return null;
+    }
+
+    /**
+     * The legacy slug stored on a gallery/exhibition collection
+     * (`extra.thg_gallery.slug`), or null when absent (e.g. project
+     * collections, or a gallery/exhibition imported without one).
+     */
+    public static function slug(Collection $collection): ?string
+    {
+        $extra = $collection->extra;
+        $thgGallery = is_object($extra) ? ($extra->thg_gallery ?? null) : null;
+
+        if (! is_object($thgGallery)) {
+            return null;
+        }
+
+        $slug = $thgGallery->slug ?? null;
+
+        return is_string($slug) && $slug !== '' ? $slug : null;
     }
 
     /**

@@ -20,14 +20,14 @@ reproduced rather than reinterpreted.
 
 ## Where the data comes from
 
-`@metanull/amulets-data` is published to GitHub Packages and declared in
-`package.json`, so `npm install` is all a normal build needs. Installing it
-requires a token with `read:packages`.
+`@museumwnf/amulets-data` is published to npmjs and declared in
+`package.json`, so `npm install` is all a normal build needs — no registry
+auth required.
 
 `vite.config.js` resolves the `@inventory-data` alias in this order:
 
 1. `DATA_PACKAGE` — an npm package name **or** a directory path (explicit wins).
-2. `@metanull/amulets-data`, if installed. **This is the normal path** — CI, the
+2. `@museumwnf/amulets-data`, if installed. **This is the normal path** — CI, the
    deploy workflow and a plain `npm install` all land here.
 3. `../../exporters/amulets/output/amulets` — a local exporter run, for working
    against data that has not been published yet.
@@ -255,14 +255,3 @@ confirm, not one this story settled.**
 `--base=/amulets/` and deploys `dist/` to `/opt/amulets/` on the OVH VPS;
 Nginx serves it at https://inventory.metanull.eu/amulets/ via an alias block.
 See [`../README.md`](../README.md) for the shared deployment mechanics.
-
-**The workflow is not usable yet** — see *What must change once the package is
-published* above. The Nginx alias block still has to be added on the server:
-
-```nginx
-location /amulets {
-    alias /opt/amulets;
-    index index.html;
-    try_files $uri $uri/ /amulets/index.html;
-}
-```

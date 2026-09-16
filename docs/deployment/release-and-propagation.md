@@ -68,15 +68,13 @@ Two hosting targets exist on purpose and both stay:
 
 ## 1. Application (inventory-app)
 
-Every merge to `main` deploys the application to the VPS. The docs site and the
-generated API client follow their own paths.
+Every merge to `main` deploys the application to the VPS. The docs site
+follows its own path.
 
 - `Build` runs on push to `main` and on tags `v*.*.*`, then `deploy-ovh` runs
   when `Build` completes and copies the artefact to the VPS over SSH. Both can
   be started by hand from the Actions tab (`workflow_dispatch`).
 - `continuous-deployment_github-pages` publishes `docs/` on every push to `main`.
-- `publish-api-client` regenerates and publishes the TypeScript client when
-  anything under `app/` changes.
 
 There is no command to run. The server side (directories, symlinks, rollback)
 is described in [Production Deployment](production-deployment).
@@ -131,9 +129,17 @@ directory and gitignored. If it is lost, the next publish would restart at
 1.0.0 and collide. Recover with `--package-version <next-free-version>` after
 checking the registry.
 
+The `exporter` service reads `staging-mysql`, and `stage` only migrates that
+database on a full rebuild. After pulling a change that adds a migration, run
+`docker compose --profile jobs run --rm staging-migrate` (non-destructive)
+before exporting, or re-run `stage` fully — otherwise the export can fail
+with an `Unknown column` error, and columns the importer fills (e.g. a URL
+map) stay NULL until the next full `stage`.
+
 Each exporter's `NPM_PUBLISH.md` documents the mechanics, including the
 `PACKAGE_REPO_URL` setting that must be present in the exporter's `.env` so the
-generated package carries a `repository` field.
+generated package carries a `repository` field, and the host `~/.npmrc` mount
+the `exporter` service needs for `--publish` to authenticate against npmjs.
 
 ## 4. Reusable workflows (viewer-workflows)
 
@@ -151,7 +157,7 @@ git -C E:/inventory/viewer-workflows push origin vX.Y.Z
 Optionally, to keep the Releases page complete:
 
 ```bash
-gh release create vX.Y.Z -R metanull/viewer-workflows --target main --title vX.Y.Z --generate-notes
+gh release create vX.Y.Z -R museumwithnofrontiers/viewer-workflows --target main --title vX.Y.Z --generate-notes
 ```
 
 Consumers adopt the new tag through Dependabot's `github-actions` ecosystem:
@@ -178,13 +184,13 @@ ranges on them, so a release does not reach any site until it is propagated.
    with the version taken from the tag.
 
 ```bash
-gh release create vX.Y.Z -R metanull/<package> --target main --title vX.Y.Z --generate-notes
+gh release create vX.Y.Z -R museumwithnofrontiers/<package> --target main --title vX.Y.Z --generate-notes
 ```
 
 4. Confirm the publish run succeeded before propagating:
 
 ```bash
-gh run list -R metanull/<package> --workflow=release.yml --limit 3
+gh run list -R museumwithnofrontiers/<package> --workflow=release.yml --limit 3
 ```
 
 When several PRs on the same package each bump the version, merge them in
@@ -197,15 +203,38 @@ to the new version. It is not automatic.
 
 `tools/propagate.mjs` in `viewer-workflows` opens one PR per website, bumping
 the range and the lockfile. Run it from the `viewer-workflows` checkout, in
-Docker, with your own `gh` login and `~/.npmrc` mounted read-only. Preview
-first with `--dry-run`.
+Docker, with your own `gh` login. Preview first with `--dry-run`.
+
+Bash (Linux, macOS):
 
 ```bash
 cd E:/inventory/viewer-workflows
-docker run --rm -it -v "$PWD:/w" -v "$HOME/.npmrc:/root/.npmrc:ro" -v "$HOME/.config/gh:/root/.config/gh:ro" -w /w node:lts-alpine sh -c "apk add --no-cache git github-cli >/dev/null && node tools/propagate.mjs --expect <package>@X.Y.Z --dry-run"
+export GH_TOKEN=$(gh auth token)
+docker run --rm -it -e GH_TOKEN -v "$PWD:/w" -w /w node:lts-alpine sh -c "apk add --no-cache git github-cli >/dev/null && node tools/propagate.mjs --expect <package>@X.Y.Z --dry-run"
 ```
 
-Then the same command without `--dry-run`.
+PowerShell (Windows), where the operator actually runs this — `export`,
+`$(...)` command substitution and `$PWD` are bash syntax and do not work as
+written in PowerShell:
+
+```powershell
+$env:GH_TOKEN = gh auth token
+$repo = "E:/inventory/viewer-workflows"
+docker run --rm -it -e GH_TOKEN -v "${repo}:/w" -w /w node:lts-alpine sh -c "apk add --no-cache git github-cli >/dev/null && node tools/propagate.mjs --expect <package>@X.Y.Z --dry-run"
+```
+
+`${repo}` needs the braces so PowerShell does not swallow the `:` that
+separates the host path from the container path.
+
+`GH_TOKEN` must be passed explicitly, as above — `gh auth login` on the host
+commonly stores the token in the OS keyring (e.g. Windows Credential
+Manager), which a container cannot reach, so mounting `~/.config/gh` alone
+carries no usable token in that case. `gh auth token` reads the real token
+regardless of where `gh` stores it. The tool itself runs `gh auth setup-git`
+on every invocation, so once `gh` is authenticated this way, `git push`
+inherits the same credentials.
+
+Then the same command without `--dry-run`, in whichever shell you used above.
 
 `--expect <package>@X.Y.Z` is mandatory. Run before the publish workflow has
 finished, `latest` still resolves to the previous version and the tool bumps
@@ -219,20 +248,32 @@ The websites are discovered, not listed: every repository created from
 `website-template` is a consumer. A site created by fork or transferred in is
 invisible to discovery; pass `--repo` for those.
 
-### 5.3 Transition to npmjs
+### 5.3 Transition to npmjs (complete)
 
-The packages are moving from GitHub Packages to npmjs under the `museumwnf`
-organisation (epics #1720 to #1723). Until that is complete, the registry is
-GitHub Packages and CI authenticates with the ephemeral `github.token`. Once a
-package is renamed to `@museumwnf/<name>`:
+The shared packages and the data packages both moved from GitHub Packages to
+npmjs under the `@museumwnf` scope. The consumer-facing part of that move
+(epics #1720 and #1722) closed 2026-09-15: the release workflow publishes to
+npmjs, every consumer — the websites, `website-template`, and inventory-app's
+OVH deploy workflows — installs from npmjs, and all 7 data packages publish
+only to npmjs (see stage 3 above). What that looked like, and what it left
+behind:
 
-- The first version of the new name must be published by hand from a session
-  with 2FA, because OIDC cannot create a package.
-- Then a trusted publisher is configured on npmjs.com for the package, naming
-  the caller workflow `release.yml`. From then on, step 5.1 publishes to npmjs
-  without any token.
-- Data packages keep being published by hand from the operator's machine, with
-  the operator's npm login.
+- For each shared package, the first version under the new name had to be
+  published by hand from a session with 2FA, because OIDC cannot create a
+  package. After that, a trusted publisher was configured on npmjs.com for
+  the package, naming the caller workflow `release.yml` — from then on, step
+  5.1 publishes to npmjs without any stored token.
+- Data packages are still published by hand from the operator's machine, with
+  the operator's own npm login — there never was a CI path for them, by
+  design (see `NPM_PUBLISH.md` in each exporter).
+- What the cutover did **not** yet remove: `viewer-workflows`' reusable
+  workflow still carries the old GitHub Packages publish path and the CI
+  wiring that fed it (`NODE_AUTH_TOKEN`, `registry-url:
+  https://npm.pkg.github.com`), and a few packages still have a stale
+  `publishConfig.registry` pointing at it. Stripping that leftover wiring —
+  and fixing any doc that still describes GitHub Packages as the current
+  publish target — is tracked separately in epic #1723 ("Retire GitHub
+  Packages publishing"), open as of this writing.
 
 ## 6. Scaffold (website-template)
 
@@ -255,7 +296,7 @@ from a local change to the site itself. Nothing to run by hand. To check a
 deployment:
 
 ```bash
-gh run list -R metanull/<site> --workflow=deploy.yml --limit 1
+gh run list -R museumwithnofrontiers/<site> --workflow=deploy.yml --limit 1
 ```
 
 GitHub Pages must have been enabled once by hand on a new repository; a green
@@ -317,7 +358,7 @@ When the platform changes instead (a shared package), the sequence is stage
 | Application on the VPS | [Production Deployment](production-deployment) in this site |
 | Content import | `scripts/import-tool/README.md` (walkthrough and copy-paste TL;DR) |
 | Data package publishing | `scripts/exporters/<site>/NPM_PUBLISH.md` |
-| Reusable workflows | `README.md` and `MAINTENANCE.md` in metanull/viewer-workflows |
-| Shared package release and propagation | `MAINTENANCE.md` in metanull/viewer-layout ("The flow"); `tools/propagate.mjs` in viewer-workflows |
-| Creating a website | `README.md` in metanull/website-template ("Admin") |
+| Reusable workflows | `README.md` and `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
+| Shared package release and propagation | `MAINTENANCE.md` in museumwithnofrontiers/viewer-layout ("The flow"); `tools/propagate.mjs` in viewer-workflows |
+| Creating a website | `README.md` in museumwithnofrontiers/website-template ("Admin") |
 | npmjs transition | epics #1720, #1721, #1722, #1723 in this repository |

@@ -21,7 +21,6 @@ jobs:
     outputs:
       backend: ${{ steps.detect.outputs.backend }}
       root-frontend: ${{ steps.detect.outputs.root-frontend }}
-      spa: ${{ steps.detect.outputs.spa }}
       importer: ${{ steps.detect.outputs.importer }}
       import-tool-image: ${{ steps.detect.outputs.import-tool-image }}
       site-i18n: ${{ steps.detect.outputs.site-i18n }}
@@ -54,12 +53,6 @@ jobs:
             echo "root-frontend=true" >> $GITHUB_OUTPUT
           else
             echo "root-frontend=false" >> $GITHUB_OUTPUT
-          fi
-
-          if echo "$CHANGED" | grep -qE '^spa/'; then
-            echo "spa=true" >> $GITHUB_OUTPUT
-          else
-            echo "spa=false" >> $GITHUB_OUTPUT
           fi
 
           if echo "$CHANGED" | grep -qE '^scripts/importer/'; then
@@ -351,19 +344,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # Three of the viewers pull @metanull/<site>-data from GitHub Packages, so
-      # the registry and token are supplied for every viewer rather than only
-      # the ones that need them today — a fork that gains a data package must
-      # not have to remember to edit this job.
+      # Every viewer's data package (@museumwnf/<site>-data) is public on
+      # npmjs, so this job needs no registry or token — the default public
+      # registry resolves it like any other dependency.
       - name: "Setup > Node Project (Viewer ${{ matrix.viewer }})"
         uses: ./.github/actions/setup-node-project
         with:
           working-directory: scripts/viewers/${{ matrix.viewer }}
-          registry-url: https://npm.pkg.github.com/
-          node-auth-token: ${{ secrets.GITHUB_TOKEN }}
 
       # Same base path the deploy workflow uses, so what CI builds is what OVH
-      # gets. A viewer whose @metanull/<site>-data package is not published
+      # gets. A viewer whose @museumwnf/<site>-data package is not published
       # fails here, and that is the point: without the package its
       # `@inventory-data` alias cannot resolve, so it cannot be deployed either.
       # A failing check is the honest signal — publish the package (see the
@@ -372,37 +362,6 @@ jobs:
         working-directory: scripts/viewers/${{ matrix.viewer }}
         run: |
           npm run build -- --base=/${{ matrix.viewer }}/
-
-  spa-frontend-validation:
-    name: Frontend Validation - SPA (Vue 3)
-    runs-on: ubuntu-latest
-    needs: detect-changes
-    if: needs.detect-changes.outputs.spa == 'true'
-
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: "Setup > Node Project (SPA)"
-        uses: ./.github/actions/setup-node-project
-        with:
-          working-directory: spa
-          registry-url: https://npm.pkg.github.com/
-          node-auth-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: "Check > npm > Linting (SPA)"
-        working-directory: spa
-        run: |
-          npm run lint
-
-      - name: "Check > npm > Build (SPA)"
-        working-directory: spa
-        run: |
-          npm run build
-
-      - name: "Check > npm > Run Tests (SPA)"
-        working-directory: spa
-        run: |
-          npm run test:all
 
   ci-success:
     name: CI Success
@@ -418,7 +377,6 @@ jobs:
       - site-i18n-validation
       - exporter-validation
       - viewer-validation
-      - spa-frontend-validation
     if: always()
 
     steps:
@@ -428,7 +386,6 @@ jobs:
 
           backendChanged="${{ needs.detect-changes.outputs.backend }}"
           rootFrontendChanged="${{ needs.detect-changes.outputs.root-frontend }}"
-          spaChanged="${{ needs.detect-changes.outputs.spa }}"
           importerChanged="${{ needs.detect-changes.outputs.importer }}"
           importToolImageChanged="${{ needs.detect-changes.outputs.import-tool-image }}"
           siteI18nChanged="${{ needs.detect-changes.outputs.site-i18n }}"
@@ -443,7 +400,6 @@ jobs:
           siteI18nResult="${{ needs.site-i18n-validation.result }}"
           exportersResult="${{ needs.exporter-validation.result }}"
           viewersResult="${{ needs.viewer-validation.result }}"
-          spaResult="${{ needs.spa-frontend-validation.result }}"
 
           fail=0
 
@@ -490,11 +446,6 @@ jobs:
 
           if [ "$viewersChanged" = "true" ] && [ "$viewersResult" != "success" ]; then
             echo "Viewer validation failed or was not run (result: $viewersResult)"
-            fail=1
-          fi
-
-          if [ "$spaChanged" = "true" ] && [ "$spaResult" != "success" ]; then
-            echo "SPA validation failed or was not run (result: $spaResult)"
             fail=1
           fi
 

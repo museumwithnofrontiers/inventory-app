@@ -11,8 +11,16 @@ import type { ExportContext } from '../../src/core/types.js'
  */
 function contextWith(rows: Record<string, unknown[]>): ExportContext {
   const query = vi.fn(async (sql: string) => {
-    if (sql.includes('FROM languages')) return rows.languages
+    // collectProjectIds' member-item project lookup.
+    if (sql.includes('FROM items')) return rows.memberProjects ?? []
+    // The projects-section title lookup (buildProjectsSection) and the
+    // gallery-name lookup (siteLanguages/names) both touch
+    // collection_translations, but only the former JOINs it from `projects
+    // p` — check it first.
+    if (sql.includes('JOIN collection_translations')) return rows.projectTitles ?? []
     if (sql.includes('FROM collection_translations')) return rows.translations
+    if (sql.includes('FROM projects')) return rows.projects ?? []
+    if (sql.includes('FROM languages')) return rows.languages
     if (sql.includes('FROM language_translations')) return rows.labels
     throw new Error(`Unexpected query: ${sql}`)
   })
@@ -103,5 +111,82 @@ describe('ManifestExporter', () => {
       terms_url: 'https://www.museumwnf.org/about/legal-notice',
       attribution: 'Content © Museum With No Frontiers, used under the MWNF legal notice.',
     })
+  })
+
+  // Epic #1727 phase 2: a hybrid gallery's members carry several distinct
+  // source projects (not a per-export constant), plus the gallery's own
+  // native project even when it holds no member itself.
+  it('builds manifest.projects from the member items’ source projects plus the gallery’s own', async () => {
+    const context = contextWith({
+      languages: [{ id: 'eng', backward_compatibility: 'en' }],
+      translations: [],
+      labels: [],
+      memberProjects: [{ project_id: 'dca-uuid' }, { project_id: 'isl-uuid' }],
+      projects: [
+        {
+          id: 'dca-uuid',
+          backward_compatibility: 'mwnf3:projects:DCA',
+          site_url: 'https://carpets.museumwnf.org',
+          related_database_url: null,
+          artistic_introduction_url: null,
+        },
+        {
+          id: 'isl-uuid',
+          backward_compatibility: 'mwnf3:projects:ISL',
+          site_url: null,
+          related_database_url: null,
+          artistic_introduction_url: null,
+        },
+      ],
+      projectTitles: [{ project_id: 'dca-uuid', language_id: 'eng', title: 'Discover Carpet Art' }],
+    })
+    context.gallery.projectId = 'dca-uuid'
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as {
+      projects: Record<
+        string,
+        { name: Record<string, string>; site_url: string | null; related_database_url: string | null; artistic_introduction_url: string | null }
+      >
+    }
+    expect(manifest.projects).toEqual({
+      'dca-uuid': {
+        name: { en: 'Discover Carpet Art' },
+        site_url: 'https://carpets.museumwnf.org',
+        related_database_url: null,
+        artistic_introduction_url: null,
+      },
+      'isl-uuid': {
+        name: {},
+        site_url: null,
+        related_database_url: null,
+        artistic_introduction_url: null,
+      },
+    })
+  })
+
+  it('reports an empty projects section when the gallery has no native project and no members', async () => {
+    const context = contextWith({ languages: [], translations: [], labels: [] })
+    context.memberItemIds = []
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { projects: Record<string, unknown> }
+    expect(manifest.projects).toEqual({})
   })
 })

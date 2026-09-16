@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Static JSON data exporter for the Carpets gallery website (@metanull/carpets-data)",
+  "description": "Static JSON data exporter for the Carpets gallery website (@museumwnf/carpets-data)",
   "scripts": {
     "build": "tsc",
     "export": "tsx src/cli/export.ts",
@@ -17,7 +17,7 @@
     "chalk": "^6.0.0",
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
-    "mysql2": "^3.24.2"
+    "mysql2": "^3.24.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

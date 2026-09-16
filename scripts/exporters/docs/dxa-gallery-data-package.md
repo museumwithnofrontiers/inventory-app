@@ -4,9 +4,9 @@ Date: 2026-08-27 · Applies to every DXA Gallery site (pilots: **amulets**
 gallery 4/AMU, **carpets** gallery 9/DCA; generalizes to the ~38 gallery
 instances). Requirements source: `dxa-legacy-analysis.md`.
 
-One package per gallery website: `@metanull/<site>-data` with `<site>` the
-kebab-cased legacy slug (`amulets`, `carpets` — decision Q4). Produced by a
-discrete exporter per site
+One package per gallery website, published to npmjs: `@museumwnf/<site>-data`
+with `<site>` the kebab-cased legacy slug (`amulets`, `carpets` — decision Q4).
+Produced by a discrete exporter per site
 (`scripts/exporters/<site>`), reading the production inventory DB. Exporters
 are read-only; media stays out of the package (absolute URLs to
 `https://inventory.metanull.eu/pub/…`).
@@ -67,6 +67,33 @@ that every entity is loaded lazily:
 The website offers `site.languages` where the item translation files actually
 carry the language (`offeredLanguages()` in viewer-core), and takes its name
 from `site.names`.
+
+Also (epic #1727 phase 2, additive): `manifest.projects`, one entry per
+project UUID referenced by anything this package ships — the source project
+of every member item (a hybrid gallery borrows from several — see
+`items.json`'s `project_id`), plus the gallery's own native project even when
+it happens to hold no member itself, keyed by that UUID:
+
+```jsonc
+"projects": {
+  "<project uuid>": {
+    "name": { "en": "Discover Carpet Art", "ar": "…" },  // from the sibling
+                                                          // Collection's translations,
+                                                          // joined by matching
+                                                          // backward_compatibility —
+                                                          // Project itself has none
+    "site_url": "https://carpets.museumwnf.org" | null,
+    "related_database_url": "https://…" | null,
+    "artistic_introduction_url": "https://…" | null
+  }
+}
+```
+
+The three URL columns are nullable `projects` columns populated at import
+time from a legacy-key map (epic #1727 phase 1, #1753/#1756) — a project this
+fork has never seen a URL for simply reports `null` for all three. `items.json`
+keeps its own `project_key` field for now (removal is the cleanup wave);
+`partners.json` gets the parallel `project_uuids` field described below.
 
 ## gallery.json (new)
 
@@ -244,6 +271,13 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
   partner holds no member item and so has nothing to resolve from; it
   reports the gallery's own project instead, since that branch means the
   partner belongs to it regardless.
+- **`project_uuids`** (epic #1727 phase 2, additive): the same membership as
+  `project_ids`, as raw project UUIDs instead of legacy keys, resolved from
+  the held items' own `project_id` column (never from `itemProjectKeys`) —
+  same MWNF-384 fallback, using the gallery's `projectId` UUID instead of its
+  legacy key. Shipped under a new field name during the transition (decision
+  4) so old and new consumers can never silently misread the array;
+  `project_ids` stays untouched until the cleanup wave.
 
 One shape across every dataset (decision D4, metanull/inventory-app#1699):
 every `partners.json` row carries `level`, `parent_id`, `project_ids`,

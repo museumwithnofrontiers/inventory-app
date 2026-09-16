@@ -179,9 +179,15 @@ export class PublishManager {
 
   generateReadme(packageName: string): string {
     const projectList = this.config.projectKeys.join(', ')
-    const installLine = this.config.registry
-      ? `npm install ${packageName} --registry ${this.config.registry}`
-      : `npm install ${packageName}`
+    // npmjs is npm's own default registry: naming it explicitly in the
+    // example would be correct but redundant, so the flag only appears for a
+    // genuinely different registry (e.g. GitHub Packages, still in use for
+    // versions published before this package's move to npmjs).
+    const isDefaultRegistry =
+      !this.config.registry || this.config.registry.replace(/\/$/, '') === 'https://registry.npmjs.org'
+    const installLine = isDefaultRegistry
+      ? `npm install ${packageName}`
+      : `npm install ${packageName} --registry ${this.config.registry}`
 
     return `# ${packageName}
 
@@ -240,6 +246,11 @@ full terms). The notice text also ships in this package as \`LICENSE.md\`.
     if (this.config.registry) {
       args.push('--registry', this.config.registry)
     }
+    // Scoped packages default to private on npmjs; these are meant to be
+    // public (non-commercial MWNF data, no npmjs org billing for private
+    // scoped packages either way). --access is a no-op against GitHub
+    // Packages, which derives visibility from the repository instead.
+    args.push('--access', 'public')
 
     this.config.logger.info(`Running: npm ${args.join(' ')}`)
 

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "Static JSON data exporter for The Use of Colours in Art exhibition website (@metanull/the-use-of-colours-in-art-data)",
+  "description": "Static JSON data exporter for The Use of Colours in Art exhibition website (@museumwnf/the-use-of-colours-in-art-data)",
   "scripts": {
     "build": "tsc",
     "export": "tsx src/cli/export.ts",
@@ -17,7 +17,7 @@
     "chalk": "^6.0.0",
     "commander": "^15.0.0",
     "dotenv": "^17.4.2",
-    "mysql2": "^3.24.2"
+    "mysql2": "^3.24.4"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

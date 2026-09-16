@@ -31,7 +31,8 @@ class FindCollectionCommandTest extends TestCase
         ?string $backwardCompatibility,
         string $internalName,
         string $title,
-        ?string $parentId = null
+        ?string $parentId = null,
+        ?string $slug = null
     ): Collection {
         $collection = Collection::factory()->create([
             'type' => $type,
@@ -40,6 +41,7 @@ class FindCollectionCommandTest extends TestCase
             'language_id' => $this->english->id,
             'context_id' => $this->defaultContext->id,
             'parent_id' => $parentId,
+            'extra' => $slug !== null ? ['thg_gallery' => ['slug' => $slug]] : null,
         ]);
 
         CollectionTranslation::factory()->create([
@@ -268,5 +270,115 @@ class FindCollectionCommandTest extends TestCase
         $this->assertSame('thg_galleries_root', $payload['parent_internal_name']);
         $this->assertSame('mwnf3_thematic_gallery:thg_gallery:9', $payload['backward_compatibility']);
         $this->assertSame(['eng' => 'Carpets'], $payload['titles']);
+    }
+
+    public function test_resolves_a_gallery_by_legacy_slug(): void
+    {
+        $collection = $this->createCollectionWithTitle(
+            Collection::TYPE_GALLERY,
+            'mwnf3_thematic_gallery:thg_gallery:9',
+            'gallery_carpets',
+            'Carpets',
+            null,
+            'carpets'
+        );
+
+        $this->artisan('importer:find-collection', ['kind' => 'gallery', 'selector' => 'carpets'])
+            ->assertExitCode(0)
+            ->expectsOutputToContain($collection->id);
+    }
+
+    public function test_resolves_an_exhibition_by_a_hyphenated_legacy_slug(): void
+    {
+        // The legacy slug and the further-slugified internal_name diverge
+        // whenever the slug itself contains a hyphen — the raw slug
+        // ("the-use-of-colours-in-art") must be matched verbatim, not the
+        // underscored internal_name form.
+        $collection = $this->createCollectionWithTitle(
+            Collection::TYPE_EXHIBITION,
+            'mwnf3_thematic_gallery:thg_gallery:47',
+            'exhibition_the_use_of_colours_in_art',
+            'The Use of Colours in Art',
+            null,
+            'the-use-of-colours-in-art'
+        );
+
+        $this->artisan('importer:find-collection', ['kind' => 'exhibition', 'selector' => 'the-use-of-colours-in-art'])
+            ->assertExitCode(0)
+            ->expectsOutputToContain($collection->id);
+    }
+
+    public function test_slug_match_is_case_sensitive(): void
+    {
+        // Title deliberately differs from the slug so this isolates slug
+        // case-sensitivity rather than incidentally matching by title.
+        $this->createCollectionWithTitle(
+            Collection::TYPE_GALLERY,
+            'mwnf3_thematic_gallery:thg_gallery:9',
+            'gallery_carpets',
+            'Handwoven Carpets',
+            null,
+            'carpets'
+        );
+
+        $this->artisan('importer:find-collection', ['kind' => 'gallery', 'selector' => 'CARPETS'])
+            ->assertExitCode(1)
+            ->expectsOutputToContain('No gallery collection found');
+    }
+
+    public function test_slug_does_not_leak_across_kinds(): void
+    {
+        // A gallery and an unrelated exhibition happen to share the same
+        // legacy slug value — type-scoping (baseQuery()) must keep a
+        // kind=gallery slug lookup from matching the exhibition, and vice
+        // versa, so this must resolve cleanly rather than report ambiguity.
+        $gallery = $this->createCollectionWithTitle(
+            Collection::TYPE_GALLERY,
+            'mwnf3_thematic_gallery:thg_gallery:9',
+            'gallery_shared_slug',
+            'Carpets',
+            null,
+            'shared-slug'
+        );
+        $this->createCollectionWithTitle(
+            Collection::TYPE_EXHIBITION,
+            'mwnf3_thematic_gallery:thg_gallery:47',
+            'exhibition_shared_slug',
+            'Colours',
+            null,
+            'shared-slug'
+        );
+
+        $this->artisan('importer:find-collection', ['kind' => 'gallery', 'selector' => 'shared-slug'])
+            ->assertExitCode(0)
+            ->expectsOutputToContain($gallery->id);
+    }
+
+    public function test_reports_ambiguity_when_a_selector_matches_two_collections_via_different_forms(): void
+    {
+        // Selector "9" is gallery_a's legacy numeric id AND, independently,
+        // gallery_b's legacy slug — the union-based resolution (numeric id +
+        // slug + title, merged, deduplicated by collection) must treat this
+        // as genuinely ambiguous rather than only trying the numeric form.
+        $byId = $this->createCollectionWithTitle(
+            Collection::TYPE_GALLERY,
+            'mwnf3_thematic_gallery:thg_gallery:9',
+            'gallery_by_id',
+            'Carpets'
+        );
+        $bySlug = $this->createCollectionWithTitle(
+            Collection::TYPE_GALLERY,
+            'mwnf3_thematic_gallery:thg_gallery:4',
+            'gallery_by_slug',
+            'Amulets',
+            null,
+            '9'
+        );
+
+        $this->artisan('importer:find-collection', ['kind' => 'gallery', 'selector' => '9'])
+            ->assertExitCode(1)
+            ->expectsOutputToContain('Ambiguous')
+            ->expectsOutputToContain($byId->id)
+            ->expectsOutputToContain($bySlug->id);
     }
 }

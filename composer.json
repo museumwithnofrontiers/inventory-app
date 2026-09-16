@@ -70,7 +70,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74,#a78bfa\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" \"npm --prefix spa run dev\" --names='server,queue,vite,spa'"
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
         ],
         "pint": [
             "Composer\\Config::disableProcessTimeout",
@@ -172,11 +172,7 @@
         "ci-openapi-doc": [
             "@php -r \"if (!is_dir('docs/_openapi')) { mkdir('docs/_openapi', 0755, true); }\"",
             "@php artisan optimize:clear --ansi",
-            "@php artisan scramble:export --path=docs/_openapi/api.json --ansi",
-            "pwsh -Command \"if (Test-Path 'api-client') { Remove-Item -Path 'api-client' -Recurse -Force }\"",
-            "pwsh -Command \"if (Test-Path 'temp_openapi_generation.log') { Clear-Content -Path 'temp_openapi_generation.log' -Force }\"",
-            "pwsh -Command \"if (-not (Test-Path 'api-client')) { New-Item -ItemType Directory -Path 'api-client' | Out-Null }\"",
-            "pwsh -Command \". ./scripts/generate-api-client.ps1 -Force 2>&1| Tee-Object -FilePath 'temp_openapi_generation.log' -Encoding UTF8\""
+            "@php artisan scramble:export --path=docs/_openapi/api.json --ansi"
         ],
         "ci-model-doc": [
             "@php artisan docs:models --force --ansi"

@@ -77,10 +77,13 @@ interface GroupMembershipRow {
 
 // item_id -> partner_id, for the member items actually held here — used to
 // resolve project_ids via itemProjectKeys the same way item_count is derived,
-// so the two fields never disagree about which items back them.
+// so the two fields never disagree about which items back them. project_id
+// is the item's own project UUID, used the same way to resolve project_uuids
+// (epic #1727 decision 4).
 interface PartnerHeldItemRow {
   partner_id: string
   item_id: string
+  project_id: string | null
 }
 
 /**
@@ -244,7 +247,7 @@ export class PartnerExporter extends BaseExporter {
       // The member items counted into item_count, by partner — resolved to
       // project_ids via itemProjectKeys below.
       this.db.query<PartnerHeldItemRow>(
-        `SELECT partner_id, id AS item_id
+        `SELECT partner_id, id AS item_id, project_id
          FROM items
          WHERE partner_id IN (${partnerPh})
            AND id IN (${itemPh})`,
@@ -343,11 +346,20 @@ export class PartnerExporter extends BaseExporter {
     // what "the projects this partner belongs to" means for a partner whose
     // held items were borrowed from elsewhere, not just the exhibition's own).
     const projectIdsMap = new Map<string, Set<string>>()
+    // partner_id -> project UUIDs of the same held items, keyed by UUID
+    // instead of legacy key (epic #1727 decision 4, new `project_uuids`
+    // field) — same membership as projectIdsMap, same MWNF-384 fallback below.
+    const projectUuidsMap = new Map<string, Set<string>>()
     for (const row of heldItems) {
       const key = this.context.itemProjectKeys.get(row.item_id)
-      if (!key) continue
-      if (!projectIdsMap.has(row.partner_id)) projectIdsMap.set(row.partner_id, new Set())
-      projectIdsMap.get(row.partner_id)!.add(key)
+      if (key) {
+        if (!projectIdsMap.has(row.partner_id)) projectIdsMap.set(row.partner_id, new Set())
+        projectIdsMap.get(row.partner_id)!.add(key)
+      }
+      if (row.project_id) {
+        if (!projectUuidsMap.has(row.partner_id)) projectUuidsMap.set(row.partner_id, new Set())
+        projectUuidsMap.get(row.partner_id)!.add(row.project_id)
+      }
     }
 
     const output: Partner[] = partners.map(partner => {
@@ -363,6 +375,15 @@ export class PartnerExporter extends BaseExporter {
           : itemCount === 0 && this.exhibition.mwnf3ProjectId
             ? [this.exhibition.mwnf3ProjectId]
             : []
+      // Same MWNF-384 fallback, in UUIDs: exhibition.projectId is already
+      // the inventory UUID of that same native project.
+      const heldProjectUuids = projectUuidsMap.get(partner.id)
+      const projectUuids =
+        heldProjectUuids && heldProjectUuids.size > 0
+          ? [...heldProjectUuids]
+          : itemCount === 0 && this.exhibition.projectId
+            ? [this.exhibition.projectId]
+            : []
       return {
         id: partner.id,
         type: partner.type,
@@ -375,6 +396,7 @@ export class PartnerExporter extends BaseExporter {
         level: levelMap.get(partner.id) ?? null,
         parent_id: parentMap.get(partner.id) ?? null,
         project_ids: projectIds,
+        project_uuids: projectUuids,
         // Member items held here — the count the partners list prints, and the
         // reason a partner appears at all.
         item_count: itemCount,

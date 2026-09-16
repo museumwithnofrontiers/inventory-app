@@ -292,6 +292,10 @@ export class PartnerExporter extends BaseExporter {
     // same way legacy keeps separate pages per project (pm_partner_list.php vs
     // pm_partner_list_eiac.php).
     const projectIdsMap = new Map<string, Set<string>>()
+    // partner_id -> project UUIDs this partner is curated under — same
+    // membership as projectIdsMap above, keyed by UUID instead of legacy key
+    // (epic #1727 decision 4, new `project_uuids` field).
+    const projectUuidsMap = new Map<string, Set<string>>()
     for (const row of levels) {
       if (!row.level) continue
       const current = levelMap.get(row.partner_id)
@@ -303,6 +307,8 @@ export class PartnerExporter extends BaseExporter {
         if (!projectIdsMap.has(row.partner_id)) projectIdsMap.set(row.partner_id, new Set())
         projectIdsMap.get(row.partner_id)!.add(key)
       }
+      if (!projectUuidsMap.has(row.partner_id)) projectUuidsMap.set(row.partner_id, new Set())
+      projectUuidsMap.get(row.partner_id)!.add(row.project_id)
     }
 
     // collection_id -> owner partner_id (the member with level='partner')
@@ -331,6 +337,7 @@ export class PartnerExporter extends BaseExporter {
       level: levelMap.get(p.id) ?? null,
       parent_id: parentMap.get(p.id) ?? null,
       project_ids: [...(projectIdsMap.get(p.id) ?? [])],
+      project_uuids: [...(projectUuidsMap.get(p.id) ?? [])],
       item_count: itemCountMap.get(p.id) ?? 0,
       // Legacy `showOnPortal`. The home page shows a random subset of the
       // featured partners, so the package ships the flag and the viewer picks.

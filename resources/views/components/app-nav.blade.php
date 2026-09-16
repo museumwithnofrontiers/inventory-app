@@ -170,18 +170,13 @@
 
                 <!-- Resources Dropdown -->
                 <div class="relative" @mouseenter="openMenu='resources'" @mouseleave="openMenu=null">
-                    <button @click="openMenu = openMenu==='resources'? null : 'resources'" type="button" class="inline-flex items-center gap-1 px-2 py-1 rounded-md font-medium {{ request()->is('cli*') ? 'text-indigo-700 bg-indigo-50' : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50' }}">
+                    <button @click="openMenu = openMenu==='resources'? null : 'resources'" type="button" class="inline-flex items-center gap-1 px-2 py-1 rounded-md font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50">
                         <x-heroicon-o-circle-stack class="w-4 h-4" /> Resources
                         <span class="w-4 h-4 transition" x-bind:class="openMenu==='resources' ? 'rotate-180' : ''">
                             <x-heroicon-o-chevron-down class="w-4 h-4" />
                         </span>
                     </button>
                     <div x-show="openMenu==='resources'" x-transition x-cloak @click.outside="openMenu=null" class="absolute z-30 mt-2 w-60 rounded-md border border-gray-200 bg-white shadow-lg py-2">
-                        @if(config('interface.show_spa_link'))
-                        <a href="{{ config('interface.spa_url') }}" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                            <x-heroicon-o-window class="w-4 h-4" /> SPA Client
-                        </a>
-                        @endif
                         <a href="{{ url('/docs/api') }}" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             <x-heroicon-o-book-open class="w-4 h-4" /> API Docs
                         </a>
@@ -371,9 +366,6 @@
             @endcan
             <div class="space-y-2">
                 <p class="text-[11px] font-semibold text-gray-400 uppercase">Resources</p>
-                @if(config('interface.show_spa_link'))
-                <a href="{{ config('interface.spa_url') }}" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">SPA Client</a>
-                @endif
                 <a href="{{ url('/docs/api') }}" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">API Docs</a>
                 <a href="https://github.com/metanull/inventory-app" target="_blank" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">Source Code</a>
                 <a href="https://metanull.github.io/inventory-app" target="_blank" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">Project Docs</a>

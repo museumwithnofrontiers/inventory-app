@@ -30,7 +30,8 @@ class ListCollectionsCommandTest extends TestCase
         string $type,
         ?string $backwardCompatibility,
         string $internalName,
-        string $title
+        string $title,
+        ?string $slug = null
     ): Collection {
         $collection = Collection::factory()->create([
             'type' => $type,
@@ -39,6 +40,7 @@ class ListCollectionsCommandTest extends TestCase
             'language_id' => $this->english->id,
             'context_id' => $this->defaultContext->id,
             'parent_id' => null,
+            'extra' => $slug !== null ? ['thg_gallery' => ['slug' => $slug]] : null,
         ]);
 
         CollectionTranslation::factory()->create([
@@ -112,13 +114,14 @@ class ListCollectionsCommandTest extends TestCase
             ->doesntExpectOutputToContain('Galleries');
     }
 
-    public function test_outputs_legacy_selector_title_uuid_and_internal_name_as_json(): void
+    public function test_outputs_legacy_selector_slug_title_uuid_and_internal_name_as_json(): void
     {
         $collection = $this->createCollectionWithTitle(
             Collection::TYPE_GALLERY,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
-            'Carpets'
+            'Carpets',
+            'carpets'
         );
 
         // See the note on test_lists_every_gallery_with_its_selectors(): a
@@ -132,6 +135,7 @@ class ListCollectionsCommandTest extends TestCase
         $this->assertIsArray($rows);
         $this->assertCount(1, $rows);
         $this->assertSame('9', $rows[0]['legacy_selector']);
+        $this->assertSame('carpets', $rows[0]['slug']);
         $this->assertSame('Carpets', $rows[0]['english_title']);
         $this->assertSame($collection->id, $rows[0]['id']);
         $this->assertSame('gallery_carpets', $rows[0]['internal_name']);
@@ -151,6 +155,25 @@ class ListCollectionsCommandTest extends TestCase
         $this->assertIsArray($rows);
         $this->assertCount(1, $rows);
         $this->assertNull($rows[0]['legacy_selector']);
+        $this->assertNull($rows[0]['slug']);
         $this->assertSame('Orphan Gallery', $rows[0]['english_title']);
+    }
+
+    public function test_shows_the_legacy_slug_in_the_table_listing(): void
+    {
+        $this->createCollectionWithTitle(
+            Collection::TYPE_EXHIBITION,
+            'mwnf3_thematic_gallery:thg_gallery:47',
+            'exhibition_the_use_of_colours_in_art',
+            'The Use of Colours in Art',
+            'the-use-of-colours-in-art'
+        );
+
+        $exitCode = Artisan::call('importer:list-collections', ['kind' => 'exhibition']);
+        $output = Artisan::output();
+
+        $this->assertSame(0, $exitCode);
+        $this->assertStringContainsString('Slug', $output);
+        $this->assertStringContainsString('the-use-of-colours-in-art', $output);
     }
 }

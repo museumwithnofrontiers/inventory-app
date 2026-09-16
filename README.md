@@ -13,7 +13,6 @@ The Inventory Management System is the digital backbone of **Museum With No Fron
 - 📚 **[Full Documentation](https://metanull.github.io/inventory-app/)** — Complete guides and references
 - 📖 **[Core Concepts](https://metanull.github.io/inventory-app/concepts)** — Understand what the system does (start here)
 - 🔌 **[API Documentation](http://localhost:8000/docs/api)** — Interactive Swagger UI (when running locally)
-- 📦 **[npm Package](https://github.com/metanull/inventory-app/packages)** — TypeScript API client
 
 ## What the System Does
 
@@ -32,8 +31,6 @@ This **monorepo** contains:
 | --------- | ----------- |
 | **Web Interface** | The main production UI — server-rendered pages for managing all inventory data (Blade/Livewire) |
 | **REST API** | Authenticated endpoints for programmatic access, with OpenAPI documentation |
-| **TypeScript API Client** | Auto-generated npm package for consuming the API from external applications |
-| **SPA Demo** | A Vue 3 reference app showing how to use the API client (not for production use) |
 | **Documentation Site** | Jekyll-based docs deployed to GitHub Pages |
 
 ### Pipelines Status
@@ -42,7 +39,6 @@ This **monorepo** contains:
 [![CodeQL](https://github.com/metanull/inventory-app/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/github-code-scanning/codeql)
 [![Build](https://github.com/metanull/inventory-app/actions/workflows/build.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/build.yml)
 [![GitHub Pages](https://github.com/metanull/inventory-app/actions/workflows/continuous-deployment_github-pages.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/continuous-deployment_github-pages.yml)
-[![Publish API Client](https://github.com/metanull/inventory-app/actions/workflows/publish-api-client.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/publish-api-client.yml)
 [![Dependabot](https://github.com/metanull/inventory-app/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/dependabot/dependabot-updates)
 
 ## Getting Started
@@ -195,7 +191,6 @@ of the container's own `DB_CONNECTION`, so tests never touch the dev database:
 ```bash
 docker compose exec app composer test                            # everything
 docker compose exec app php artisan test --testsuite=Api         # one suite
-docker compose run --rm --workdir /var/www/app/spa tools npm test # SPA demo
 ```
 
 ### Ports and volumes
@@ -232,38 +227,6 @@ nor removes them, and their names use a hyphen rather than the underscore
 Compose gives its own. Create them once before the first import, and see
 [scripts/import-tool/README.md](scripts/import-tool/README.md) for backup and
 restore.
-
-## Using the API Client (External Developers)
-
-To consume the API from your own application, use the auto-generated TypeScript client:
-
-1. **Configure npm** — create `.npmrc` in your project:
-
-    ```ini
-    @metanull:registry=https://npm.pkg.github.com
-    //npm.pkg.github.com/:_authToken=YOUR_GITHUB_TOKEN
-    ```
-
-    Get a [GitHub PAT](https://github.com/settings/tokens) with `read:packages` permission.
-
-2. **Install**
-
-    ```bash
-    npm install @metanull/inventory-app-api-client@latest
-    ```
-
-3. **Use**
-
-    ```typescript
-    import { Configuration, DefaultApi } from '@metanull/inventory-app-api-client';
-
-    const api = new DefaultApi(new Configuration({
-      basePath: 'https://your-api-url.com'
-    }));
-
-    const items = await api.itemIndex();
-    console.log(items.data);
-    ```
 
 ## Contributing
 

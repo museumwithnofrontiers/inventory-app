@@ -136,16 +136,6 @@
 			"detail": "npm audit (.)"
 		},
 		{
-			"label": "audit:npm:spa",
-			"type": "shell",
-			"command": "npm audit",
-			"group": "build",
-			"options": { "cwd": "${workspaceFolder}/spa" },
-			"presentation": { "reveal": "always", "panel": "shared" },
-			"problemMatcher": [],
-			"detail": "npm audit (spa/)"
-		},
-		{
 			"label": "audit:npm:importer",
 			"type": "shell",
 			"command": "npm audit",
@@ -160,21 +150,20 @@
 			"dependsOn": [
 				"audit:composer",
 				"audit:npm",
-				"audit:npm:spa",
 				"audit:npm:importer"
 			],
 			"dependsOrder": "sequence",
 			"group": "build",
 			"presentation": { "reveal": "always", "panel": "shared" },
 			"problemMatcher": [],
-			"detail": "composer audit + npm audit (., spa/, scripts/importer/)"
+			"detail": "composer audit + npm audit (., scripts/importer/)"
 		},
 
 		// ── Docker dev container shell ────────────────────────────────────────────
 		{
 			"label": "docker:shell",
 			"type": "shell",
-			"command": "docker run --rm -it -v \"${workspaceFolder}:/workspaces/inventory-app\" -v inv-app-php-vendor:/workspaces/inventory-app/vendor -v inv-app-node-modules:/workspaces/inventory-app/node_modules -v inv-app-spa-node-modules:/workspaces/inventory-app/spa/node_modules -v inv-app-importer-node-modules:/workspaces/inventory-app/scripts/importer/node_modules -w /workspaces/inventory-app inventory-app-dev bash",
+			"command": "docker run --rm -it -v \"${workspaceFolder}:/workspaces/inventory-app\" -v inv-app-php-vendor:/workspaces/inventory-app/vendor -v inv-app-node-modules:/workspaces/inventory-app/node_modules -v inv-app-importer-node-modules:/workspaces/inventory-app/scripts/importer/node_modules -w /workspaces/inventory-app inventory-app-dev bash",
 			"group": "none",
 			"options": { "cwd": "${workspaceFolder}" },
 			"presentation": { "reveal": "always", "panel": "new", "focus": true },

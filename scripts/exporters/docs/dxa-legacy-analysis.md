@@ -288,8 +288,9 @@ Residual items to verify during exporter implementation (not blockers):
   gracefully for the rest.
 - **Q4 — Naming: full legacy slugs**, kebab-cased for folders and packages:
   `amulets`, `carpets`, `the-use-of-colours-in-art`, `water-in-islam`
-  (`@metanull/<name>-data`). Data values keep the original underscore slugs
-  (`the_use_of_colours_in_art`) since they are legacy identity.
+  (`@museumwnf/<name>-data`, published to npmjs). Data values keep the
+  original underscore slugs (`the_use_of_colours_in_art`) since they are
+  legacy identity.
 - **Q6 — Deduplicated Explore monuments: no new persistence** (2026-08-28,
   during [#1593](https://github.com/metanull/inventory-app/issues/1593)). When
   the importer merges an Explore monument into an already-imported record, the

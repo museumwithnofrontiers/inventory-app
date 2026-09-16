@@ -3,7 +3,6 @@
     "phpunit.php": "/usr/local/bin/php",
     "phpunit.phpunit": "vendor/bin/pest",
     "phpunit.args": ["--no-coverage"],
-    "vitest.rootConfig": "./spa/vitest.config.ts",
     "eslint.workingDirectories": [
         { "mode": "auto" }
     ],

@@ -50,9 +50,3 @@ The sections below cover how the frontend is built. They are useful for develope
 - [Core Model]({{ '/understanding/core-model' | relative_url }}) - Understand the business model
 - [Database Models]({{ '/models/' | relative_url }}) - Data structure reference
 - [Management API Reference]({{ '/api/' | relative_url }}) - REST API for programmatic access
-
----
-
-{: .note }
-
-> For the Vue.js sample application (a reference for external API consumers), see [Vue.js Sample App]({{ '/frontend-vue-sample/' | relative_url }}).

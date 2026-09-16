@@ -10,7 +10,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 // The data package is resolved at build time, in this order:
 //
 //   1. DATA_PACKAGE — an npm package name *or* a directory path. Explicit wins.
-//   2. @metanull/water-in-islam-data — the published package. This
+//   2. @museumwnf/water-in-islam-data — the published package. This
 //      is what `npm install` brings in, and what CI and the deploy workflow
 //      build against.
 //   3. ../../exporters/water-in-islam/output/water-in-islam
@@ -50,7 +50,7 @@ function resolveDataPackage() {
     )
   }
 
-  const published = asPackage('@metanull/water-in-islam-data')
+  const published = asPackage('@museumwnf/water-in-islam-data')
   if (published) return published
 
   const local = asDirectory(
@@ -61,7 +61,7 @@ function resolveDataPackage() {
   throw new Error(
     'No Water in Islam data package found.\n' +
     '\n' +
-    'This viewer reads @metanull/water-in-islam-data when it is\n' +
+    'This viewer reads @museumwnf/water-in-islam-data when it is\n' +
     'installed, and falls back to the exporter output at\n' +
     'scripts/exporters/water-in-islam/output/water-in-islam.\n' +
     'Neither is present. Produce the local export with:\n' +

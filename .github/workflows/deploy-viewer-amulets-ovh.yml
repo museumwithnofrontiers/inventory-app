@@ -14,7 +14,6 @@ concurrency:
 
 permissions:
   contents: read
-  packages: read   # Required to pull @metanull/amulets-data from GitHub Packages
 
 jobs:
 
@@ -33,22 +32,16 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "lts/Krypton"
-          registry-url: https://npm.pkg.github.com/
-          scope: "@metanull"
 
       - name: Install dependencies
         working-directory: scripts/viewers/amulets
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm ci --no-audit --no-fund
 
       - name: Update data package to latest published version
         working-directory: scripts/viewers/amulets
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Always pull the newest @metanull/amulets-data regardless of what
+        # Always pull the newest @museumwnf/amulets-data regardless of what
         # is pinned in package-lock.json — the viewer must reflect current data.
-        run: npm install @metanull/amulets-data@latest --no-audit --no-fund
+        run: npm install @museumwnf/amulets-data@latest --no-audit --no-fund
 
       - name: Build viewer
         working-directory: scripts/viewers/amulets

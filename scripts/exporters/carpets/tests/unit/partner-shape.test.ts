@@ -114,7 +114,7 @@ describe('PartnerExporter — shared partner shape', () => {
     rmSync(outputDir, { recursive: true, force: true })
   })
 
-  it('reports null level/parent_id and empty project_ids for an uncurated partner with no held item', async () => {
+  it('reports null level/parent_id and empty project_ids/project_uuids for an uncurated partner with no held item', async () => {
     const db = stubDb({ partners: [partnerRow('partner-a', 0)] })
     await new PartnerExporter(context(db, null)).export()
 
@@ -122,6 +122,7 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(output?.level).toBeNull()
     expect(output?.parent_id).toBeNull()
     expect(output?.project_ids).toEqual([])
+    expect(output?.project_uuids).toEqual([])
   })
 
   it('derives level and parent_id from the curated partner_group hierarchy', async () => {
@@ -172,8 +173,8 @@ describe('PartnerExporter — shared partner shape', () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 2)],
       heldItems: [
-        { partner_id: 'partner-a', item_id: 'item-a' },
-        { partner_id: 'partner-a', item_id: 'item-b' },
+        { partner_id: 'partner-a', item_id: 'item-a', project_id: 'project-dca-uuid' },
+        { partner_id: 'partner-a', item_id: 'item-b', project_id: 'project-isl-uuid' },
       ],
     })
     await new PartnerExporter(context(db, 'project-dca-uuid', itemProjectKeys)).export()
@@ -181,10 +182,34 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(readOutput()[0]?.project_ids?.slice().sort()).toEqual(['DCA', 'ISL'])
   })
 
+  // Epic #1727 decision 4: project_uuids derives from the same held items as
+  // project_ids, but from the item's own project_id column rather than
+  // itemProjectKeys, so it never depends on the legacy-key resolution at all.
+  it('derives project_uuids (raw UUIDs) from the same held items as project_ids', async () => {
+    const itemProjectKeys = new Map([
+      ['item-a', 'DCA'],
+      ['item-b', 'ISL'],
+    ])
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 2)],
+      heldItems: [
+        { partner_id: 'partner-a', item_id: 'item-a', project_id: 'project-dca-uuid' },
+        { partner_id: 'partner-a', item_id: 'item-b', project_id: 'project-isl-uuid' },
+      ],
+    })
+    await new PartnerExporter(context(db, 'project-dca-uuid', itemProjectKeys)).export()
+
+    expect(readOutput()[0]?.project_uuids?.slice().sort()).toEqual([
+      'project-dca-uuid',
+      'project-isl-uuid',
+    ])
+  })
+
   it('reports the gallery own project for an MWNF-384 partner holding no item', async () => {
     const db = stubDb({ partners: [partnerRow('partner-orphan', 0)] })
     await new PartnerExporter(context(db, 'project-dca-uuid')).export()
 
     expect(readOutput()[0]?.project_ids).toEqual(['DCA'])
+    expect(readOutput()[0]?.project_uuids).toEqual(['project-dca-uuid'])
   })
 })

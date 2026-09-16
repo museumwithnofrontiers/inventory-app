@@ -1,6 +1,6 @@
 # Scripts
 
-The /scripts directory contains automation and helper scripts used for documentation, management of the API client npm package, etc.
+The /scripts directory contains automation and helper scripts used for documentation, deployment, and development, etc.
 
 ## Table of contents
 
@@ -18,12 +18,7 @@ The /scripts directory contains automation and helper scripts used for documenta
   - [Scripts used in CI/CD Workflows](#scripts-used-in-cicd-workflows)
     - [Auto-generation of the static documentation website](#auto-generation-of-the-static-documentation-website)
       - [Generating the Git Commit History](#generating-the-git-commit-history)
-      - [Generating the API client npm package's static documentation](#generating-the-api-client-npm-packages-static-documentation)
   - [Scripts used locally during development](#scripts-used-locally-during-development)
-    - [Auto-generation of the API client npm package](#auto-generation-of-the-api-client-npm-package)
-      - [Authenticating with GitHub Packages](#authenticating-with-github-packages)
-      - [Generating the API client npm package](#generating-the-api-client-npm-package)
-      - [Publishing the API client npm package to the GitHub Packages npm registry](#publishing-the-api-client-npm-package-to-the-github-packages-npm-registry)
     - [Generation of the static documentation website](#generation-of-the-static-documentation-website)
       - [Generating the static documentation website locally](#generating-the-static-documentation-website-locally)
       - [Running the static documentation website locally](#running-the-static-documentation-website-locally)
@@ -185,145 +180,7 @@ See:
 python scripts/generate-commit-docs.py
 ```
 
-#### Generating the API client npm package's static documentation
-
-Transforms the TypeScript API Client markdown files (auto-generated) into Jekyll-compatible markdown pages; fixes the relative hyperlinks they contain; and generates an Index markdown file.
-
-These files are integrated by Jekyll into the static documentation website under `/inventory-app/api-client/`.
-
-The script is called by CI workflows on push to main. 
-
-See:
-- [/.github/workflows/README.md](../.github/workflows/README.md#deploy-documentation-to-github-pages) for workflow details
-- [/docs/README.md](../docs/README.md#script-generate-api-client-documentation) for Jekyll integration
-
-**Script properties**
-
-| Property | Value |
-| --- | --- |
-| Script | `generate-client-docs.py` |
-| Invoker | Invoked by `.github/workflows/continuous-deployment_github-pages.yml` on **push** to **main**. See [/.github/workflows/README.md](../.github/workflows/README.md#deploy-documentation-to-github-pages) |
-| Input | `/api-client/docs/*.md` - These files are auto-generated during development and not directly suitable for integration by Jekyll. See [Generating the API client npm package](#generating-the-api-client-npm-package) |
-| Output | `/docs/api-client/*.md` |
-| Log | `/docs/client-docs.log` |
-
-**Links**
-
-| Reference | Url |
-| --- | --- |
-| Static documentation of the API client npm package | [https://metanull.github.io/inventory-app/api-client/](https://metanull.github.io/inventory-app/api-client/) |
-
-**Usage:**
-```bash
-# Requires TypeScript client to be generated first
-# See: (Generating the API client npm package)
-
-# Then generate documentation
-python scripts/generate-client-docs.py
-```
-
 ## Scripts used locally during development
-
-### Auto-generation of the API client npm package
-
-#### Authenticating with GitHub Packages
-
-Configures authentication with GitHub Packages by creating or updating the `.npmrc` file. It is required to install the API client npm package from the GitHub Packages npm repository.
-
-**Script properties**
-
-| Property | Value |
-| --- | --- |
-| Script | `Setup-GithubPackages.ps1` |
-| Invoker | Invoked by the developer **once**, or after changing their **Personal Access Token** |
-| Input | The script prompts information from the user |
-| Output | `/.npmrc` |
-| Log | **N/A** - The script writes to the terminal |
-
-**Usage**
-
-```powershell
-. ./scripts/Setup-GithubPackages.ps1
-```
-
-#### Generating the API client npm package
-
-Reads the specifications of the API exposed by the Laravel project, and generates:
-- an OpenApi documentation - `/docs/_openapi/api.json`
-- an API client npm package - `/api-client/*`.
-- static documentation of the npm package - `/api-client/docs/*.md`
-
-**Script properties**
-
-| Property | Value |
-| --- | --- |
-| Script | `generate-api-client.ps1` |
-| Invoker | Invoked by the developer after **change** to the **api** |
-| Input 1 | `/app` - The source code of the Laravel application |
-| Input 2 | `/scripts/api-client-config.psd1` - Configuration of API client generation scripts |
-| Output 1 | `/docs/_openapi/api.json` |
-| Output 2 | `/api-client/package.json`, `/api-client/*.ts` |
-| Output 3 | `/api-client/docs/*.md` |
-| Log | **N/A** - The script writes to the terminal |
-
-**Links**
-
-| Reference | Url |
-| --- | --- |
-| Documentation | [https://metanull.github.io/inventory-app/api/](https://metanull.github.io/inventory-app/api/) |
-| API's OpenAPI specification (*api.json*) | [https://metanull.github.io/inventory-app/api.json](https://metanull.github.io/inventory-app/api.json) |
-| Swagger UI for the API's OpenAPI specification | [https://metanull.github.io/inventory-app/swagger-ui.html](https://metanull.github.io/inventory-app/swagger-ui.html) |
-| API client npm package | [https://github.com/metanull?tab=packages&repo_name=inventory-app](https://github.com/metanull?tab=packages&repo_name=inventory-app) |
-| Static documentation of the API client npm package | [https://metanull.github.io/inventory-app/api-client/](https://metanull.github.io/inventory-app/api-client/) |
-
-**Usage**
-
-**IMPORTANT**: **DO** use the composer command `composer ci-openapi-doc`, as it **first** generates up to date *api.json* **then** calls *generate-api-client.ps1*
-
-```powershell
-composer ci-openapi-doc
-```
-
-Alternatively, use:
-
-```powershell
-# Update the OpenAPI specification (/docs/_openapi/api.json)
-# php artisan scramble:export --path=docs/_openapi/api.json --ansi
-
-# Generate the API client npm package
-#. ./scripts/generate-api-client.ps1
-```
-
-#### Publishing the API client npm package to the GitHub Packages npm registry
-
-Publishes the API client npm package to the [GitHub Packages](https://docs.github.com/en/packages) npm registry
-
-**Script properties**
-
-| Property | Value |
-| --- | --- |
-| Script | `publish-api-client.ps1` |
-| Invoker | Invoked by the developer after [Generating the API client npm package](#generating-the-api-client-npm-package) |
-| Input 1 |  `/api-client/package.json`, `/api-client/*.ts`. See [Generating the API client npm package](#generating-the-api-client-npm-package) |
-| Input 2 | User's GitHub personal access token, with adequate permissions |
-| Output | [https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client](https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client) |
-| Log | **N/A** - The script writes to the terminal |
-
-**Links**
-
-| Reference | Url |
-| --- | --- |
-| GitHub Packages | [https://docs.github.com/en/packages](https://docs.github.com/en/packages) |
-| *@metanull/inventory-app-api-client* | [https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client](https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client) |
-| GitHub Packages in inventory-app | [https://github.com/metanull?tab=packages&repo_name=inventory-app](https://github.com/metanull?tab=packages&repo_name=inventory-app) |
-
-**Usage**
-
-```powershell
-# Requires API client npm package to be generated
-# Requires GitHub Personal Access Token
-. ./scripts/publish-api-client.ps1 -Credential (Get-Credential)
-```
 
 ### Generation of the static documentation website
 
@@ -471,8 +328,7 @@ All parameters are auto-detected from your current working directory if not prov
 4. Checks out the specified branch
 5. Installs PHP and NPM dependencies (production flags)
 6. Builds backend assets
-7. Builds SPA assets
-8. Cleans up temporary files
+7. Cleans up temporary files
 
 **Exit codes**
 - **0**: Success

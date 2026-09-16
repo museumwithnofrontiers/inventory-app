@@ -243,37 +243,10 @@ Use separate `.env` files for each environment:
 - `.env.staging` - Staging
 - `.env.production` - Production
 
-## API Client Configuration
-
-When using the API from a frontend application:
-
-```typescript
-// Configure API client
-import { Configuration, DefaultApi } from "@metanull/inventory-app-api-client";
-
-const config = new Configuration({
-  basePath: "https://api.example.com",
-  credentials: "include", // Include cookies/auth tokens
-});
-
-const api = new DefaultApi(config);
-```
-
-Ensure your HTTP client sends credentials:
-
-```typescript
-// Axios
-axios.defaults.withCredentials = true;
-
-// Fetch
-fetch(url, { credentials: "include" });
-```
-
 ## Related Documentation
 
 - [Mozilla CORS Documentation](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS)
 - [Laravel CORS Package](https://github.com/fruitcake/laravel-cors)
-- [API Integration Guidelines](/frontend-vue-sample/guidelines/api-integration)
 - [Trusted Proxy Configuration](/deployment/trusted-proxies)
 
 ## GitHub Pages Deployment Example

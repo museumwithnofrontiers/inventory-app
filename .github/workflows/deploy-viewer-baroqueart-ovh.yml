@@ -14,7 +14,6 @@ concurrency:
 
 permissions:
   contents: read
-  packages: read   # Required to pull @metanull/baroqueart-data from GitHub Packages
 
 jobs:
 
@@ -33,22 +32,16 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: "lts/Krypton"
-          registry-url: https://npm.pkg.github.com/
-          scope: "@metanull"
 
       - name: Install dependencies
         working-directory: scripts/viewers/baroqueart
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm ci --no-audit --no-fund
 
       - name: Update data package to latest published version
         working-directory: scripts/viewers/baroqueart
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Always pull the newest @metanull/baroqueart-data regardless of what
+        # Always pull the newest @museumwnf/baroqueart-data regardless of what
         # is pinned in package-lock.json — the viewer must reflect current data.
-        run: npm install @metanull/baroqueart-data@latest --no-audit --no-fund
+        run: npm install @museumwnf/baroqueart-data@latest --no-audit --no-fund
 
       - name: Build viewer
         working-directory: scripts/viewers/baroqueart

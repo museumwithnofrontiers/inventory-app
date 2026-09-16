@@ -1,7 +1,7 @@
 # Sharing History Viewer
 
 A Vue 3 single-page application rendering the Sharing History data-package
-(`@metanull/sharinghistory-data`). It serves two purposes:
+(`@museumwnf/sharinghistory-data`). It serves two purposes:
 
 1. A visual verification tool for the owner to assert that the data-package
    produced by the exporter is correct.
@@ -68,13 +68,13 @@ routing.
 ## Development
 
 ```bash
-npm install          # requires ~/.npmrc auth for the @metanull scope
+npm install          # @museumwnf/sharinghistory-data is public on npmjs — no auth needed
 npm run dev          # Claude Code: launch.json entry "sharinghistory-viewer", port 4175
 npm run build        # production build into dist/
 ```
 
 To pick up a new data-package version: `npm install
-@metanull/sharinghistory-data@latest`, then restart the dev server (Vite
+@museumwnf/sharinghistory-data@latest`, then restart the dev server (Vite
 pre-bundle cache).
 
 ## Deployment
@@ -83,4 +83,5 @@ pre-bundle cache).
 `--base=/sharinghistory/` and deploys `dist/` to `/opt/sharinghistory/` on
 the OVH VPS; Nginx serves it at https://inventory.metanull.eu/sharinghistory/
 via an alias block. See [`../README.md`](../README.md) for the shared
-deployment mechanics and GitHub Packages access prerequisites.
+deployment mechanics — the data package is public on npmjs, so the workflow
+needs no registry credential.

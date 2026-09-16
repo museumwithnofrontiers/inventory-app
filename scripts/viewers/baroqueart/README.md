@@ -1,7 +1,7 @@
 # Baroque Art Viewer
 
 A Vue 3 single-page application rendering the Discover Baroque Art data-package
-(`@metanull/baroqueart-data`). It serves two purposes:
+(`@museumwnf/baroqueart-data`). It serves two purposes:
 
 1. A visual verification tool for the owner to assert that the data-package
    produced by the exporter is correct.
@@ -41,12 +41,11 @@ scripts/viewers/baroqueart/
 └── package.json        # Dependencies: vue, vue-router + the data package
 ```
 
-Scoping `@metanull` to `https://npm.pkg.github.com` (with the auth token)
-happens in the repo-**root** `.npmrc` (gitignored, not this directory) —
-`npm install`/`npm ci` from anywhere under this repo picks it up
-automatically via npm's normal upward config-file resolution.
+`@museumwnf/baroqueart-data` is a public package on npmjs, so no registry
+scoping or auth token is needed to install it — a plain `npm install`/`npm ci`
+resolves it from `registry.npmjs.org` like any other dependency.
 
-## How it uses `@metanull/baroqueart-data`
+## How it uses `@museumwnf/baroqueart-data`
 
 `vite.config.js` resolves the installed package's directory at build time and registers
 a Vite alias `@inventory-data` pointing to it:
@@ -54,7 +53,7 @@ a Vite alias `@inventory-data` pointing to it:
 ```js
 // vite.config.js
 const dataPackageDir = dirname(require.resolve(`${dataPackage}/package.json`))
-// alias: '@inventory-data' → '/abs/path/to/node_modules/@metanull/baroqueart-data'
+// alias: '@inventory-data' → '/abs/path/to/node_modules/@museumwnf/baroqueart-data'
 ```
 
 `App.vue` then imports data directly from that alias:
@@ -73,14 +72,13 @@ file (`translations/items.en.json`, `translations/items.fr.json`, …) becomes a
 separate lazy chunk, loaded only when the user selects that language.
 
 The data package to use is configured by `DATA_PACKAGE` in `.env` (defaults to
-`@metanull/baroqueart-data`). Changing it to another compatible package requires only
+`@museumwnf/baroqueart-data`). Changing it to another compatible package requires only
 updating `.env` and re-running `npm install`.
 
 ## Build and run
 
 ```bash
-# Authentication — the @metanull scope is served from GitHub Package Registry.
-# Make sure ~/.npmrc contains a valid token for npm.pkg.github.com.
+# @museumwnf/baroqueart-data is public on npmjs — no auth needed.
 
 npm install          # installs vue, vite, and the data package
 npm run dev          # development server at http://localhost:5173
@@ -100,10 +98,9 @@ automatically. It triggers on:
 
 Steps, in order:
 
-1. Checkout, set up Node with the `@metanull` scope pointed at
-   `npm.pkg.github.com`
+1. Checkout, set up Node
 2. `npm ci` (installs whatever's pinned in `package-lock.json`)
-3. **`npm install @metanull/baroqueart-data@latest`** — always pulls the
+3. **`npm install @museumwnf/baroqueart-data@latest`** — always pulls the
    newest published data package regardless of what's pinned in the
    lockfile, since the whole point of a deploy is to reflect current content
 4. `npm run build -- --base=/baroqueart/` (the `--base` matters: the site is
@@ -118,10 +115,9 @@ Runs with `concurrency: cancel-in-progress: false` — a second push while a
 deploy is in flight queues behind it rather than cancelling the first.
 
 **Required repository secrets:** `VPS_SSH_KEY` (private key), `VPS_HOST`,
-`VPS_SSH_USER`. **Required permission:** `packages: read`, to pull
-`@metanull/baroqueart-data` from GitHub Packages using the workflow's own
-`GITHUB_TOKEN` — no separate PAT needed in CI (unlike local development,
-which needs a real PAT in `~/.npmrc`).
+`VPS_SSH_USER`. No `packages: read` permission or PAT is needed —
+`@museumwnf/baroqueart-data` is a public npmjs package, so both `npm ci` and
+the deploy-time `npm install` resolve it anonymously.
 
 This workflow only builds and ships the *viewer* — it never runs the
 exporter or touches the database. Publishing a new data package version is

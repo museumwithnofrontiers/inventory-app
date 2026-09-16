@@ -11,6 +11,28 @@ interface ProjectNameRow {
   title: string | null
 }
 
+interface ProjectRow {
+  id: string
+  backward_compatibility: string | null
+  site_url: string | null
+  related_database_url: string | null
+  artistic_introduction_url: string | null
+}
+
+interface ProjectTitleRow {
+  project_id: string
+  language_id: string
+  title: string | null
+}
+
+/** One entry of `manifest.projects` — see `ManifestExporter.buildProjectsSection`. */
+export interface ProjectEntry {
+  name: Record<string, string>
+  site_url: string | null
+  related_database_url: string | null
+  artistic_introduction_url: string | null
+}
+
 /**
  * `manifest.json` — what this package is and when it was made, and the one
  * thing a website reads before it mounts.
@@ -50,6 +72,12 @@ export class ManifestExporter extends BaseExporter {
         names: await this.siteNames(),
       },
       languages: langRows.map(r => r.backward_compatibility),
+      // Every project referenced by anything this package ships — for a
+      // project-scoped exporter that is exactly the exported project(s)
+      // themselves (items/partners/collections/timelines never reference a
+      // project outside `this.projectIds`). Additive: `projectKeys`/
+      // `projectIds` above stay untouched (epic #1727 phase 2).
+      projects: await this.buildProjectsSection(this.projectIds),
     }
 
     await this.writeJson('manifest.json', manifest)
@@ -104,5 +132,55 @@ export class ManifestExporter extends BaseExporter {
       if (row.title) names[row.language_id] = row.title
     }
     return names
+  }
+
+  /**
+   * `manifest.projects` — one entry per referenced project UUID, keyed by
+   * that UUID (epic #1727 phase 2). `name` comes from the sibling Collection's
+   * translations, joined by matching `backward_compatibility` — `Project`
+   * itself carries no translations. The three URL columns come straight off
+   * `projects` (nullable, populated at import time — epic #1727 phase 1,
+   * #1753/#1756).
+   */
+  protected async buildProjectsSection(projectIds: string[]): Promise<Record<string, ProjectEntry>> {
+    if (projectIds.length === 0) return {}
+    const ph = this.placeholders(projectIds.length)
+    const langCodeMap = await this.buildLangCodeMap()
+
+    const [projects, titles] = await Promise.all([
+      this.db.query<ProjectRow>(
+        `SELECT id, backward_compatibility, site_url, related_database_url, artistic_introduction_url
+         FROM projects
+         WHERE id IN (${ph})`,
+        projectIds
+      ),
+      this.db.query<ProjectTitleRow>(
+        `SELECT p.id AS project_id, ct.language_id, ct.title
+         FROM projects p
+         JOIN collections c ON c.backward_compatibility = p.backward_compatibility
+         JOIN collection_translations ct ON ct.collection_id = c.id
+         WHERE p.id IN (${ph})`,
+        projectIds
+      ),
+    ])
+
+    const namesByProject = new Map<string, Record<string, string>>()
+    for (const row of titles) {
+      const code = langCodeMap.get(row.language_id)
+      if (!code || !row.title) continue
+      if (!namesByProject.has(row.project_id)) namesByProject.set(row.project_id, {})
+      namesByProject.get(row.project_id)![code] = row.title
+    }
+
+    const result: Record<string, ProjectEntry> = {}
+    for (const p of projects) {
+      result[p.id] = {
+        name: namesByProject.get(p.id) ?? {},
+        site_url: p.site_url,
+        related_database_url: p.related_database_url,
+        artistic_introduction_url: p.artistic_introduction_url,
+      }
+    }
+    return result
   }
 }

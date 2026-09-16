@@ -167,6 +167,16 @@ exhibition collection universe; verify during implementation for the 26
 E2-recovered Explore/Travel pictures — their parents come from the Explore/
 Travels item families).
 
+## manifest.json note
+
+Identical spec to the Gallery package, `manifest.projects` included (epic
+#1727 phase 2): one entry per project UUID referenced by anything this
+package ships, keyed by that UUID, with a per-language `name` (from the
+sibling Collection's translations) and the three nullable URL columns
+(`site_url`, `related_database_url`, `artistic_introduction_url`). Collected
+from the member items' `project_id` (`items.json`) plus the exhibition's own
+native project (`exhibition.projectId`), the same way as the Gallery package.
+
 ## items.json note
 
 Identical spec to the Gallery package. The exhibition's own pseudo-project
@@ -177,7 +187,8 @@ for purpose-authored records exactly as legacy does
 
 ## partners.json note
 
-Gallery spec plus:
+Gallery spec plus (including `project_uuids`, epic #1727 phase 2 — see the
+Gallery package's partners.json section):
 
 - Institutions (monument owners) and museums both appear; the viewer routes
   museums to partner pages and institutions to institution pages by partner

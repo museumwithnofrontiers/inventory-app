@@ -19,7 +19,6 @@ The `/.github/workflows` directory contains GitHub Actions workflows for continu
   - [Continuous Deployment](#continuous-deployment)
     - [Deploy Laravel Application](#deploy-laravel-application)
     - [Deploy Documentation to GitHub Pages](#deploy-documentation-to-github-pages)
-    - [Publish API Client Package](#publish-api-client-package)
   - [Automation Workflows](#automation-workflows)
     - [Version Bump](#version-bump)
     - [Merge Dependabot PR](#merge-dependabot-pr)
@@ -69,24 +68,18 @@ Runs mandatory dependency audits on every pull request. Provides the `CI Success
    - Installs importer npm dependencies from `scripts/importer/`
    - Runs `npm audit --audit-level moderate`
 
-4. **audit-npm-spa** - Audits SPA npm dependencies
-   - Installs Node.js lts/Krypton (24.x)
-   - Installs SPA npm dependencies (authenticated with `GITHUB_TOKEN` for GitHub Packages)
-   - Runs `npm audit --audit-level moderate`
-
-5. **ci-success** - Aggregates audit results
-   - Requires all 4 audit jobs to succeed
+4. **ci-success** - Aggregates audit results
+   - Requires all 3 audit jobs to succeed
    - Fails the workflow if any audit job failed or was skipped
    - This job name satisfies the `CI Success` branch protection required check
 
 **Permissions**
 
 - `contents: read` - For reading repository contents
-- `packages: read` - For accessing GitHub Packages (SPA dependencies)
 
 **Branch protection**
 
-The `CI Success` job in this workflow satisfies the `CI Success` required status check configured in branch protection rules for `main`. All 4 audits must pass before a PR can be merged.
+The `CI Success` job in this workflow satisfies the `CI Success` required status check configured in branch protection rules for `main`. All 3 audits must pass before a PR can be merged.
 
 **Usage**
 
@@ -118,12 +111,11 @@ Runs build and test jobs conditionally based on which paths changed in the pull 
 | --- | --- |
 | `app/**`, `routes/**`, `config/**`, `database/**`, `tests/**`, `bootstrap/**`, `composer.json`, `composer.lock`, `phpunit.xml`, `artisan` | `backend-lint`, `backend-tests` |
 | `resources/css/**`, `resources/js/**`, `resources/views/**`, `vite.config.js`, `tailwind.config.js`, `postcss.config.js`, `package.json`, `package-lock.json`, `tsconfig.json`, `eslint.config.js` | `backend-rendered-frontend-validation` |
-| `spa/**` | `spa-frontend-validation` |
 
 **Jobs**
 
 1. **detect-changes** - Classifies changed files using `git diff` against the PR base SHA
-   - Emits outputs: `backend`, `root-frontend`, `spa` (true/false)
+   - Emits outputs: `backend`, `root-frontend` (true/false)
    - All outputs are `true` when triggered by `workflow_dispatch`
 
 2. **backend-lint** *(when `backend=true`)* - Laravel backend linting
@@ -141,14 +133,9 @@ Runs build and test jobs conditionally based on which paths changed in the pull 
    - Installs Node.js lts/Krypton and root npm dependencies
    - Runs `npm run build`
 
-5. **spa-frontend-validation** *(when `spa=true`)* - SPA (Vue 3) validation
-   - Installs Node.js lts/Krypton and SPA npm dependencies
-   - Runs lint, build, and `npm run test:all`
-
 **Permissions**
 
 - `contents: read` - For reading repository contents
-- `packages: read` - For accessing GitHub Packages (SPA dependencies)
 
 **Usage**
 
@@ -264,7 +251,7 @@ This workflow runs automatically when changes are pushed to `main`.
 
 ### Deploy Documentation to GitHub Pages
 
-Generates and deploys the Jekyll-based static documentation website to GitHub Pages. This workflow calls Python scripts to generate commit history and API client documentation.
+Generates and deploys the Jekyll-based static documentation website to GitHub Pages. This workflow calls a Python script to generate commit history documentation.
 
 See [/docs/README.md](/development/documentation-site) for complete Jekyll site documentation.
 
@@ -286,7 +273,6 @@ See [/docs/README.md](/development/documentation-site) for complete Jekyll site 
    - Sets up Ruby 3.2.3
    - Installs Ruby dependencies with `bundle install`
    - **Generates commit history documentation** - Calls `python scripts/generate-commit-docs.py`. See [/scripts/README.md](/development/scripts#generating-the-git-commit-history)
-   - **Generates API client documentation** - Calls `python scripts/generate-client-docs.py`. See [/scripts/README.md](/development/scripts#generating-the-api-client-npm-packages-static-documentation)
    - Builds Jekyll site with `bundle exec jekyll build`
    - Uploads artifact for GitHub Pages
 
@@ -306,7 +292,6 @@ See [/docs/README.md](/development/documentation-site) for complete Jekyll site 
 
 This workflow depends on the following scripts:
 - `generate-commit-docs.py` - Converts Git commit history into Jekyll markdown pages. See [/scripts/README.md](/development/scripts#generating-the-git-commit-history)
-- `generate-client-docs.py` - Converts TypeScript API client docs into Jekyll markdown pages. See [/scripts/README.md](/development/scripts#generating-the-api-client-npm-packages-static-documentation)
 
 For Jekyll site documentation, see [/docs/README.md](/development/documentation-site)
 
@@ -325,70 +310,6 @@ This workflow runs automatically on push to `main`. For manual deployment:
 | GitHub Pages | [https://pages.github.com/](https://pages.github.com/) |
 | Documentation Site | [https://metanull.github.io/inventory-app](https://metanull.github.io/inventory-app) |
 | Jekyll Documentation | [https://jekyllrb.com/docs/](https://jekyllrb.com/docs/) |
-
----
-
-### Publish API Client Package
-
-Publishes the TypeScript API client package to GitHub Packages when a release is created.
-
-**Workflow properties**
-
-| Property | Value |
-| --- | --- |
-| **Workflow** | `publish-npm-github-package.yml` |
-| **Trigger** | Release created |
-| **Manual trigger** | Yes (`workflow_dispatch`) |
-| **Runner** | `ubuntu-latest` (GitHub-hosted) |
-
-**Jobs**
-
-1. **build** - Builds and tests the package
-   - Checks out repository
-   - Sets up Node.js 20
-   - Installs dependencies with `npm ci`
-   - Runs tests with `npm test`
-
-2. **publish-gpr** - Publishes to GitHub Packages
-   - Checks out repository
-   - Sets up Node.js 20 with GitHub Packages registry
-   - Installs dependencies with `npm ci`
-   - Publishes package with `npm publish`
-
-**Permissions**
-
-- `contents: read` - For reading repository contents
-- `packages: write` - For publishing to GitHub Packages
-
-**Prerequisites**
-
-Before this workflow can run successfully:
-1. API client must be generated using `generate-api-client.ps1`. See [/scripts/README.md](/development/scripts#generating-the-api-client-npm-package)
-2. Package version should be updated appropriately
-3. A release must be created in GitHub
-
-**Usage**
-
-This workflow runs automatically when a GitHub release is created. For manual publishing:
-
-```bash
-# Trigger via GitHub UI: Actions > Package @metanull/inventory-app-api-client > Run workflow
-```
-
-Alternatively, you can publish manually using the script:
-
-```powershell
-# See: /scripts/README.md#publishing-the-api-client-npm-package-to-the-github-packages-npm-registry
-. ./scripts/publish-api-client.ps1 -Credential (Get-Credential)
-```
-
-**Links**
-
-| Reference | URL |
-| --- | --- |
-| GitHub Packages | [https://github.com/features/packages](https://github.com/features/packages) |
-| API Client Package | [https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client](https://github.com/metanull/inventory-app/pkgs/npm/inventory-app-api-client) |
-| Publishing Node.js Packages | [https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages](https://docs.github.com/en/actions/publishing-packages/publishing-nodejs-packages) |
 
 ---
 
@@ -460,25 +381,8 @@ Dependabot is configured in `.github/dependabot.yml` to keep dependencies up to 
 | Ecosystem | Directory | Schedule | Registry |
 | --- | --- | --- | --- |
 | `composer` | `/` | Weekly | packagist.org (public) |
-| `npm` | `/` | Weekly | npm.pkg.github.com (GitHub) |
-| `npm` | `/spa` | Weekly | npm.pkg.github.com (GitHub) |
+| `npm` | `/` | Weekly | npmjs.org (public) |
 | `github-actions` | `/` | Weekly | github.com (public) |
-
-**GitHub Packages registry access**
-
-The `npm` ecosystems reference the GitHub Packages registry (`npm.pkg.github.com`), which requires authentication even for packages in the same organization. The registry token is configured as:
-
-```yaml
-registries:
-  npm-github:
-    type: npm-registry
-    url: https://npm.pkg.github.com
-    token: ${{secrets.DEPENDABOT_GITHUB_PACKAGES_TOKEN}}
-```
-
-Dependabot version updates run on Dependabot's own infrastructure, **not** on GitHub Actions runners. This means the automatically provided `GITHUB_TOKEN` is **not** available as a secret in `dependabot.yml`. Instead, a Personal Access Token (PAT) must be stored as a **Dependabot secret**.
-
-> **Note**: The `${{secrets.GITHUB_TOKEN}}` approach only works when "Dependabot on Actions runners" is enabled in the repository settings (**Settings > Code security > Dependabot**). This feature is not available on all GitHub plans and is not always accessible for free public repositories.
 
 **Setup instructions**
 
@@ -551,13 +455,11 @@ Several workflows interact with scripts and other workflows:
 | `ci-build-test.yml` | - | - |
 | `build.yml` | - | `deploy-ovh.yml` |
 | `continuous-deployment_github-pages.yml` | [/scripts/README.md](/development/scripts) scripts | - |
-| `publish-api-client.yml` | API client generation | - |
 | `merge-dependabot-pr.yml` | - | - |
 
 **Scripts used by workflows:**
 
 - `generate-commit-docs.py` - Used by `continuous-deployment_github-pages.yml`. See [/scripts/README.md](/development/scripts#generating-the-git-commit-history)
-- `generate-client-docs.py` - Used by `continuous-deployment_github-pages.yml`. See [/scripts/README.md](/development/scripts#generating-the-api-client-npm-packages-static-documentation)
 
 ---
 

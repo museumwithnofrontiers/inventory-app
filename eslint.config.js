@@ -8,7 +8,6 @@ export default [
             'public/',
             'storage/',
             'vendor/',
-            'spa/',
             'dist/',
             '.git/',
             'build/',

@@ -10,7 +10,7 @@ const here = dirname(fileURLToPath(import.meta.url))
 // The data package is resolved at build time, in this order:
 //
 //   1. DATA_PACKAGE — an npm package name *or* a directory path. Explicit wins.
-//   2. @metanull/carpets-data — the published package. This is what `npm
+//   2. @museumwnf/carpets-data — the published package. This is what `npm
 //      install` brings in, and what CI and the deploy workflow build against.
 //   3. ../../exporters/carpets/output/carpets — a local exporter run, for
 //      working against data that has not been published yet:
@@ -47,7 +47,7 @@ function resolveDataPackage() {
     )
   }
 
-  const published = asPackage('@metanull/carpets-data')
+  const published = asPackage('@museumwnf/carpets-data')
   if (published) return published
 
   const local = asDirectory('../../exporters/carpets/output/carpets')
@@ -56,7 +56,7 @@ function resolveDataPackage() {
   throw new Error(
     'No Carpets data package found.\n' +
     '\n' +
-    'This viewer reads @metanull/carpets-data when it is installed, and falls\n' +
+    'This viewer reads @museumwnf/carpets-data when it is installed, and falls\n' +
     'back to the exporter output at scripts/exporters/carpets/output/carpets.\n' +
     'Neither is present. Produce the local export with:\n' +
     '\n' +

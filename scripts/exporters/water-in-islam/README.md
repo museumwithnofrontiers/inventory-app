@@ -3,8 +3,7 @@
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for the rebuilt **Water in Islam** website — no API server, no
 auth, no runtime database dependency. Optionally packages and publishes that
-output as a private npm package (`@metanull/water-in-islam-data`) on GitHub
-Packages.
+output as a public npm package (`@museumwnf/water-in-islam-data`) on npmjs.
 
 This is the second DXA **exhibition** exporter
 ([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
@@ -92,13 +91,13 @@ package carries both fields rather than deriving one from the other.
 
 | File | Contents |
 |---|---|
-| `manifest.json` | Export metadata, the languages present, item and theme counts |
+| `manifest.json` | Export metadata, the languages present, item and theme counts. Also `projects`: one entry per referenced project UUID, with a per-language name and the three URL columns (epic #1727 phase 2, additive) |
 | `exhibition.json` | Site anchor: slug, legacy host, titles/subtitles/headlines, enabled languages, logos, partner strip, chrome flags, **hidden partner ids**, sibling sites |
 | `themes.json` | 6 themes + 22 sub-themes, 432 curated pictures with cover pictures and related-picture links |
 | `related_content.json` | The 5 "Further Reading" bibliographies, as `kind: "text"` entries |
 | `items.json` | The 495 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 245 THG facet tags with their category (artist 11, dynasty 29, material 99, subject 18, type 88) |
-| `partners.json` | The 128 museums and institutions; eleven of them flagged hidden by `exhibition.json`. One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids` from the curated hierarchy where the data has one |
+| `partners.json` | The 128 museums and institutions; eleven of them flagged hidden by `exhibition.json`. One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
 | `countries.json` | The 37 countries the members, their holders and the timeline reference |
 | `languages.json` | The 9 languages the site can display (en as `site_language`, plus 8 carried by borrowed records and partners) |
 | `dynasties.json` | The 38 dynasties member items reference |
@@ -127,7 +126,7 @@ docker compose --profile jobs run --rm exporter water-in-islam --force
 ```
 
 Add `--publish` to bump the version, generate `package.json`/`README.md` and
-push to GitHub Packages — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
+push to npmjs — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
 
 The compose service points at the **staging** database (`staging-mysql`), which
 is where the exporter should be developed and verified.
@@ -138,7 +137,7 @@ running anything that way.
 ## Naming
 
 The folder and package are `water-in-islam` /
-`@metanull/water-in-islam-data` — the kebab-cased legacy slug fixed by decision
+`@museumwnf/water-in-islam-data` — the kebab-cased legacy slug fixed by decision
 Q4. The data keeps the underscore form (`water_in_islam`), because that is the
 legacy public URL path and therefore identity. Never derive one from the other.
 

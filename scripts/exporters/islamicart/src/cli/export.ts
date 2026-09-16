@@ -7,7 +7,7 @@
  *
  * This exporter is single-purpose: it always exports the Discover Islamic
  * Art dataset — projects ISL (Discover Islamic Art) and EPM (Explore
- * Islamic Art Collections) together, as `@metanull/islamicart-data`. The
+ * Islamic Art Collections) together, as `@museumwnf/islamicart-data`. The
  * scope is not configurable: ISL and EPM are one dataset, and an ISL-only
  * export would silently drop the EPM project collection and every
  * `partner_group:museums:*` collection.
@@ -52,7 +52,7 @@ dotenv.config({ path: resolve(process.cwd(), '.env') })
 // must always be exported together (see the header comment).
 const SUBDIRECTORY = 'islamicart'
 const PROJECT_KEYS = ['ISL', 'EPM']
-const PACKAGE_NAME = '@metanull/islamicart-data'
+const PACKAGE_NAME = '@museumwnf/islamicart-data'
 
 const program = new Command()
 
@@ -185,7 +185,7 @@ program
             const registry =
               options.npmRegistry ||
               process.env['NPM_REGISTRY'] ||
-              'https://npm.pkg.github.com'
+              'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the project
             // output directory, so it survives --force cleans.

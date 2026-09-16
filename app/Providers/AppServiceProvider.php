@@ -103,7 +103,6 @@ class AppServiceProvider extends ServiceProvider
             // Initialize with null values
             $info = [
                 'app_version' => null,
-                'api_client_version' => null,
                 'build_timestamp' => null,
                 'commit_sha' => null,
                 'repository' => null,

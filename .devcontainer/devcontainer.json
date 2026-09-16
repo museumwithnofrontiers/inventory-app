@@ -25,7 +25,7 @@
     // vendor/ lives in a named volume declared by compose, so it stays on the
     // fast Linux filesystem. node_modules is on the bind mount, shared with
     // the `tools` service so both see the same tree.
-    "postCreateCommand": "composer install --no-interaction && npm install && npm install --prefix spa && npm install --prefix scripts/importer",
+    "postCreateCommand": "composer install --no-interaction && npm install && npm install --prefix scripts/importer",
 
     "forwardPorts": [8010, 5173, 8026, 4000],
     "portsAttributes": {
@@ -54,7 +54,6 @@
                 "phpunit.php": "/usr/local/bin/php",
                 "phpunit.phpunit": "vendor/bin/pest",
                 "phpunit.args": ["--no-coverage"],
-                "vitest.rootConfig": "./spa/vitest.config.ts",
                 "eslint.workingDirectories": [{ "mode": "auto" }],
                 "eslint.options": { "configFile": "./eslint.config.js" },
                 "tailwindCSS.includeLanguages": {

@@ -16,7 +16,6 @@ The future read-only API is a separate design area. It should optimize public co
 
 - [Interactive API Explorer (Swagger UI)]({{ '/swagger-ui.html' | relative_url }}) - Browse and test endpoints directly
 - [OpenAPI Specification]({{ '/api.json' | relative_url }}) - Download the full specification (JSON)
-- [TypeScript Client Documentation]({{ '/api-client/' | relative_url }}) - Auto-generated client reference
 
 ## Interactive Documentation
 
@@ -46,37 +45,3 @@ Images flow through a three-stage pipeline:
 3. **Attachment** - attach the processed image to an item, collection, or partner.
 
 See [Core Model]({{ '/understanding/core-model' | relative_url }}) for the business meaning of images and picture Items.
-
-## TypeScript API Client
-
-An auto-generated TypeScript client is available as an npm package. It provides type-safe access to every API endpoint.
-
-### Installation
-
-```bash
-npm install @metanull/inventory-app-api-client@latest
-```
-
-{: .note }
-
-> The package is published to [GitHub Packages](https://github.com/metanull/inventory-app/packages). You need a GitHub PAT with `read:packages` scope and an `.npmrc` pointing to the GitHub registry. See the [README](https://github.com/metanull/inventory-app#using-the-api-client-external-developers) for setup details.
-
-### Quick Example
-
-```typescript
-import { Configuration, DefaultApi } from "@metanull/inventory-app-api-client";
-
-const api = new DefaultApi(
-  new Configuration({ basePath: "https://your.api.url" }),
-);
-const items = await api.itemIndex();
-console.log(items.data);
-```
-
-### Client Documentation
-
-- **[TypeScript API Client Reference]({{ '/api-client/' | relative_url }})** - Auto-generated documentation for all client methods, parameters, and response types
-
-### For Maintainers
-
-The client is auto-generated from the [OpenAPI specification]({{ '/api.json' | relative_url }}) using `openapi-generator-cli`. Generation and publishing scripts are documented in [Development / Scripts]({{ '/development/scripts' | relative_url }}).
