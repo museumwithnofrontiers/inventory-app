@@ -210,67 +210,89 @@ package. Three more steps get the new data in front of a visitor.
 
 ### 7. Publish the data packages
 
-Each website installs `@metanull/<dataset>-data` from GitHub Packages, and an
-exporter run with `--publish` both exports and publishes — there is no separate
-`npm publish`. The compose `exporter` service forces the staging database into
-its environment, so this reads the copy you just reviewed, whatever
-`scripts/exporters/<dataset>/.env` says.
+Each website installs `@museumwnf/<dataset>-data` from the public npmjs
+registry (`registry.npmjs.org`), and an exporter run with `--publish` both
+exports and publishes — there is no separate `npm publish`. The compose
+`exporter` service forces the staging database into its environment, so this
+reads the copy you just reviewed, whatever `scripts/exporters/<dataset>/.env`
+says.
 
-Two things the command needs that it cannot find on its own:
-
-- **The token.** npm reads a project `.npmrc` from the current directory only,
-  and the publish runs from `output/<dataset>/`, so the repo-root `.npmrc`
-  (gitignored; holds the GitHub Packages token) has to be named explicitly with
-  `NPM_CONFIG_USERCONFIG`. Without it the tarball builds and the publish dies
-  with `ENEEDAUTH`.
-- **The version.** Pass it explicitly with `--package-version`, every time.
-  The auto-increment asks the registry first, but when the registry does not
-  answer it falls back to `output/.version-<dataset>` without failing — a
-  gitignored counter that is per-worktree, is absent in any worktree that has
-  never exported, and is written *before* the publish so a failed run burns
-  the number. Every one of those has produced a "cannot publish over
-  previously published version" refusal at least once. Reading the registry
-  and naming the next patch yourself is deterministic and also repairs the
-  counter for whoever runs next.
+Authentication is a one-time, per-machine step, done **on the host** — this
+is a manual, local publish, never run from CI (see
+[`docs/deployment/release-and-propagation.md`](../../docs/deployment/release-and-propagation.md)
+§5.3):
 
 ```bash
-# What is published now — the only reliable way to read it.
-docker compose --profile tools run --rm --no-deps -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc tools npm view @metanull/<dataset>-data version
-# Export from staging and publish the next patch of it.
-docker compose run --rm -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc exporter <dataset> --force --publish --package-version <next>
+npm login
 ```
 
-The exporter prints `✓ Published: @metanull/<dataset>-data@<next>` on success;
-confirm by running the first command again. Seven datasets, seven runs;
-publishing only some of them leaves the other websites on the previous import
-with no error anywhere.
+That writes a session token to your **host** `~/.npmrc`. `compose.yml` mounts
+that file read-only into the `exporter` container
+(`${HOME}/.npmrc:/root/.npmrc:ro`) — the container never runs `npm login`
+itself and no token is ever written to a tracked file. **Windows** —
+PowerShell does not export `$HOME` to child processes, so `${HOME}` above
+resolves to nothing unless you set it first, in every new shell:
 
-If a dataset has never been published from this checkout, check that
-`scripts/exporters/<dataset>/.env` sets `PACKAGE_REPO_URL` before the first
-run: the package's `repository` field is what lets a GitHub Actions token
-install it, and a version published without one cannot be repaired — only
-superseded.
+```powershell
+$env:HOME = $env:USERPROFILE
+```
+
+`docker compose run` keeps a TTY attached, so if npmjs asks for a 2FA
+one-time code or a web-login confirmation, the prompt appears right there in
+the terminal.
+
+```bash
+# What is published now — the only reliable way to read it. No credential
+# needed: @museumwnf packages are public.
+docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view @museumwnf/<dataset>-data version
+# Export from staging and publish the next patch of it.
+docker compose run --rm exporter <dataset> --force --publish
+```
+
+A single `--publish` run auto-increments the patch version: it asks the
+registry first and uses it whenever the registry is ahead of the local
+counter in `output/.version-<dataset>` — a gitignored, per-worktree file that
+is absent in any worktree that has never exported, so a fresh worktree or a
+deleted `output/` no longer walks into a taken number. Pass
+`--package-version <next>` yourself only for a minor/major bump, or when the
+registry cannot be reached.
+
+The exporter prints `✓ Published: @museumwnf/<dataset>-data@<next>` on
+success; confirm by running the first command again. Seven datasets, seven
+runs; publishing only some of them leaves the other websites on the previous
+import with no error anywhere.
+
+`PACKAGE_REPO_URL` in `scripts/exporters/<dataset>/.env` is good package
+metadata — it populates the published `repository` field — but npmjs does not
+require it to install a version, so it is not something a first publish is
+blocked on.
 
 ### 8. Pin the new version in each website
 
 Publishing changes nothing that is live. Each website is its own repository
-(`github.com/metanull/<site>`) and pins its data package twice: a caret range
-in `package.json` and an exact version in `package-lock.json`. The deploy runs
-`npm ci` from the lockfile on every push to `main`, so **the lockfile is what
-visitors see**, and the new version reaches a site only when someone moves it.
-Nobody else will: Dependabot cannot authenticate to the `@metanull` scope on
-any site repository, and `main` is PR-only on all seven.
+(`github.com/museumwithnofrontiers/<site>`) and pins its data package twice: a
+caret range in `package.json` and an exact version in `package-lock.json`. The
+deploy runs `npm ci` from the lockfile on every push to `main`, so **the
+lockfile is what visitors see**, and the new version reaches a site only when
+someone moves it. Nobody does this for you automatically: every site's
+`.github/dependabot.yml` deliberately ignores the `@museumwnf` scope — not
+because Dependabot cannot authenticate (the packages are public on npmjs, and
+Dependabot reads those fine) but because moving this pin is meant to stay a
+human, operator-driven step, the same principle documented for the shared
+platform packages' propagation in
+[`docs/deployment/release-and-propagation.md`](../../docs/deployment/release-and-propagation.md)
+(§5.2, "Propagate"). `main` is also PR-only on all seven.
 
 In a checkout of the site, on `main`:
 
 ```bash
-npm install @metanull/<site>-data@^<next>
+npm install @museumwnf/<site>-data@^<next>
 ```
 
 That one command rewrites the range and the lockfile together (four lines:
 spec, version, resolved URL, integrity — nothing else). Then, in order: run
 the site's tests, look at the lockfile diff for anything that resembles a
-token (the resolved URLs are `npm.pkg.github.com` and carry none, but look
+token (the resolved URLs are `registry.npmjs.org` and carry none, but look
 rather than assume), commit both files, push a branch, open the pull request
 and let auto-merge take it when the checks pass. Merging is what deploys —
 the `Deploy` workflow runs on the push to `main`; confirm it with
@@ -441,8 +463,11 @@ Everything else is required.
 
 The VPN to the legacy network must be up for steps 2, 3 and 4, and stay up for
 the whole of step 3. Step 8 needs the SSH key instead, and nothing else does.
-Steps 9 to 11 need neither — only the GitHub Packages token in the repo-root
-`.npmrc` and `gh` logged in.
+Steps 9 to 11 need neither — only your own npm login on the host (`npm login`,
+once per machine — see step 9) and `gh` logged in. **Windows** — set
+`$env:HOME = $env:USERPROFILE` in every new shell before step 9's first
+`docker compose run exporter ... --publish`, or the container's mount of your
+npm session is silently empty.
 
 ```powershell
 # ── 0. NOTHING ELSE MAY BE IMPORTING ─────────────────────────────────────────
@@ -533,45 +558,50 @@ docker compose --env-file scripts/import-tool/.env --profile import run --build 
 # replace step 7's export commands rather than following them. Seven datasets:
 # run the block below once per value of $dataset, in any order.
 #
-# NPM_CONFIG_USERCONFIG is not optional: npm reads a project .npmrc from the
-# current directory only, `npm publish` runs from output/<dataset>/, and
-# without it the tarball is built and the publish dies with ENEEDAUTH. The
-# token lives in the gitignored repo-root .npmrc.
-#
-# The version is passed explicitly, every time. The auto-increment falls back
-# to a gitignored per-worktree counter whenever the registry does not answer,
-# and that counter is written before the publish — so a failed run burns the
-# number and a fresh worktree restarts at 1.0.0. Naming the next patch
-# yourself is deterministic and repairs the counter as a side effect.
+# PowerShell does not export $HOME to child processes, so ${HOME} in
+# compose.yml — which mounts your npm session read-only into the exporter
+# container — resolves to nothing unless you set this first, in EVERY new
+# shell:
+$env:HOME = $env:USERPROFILE
+
+# One-time per machine: authenticate ON THE HOST (never inside the
+# container). This writes a session token to your host ~/.npmrc; nothing in
+# this repo ever writes to that file, and no token reaches a tracked file.
+npm login
+
 $dataset = 'islamicart'     # then: baroqueart, sharinghistory, amulets, carpets, the-use-of-colours-in-art, water-in-islam
 
-# What the registry holds now — the only reliable way to read it.
-$current = docker compose --profile tools run --rm --no-deps -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc tools npm view "@metanull/$dataset-data" version
-$current
+# What the registry holds now. No credential needed — @museumwnf packages
+# are public.
+docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$dataset-data" version
 
-# The next patch of it.
-$parts = $current.Trim() -split '\.'; $parts[2] = [int]$parts[2] + 1; $next = $parts -join '.'
-$next
+# Export from staging and publish the next patch. Auto-increments by asking
+# the registry first and using it whenever it is ahead of the gitignored,
+# per-worktree counter in output/.version-<dataset> — pass
+# --package-version <next> instead only for a minor/major bump, or when the
+# registry cannot be reached. Ends with: ✓ Published: @museumwnf/<dataset>-data@<next>
+docker compose run --rm exporter $dataset --force --publish
 
-# Export from staging and publish. Ends with: ✓ Published: @metanull/<dataset>-data@<next>
-docker compose run --rm -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc exporter $dataset --force --publish --package-version $next
-
-# Confirm before moving on. Must print $next; if it still prints $current,
-# the publish did not happen and the website will not see anything either.
-docker compose --profile tools run --rm --no-deps -e NPM_CONFIG_USERCONFIG=/var/www/app/.npmrc tools npm view "@metanull/$dataset-data" version
+# Confirm before moving on. Must print a version newer than the one above; if
+# it still prints the same one, the publish did not happen and the website
+# will not see anything either.
+docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$dataset-data" version
 
 # ── 10. PIN THE NEW VERSION IN EACH WEBSITE ──────────────────────────────────
 # Publishing changes nothing that is live. Each website is its own repository
 # and pins its data package in package.json (^range) AND package-lock.json
 # (exact); the deploy runs `npm ci`, so the lockfile is what visitors see.
-# Nobody moves it for you: Dependabot cannot authenticate to the @metanull
-# scope on any site repository, and main is PR-only on all seven. Run the
-# block below once per site, from a directory where you keep site clones.
+# Nobody moves it for you automatically: every site's dependabot.yml
+# deliberately ignores the @museumwnf scope — not because it cannot
+# authenticate (the packages are public on npmjs) but because moving this
+# pin is meant to stay a human, operator-driven step — and main is PR-only
+# on all seven. Run the block below once per site, from a directory where
+# you keep site clones.
 $site = 'islamicart'        # then: baroqueart, sharinghistory, amulets, carpets, the-use-of-colours-in-art, water-in-islam
 $next = '<the version step 9 published for this site>'
 
 # OPTIONAL — first time on this machine only.
-gh repo clone "metanull/$site"
+gh repo clone "museumwithnofrontiers/$site"
 
 Set-Location $site
 git checkout main
@@ -580,13 +610,14 @@ git checkout -B "chore/data-$next"
 
 # Rewrites the range and the lockfile together. If `git diff --stat` shows
 # nothing, no newer version exists: back to step 9 for this dataset.
-npm install "@metanull/$site-data@^$next"
+npm install "@museumwnf/$site-data@^$next"
 git diff --stat
 
 # The site's own checks, before CI repeats them.
 npm test -- --run
 
-# Belt and braces: resolved URLs carry no credential, but look.
+# Belt and braces: resolved URLs are registry.npmjs.org and carry no
+# credential, but look.
 git diff package-lock.json | Select-String -Pattern '_authToken|ghp_|github_pat'
 
 git add package.json package-lock.json
