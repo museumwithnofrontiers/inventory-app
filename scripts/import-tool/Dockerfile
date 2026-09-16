@@ -6,7 +6,11 @@
 # scripts/importer:
 #   docker build -f scripts/import-tool/Dockerfile -t import-tool:latest .
 
-FROM node:22-alpine
+# Keep in step with the Node major CI actually validates the importer
+# against — .github/actions/setup-node-project/action.yml's node-version
+# (currently lts/Krypton, i.e. 24). A Dockerfile FROM line can't read that
+# file, so this is a value to check by eye, not derive automatically.
+FROM node:24-alpine
 
 # mysql-client provides mysql/mysqldump — used only by `ship` mode, to dump
 # staging-mysql (a `stage` build) before handing it to the deployed host.
