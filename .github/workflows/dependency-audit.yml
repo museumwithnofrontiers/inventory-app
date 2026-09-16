@@ -23,16 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: "Setup > Image > Install php"
-        uses: shivammathur/setup-php@v2
+      - name: "Setup > Backend"
+        uses: ./.github/actions/setup-backend
         with:
-          php-version: "8.5"
-          extensions: fileinfo, intl, zip, sqlite3, pdo_sqlite, gd, exif
-          github-token: ""
-
-      - name: "Setup > Composer > Install Dependencies"
-        run: |
-          composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
+          # No php-version/extensions override — this job only needs vendor/
+          # to run `composer audit`, so it takes the same PHP the rest of CI
+          # does rather than naming its own.
+          prepare-laravel-env: false
 
       - name: "Check > Composer > Audit Vulnerabilities"
         run: |

@@ -29,12 +29,17 @@ jobs:
         clean: true
 
     - name: Setup PHP
-      uses: shivammathur/setup-php@v2
+      uses: ./.github/actions/setup-backend
       with:
-        php-version: '8.5'  # Must match the runtime: .docker/Dockerfile and the VPS both run 8.5
+        # No php-version override: the action's own default is the single
+        # place this repo names a PHP minor for CI (checked against
+        # .docker/Dockerfile and composer.json by the php-version-drift job).
         extensions: fileinfo, zip, sqlite3, pdo_sqlite, gd, exif
         tools: pint
-        github-token: ''
+        # This job runs its own composer install (--no-dev, below) and never
+        # boots the app — it packages a release, it doesn't test one.
+        install-dependencies: false
+        prepare-laravel-env: false
 
     - name: Setup Node.js
       uses: actions/setup-node@v7
@@ -45,6 +50,14 @@ jobs:
     - name: Install PHP dependencies
       run: |
         composer install --no-dev --no-interaction --optimize-autoloader --no-scripts --prefer-dist
+
+    - name: Check platform requirements
+      run: |
+        # Refuses to package a vendor/ tree that doesn't satisfy the PHP
+        # version and extensions composer.json declares — the same check
+        # backend-lint already runs, now also gating the artifact that
+        # actually ships to the VPS.
+        composer check-platform-reqs
 
     - name: Publish Filament assets
       run: |
