@@ -1,16 +1,25 @@
 name: "Setup Backend (PHP + Laravel)"
-description: "Install PHP, Composer dependencies, and prepare a Laravel test environment (sqlite in-memory)"
+description: "Install PHP, optionally install Composer dependencies and prepare a Laravel test environment (sqlite in-memory)"
 
 inputs:
   php-version:
-    description: "PHP version to install"
+    description: "PHP version to install. The single source of truth for the CI default — .docker/Dockerfile's FROM tag and composer.json's config.platform.php must name the same major.minor (checked by the php-version-drift job)."
     default: "8.5"
+  extensions:
+    description: "Comma-separated PHP extensions to install"
+    default: "fileinfo, intl, zip, sqlite3, pdo_sqlite, gd, exif"
   tools:
     description: "Comma-separated Composer/PHP tools to install (e.g. pint or phpunit,pest)"
     default: ""
   coverage:
     description: "Coverage driver (none or xdebug)"
     default: "none"
+  install-dependencies:
+    description: "Run composer install after installing PHP. Callers that need a different install (e.g. --no-dev for a release build) should set this to false and run their own."
+    default: "true"
+  prepare-laravel-env:
+    description: "Create .env from .env.local.example, generate an app key, and migrate an in-memory sqlite database. Only meaningful alongside install-dependencies: true — set false for callers that just need vendor/ (a build, an audit) and not a bootable app."
+    default: "true"
 
 runs:
   using: "composite"
@@ -19,28 +28,32 @@ runs:
       uses: shivammathur/setup-php@v2
       with:
         php-version: ${{ inputs.php-version }}
-        extensions: fileinfo, intl, zip, sqlite3, pdo_sqlite, gd, exif
+        extensions: ${{ inputs.extensions }}
         tools: ${{ inputs.tools }}
         coverage: ${{ inputs.coverage }}
         github-token: ""
 
     - name: "Setup > Composer > Install Dependencies"
+      if: inputs.install-dependencies == 'true'
       shell: bash
       run: |
         composer install -q --no-ansi --no-interaction --no-scripts --no-progress --prefer-dist
 
     - name: "Setup > Laravel > Create .env file from example"
+      if: inputs.install-dependencies == 'true' && inputs.prepare-laravel-env == 'true'
       shell: bash
       run: |
         cp .env.local.example .env
         rm -rf bootstrap/cache/*.php || true
 
     - name: "Setup > Laravel > Generate application key"
+      if: inputs.install-dependencies == 'true' && inputs.prepare-laravel-env == 'true'
       shell: bash
       run: |
         php artisan key:generate
 
     - name: "Setup > Laravel > Create database"
+      if: inputs.install-dependencies == 'true' && inputs.prepare-laravel-env == 'true'
       shell: bash
       run: |
         php artisan migrate --force

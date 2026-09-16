@@ -132,6 +132,59 @@ jobs:
         with:
           fail-on-severity: high
 
+  # Runs on every PR, unconditionally — a version can drift here without
+  # touching any path the `backend` change-detection above watches (e.g. a
+  # Dockerfile-only or action-only edit). This is what would have caught
+  # PR #1787: three places claiming to agree on a PHP minor, nothing
+  # comparing them.
+  php-version-drift:
+    name: PHP Version Drift Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: "Check > PHP version agreement"
+        run: |
+          # Compare major.minor only. composer.json's config.platform.php is
+          # deliberately a bare minor ("8.5", not "8.5.4" — Pascal rejected
+          # pinning the patch), and .docker/Dockerfile's tag carries an
+          # Alpine suffix ("8.5-fpm-alpine"), so anchoring on a three-part
+          # version would fail on the values this repo uses today.
+          extract_mm() { grep -oP '^[0-9]+\.[0-9]+' <<< "$1"; }
+
+          platform_raw=$(jq -r '.config.platform.php' composer.json)
+          dockerfile_raw=$(grep -oP '^FROM php:\K[0-9]+(\.[0-9]+)*' .docker/Dockerfile | head -1)
+          action_raw=$(awk '
+            /^  php-version:/ { found=1 }
+            found && /default:/ {
+              sub(/.*default: *"?/, "")
+              sub(/".*/, "")
+              print
+              exit
+            }
+          ' .github/actions/setup-backend/action.yml)
+
+          platform=$(extract_mm "$platform_raw")
+          dockerfile=$(extract_mm "$dockerfile_raw")
+          action=$(extract_mm "$action_raw")
+
+          echo "composer.json config.platform.php ........ '$platform_raw' -> ${platform:-<none>}"
+          echo ".docker/Dockerfile FROM php: tag ........... '$dockerfile_raw' -> ${dockerfile:-<none>}"
+          echo "setup-backend action.yml php-version default '$action_raw' -> ${action:-<none>}"
+
+          if [ -z "$platform" ] || [ -z "$dockerfile" ] || [ -z "$action" ]; then
+            echo "::error::Could not extract a PHP major.minor from one of the three sources above — check they still exist at their expected locations."
+            exit 1
+          fi
+
+          if [ "$platform" != "$dockerfile" ] || [ "$platform" != "$action" ]; then
+            echo "::error::PHP version drift: composer.json config.platform.php ($platform), .docker/Dockerfile's FROM tag ($dockerfile), and setup-backend's php-version default ($action) do not all name the same major.minor."
+            exit 1
+          fi
+
+          echo "All three agree: PHP $platform"
+
   backend-lint:
     name: Backend Linting and Validation
     runs-on: ubuntu-latest
@@ -370,6 +423,7 @@ jobs:
     needs:
       - detect-changes
       - dependency-review
+      - php-version-drift
       - backend-lint
       - backend-tests
       - backend-rendered-frontend-validation
@@ -384,6 +438,7 @@ jobs:
       - name: Check all mandatory checks passed
         run: |
           depReviewResult="${{ needs.dependency-review.result }}"
+          phpVersionDriftResult="${{ needs.php-version-drift.result }}"
 
           backendChanged="${{ needs.detect-changes.outputs.backend }}"
           rootFrontendChanged="${{ needs.detect-changes.outputs.root-frontend }}"
@@ -406,6 +461,11 @@ jobs:
 
           if [ "$depReviewResult" != "success" ]; then
             echo "Dependency review failed (result: $depReviewResult)"
+            fail=1
+          fi
+
+          if [ "$phpVersionDriftResult" != "success" ]; then
+            echo "PHP version drift check failed (result: $phpVersionDriftResult)"
             fail=1
           fi
 
