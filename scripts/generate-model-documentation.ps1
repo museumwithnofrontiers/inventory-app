@@ -43,12 +43,13 @@ $commandArgs += "--ansi"
 
 Write-Host "  Output: docs/_model/" -ForegroundColor Gray
 Write-Host ""
-Write-Host "Running: php artisan docs:models $(if ($Force) { '--force' } else { '' }) --ansi" -ForegroundColor Gray
+Write-Host "Running: docker compose run --rm app php artisan docs:models $(if ($Force) { '--force' } else { '' }) --ansi" -ForegroundColor Gray
 Write-Host ""
 
 try {
-    # Run the artisan command
-    & php @commandArgs
+    # Run the artisan command inside the app container, matching the project's
+    # Docker-only dev workflow (see the other scripts/Invoke-*.ps1 helpers).
+    & docker compose run --rm app php @commandArgs
     $exitCode = $LASTEXITCODE
     
     if ($exitCode -eq 0) {

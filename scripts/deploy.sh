@@ -23,9 +23,10 @@
 set -euo pipefail
 
 # --- Configuration -----------------------------------------------------------
+# PHP itself is provisioned separately (see provision.sh's PHP_VERSION) — this
+# script only unpacks a release tarball and never selects a PHP version.
 APP_DIR="/opt/inventory"
 CURRENT="${APP_DIR}/current"
-PHP_VERSION="8.5"
 
 # --- Arguments ---------------------------------------------------------------
 ARCHIVE="${1:-}"

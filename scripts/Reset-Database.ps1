@@ -5,7 +5,7 @@
 			[string[]]$Arguments
 		)
 
-		php artisan @Arguments
+		docker compose run --rm app php artisan @Arguments
 		if ($LASTEXITCODE -ne 0) {
 			throw "Artisan command failed: php artisan $($Arguments -join ' ')"
 		}

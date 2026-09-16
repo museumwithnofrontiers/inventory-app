@@ -60,7 +60,7 @@ _docs/
 ### For Local Development
 
 - Python 3.x
-- Ruby 3.2.3 (for Jekyll)
+- Ruby 3.4 (for Jekyll), matching `.docker/Dockerfile.docs` and `docs/Gemfile`
 - Bundler gem installed
 
 ### For GitHub Actions (handled automatically)
@@ -164,7 +164,7 @@ jobs:
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
         with:
-          ruby-version: "3.2.3"
+          ruby-version: "3.4"
           working-directory: docs
 
       - name: Install Ruby dependencies
