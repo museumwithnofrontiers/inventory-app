@@ -11,7 +11,7 @@
 			"options": { "cwd": "${workspaceFolder}", "env": { "XDEBUG_MODE": "off" } },
 			"presentation": { "reveal": "always", "panel": "shared" },
 			"problemMatcher": [],
-			"detail": "Run Laravel Pint (PHP 8.4 Dev Container)"
+			"detail": "Run Laravel Pint (Dev Container)"
 		},
 
 		// ── PHP test suites (atomic, one per CI matrix job) ───────────────────────

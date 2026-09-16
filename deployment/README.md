@@ -26,13 +26,14 @@ This directory contains sample web server configuration files for deploying the 
 
 ### OVH Reference Host
 
-The current OVH host for `inventory.metanull.eu` runs this stack:
-
-- Ubuntu 25.10 (Questing Quokka)
-- Nginx 1.28.0
-- PHP 8.4.11 with PHP-FPM
-- MySQL 8.4.8
-- Valkey 8.1.6
+The current OVH host for `inventory.metanull.eu` runs Ubuntu 26.04 with
+PHP-FPM. The exact PHP minor is set once, in one place —
+`scripts/provision.sh`'s `PHP_VERSION` — and mirrored by `.docker/Dockerfile`'s
+`FROM php:` tag and every CI `php-version` input; see
+[Server Configuration](../docs/deployment/server-configuration.md)
+for the authoritative, currently-maintained walkthrough (socket paths,
+PHP-FPM pool config, Nginx/Apache blocks). Don't hardcode a PHP minor here —
+it drifts exactly like the one this file used to carry.
 
 ## Installation Instructions
 
