@@ -292,7 +292,7 @@ See [/docs/README.md](../../docs/README.md) for complete Jekyll site documentati
 1. **build** - Generates and builds documentation
    - Checks out repository with full Git history (`fetch-depth: 0`)
    - Sets up Python 3.x
-   - Sets up Ruby 3.2.3 (working directory `docs`)
+   - Sets up Ruby (working directory `docs`). The version lives in the workflow itself; keep it in step with `.docker/Dockerfile.docs` and `docs/Gemfile`
    - Installs Ruby dependencies with `bundle install`
    - **Generates commit history documentation** - Calls `python scripts/generate-commit-docs.py`. See [/scripts/README.md](../../scripts/README.md#generating-the-git-commit-history)
    - Builds Jekyll site with `bundle exec jekyll build`
