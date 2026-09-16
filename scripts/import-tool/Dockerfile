@@ -6,7 +6,7 @@
 # scripts/importer:
 #   docker build -f scripts/import-tool/Dockerfile -t import-tool:latest .
 
-FROM node:22-alpine
+FROM node:26-alpine
 
 # mysql-client provides mysql/mysqldump — used only by `ship` mode, to dump
 # staging-mysql (a `stage` build) before handing it to the deployed host.
