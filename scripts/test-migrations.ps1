@@ -89,7 +89,7 @@ function Test-MigrationCycle {
     if ($PSCmdlet.ShouldProcess("Database", "Wipe and run migration cycle $CycleNumber")) {
         # Wipe database
         Write-Status "Wiping database..."
-        $wipeResult = & php artisan db:wipe *>&1
+        $wipeResult = & docker compose run --rm app php artisan db:wipe *>&1
         if ($LASTEXITCODE -ne 0) {
             throw "Database wipe failed:`n$($wipeResult -join "`n")"
         }
@@ -97,7 +97,7 @@ function Test-MigrationCycle {
         
         # Run migrations
         Write-Status "Running migrations..."
-        $migrateResult = & php artisan migrate *>&1
+        $migrateResult = & docker compose run --rm app php artisan migrate *>&1
         if ($LASTEXITCODE -ne 0) {
             throw "Migrations failed:`n$($migrateResult -join "`n")"
         }
@@ -105,7 +105,7 @@ function Test-MigrationCycle {
         
         # Rollback migrations
         Write-Status "Rolling back migrations..."
-        $rollbackResult = & php artisan migrate:rollback --step=100 *>&1
+        $rollbackResult = & docker compose run --rm app php artisan migrate:rollback --step=100 *>&1
         if ($LASTEXITCODE -ne 0) {
             throw "Rollback failed:`n$($rollbackResult -join "`n")"
         }

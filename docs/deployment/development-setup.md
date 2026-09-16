@@ -32,263 +32,88 @@ Complete guide for setting up a local development environment for the Inventory 
 
 ### Required Software
 
-- **PHP 8.2+** with required extensions
-- **Composer 2.0+**
-- **Node.js 18+** and npm
+**Docker Desktop** (or Docker Engine + Compose v2). Nothing else — no PHP, no
+Composer, no Node, no database on the host. Every tool the project needs lives
+in `.docker/Dockerfile`, built and versioned once, so every contributor and CI
+run the same toolchain. Installing PHP, Composer, or Node.js directly on your
+workstation is not part of the supported workflow — see the root
+[`README.md`](https://github.com/metanull/inventory-app/blob/main/README.md#getting-started)
+for the canonical setup instructions this page mirrors.
+
+Also useful, though not required to run the stack:
+
 - **Git**
-- **VS Code** (recommended)
+- **VS Code** (recommended, with the Dev Containers extension if you want the
+  editor attached inside the `app` container — see
+  [`.devcontainer/devcontainer.json`](https://github.com/metanull/inventory-app/blob/main/.devcontainer/devcontainer.json))
 
-## Step 1: Install Prerequisites
+## Step 1: Install Docker
 
-### 1.1 PHP Installation
-
-#### Windows
-
-```powershell
-# Option 1: Using Chocolatey
-choco install php
-
-# Option 2: Manual installation
-# Download PHP 8.2+ from https://windows.php.net/
-# Extract to C:\php and add to PATH
-```
-
-#### macOS
+Install Docker Desktop (Windows/macOS) or Docker Engine + the Compose v2 plugin
+(Linux), then verify:
 
 ```bash
-# Using Homebrew
-brew install php@8.2
-brew link php@8.2
+docker --version
+docker compose version
 ```
 
-#### Linux (Ubuntu/Debian)
-
-```bash
-# Add PHP repository
-sudo add-apt-repository ppa:ondrej/php
-sudo apt update
-
-# Install PHP and extensions
-sudo apt install php8.2 php8.2-cli php8.2-curl php8.2-gd php8.2-mbstring \
-                 php8.2-mysql php8.2-sqlite3 php8.2-xml php8.2-zip
-```
-
-### 1.2 Required PHP Extensions
-
-Verify these extensions are enabled:
-
-**Linux/macOS:**
-
-```bash
-php -m | grep -E "(fileinfo|zip|sqlite3|pdo_sqlite|gd|exif|openssl|curl|mbstring)"
-```
-
-**Windows (PowerShell)**, where `grep` is not available:
-
-```powershell
-php -m | Select-String -Pattern "fileinfo|zip|sqlite3|pdo_sqlite|gd|exif|openssl|curl|mbstring"
-```
-
-### 1.3 Composer Installation
-
-#### Windows
-
-```powershell
-# Option 1: Using Chocolatey
-choco install composer
-
-# Option 2: Manual installation
-# Download and run Composer-Setup.exe from https://getcomposer.org/download/
-
-# Verify installation
-composer --version
-```
-
-#### macOS/Linux
-
-```bash
-# Download and install Composer
-curl -sS https://getcomposer.org/installer | php
-sudo mv composer.phar /usr/local/bin/composer
-
-# Verify installation
-composer --version
-```
-
-### 1.4 Node.js Installation
-
-#### Windows
-
-```powershell
-# Option 1: Download from https://nodejs.org/
-# Option 2: Using Chocolatey
-choco install nodejs
-```
-
-#### macOS/Linux
-
-```bash
-# Using Node Version Manager (recommended)
-curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-nvm install 18
-nvm use 18
-```
+That's the entire prerequisite. `.docker/Dockerfile`'s `dev` target already
+bundles PHP, the required extensions, Composer, and Node — nothing here is
+installed or version-pinned on your machine, so nothing here can drift from
+what CI and production run.
 
 ## Step 2: Project Setup
 
 ### 2.1 Clone Repository
 
 ```bash
-# Clone the repository
 git clone https://github.com/metanull/inventory-app.git
 cd inventory-app
 ```
 
-### 2.2 Install Dependencies
+### 2.2 Start the Stack
 
 ```bash
-# Install PHP dependencies
-composer install
-
-# Install Node.js dependencies
-npm install
+docker compose up -d
 ```
 
-### 2.3 Environment Configuration
+This builds the image, starts MySQL, Valkey, and Mailpit, waits for them to be
+healthy, installs Composer dependencies into a named volume, runs the
+migrations, and brings up php-fpm, nginx, and a queue worker. Environment
+configuration for the dev stack (database, cache, queue, mail) is supplied by
+`compose.yml` itself, not by a `.env` file you need to create or edit.
 
-```bash
-# Copy environment file
-cp .env.example .env
+**Access the application:**
 
-# Generate application key
-php artisan key:generate
-```
+| | |
+|---|---|
+| Admin panel (the active UI) | http://localhost:8010/admin |
+| API docs | http://localhost:8010/docs/api |
+| Mailpit (captures all outbound mail) | http://localhost:8026 |
+| MySQL | `127.0.0.1:3337`, database/user `inventory`, password `secret` |
 
-### 2.4 Configure Environment
-
-Edit `.env` file for development:
-
-```env
-# Application
-APP_NAME="Inventory Management"
-APP_ENV=local
-APP_KEY=base64:YOUR_GENERATED_KEY
-APP_DEBUG=true
-APP_TIMEZONE=UTC
-APP_URL=http://localhost:8000
-
-# Database (SQLite for development)
-DB_CONNECTION=sqlite
-DB_DATABASE=database/database.sqlite
-
-# Image Storage (local development)
-UPLOAD_IMAGES_DISK=local_upload_images
-UPLOAD_IMAGES_PATH=uploads/images
-AVAILABLE_IMAGES_DISK=local_available_images
-AVAILABLE_IMAGES_PATH=available/images
-PICTURES_DISK=local_pictures
-PICTURES_PATH=pictures
-
-# Cache
-CACHE_STORE=file
-SESSION_DRIVER=file
-QUEUE_CONNECTION=sync
-
-# Mail (use log driver for development)
-MAIL_MAILER=log
-
-# Frontend Development
-VITE_APP_URL=http://localhost:8000
-```
-
-### 2.5 Database Setup
-
-**Linux/macOS:**
-
-```bash
-# Create SQLite database file
-touch database/database.sqlite
-
-# Run migrations
-php artisan migrate
-
-# Seed database with test data
-php artisan db:seed
-```
-
-**Windows (PowerShell)**, where `touch` does not exist:
-
-```powershell
-# Create SQLite database file
-New-Item -ItemType File -Path database/database.sqlite -Force
-
-# Run migrations
-php artisan migrate
-
-# Seed database with test data
-php artisan db:seed
-```
-
-### 2.6 Storage Setup
-
-**Linux/macOS:**
-
-```bash
-# Create symbolic link for storage
-php artisan storage:link
-
-# Create image storage directories
-mkdir -p storage/app/uploads/images
-mkdir -p storage/app/available/images
-mkdir -p storage/app/pictures
-```
-
-**Windows (PowerShell)**, where `mkdir` has no `-p` flag and errors if the
-directory already exists:
-
-```powershell
-# Create symbolic link for storage
-php artisan storage:link
-
-# Create image storage directories
-New-Item -ItemType Directory -Force -Path storage/app/uploads/images
-New-Item -ItemType Directory -Force -Path storage/app/available/images
-New-Item -ItemType Directory -Force -Path storage/app/pictures
-```
+See the root [`README.md`](https://github.com/metanull/inventory-app/blob/main/README.md)
+for the full list of profiles (`staging`, `docs`, `tools`, `jobs`, `import`),
+ports, and volumes.
 
 ## Step 3: Development Servers
 
-### 3.1 Manual Start
-
-Start both servers manually:
+`docker compose up -d` (Step 2.2) already starts everything — there is no
+separate "start the server" step. To watch the logs or restart a single
+service:
 
 ```bash
-# Terminal 1: Start Laravel development server
-php artisan serve
-
-# Terminal 2: Start Vite development server
-npm run dev
+docker compose logs -f app
+docker compose restart app
 ```
 
-### 3.2 Automated Start (Recommended)
+Front-end asset work (Vite) runs through the `tools` profile, so the dev image
+stays free of a running Vite process:
 
-Use the development script:
-
-```powershell
-# Start development servers
-composer dev
-
-# Start with database reset
-composer dev -- --reset
+```bash
+docker compose run --rm tools npm ci
+docker compose run --rm --service-ports tools npm run dev   # vite on :5173
 ```
-
-The `composer dev` script will:
-
-- Start PHP artisan serve (Laravel API)
-- Start npm run dev (Vite frontend server)
-- Start queue listener for background jobs
-- Run all servers concurrently with colored output
-- Handle graceful shutdown
 
 ## Step 4: IDE Configuration
 
@@ -311,9 +136,13 @@ Install recommended extensions:
 
 ### 4.2 VS Code Settings
 
+Intelephense needs *a* PHP binary to introspect, but not the one that runs
+your code — it never has to be the same version as `.docker/Dockerfile`. If
+you don't have PHP on your machine at all, omit `php.validate.executablePath`
+and let Intelephense fall back to its bundled stubs.
+
 ```json
 {
-  "php.validate.executablePath": "/path/to/php",
   "intelephense.files.maxSize": 3000000,
   "vetur.validation.template": false,
   "vetur.validation.script": false,
@@ -323,7 +152,10 @@ Install recommended extensions:
 
 ### 4.3 Debug Configuration
 
-Create `.vscode/launch.json`:
+Step debugging (Xdebug) is compiled into the `dev` image but off by default.
+Set `XDEBUG_MODE=debug` on the `app` container (or uncomment the line in
+`.devcontainer/devcontainer.json`) to arm it against port 9003, then create
+`.vscode/launch.json`:
 
 ```json
 {
@@ -333,7 +165,7 @@ Create `.vscode/launch.json`:
       "name": "Launch Chrome",
       "request": "launch",
       "type": "pwa-chrome",
-      "url": "http://localhost:8000",
+      "url": "http://localhost:8010",
       "webRoot": "${workspaceFolder}/resources/js"
     },
     {
@@ -342,7 +174,7 @@ Create `.vscode/launch.json`:
       "request": "launch",
       "port": 9003,
       "pathMappings": {
-        "/var/www/html": "${workspaceFolder}"
+        "/var/www/app": "${workspaceFolder}"
       }
     }
   ]
@@ -354,111 +186,97 @@ Create `.vscode/launch.json`:
 ### 5.1 Daily Development
 
 ```bash
-# Start development environment
-composer dev
+# Start the stack (if not already running)
+docker compose up -d
 
 # Access applications:
-# - API: http://localhost:8000/api
-# - Frontend: http://localhost:8000 (served by Laravel with Vite HMR)
-# - Vite Dev Server: http://localhost:5173 (for direct asset access)
+# - Admin panel: http://localhost:8010/admin
+# - API docs: http://localhost:8010/docs/api
+# - Vite dev server: http://localhost:5173 (docker compose run --rm --service-ports tools npm run dev)
 ```
 
 ### 5.2 Code Quality
 
-**Linux/macOS:**
+Everything runs inside the containers — see
+[`scripts/Invoke-Check.ps1`](https://github.com/metanull/inventory-app/blob/main/scripts/Invoke-Check.ps1)
+and
+[`scripts/Invoke-Fix.ps1`](https://github.com/metanull/inventory-app/blob/main/scripts/Invoke-Fix.ps1)
+for the full set of checks. Directly:
 
 ```bash
-# Check code style
-./vendor/bin/pint
-npm run lint
-npm run type-check
-```
-
-**Windows (PowerShell):**
-
-```powershell
-# Check code style
-.\vendor\bin\pint
-npm run lint
-npm run type-check
+docker compose exec app composer check      # pint --test, phpstan, pest
+docker compose exec app composer pint       # fix code style
+docker compose exec app composer stan       # phpstan
+docker compose run --rm tools npx prettier --check --ignore-unknown ./resources/**
 ```
 
 ### 5.3 Database Management
 
 ```bash
 # Snapshot auth before a destructive reset
-php artisan auth:snapshot auth-snapshots/pre-reset.json.enc --force
+docker compose exec app php artisan auth:snapshot auth-snapshots/pre-reset.json.enc --force
 
 # Reset database and run migrations
-php artisan db:wipe --force
-php artisan migrate --force
-php artisan db:seed --class=MinimalDatabaseSeeder --force
-php artisan permissions:sync
+docker compose exec app php artisan db:wipe --force
+docker compose exec app php artisan migrate --force
+docker compose exec app php artisan db:seed --class=MinimalDatabaseSeeder --force
+docker compose exec app php artisan permissions:sync
 
 # Restore users, MFA setup, role assignments, direct permissions, and API tokens
-php artisan auth:restore auth-snapshots/pre-reset.json.enc --force
+docker compose exec app php artisan auth:restore auth-snapshots/pre-reset.json.enc --force
 
 # Create new migration
-php artisan make:migration create_example_table
+docker compose exec app php artisan make:migration create_example_table
 
 # Create new model with factory and seeder
-php artisan make:model Example -mfs
+docker compose exec app php artisan make:model Example -mfs
 
 # Run specific seeder
-php artisan db:seed --class=ExampleSeeder
+docker compose exec app php artisan db:seed --class=ExampleSeeder
 ```
+
+On Windows, `scripts/Reset-Database.ps1` wraps the snapshot/wipe/migrate/seed/
+restore sequence above in one command, already routed through
+`docker compose run --rm app`.
 
 ### 5.4 Frontend Development
 
 ```bash
 # Install new frontend dependency
-npm install package-name
+docker compose run --rm tools npm install package-name
 
 # Run frontend tests
-npm run test
-
-# Run integration tests
-npm run test:integration
+docker compose run --rm tools npm run test
 
 # Build for production
-npm run build
+docker compose run --rm tools npm run build
 ```
 
 ## Step 6: Testing Environment
 
-### 6.1 Unit Testing
+### 6.1 Backend Testing
+
+The suite runs against SQLite `:memory:` — `phpunit.xml` forces that
+regardless of the container's own `DB_CONNECTION`, so tests never touch the
+dev database:
 
 ```bash
-# Run PHP tests
-php artisan test
-
-# Run with coverage
-php artisan test --coverage
-
-# Run specific test
-php artisan test --filter ExampleTest
+docker compose exec app composer test                            # everything
+docker compose exec app php artisan test --testsuite=Api         # one suite
+docker compose exec app php artisan test --filter ExampleTest    # one test
 ```
 
 ### 6.2 Frontend Testing
 
 ```bash
-# Run Vue.js unit tests
-npm run test
-
-# Run with watch mode
-npm run test:watch
-
-# Run integration tests
-npm run test:integration
+docker compose run --rm tools npm run test
+docker compose run --rm tools npm run test:watch
 ```
 
 ### 6.3 API Testing
 
-**Linux/macOS:**
-
 ```bash
-# Test API endpoints
-curl -X GET http://localhost:8000/api/projects \
+curl -X GET http://localhost:8010/api/projects \
      -H "Accept: application/json" \
      -H "Authorization: Bearer YOUR_TOKEN"
 ```
@@ -468,8 +286,7 @@ syntax — use a backtick, and call `curl.exe` directly so it isn't resolved to
 the `Invoke-WebRequest` alias:
 
 ```powershell
-# Test API endpoints
-curl.exe -X GET http://localhost:8000/api/projects `
+curl.exe -X GET http://localhost:8010/api/projects `
      -H "Accept: application/json" `
      -H "Authorization: Bearer YOUR_TOKEN"
 ```
@@ -480,31 +297,31 @@ curl.exe -X GET http://localhost:8000/api/projects `
 
 ```bash
 # 1. Create migration
-php artisan make:migration create_feature_table
+docker compose exec app php artisan make:migration create_feature_table
 
 # 2. Create model with factory and seeder
-php artisan make:model Feature -mfs
+docker compose exec app php artisan make:model Feature -mfs
 
 # 3. Create controller
-php artisan make:controller FeatureController --api
+docker compose exec app php artisan make:controller FeatureController --api
 
 # 4. Create resource
-php artisan make:resource FeatureResource
+docker compose exec app php artisan make:resource FeatureResource
 
 # 5. Add routes to routes/api.php
 # 6. Create tests
-php artisan make:test FeatureTest
+docker compose exec app php artisan make:test FeatureTest
 ```
 
 ### 7.2 Database Seeding
 
 ```bash
 # Create seeder
-php artisan make:seeder FeatureSeeder
+docker compose exec app php artisan make:seeder FeatureSeeder
 
 # Add to DatabaseSeeder.php
 # Run seeder
-php artisan db:seed --class=FeatureSeeder
+docker compose exec app php artisan db:seed --class=FeatureSeeder
 ```
 
 ### 7.3 Frontend Components
@@ -521,71 +338,38 @@ php artisan db:seed --class=FeatureSeeder
 
 #### Port Already in Use
 
+The dev stack binds to `8010` (see the port table in the root `README.md`).
+Find and stop whatever already owns it:
+
 **Linux/macOS:**
 
 ```bash
-# Kill process using port 8000
-lsof -ti:8000 | xargs kill -9
-
-# Or use different port
-php artisan serve --port=8001
+lsof -ti:8010 | xargs kill -9
 ```
 
 **Windows (PowerShell)**, where `lsof`/`xargs` do not exist:
 
 ```powershell
-# Kill process using port 8000
-Get-NetTCPConnection -LocalPort 8000 -ErrorAction SilentlyContinue |
+Get-NetTCPConnection -LocalPort 8010 -ErrorAction SilentlyContinue |
     Select-Object -ExpandProperty OwningProcess -Unique |
     ForEach-Object { Stop-Process -Id $_ -Force }
-
-# Or use different port
-php artisan serve --port=8001
 ```
 
-#### Permission Issues (Linux/macOS)
-
-```bash
-# Fix storage permissions
-sudo chown -R $USER:www-data storage bootstrap/cache
-sudo chmod -R 775 storage bootstrap/cache
-```
+Or change the published port for the `web` service in `compose.yml`.
 
 #### Composer Issues
 
 ```bash
-# Clear Composer cache
-composer clear-cache
-
-# Update dependencies
-composer update
-
-# Dump autoload
-composer dump-autoload
+docker compose exec app composer clear-cache
+docker compose run --rm --no-deps app composer update
+docker compose exec app composer dump-autoload
 ```
 
 #### NPM Issues
 
-**Linux/macOS:**
-
 ```bash
-# Clear npm cache
-npm cache clean --force
-
-# Delete node_modules and reinstall
-rm -rf node_modules package-lock.json
-npm install
-```
-
-**Windows (PowerShell):**
-
-```powershell
-# Clear npm cache
-npm cache clean --force
-
-# Delete node_modules and reinstall
-Remove-Item -Recurse -Force node_modules, package-lock.json
-npm install
+docker compose run --rm tools npm cache clean --force
+docker compose run --rm tools sh -c "rm -rf node_modules package-lock.json && npm install"
 ```
 
 ### 8.2 Performance Issues
@@ -594,53 +378,43 @@ npm install
 
 ```bash
 # Clear all caches
-php artisan optimize:clear
+docker compose exec app php artisan optimize:clear
 
-# Disable Xdebug when not debugging
-# Comment out xdebug extension in php.ini
+# Disable Xdebug when not debugging — unset XDEBUG_MODE (or leave it unset,
+# it is off by default) rather than editing php.ini inside the container.
 ```
 
 #### Slow Frontend Compilation
 
-**Linux/macOS:**
-
 ```bash
-# Use Vite optimization
-npm run dev -- --host
-
-# Increase Node.js memory limit
-export NODE_OPTIONS="--max-old-space-size=4096"
+docker compose run --rm --service-ports tools npm run dev -- --host
 ```
 
-**Windows (PowerShell)**, where `export` is bash syntax and does not work as
-written in PowerShell:
+To raise Node's memory limit for the `tools` container, set `NODE_OPTIONS` as
+an environment override on the `run` command rather than inside the
+container:
 
-```powershell
-# Use Vite optimization
-npm run dev -- --host
-
-# Increase Node.js memory limit
-$env:NODE_OPTIONS = "--max-old-space-size=4096"
+```bash
+docker compose run --rm -e NODE_OPTIONS=--max-old-space-size=4096 tools npm run build
 ```
 
 ## Step 9: Development Scripts
 
 ### 9.1 Composer Scripts
 
-Available composer scripts for development:
+Available composer scripts for development, run inside the container:
 
 ```bash
-# Start development environment
-composer dev
-
-# Start with reset
-composer dev -- --reset
-
 # Quality checks
-composer ci-lint
-composer ci-test
-composer ci-before:pull-request
+docker compose exec app composer ci-lint
+docker compose exec app composer ci-test
+docker compose exec app composer ci-before:pull-request
 ```
+
+See [Scripts]({{ '/development/scripts' | relative_url }}) for the
+Docker-wrapped PowerShell helpers (`scripts/Invoke-Check.ps1`,
+`scripts/Invoke-Fix.ps1`, `scripts/Invoke-Pest.local.ps1`,
+`scripts/Invoke-Phpstan.local.ps1`) that call these same commands.
 
 ## Step 10: Git Workflow
 
@@ -661,15 +435,15 @@ git push origin feature/new-feature
 ### 10.2 Pre-commit Checks
 
 ```bash
-# Run before committing
-composer ci-before:pull-request
-
-# This runs:
-# - Code formatting (Pint)
-# - Tests (PHPUnit)
-# - Security audit
-# - OpenAPI documentation generation
+docker compose exec app composer ci-before:pull-request
 ```
+
+This runs:
+
+- Code formatting (Pint)
+- Tests (PHPUnit)
+- Security audit
+- OpenAPI documentation generation
 
 ---
 
