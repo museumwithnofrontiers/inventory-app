@@ -241,9 +241,10 @@ jobs:
     if: needs.detect-changes.outputs.import-tool-image == 'true'
 
     # importer-validation runs `npm ci` on the GitHub runner, which has a full
-    # build toolchain. The import-tool image does not: it is node:22-alpine,
-    # so a dependency without a musl prebuild fails there and nowhere else.
-    # That is how #1598 shipped a broken `stage` image through a green CI.
+    # build toolchain. The import-tool image does not: it is Alpine-based
+    # (see the FROM line in scripts/import-tool/Dockerfile), so a dependency
+    # without a musl prebuild fails there and nowhere else. That is how
+    # #1598 shipped a broken `stage` image through a green CI.
     #
     # Builds only. Nothing is pushed and nothing is tagged for a registry:
     # the workflow's `permissions:` block grants `packages: read`, so this job
