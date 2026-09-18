@@ -180,10 +180,10 @@
                         <a href="{{ url('/docs/api') }}" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             <x-heroicon-o-book-open class="w-4 h-4" /> API Docs
                         </a>
-                        <a href="https://github.com/metanull/inventory-app" target="_blank" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <a href="https://github.com/museumwithnofrontiers/inventory-app" target="_blank" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             <x-heroicon-o-code-bracket class="w-4 h-4" /> Source Code
                         </a>
-                        <a href="https://metanull.github.io/inventory-app" target="_blank" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                        <a href="https://museumwithnofrontiers.github.io/inventory-app" target="_blank" class="flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
                             <x-heroicon-o-document-text class="w-4 h-4" /> Project Docs
                         </a>
                     </div>
@@ -367,8 +367,8 @@
             <div class="space-y-2">
                 <p class="text-[11px] font-semibold text-gray-400 uppercase">Resources</p>
                 <a href="{{ url('/docs/api') }}" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">API Docs</a>
-                <a href="https://github.com/metanull/inventory-app" target="_blank" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">Source Code</a>
-                <a href="https://metanull.github.io/inventory-app" target="_blank" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">Project Docs</a>
+                <a href="https://github.com/museumwithnofrontiers/inventory-app" target="_blank" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">Source Code</a>
+                <a href="https://museumwithnofrontiers.github.io/inventory-app" target="_blank" class="block px-2 py-1 rounded text-gray-600 hover:bg-gray-50 hover:text-gray-800">Project Docs</a>
             </div>
             @auth
                 @if(auth()->user()->can(\App\Enums\Permission::MANAGE_USERS->value) || auth()->user()->can(\App\Enums\Permission::MANAGE_ROLES->value))

@@ -44,7 +44,7 @@ files, written to `output/islamicart/`:
 | `countries.json` | `CountryExporter` | Country reference data + translations |
 | `dynasties.json` | `DynastyExporter` | Dynasty reference data + translations |
 | `timelines.json` | `TimelineExporter` | Timelines and their events |
-| `partners.json` | `PartnerExporter` | Museums/institutions + translations + images. One shape across every dataset (metanull/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured`/`project_uuids` (epic #1727 phase 2, additive) |
+| `partners.json` | `PartnerExporter` | Museums/institutions + translations + images. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured`/`project_uuids` (epic #1727 phase 2, additive) |
 | `items.json` | `ItemExporter` | Items (objects/monuments/details), with images, dynasty/tag links, related-item links |
 | `collections.json` | `CollectionExporter` | Collections (exhibitions/themes/galleries), with images and item membership |
 | `glossary.json` | `GlossaryExporter` | Glossary terms + translations |
@@ -156,7 +156,7 @@ single project is the fastest way to confirm connectivity.
 
 The published package is Content of the MWNF Website under the
 [MWNF legal notice](https://www.museumwnf.org/about/legal-notice) (story
-metanull/inventory-app#1690): `package.json`'s `license` defaults to
+museumwithnofrontiers/inventory-app#1690): `package.json`'s `license` defaults to
 `SEE LICENSE IN LICENSE.md` (override with `PACKAGE_LICENSE`), the notice
 text itself ships as `LICENSE.md` — a copy of the single shared
 `scripts/exporters/docs/LICENSE.md.template` all seven exporters copy from,

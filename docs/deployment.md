@@ -130,7 +130,7 @@ New-Item -ItemType Directory -Path "C:\mwnf-server\github-apps\shared-storage\st
 
 ### Step 1: Download Release Artifact
 
-1. Go to the [GitHub Releases](https://github.com/metanull/inventory-app/releases) page
+1. Go to the [GitHub Releases](https://github.com/museumwithnofrontiers/inventory-app/releases) page
 2. Find the version you want to deploy
 3. Download the `inventory-app-release-*.zip` artifact
 4. Extract it to a temporary directory:
@@ -467,4 +467,4 @@ The deployment script returns the following exit codes:
 
 - [Installation Script Design](/deployment/#) - Architecture documentation
 - [README](/README) - Project overview
-- [GitHub Releases](https://github.com/metanull/inventory-app/releases) - Download releases
+- [GitHub Releases](https://github.com/museumwithnofrontiers/inventory-app/releases) - Download releases

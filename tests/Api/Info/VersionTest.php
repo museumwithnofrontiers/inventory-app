@@ -35,13 +35,13 @@ class VersionTest extends TestCase
     private function createMockVersionFile(?array $data = null): void
     {
         $defaultData = [
-            'repository' => 'metanull/inventory-app',
+            'repository' => 'museumwithnofrontiers/inventory-app',
             'build_timestamp' => [
                 'value' => '/Date(271310400000)/',
                 'DisplayHint' => 2,
                 'DateTime' => 'Saturday, August 5, 1978 5:00:00 AM',
             ],
-            'repository_url' => 'https://github.com/metanull/inventory-app',
+            'repository_url' => 'https://github.com/museumwithnofrontiers/inventory-app',
             'app_version' => '1.0.0-dev',
             'commit_sha' => '1e3b8e37cab51bf27faa916eec9e66b2beadb931',
         ];

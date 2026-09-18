@@ -5,10 +5,10 @@ A Vue 3 + Vite single-page application that reproduces the legacy
 reading a **static data package** instead of calling an API.
 
 This is the second DXA **exhibition** viewer
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1549](https://github.com/metanull/inventory-app/issues/1549)), forked
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1549](https://github.com/museumwithnofrontiers/inventory-app/issues/1549)), forked
 from [`../the-use-of-colours-in-art`](../the-use-of-colours-in-art/README.md)
-([#1547](https://github.com/metanull/inventory-app/issues/1547)). Its data comes
+([#1547](https://github.com/museumwithnofrontiers/inventory-app/issues/1547)). Its data comes
 from the matching exporter,
 [`../../exporters/water-in-islam`](../../exporters/water-in-islam/README.md);
 its UI strings come from [`../../site-i18n`](../../site-i18n/README.md); the

@@ -620,7 +620,7 @@ grep -E "GET|POST" /var/log/apache2/access.log | tail -100
 
 ### Project-Specific Help
 
-- **GitHub Issues**: [https://github.com/metanull/inventory-app/issues](https://github.com/metanull/inventory-app/issues)
+- **GitHub Issues**: [https://github.com/museumwithnofrontiers/inventory-app/issues](https://github.com/museumwithnofrontiers/inventory-app/issues)
 - **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
 - **Development Guide**: [Development Setup](development-setup)
 

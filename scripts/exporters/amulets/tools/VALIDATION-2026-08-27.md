@@ -7,7 +7,7 @@ public, so the comparison here is against the **running legacy instance**
 (<https://amulets.museumwnf.org/api/v2/…>), which is a stricter target — it
 reflects every server-side filter and quirk the dumps do not show.
 
-Export run against the **staging** inventory database (post-[#1523](https://github.com/metanull/inventory-app/issues/1523)
+Export run against the **staging** inventory database (post-[#1523](https://github.com/museumwithnofrontiers/inventory-app/issues/1523)
 import), `BASE_URL=https://inventory.metanull.eu`.
 
 > **Amendment — timeline scope and `countries.json`.** The original run of this
@@ -15,7 +15,7 @@ import), `BASE_URL=https://inventory.metanull.eu`.
 > to a single legacy source (18 timelines / 1,075 events against the live 26
 > countries / 1,390 events) and `countries.json` omitted the timeline's
 > countries (19 shipped where 31 are needed). Both were found while building the
-> amulets viewer ([#1566](https://github.com/metanull/inventory-app/issues/1566)),
+> amulets viewer ([#1566](https://github.com/museumwithnofrontiers/inventory-app/issues/1566)),
 > corrected first in the carpets fork, and are now corrected here. The rows
 > below carry the post-fix numbers; the two amended sections spell out what
 > changed.
@@ -207,12 +207,12 @@ History exhibition 2, has no timeline.
    (Colours) stores `{"type":"Buffer","data":[1]}` in
    `collection_translations.extra` where gallery 9 stores `false` — some rows
    predate the importer's `bitToBoolean` normalization. `bitToBoolean` in the
-   exporter accepts both forms; the exhibition exporter ([#1546](https://github.com/metanull/inventory-app/issues/1546))
+   exporter accepts both forms; the exhibition exporter ([#1546](https://github.com/museumwithnofrontiers/inventory-app/issues/1546))
    will need the same, or an importer fix.
 4. **Gallery chrome images are not in inventory storage.**
    `thematic_gallery/thg_galleries/4/{1,banner}.jpg` were never imported, so
    the package carries legacy paths and the viewer must supply the media host
-   ([#1543](https://github.com/metanull/inventory-app/issues/1543) decides how).
+   ([#1543](https://github.com/museumwithnofrontiers/inventory-app/issues/1543) decides how).
 
 ## Reproducing
 

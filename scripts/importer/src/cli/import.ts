@@ -830,7 +830,7 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     // and 15), which the exhibition needs — legacy shows 194 curated pictures,
     // the import produced 189. Re-running this importer alone afterwards
     // imported all 1,284 rows with zero skips, which is what "ordering, not
-    // resolution" looks like. See metanull/inventory-app#1546.
+    // resolution" looks like. See museumwithnofrontiers/inventory-app#1546.
     dependencies: [
       'thg-theme',
       'object',

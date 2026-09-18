@@ -313,7 +313,7 @@ A newly published data package does **not** redeploy a demo viewer by itself.
 Start the workflow by hand when the content should be refreshed:
 
 ```bash
-gh workflow run deploy-viewer-<site>-ovh.yml -R metanull/inventory-app
+gh workflow run deploy-viewer-<site>-ovh.yml -R museumwithnofrontiers/inventory-app
 ```
 
 ## After a full re-import: the whole sequence

@@ -292,7 +292,7 @@ Residual items to verify during exporter implementation (not blockers):
   original underscore slugs (`the_use_of_colours_in_art`) since they are
   legacy identity.
 - **Q6 — Deduplicated Explore monuments: no new persistence** (2026-08-28,
-  during [#1593](https://github.com/metanull/inventory-app/issues/1593)). When
+  during [#1593](https://github.com/museumwithnofrontiers/inventory-app/issues/1593)). When
   the importer merges an Explore monument into an already-imported record, the
   Explore identity survives on `collection_item.backward_compatibility` and
   nowhere else; no `"deduplicated"` key is added to the item. See

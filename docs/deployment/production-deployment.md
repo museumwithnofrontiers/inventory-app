@@ -97,7 +97,7 @@ FLUSH PRIVILEGES;
 ```powershell
 # Clone repository to production directory
 cd C:\inetpub\wwwroot\
-git clone https://github.com/metanull/inventory-app.git
+git clone https://github.com/museumwithnofrontiers/inventory-app.git
 cd inventory-app
 
 # Or download release package

@@ -307,7 +307,7 @@ export class ThgGalleryTranslationImporter extends BaseImporter {
     // exhibition sheet renders them in three different places (sub-title under
     // the title, headline in the banner, about on its own page), and an
     // exhibition data package has no other way to tell them apart.
-    // See metanull/inventory-app#1546.
+    // See museumwithnofrontiers/inventory-app#1546.
     if (i18n.subtitle) exhibitionExtra.subtitle = i18n.subtitle;
     if (i18n.heading) exhibitionExtra.heading = i18n.heading;
     if (i18n.about) exhibitionExtra.about = i18n.about;

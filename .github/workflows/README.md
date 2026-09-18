@@ -330,7 +330,7 @@ This workflow runs automatically on push to `main`. For manual deployment:
 | Reference | URL |
 | --- | --- |
 | GitHub Pages | [https://pages.github.com/](https://pages.github.com/) |
-| Documentation Site | [https://metanull.github.io/inventory-app](https://metanull.github.io/inventory-app) |
+| Documentation Site | [https://museumwithnofrontiers.github.io/inventory-app](https://museumwithnofrontiers.github.io/inventory-app) |
 | Jekyll Documentation | [https://jekyllrb.com/docs/](https://jekyllrb.com/docs/) |
 
 ---

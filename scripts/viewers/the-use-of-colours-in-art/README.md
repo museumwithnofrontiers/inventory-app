@@ -5,8 +5,8 @@ A Vue 3 + Vite single-page application that reproduces the legacy
 website while reading a **static data package** instead of calling an API.
 
 This is the first DXA **exhibition** viewer
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1547](https://github.com/metanull/inventory-app/issues/1547)), forked
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1547](https://github.com/museumwithnofrontiers/inventory-app/issues/1547)), forked
 from [`../carpets`](../carpets/README.md). Its data comes from the matching
 exporter,
 [`../../exporters/the-use-of-colours-in-art`](../../exporters/the-use-of-colours-in-art/README.md);
@@ -178,7 +178,7 @@ client reads the catalogue, and so does this.
   categories 1–4 render in the footer strip under `footer_logo_section_<n>`, a
   logo with `visible: false` is dropped, and an emptied category loses its
   heading too. All of that arrived with
-  [#1592](https://github.com/metanull/inventory-app/issues/1592), which put
+  [#1592](https://github.com/museumwithnofrontiers/inventory-app/issues/1592), which put
   `link`, `category_id`, `visible` and the per-language `labels` into
   `collection_images.extra` — before it, the package carried the image and the
   display order and nothing else.

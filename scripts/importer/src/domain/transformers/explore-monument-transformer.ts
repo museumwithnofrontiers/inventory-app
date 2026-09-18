@@ -22,7 +22,7 @@ export interface ExploreLegacyMonument {
    * The legacy 2-char country code of the monument's location, joined in from
    * `mwnf3_explore.locations.countryId`. Legacy stores no country on the
    * monument row itself and derives it at query time through this same hop.
-   * See metanull/inventory-app#1593.
+   * See museumwithnofrontiers/inventory-app#1593.
    */
   countryId: string | null;
 }

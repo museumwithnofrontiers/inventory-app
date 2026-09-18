@@ -29,7 +29,7 @@
  *
  * Run standalone with `--only explore-monument-country-backfill`. It is a
  * no-op after a fresh full import, because ExploreMonumentImporter now derives
- * the country itself. See metanull/inventory-app#1593.
+ * the country itself. See museumwithnofrontiers/inventory-app#1593.
  */
 
 import { BaseImporter } from '../../core/base-importer.js';

@@ -87,7 +87,7 @@ files, written to `output/sharinghistory/`:
 | `languages.json` | `LanguageExporter` | Language reference data |
 | `countries.json` | `CountryExporter` | Country reference data + translations |
 | `timelines.json` / `timeline_events.json` | `TimelineExporter` | Per-(country × exhibition) SH timelines (+ Permanent Collection timelines with `collection_id: null`), events with images, item links and legacy captions |
-| `partners.json` | `PartnerExporter` | SH partners (flat tiers via `level`: `partner` / `associated_partner`) + translations + logos + images. One shape across every dataset (metanull/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured`/`project_uuids` (epic #1727 phase 2, additive) |
+| `partners.json` | `PartnerExporter` | SH partners (flat tiers via `level`: `partner` / `associated_partner`) + translations + logos + images. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured`/`project_uuids` (epic #1727 phase 2, additive) |
 | `items.json` | `ItemExporter` | Items (objects/monuments), with `display_status`, images, media/documents, related-item links |
 | `collections.json` | `CollectionExporter` | Project, exhibitions root, exhibitions → themes → subthemes, Historical Background and National Context collections — with images, item membership, justifications |
 | `glossary.json` | `GlossaryExporter` | Glossary terms used by SH content + translations |
@@ -199,7 +199,7 @@ the [importer](../../importer/README.md#troubleshooting).
 
 The published package is Content of the MWNF Website under the
 [MWNF legal notice](https://www.museumwnf.org/about/legal-notice) (story
-metanull/inventory-app#1690): `package.json`'s `license` defaults to
+museumwithnofrontiers/inventory-app#1690): `package.json`'s `license` defaults to
 `SEE LICENSE IN LICENSE.md` (override with `PACKAGE_LICENSE`), the notice
 text itself ships as `LICENSE.md` — a copy of the single shared
 `scripts/exporters/docs/LICENSE.md.template` all seven exporters copy from,

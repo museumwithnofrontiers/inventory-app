@@ -270,7 +270,7 @@ Two counting traps worth knowing before comparing a fork against these numbers:
 ## Reference implementation
 
 [`scripts/exporters/the-use-of-colours-in-art`](../the-use-of-colours-in-art/README.md)
-([story #1546](https://github.com/metanull/inventory-app/issues/1546),
+([story #1546](https://github.com/museumwithnofrontiers/inventory-app/issues/1546),
 [`../the-use-of-colours-in-art/tools/VALIDATION-2026-08-28.md`](../the-use-of-colours-in-art/tools/VALIDATION-2026-08-28.md))
 implements this specification and is verified against the live legacy API —
 items, themes (per theme, all fifteen), pictures, tags, both timelines, related
@@ -279,7 +279,7 @@ every correction marked above was found by counting against the running site,
 and each had a wrong-looking alternative that still produced plausible output.
 
 [`scripts/exporters/water-in-islam`](../water-in-islam/README.md)
-([story #1548](https://github.com/metanull/inventory-app/issues/1548),
+([story #1548](https://github.com/museumwithnofrontiers/inventory-app/issues/1548),
 [`../water-in-islam/tools/VALIDATION-2026-08-29.md`](../water-in-islam/tools/VALIDATION-2026-08-29.md))
 is that fork, and its value to this specification is the three claims it
 **tested** which Colours alone could only assert:

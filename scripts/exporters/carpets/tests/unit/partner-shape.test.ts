@@ -11,7 +11,7 @@ import type { Logger } from '../../src/core/logger.js'
 /**
  * Every dataset's partners.json carries the same five fields — level,
  * parent_id, project_ids, item_count, featured (decision D4,
- * metanull/inventory-app#1699). This fork already had item_count/featured;
+ * museumwithnofrontiers/inventory-app#1699). This fork already had item_count/featured;
  * these cases pin the three fields it adds — level, parent_id, project_ids —
  * derived from the same curated collection_partner hierarchy the
  * project-scoped exporters read, scoped to the gallery's own single project,

@@ -216,9 +216,9 @@ had `country_id = NULL`, which cost `countries.json` exactly one entry — `in`
 union is 35.
 
 Both were raised as their own stories and fixed:
-[#1592](https://github.com/metanull/inventory-app/issues/1592) adds an `extra`
+[#1592](https://github.com/museumwithnofrontiers/inventory-app/issues/1592) adds an `extra`
 column to `collection_images` and imports the logo passenger data;
-[#1593](https://github.com/metanull/inventory-app/issues/1593) resolves the
+[#1593](https://github.com/museumwithnofrontiers/inventory-app/issues/1593) resolves the
 Explore `locationId → countryId` hop at import time, with a phase-11 backfill for
 databases imported before the fix.
 

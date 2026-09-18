@@ -88,7 +88,7 @@
 
                 {{-- Source Code --}}
                 <x-ui.card 
-                    href="https://github.com/metanull/inventory-app"
+                    href="https://github.com/museumwithnofrontiers/inventory-app"
                     title="Source Code"
                     description="Explore the repository and contribute improvements."
                     :icon="'<x-heroicon-o-code-bracket class=\'w-6 h-6\' />'"
@@ -97,7 +97,7 @@
 
                 {{-- Project Docs --}}
                 <x-ui.card 
-                    href="https://metanull.github.io/inventory-app"
+                    href="https://museumwithnofrontiers.github.io/inventory-app"
                     title="Project Docs"
                     description="View comprehensive project documentation and guidelines."
                     :icon="'<x-heroicon-o-document-text class=\'w-6 h-6\' />'"

@@ -32,7 +32,7 @@ The system can be deployed in several configurations:
 ## Quick Start (Development)
 
 ```powershell
-git clone https://github.com/metanull/inventory-app.git
+git clone https://github.com/museumwithnofrontiers/inventory-app.git
 cd inventory-app
 composer install
 npm install
