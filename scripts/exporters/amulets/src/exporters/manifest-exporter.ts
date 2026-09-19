@@ -101,6 +101,7 @@ export class ManifestExporter extends BaseExporter {
         backward_compatibility: this.gallery.backwardCompatibility,
         slug: this.gallery.slug,
         mwnf3_project_id: this.gallery.mwnf3ProjectId,
+        project_id: this.gallery.projectId,
       },
       languages,
       itemCount: this.memberItemIds.length,

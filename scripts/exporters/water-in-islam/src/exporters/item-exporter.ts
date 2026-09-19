@@ -98,6 +98,7 @@ interface ItemItemLinkRow {
   source_id: string
   target_id: string
   target_backward_compatibility: string | null
+  target_project_id: string | null
   target_project_bc: string | null
   language_id: string | null
   justification: string | null
@@ -244,6 +245,7 @@ export class ItemExporter extends BaseExporter {
       this.db.query<ItemItemLinkRow>(
         `SELECT iil.source_id, iil.target_id,
                 tgt.backward_compatibility AS target_backward_compatibility,
+                tgt.project_id AS target_project_id,
                 proj.backward_compatibility AS target_project_bc,
                 iilt.language_id, iilt.description AS justification
          FROM item_item_links iil
@@ -536,6 +538,7 @@ export class ItemExporter extends BaseExporter {
         entry = {
           id: link.target_id,
           backward_compatibility: link.target_backward_compatibility,
+          project_id: link.target_project_id,
           project_key: lastSegment(link.target_project_bc),
           in_package: memberIds.has(link.target_id),
           justifications: {},
@@ -580,6 +583,7 @@ export class ItemExporter extends BaseExporter {
 interface RelatedEntry {
   id: string
   backward_compatibility: string | null
+  project_id: string | null
   project_key: string | null
   in_package: boolean
   justifications: Record<string, string>

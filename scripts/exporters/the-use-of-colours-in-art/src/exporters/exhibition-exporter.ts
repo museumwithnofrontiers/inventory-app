@@ -187,6 +187,7 @@ export class ExhibitionExporter extends BaseExporter {
       slug: this.exhibition.slug,
       legacy_host: this.exhibition.host,
       mwnf3_project_id: this.exhibition.mwnf3ProjectId,
+      project_id: this.exhibition.projectId,
       languages: Object.keys(titles).sort(),
       languages_enabled: languagesEnabled.sort(),
       titles,
