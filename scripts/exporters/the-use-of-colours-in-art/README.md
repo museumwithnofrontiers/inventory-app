@@ -7,10 +7,10 @@ publishes that output as a public npm package
 (`@museumwnf/the-use-of-colours-in-art-data`) on npmjs.
 
 This is the first of the DXA **exhibition** exporters
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1546](https://github.com/metanull/inventory-app/issues/1546)), forked
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1546](https://github.com/museumwithnofrontiers/inventory-app/issues/1546)), forked
 from [`../carpets`](../carpets/README.md)
-([#1544](https://github.com/metanull/inventory-app/issues/1544)). It replaces one
+([#1544](https://github.com/museumwithnofrontiers/inventory-app/issues/1544)). It replaces one
 legacy deployment of `dxa-api` + `dxa-client`:
 <https://exhibitions.museumwnf.org/the_use_of_colours_in_art/en>. The package
 specification it implements is
@@ -125,7 +125,7 @@ curated texts, so a `de` build becomes possible the day someone flips the flag.
 | `related_content.json` | The 10 categorized reading-list entries |
 | `items.json` | The 171 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 293 THG facet tags with their category (artist 45, dynasty 18, material 97, subject 34, type 99) |
-| `partners.json` | The 85 museums and institutions (75 on legacy's partner list + 11 institutions, minus the overlap). One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
+| `partners.json` | The 85 museums and institutions (75 on legacy's partner list + 11 institutions, minus the overlap). One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
 | `countries.json` | The 35 countries the members, their holders and the timeline reference |
 | `languages.json` | The 10 languages the site can display (de/en as `site_language`, plus 8 carried by borrowed records and partners) |
 | `dynasties.json` | The 16 dynasties member items reference |
@@ -207,9 +207,9 @@ therefore identity. Never derive one from the other.
 
 Verified during implementation. None blocks the package, and none is worth an
 issue of its own: the two importer-side defects this section used to list were
-fixed by [#1592](https://github.com/metanull/inventory-app/issues/1592) (sponsor
+fixed by [#1592](https://github.com/museumwithnofrontiers/inventory-app/issues/1592) (sponsor
 logo captions, links and categories) and
-[#1593](https://github.com/metanull/inventory-app/issues/1593) (Explore monument
+[#1593](https://github.com/museumwithnofrontiers/inventory-app/issues/1593) (Explore monument
 countries). What remains is one deliberate modelling difference and two
 disagreements with the live API that are expected and will not be fixed.
 
@@ -243,7 +243,7 @@ export checked metric by metric against the live legacy API.
 
 The published package is Content of the MWNF Website under the
 [MWNF legal notice](https://www.museumwnf.org/about/legal-notice) (story
-metanull/inventory-app#1690): `package.json`'s `license` defaults to
+museumwithnofrontiers/inventory-app#1690): `package.json`'s `license` defaults to
 `SEE LICENSE IN LICENSE.md` (override with `PACKAGE_LICENSE`), the notice
 text itself ships as `LICENSE.md` — a copy of the single shared
 `scripts/exporters/docs/LICENSE.md.template` all seven exporters copy from,

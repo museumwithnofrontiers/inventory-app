@@ -64,8 +64,8 @@ The plugin ensures these files are:
 
 ### On GitHub Pages
 
-- **OpenAPI Spec:** `https://metanull.github.io/inventory-app/api.json`
-- **Swagger UI:** `https://metanull.github.io/inventory-app/swagger-ui.html`
+- **OpenAPI Spec:** `https://museumwithnofrontiers.github.io/inventory-app/api.json`
+- **Swagger UI:** `https://museumwithnofrontiers.github.io/inventory-app/swagger-ui.html`
 
 ### Locally (during development)
 

@@ -30,7 +30,7 @@
  *
  * Run standalone with `--only exhibition-i18n-text-backfill`. It is a no-op
  * after a fresh full import, because ThgGalleryTranslationImporter now writes
- * the three fields itself. See metanull/inventory-app#1546.
+ * the three fields itself. See museumwithnofrontiers/inventory-app#1546.
  */
 
 import { BaseImporter } from '../../core/base-importer.js';

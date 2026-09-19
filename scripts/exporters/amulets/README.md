@@ -7,8 +7,8 @@ publishes that output as a public npm package (`@museumwnf/amulets-data`) on
 npmjs.
 
 This is the first of the DXA gallery exporters
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1542](https://github.com/metanull/inventory-app/issues/1542)). It
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1542](https://github.com/museumwithnofrontiers/inventory-app/issues/1542)). It
 replaces one legacy deployment of `dxa-api` + `dxa-client`:
 <https://amulets.museumwnf.org>. The package specification it implements is
 [`../docs/dxa-gallery-data-package.md`](../docs/dxa-gallery-data-package.md);
@@ -24,7 +24,7 @@ else follows from that.
 - **The item universe is a membership union, not a project.** Legacy computed
   visibility as an OR predicate — items of the gallery's own mwnf3 project OR
   items listed in the six `thg_gallery_*` link tables. The importer
-  materializes that union in `collection_item` ([#1517](https://github.com/metanull/inventory-app/issues/1517),
+  materializes that union in `collection_item` ([#1517](https://github.com/museumwithnofrontiers/inventory-app/issues/1517),
   gap G1), so the exporter reads it as a plain join.
 - **Amulets owns none of its content.** All 45 objects are borrowed: 24 from
   EPM, 13 from ISL, 5 from Sharing History and 3 from DCA. The source project
@@ -68,9 +68,9 @@ else follows from that.
 
 ## Two rules this exporter originally got wrong
 
-The first release of this exporter ([#1542](https://github.com/metanull/inventory-app/issues/1542))
+The first release of this exporter ([#1542](https://github.com/museumwithnofrontiers/inventory-app/issues/1542))
 shipped two behaviours that do not match the live API. Both were found while
-building the amulets viewer ([#1566](https://github.com/metanull/inventory-app/issues/1566)),
+building the amulets viewer ([#1566](https://github.com/museumwithnofrontiers/inventory-app/issues/1566)),
 first corrected in the carpets fork, and are now corrected here.
 
 ### The global timeline is a merge of two chronologies, not one
@@ -117,7 +117,7 @@ pse, sau, syr and tun.
 | `gallery.json` | Site anchor: slug, legacy host, names, banner/homepage item, chrome flags, sibling galleries |
 | `items.json` | The 45 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 115 THG facet tags with their category (artist/dynasty/material/subject/type) |
-| `partners.json` | The 26 museums holding member items. One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
+| `partners.json` | The 26 museums holding member items. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
 | `countries.json` | The 31 countries the members, their holders and the timeline reference |
 | `languages.json` | The 9 languages the site can display, flagged `site_language` |
 | `dynasties.json` | The 10 dynasties member items reference |
@@ -174,7 +174,7 @@ Verified during implementation, none blocking:
   **`notice_b` used to be listed here and does not belong:** it is not a
   copyedit notice but the image rights line legacy renders as "Additional
   Copyright Information", and it is imported and exported as `copyright` since
-  [#1629](https://github.com/metanull/inventory-app/issues/1629). The
+  [#1629](https://github.com/museumwithnofrontiers/inventory-app/issues/1629). The
   2026-08-27 validation found no amulets item carrying one, so the row is
   expected to stay empty here — worth re-checking against the next import
   rather than assumed.
@@ -199,7 +199,7 @@ export checked field by field against the live legacy API.
 
 The published package is Content of the MWNF Website under the
 [MWNF legal notice](https://www.museumwnf.org/about/legal-notice) (story
-metanull/inventory-app#1690): `package.json`'s `license` defaults to
+museumwithnofrontiers/inventory-app#1690): `package.json`'s `license` defaults to
 `SEE LICENSE IN LICENSE.md` (override with `PACKAGE_LICENSE`), the notice
 text itself ships as `LICENSE.md` — a copy of the single shared
 `scripts/exporters/docs/LICENSE.md.template` all seven exporters copy from,

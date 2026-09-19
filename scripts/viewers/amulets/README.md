@@ -5,8 +5,8 @@ A Vue 3 + Vite single-page application that reproduces the legacy
 package** instead of calling an API.
 
 This is the viewer half of the first DXA gallery pilot
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1543](https://github.com/metanull/inventory-app/issues/1543)). Its
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1543](https://github.com/museumwithnofrontiers/inventory-app/issues/1543)). Its
 data comes from the matching exporter,
 [`../../exporters/amulets`](../../exporters/amulets/README.md); its UI strings
 come from [`../../site-i18n`](../../site-i18n/README.md); the legacy behaviour
@@ -205,9 +205,9 @@ Everything not listed matched.
   row that has it, and `notice_c` was never rendered by any legacy client.
   `scriber`, `binding` and `workshop` **were** listed here as missing and are
   not — they were always in the package, and the sheet has rendered them since
-  [#1640](https://github.com/metanull/inventory-app/pull/1640); `notice_b` is
+  [#1640](https://github.com/museumwithnofrontiers/inventory-app/pull/1640); `notice_b` is
   the rights line, imported as `copyright` since
-  [#1629](https://github.com/metanull/inventory-app/issues/1629).
+  [#1629](https://github.com/museumwithnofrontiers/inventory-app/issues/1629).
 - EPM `author` / `copy_editor` are filed on the Arabic row only. The sheet
   falls back to the record's other languages for those two fields — proper
   names are language-independent — which restores the legacy attribution line.

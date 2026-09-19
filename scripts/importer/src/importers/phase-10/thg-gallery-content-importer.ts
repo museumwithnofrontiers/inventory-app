@@ -10,7 +10,7 @@
  * a hyperlink to the sponsor, a banner slot and a visibility flag. Those ride
  * along in `collection_images.extra`, and the image is marked as a logo with
  * the `image-type:logo` tag — `collection_images` has no type column of its
- * own. See metanull/inventory-app#1592.
+ * own. See museumwithnofrontiers/inventory-app#1592.
  */
 
 import path from 'path';
@@ -290,7 +290,7 @@ export interface ExhibitionLogoExtraSource {
  * Shared by ThgGalleryContentImporter (the write path) and
  * ExhibitionLogoExtraBackfillImporter (the repair path) so the two shapes
  * cannot drift — a backfilled row must be indistinguishable from a
- * freshly-imported one. See metanull/inventory-app#1592.
+ * freshly-imported one. See museumwithnofrontiers/inventory-app#1592.
  *
  * Keys with no value anywhere are omitted, the same convention `buildExtra()`
  * above follows. `visible` is always present: `false` is a value, and a logo

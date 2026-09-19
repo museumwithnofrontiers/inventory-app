@@ -32,7 +32,7 @@
  *   display_order the original import wrote are left exactly as they are.
  *
  * Run standalone with `--only exhibition-logo-extra-backfill`. It is a no-op
- * after a fresh full import. See metanull/inventory-app#1592.
+ * after a fresh full import. See museumwithnofrontiers/inventory-app#1592.
  */
 
 import { BaseImporter } from '../../core/base-importer.js';

@@ -5,12 +5,12 @@ description: >-
   Documentation for MWNF Inventory, the content-focused system replacing
   legacy museum content databases and applications.
 
-url: "https://metanull.github.io"
+url: "https://museumwithnofrontiers.github.io"
 baseurl: "/inventory-app"
 
 # Social links
-github_username: metanull
-repository: metanull/inventory-app
+github_username: museumwithnofrontiers
+repository: museumwithnofrontiers/inventory-app
 
 # SEO
 author:
@@ -39,9 +39,9 @@ search:
 nav_sort: case_insensitive
 nav_external_links:
   - title: GitHub Repository
-    url: https://github.com/metanull/inventory-app
+    url: https://github.com/museumwithnofrontiers/inventory-app
   - title: API Documentation
-    url: https://metanull.github.io/inventory-app/swagger-ui.html
+    url: https://museumwithnofrontiers.github.io/inventory-app/swagger-ui.html
 
 # Footer
 footer_content: "Copyright &copy; 2025 Pascal Havelange. Built with Jekyll and GitHub Pages."
@@ -57,7 +57,7 @@ last_edit_time_format: "%b %e %Y at %I:%M %p"
 # GitHub
 gh_edit_link: true
 gh_edit_link_text: "Edit this page on GitHub"
-gh_edit_repository: "https://github.com/metanull/inventory-app"
+gh_edit_repository: "https://github.com/museumwithnofrontiers/inventory-app"
 gh_edit_branch: "main"
 gh_edit_source: docs
 gh_edit_view_mode: "tree"
@@ -122,4 +122,4 @@ sass:
 # Custom CSS
 aux_links:
   "View on GitHub":
-    - "https://github.com/metanull/inventory-app"
+    - "https://github.com/museumwithnofrontiers/inventory-app"

@@ -47,7 +47,7 @@ export interface ExhibitionChrome {
  * into the single `collection_translations.description` with blank lines
  * between, which is lossy: `about` itself contains blank lines, so the join
  * cannot be undone. They are preserved individually here as of
- * metanull/inventory-app#1546 — see ExhibitionExporter for what the exporter
+ * museumwithnofrontiers/inventory-app#1546 — see ExhibitionExporter for what the exporter
  * does on a database imported before that.
  */
 export interface ExhibitionI18n {
@@ -154,7 +154,7 @@ export interface PartnerLogo {
 
 /**
  * `partners.json` row — one shape across every dataset (decision D4,
- * metanull/inventory-app#1699). `level` / `parent_id` come from the curated
+ * museumwithnofrontiers/inventory-app#1699). `level` / `parent_id` come from the curated
  * legacy partner hierarchy (`collection_partner`) where a dataset has one;
  * `project_ids` from the legacy projects the partner belongs to; `item_count`
  * / `featured` are always computed. A dataset with nothing for a field

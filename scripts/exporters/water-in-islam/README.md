@@ -6,10 +6,10 @@ auth, no runtime database dependency. Optionally packages and publishes that
 output as a public npm package (`@museumwnf/water-in-islam-data`) on npmjs.
 
 This is the second DXA **exhibition** exporter
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1548](https://github.com/metanull/inventory-app/issues/1548)), forked
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1548](https://github.com/museumwithnofrontiers/inventory-app/issues/1548)), forked
 from [`../the-use-of-colours-in-art`](../the-use-of-colours-in-art/README.md)
-([#1546](https://github.com/metanull/inventory-app/issues/1546)). It replaces
+([#1546](https://github.com/museumwithnofrontiers/inventory-app/issues/1546)). It replaces
 one legacy deployment of `dxa-api` + `exhibitions-client`:
 <https://exhibitions.museumwnf.org/water_in_islam/en>. The package
 specification it implements is
@@ -97,7 +97,7 @@ package carries both fields rather than deriving one from the other.
 | `related_content.json` | The 5 "Further Reading" bibliographies, as `kind: "text"` entries |
 | `items.json` | The 495 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 245 THG facet tags with their category (artist 11, dynasty 29, material 99, subject 18, type 88) |
-| `partners.json` | The 128 museums and institutions; eleven of them flagged hidden by `exhibition.json`. One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
+| `partners.json` | The 128 museums and institutions; eleven of them flagged hidden by `exhibition.json`. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
 | `countries.json` | The 37 countries the members, their holders and the timeline reference |
 | `languages.json` | The 9 languages the site can display (en as `site_language`, plus 8 carried by borrowed records and partners) |
 | `dynasties.json` | The 38 dynasties member items reference |
@@ -186,7 +186,7 @@ export checked metric by metric against the live legacy API.
 
 The published package is Content of the MWNF Website under the
 [MWNF legal notice](https://www.museumwnf.org/about/legal-notice) (story
-metanull/inventory-app#1690): `package.json`'s `license` defaults to
+museumwithnofrontiers/inventory-app#1690): `package.json`'s `license` defaults to
 `SEE LICENSE IN LICENSE.md` (override with `PACKAGE_LICENSE`), the notice
 text itself ships as `LICENSE.md` — a copy of the single shared
 `scripts/exporters/docs/LICENSE.md.template` all seven exporters copy from,

@@ -137,7 +137,7 @@ describe('relatedContentLegacyId / relatedContentKind', () => {
 
 /**
  * The sponsor logo's caption, hyperlink and banner slot ride in
- * `collection_images.extra` (metanull/inventory-app#1592). Everything the
+ * `collection_images.extra` (museumwithnofrontiers/inventory-app#1592). Everything the
  * exporter does with that column is failure handling: the column may be absent,
  * NULL or malformed, a key may be missing, and the language maps are keyed by
  * the inventory's 3-char id while the package emits 2-char codes. A throw here

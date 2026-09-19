@@ -1,7 +1,7 @@
 # Inventory Management System
 
-[![github](https://img.shields.io/badge/Source-github-151013.svg?logo=github&logoColor=white&labelColor=555555)](https://github.com/metanull/inventory-app)
-[![github](https://img.shields.io/badge/Documentation-github-878787.svg?logo=github&logoColor=white&labelColor=8a8a9a)](https://metanull.github.io/inventory-app/)
+[![github](https://img.shields.io/badge/Source-github-151013.svg?logo=github&logoColor=white&labelColor=555555)](https://github.com/museumwithnofrontiers/inventory-app)
+[![github](https://img.shields.io/badge/Documentation-github-878787.svg?logo=github&logoColor=white&labelColor=8a8a9a)](https://museumwithnofrontiers.github.io/inventory-app/)
 [![PHP 8.2+](https://img.shields.io/badge/php-8.2+-777bb3.svg?logo=php&logoColor=white&labelColor=555555)](https://php.net)
 [![Laravel 12](https://img.shields.io/badge/laravel-12-f05340.svg?logo=laravel&logoColor=ffffff&labelColor=6c6c6c)](https://laravel.com)
 [![LICENSE](https://img.shields.io/badge/license-MIT-428f7e.svg?logo=open%20source%20initiative&logoColor=white&labelColor=555555)](https://github.com/metanull/inventory-app/blob/main/LICENSE)
@@ -10,8 +10,8 @@ The Inventory Management System is the digital backbone of **Museum With No Fron
 
 ## Quick Links
 
-- 📚 **[Full Documentation](https://metanull.github.io/inventory-app/)** — Complete guides and references
-- 📖 **[Core Concepts](https://metanull.github.io/inventory-app/concepts)** — Understand what the system does (start here)
+- 📚 **[Full Documentation](https://museumwithnofrontiers.github.io/inventory-app/)** — Complete guides and references
+- 📖 **[Core Concepts](https://museumwithnofrontiers.github.io/inventory-app/concepts)** — Understand what the system does (start here)
 - 🔌 **[API Documentation](http://localhost:8000/docs/api)** — Interactive Swagger UI (when running locally)
 
 ## What the System Does
@@ -21,7 +21,7 @@ The Inventory Management System is the digital backbone of **Museum With No Fron
 - **Handles images** — upload, process, and attach photographs to items, collections, and partners.
 - **Controls access** — role-based permissions determine who can view, create, edit, or delete records.
 
-For a detailed explanation of every entity and business rule, see the **[Core Concepts](https://metanull.github.io/inventory-app/concepts)** page.
+For a detailed explanation of every entity and business rule, see the **[Core Concepts](https://museumwithnofrontiers.github.io/inventory-app/concepts)** page.
 
 ## What's Inside This Repository
 
@@ -35,11 +35,11 @@ This **monorepo** contains:
 
 ### Pipelines Status
 
-[![Continuous Integration](https://github.com/metanull/inventory-app/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/continuous-integration.yml)
-[![CodeQL](https://github.com/metanull/inventory-app/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/github-code-scanning/codeql)
-[![Build](https://github.com/metanull/inventory-app/actions/workflows/build.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/build.yml)
-[![GitHub Pages](https://github.com/metanull/inventory-app/actions/workflows/continuous-deployment_github-pages.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/continuous-deployment_github-pages.yml)
-[![Dependabot](https://github.com/metanull/inventory-app/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/dependabot/dependabot-updates)
+[![Continuous Integration](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/continuous-integration.yml)
+[![CodeQL](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/github-code-scanning/codeql)
+[![Build](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/build.yml/badge.svg)](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/build.yml)
+[![GitHub Pages](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/continuous-deployment_github-pages.yml/badge.svg)](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/continuous-deployment_github-pages.yml)
+[![Dependabot](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/dependabot/dependabot-updates)
 
 ## Getting Started
 
@@ -52,7 +52,7 @@ in `.docker/Dockerfile`.
 ### Installation
 
 ```bash
-git clone https://github.com/metanull/inventory-app.git
+git clone https://github.com/museumwithnofrontiers/inventory-app.git
 cd inventory-app
 docker compose up -d
 ```
@@ -235,5 +235,5 @@ restore.
 - ✅ No TypeScript errors (strict typing)
 - ✅ Branch-based workflow (no direct `main` commits)
 
-> **For complete contribution guidelines**, see the [Full Documentation](https://metanull.github.io/inventory-app/).
+> **For complete contribution guidelines**, see the [Full Documentation](https://museumwithnofrontiers.github.io/inventory-app/).
 

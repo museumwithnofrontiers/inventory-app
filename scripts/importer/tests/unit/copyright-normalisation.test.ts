@@ -14,7 +14,7 @@
  * so a backfill wins, `notice_b` as the fallback, HTML converted, nothing
  * written when neither is present, and `notice_b` gone from the vocabulary.
  *
- * See metanull/inventory-app#1629 (mwnf3) and #1631 (Sharing History).
+ * See museumwithnofrontiers/inventory-app#1629 (mwnf3) and #1631 (Sharing History).
  */
 
 import { describe, it, expect } from 'vitest';

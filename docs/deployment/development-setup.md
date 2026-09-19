@@ -37,7 +37,7 @@ Composer, no Node, no database on the host. Every tool the project needs lives
 in `.docker/Dockerfile`, built and versioned once, so every contributor and CI
 run the same toolchain. Installing PHP, Composer, or Node.js directly on your
 workstation is not part of the supported workflow — see the root
-[`README.md`](https://github.com/metanull/inventory-app/blob/main/README.md#getting-started)
+[`README.md`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/README.md#getting-started)
 for the canonical setup instructions this page mirrors.
 
 Also useful, though not required to run the stack:
@@ -45,7 +45,7 @@ Also useful, though not required to run the stack:
 - **Git**
 - **VS Code** (recommended, with the Dev Containers extension if you want the
   editor attached inside the `app` container — see
-  [`.devcontainer/devcontainer.json`](https://github.com/metanull/inventory-app/blob/main/.devcontainer/devcontainer.json))
+  [`.devcontainer/devcontainer.json`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/.devcontainer/devcontainer.json))
 
 ## Step 1: Install Docker
 
@@ -67,7 +67,7 @@ what CI and production run.
 ### 2.1 Clone Repository
 
 ```bash
-git clone https://github.com/metanull/inventory-app.git
+git clone https://github.com/museumwithnofrontiers/inventory-app.git
 cd inventory-app
 ```
 
@@ -92,7 +92,7 @@ configuration for the dev stack (database, cache, queue, mail) is supplied by
 | Mailpit (captures all outbound mail) | http://localhost:8026 |
 | MySQL | `127.0.0.1:3337`, database/user `inventory`, password `secret` |
 
-See the root [`README.md`](https://github.com/metanull/inventory-app/blob/main/README.md)
+See the root [`README.md`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/README.md)
 for the full list of profiles (`staging`, `docs`, `tools`, `jobs`, `import`),
 ports, and volumes.
 
@@ -198,9 +198,9 @@ docker compose up -d
 ### 5.2 Code Quality
 
 Everything runs inside the containers — see
-[`scripts/Invoke-Check.ps1`](https://github.com/metanull/inventory-app/blob/main/scripts/Invoke-Check.ps1)
+[`scripts/Invoke-Check.ps1`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/Invoke-Check.ps1)
 and
-[`scripts/Invoke-Fix.ps1`](https://github.com/metanull/inventory-app/blob/main/scripts/Invoke-Fix.ps1)
+[`scripts/Invoke-Fix.ps1`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/Invoke-Fix.ps1)
 for the full set of checks. Directly:
 
 ```bash

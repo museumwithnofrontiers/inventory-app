@@ -64,8 +64,8 @@ Reviewers focus on:
 
 ## Getting Help
 
-- [GitHub Issues](https://github.com/metanull/inventory-app/issues) — Bug reports and feature requests
-- [GitHub Discussions](https://github.com/metanull/inventory-app/discussions) — Questions and general discussion
+- [GitHub Issues](https://github.com/museumwithnofrontiers/inventory-app/issues) — Bug reports and feature requests
+- [GitHub Discussions](https://github.com/museumwithnofrontiers/inventory-app/discussions) — Questions and general discussion
 
 ---
 

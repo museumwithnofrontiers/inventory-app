@@ -106,7 +106,7 @@ export interface PartnerLogo {
 
 /**
  * `partners.json` row — one shape across every dataset (decision D4,
- * metanull/inventory-app#1699). `level` / `parent_id` come from the curated
+ * museumwithnofrontiers/inventory-app#1699). `level` / `parent_id` come from the curated
  * legacy partner hierarchy (`collection_partner`) where a dataset has one;
  * `project_ids` from the legacy projects the partner belongs to; `item_count`
  * / `featured` are always computed. A dataset with nothing for a field

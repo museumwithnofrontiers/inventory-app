@@ -241,8 +241,8 @@ nav_exclude: true
 
 ## Links
 
-- [View commit on GitHub](https://github.com/metanull/inventory-app/commit/{commit['hash']})
-- [Browse repository at this commit](https://github.com/metanull/inventory-app/tree/{commit['hash']})
+- [View commit on GitHub](https://github.com/museumwithnofrontiers/inventory-app/commit/{commit['hash']})
+- [Browse repository at this commit](https://github.com/museumwithnofrontiers/inventory-app/tree/{commit['hash']})
 
 ---
 

@@ -118,7 +118,7 @@ export class ItemExporter extends BaseExporter {
     // never displayed monument details as items (browse unions objects +
     // monuments only; search surfaces the PARENT monument for a detail-text
     // hit) — details are embedded as details[] on their parent monument
-    // below (metanull/inventory-app#1515). 'picture' child items are
+    // below (museumwithnofrontiers/inventory-app#1515). 'picture' child items are
     // likewise excluded — those are exported as images on their parent.
     const items = await this.db.query<ItemRow>(
       `SELECT id, type, internal_name, backward_compatibility, parent_id,

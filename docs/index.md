@@ -4,11 +4,11 @@ title: Home
 nav_order: 1
 ---
 
-[![github](https://img.shields.io/badge/Source-github-151013.svg?logo=github&logoColor=white&labelColor=555555)](https://github.com/metanull/inventory-app)
+[![github](https://img.shields.io/badge/Source-github-151013.svg?logo=github&logoColor=white&labelColor=555555)](https://github.com/museumwithnofrontiers/inventory-app)
 [![LICENSE](https://img.shields.io/badge/license-MIT-428f7e.svg?logo=open%20source%20initiative&logoColor=white&labelColor=555555)](https://github.com/metanull/inventory-app/blob/main/LICENSE)
-[![Continuous Integration](https://github.com/metanull/inventory-app/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/continuous-integration.yml)
-[![Build](https://github.com/metanull/inventory-app/actions/workflows/build.yml/badge.svg)](https://github.com/metanull/inventory-app/actions/workflows/build.yml)
-[![Documentation](https://github.com/metanull/inventory-app/actions/workflows/continuous-deployment_github-pages.yml/badge.svg)](https://metanull.github.io/inventory-app)
+[![Continuous Integration](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/continuous-integration.yml/badge.svg)](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/continuous-integration.yml)
+[![Build](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/build.yml/badge.svg)](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/build.yml)
+[![Documentation](https://github.com/museumwithnofrontiers/inventory-app/actions/workflows/continuous-deployment_github-pages.yml/badge.svg)](https://museumwithnofrontiers.github.io/inventory-app)
 
 # MWNF Inventory Documentation
 

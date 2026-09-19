@@ -35,7 +35,7 @@ inside each one for dataset specifics.
 ### Project-scoped vs gallery-scoped
 
 The first three exporters scope by **project**: every item with
-`project_id IN (…)`. The DXA family ([epic #1539](https://github.com/metanull/inventory-app/issues/1539))
+`project_id IN (…)`. The DXA family ([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539))
 scopes by **collection** instead — a thematic gallery's item universe is the
 membership union legacy expressed as an OR predicate (native project OR one of
 six `thg_gallery_*` link tables), materialized by the importer in
@@ -153,7 +153,7 @@ Prerequisites, one-time:
 - `.env` in the exporter directory (`cp .env.example .env` if present):
   `BASE_URL` (the public base URL of the inventory app's storage, prepended to
   image paths in the exported JSON) and
-  `PACKAGE_REPO_URL=https://github.com/metanull/inventory-app` (good package
+  `PACKAGE_REPO_URL=https://github.com/museumwithnofrontiers/inventory-app` (good package
   metadata; npmjs does not require it to install a version). `DB_*` matters
   only for host-side runs; the compose service supplies its own.
 - npmjs authentication, done **on the host** first — this is a manual, local

@@ -279,7 +279,7 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
   4) so old and new consumers can never silently misread the array;
   `project_ids` stays untouched until the cleanup wave.
 
-One shape across every dataset (decision D4, metanull/inventory-app#1699):
+One shape across every dataset (decision D4, museumwithnofrontiers/inventory-app#1699):
 every `partners.json` row carries `level`, `parent_id`, `project_ids`,
 `item_count` and `featured`, so the derivation in viewer-core can read one
 shape regardless of which family exported the package.
@@ -419,15 +419,15 @@ AMU ≈ 45 items → trivial. DCA ≈ 486 items → well under the islamicart pa
 Two exporters implement this specification, both verified against the live
 legacy API:
 
-- `scripts/exporters/carpets` ([story #1544](https://github.com/metanull/inventory-app/issues/1544),
+- `scripts/exporters/carpets` ([story #1544](https://github.com/museumwithnofrontiers/inventory-app/issues/1544),
   [`../carpets/tools/VALIDATION-2026-08-27.md`](../carpets/tools/VALIDATION-2026-08-27.md))
   — **fork this one.** It is the hybrid gallery (native + borrowed members) and
   it carries the corrected timeline and countries rules above.
-- `scripts/exporters/amulets` ([story #1542](https://github.com/metanull/inventory-app/issues/1542),
+- `scripts/exporters/amulets` ([story #1542](https://github.com/museumwithnofrontiers/inventory-app/issues/1542),
   [`../amulets/tools/VALIDATION-2026-08-27.md`](../amulets/tools/VALIDATION-2026-08-27.md))
   — the original, and still the clearest example of the purely-curated case. It
   shipped without the two corrections marked above; both were backported in
-  [#1586](https://github.com/metanull/inventory-app/issues/1586), so its
+  [#1586](https://github.com/museumwithnofrontiers/inventory-app/issues/1586), so its
   `timelines.json` now holds the full 37 and its `countries.json` covers the
   timeline countries. Its `items[]` still omits the `project_id` listed in the
   field set above (it ships only the legacy `project_key`).

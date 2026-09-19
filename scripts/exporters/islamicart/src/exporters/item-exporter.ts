@@ -116,7 +116,7 @@ export class ItemExporter extends BaseExporter {
 
     // Exclude 'picture' child items — those are exported as images on their
     // parent. 'detail' is excluded for symmetry with the baroqueart exporter
-    // (metanull/inventory-app#1515: the legacy sites never displayed
+    // (museumwithnofrontiers/inventory-app#1515: the legacy sites never displayed
     // monument details as items); ISL/EPM have zero detail rows, so this
     // changes no data.
     const items = await this.db.query<ItemRow>(

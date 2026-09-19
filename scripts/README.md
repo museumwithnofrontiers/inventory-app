@@ -132,15 +132,15 @@ New-Item -ItemType Junction `
 
 | Reference | Url |
 | --- | --- |
-| Deployment Guide | [https://metanull.github.io/inventory-app/deployment/](https://metanull.github.io/inventory-app/deployment/) |
-| Release Artifacts | [https://github.com/metanull/inventory-app/releases](https://github.com/metanull/inventory-app/releases) |
+| Deployment Guide | [https://museumwithnofrontiers.github.io/inventory-app/deployment/](https://museumwithnofrontiers.github.io/inventory-app/deployment/) |
+| Release Artifacts | [https://github.com/museumwithnofrontiers/inventory-app/releases](https://github.com/museumwithnofrontiers/inventory-app/releases) |
 | GitHub Actions Workflow | [/.github/workflows/release-deployment.yml](../.github/workflows/release-deployment.yml) |
 
 ## Scripts used in CI/CD Workflows
 
 ### Auto-generation of the static documentation website
 
-These scripts are triggered by the CI/CD Workflow action `.github/workflows/continuous-deployment_github-pages.yml` responsible for deploying the static documentation website to [github.io](https://metanull.github.io). 
+These scripts are triggered by the CI/CD Workflow action `.github/workflows/continuous-deployment_github-pages.yml` responsible for deploying the static documentation website to [github.io](https://museumwithnofrontiers.github.io). 
 
 See:
 - [/.github/workflows/README.md](../.github/workflows/README.md#deploy-documentation-to-github-pages) for workflow details
@@ -172,7 +172,7 @@ See:
 
 | Reference | Url |
 | --- | --- |
-| Git Commit History | [https://metanull.github.io/inventory-app/development/archive](https://metanull.github.io/inventory-app/development/archive) |
+| Git Commit History | [https://museumwithnofrontiers.github.io/inventory-app/development/archive](https://museumwithnofrontiers.github.io/inventory-app/development/archive) |
 
 **Usage:**
 ```bash
@@ -310,7 +310,7 @@ All parameters are auto-detected from your current working directory if not prov
 
 # Or specify parameters explicitly
 ./scripts/Invoke-LocalCDBuild.ps1 `
-  -RepositoryUrl "https://github.com/metanull/inventory-app.git" `
+  -RepositoryUrl "https://github.com/museumwithnofrontiers/inventory-app.git" `
   -BranchName "main" `
   -NpmrcPath "$HOME\.npmrc"
 ```

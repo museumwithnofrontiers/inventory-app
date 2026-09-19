@@ -5,8 +5,8 @@ A Vue 3 + Vite single-page application that reproduces the legacy
 package** instead of calling an API.
 
 This is the viewer half of the second DXA gallery pilot
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1545](https://github.com/metanull/inventory-app/issues/1545)). Its
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1545](https://github.com/museumwithnofrontiers/inventory-app/issues/1545)). Its
 data comes from the matching exporter,
 [`../../exporters/carpets`](../../exporters/carpets/README.md); its UI strings
 come from [`../../site-i18n`](../../site-i18n/README.md); the legacy behaviour
@@ -14,7 +14,7 @@ it reproduces is analysed in
 [`../../exporters/docs/dxa-legacy-analysis.md`](../../exporters/docs/dxa-legacy-analysis.md).
 
 It is **forked from [`../amulets`](../amulets/README.md)**
-([#1543](https://github.com/metanull/inventory-app/issues/1543)) — the two
+([#1543](https://github.com/museumwithnofrontiers/inventory-app/issues/1543)) — the two
 galleries share one legacy codebase, so they share routes, page structure and
 facet behaviour. Viewers are forked per dataset by design and are expected to
 diverge; the sections below are the places where this one already does.
@@ -202,7 +202,7 @@ member item. On carpets that is `jo/Mus31` (Greater Amman Municipality) and
 both returned by the live `/partners` with `hasObjects: 0`, and both the
 difference between 70 and legacy's **72**. The package ships them with
 `item_count: 0` after
-[#1589](https://github.com/metanull/inventory-app/issues/1589) carried
+[#1589](https://github.com/museumwithnofrontiers/inventory-app/issues/1589) carried
 `museums.project_id` through the importer.
 
 **Decision: they are listed, in full.** Legacy lists them, so hiding them would
@@ -291,9 +291,9 @@ records.
   row that has it, and `notice_c` was never rendered by any legacy client.
   `scriber`, `binding` and `workshop` **were** listed here as missing and are
   not — they were always in the package, and the sheet has rendered them since
-  [#1640](https://github.com/metanull/inventory-app/pull/1640); `notice_b` is
+  [#1640](https://github.com/museumwithnofrontiers/inventory-app/pull/1640); `notice_b` is
   the rights line, imported as `copyright` since
-  [#1629](https://github.com/metanull/inventory-app/issues/1629).
+  [#1629](https://github.com/museumwithnofrontiers/inventory-app/issues/1629).
 - EPM `author` / `copy_editor` are filed on the Arabic row only. The sheet
   falls back to the record's other languages for those two fields — proper
   names are language-independent — which restores the legacy attribution line.

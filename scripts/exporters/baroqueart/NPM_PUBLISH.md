@@ -101,7 +101,7 @@ The generated `package.json` carries:
 Publishing goes to `https://registry.npmjs.org` (override with
 `--npm-registry` or the `NPM_REGISTRY` env var). This is a manual, local
 publish — not run from CI (the shared packages use npm trusted publishing
-in CI; data packages do not, see metanull/inventory-app#1720) — so it needs
+in CI; data packages do not, see museumwithnofrontiers/inventory-app#1720) — so it needs
 your own npmjs login with 2FA, done **on the host** first:
 
 ```bash

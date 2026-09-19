@@ -7,7 +7,7 @@ rather than the offline dumps in `.legacy-database/`, because the DXA API is
 still live and public and therefore reflects every server-side filter and quirk
 a dump does not show.
 
-Export run against the **staging** inventory database (post-[#1523](https://github.com/metanull/inventory-app/issues/1523)
+Export run against the **staging** inventory database (post-[#1523](https://github.com/museumwithnofrontiers/inventory-app/issues/1523)
 import), `BASE_URL=https://inventory.metanull.eu`:
 
 ```bash
@@ -306,7 +306,7 @@ spec.
 4. **Gallery chrome images are not in inventory storage.**
    `thematic_gallery/thg_galleries/9/{1,banner}.jpg` were never imported, so the
    package carries legacy paths and the viewer must supply the media host
-   ([#1543](https://github.com/metanull/inventory-app/issues/1543) decides how).
+   ([#1543](https://github.com/museumwithnofrontiers/inventory-app/issues/1543) decides how).
 5. **50 of the 486 members carry no facet tag at all**, so the facet dropdowns
    never reach them; legacy behaves the same way (the tag totals match exactly).
    Worth knowing when building the viewer's search.

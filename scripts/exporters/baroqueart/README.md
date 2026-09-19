@@ -59,7 +59,7 @@ files, written to `output/baroqueart/`:
 | `languages.json`                          | `LanguageExporter`   | Language reference data                                                                                                                                                                                                                          |
 | `countries.json`                          | `CountryExporter`    | Country reference data + translations                                                                                                                                                                                                            |
 | `timelines.json` / `timeline_events.json` | `TimelineExporter`   | Per-country BAR timelines and their events                                                                                                                                                                                                       |
-| `partners.json`                           | `PartnerExporter`    | Museums/institutions + translations + images. One shape across every dataset (metanull/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured`/`project_uuids` (epic #1727 phase 2, additive)                                                                     |
+| `partners.json`                           | `PartnerExporter`    | Museums/institutions + translations + images. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `level`/`parent_id`/`project_ids`, plus `item_count`/`featured`/`project_uuids` (epic #1727 phase 2, additive)                                                                     |
 | `items.json`                              | `ItemExporter`       | Items (objects/monuments), with images, tag links, related-item links; monument details are embedded as `details[]` on the parent monument, never as top-level rows (#1515 — the legacy site only ever showed them inline as "Special Features") |
 | `collections.json`                        | `CollectionExporter` | Collections (project, exhibitions root + exhibitions), with images and item membership                                                                                                                                                           |
 | `glossary.json`                           | `GlossaryExporter`   | Glossary terms used by BAR content + translations                                                                                                                                                                                                |
@@ -168,7 +168,7 @@ the [importer](../../importer/README.md#troubleshooting).
 
 The published package is Content of the MWNF Website under the
 [MWNF legal notice](https://www.museumwnf.org/about/legal-notice) (story
-metanull/inventory-app#1690): `package.json`'s `license` defaults to
+museumwithnofrontiers/inventory-app#1690): `package.json`'s `license` defaults to
 `SEE LICENSE IN LICENSE.md` (override with `PACKAGE_LICENSE`), the notice
 text itself ships as `LICENSE.md` — a copy of the single shared
 `scripts/exporters/docs/LICENSE.md.template` all seven exporters copy from,

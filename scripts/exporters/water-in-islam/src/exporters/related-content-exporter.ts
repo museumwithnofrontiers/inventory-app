@@ -168,7 +168,7 @@ export class RelatedContentExporter extends BaseExporter {
    * The "Further Reading" blocks — related-content entries that carry a
    * bibliography and nothing else. They have no `collection_media` row because
    * that table needs a URL, so the importer files them on the exhibition
-   * collection's `extra` instead (metanull/inventory-app#1607 territory: the
+   * collection's `extra` instead (museumwithnofrontiers/inventory-app#1607 territory: the
    * same read-modify-write the gallery anchor and hidden-museum list use).
    *
    * They ship in the same array as the linked entries, with `kind: "text"` and

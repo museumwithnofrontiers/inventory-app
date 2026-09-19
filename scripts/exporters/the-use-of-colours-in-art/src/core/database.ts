@@ -214,7 +214,7 @@ export class Database {
    * Legacy computed this as an OR predicate — items of the exhibition's native
    * mwnf3 project UNION items listed in the six `thg_gallery_*` link tables.
    * The importer materializes that union in `collection_item`
-   * (metanull/inventory-app#1517, gap G1), so membership is a plain join here.
+   * (museumwithnofrontiers/inventory-app#1517, gap G1), so membership is a plain join here.
    *
    * 'picture' children are excluded: they ship as `images` on their parent, and
    * separately as the curated selections of `themes.json`.

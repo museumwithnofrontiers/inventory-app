@@ -105,7 +105,7 @@ pipelines.
 
 {: .note }
 
-> **Python script for the generation of the pages**: [generate-commit-docs.py](https://github.com/metanull/inventory-app/blob/main/scripts/generate-commit-docs.py)
+> **Python script for the generation of the pages**: [generate-commit-docs.py](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/generate-commit-docs.py)
 
 ```yaml
 name: Generate Commit Documentation

@@ -4,10 +4,10 @@ Extracts the UI strings and editorial page content of a legacy DXA gallery or
 exhibition website into [vue-i18n](https://vue-i18n.intlify.dev/) message files,
 so a rebuilt site can be scaffolded with its text already in place.
 
-Implements **THG G3** ([#1521](https://github.com/metanull/inventory-app/issues/1521))
+Implements **THG G3** ([#1521](https://github.com/museumwithnofrontiers/inventory-app/issues/1521))
 and the layered output of
-[#1537](https://github.com/metanull/inventory-app/issues/1537), sub-stories of
-[#1517](https://github.com/metanull/inventory-app/issues/1517).
+[#1537](https://github.com/museumwithnofrontiers/inventory-app/issues/1537), sub-stories of
+[#1517](https://github.com/museumwithnofrontiers/inventory-app/issues/1517).
 
 ## Why this is not an importer
 
@@ -229,7 +229,7 @@ that are empty after conversion are dropped, and both are counted in the report.
 `mwnf3_project_id` for all 48 galleries and exhibitions, and
 `thg_gallery_url.link` carries the canonical host. This is the same anchor the
 importer writes to `collections.extra.thg_gallery`
-([#1520](https://github.com/metanull/inventory-app/issues/1520)).
+([#1520](https://github.com/museumwithnofrontiers/inventory-app/issues/1520)).
 
 The legacy deployment scripts keep a second, partial copy of the mapping in
 `E:\mwnf-server\apps\<site>\api\environment\config.sh` (`sites`/`projects`/

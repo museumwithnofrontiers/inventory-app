@@ -6,9 +6,9 @@ no runtime database dependency. Optionally packages and publishes that output as
 a public npm package (`@museumwnf/carpets-data`) on npmjs.
 
 This is the second of the DXA gallery exporters
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539),
-[story #1544](https://github.com/metanull/inventory-app/issues/1544)), forked
-from [`../amulets`](../amulets/README.md) ([#1542](https://github.com/metanull/inventory-app/issues/1542)).
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
+[story #1544](https://github.com/museumwithnofrontiers/inventory-app/issues/1544)), forked
+from [`../amulets`](../amulets/README.md) ([#1542](https://github.com/museumwithnofrontiers/inventory-app/issues/1542)).
 It replaces one legacy deployment of `dxa-api` + `dxa-client`:
 <https://carpets.museumwnf.org>. The package specification it implements is
 [`../docs/dxa-gallery-data-package.md`](../docs/dxa-gallery-data-package.md);
@@ -23,7 +23,7 @@ Carpets is where the collection-scoped design gets its real test.
 - **486 members, 398 of them native.** The universe is still the membership
   union legacy expressed as an OR predicate (items of the gallery's own mwnf3
   project OR items listed in the six `thg_gallery_*` link tables), materialized
-  by the importer in `collection_item` ([#1517](https://github.com/metanull/inventory-app/issues/1517),
+  by the importer in `collection_item` ([#1517](https://github.com/museumwithnofrontiers/inventory-app/issues/1517),
   gap G1). But here the native branch dominates: 398 DCA objects, plus 59 EPM,
   21 ISL, 4 Sharing History, 2 BAR, 1 EXTHE and 1 GALLERIES.
 - **Seven source projects, so `project_key` and context selection are per
@@ -60,7 +60,7 @@ rather than URLs (decision Q3), and the timeline is not gallery-specific.
 ## Two fixes this fork does not inherit from amulets
 
 Both were found while building the amulets viewer
-([#1566](https://github.com/metanull/inventory-app/issues/1566)) and are
+([#1566](https://github.com/museumwithnofrontiers/inventory-app/issues/1566)) and are
 corrected here. The amulets exporter still has them.
 
 ### The global timeline is a merge of two chronologies, not one
@@ -138,7 +138,7 @@ also set on the ten ISL schools, which legacy's partner list never shows.
 | `gallery.json` | Site anchor: slug, legacy host, names, banner item, chrome flags, sibling galleries |
 | `items.json` | The 486 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 248 THG facet tags with their category (artist 11, dynasty 22, material 103, subject 30, type 82) |
-| `partners.json` | The 72 museums on the gallery's partner list (70 holding member items + 2 MWNF-384). One shape across every dataset (metanull/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
+| `partners.json` | The 72 museums on the gallery's partner list (70 holding member items + 2 MWNF-384). One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
 | `countries.json` | The 34 countries the members, their holders and the timeline reference |
 | `languages.json` | The 10 languages the site can display (ar/en/es/fr as `site_language`, plus cs/de/el/it/pt/tr carried by borrowed records and partners) |
 | `dynasties.json` | The 14 dynasties member items reference |
@@ -195,7 +195,7 @@ Verified during implementation, none blocking:
   legacy client. **`notice_b` used to be listed here and does not belong:** it
   is not a copyedit notice at all but the image rights line legacy renders as
   "Additional Copyright Information", and it is imported and exported as
-  `copyright` since [#1629](https://github.com/metanull/inventory-app/issues/1629).
+  `copyright` since [#1629](https://github.com/museumwithnofrontiers/inventory-app/issues/1629).
 - **Legacy's two hardcoded partner exclusions** (`uk/Mus51`, `us/Mus51`, in
   `Partners.blade.php`) are not reproduced; neither holds a carpets member and
   neither was created under DCA.
@@ -211,7 +211,7 @@ export checked metric by metric against the live legacy API.
 
 The published package is Content of the MWNF Website under the
 [MWNF legal notice](https://www.museumwnf.org/about/legal-notice) (story
-metanull/inventory-app#1690): `package.json`'s `license` defaults to
+museumwithnofrontiers/inventory-app#1690): `package.json`'s `license` defaults to
 `SEE LICENSE IN LICENSE.md` (override with `PACKAGE_LICENSE`), the notice
 text itself ships as `LICENSE.md` — a copy of the single shared
 `scripts/exporters/docs/LICENSE.md.template` all seven exporters copy from,

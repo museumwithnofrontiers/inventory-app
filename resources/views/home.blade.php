@@ -261,7 +261,7 @@
                 @endauth
 
                 <x-ui.card
-                    href="https://github.com/metanull/inventory-app"
+                    href="https://github.com/museumwithnofrontiers/inventory-app"
                     title="Source Code"
                     description="Explore repository & contributions."
                     iconColor="gray"
@@ -274,7 +274,7 @@
                 </x-ui.card>
 
                 <x-ui.card 
-                    href="https://metanull.github.io/inventory-app"
+                    href="https://museumwithnofrontiers.github.io/inventory-app"
                     title="Project Docs"
                     description="Development guidelines & architecture."
                     iconColor="sky"

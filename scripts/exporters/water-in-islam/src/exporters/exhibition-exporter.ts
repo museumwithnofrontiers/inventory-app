@@ -20,7 +20,7 @@ export interface LogoRow {
 
 /**
  * The passenger data the importer files on a sponsor logo's `collection_images`
- * row (metanull/inventory-app#1592). Language maps are keyed by the inventory's
+ * row (museumwithnofrontiers/inventory-app#1592). Language maps are keyed by the inventory's
  * 3-char language id (`eng`), NOT by the 2-char code this package emits.
  */
 interface LogoExtra {
@@ -136,7 +136,7 @@ export class ExhibitionExporter extends BaseExporter {
         if (i18n.heading) headlines[code] = i18n.heading
         if (i18n.about) abouts[code] = i18n.about
       } else if (row.description) {
-        // Fallback for a database imported before metanull/inventory-app#1546:
+        // Fallback for a database imported before museumwithnofrontiers/inventory-app#1546:
         // ThgGalleryTranslationImporter joined subtitle + heading + about into
         // `description` with blank lines between them, and that join is not
         // reversible — `about` contains blank lines of its own. Rather than
@@ -233,7 +233,7 @@ export class ExhibitionExporter extends BaseExporter {
    * banner: the image, its hyperlink, its per-language caption and its banner
    * slot.
    *
-   * Two mechanisms carry that, both introduced by metanull/inventory-app#1592
+   * Two mechanisms carry that, both introduced by museumwithnofrontiers/inventory-app#1592
    * and both already used elsewhere in the schema:
    *
    * - **Typing via tags.** A collection can own images that are not sponsor
@@ -289,7 +289,7 @@ export class ExhibitionExporter extends BaseExporter {
       this.logger.warning(
         `exhibition.json: this collection has ${totals[0]?.total ?? 0} image(s) but none ` +
           `carries the 'image-type: logo' tag, so no sponsor logo ships. This database ` +
-          `predates metanull/inventory-app#1592 — run the importer's phase-11 logo ` +
+          `predates museumwithnofrontiers/inventory-app#1592 — run the importer's phase-11 logo ` +
           `backfill (or a fresh import) and re-export.`
       )
     }

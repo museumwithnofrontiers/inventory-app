@@ -25,7 +25,7 @@ runtime.
 
 The first three viewers are **verification tools** for their packages. The
 other four are DXA rebuilds
-([epic #1539](https://github.com/metanull/inventory-app/issues/1539)):
+([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539)):
 faithful reproductions of public legacy websites
 (<https://amulets.museumwnf.org>, <https://carpets.museumwnf.org>,
 <https://exhibitions.museumwnf.org/the_use_of_colours_in_art/en>,
