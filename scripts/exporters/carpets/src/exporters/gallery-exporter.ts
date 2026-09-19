@@ -65,6 +65,7 @@ export class GalleryExporter extends BaseExporter {
       slug: this.gallery.slug,
       legacy_host: this.gallery.host,
       mwnf3_project_id: this.gallery.mwnf3ProjectId,
+      project_id: this.gallery.projectId,
       // The UI languages the gallery actually shipped in (thg_gallery_lang).
       languages: Object.keys(names).sort(),
       names,

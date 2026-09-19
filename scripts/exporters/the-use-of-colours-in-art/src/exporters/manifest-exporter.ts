@@ -100,6 +100,7 @@ export class ManifestExporter extends BaseExporter {
         backward_compatibility: this.exhibition.backwardCompatibility,
         slug: this.exhibition.slug,
         mwnf3_project_id: this.exhibition.mwnf3ProjectId,
+        project_id: this.exhibition.projectId,
       },
       languages,
       itemCount: this.memberItemIds.length,

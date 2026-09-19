@@ -170,6 +170,27 @@ describe('ManifestExporter', () => {
     })
   })
 
+  // Epic #1727 phase 2 follow-up: manifest.exhibition carried only the legacy
+  // mwnf3_project_id; consumers resolving projects by UUID (manifest.projects)
+  // need the exhibition's own project_id right there too.
+  it('carries the exhibition own project_id (UUID) alongside the legacy mwnf3_project_id', async () => {
+    const context = contextWith({ languages: [], translations: [], labels: [] })
+    context.exhibition.projectId = 'galex6-uuid'
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { exhibition: { mwnf3_project_id: string | null; project_id: string | null } }
+    expect(manifest.exhibition.mwnf3_project_id).toBe('GalEx6')
+    expect(manifest.exhibition.project_id).toBe('galex6-uuid')
+  })
+
   it('reports an empty projects section when the exhibition has no native project and no members', async () => {
     const context = contextWith({ languages: [], translations: [], labels: [] })
     context.memberItemIds = []

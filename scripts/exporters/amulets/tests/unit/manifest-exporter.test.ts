@@ -173,6 +173,27 @@ describe('ManifestExporter', () => {
     })
   })
 
+  // Epic #1727 phase 2 follow-up: manifest.gallery carried only the legacy
+  // mwnf3_project_id; consumers resolving projects by UUID (manifest.projects)
+  // need the gallery's own project_id right there too.
+  it('carries the gallery own project_id (UUID) alongside the legacy mwnf3_project_id', async () => {
+    const context = contextWith({ languages: [], translations: [], labels: [] })
+    context.gallery.projectId = 'amu-uuid'
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { gallery: { mwnf3_project_id: string | null; project_id: string | null } }
+    expect(manifest.gallery.mwnf3_project_id).toBe('AMU')
+    expect(manifest.gallery.project_id).toBe('amu-uuid')
+  })
+
   it('reports an empty projects section when the gallery has no native project and no members', async () => {
     const context = contextWith({ languages: [], translations: [], labels: [] })
     context.memberItemIds = []
