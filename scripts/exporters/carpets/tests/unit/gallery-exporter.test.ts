@@ -40,7 +40,6 @@ describe('GalleryExporter — project_id', () => {
     outputDir,
     gallery,
     memberItemIds: [],
-    itemProjectKeys: new Map(),
     itemOwnContextIds: new Map(),
     baseUrl: 'https://example.test',
     logger: {

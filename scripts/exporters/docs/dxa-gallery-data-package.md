@@ -91,8 +91,7 @@ it happens to hold no member itself, keyed by that UUID:
 
 The three URL columns are nullable `projects` columns populated at import
 time from a legacy-key map (epic #1727 phase 1, #1753/#1756) — a project this
-fork has never seen a URL for simply reports `null` for all three. `items.json`
-keeps its own `project_key` field for now (removal is the cleanup wave);
+fork has never seen a URL for simply reports `null` for all three.
 `partners.json` gets the parallel `project_uuids` field described below.
 
 ## gallery.json (new)
@@ -187,18 +186,17 @@ gallery deltas:
 - **`tag_ids`** replaces the flat `tags` string list: references into
   `tags.json` so the facet **category** survives (legacy infers
   type/dynasty/subject/material from the tag id — the flat list cannot).
-- **`project_key`** (e.g. `EPM`, `ISL`, `DCA`, `AWE`): member items span many
-  projects; the sheet shows the source database. Per decision Q3 the package
-  does NOT construct the legacy `remote-object`/`remote-monument` URL — the
-  reference is the pair (`project_key`, `backward_compatibility`), which is
-  exactly the legacy dbUid; a future resolver turns it into a link, and the
-  viewer omits the link until then.
+- Member items span many projects; the sheet shows the source database via
+  `project_id` (the item's own project UUID) + `backward_compatibility`. Per
+  decision Q3 the package does NOT construct the legacy
+  `remote-object`/`remote-monument` URL — a future resolver turns that pair
+  into a link, and the viewer omits the link until then.
 - Monument members carry embedded `details[]` (baroqueart 2.0.0 convention)
   — AMU/DCA have no monument members today, but the shape is specified for
   the other galleries.
 - **`related_items`** keeps every outgoing link, including targets outside the
   gallery, each with `in_package` saying whether the viewer can open it
-  locally, plus `backward_compatibility` and `project_key` for the ones it
+  locally, plus `backward_compatibility` and `project_id` for the ones it
   cannot (decision Q3 — the links must not be dropped). Amulets' 45 members
   carry 56 outgoing links, none of them to another member.
 - **`gallery_references`** replaces the legacy `galleries` array of
@@ -265,22 +263,16 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
   project rather than a project list. `null` for an uncurated partner, and
   for every partner on a gallery with no native project (43, 45) — there is
   no project to curate the hierarchy under.
-- **`project_ids`**: the legacy project keys of the member items this
-  partner holds here, resolved the same way `item_count` is derived so the
-  two fields never disagree about which items back them. An MWNF-384
-  partner holds no member item and so has nothing to resolve from; it
-  reports the gallery's own project instead, since that branch means the
-  partner belongs to it regardless.
-- **`project_uuids`** (epic #1727 phase 2, additive): the same membership as
-  `project_ids`, as raw project UUIDs instead of legacy keys, resolved from
-  the held items' own `project_id` column (never from `itemProjectKeys`) —
-  same MWNF-384 fallback, using the gallery's `projectId` UUID instead of its
-  legacy key. Shipped under a new field name during the transition (decision
-  4) so old and new consumers can never silently misread the array;
-  `project_ids` stays untouched until the cleanup wave.
+- **`project_uuids`**: the project UUIDs of the member items this partner
+  holds here, resolved from the held items' own `project_id` column the same
+  way `item_count` is derived so the two fields never disagree about which
+  items back them. An MWNF-384 partner holds no member item and so has
+  nothing to resolve from; it reports the gallery's own project (its
+  `projectId` UUID) instead, since that branch means the partner belongs to
+  it regardless.
 
 One shape across every dataset (decision D4, museumwithnofrontiers/inventory-app#1699):
-every `partners.json` row carries `level`, `parent_id`, `project_ids`,
+every `partners.json` row carries `level`, `parent_id`, `project_uuids`,
 `item_count` and `featured`, so the derivation in viewer-core can read one
 shape regardless of which family exported the package.
 
@@ -429,8 +421,7 @@ legacy API:
   shipped without the two corrections marked above; both were backported in
   [#1586](https://github.com/museumwithnofrontiers/inventory-app/issues/1586), so its
   `timelines.json` now holds the full 37 and its `countries.json` covers the
-  timeline countries. Its `items[]` still omits the `project_id` listed in the
-  field set above (it ships only the legacy `project_key`).
+  timeline countries.
 
 A third rule was added on 2026-08-28 while building the first exhibition
 exporter and applies to **galleries too**, since it lives in the same legacy

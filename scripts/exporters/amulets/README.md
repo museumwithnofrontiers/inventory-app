@@ -117,7 +117,7 @@ pse, sau, syr and tun.
 | `gallery.json` | Site anchor: slug, legacy host, names, banner/homepage item, chrome flags, sibling galleries |
 | `items.json` | The 45 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 115 THG facet tags with their category (artist/dynasty/material/subject/type) |
-| `partners.json` | The 26 museums holding member items. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
+| `partners.json` | The 26 museums holding member items. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_uuids` from the curated hierarchy where the data has one |
 | `countries.json` | The 31 countries the members, their holders and the timeline reference |
 | `languages.json` | The 9 languages the site can display, flagged `site_language` |
 | `dynasties.json` | The 10 dynasties member items reference |

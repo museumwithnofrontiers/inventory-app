@@ -61,8 +61,6 @@ export interface ExportContext {
   gallery: Gallery
   /** Item UUIDs of the gallery's membership union (native project ∪ link tables). */
   memberItemIds: string[]
-  /** Item UUID → legacy project key of the item's OWN project (e.g. `EPM`, `ISL`, `awe`). */
-  itemProjectKeys: Map<string, string>
   /** Item UUID → context UUID of the item's OWN project, for translation selection. */
   itemOwnContextIds: Map<string, string>
   baseUrl: string
@@ -108,7 +106,7 @@ export interface PartnerLogo {
  * `partners.json` row — one shape across every dataset (decision D4,
  * museumwithnofrontiers/inventory-app#1699). `level` / `parent_id` come from the curated
  * legacy partner hierarchy (`collection_partner`) where a dataset has one;
- * `project_ids` from the legacy projects the partner belongs to; `item_count`
+ * `project_uuids` from the legacy projects the partner belongs to; `item_count`
  * / `featured` are always computed. A dataset with nothing for a field
  * reports its empty value (`null` / `0` / `false` / `[]`), never omits the key
  * — the derivation in viewer-core reads one shape regardless of which family
@@ -127,15 +125,7 @@ export interface Partner {
   level: string | null
   /** The owning partner's id, for a member of a curated group; `null` for an owner or an uncurated partner. */
   parent_id: string | null
-  /** Legacy project keys (e.g. `ISL`, `DCA`) the partner belongs to. */
-  project_ids: string[]
-  /**
-   * Project UUIDs the partner belongs to — same membership as `project_ids`,
-   * shipped under a new field name during the transition (epic #1727
-   * decision 4) so old and new consumers can never silently misread the
-   * array. `project_ids` (legacy key strings) stays untouched until the
-   * cleanup wave.
-   */
+  /** Project UUIDs the partner belongs to. */
   project_uuids: string[]
   /** Exported items this partner holds. */
   item_count: number

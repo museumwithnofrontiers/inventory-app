@@ -38,7 +38,6 @@ function contextWith(rows: Record<string, unknown[]>): ExportContext {
       chrome: {},
     },
     memberItemIds: ['a', 'b'],
-    itemProjectKeys: new Map(),
     itemOwnContextIds: new Map(),
     baseUrl: 'https://example.org',
     logger: { info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn() } as unknown as ExportContext['logger'],

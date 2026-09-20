@@ -180,7 +180,7 @@ native project (`exhibition.projectId`), the same way as the Gallery package.
 ## items.json note
 
 Identical spec to the Gallery package. The exhibition's own pseudo-project
-items (EXHCOLOUR/GalEx6) are ordinary members; `project_key` distinguishes
+items (EXHCOLOUR/GalEx6) are ordinary members; `project_id` distinguishes
 them from borrowed items so the sheet can suppress the "source database" link
 for purpose-authored records exactly as legacy does
 (`projectSourceIsExhibition` in the API response).

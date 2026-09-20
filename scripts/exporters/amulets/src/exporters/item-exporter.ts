@@ -99,7 +99,6 @@ interface ItemItemLinkRow {
   target_id: string
   target_backward_compatibility: string | null
   target_project_id: string | null
-  target_project_bc: string | null
   language_id: string | null
   justification: string | null
 }
@@ -244,11 +243,9 @@ export class ItemExporter extends BaseExporter {
         `SELECT iil.source_id, iil.target_id,
                 tgt.backward_compatibility AS target_backward_compatibility,
                 tgt.project_id AS target_project_id,
-                proj.backward_compatibility AS target_project_bc,
                 iilt.language_id, iilt.description AS justification
          FROM item_item_links iil
          JOIN items tgt ON tgt.id = iil.target_id
-         LEFT JOIN projects proj ON proj.id = tgt.project_id
          LEFT JOIN item_item_link_translations iilt ON iilt.item_item_link_id = iil.id
          WHERE iil.source_id IN (${itemPh})`,
         this.memberItemIds
@@ -413,10 +410,6 @@ export class ItemExporter extends BaseExporter {
       internal_name: item.internal_name,
       backward_compatibility: item.backward_compatibility,
       project_id: item.project_id,
-      // (project_key, backward_compatibility) is the legacy dbUid pair — the
-      // reference a future resolver turns into a link to the source database
-      // website. The exporter deliberately builds no URL (decision Q3).
-      project_key: this.context.itemProjectKeys.get(item.id) ?? null,
       partner_id: item.partner_id,
       country_id: item.country_id,
       owner_reference: item.owner_reference,
@@ -537,7 +530,6 @@ export class ItemExporter extends BaseExporter {
           id: link.target_id,
           backward_compatibility: link.target_backward_compatibility,
           project_id: link.target_project_id,
-          project_key: lastSegment(link.target_project_bc),
           in_package: memberIds.has(link.target_id),
           justifications: {},
         }
@@ -582,7 +574,6 @@ interface RelatedEntry {
   id: string
   backward_compatibility: string | null
   project_id: string | null
-  project_key: string | null
   in_package: boolean
   justifications: Record<string, string>
 }
@@ -598,11 +589,6 @@ function groupBy<T, V>(rows: T[], key: (row: T) => string, value: (row: T) => V)
   return result
 }
 
-function lastSegment(backwardCompatibility: string | null): string | null {
-  if (!backwardCompatibility) return null
-  const segments = backwardCompatibility.split(':')
-  return segments[segments.length - 1] ?? null
-}
 
 /**
  * Parses a MySQL JSON column value. mysql2 auto-decodes native JSON columns

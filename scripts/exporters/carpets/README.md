@@ -26,7 +26,7 @@ Carpets is where the collection-scoped design gets its real test.
   by the importer in `collection_item` ([#1517](https://github.com/museumwithnofrontiers/inventory-app/issues/1517),
   gap G1). But here the native branch dominates: 398 DCA objects, plus 59 EPM,
   21 ISL, 4 Sharing History, 2 BAR, 1 EXTHE and 1 GALLERIES.
-- **Seven source projects, so `project_key` and context selection are per
+- **Seven source projects, so `project_id` and context selection are per
   item.** A DCA carpet shows its DCA texts, a borrowed EPM object shows its EPM
   texts, and each sheet names its own source database. Nothing here can be a
   per-export constant.
@@ -138,7 +138,7 @@ also set on the ten ISL schools, which legacy's partner list never shows.
 | `gallery.json` | Site anchor: slug, legacy host, names, banner item, chrome flags, sibling galleries |
 | `items.json` | The 486 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 248 THG facet tags with their category (artist 11, dynasty 22, material 103, subject 30, type 82) |
-| `partners.json` | The 72 museums on the gallery's partner list (70 holding member items + 2 MWNF-384). One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
+| `partners.json` | The 72 museums on the gallery's partner list (70 holding member items + 2 MWNF-384). One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_uuids` from the curated hierarchy where the data has one |
 | `countries.json` | The 34 countries the members, their holders and the timeline reference |
 | `languages.json` | The 10 languages the site can display (ar/en/es/fr as `site_language`, plus cs/de/el/it/pt/tr carried by borrowed records and partners) |
 | `dynasties.json` | The 14 dynasties member items reference |
