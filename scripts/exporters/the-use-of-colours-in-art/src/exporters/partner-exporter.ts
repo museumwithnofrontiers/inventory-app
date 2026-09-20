@@ -75,11 +75,10 @@ interface GroupMembershipRow {
   level: string | null
 }
 
-// item_id -> partner_id, for the member items actually held here — used to
-// resolve project_ids via itemProjectKeys the same way item_count is derived,
-// so the two fields never disagree about which items back them. project_id
-// is the item's own project UUID, used the same way to resolve project_uuids
-// (epic #1727 decision 4).
+// item_id -> partner_id, for the member items actually held here — item_count
+// and project_uuids are both derived from this same set, so they never
+// disagree about which items back them. project_id is the item's own project
+// UUID, resolved into project_uuids below.
 interface PartnerHeldItemRow {
   partner_id: string
   item_id: string
@@ -245,7 +244,7 @@ export class PartnerExporter extends BaseExporter {
           )
         : Promise.resolve([] as GroupMembershipRow[]),
       // The member items counted into item_count, by partner — resolved to
-      // project_ids via itemProjectKeys below.
+      // project_uuids below.
       this.db.query<PartnerHeldItemRow>(
         `SELECT partner_id, id AS item_id, project_id
          FROM items
@@ -341,21 +340,12 @@ export class PartnerExporter extends BaseExporter {
       if (owner && owner !== row.partner_id) parentMap.set(row.partner_id, owner)
     }
 
-    // partner_id -> legacy project keys of the member items it holds here
-    // (itemProjectKeys already resolves each item to its OWN project — that's
-    // what "the projects this partner belongs to" means for a partner whose
-    // held items were borrowed from elsewhere, not just the exhibition's own).
-    const projectIdsMap = new Map<string, Set<string>>()
-    // partner_id -> project UUIDs of the same held items, keyed by UUID
-    // instead of legacy key (epic #1727 decision 4, new `project_uuids`
-    // field) — same membership as projectIdsMap, same MWNF-384 fallback below.
+    // partner_id -> project UUIDs of the member items it holds here (each
+    // item resolves to its OWN project — that's what "the projects this
+    // partner belongs to" means for a partner whose held items were borrowed
+    // from elsewhere, not just the exhibition's own), same MWNF-384 fallback below.
     const projectUuidsMap = new Map<string, Set<string>>()
     for (const row of heldItems) {
-      const key = this.context.itemProjectKeys.get(row.item_id)
-      if (key) {
-        if (!projectIdsMap.has(row.partner_id)) projectIdsMap.set(row.partner_id, new Set())
-        projectIdsMap.get(row.partner_id)!.add(key)
-      }
       if (row.project_id) {
         if (!projectUuidsMap.has(row.partner_id)) projectUuidsMap.set(row.partner_id, new Set())
         projectUuidsMap.get(row.partner_id)!.add(row.project_id)
@@ -365,18 +355,11 @@ export class PartnerExporter extends BaseExporter {
     const output: Partner[] = partners.map(partner => {
       const extra = extraMap.get(partner.id)
       const itemCount = Number(partner.item_count)
-      const heldProjectKeys = projectIdsMap.get(partner.id)
       // A partner with no held item here only appears via the MWNF-384
       // branch, which means it belongs to the exhibition's own project even
-      // though it contributes nothing to project_ids above.
-      const projectIds =
-        heldProjectKeys && heldProjectKeys.size > 0
-          ? [...heldProjectKeys]
-          : itemCount === 0 && this.exhibition.mwnf3ProjectId
-            ? [this.exhibition.mwnf3ProjectId]
-            : []
-      // Same MWNF-384 fallback, in UUIDs: exhibition.projectId is already
-      // the inventory UUID of that same native project.
+      // though it contributes nothing to project_uuids above.
+      // exhibition.projectId is already the inventory UUID of that same
+      // native project.
       const heldProjectUuids = projectUuidsMap.get(partner.id)
       const projectUuids =
         heldProjectUuids && heldProjectUuids.size > 0
@@ -395,7 +378,6 @@ export class PartnerExporter extends BaseExporter {
         monument_item_id: partner.monument_item_id,
         level: levelMap.get(partner.id) ?? null,
         parent_id: parentMap.get(partner.id) ?? null,
-        project_ids: projectIds,
         project_uuids: projectUuids,
         // Member items held here — the count the partners list prints, and the
         // reason a partner appears at all.

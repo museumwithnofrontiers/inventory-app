@@ -50,7 +50,6 @@ describe('PartnerExporter — MWNF-384 scope', () => {
     outputDir,
     gallery: gallery(projectId),
     memberItemIds: ['item-a', 'item-b'],
-    itemProjectKeys: new Map(),
     itemOwnContextIds: new Map(),
     baseUrl: 'https://example.test',
     logger: {

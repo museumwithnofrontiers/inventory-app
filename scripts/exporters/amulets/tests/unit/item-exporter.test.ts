@@ -10,12 +10,11 @@ import type { ExportContext, Gallery } from '../../src/core/types.js'
 import type { Logger } from '../../src/core/logger.js'
 
 /**
- * Epic #1727 phase 2 follow-up: every entry in `items.json` must carry the
- * item's own `project_id` (UUID) next to the legacy `project_key`, matching
- * carpets-data — the column was already selected by the SQL query but never
- * copied onto the output row. Every `related_items` stub (a link to an item
- * outside the gallery, which can only be shipped as a reference — decision
- * Q3) needs the same UUID twin of `target_project_bc`/`project_key`.
+ * Every entry in `items.json` carries the item's own `project_id` (UUID),
+ * and so does every `related_items` stub (a link to an item outside the
+ * gallery, which can only be shipped as a reference — decision Q3). The
+ * legacy `project_key` twin both originally shipped alongside (epic #1727
+ * phase 2) is gone as of the cleanup wave; these cases pin its absence.
  */
 describe('ItemExporter — project_id', () => {
   let outputDir: string
@@ -66,7 +65,6 @@ describe('ItemExporter — project_id', () => {
     outputDir,
     gallery,
     memberItemIds: ['item-a'],
-    itemProjectKeys: new Map([['item-a', 'EPM']]),
     itemOwnContextIds: new Map(),
     baseUrl: 'https://example.test',
     logger: {
@@ -89,13 +87,13 @@ describe('ItemExporter — project_id', () => {
     rmSync(outputDir, { recursive: true, force: true })
   })
 
-  it('carries the item own project_id (UUID) alongside the legacy project_key', async () => {
+  it('carries the item own project_id (UUID), with no legacy project_key', async () => {
     const db = stubDb({ items: [itemRow()] })
     await new ItemExporter(context(db)).export()
 
     const item = readOutput()[0]
     expect(item?.project_id).toBe('epm-project-uuid')
-    expect(item?.project_key).toBe('EPM')
+    expect(item).not.toHaveProperty('project_key')
   })
 
   it('reports null project_id when the item has no project (item.project_id column is null)', async () => {
@@ -105,7 +103,7 @@ describe('ItemExporter — project_id', () => {
     expect(readOutput()[0]?.project_id).toBeNull()
   })
 
-  it('carries the related-item stub own project_id (UUID) alongside its legacy project_key', async () => {
+  it('carries the related-item stub own project_id (UUID), with no legacy project_key', async () => {
     const db = stubDb({
       items: [itemRow()],
       itemItemLinks: [
@@ -114,7 +112,6 @@ describe('ItemExporter — project_id', () => {
           target_id: 'item-outside',
           target_backward_compatibility: 'mwnf3:objects:ISL:en:Mus02:9',
           target_project_id: 'isl-project-uuid',
-          target_project_bc: 'mwnf3:projects:ISL',
           language_id: null,
           justification: null,
         },
@@ -125,7 +122,7 @@ describe('ItemExporter — project_id', () => {
     const related = (readOutput()[0]?.related_items as Array<Record<string, unknown>>)[0]
     expect(related?.id).toBe('item-outside')
     expect(related?.project_id).toBe('isl-project-uuid')
-    expect(related?.project_key).toBe('ISL')
+    expect(related).not.toHaveProperty('project_key')
   })
 
   it('reports null related-item project_id when the target has no project', async () => {
@@ -137,7 +134,6 @@ describe('ItemExporter — project_id', () => {
           target_id: 'item-outside',
           target_backward_compatibility: 'mwnf3:objects:XXX:en:Mus02:9',
           target_project_id: null,
-          target_project_bc: null,
           language_id: null,
           justification: null,
         },

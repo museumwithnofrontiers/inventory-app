@@ -97,7 +97,7 @@ package carries both fields rather than deriving one from the other.
 | `related_content.json` | The 5 "Further Reading" bibliographies, as `kind: "text"` entries |
 | `items.json` | The 495 member items — full sheets, facet tag ids, images, references |
 | `tags.json` | 245 THG facet tags with their category (artist 11, dynasty 29, material 99, subject 18, type 88) |
-| `partners.json` | The 128 museums and institutions; eleven of them flagged hidden by `exhibition.json`. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_ids`/`project_uuids` (epic #1727 phase 2, additive) from the curated hierarchy where the data has one |
+| `partners.json` | The 128 museums and institutions; eleven of them flagged hidden by `exhibition.json`. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `featured`, `item_count`, plus `level`/`parent_id`/`project_uuids` from the curated hierarchy where the data has one |
 | `countries.json` | The 37 countries the members, their holders and the timeline reference |
 | `languages.json` | The 9 languages the site can display (en as `site_language`, plus 8 carried by borrowed records and partners) |
 | `dynasties.json` | The 38 dynasties member items reference |

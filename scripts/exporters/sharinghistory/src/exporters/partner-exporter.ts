@@ -196,11 +196,6 @@ export class PartnerExporter extends BaseExporter {
       ),
     ])
 
-    // project UUID -> legacy project key (e.g. 'ISL', 'EPM'), for project_ids below
-    const projectKeyById = new Map(
-      this.projectIds.map((id, i) => [id, this.context.projectKeys[i]])
-    )
-
     // Per-context hierarchy: partner-hierarchy-importer.ts / institution-hierarchy-importer.ts
     // give each tier-1 partner_museums/partner_institutions row its own "group" collection
     // (collection_type='collection', internal_name 'partner_group:...') and attach that
@@ -287,25 +282,16 @@ export class PartnerExporter extends BaseExporter {
 
     // partner_id -> most prominent level across the exported projects
     const levelMap = new Map<string, string>()
-    // partner_id -> legacy project keys this partner is curated under (e.g. ['ISL'], or
-    // ['ISL', 'EPM'] if listed in both) — lets the viewer split Partners by project the
-    // same way legacy keeps separate pages per project (pm_partner_list.php vs
-    // pm_partner_list_eiac.php).
-    const projectIdsMap = new Map<string, Set<string>>()
-    // partner_id -> project UUIDs this partner is curated under — same
-    // membership as projectIdsMap above, keyed by UUID instead of legacy key
-    // (epic #1727 decision 4, new `project_uuids` field).
+    // partner_id -> project UUIDs this partner is curated under (e.g. one
+    // UUID, or two if listed under both ISL and EPM) — lets the viewer split
+    // Partners by project the same way legacy keeps separate pages per
+    // project (pm_partner_list.php vs pm_partner_list_eiac.php).
     const projectUuidsMap = new Map<string, Set<string>>()
     for (const row of levels) {
       if (!row.level) continue
       const current = levelMap.get(row.partner_id)
       if (!current || (LEVEL_RANK[row.level] ?? 99) < (LEVEL_RANK[current] ?? 99)) {
         levelMap.set(row.partner_id, row.level)
-      }
-      const key = projectKeyById.get(row.project_id)
-      if (key) {
-        if (!projectIdsMap.has(row.partner_id)) projectIdsMap.set(row.partner_id, new Set())
-        projectIdsMap.get(row.partner_id)!.add(key)
       }
       if (!projectUuidsMap.has(row.partner_id)) projectUuidsMap.set(row.partner_id, new Set())
       projectUuidsMap.get(row.partner_id)!.add(row.project_id)
@@ -336,7 +322,6 @@ export class PartnerExporter extends BaseExporter {
       monument_item_id: p.monument_item_id,
       level: levelMap.get(p.id) ?? null,
       parent_id: parentMap.get(p.id) ?? null,
-      project_ids: [...(projectIdsMap.get(p.id) ?? [])],
       project_uuids: [...(projectUuidsMap.get(p.id) ?? [])],
       item_count: itemCountMap.get(p.id) ?? 0,
       // Legacy `showOnPortal`. The home page shows a random subset of the

@@ -10,9 +10,9 @@ import type { Logger } from '../../src/core/logger.js'
 
 /**
  * Every dataset's partners.json carries the same five fields — level,
- * parent_id, project_ids, item_count, featured (decision D4,
+ * parent_id, project_uuids, item_count, featured (decision D4,
  * museumwithnofrontiers/inventory-app#1699). The standalone (project-scoped) exporters
- * already derived level/parent_id/project_ids from the curated
+ * already derived level/parent_id/project_uuids from the curated
  * collection_partner hierarchy; these cases pin the two fields this fork
  * adds — item_count and featured — plus their empty defaults, so a partner
  * the hierarchy or the portal flag has nothing to say about still reports a
@@ -167,7 +167,7 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(output?.additional_urls).toEqual([{ url: 'https://example.test/more' }])
   })
 
-  it('reports null level/parent_id and an empty project_ids/project_uuids for an uncurated partner', async () => {
+  it('reports null level/parent_id and an empty project_uuids for an uncurated partner, and no legacy project_ids key', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A')],
       translations: [translationRow('partner-a')],
@@ -177,11 +177,11 @@ describe('PartnerExporter — shared partner shape', () => {
     const output = readOutput()[0]
     expect(output?.level).toBeNull()
     expect(output?.parent_id).toBeNull()
-    expect(output?.project_ids).toEqual([])
     expect(output?.project_uuids).toEqual([])
+    expect(output).not.toHaveProperty('project_ids')
   })
 
-  it('derives level, parent_id and project_ids from the curated hierarchy', async () => {
+  it('derives level and parent_id from the curated hierarchy', async () => {
     const db = stubDb({
       partners: [partnerRow('owner', 'Owner museum'), partnerRow('member', 'Member museum')],
       translations: [translationRow('owner'), translationRow('member')],
@@ -201,16 +201,15 @@ describe('PartnerExporter — shared partner shape', () => {
     const member = output.find(p => p.id === 'member')
     expect(owner?.level).toBe('partner')
     expect(owner?.parent_id).toBeNull()
-    expect(owner?.project_ids).toEqual(['ISL'])
     expect(member?.level).toBe('associated_partner')
     expect(member?.parent_id).toBe('owner')
-    expect(member?.project_ids).toEqual(['ISL'])
   })
 
-  // Epic #1727 decision 4: project_uuids ships the raw project UUIDs
-  // alongside the untouched legacy-key project_ids, under a new field name so
-  // old and new consumers can never silently misread the array.
-  it('derives project_uuids (raw UUIDs) alongside project_ids (legacy keys)', async () => {
+  // Epic #1727 decision 4: project_uuids ships the raw project UUIDs this
+  // partner is curated under. The legacy-key project_ids field it originally
+  // shipped alongside (so old and new consumers could never silently misread
+  // the array) is gone as of the cleanup wave.
+  it('derives project_uuids (raw UUIDs) from the curated hierarchy', async () => {
     const db = stubDb({
       partners: [partnerRow('owner', 'Owner museum')],
       translations: [translationRow('owner')],
@@ -219,7 +218,7 @@ describe('PartnerExporter — shared partner shape', () => {
     await new PartnerExporter(context(db)).export()
 
     const owner = readOutput().find(p => p.id === 'owner')
-    expect(owner?.project_ids).toEqual(['ISL'])
     expect(owner?.project_uuids).toEqual(['project-isl'])
+    expect(owner).not.toHaveProperty('project_ids')
   })
 })

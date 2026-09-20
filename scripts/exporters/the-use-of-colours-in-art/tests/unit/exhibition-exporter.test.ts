@@ -42,7 +42,6 @@ describe('ExhibitionExporter — project_id', () => {
     exhibition,
     themes: [],
     memberItemIds: [],
-    itemProjectKeys: new Map(),
     itemOwnContextIds: new Map(),
     baseUrl: 'https://example.test',
     logger: {

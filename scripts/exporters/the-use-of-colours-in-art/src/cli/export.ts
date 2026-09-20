@@ -180,7 +180,6 @@ program
           exhibition,
           themes,
           memberItemIds: members.map(m => m.item_id),
-          itemProjectKeys: projectKeys,
           itemOwnContextIds: ownContextIds,
           baseUrl: options.baseUrl,
           logger,

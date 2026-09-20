@@ -10,9 +10,9 @@ import type { Logger } from '../../src/core/logger.js'
 
 /**
  * Every dataset's partners.json carries the same five fields — level,
- * parent_id, project_ids, item_count, featured (decision D4,
+ * parent_id, project_uuids, item_count, featured (decision D4,
  * museumwithnofrontiers/inventory-app#1699). This fork already had item_count/featured;
- * these cases pin the three fields it adds — level, parent_id, project_ids —
+ * these cases pin the three fields it adds — level, parent_id, project_uuids —
  * derived from the same curated collection_partner hierarchy the
  * project-scoped exporters read, scoped to the gallery's own single project,
  * plus their empty defaults so a partner the hierarchy has nothing to say
@@ -82,16 +82,11 @@ describe('PartnerExporter — shared partner shape', () => {
       },
     }) as unknown as Database
 
-  const context = (
-    db: Database,
-    projectId: string | null,
-    itemProjectKeys: Map<string, string> = new Map()
-  ): ExportContext => ({
+  const context = (db: Database, projectId: string | null): ExportContext => ({
     db,
     outputDir,
     gallery: gallery(projectId),
     memberItemIds: ['item-a', 'item-b'],
-    itemProjectKeys,
     itemOwnContextIds: new Map(),
     baseUrl: 'https://example.test',
     logger: {
@@ -114,15 +109,15 @@ describe('PartnerExporter — shared partner shape', () => {
     rmSync(outputDir, { recursive: true, force: true })
   })
 
-  it('reports null level/parent_id and empty project_ids/project_uuids for an uncurated partner with no held item', async () => {
+  it('reports null level/parent_id and empty project_uuids for an uncurated partner with no held item, and no legacy project_ids key', async () => {
     const db = stubDb({ partners: [partnerRow('partner-a', 0)] })
     await new PartnerExporter(context(db, null)).export()
 
     const output = readOutput()[0]
     expect(output?.level).toBeNull()
     expect(output?.parent_id).toBeNull()
-    expect(output?.project_ids).toEqual([])
     expect(output?.project_uuids).toEqual([])
+    expect(output).not.toHaveProperty('project_ids')
   })
 
   it('derives level and parent_id from the curated partner_group hierarchy', async () => {
@@ -165,11 +160,9 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(queries.some(q => q.sql.includes("cp.collection_type = 'collection'"))).toBe(false)
   })
 
-  it('derives project_ids from the legacy project of each held item', async () => {
-    const itemProjectKeys = new Map([
-      ['item-a', 'DCA'],
-      ['item-b', 'ISL'],
-    ])
+  // Epic #1727 decision 4: project_uuids derives from the held items' own
+  // project_id column, so it never depends on legacy-key resolution at all.
+  it('derives project_uuids (raw UUIDs) from the legacy project of each held item', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 2)],
       heldItems: [
@@ -177,27 +170,7 @@ describe('PartnerExporter — shared partner shape', () => {
         { partner_id: 'partner-a', item_id: 'item-b', project_id: 'project-isl-uuid' },
       ],
     })
-    await new PartnerExporter(context(db, 'project-dca-uuid', itemProjectKeys)).export()
-
-    expect(readOutput()[0]?.project_ids?.slice().sort()).toEqual(['DCA', 'ISL'])
-  })
-
-  // Epic #1727 decision 4: project_uuids derives from the same held items as
-  // project_ids, but from the item's own project_id column rather than
-  // itemProjectKeys, so it never depends on the legacy-key resolution at all.
-  it('derives project_uuids (raw UUIDs) from the same held items as project_ids', async () => {
-    const itemProjectKeys = new Map([
-      ['item-a', 'DCA'],
-      ['item-b', 'ISL'],
-    ])
-    const db = stubDb({
-      partners: [partnerRow('partner-a', 2)],
-      heldItems: [
-        { partner_id: 'partner-a', item_id: 'item-a', project_id: 'project-dca-uuid' },
-        { partner_id: 'partner-a', item_id: 'item-b', project_id: 'project-isl-uuid' },
-      ],
-    })
-    await new PartnerExporter(context(db, 'project-dca-uuid', itemProjectKeys)).export()
+    await new PartnerExporter(context(db, 'project-dca-uuid')).export()
 
     expect(readOutput()[0]?.project_uuids?.slice().sort()).toEqual([
       'project-dca-uuid',
@@ -209,7 +182,7 @@ describe('PartnerExporter — shared partner shape', () => {
     const db = stubDb({ partners: [partnerRow('partner-orphan', 0)] })
     await new PartnerExporter(context(db, 'project-dca-uuid')).export()
 
-    expect(readOutput()[0]?.project_ids).toEqual(['DCA'])
     expect(readOutput()[0]?.project_uuids).toEqual(['project-dca-uuid'])
+    expect(readOutput()[0]).not.toHaveProperty('project_ids')
   })
 })
