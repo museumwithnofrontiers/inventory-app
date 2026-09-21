@@ -28,6 +28,7 @@ legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter,
 | [`the-use-of-colours-in-art/`](the-use-of-colours-in-art/README.md) | THG **exhibition 47** (membership union + curated theme tree) | `@museumwnf/the-use-of-colours-in-art-data` | `scripts/viewers/the-use-of-colours-in-art` |
 | [`water-in-islam/`](water-in-islam/README.md) | THG **exhibition 56** (membership union + curated theme tree) | `@museumwnf/water-in-islam-data` | *(viewer not built yet)* |
 | [`dxa-gallery/`](dxa-gallery/README.md) | any THG gallery, scoped per run by `--instance` (ships with `carpets` and `amulets`) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/carpets`, `scripts/viewers/amulets` |
+| [`dxa-exhibition/`](dxa-exhibition/README.md) | any THG exhibition, scoped per run by `--instance` (ships with `the-use-of-colours-in-art` and `water-in-islam`) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/the-use-of-colours-in-art` *(water viewer not built yet)* |
 
 Each directory is a **self-contained Node/TypeScript project** (own
 `package.json`, `tsconfig.json`, `vitest.config.ts`, `.env`). See the README

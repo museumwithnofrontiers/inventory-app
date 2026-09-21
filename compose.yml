@@ -485,6 +485,7 @@ services:
       - exporter-the-use-of-colours-in-art-modules:/var/www/app/scripts/exporters/the-use-of-colours-in-art/node_modules
       - exporter-water-in-islam-modules:/var/www/app/scripts/exporters/water-in-islam/node_modules
       - exporter-dxa-gallery-modules:/var/www/app/scripts/exporters/dxa-gallery/node_modules
+      - exporter-dxa-exhibition-modules:/var/www/app/scripts/exporters/dxa-exhibition/node_modules
     environment:
       # The exporters read DB_* directly. dotenv does not override variables
       # that are already set, so these win over any scripts/exporters/*/.env
@@ -603,6 +604,7 @@ volumes:
   exporter-the-use-of-colours-in-art-modules:
   exporter-water-in-islam-modules:
   exporter-dxa-gallery-modules:
+  exporter-dxa-exhibition-modules:
 
   # NOT disposable, and deliberately external so that `down -v` cannot destroy
   # them: a full stage is hours of importing and several gigabytes of images.
