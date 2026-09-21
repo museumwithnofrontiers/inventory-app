@@ -1,10 +1,12 @@
 /**
- * The website layout: only a site's own legacy keys (`galleryCredits`, and for a
- * gallery `galleryAbout`), renamed into the keys the viewer-i18n dictionary
- * expects. Cases are drawn from the shape verified against carpets, amulets,
+ * The website layout: only a site's own legacy keys (`galleryCredits` for a
+ * gallery, `exhibitionCredits` for an exhibition, and for a gallery also
+ * `galleryAbout`), renamed into the keys the viewer-i18n dictionary expects.
+ * Cases are drawn from the shape verified against carpets, amulets,
  * water-in-islam and the-use-of-colours-in-art on `origin/main`, 2026-09-21:
  * galleries carry `<ns>.credits.body` and `gallery.about.body`, exhibitions carry
- * `<ns>.credits.body` only.
+ * `<ns>.credits.body` sourced from `exhibitionCredits` only — never from the
+ * common group's `galleryCredits` fallback.
  */
 import { describe, expect, it } from 'vitest'
 
@@ -26,9 +28,9 @@ describe('websiteKeyMapping', () => {
     })
   })
 
-  it('maps only galleryCredits for an exhibition — there is no About page', () => {
+  it('maps only exhibitionCredits for an exhibition — there is no About page, and galleryCredits is not owned', () => {
     expect(websiteKeyMapping('exhibition', 'waterInIslam')).toEqual({
-      galleryCredits: 'waterInIslam.credits.body',
+      exhibitionCredits: 'waterInIslam.credits.body',
     })
   })
 })
@@ -56,19 +58,24 @@ describe('buildWebsiteCatalogue', () => {
     expect(notEmitted).toEqual(['searchHowTo'])
   })
 
-  it('emits only credits for an exhibition, and lists galleryAbout as not emitted when legacy has it', () => {
-    // No exhibition actually has galleryAbout in legacy, but the mapping must
-    // still name it as withheld if a row happened to exist, rather than
-    // silently treating it as covered.
+  it('emits only exhibitionCredits for an exhibition, and lists galleryCredits and galleryAbout as not emitted', () => {
+    // The common group falls back to galleryCredits for every site, and no
+    // exhibition actually has galleryAbout in legacy, but the mapping must
+    // still name both as withheld if a row happened to exist, rather than
+    // silently treating either as covered.
     const { messages } = mergeTranslationGroups(
       [],
-      [row('galleryCredits', 'en', 'Exhibition credits'), row('galleryAbout', 'en', 'Ignored for exhibitions')]
+      [
+        row('exhibitionCredits', 'en', 'Exhibition credits'),
+        row('galleryCredits', 'en', 'Common group fallback credits — not owned by an exhibition'),
+        row('galleryAbout', 'en', 'Ignored for exhibitions'),
+      ]
     )
 
     const { locales, notEmitted } = buildWebsiteCatalogue(messages, 'exhibition', 'waterInIslam')
 
     expect(locales).toEqual({ en: { 'waterInIslam.credits.body': 'Exhibition credits' } })
-    expect(notEmitted).toEqual(['galleryAbout'])
+    expect(notEmitted).toEqual(['galleryAbout', 'galleryCredits'])
   })
 
   it('produces a locale file with one key when legacy has only credits in that locale', () => {
