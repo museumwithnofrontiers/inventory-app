@@ -27,6 +27,7 @@ legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter,
 | [`carpets/`](carpets/README.md) | THG **gallery 9** (membership union, DCA-native + borrowed) | `@museumwnf/carpets-data` | `scripts/viewers/carpets` |
 | [`the-use-of-colours-in-art/`](the-use-of-colours-in-art/README.md) | THG **exhibition 47** (membership union + curated theme tree) | `@museumwnf/the-use-of-colours-in-art-data` | `scripts/viewers/the-use-of-colours-in-art` |
 | [`water-in-islam/`](water-in-islam/README.md) | THG **exhibition 56** (membership union + curated theme tree) | `@museumwnf/water-in-islam-data` | *(viewer not built yet)* |
+| [`dxa-gallery/`](dxa-gallery/README.md) | any THG gallery, scoped per run by `--instance` (ships with `carpets` and `amulets`) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/carpets`, `scripts/viewers/amulets` |
 
 Each directory is a **self-contained Node/TypeScript project** (own
 `package.json`, `tsconfig.json`, `vitest.config.ts`, `.env`). See the README
@@ -57,6 +58,25 @@ its own, the rest come from seven other projects. `water-in-islam` is its fork
 and the opposite balance — 314 native records among 495 — and the site that
 exercises what a single exhibition could not: hidden museums, an exhibition with
 no chronology of its own, and one published language.
+
+## Parameterised DXA exporters and instance files
+
+`carpets`/`amulets` and `the-use-of-colours-in-art`/`water-in-islam` were each
+forked pairs that differed only in the hardcoded scope constant, the package
+name and a handful of comments — exactly the kind of copy-paste duplication
+that does not survive going from a handful of sites to dozens (epic #1734).
+`dxa-gallery` replaces the gallery pair with **one** exporter that takes
+`--instance <name|path>` instead of a per-fork constant; `dxa-exhibition`
+does the same for the exhibition pair.
+
+An "instance" is a small JSON file under
+[`instances/`](instances/README.md) (`<slug>.json`) holding the collection
+UUID, the site slug, a display name and the package name — see that README
+for the field shapes, how `kind` picks the right exporter, and how to obtain
+a `collection_id`. No legacy id appears anywhere in either parameterised
+exporter's own source; the four forked directories above are unaffected for
+now and are removed by a later story once their parameterised replacements
+are verified equivalent.
 
 ## Why forked per dataset (deliberate decision)
 
