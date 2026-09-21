@@ -71,10 +71,12 @@ export class DynastyExporter extends BaseExporter {
 
     const [translations, images] = await Promise.all([
       this.db.query<DynastyTranslationRow>(
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT dynasty_id, language_id, name, also_known_as, area, history,
                 date_description_ah, date_description_ad
          FROM dynasty_translations
-         WHERE dynasty_id IN (${dynastyPh})`,
+         WHERE dynasty_id IN (${dynastyPh})
+         ORDER BY dynasty_id`,
         dynastyIds
       ),
       // A representative image: the first picture (by display order) of any

@@ -343,8 +343,9 @@ export class ExhibitionExporter extends BaseExporter {
 
     if (keys.length === 0) return []
 
-    const rows = await this.db.query<{ id: string }>(
-      `SELECT id FROM partners WHERE backward_compatibility IN (${this.placeholders(keys.length)})`,
+    const rows = await this.db.query<{ id: string; backward_compatibility: string }>(
+      `SELECT id, backward_compatibility FROM partners
+       WHERE backward_compatibility IN (${this.placeholders(keys.length)})`,
       keys
     )
 
@@ -353,7 +354,12 @@ export class ExhibitionExporter extends BaseExporter {
         `exhibition.json: ${keys.length - rows.length} hidden-partner reference(s) did not resolve`
       )
     }
-    return rows.map(row => row.id)
+
+    // Returned in the curated `keys` order, not the query's row order (which
+    // an IN (...) list does not guarantee) — sorted so two exports of one
+    // database are byte-identical.
+    const idByKey = new Map(rows.map(row => [row.backward_compatibility, row.id]))
+    return keys.map(key => idByKey.get(key)).filter((id): id is string => !!id)
   }
 
   /**
@@ -410,15 +416,20 @@ export class ExhibitionExporter extends BaseExporter {
 
     const [titles, chromeRows] = await Promise.all([
       this.db.query<TranslationRow>(
+        // Row order is unspecified; sorted so each sibling's `names` key order
+        // is byte-identical across two exports of one database.
         `SELECT collection_id, language_id, title, description
          FROM collection_translations
-         WHERE collection_id IN (${placeholders})`,
+         WHERE collection_id IN (${placeholders})
+         ORDER BY collection_id, language_id`,
         siblingIds
       ),
       this.db.query<SiblingChromeRow>(
+        // Row order is unspecified; sorted so the "first row wins" pick below is deterministic.
         `SELECT collection_id, extra
          FROM collection_translations
-         WHERE collection_id IN (${placeholders}) AND extra IS NOT NULL`,
+         WHERE collection_id IN (${placeholders}) AND extra IS NOT NULL
+         ORDER BY collection_id, language_id`,
         siblingIds
       ),
     ])

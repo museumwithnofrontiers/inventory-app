@@ -149,15 +149,20 @@ export class GalleryExporter extends BaseExporter {
 
     const [titles, chromeRows] = await Promise.all([
       this.db.query<GalleryTranslationRow>(
+        // Row order is unspecified; sorted so each sibling's `names` key order
+        // is byte-identical across two exports of one database.
         `SELECT collection_id, language_id, title
          FROM collection_translations
-         WHERE collection_id IN (${placeholders})`,
+         WHERE collection_id IN (${placeholders})
+         ORDER BY collection_id, language_id`,
         siblingIds
       ),
       this.db.query<SiblingChromeRow>(
+        // Row order is unspecified; sorted so the "first row wins" pick below is deterministic.
         `SELECT collection_id, extra
          FROM collection_translations
-         WHERE collection_id IN (${placeholders}) AND extra IS NOT NULL`,
+         WHERE collection_id IN (${placeholders}) AND extra IS NOT NULL
+         ORDER BY collection_id, language_id`,
         siblingIds
       ),
     ])

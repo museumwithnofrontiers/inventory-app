@@ -24,8 +24,9 @@ export class CountryExporter extends BaseExporter {
     const countries = await this.db.query<CountryRow>(
       `SELECT id, internal_name, backward_compatibility FROM countries ORDER BY id`
     )
+    // Row order is unspecified; sorted so two exports of one database are byte-identical.
     const translations = await this.db.query<CountryTranslationRow>(
-      `SELECT country_id, language_id, name FROM country_translations`
+      `SELECT country_id, language_id, name FROM country_translations ORDER BY country_id`
     )
 
     // language id -> 2-char code

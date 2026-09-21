@@ -103,9 +103,13 @@ export class ThemeExporter extends BaseExporter {
         themeIds
       ),
       this.db.query<ThemeTranslationRow>(
+        // Row order is unspecified; sorted so the theme-id key order in each
+        // language's translation file is byte-identical across two exports of
+        // one database.
         `SELECT collection_id, language_id, title, description, quote
          FROM collection_translations
-         WHERE collection_id IN (${themePh})`,
+         WHERE collection_id IN (${themePh})
+         ORDER BY collection_id, language_id`,
         themeIds
       ),
     ])
@@ -317,9 +321,13 @@ export class ThemeExporter extends BaseExporter {
 
     const linkIds = links.map(link => link.id)
     const translations = await this.db.query<RelatedLinkTranslationRow>(
+      // Row order is unspecified; sorted so each link's `descriptions` /
+      // `reciprocal_descriptions` key order is byte-identical across two
+      // exports of one database.
       `SELECT item_item_link_id, language_id, description, reciprocal_description
        FROM item_item_link_translations
-       WHERE item_item_link_id IN (${this.placeholders(linkIds.length)})`,
+       WHERE item_item_link_id IN (${this.placeholders(linkIds.length)})
+       ORDER BY item_item_link_id, language_id`,
       linkIds
     )
 

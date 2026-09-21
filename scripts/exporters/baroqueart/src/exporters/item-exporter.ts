@@ -223,10 +223,14 @@ export class ItemExporter extends BaseExporter {
       )
       const detailContextIds = [...new Set([...contextIds, ...defaultContextRows.map(r => r.id)])]
       detailTranslations = await this.db.query<DetailTranslationRow>(
+        // Row order is unspecified; sorted so two exports of one database are
+        // byte-identical (also fixes which row `rows[0]` picks when neither
+        // context wins during the merge below).
         `SELECT item_id, language_id, context_id, name, description, dates, location
          FROM item_translations
          WHERE item_id IN (${this.placeholders(detailIds.length)})
-           AND context_id IN (${this.placeholders(detailContextIds.length)})`,
+           AND context_id IN (${this.placeholders(detailContextIds.length)})
+         ORDER BY item_id, context_id`,
         [...detailIds, ...detailContextIds]
       )
     }
@@ -254,6 +258,9 @@ export class ItemExporter extends BaseExporter {
     // Filter by context_id so that explore-context translations (which may have
     // extra=null) do not overwrite the canonical project translations.
     const translations = await this.db.query<ItemTranslationRow>(
+      // Row order is unspecified; sorted so two exports of one database are
+      // byte-identical (also fixes which row `rows[0]` picks below when an
+      // item's own context is not among its translation rows).
       `SELECT it.item_id, it.language_id, it.context_id,
               it.name, it.alternate_name, it.description,
               it.type, it.holder, it.owner, it.initial_owner, it.dates,
@@ -270,7 +277,8 @@ export class ItemExporter extends BaseExporter {
        LEFT JOIN authors a3 ON a3.id = it.translator_id
        LEFT JOIN authors a4 ON a4.id = it.translation_copy_editor_id
        WHERE it.item_id IN (${itemPh})
-         AND it.context_id IN (${contextPh})`,
+         AND it.context_id IN (${contextPh})
+       ORDER BY it.item_id, it.context_id`,
       [...itemIds, ...contextIds]
     )
 
@@ -299,9 +307,12 @@ export class ItemExporter extends BaseExporter {
     if (pictureItems.length > 0) {
       const pictureIds = [...new Set(pictureItems.map(p => p.picture_id))]
       pictureTranslations = await this.db.query<PictureTranslationRow>(
+        // Row order is unspecified; sorted so the `captions` key order below is
+        // byte-identical across two exports of one database.
         `SELECT item_id AS picture_id, language_id, description AS caption, extra
          FROM item_translations
-         WHERE item_id IN (${this.placeholders(pictureIds.length)})`,
+         WHERE item_id IN (${this.placeholders(pictureIds.length)})
+         ORDER BY picture_id, language_id`,
         pictureIds
       )
     }
@@ -317,36 +328,44 @@ export class ItemExporter extends BaseExporter {
       itemItemLinks,
     ] = await Promise.all([
       this.db.query<ItemDynastyRow>(
-        `SELECT item_id, dynasty_id FROM item_dynasty WHERE item_id IN (${itemPh})`,
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
+        `SELECT item_id, dynasty_id FROM item_dynasty WHERE item_id IN (${itemPh})
+         ORDER BY item_id, dynasty_id`,
         itemIds
       ),
       this.db.query<ItemTagRow>(
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT it2.item_id, t.description AS tag
          FROM item_tag it2
          JOIN tags t ON t.id = it2.tag_id
-         WHERE it2.item_id IN (${itemPh})`,
+         WHERE it2.item_id IN (${itemPh})
+         ORDER BY it2.item_id, t.description`,
         itemIds
       ),
       // Glossary terms used anywhere in this item's translations (any language),
       // via item_translations -> item_translation_spelling -> glossary_spellings.
+      // Row order is unspecified; sorted so two exports of one database are byte-identical.
       this.db.query<ItemGlossaryRow>(
         `SELECT DISTINCT it3.item_id, gs.glossary_id
          FROM item_translation_spelling its
          JOIN item_translations it3 ON it3.id = its.item_translation_id
          JOIN glossary_spellings gs ON gs.id = its.spelling_id
-         WHERE it3.item_id IN (${itemPh})`,
+         WHERE it3.item_id IN (${itemPh})
+         ORDER BY it3.item_id, gs.glossary_id`,
         itemIds
       ),
       // Object artists (legacy `artist_` text, parsed into structured Artist
       // entities by the importer). Language-independent — `artists.name` has
       // no language column — so this is a top-level item field, not per-translation.
       // Embedded details carry artists too (legacy monument_details.artist),
-      // so their ids are included; the shared artistMap serves both.
+      // so their ids are included; the shared artistMap serves both. Row order
+      // is unspecified; sorted so two exports of one database are byte-identical.
       this.db.query<ItemArtistRow>(
         `SELECT ai.item_id, a.name
          FROM artist_item ai
          JOIN artists a ON a.id = ai.artist_id
-         WHERE ai.item_id IN (${this.placeholders(itemAndDetailIds.length)})`,
+         WHERE ai.item_id IN (${this.placeholders(itemAndDetailIds.length)})
+         ORDER BY ai.item_id, a.name`,
         itemAndDetailIds
       ),
       // THG (Thematic Gallery) cross-references — a separate legacy project's
@@ -356,12 +375,14 @@ export class ItemExporter extends BaseExporter {
       // is intentionally never exported (out of scope, separate site) — this
       // is a lightweight, scoped-by-prefix lookup, not a full THG export.
       this.db.query<ItemThgGalleryRow>(
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT ci.item_id, ct.title AS name, c.internal_name
          FROM collection_item ci
          JOIN collections c ON c.id = ci.collection_id
          LEFT JOIN collection_translations ct ON ct.collection_id = c.id AND ct.language_id = 'eng'
          WHERE ci.item_id IN (${itemPh})
-           AND c.backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:thg\\_gallery:%'`,
+           AND c.backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:thg\\_gallery:%'
+         ORDER BY ci.item_id, c.internal_name, c.id`,
         itemIds
       ),
       // Audio/video media attached to items (item_media table) — legacy
@@ -377,11 +398,15 @@ export class ItemExporter extends BaseExporter {
       // directed links; fetching both directions and reversing doubles the list.
       // Justification texts are joined per link per language.
       this.db.query<ItemItemLinkRow>(
+        // Row order is unspecified; sorted so two exports of one database are
+        // byte-identical — both the target order within `related_items` and the
+        // language-key order within each target's `justifications`.
         `SELECT iil.source_id, iil.target_id,
                 iilt.language_id, iilt.description AS justification
          FROM item_item_links iil
          LEFT JOIN item_item_link_translations iilt ON iilt.item_item_link_id = iil.id
-         WHERE iil.source_id IN (${itemPh})`,
+         WHERE iil.source_id IN (${itemPh})
+         ORDER BY iil.source_id, iil.target_id, iilt.language_id`,
         itemIds
       ),
     ])
