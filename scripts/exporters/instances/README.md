@@ -12,6 +12,12 @@ reads every file here to build its batch plan — including the `kind:
 "standalone"` files below, which exist only for that batch and are never read
 by `dxa-gallery` or `dxa-exhibition` themselves.
 
+For a `gallery`/`exhibition` site, authoring an instance file is one step of
+a larger procedure — see
+[`docs/deployment/new-website.md`](../../../docs/deployment/new-website.md)
+for the full ordered recipe, from looking up the legacy collection to a
+live, discovered site.
+
 ## Naming
 
 One file per site, named `<slug>.json`, where `<slug>` is the site's own
