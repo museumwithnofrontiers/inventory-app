@@ -159,18 +159,24 @@ seven exports first and only then failing the publish step with
 that error as a permissions problem if you ever do see it past the
 preflight).
 
-Repeat for each of the seven exporters (`islamicart`, `baroqueart`,
-`sharinghistory`, `carpets`, `amulets`, `the-use-of-colours-in-art`,
-`water-in-islam`), PowerShell:
+Repeat for each of the five exporter invocations that together publish the
+seven data packages — three standalone exporters, plus the two parameterised
+DXA exporters run once per instance slug they carry — PowerShell:
 
 ```powershell
 $env:HOME = $env:USERPROFILE
-@('islamicart','baroqueart','sharinghistory','carpets','amulets','the-use-of-colours-in-art','water-in-islam') | % {
+@('islamicart','baroqueart','sharinghistory') | % {
   docker compose --profile jobs run --rm exporter "$_" --force --publish
+}
+@('carpets','amulets') | % {
+  docker compose --profile jobs run --rm exporter dxa-gallery --instance "$_" --force --publish
+}
+@('the-use-of-colours-in-art','water-in-islam') | % {
+  docker compose --profile jobs run --rm exporter dxa-exhibition --instance "$_" --force --publish
 }
 ```
 
-That single run per site exports, bumps the patch version, generates
+That single run per site/instance exports, bumps the patch version, generates
 `package.json`, `README.md` and `LICENSE.md`, and runs `npm publish`. Do not
 run `npm publish` yourself afterwards.
 
@@ -185,8 +191,10 @@ unblocks and the run continues on its own — there is no ENTER prompt to
 answer. All seven publishes complete comfortably inside that window (the
 whole loop took under two minutes on 2026-09-20 and 2026-09-21).
 
-The version counter lives in `output/.version-<site>`, outside the package
-directory and gitignored. As of #1865 it is written only once `npm publish`
+The version counter lives in `output/.version-<site>` (in the parameterised
+`dxa-gallery`/`dxa-exhibition` directories, `<site>` is the instance slug, one
+counter per instance), outside the package directory and gitignored. As of
+#1865 it is written only once `npm publish`
 has actually succeeded, so a failed publish never burns a patch number — a
 plain rerun after a failure retries the very same version rather than
 skipping past it; fix the underlying cause, or pass `--package-version`
@@ -440,7 +448,7 @@ pointer to the section above.
 
 1. `stage`, then `staging-glossary-sync`, then review locally (stage 2).
 2. `ship` to the VPS (stage 2).
-3. Publish the seven data packages (stage 3), one command per exporter.
+3. Publish the seven data packages (five exporter invocations) (stage 3).
 4. Propagate each data package with `--expect <site>-data@X.Y.Z` (stage 5.2),
    which opens and merges one PR per website; the merges deploy the websites.
 5. Start the demo viewer workflows by hand if the demos should show the new

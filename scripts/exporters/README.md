@@ -23,12 +23,8 @@ legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter,
 | [`islamicart/`](islamicart/README.md) | project `ISL` + `EPM` (one dataset) | `@museumwnf/islamicart-data` | `scripts/viewers/islamicart` |
 | [`baroqueart/`](baroqueart/README.md) | project `BAR` | `@museumwnf/baroqueart-data` | `scripts/viewers/baroqueart` |
 | [`sharinghistory/`](sharinghistory/README.md) | project `awe` (SH keyspace, lowercase) | `@museumwnf/sharinghistory-data` | `scripts/viewers/sharinghistory` |
-| [`amulets/`](amulets/README.md) | THG **gallery 4** (membership union) | `@museumwnf/amulets-data` | `scripts/viewers/amulets` |
-| [`carpets/`](carpets/README.md) | THG **gallery 9** (membership union, DCA-native + borrowed) | `@museumwnf/carpets-data` | `scripts/viewers/carpets` |
-| [`the-use-of-colours-in-art/`](the-use-of-colours-in-art/README.md) | THG **exhibition 47** (membership union + curated theme tree) | `@museumwnf/the-use-of-colours-in-art-data` | `scripts/viewers/the-use-of-colours-in-art` |
-| [`water-in-islam/`](water-in-islam/README.md) | THG **exhibition 56** (membership union + curated theme tree) | `@museumwnf/water-in-islam-data` | *(viewer not built yet)* |
-| [`dxa-gallery/`](dxa-gallery/README.md) | any THG gallery, scoped per run by `--instance` (ships with `carpets` and `amulets`) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/carpets`, `scripts/viewers/amulets` |
-| [`dxa-exhibition/`](dxa-exhibition/README.md) | any THG exhibition, scoped per run by `--instance` (ships with `the-use-of-colours-in-art` and `water-in-islam`) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/the-use-of-colours-in-art` *(water viewer not built yet)* |
+| [`dxa-gallery/`](dxa-gallery/README.md) | any THG gallery, scoped per run by `--instance`: [`carpets`](instances/carpets.md) (gallery 9, membership union, DCA-native + borrowed), [`amulets`](instances/amulets.md) (gallery 4, membership union) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/carpets`, `scripts/viewers/amulets` |
+| [`dxa-exhibition/`](dxa-exhibition/README.md) | any THG exhibition, scoped per run by `--instance`: [`the-use-of-colours-in-art`](instances/the-use-of-colours-in-art.md) (exhibition 47), [`water-in-islam`](instances/water-in-islam.md) (exhibition 56) — both membership union + curated theme tree | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/the-use-of-colours-in-art` *(water viewer not built yet)* |
 
 Each directory is a **self-contained Node/TypeScript project** (own
 `package.json`, `tsconfig.json`, `vitest.config.ts`, `.env`). See the README
@@ -75,9 +71,12 @@ An "instance" is a small JSON file under
 UUID, the site slug, a display name and the package name — see that README
 for the field shapes, how `kind` picks the right exporter, and how to obtain
 a `collection_id`. No legacy id appears anywhere in either parameterised
-exporter's own source; the four forked directories above are unaffected for
-now and are removed by a later story once their parameterised replacements
-are verified equivalent.
+exporter's own source; the four forked directories that used to serve these
+sites (`carpets`, `amulets`, `the-use-of-colours-in-art`, `water-in-islam`)
+are gone, their parameterised replacements verified equivalent
+([#1913](https://github.com/museumwithnofrontiers/inventory-app/issues/1913)). Each instance's
+site-specific knowledge — legacy scope, membership reasoning, gaps, decisions
+— now lives next to its instance file as `instances/<slug>.md`.
 
 ## Why forked per dataset (deliberate decision)
 
@@ -90,6 +89,15 @@ is that cross-cutting fixes must be ported to every fork (e.g. the
 unpublished-exhibition filter, added to both in #1477/#1478); when you fix a
 `src/exporters/*` file in one fork, check whether the siblings need the same
 change.
+
+**2026-09-21 amendment.** The DXA family (`dxa-gallery`, `dxa-exhibition`) is
+the exception: its four forks differed only by a hardcoded scope constant, a
+package name and a handful of comments — never by feature — so epic #1734
+collapsed them into two parameterised exporters plus a per-site instance file
+each (see *Parameterised DXA exporters and instance files* above). The
+standalone trio (`islamicart`, `baroqueart`, `sharinghistory`) stays forked:
+their differences are real per-site features, not copy-paste duplication, and
+the decision above still applies to them.
 
 ## Package layout
 
@@ -284,6 +292,30 @@ a plain `npm install @museumwnf/<dataset>-data@latest`, no token involved):
    the old data and needs a second dispatch.
 
 ## Adding a new dataset
+
+**A DXA gallery or exhibition** — a thematic gallery or curated exhibition
+scoped by a `collections` UUID: one instance file, no directory copy.
+
+1. Look up the collection UUID:
+   `php artisan importer:find-collection gallery|exhibition <legacy id|slug|exact English title> --json`
+   (inside the `app`/`staging-app` container).
+2. Add `scripts/exporters/instances/<slug>.json` — see
+   [`instances/README.md`](instances/README.md) for the field shapes and how
+   `kind` picks `dxa-gallery` or `dxa-exhibition`.
+3. Add `scripts/exporters/instances/<slug>.md`, the site note: legacy scope,
+   membership and borrowed-record reasoning, gaps, decisions and per-site
+   quirks — see any existing `instances/*.md` for the shape.
+4. Validate counts against the legacy site/database before first publish
+   (see `baroqueart/tools/legacy-validation.sql` for a worked example, and
+   `.legacy-database/` for offline legacy dumps), then record the check as
+   `scripts/exporters/docs/validation/<slug>-<date>.md`.
+5. Publish
+   (`docker compose --profile jobs run --rm exporter dxa-gallery --instance <slug> --force --publish`,
+   or `dxa-exhibition` for an exhibition), then create the matching viewer
+   (see [`../viewers/README.md`](../viewers/README.md)).
+
+**A standalone site** — its feature set differs enough to need its own fork
+(see *Why forked per dataset* above):
 
 1. Copy the closest existing exporter directory to `scripts/exporters/<name>`.
 2. Prune exporters the dataset doesn't need; set the hardcoded dataset

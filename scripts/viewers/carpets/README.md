@@ -8,7 +8,7 @@ This is the viewer half of the second DXA gallery pilot
 ([epic #1539](https://github.com/museumwithnofrontiers/inventory-app/issues/1539),
 [story #1545](https://github.com/museumwithnofrontiers/inventory-app/issues/1545)). Its
 data comes from the matching exporter,
-[`../../exporters/carpets`](../../exporters/carpets/README.md); its UI strings
+[`../../exporters/dxa-gallery`](../../exporters/dxa-gallery/README.md) (site note: [`../../exporters/instances/carpets.md`](../../exporters/instances/carpets.md)); its UI strings
 come from [`../../site-i18n`](../../site-i18n/README.md); the legacy behaviour
 it reproduces is analysed in
 [`../../exporters/docs/dxa-legacy-analysis.md`](../../exporters/docs/dxa-legacy-analysis.md).
@@ -35,13 +35,13 @@ auth required.
 1. `DATA_PACKAGE` — an npm package name **or** a directory path (explicit wins).
 2. `@museumwnf/carpets-data`, if installed. **This is the normal path** — CI, the
    deploy workflow and a plain `npm install` all land here.
-3. `../../exporters/carpets/output/carpets` — a local exporter run, for working
+3. `../../exporters/dxa-gallery/output/carpets` — a local exporter run, for working
    against data that has not been published yet.
 
 For (3), produce the export from the repository root:
 
 ```bash
-docker compose --profile jobs run --rm exporter carpets --force \
+docker compose --profile jobs run --rm exporter dxa-gallery --instance carpets --force \
     --base-url https://inventory.metanull.eu
 ```
 
@@ -54,7 +54,7 @@ Because (2) is checked before (3), an installed package shadows a local export.
 Point `DATA_PACKAGE` at the export directory to override it.
 
 Publishing a new version is the exporter's job, not the viewer's — see
-[`../../exporters/carpets/NPM_PUBLISH.md`](../../exporters/carpets/NPM_PUBLISH.md).
+[`../../exporters/dxa-gallery/NPM_PUBLISH.md`](../../exporters/dxa-gallery/NPM_PUBLISH.md).
 The deploy workflow always installs `@latest` regardless of the lockfile, so a
 publish reaches production on the next deploy without a code change here.
 
@@ -233,7 +233,7 @@ thing. Rendering it from that column would state something legacy did not.
 Served from a local export taken after a full legacy re-import of the staging
 database. Every figure below is what the running viewer showed, and every one
 matches the exporter's
-[`VALIDATION-2026-08-27.md`](../../exporters/carpets/tools/VALIDATION-2026-08-27.md).
+[`VALIDATION-2026-08-27.md`](../../exporters/docs/validation/carpets-2026-08-27.md).
 
 | Page | Checked | Result |
 |---|---|---|
@@ -267,7 +267,7 @@ the exporter:
 The differences below are inherited from the amulets fork, whose page-by-page
 comparison against the live legacy site was made on 2026-08-27, plus the
 carpets-specific items the exporter's
-[`VALIDATION-2026-08-27.md`](../../exporters/carpets/tools/VALIDATION-2026-08-27.md)
+[`VALIDATION-2026-08-27.md`](../../exporters/docs/validation/carpets-2026-08-27.md)
 records.
 
 **Legacy defects not reproduced**

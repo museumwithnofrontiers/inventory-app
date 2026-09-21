@@ -15,6 +15,11 @@ slug — the value used for the output directory, the data-package name and
 (a bare name, resolved against this directory) or `--instance <path>` (any
 path containing a `/` or `\`, or ending in `.json`, used as-is).
 
+A `<slug>.md` next to a `<slug>.json` is that site's note: legacy scope,
+membership and borrowed-record reasoning, gaps, decisions and other
+per-site quirks that do not belong in the shared exporter or its
+specification doc. It is prose for humans, read by nothing at export time.
+
 ## Fields
 
 - `kind` — which exporter this instance is for. `"gallery"` is read by

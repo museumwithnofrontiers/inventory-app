@@ -480,10 +480,6 @@ services:
       - exporter-islamicart-modules:/var/www/app/scripts/exporters/islamicart/node_modules
       - exporter-baroqueart-modules:/var/www/app/scripts/exporters/baroqueart/node_modules
       - exporter-sharinghistory-modules:/var/www/app/scripts/exporters/sharinghistory/node_modules
-      - exporter-amulets-modules:/var/www/app/scripts/exporters/amulets/node_modules
-      - exporter-carpets-modules:/var/www/app/scripts/exporters/carpets/node_modules
-      - exporter-the-use-of-colours-in-art-modules:/var/www/app/scripts/exporters/the-use-of-colours-in-art/node_modules
-      - exporter-water-in-islam-modules:/var/www/app/scripts/exporters/water-in-islam/node_modules
       - exporter-dxa-gallery-modules:/var/www/app/scripts/exporters/dxa-gallery/node_modules
       - exporter-dxa-exhibition-modules:/var/www/app/scripts/exporters/dxa-exhibition/node_modules
     environment:
@@ -599,10 +595,6 @@ volumes:
   exporter-islamicart-modules:
   exporter-baroqueart-modules:
   exporter-sharinghistory-modules:
-  exporter-amulets-modules:
-  exporter-carpets-modules:
-  exporter-the-use-of-colours-in-art-modules:
-  exporter-water-in-islam-modules:
   exporter-dxa-gallery-modules:
   exporter-dxa-exhibition-modules:
 

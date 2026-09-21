@@ -546,10 +546,10 @@ docker compose run --rm staging-seed-auth
 docker compose run --rm exporter islamicart --force
 docker compose run --rm exporter baroqueart --force
 docker compose run --rm exporter sharinghistory --force
-docker compose run --rm exporter amulets --force
-docker compose run --rm exporter carpets --force
-docker compose run --rm exporter the-use-of-colours-in-art --force
-docker compose run --rm exporter water-in-islam --force
+docker compose run --rm exporter dxa-gallery --instance amulets --force
+docker compose run --rm exporter dxa-gallery --instance carpets --force
+docker compose run --rm exporter dxa-exhibition --instance the-use-of-colours-in-art --force
+docker compose run --rm exporter dxa-exhibition --instance water-in-islam --force
 
 # ── 8. SHIP — DESTRUCTIVE, REBUILDS THE DEPLOYED APP ─────────────────────────
 # Snapshot the deployed users/roles/permissions first, so ship's auth-restore
@@ -562,8 +562,20 @@ docker compose --env-file scripts/import-tool/.env --profile import run --build 
 # ── 9. PUBLISH THE DATA PACKAGES ─────────────────────────────────────────────
 # Shipping updates the application; the websites read published npm packages
 # and step 8 does not touch them. `--publish` exports AND publishes, so these
-# replace step 7's export commands rather than following them. Seven datasets:
-# run the block below once per value of $dataset, in any order.
+# replace step 7's export commands rather than following them. Seven
+# datasets, five exporter invocations — three standalone exporters, plus the
+# two parameterised ones ($exporterDir dxa-gallery / dxa-exhibition) run once
+# per instance slug they carry. Run the block below once per row, in any
+# order:
+#
+#   $exporterDir     $instanceArgs                              $slug
+#   islamicart       @()                                        islamicart
+#   baroqueart       @()                                        baroqueart
+#   sharinghistory   @()                                        sharinghistory
+#   dxa-gallery      @('--instance','carpets')                  carpets
+#   dxa-gallery      @('--instance','amulets')                  amulets
+#   dxa-exhibition   @('--instance','the-use-of-colours-in-art') the-use-of-colours-in-art
+#   dxa-exhibition   @('--instance','water-in-islam')            water-in-islam
 #
 # PowerShell does not export $HOME to child processes, so ${HOME} in
 # compose.yml — which mounts your npm session read-only into the exporter
@@ -576,23 +588,25 @@ $env:HOME = $env:USERPROFILE
 # this repo ever writes to that file, and no token reaches a tracked file.
 npm login
 
-$dataset = 'islamicart'     # then: baroqueart, sharinghistory, amulets, carpets, the-use-of-colours-in-art, water-in-islam
+$exporterDir = 'islamicart'
+$instanceArgs = @()
+$slug = 'islamicart'
 
 # What the registry holds now. No credential needed — @museumwnf packages
 # are public.
-docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$dataset-data" version
+docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$slug-data" version
 
 # Export from staging and publish the next patch. Auto-increments by asking
 # the registry first and using it whenever it is ahead of the gitignored,
-# per-worktree counter in output/.version-<dataset> — pass
+# per-worktree counter in output/.version-<slug> — pass
 # --package-version <next> instead only for a minor/major bump, or when the
-# registry cannot be reached. Ends with: ✓ Published: @museumwnf/<dataset>-data@<next>
-docker compose run --rm exporter $dataset --force --publish
+# registry cannot be reached. Ends with: ✓ Published: @museumwnf/<slug>-data@<next>
+docker compose run --rm exporter $exporterDir @instanceArgs --force --publish
 
 # Confirm before moving on. Must print a version newer than the one above; if
 # it still prints the same one, the publish did not happen and the website
 # will not see anything either.
-docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$dataset-data" version
+docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$slug-data" version
 
 # ── 10. PIN THE NEW VERSION IN EACH WEBSITE ──────────────────────────────────
 # Publishing changes nothing that is live. Each website is its own repository

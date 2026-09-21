@@ -10,7 +10,7 @@ This is the second DXA **exhibition** viewer
 from [`../the-use-of-colours-in-art`](../the-use-of-colours-in-art/README.md)
 ([#1547](https://github.com/museumwithnofrontiers/inventory-app/issues/1547)). Its data comes
 from the matching exporter,
-[`../../exporters/water-in-islam`](../../exporters/water-in-islam/README.md);
+[`../../exporters/dxa-exhibition`](../../exporters/dxa-exhibition/README.md) (site note: [`../../exporters/instances/water-in-islam.md`](../../exporters/instances/water-in-islam.md));
 its UI strings come from [`../../site-i18n`](../../site-i18n/README.md); the
 legacy behaviour it reproduces is analysed in
 [`../../exporters/docs/dxa-legacy-analysis.md`](../../exporters/docs/dxa-legacy-analysis.md).
@@ -47,27 +47,27 @@ auth required.
 1. `DATA_PACKAGE` — an npm package name **or** a directory path (explicit wins).
 2. `@museumwnf/water-in-islam-data`, if installed. **This is the normal path** —
    CI, the deploy workflow and a plain `npm install` all land here.
-3. `../../exporters/water-in-islam/output/water-in-islam` — a local exporter
+3. `../../exporters/dxa-exhibition/output/water-in-islam` — a local exporter
    run, for working against data that has not been published yet.
 
 For (3), produce the export from the repository root:
 
 ```bash
-docker compose --profile jobs run --rm exporter water-in-islam --force \
+docker compose --profile jobs run --rm exporter dxa-exhibition --instance water-in-islam --force \
     --base-url https://inventory.metanull.eu
 ```
 
 `--base-url` matters: without it the exporter writes relative
 `./images/pub/<uuid>.jpg` paths and the photographs will not load. The compose
 `exporter` service is pinned to the **staging** database;
-`scripts/exporters/water-in-islam/.env` points at production and must not be
+`scripts/exporters/dxa-exhibition/.env` points at production and must not be
 used casually.
 
 Because (2) is checked before (3), an installed package shadows a local export.
 Point `DATA_PACKAGE` at the export directory to override it.
 
 Publishing a new version is the exporter's job — see
-[`NPM_PUBLISH.md`](../../exporters/water-in-islam/NPM_PUBLISH.md). The deploy
+[`NPM_PUBLISH.md`](../../exporters/dxa-exhibition/NPM_PUBLISH.md). The deploy
 workflow always installs `@latest` regardless of the lockfile, so a publish
 reaches production on the next deploy without a code change here.
 

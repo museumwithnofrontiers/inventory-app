@@ -23,7 +23,7 @@ class DeterministicUuidTest extends TestCase
 {
     public function test_reproduces_the_importers_uuid_for_a_thg_gallery(): void
     {
-        // carpets, legacy gallery_id 9 — scripts/exporters/carpets/src/cli/export.ts
+        // carpets, legacy gallery_id 9 — scripts/exporters/instances/carpets.json
         $this->assertSame(
             '743fd119-f663-54ae-b92a-933fc1fdbfd8',
             DeterministicUuid::forCollection('mwnf3_thematic_gallery:thg_gallery:9')

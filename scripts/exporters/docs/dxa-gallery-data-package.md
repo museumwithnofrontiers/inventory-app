@@ -408,16 +408,25 @@ AMU ≈ 45 items → trivial. DCA ≈ 486 items → well under the islamicart pa
 
 ## Reference implementation
 
-Two exporters implement this specification, both verified against the live
-legacy API:
+[`scripts/exporters/dxa-gallery`](../dxa-gallery/README.md) (epic
+[#1734](https://github.com/museumwithnofrontiers/inventory-app/issues/1734), story
+[#1911](https://github.com/museumwithnofrontiers/inventory-app/issues/1911)) implements this
+specification, parameterised per site by an
+[instance file](../instances/README.md) rather than a fork. It replaces the two
+exporters that originally proved the specification against the live legacy
+API, both verified and now retired ([#1913](https://github.com/museumwithnofrontiers/inventory-app/issues/1913)):
 
-- `scripts/exporters/carpets` ([story #1544](https://github.com/museumwithnofrontiers/inventory-app/issues/1544),
-  [`../carpets/tools/VALIDATION-2026-08-27.md`](../carpets/tools/VALIDATION-2026-08-27.md))
-  — **fork this one.** It is the hybrid gallery (native + borrowed members) and
-  it carries the corrected timeline and countries rules above.
-- `scripts/exporters/amulets` ([story #1542](https://github.com/museumwithnofrontiers/inventory-app/issues/1542),
-  [`../amulets/tools/VALIDATION-2026-08-27.md`](../amulets/tools/VALIDATION-2026-08-27.md))
-  — the original, and still the clearest example of the purely-curated case. It
+- **carpets** (`instances/carpets.json`, site note
+  [`../instances/carpets.md`](../instances/carpets.md), validation
+  [`../docs/validation/carpets-2026-08-27.md`](validation/carpets-2026-08-27.md))
+  — [story #1544](https://github.com/museumwithnofrontiers/inventory-app/issues/1544). The hybrid
+  gallery (native + borrowed members); it carries the corrected timeline and
+  countries rules above.
+- **amulets** (`instances/amulets.json`, site note
+  [`../instances/amulets.md`](../instances/amulets.md), validation
+  [`../docs/validation/amulets-2026-08-27.md`](validation/amulets-2026-08-27.md))
+  — [story #1542](https://github.com/museumwithnofrontiers/inventory-app/issues/1542), the
+  original and still the clearest example of the purely-curated case. It
   shipped without the two corrections marked above; both were backported in
   [#1586](https://github.com/museumwithnofrontiers/inventory-app/issues/1586), so its
   `timelines.json` now holds the full 37 and its `countries.json` covers the
@@ -427,10 +436,11 @@ A third rule was added on 2026-08-28 while building the first exhibition
 exporter and applies to **galleries too**, since it lives in the same legacy
 query: `Partners.blade.php` ends with a CTE that drops `uk/Mus51` and `us/Mus51`
 by name from every DXA partner list. It changes nothing on amulets or carpets —
-neither holds a member of theirs — which is why the first two forks recorded it
-and moved on. Reproduce it anyway; see
-[`../the-use-of-colours-in-art/src/exporters/partner-exporter.ts`](../the-use-of-colours-in-art/src/exporters/partner-exporter.ts).
+neither holds a member of theirs — which is why the first two exporters
+recorded it and moved on. Reproduce it anyway; see
+[`../dxa-exhibition/src/exporters/partner-exporter.ts`](../dxa-exhibition/src/exporters/partner-exporter.ts).
 
-Fork rather than re-deriving the scoping rules; the tag, membership, timeline
-and country rules above are all counted against the live API and every one of
-them has a wrong-looking alternative that still produces plausible output.
+Add a new site as an instance file rather than re-deriving the scoping rules;
+the tag, membership, timeline and country rules above are all counted against
+the live API and every one of them has a wrong-looking alternative that still
+produces plausible output.

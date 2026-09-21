@@ -9,7 +9,7 @@ This is the first DXA **exhibition** viewer
 [story #1547](https://github.com/museumwithnofrontiers/inventory-app/issues/1547)), forked
 from [`../carpets`](../carpets/README.md). Its data comes from the matching
 exporter,
-[`../../exporters/the-use-of-colours-in-art`](../../exporters/the-use-of-colours-in-art/README.md);
+[`../../exporters/dxa-exhibition`](../../exporters/dxa-exhibition/README.md) (site note: [`../../exporters/instances/the-use-of-colours-in-art.md`](../../exporters/instances/the-use-of-colours-in-art.md));
 its UI strings come from [`../../site-i18n`](../../site-i18n/README.md); the
 legacy behaviour it reproduces is analysed in
 [`../../exporters/docs/dxa-legacy-analysis.md`](../../exporters/docs/dxa-legacy-analysis.md).
@@ -62,14 +62,14 @@ no registry auth required.
 1. `DATA_PACKAGE` — an npm package name **or** a directory path (explicit wins).
 2. `@museumwnf/the-use-of-colours-in-art-data`, if installed. **This is the
    normal path** — CI, the deploy workflow and a plain `npm install` all land here.
-3. `../../exporters/the-use-of-colours-in-art/output/the-use-of-colours-in-art`
+3. `../../exporters/dxa-exhibition/output/the-use-of-colours-in-art`
    — a local exporter run, for working against data that has not been published
    yet.
 
 For (3), produce the export from the repository root:
 
 ```bash
-docker compose --profile jobs run --rm exporter the-use-of-colours-in-art --force \
+docker compose --profile jobs run --rm exporter dxa-exhibition --instance the-use-of-colours-in-art --force \
     --base-url https://inventory.metanull.eu
 ```
 
@@ -82,7 +82,7 @@ Because (2) is checked before (3), an installed package shadows a local export.
 Point `DATA_PACKAGE` at the export directory to override it.
 
 Publishing a new version is the exporter's job — see
-[`NPM_PUBLISH.md`](../../exporters/the-use-of-colours-in-art/NPM_PUBLISH.md).
+[`NPM_PUBLISH.md`](../../exporters/dxa-exhibition/NPM_PUBLISH.md).
 The deploy workflow always installs `@latest` regardless of the lockfile, so a
 publish reaches production on the next deploy without a code change here.
 
