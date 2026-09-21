@@ -1,0 +1,7 @@
+{
+  "kind": "gallery",
+  "slug": "historical-cars",
+  "name": "Historical Cars",
+  "collection_id": "a3dc581c-2547-57ee-906c-0d1a3a1699f3",
+  "package_name": "@museumwnf/historical-cars-data"
+}
