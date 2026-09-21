@@ -36,6 +36,14 @@ export function buildReport(
       'that shared layer with the site’s own files overlaid, key by key within a locale.'
     )
   }
+  if (layout === 'website') {
+    lines.push('')
+    lines.push(
+      'The site directory holds only the two legacy keys a site owns, renamed into their',
+      'viewer-i18n key and written straight to `locales/<lang>.json` — the form a rebuilt',
+      'site consumes directly. See “Website output” below for what was emitted and what was not.'
+    )
+  }
   lines.push('')
 
   lines.push('## Sites')
@@ -92,6 +100,41 @@ export function buildReport(
             stats.overriddenNoOp.map((label) => `\`${label}\``).join(', ')
         )
       }
+      lines.push('')
+    }
+  }
+
+  const websiteSites = sites.filter((s) => s.website !== undefined)
+  if (websiteSites.length > 0) {
+    lines.push('## Website output')
+    lines.push('')
+    lines.push(
+      'What a rebuilt site takes into its own `locales/` directory. Everything else a site',
+      'legacy carries is provided by the viewer-i18n dictionary — the shared gallery/exhibition',
+      'bundle every site loads — and must not be duplicated here.'
+    )
+    lines.push('')
+    for (const { site, website } of websiteSites) {
+      const info = website!
+      const localeList = Object.keys(info.locales).sort()
+      const keys = [...new Set(Object.values(info.locales).flatMap((m) => Object.keys(m)))].sort()
+      lines.push(`### ${describeSite(site)}`)
+      lines.push('')
+      lines.push(`- Namespace: \`${info.namespace}\``)
+      lines.push(
+        `- Files written: ${localeList.map((l) => `\`locales/${l}.json\``).join(', ') || '—'}`
+      )
+      lines.push(`- Keys emitted: ${keys.map((k) => `\`${k}\``).join(', ') || '—'}`)
+      if (info.missing.length > 0) {
+        lines.push(
+          `- No English value in legacy, so omitted rather than left blank: ` +
+            info.missing.map((k) => `\`${k}\``).join(', ')
+        )
+      }
+      lines.push(
+        `- Provided by the viewer-i18n dictionary, not emitted: ` +
+          `${info.notEmitted.map((k) => `\`${k}\``).join(', ') || '—'}`
+      )
       lines.push('')
     }
   }
