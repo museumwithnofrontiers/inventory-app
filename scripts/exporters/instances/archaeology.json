@@ -1,0 +1,7 @@
+{
+  "kind": "gallery",
+  "slug": "archaeology",
+  "name": "Archaeological Objects",
+  "collection_id": "f38a24de-240c-5463-b14d-e1a5f826b32d",
+  "package_name": "@museumwnf/archaeology-data"
+}
