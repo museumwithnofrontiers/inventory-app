@@ -128,6 +128,10 @@ in `scripts/import-tool/README.md`.
 One exporter per website, under `scripts/exporters/<site>/`. Publishing is a
 manual step on the operator's machine. No workflow publishes data packages.
 
+A brand-new site's very first publish — before its repository even exists —
+is step 3 of [New Website Recipe](new-website), not the republish loop
+below.
+
 Docker bind-mounts this checkout, so the export runs whatever is currently
 checked out here — not necessarily the merge you intend to publish. Before a
 republish:

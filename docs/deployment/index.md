@@ -81,3 +81,4 @@ The Filament `/admin` panel is the primary production UI.
 - [CORS Configuration](cors-configuration) - Cross-origin request settings
 - [Testing Troubleshooting](testing-troubleshooting) - Common testing issues
 - [Release and Propagation](release-and-propagation) - How a change travels from this repository to the public websites
+- [New Website Recipe](new-website) - Ordered procedure for creating and publishing a new gallery or exhibition website
