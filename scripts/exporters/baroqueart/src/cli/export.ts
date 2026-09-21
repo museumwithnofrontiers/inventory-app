@@ -112,6 +112,29 @@ program
       mkdirSync(outputDir, { recursive: true })
       logger.info(`Output directory: ${outputDir}`)
 
+      // Preflight for --publish: confirm the npm session is alive before
+      // spending minutes on the export below. A dead session would otherwise
+      // only surface at the very end, as a registry 404 right after export.
+      if (options.publish) {
+        const registry =
+          options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
+        const preflight = new PublishManager({
+          outputDir,
+          versionFile: resolve(outputBaseDir, `.version-${subdirectory}`),
+          packageName: PACKAGE_NAME,
+          projectKeys,
+          logger,
+          registry,
+        })
+        try {
+          preflight.assertLoggedIn()
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error(chalk.red(`\n${message}\n`))
+          process.exit(1)
+        }
+      }
+
       // Connect to the inventory database
       const db = new Database()
 
@@ -220,6 +243,7 @@ program
 
             console.log('')
             publishManager.publish()
+            publishManager.recordPublished(nextVersion)
             console.log(chalk.green(`  ✓ Published: ${packageName}@${nextVersion}`))
             console.log('')
           } catch (err) {

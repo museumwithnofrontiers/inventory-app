@@ -17,8 +17,11 @@ vi.mock('child_process', () => ({ spawnSync: vi.fn() }))
  * with what was actually published. Four of the seven datasets were found
  * sitting at 1.0.0 while the registry held 1.0.2 and 1.0.3, so the first
  * `--publish` after a rebuild walked straight into a taken number and npm
- * refused it — having already burned the number in the file, because it is
- * written before the publish runs.
+ * refused it.
+ *
+ * getNextVersion()/setVersion() only compute a version now; the counter file
+ * is written by recordPublished(), called only once publish() has actually
+ * succeeded — see "persisting the published version" below.
  */
 
 const registrySays = (version: string) =>
@@ -49,7 +52,8 @@ describe('choosing the next version', () => {
     const { publisher, versionFile } = manager('1.0.0')
 
     expect(publisher.getNextVersion()).toBe('1.0.4')
-    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.4')
+    // getNextVersion() only computes; nothing is written until recordPublished().
+    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.0')
   })
 
   it('follows the registry when there is no counter file at all', () => {
@@ -102,16 +106,98 @@ describe('choosing the next version', () => {
 describe('setting a version explicitly', () => {
   beforeEach(() => vi.mocked(spawnSync).mockReset())
 
-  it('writes it without asking the registry', () => {
+  it('validates without writing or asking the registry', () => {
     const { publisher, versionFile } = manager('1.0.0')
 
     expect(publisher.setVersion('1.0.3')).toBe('1.0.3')
-    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.3')
+    // Not persisted until recordPublished() is called after a successful
+    // publish — see the "persisting the published version" tests below.
+    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.0')
     expect(spawnSync).not.toHaveBeenCalled()
   })
 
   it('refuses something that is not a version', () => {
     expect(() => manager('1.0.0').publisher.setVersion('latest')).toThrow(/Invalid version/)
+  })
+})
+
+describe('confirming the npm session before a slow export', () => {
+  beforeEach(() => vi.mocked(spawnSync).mockReset())
+
+  it('throws with the npm login hint when whoami fails', () => {
+    vi.mocked(spawnSync).mockReturnValue({ status: 1, stdout: '' } as never)
+    const { publisher } = manager('1.0.0')
+
+    expect(() => publisher.assertLoggedIn()).toThrow(/npm login/)
+  })
+
+  it('throws when whoami exits zero but answers with no user name', () => {
+    vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: '' } as never)
+    const { publisher } = manager('1.0.0')
+
+    expect(() => publisher.assertLoggedIn()).toThrow(/npm login/)
+  })
+
+  it('passes and logs the user name when whoami succeeds', () => {
+    vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: 'pascalh\n' } as never)
+    const { publisher } = manager('1.0.0')
+
+    expect(() => publisher.assertLoggedIn()).not.toThrow()
+  })
+
+  it('asks whoami at the configured registry', () => {
+    vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: 'pascalh\n' } as never)
+    const { publisher } = manager('1.0.0')
+    publisher.assertLoggedIn()
+
+    const [command, args] = vi.mocked(spawnSync).mock.calls[0]
+    expect(command).toBe('npm')
+    expect(args).toEqual(['whoami', '--registry', 'https://npm.pkg.github.com'])
+  })
+})
+
+/**
+ * A failed publish must never burn the version number the next run would
+ * otherwise walk straight into: getNextVersion()/setVersion() only compute,
+ * and the counter file is written by recordPublished() alone, which callers
+ * (see src/cli/export.ts) call only once publish() has returned without
+ * throwing.
+ */
+describe('persisting the published version', () => {
+  beforeEach(() => vi.mocked(spawnSync).mockReset())
+
+  it('leaves the counter file untouched when the publish that follows fails', () => {
+    registrySilent()
+    const { publisher, versionFile } = manager('1.0.5')
+
+    const next = publisher.getNextVersion()
+    expect(next).toBe('1.0.6')
+    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.5')
+
+    vi.mocked(spawnSync).mockReturnValue({ status: 1 } as never)
+    expect(() => publisher.publish()).toThrow(/npm publish exited/)
+    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.5')
+  })
+
+  it('holds the published version once publish has actually succeeded', () => {
+    registrySilent()
+    const { publisher, versionFile } = manager('1.0.5')
+    const next = publisher.getNextVersion()
+
+    vi.mocked(spawnSync).mockReturnValue({ status: 0 } as never)
+    publisher.publish()
+    publisher.recordPublished(next)
+
+    expect(readFileSync(versionFile, 'utf-8')).toBe(next)
+  })
+
+  it('persists an explicit --package-version only once recordPublished is called', () => {
+    const { publisher, versionFile } = manager('1.0.0')
+    const version = publisher.setVersion('2.0.0')
+    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.0')
+
+    publisher.recordPublished(version)
+    expect(readFileSync(versionFile, 'utf-8')).toBe('2.0.0')
   })
 })
 

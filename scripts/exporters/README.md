@@ -175,11 +175,17 @@ Prerequisites, one-time:
   $env:HOME = $env:USERPROFILE
   ```
 
-  `docker compose run` keeps a TTY attached, so if npmjs asks for a 2FA
-  one-time code or a web-login confirmation, the prompt appears right there
-  in the terminal. Details, including the first-publish `--access public`
-  requirement for a new `@museumwnf` package name, are in each dataset's
-  `NPM_PUBLISH.md`.
+  `--publish` runs `npm whoami` against that mounted session before the
+  export starts, and fails fast with an `npm login` hint if it is dead,
+  rather than only surfacing as a registry 404 after the whole export has
+  run. The container has no browser (`NPM_CONFIG_BROWSER=false` in
+  `compose.yml`), so if npmjs still asks for a 2FA one-time code or a
+  web-login confirmation, npm prints the URL right there in the terminal and
+  polls the registry for the login to complete — open the URL yourself, tick
+  "stay authenticated for publish for the next 5 minutes", and the run
+  continues on its own. Details, including the first-publish
+  `--access public` requirement for a new `@museumwnf` package name, are in
+  each dataset's `NPM_PUBLISH.md`.
 
 Then, per dataset (exports are **read-only**, but always check what `BASE_URL`
 points at first) — the command is identical for every dataset:
@@ -195,10 +201,11 @@ the islamicart exporter unconditionally exports **both** `ISL` and `EPM`:
 they are one dataset, and an ISL-only export would silently drop 29
 collections (see [`islamicart/README.md`](islamicart/README.md)).
 
-A single `--publish` run does everything: auto-increments the patch version
-persisted in `output/.version-<dataset>` (or use `--package-version` for an
-explicit semver), generates `package.json`/`README.md` in the output
-directory, and runs `npm publish` against npmjs. There is **no**
+A single `--publish` run does everything: computes the next patch version (or
+use `--package-version` for an explicit semver), generates
+`package.json`/`README.md` in the output directory, runs `npm publish`
+against npmjs, and — only once that publish has actually succeeded —
+persists the version to `output/.version-<dataset>`. There is **no**
 separate manual `npm publish` step. Details in each dataset's
 `NPM_PUBLISH.md`.
 
@@ -227,8 +234,10 @@ a plain `npm install @museumwnf/<dataset>-data@latest`, no token involved):
    thing — the counter has never had a reason to be right.
 
    The counter is still the answer when the registry cannot be reached or has
-   never seen the package, and it is still written **before** the publish runs,
-   so a failed publish burns the number. Read it before re-running:
+   never seen the package. As of #1865 it is written only **after** the
+   publish succeeds, so a failed publish no longer burns the number — a plain
+   rerun retries the very same version rather than skipping past it. Read it
+   before re-running:
 
    ```bash
    cat scripts/exporters/<dataset>/output/.version-<dataset>
