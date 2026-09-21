@@ -367,6 +367,17 @@ jobs:
         with:
           working-directory: scripts/exporters/${{ matrix.dataset }}
 
+      # Exercises the `all` plan builder (#1922) — repo-root relative, not
+      # scoped to this matrix entry's directory, so it runs once per matrix
+      # entry, which is cheap. Needs no database and no exporter's
+      # node_modules: only `sh` and the bare `node` this job's Setup step
+      # already installed, so it also proves the dry-run truly needs nothing
+      # else.
+      - name: "Check > sh > Batch entrypoint dry run"
+        run: |
+          sh -n scripts/exporters/docker-entrypoint.sh
+          sh scripts/exporters/docker-entrypoint.sh all --dry-run
+
       - name: "Check > npm > Type Check (Exporter ${{ matrix.dataset }})"
         working-directory: scripts/exporters/${{ matrix.dataset }}
         run: |

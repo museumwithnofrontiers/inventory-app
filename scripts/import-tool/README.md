@@ -215,7 +215,11 @@ registry (`registry.npmjs.org`), and an exporter run with `--publish` both
 exports and publishes — there is no separate `npm publish`. The compose
 `exporter` service forces the staging database into its environment, so this
 reads the copy you just reviewed, whatever `scripts/exporters/<dataset>/.env`
-says.
+says. `docker-entrypoint.sh all` ([#1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922))
+does all seven datasets in one run — that is the command below; see
+[`scripts/exporters/README.md`](../exporters/README.md#batch-re-export-every-instance-in-one-run)
+for `--dry-run`, `--only <slug>[,<slug>…]` to redo a subset, and what its
+summary table and failure handling look like.
 
 Authentication is a one-time, per-machine step, done **on the host** — this
 is a manual, local publish, never run from CI (see
@@ -250,8 +254,12 @@ publish for the next 5 minutes", and the run continues on its own.
 # What is published now — the only reliable way to read it. No credential
 # needed: @museumwnf packages are public.
 docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view @museumwnf/<dataset>-data version
-# Export from staging and publish the next patch of it.
-docker compose run --rm exporter <dataset> --force --publish
+# See the plan, then export every dataset from staging and publish the next
+# patch of each.
+docker compose --profile jobs run --rm --no-deps exporter all --dry-run
+docker compose --profile jobs run --rm --no-deps exporter all --force --publish
+# To redo just one dataset instead of the whole batch:
+docker compose --profile jobs run --rm --no-deps exporter <dataset> --force --publish
 ```
 
 A single `--publish` run computes the next patch version: it asks the
@@ -265,9 +273,12 @@ version rather than skipping past it. Pass `--package-version <next>`
 yourself only for a minor/major bump, or when the registry cannot be reached.
 
 The exporter prints `✓ Published: @museumwnf/<dataset>-data@<next>` on
-success; confirm by running the first command again. Seven datasets, seven
-runs; publishing only some of them leaves the other websites on the previous
-import with no error anywhere.
+success; confirm by running the first command again. `all` runs every
+instance to the end even if one fails, then prints a summary table (instance,
+exporter, result, published version) and exits non-zero if any instance
+failed — publishing only some of the seven leaves the other websites on the
+previous import, and the summary is how you see that happened instead of
+assuming all seven went out.
 
 `PACKAGE_REPO_URL` in `scripts/exporters/<dataset>/.env` is good package
 metadata — it populates the published `repository` field — but npmjs does not
@@ -541,15 +552,10 @@ docker compose run --rm staging-glossary-sync
 docker compose run --rm staging-seed-auth
 
 # OPTIONAL — regenerate the website data packages from the staged copy, without
-# publishing them. There are seven datasets, one per website; listing only some
-# of them leaves the rest on the previous import.
-docker compose run --rm exporter islamicart --force
-docker compose run --rm exporter baroqueart --force
-docker compose run --rm exporter sharinghistory --force
-docker compose run --rm exporter dxa-gallery --instance amulets --force
-docker compose run --rm exporter dxa-gallery --instance carpets --force
-docker compose run --rm exporter dxa-exhibition --instance the-use-of-colours-in-art --force
-docker compose run --rm exporter dxa-exhibition --instance water-in-islam --force
+# publishing them. `all` (#1922) does all seven datasets in one run; running
+# only some of them individually instead leaves the rest on the previous
+# import.
+docker compose run --rm exporter all --force
 
 # ── 8. SHIP — DESTRUCTIVE, REBUILDS THE DEPLOYED APP ─────────────────────────
 # Snapshot the deployed users/roles/permissions first, so ship's auth-restore
@@ -561,21 +567,11 @@ docker compose --env-file scripts/import-tool/.env --profile import run --build 
 
 # ── 9. PUBLISH THE DATA PACKAGES ─────────────────────────────────────────────
 # Shipping updates the application; the websites read published npm packages
-# and step 8 does not touch them. `--publish` exports AND publishes, so these
-# replace step 7's export commands rather than following them. Seven
-# datasets, five exporter invocations — three standalone exporters, plus the
-# two parameterised ones ($exporterDir dxa-gallery / dxa-exhibition) run once
-# per instance slug they carry. Run the block below once per row, in any
-# order:
-#
-#   $exporterDir     $instanceArgs                              $slug
-#   islamicart       @()                                        islamicart
-#   baroqueart       @()                                        baroqueart
-#   sharinghistory   @()                                        sharinghistory
-#   dxa-gallery      @('--instance','carpets')                  carpets
-#   dxa-gallery      @('--instance','amulets')                  amulets
-#   dxa-exhibition   @('--instance','the-use-of-colours-in-art') the-use-of-colours-in-art
-#   dxa-exhibition   @('--instance','water-in-islam')            water-in-islam
+# and step 8 does not touch them. `--publish` exports AND publishes, so this
+# replaces step 7's export commands rather than following them.
+# `docker-entrypoint.sh all` (#1922) does all seven datasets — the three
+# still-forked exporters plus the two parameterised ones, once per instance
+# slug they carry — in one run instead of one invocation per row.
 #
 # PowerShell does not export $HOME to child processes, so ${HOME} in
 # compose.yml — which mounts your npm session read-only into the exporter
@@ -588,25 +584,25 @@ $env:HOME = $env:USERPROFILE
 # this repo ever writes to that file, and no token reaches a tracked file.
 npm login
 
-$exporterDir = 'islamicart'
-$instanceArgs = @()
-$slug = 'islamicart'
+# See the plan first — touches nothing.
+docker compose --profile jobs run --rm --no-deps exporter all --dry-run
 
-# What the registry holds now. No credential needed — @museumwnf packages
-# are public.
-docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$slug-data" version
+# Export every dataset from staging and publish the next patch of each. One
+# `npm whoami` preflight up front; one dataset failing does not stop the
+# others. Ends with a summary table (instance, exporter, result, published
+# version) and, on success, a ready-to-paste
+# `node tools/propagate.mjs --expect <pkg>@<version> …` block for step 5.2 of
+# docs/deployment/release-and-propagation.md.
+docker compose --profile jobs run --rm --no-deps exporter all --force --publish
 
-# Export from staging and publish the next patch. Auto-increments by asking
-# the registry first and using it whenever it is ahead of the gitignored,
-# per-worktree counter in output/.version-<slug> — pass
-# --package-version <next> instead only for a minor/major bump, or when the
-# registry cannot be reached. Ends with: ✓ Published: @museumwnf/<slug>-data@<next>
-docker compose run --rm exporter $exporterDir @instanceArgs --force --publish
+# To redo just one dataset instead of the whole batch:
+docker compose --profile jobs run --rm --no-deps exporter dxa-gallery --instance carpets --force --publish
 
-# Confirm before moving on. Must print a version newer than the one above; if
-# it still prints the same one, the publish did not happen and the website
-# will not see anything either.
-docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/$slug-data" version
+# Confirm before moving on — the registry, not the summary table, is the
+# source of truth. Must print a version newer than before the run; if it
+# still prints the same one, the publish did not happen and the website will
+# not see anything either.
+docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/<slug>-data" version
 
 # ── 10. PIN THE NEW VERSION IN EACH WEBSITE ──────────────────────────────────
 # Publishing changes nothing that is live. Each website is its own repository

@@ -1,0 +1,7 @@
+{
+  "kind": "standalone",
+  "slug": "islamicart",
+  "name": "Discover Islamic Art",
+  "exporter": "islamicart",
+  "package_name": "@museumwnf/islamicart-data"
+}

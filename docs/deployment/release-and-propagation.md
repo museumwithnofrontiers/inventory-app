@@ -64,7 +64,7 @@ session, a fresh checkout) that are not worth repeating here.
 |---|---|---|---|---|
 | App deploy | Merge to `main`, or a `v*.*.*` tag | None — automatic ([§1](#1-application-inventory-app)) | `gh run list -R museumwithnofrontiers/inventory-app --workflow=deploy-ovh.yml --limit 1` is `completed success` | [Production Deployment](production-deployment) |
 | Content re-import + ship | New legacy content is ready to land | `stage`, then `ship` ([§2](#2-content-import-tool)) | Staged DB reviewed locally before `ship`; `ship`'s own console output | `scripts/import-tool/README.md` |
-| Data package republish | Shipped content should reach a website | One `--publish` per exporter ([§3](#3-data-packages-exporters)) | `npm view @museumwnf/<site>-data version` and `time.modified`, for each of the seven | `scripts/exporters/<site>/NPM_PUBLISH.md` |
+| Data package republish | Shipped content should reach a website | `exporter all --force --publish` ([§3](#3-data-packages-exporters)) | `npm view @museumwnf/<site>-data version` and `time.modified`, for each of the seven | `scripts/exporters/<site>/NPM_PUBLISH.md` |
 | Shared package release | A viewer-core / viewer-layout / viewer-i18n PR merges | `gh release create` ([§5.1](#51-release)) | `gh run list --workflow=release.yml` is `completed success`, then `npm view @museumwnf/<package> version` | `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
 | Propagate | A data or shared package release should reach sites | `tools/propagate.mjs --expect ...` ([§5.2](#52-propagate)) | Each site's propagation PR reaches MERGED, then its `deploy.yml` run is `completed success` | `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
 | Scaffold | A new website is created | Copy `website-template` by hand, then its "Admin" steps | Pages enabled once by hand on the new repository | `README.md` in museumwithnofrontiers/website-template |
@@ -140,7 +140,7 @@ git log -1 --format=%h
 Confirm the hash is the commit you mean to publish. A tree one commit behind
 can republish a field that was just removed.
 
-Authenticate on the host immediately before the loop below, not once at the
+Authenticate on the host immediately before the batch below, not once at the
 start of the day:
 
 ```powershell
@@ -149,36 +149,55 @@ npm whoami
 ```
 
 `npm whoami` must print your login. A session from the previous morning is
-commonly already dead by the next morning. `--publish` now runs this same
-check itself, before the export starts, on every dataset in the loop below
-(#1865) — so a dead session fails in seconds on the FIRST dataset, with an
-`npm login` hint, and the loop stops there rather than working through all
-seven exports first and only then failing the publish step with
+commonly already dead by the next morning. `all --publish` runs this same
+check itself, once, before any export starts (#1865, batched by #1922) — so a
+dead session fails in seconds, with an `npm login` hint, and nothing exports
+rather than working through all seven exports first and only then failing the
+publish step with
 `E404 Not Found - PUT https://registry.npmjs.org/@museumwnf%2f<x>-data`
 ("could not be found or you do not have permission" — not a 401; do not read
 that error as a permissions problem if you ever do see it past the
 preflight).
 
-Repeat for each of the five exporter invocations that together publish the
-seven data packages — three standalone exporters, plus the two parameterised
-DXA exporters run once per instance slug they carry — PowerShell:
+One command re-exports and republishes all seven
+([#1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922)):
+it iterates every `scripts/exporters/instances/*.json` — the three
+still-forked exporters via a `kind: "standalone"` file, plus the two
+parameterised DXA exporters once per instance slug they carry — running each
+one's exporter in turn. See the plan first, then run for real — PowerShell:
 
 ```powershell
 $env:HOME = $env:USERPROFILE
-@('islamicart','baroqueart','sharinghistory') | % {
-  docker compose --profile jobs run --rm exporter "$_" --force --publish
-}
-@('carpets','amulets') | % {
-  docker compose --profile jobs run --rm exporter dxa-gallery --instance "$_" --force --publish
-}
-@('the-use-of-colours-in-art','water-in-islam') | % {
-  docker compose --profile jobs run --rm exporter dxa-exhibition --instance "$_" --force --publish
-}
+docker compose --profile jobs run --rm --no-deps exporter all --dry-run
+docker compose --profile jobs run --rm --no-deps exporter all --force --publish
 ```
 
-That single run per site/instance exports, bumps the patch version, generates
-`package.json`, `README.md` and `LICENSE.md`, and runs `npm publish`. Do not
-run `npm publish` yourself afterwards.
+One instance failing does not stop the others — the batch runs every planned
+instance, then prints a summary table (instance, exporter, result, published
+version) and a non-zero exit if any instance failed. On success it prints a
+ready-to-paste block for every package it actually published:
+
+```
+node tools/propagate.mjs --expect <pkg>@<version> --expect <pkg>@<version> …
+```
+
+paste that straight into [§5.2](#52-propagate) once you are ready to
+propagate. See [`scripts/exporters/README.md`](../../scripts/exporters/README.md#batch-re-export-every-instance-in-one-run)
+for `--only <slug>[,<slug>…]` (redo a subset) and the failure-naming behaviour
+for a malformed instance file.
+
+To redo a single site instead of the whole batch, the per-instance command is
+still there — one example per exporter shape:
+
+```powershell
+docker compose --profile jobs run --rm --no-deps exporter islamicart --force --publish
+docker compose --profile jobs run --rm --no-deps exporter dxa-gallery --instance carpets --force --publish
+docker compose --profile jobs run --rm --no-deps exporter dxa-exhibition --instance water-in-islam --force --publish
+```
+
+Either way, that single run per site/instance exports, bumps the patch
+version, generates `package.json`, `README.md` and `LICENSE.md`, and runs
+`npm publish`. Do not run `npm publish` yourself afterwards.
 
 npmjs requires a web authentication per publish, and the container cannot open
 a browser: the `exporter` service sets `NPM_CONFIG_BROWSER=false` (#1865), so
@@ -448,7 +467,8 @@ pointer to the section above.
 
 1. `stage`, then `staging-glossary-sync`, then review locally (stage 2).
 2. `ship` to the VPS (stage 2).
-3. Publish the seven data packages (five exporter invocations) (stage 3).
+3. Publish the seven data packages, one `exporter all --force --publish` run
+   (stage 3).
 4. Propagate each data package with `--expect <site>-data@X.Y.Z` (stage 5.2),
    which opens and merges one PR per website; the merges deploy the websites.
 5. Start the demo viewer workflows by hand if the demos should show the new
