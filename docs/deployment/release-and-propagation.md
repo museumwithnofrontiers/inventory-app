@@ -54,6 +54,22 @@ Two hosting targets exist on purpose and both stay:
 - **GitHub Pages** hosts the public websites, one repository each, created from
   `website-template`.
 
+## Which command, when
+
+One row per step. "Command" points at the section that has the exact,
+runnable form; several steps have prerequisites (an authenticated `npm`
+session, a fresh checkout) that are not worth repeating here.
+
+| Step | Trigger | Command | Verify | Details |
+|---|---|---|---|---|
+| App deploy | Merge to `main`, or a `v*.*.*` tag | None — automatic ([§1](#1-application-inventory-app)) | `gh run list -R museumwithnofrontiers/inventory-app --workflow=deploy-ovh.yml --limit 1` is `completed success` | [Production Deployment](production-deployment) |
+| Content re-import + ship | New legacy content is ready to land | `stage`, then `ship` ([§2](#2-content-import-tool)) | Staged DB reviewed locally before `ship`; `ship`'s own console output | `scripts/import-tool/README.md` |
+| Data package republish | Shipped content should reach a website | One `--publish` per exporter ([§3](#3-data-packages-exporters)) | `npm view @museumwnf/<site>-data version` and `time.modified`, for each of the seven | `scripts/exporters/<site>/NPM_PUBLISH.md` |
+| Shared package release | A viewer-core / viewer-layout / viewer-i18n PR merges | `gh release create` ([§5.1](#51-release)) | `gh run list --workflow=release.yml` is `completed success`, then `npm view @museumwnf/<package> version` | `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
+| Propagate | A data or shared package release should reach sites | `tools/propagate.mjs --expect ...` ([§5.2](#52-propagate)) | Each site's propagation PR reaches MERGED, then its `deploy.yml` run is `completed success` | `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
+| Scaffold | A new website is created | Copy `website-template` by hand, then its "Admin" steps | Pages enabled once by hand on the new repository | `README.md` in museumwithnofrontiers/website-template |
+| Websites | A propagation PR merges, or a local change to the site merges | None — automatic ([§7](#7-websites)) | `gh run list -R museumwithnofrontiers/<site> --workflow=deploy.yml --limit 1` is `completed success` | [§7](#7-websites) above |
+
 ## Families of repositories
 
 | Family | Repositories | What a "release" is | Who triggers it |
@@ -112,22 +128,65 @@ in `scripts/import-tool/README.md`.
 One exporter per website, under `scripts/exporters/<site>/`. Publishing is a
 manual step on the operator's machine. No workflow publishes data packages.
 
-Repeat for each of the seven exporters (`islamicart`, `baroqueart`,
-`sharinghistory`, `carpets`, `amulets`, `the-use-of-colours-in-art`,
-`water-in-islam`):
+Docker bind-mounts this checkout, so the export runs whatever is currently
+checked out here — not necessarily the merge you intend to publish. Before a
+republish:
 
-```bash
-docker compose --profile jobs run --rm exporter <site> --force --publish
+```powershell
+git pull --ff-only origin main
+git log -1 --format=%h
 ```
 
-That single run exports, bumps the patch version, generates `package.json`,
-`README.md` and `LICENSE.md`, and runs `npm publish`. Do not run `npm publish`
-yourself afterwards.
+Confirm the hash is the commit you mean to publish. A tree one commit behind
+can republish a field that was just removed.
+
+Authenticate on the host immediately before the loop below, not once at the
+start of the day:
+
+```powershell
+npm login
+npm whoami
+```
+
+`npm whoami` must print your login. A session from the previous morning is
+commonly already dead by the next morning; a dead session makes `npm publish`
+fail with `E404 Not Found - PUT https://registry.npmjs.org/@museumwnf%2f<x>-data`
+("could not be found or you do not have permission") — not with a 401 — so do
+not read that error as a permissions problem.
+
+Repeat for each of the seven exporters (`islamicart`, `baroqueart`,
+`sharinghistory`, `carpets`, `amulets`, `the-use-of-colours-in-art`,
+`water-in-islam`), PowerShell:
+
+```powershell
+$env:HOME = $env:USERPROFILE
+@('islamicart','baroqueart','sharinghistory','carpets','amulets','the-use-of-colours-in-art','water-in-islam') | % {
+  docker compose --profile jobs run --rm exporter "$_" --force --publish
+}
+```
+
+That single run per site exports, bumps the patch version, generates
+`package.json`, `README.md` and `LICENSE.md`, and runs `npm publish`. Do not
+run `npm publish` yourself afterwards.
+
+npmjs requires a web authentication per publish, and the container cannot open
+a browser: `npm publish` prints `Authenticate your account at:
+https://www.npmjs.com/auth/cli/<id>`, then `Press ENTER to open in the
+browser...`, and pressing ENTER exits with `npm error Set the BROWSER
+environment variable to your desired browser.` instead of opening anything.
+The working procedure: open that URL yourself, sign in, tick "stay
+authenticated for publish for the next 5 minutes", then rerun the loop above —
+all seven publishes complete comfortably inside that window (the whole loop
+took under two minutes on 2026-09-20 and 2026-09-21). This is a known
+limitation of the current tooling; the version-counter behaviour below is what
+makes rerunning the loop inside that window safe.
 
 The version counter lives in `output/.version-<site>`, outside the package
-directory and gitignored. If it is lost, the next publish would restart at
-1.0.0 and collide. Recover with `--package-version <next-free-version>` after
-checking the registry.
+directory and gitignored. The bump happens *before* `npm publish` runs, so a
+failed publish still burns a patch number — gaps in the version sequence are
+normal and harmless. If the counter file is lost entirely, the next publish
+would restart at 1.0.0 and collide; recover with
+`--package-version <next-free-version>` after checking the registry.
 
 The `exporter` service reads `staging-mysql`, and `stage` only migrates that
 database on a full rebuild. After pulling a change that adds a migration, run
@@ -141,17 +200,28 @@ Each exporter's `NPM_PUBLISH.md` documents the mechanics, including the
 generated package carries a `repository` field, and the host `~/.npmrc` mount
 the `exporter` service needs for `--publish` to authenticate against npmjs.
 
+Verify, for each of the seven: `npm view @museumwnf/<site>-data version` and
+`time.modified`; the export output under
+`scripts/exporters/<site>/output/<site>/` is what was published.
+
 ## 4. Reusable workflows (viewer-workflows)
 
 Every other repository's CI and deployment is a thin caller of a reusable
 workflow in `viewer-workflows`, pinned to an exact tag. A release is a tag, and
 nothing else: no version file, no moving `v1` tag, no rebuild.
 
+Push the tag from a checkout whose `origin` is
+`museumwithnofrontiers/viewer-workflows` — the long-lived local checkout at
+`E:/inventory/viewer-workflows` still points at the pre-move `metanull` remote
+and would tag the wrong repository silently (`git push` succeeds either way).
+The fresh clone kept for propagation (`E:\inventory\wsr\viewer-workflows-prop`,
+see [5.2](#52-propagate)) is already correct:
+
 ```bash
-git -C E:/inventory/viewer-workflows checkout main
-git -C E:/inventory/viewer-workflows pull --ff-only origin main
-git -C E:/inventory/viewer-workflows tag vX.Y.Z
-git -C E:/inventory/viewer-workflows push origin vX.Y.Z
+git -C E:/inventory/wsr/viewer-workflows-prop checkout main
+git -C E:/inventory/wsr/viewer-workflows-prop pull --ff-only origin main
+git -C E:/inventory/wsr/viewer-workflows-prop tag vX.Y.Z
+git -C E:/inventory/wsr/viewer-workflows-prop push origin vX.Y.Z
 ```
 
 Optionally, to keep the Releases page complete:
@@ -179,19 +249,32 @@ ranges on them, so a release does not reach any site until it is propagated.
    `CHANGELOG.md` entry go in that PR (no "Unreleased" section exists; every
    entry is a version).
 2. Merge it.
-3. Publish a GitHub Release whose tag is the new version. The release event,
-   not the merge, triggers `package-release.yml`, which publishes the package
-   with the version taken from the tag.
+3. Publish a GitHub Release whose tag is the new version, with notes taken
+   from the `CHANGELOG.md` section the PR just added — not `--generate-notes`,
+   which drafts from commits instead of the entry the PR already wrote. The
+   release event, not the merge, triggers `package-release.yml`, which
+   publishes the package with the version taken from the tag.
 
 ```bash
-gh release create vX.Y.Z -R museumwithnofrontiers/<package> --target main --title vX.Y.Z --generate-notes
+gh release create vX.Y.Z -R museumwithnofrontiers/<package> --target main --title vX.Y.Z --notes-file <changelog section file>
 ```
 
 4. Confirm the publish run succeeded before propagating:
 
 ```bash
-gh run list -R museumwithnofrontiers/<package> --workflow=release.yml --limit 3
+gh run list -R museumwithnofrontiers/<package> --workflow=release.yml -L 1
 ```
+
+should read `completed success`. Then confirm on the registry:
+
+```bash
+npm view @museumwnf/<package> version
+```
+
+Registry lag is real: on 2026-09-21 the publish workflow finished at
+06:57:42Z and a propagation started two seconds later still saw the previous
+version. Poll every minute for up to ten minutes before concluding a publish
+did not happen — never re-publish on the strength of one check.
 
 When several PRs on the same package each bump the version, merge them in
 order and let the last one carry the version that gets released.
@@ -202,51 +285,76 @@ Propagation is the one human decision in the flow: **when** the websites move
 to the new version. It is not automatic.
 
 `tools/propagate.mjs` in `viewer-workflows` opens one PR per website, bumping
-the range and the lockfile. Run it from the `viewer-workflows` checkout, in
-Docker, with your own `gh` login. Preview first with `--dry-run`.
-
-Bash (Linux, macOS):
-
-```bash
-cd E:/inventory/viewer-workflows
-export GH_TOKEN=$(gh auth token)
-docker run --rm -it -e GH_TOKEN -v "$PWD:/w" -w /w node:lts-alpine sh -c "apk add --no-cache git github-cli >/dev/null && node tools/propagate.mjs --expect <package>@X.Y.Z --dry-run"
-```
-
-PowerShell (Windows), where the operator actually runs this — `export`,
-`$(...)` command substitution and `$PWD` are bash syntax and do not work as
-written in PowerShell:
+the range and the lockfile. It discovers sites from the *owner of its own git
+remote*, so the checkout it runs from matters: `E:/inventory/viewer-workflows`
+is a stale checkout whose `origin` still points at `metanull/...` and finds no
+sites. Keep a fresh clone for this instead, and pull it before each run:
 
 ```powershell
-$env:GH_TOKEN = gh auth token
-$repo = "E:/inventory/viewer-workflows"
-docker run --rm -it -e GH_TOKEN -v "${repo}:/w" -w /w node:lts-alpine sh -c "apk add --no-cache git github-cli >/dev/null && node tools/propagate.mjs --expect <package>@X.Y.Z --dry-run"
+git clone https://github.com/museumwithnofrontiers/viewer-workflows E:\inventory\wsr\viewer-workflows-prop
+git -C E:\inventory\wsr\viewer-workflows-prop pull --ff-only
 ```
 
-`${repo}` needs the braces so PowerShell does not swallow the `:` that
-separates the host path from the container path.
+Run it in Docker, with your own `gh` login. The command as run (PowerShell;
+`--expect` is mandatory and repeatable — name every version this run must
+find on the registry):
 
-`GH_TOKEN` must be passed explicitly, as above — `gh auth login` on the host
-commonly stores the token in the OS keyring (e.g. Windows Credential
-Manager), which a container cannot reach, so mounting `~/.config/gh` alone
-carries no usable token in that case. `gh auth token` reads the real token
-regardless of where `gh` stores it. The tool itself runs `gh auth setup-git`
-on every invocation, so once `gh` is authenticated this way, `git push`
-inherits the same credentials.
+```powershell
+$n = git config --get user.name; $e = git config --get user.email
+docker run --rm -e GH_TOKEN=$(gh auth token) -e GIT_AUTHOR_NAME="$n" -e GIT_AUTHOR_EMAIL="$e" -e GIT_COMMITTER_NAME="$n" -e GIT_COMMITTER_EMAIL="$e" -v E:\inventory\wsr\viewer-workflows-prop:/w -w /w node:lts-alpine sh -c "apk add --no-cache git github-cli >/dev/null && node tools/propagate.mjs --expect viewer-layout@2.15.1"
+```
 
-Then the same command without `--dry-run`, in whichever shell you used above.
+The `GIT_*` variables are optional — the tool derives an identity from the
+`gh` login otherwise; pass them when the propagation commits should carry the
+same identity as your other commits. `GH_TOKEN` must be passed explicitly:
+`gh auth login` on the host commonly stores the token in the OS keyring (e.g.
+Windows Credential Manager), which a container cannot reach, so mounting
+`~/.config/gh` alone carries no usable token in that case. `gh auth token`
+reads the real token regardless of where `gh` stores it. The tool itself runs
+`gh auth setup-git` on every invocation, so once `gh` is authenticated this
+way, `git push` inherits the same credentials.
 
-`--expect <package>@X.Y.Z` is mandatory. Run before the publish workflow has
-finished, `latest` still resolves to the previous version and the tool bumps
-nothing while exiting successfully.
+Other flags: `--repo <site>` (restrict to one site), `--dry-run` (preview,
+recommended first), `--no-merge` (open the PRs without arming auto-merge).
+Run before the publish workflow has finished and `latest` still resolves to
+the previous version, the tool bumps nothing while exiting successfully —
+`--expect` turns that silent no-op into a refusal.
 
 Each website PR runs that site's own CI. Green PRs can be merged (or
 auto-merged) because the package's own CI already built that exact tarball
 against every site. Merging a website PR triggers its deployment (stage 7).
 
+Outcomes per site: **opened** (PR with auto-merge armed, merges on green),
+**already current** (lockfile unchanged), **pending** (an earlier propagation
+PR is still open on `chore/propagate-platform-packages` — merge or close it,
+then rerun with `--repo`), **failed**. The exit code is non-zero only when a
+site failed.
+
 The websites are discovered, not listed: every repository created from
 `website-template` is a consumer. A site created by fork or transferred in is
 invisible to discovery; pass `--repo` for those.
+
+Verify: each PR reaches MERGED —
+
+```bash
+gh pr list -R museumwithnofrontiers/<site> --head chore/propagate-platform-packages --state all -L 1
+```
+
+— then its deployment succeeded —
+
+```bash
+gh run list -R museumwithnofrontiers/<site> --workflow=deploy.yml --branch main -L 1
+```
+
+— `completed success`. For a breaking platform release, also confirm each
+site's `package-lock.json` on `main` resolves the package to the new version:
+
+```bash
+gh api repos/museumwithnofrontiers/<site>/contents/package-lock.json -H "Accept: application/vnd.github.raw"
+```
+
+and read `packages["node_modules/@museumwnf/<package>"].version` from the
+result.
 
 ### 5.3 Transition to npmjs (complete)
 
@@ -350,6 +458,15 @@ When the platform changes instead (a shared package), the sequence is stage
   derived (websites discovered from the template), an empty matrix is a
   discovery failure, not "nothing to do". Read the check names, not only the
   colours.
+- **A breaking change in a shared package goes out in a fixed order.** First
+  widen the dependent package's peer range — an additive, patch release — and
+  propagate it so every site's lockfile already carries it. Only then release
+  the breaking version. `package-ci.yml`'s Downstream job runs `npm ci` and
+  then `npm install --no-save <tarball>` on every site's `main`, so the peer
+  resolution it checks is against the sites' *lockfiles*, not their declared
+  ranges — a site whose lockfile has not moved yet fails the downstream build
+  against the breaking tarball even though its `package.json` range would
+  technically admit it.
 
 ## Where the details live
 
@@ -359,6 +476,6 @@ When the platform changes instead (a shared package), the sequence is stage
 | Content import | `scripts/import-tool/README.md` (walkthrough and copy-paste TL;DR) |
 | Data package publishing | `scripts/exporters/<site>/NPM_PUBLISH.md` |
 | Reusable workflows | `README.md` and `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
-| Shared package release and propagation | `MAINTENANCE.md` in museumwithnofrontiers/viewer-layout ("The flow"); `tools/propagate.mjs` in viewer-workflows |
+| Shared package release and propagation | `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows ("The flow"); `tools/propagate.mjs` in the same repository |
 | Creating a website | `README.md` in museumwithnofrontiers/website-template ("Admin") |
 | npmjs transition | epics #1720, #1721, #1722, #1723 in this repository |
