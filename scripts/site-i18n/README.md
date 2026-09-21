@@ -173,6 +173,45 @@ extractor checks every split against the merged catalogue and **aborts** rather
 than writing output that silently disagrees with it, naming the site and telling
 you to use `--layout flat`.
 
+### The website layout
+
+```powershell
+docker run --rm --network host -v "${PWD}:/app" -v site-i18n-node-modules:/app/node_modules -w /app node:22-alpine npm run extract -- carpets --layout website --namespace carpets --force
+```
+
+`--layout website` writes exactly one site's own texts, in the keys a rebuilt
+site's `locales/` directory expects — this is the extraction step of the site
+generator recipe (epic #1735), and its output is what the recipe copies straight
+into the site repo for the texts PR. It takes exactly one selector — a batch has
+no meaning here, a website layout is one site's texts, and `--all` is refused —
+and requires `--namespace <ns>`: one lowercase-led word of letters and digits, no
+hyphens (`carpets`, `waterInIslam`, `colours`), because the namespace is a site's
+own decision, not something derivable from its slug.
+
+Only two legacy keys are a site's own editorial copy: `galleryCredits`, which
+every site owns, and `galleryAbout`, which only a gallery renders — an exhibition
+has no About page (`standardRoutes('exhibition', …)` in `viewer-layout` has none,
+blocked on the Theme epic, inventory-app#1729). They are renamed into the keys the
+viewer-i18n dictionary expects:
+
+| Legacy key | Kind | viewer-i18n key |
+| --- | --- | --- |
+| `galleryCredits` | gallery, exhibition | `<namespace>.credits.body` |
+| `galleryAbout` | gallery only | `gallery.about.body` |
+
+Output: `output/<slug>/locales/<lang>.json`, one file per legacy language that has
+at least one of the site's own texts — never padded with English, same rule as
+the other layouts. `en.json` always exists, even empty, because it is the
+fallback locale a site loads unconditionally; a site-owned key legacy has no
+English value for is omitted (not written with a blank value) and the run warns.
+
+Every other legacy key of the site — the UI labels, `galleryPartners`,
+`searchHowTo`, `thg_about_text`, `txt*` and the rest — is provided by the
+viewer-i18n dictionary and deliberately **not emitted**.
+`extraction-report.md`'s "Website output" section names every one of them per
+site, so a reviewer sees exactly what the site does not own before the texts PR
+is opened.
+
 ## Values are Markdown, not HTML
 
 The legacy strings are HTML fragments — the legacy client renders them straight
@@ -285,25 +324,22 @@ in a URL and illegal in a Windows path, so its output directory drops the colon.
 
 ## Scaffolding a site
 
-1. `npm run list` — find the site's gallery id and slug.
-2. Extract it, and read the warnings it prints.
-3. Read `output/extraction-report.md`: confirm the locale coverage is what you
-   expect, check the "Shared vs. own" row for the site, and look over what the
-   legacy RIGHT JOIN was dropping.
-4. Copy `output/_common/<id>/i18n/` into the new site repo as its base message
-   directory, `output/<slug>/i18n/` as its overrides, and `site.json` into
-   whatever the scaffold uses for per-site configuration.
-5. Merge the two layers per locale, own layer last — vue-i18n's
-   `mergeLocaleMessage` after loading the shared layer, or a build-time spread.
-   **Glob the site's `i18n/` rather than assuming a file per locale**: most sites
-   override only a few languages, and that is the point.
-6. Wire vue-i18n with `fallbackLocale: 'en'` and render the page-content keys
-   (`galleryAbout`, `galleryCredits`, `galleryPartners`, `searchHowTo`,
-   `thg_about_text`, `txt*`) through a Markdown component.
+The platform is `@museumwnf/viewer-i18n` (the shared dictionary) plus a site's own
+`locales/` directory plus `viewerI18n.class`/`namespace` in the site's
+`package.json` — not vue-i18n's `mergeLocaleMessage`, not a
+`dxa-client/_variables.scss` copy. In outline:
 
-The palette for a site lives separately, in
-`dxa-client/src/sites/<key>/_variables.scss` — see #1510 for how that fits the
-viewer-core / viewer-layout platform.
+1. `npm run list` — find the site's gallery id and slug.
+2. Extract it with `--layout website --namespace <ns>` (above), and read the
+   warnings it prints.
+3. Copy `output/<slug>/locales/` into the new site repo as-is, and open the
+   texts PR.
+4. CI's `ci / Texts` job on that repo validates the copied keys against the
+   viewer-i18n dictionary.
+
+The full ordered recipe — repo creation, Pages enablement, the Dependabot entry,
+the `.new-architecture` submodule pointer, `dependents.json` — is
+`docs/deployment/new-website.md` (story #1921); this step is one line in it.
 
 ## Tests
 

@@ -108,4 +108,17 @@ export interface ExtractedSite {
   warnings: string[]
   /** Present when the run wrote layered output. */
   layers?: LayerSplit
+  /** Present when the run wrote website-layout output. */
+  website?: WebsiteReportInfo
+}
+
+/**
+ * What the report needs about a site's website-layout output — the namespace it
+ * was built with, alongside the `buildWebsiteCatalogue` result.
+ */
+export interface WebsiteReportInfo {
+  namespace: string
+  locales: MessageCatalogue
+  notEmitted: string[]
+  missing: string[]
 }

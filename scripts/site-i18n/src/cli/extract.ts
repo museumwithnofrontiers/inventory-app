@@ -15,13 +15,16 @@
  *   npm run extract -- --all                   # every active site
  *   npm run extract -- --all --include-hidden  # ...including status 'H'
  *   npm run extract -- carpets --layout flat   # one self-contained catalogue
+ *   npm run extract -- carpets --layout website --namespace carpets --force
+ *                                               # one site's own locales/, ready for its repo
  *
  * Output, under --output-dir (default ./output):
  *   _common/<id>/common.json      the shared layer's provenance (layered only)
  *   _common/<id>/i18n/<lang>.json the common group, written once (layered only)
  *   <slug>/site.json              the gallery anchor: id, project, slug, host, groups
- *   <slug>/i18n/index.json        locales, default and fallback locale, key counts
- *   <slug>/i18n/<lang>.json       vue-i18n messages, Markdown values
+ *   <slug>/i18n/index.json        locales, default and fallback locale, key counts (layered/flat only)
+ *   <slug>/i18n/<lang>.json       vue-i18n messages, Markdown values (layered/flat only)
+ *   <slug>/locales/<lang>.json    the site's own viewer-i18n keys, Markdown values (website only)
  *   extraction-report.md          what the run did, across every site extracted
  *
  * ## Layouts
@@ -32,7 +35,11 @@
  * 453. `--layout layered` (the default) writes the common group once under
  * `_common/` and gives each site only what it overrides or adds. `--layout flat`
  * writes the merged catalogue per site, which is the form to diff against the
- * legacy API's own output when verifying an extraction.
+ * legacy API's own output when verifying an extraction. `--layout website` writes
+ * only the one or two legacy keys a site actually owns (`galleryCredits`, and for
+ * a gallery `galleryAbout`), renamed into the keys the viewer-i18n dictionary
+ * expects, for exactly one site named with `--namespace <ns>`; every other legacy
+ * key is provided by the shared dictionary and is listed, not emitted.
  */
 
 import dotenv from 'dotenv'
@@ -51,12 +58,14 @@ import type {
 } from '../core/types.js'
 import {
   buildLocaleIndex,
+  FALLBACK_LOCALE,
   findLayerRoundTripFailures,
   mergeTranslationGroups,
   splitLayers,
 } from '../extract.js'
 import { buildReport } from '../report.js'
 import { collectWarnings, isHidden, outputName, selectSites } from '../registry.js'
+import { buildWebsiteCatalogue, NAMESPACE_PATTERN, websiteKeyMapping } from '../website.js'
 
 /**
  * Directory holding the shared layers, one subdirectory per common group id.
@@ -92,8 +101,14 @@ program
   .option('--force', 'Overwrite the output directory if it already exists', false)
   .option(
     '--layout <layout>',
-    "'layered' (shared layer in _common/, sites carry only their own messages) or 'flat' (one self-contained catalogue per site)",
+    "'layered' (shared layer in _common/, sites carry only their own messages), 'flat' " +
+      "(one self-contained catalogue per site) or 'website' (one site's own locales/, in " +
+      'viewer-i18n keys)',
     'layered'
+  )
+  .option(
+    '--namespace <ns>',
+    "The site's viewer-i18n namespace (required with --layout website, e.g. carpets, waterInIslam)"
   )
   .action(
     async (
@@ -106,19 +121,21 @@ program
         outputDir: string
         force: boolean
         layout: string
+        namespace?: string
       }
     ) => {
       const logger = new Logger('site-i18n')
 
-      if (options.layout !== 'layered' && options.layout !== 'flat') {
+      if (options.layout !== 'layered' && options.layout !== 'flat' && options.layout !== 'website') {
         console.error(
           chalk.red(`Unknown layout "${options.layout}".\n`) +
-            chalk.dim("Expected 'layered' (default) or 'flat'.")
+            chalk.dim("Expected 'layered' (default), 'flat' or 'website'.")
         )
         process.exitCode = 1
         return
       }
       const layered = options.layout === 'layered'
+      const website = options.layout === 'website'
 
       if (!options.all && selectors.length === 0) {
         console.error(
@@ -127,6 +144,49 @@ program
         )
         process.exitCode = 1
         return
+      }
+
+      // The website layout writes one site's own texts, so a batch or a
+      // multi-site run has no meaning here — check this before anything that
+      // could touch the database.
+      if (website) {
+        if (options.all) {
+          console.error(
+            chalk.red('--layout website extracts one site; --all is not accepted.\n') +
+              chalk.dim('Name the single site to extract.')
+          )
+          process.exitCode = 1
+          return
+        }
+        if (selectors.length !== 1) {
+          console.error(
+            chalk.red(
+              `--layout website extracts exactly one site; got ${selectors.length}.\n`
+            ) + chalk.dim("A website layout is one site's texts — name a single selector.")
+          )
+          process.exitCode = 1
+          return
+        }
+        if (options.namespace === undefined) {
+          console.error(
+            chalk.red('--namespace <ns> is required with --layout website.\n') +
+              chalk.dim(
+                'The namespace is a site decision (e.g. carpets, waterInIslam), not derivable from the slug.'
+              )
+          )
+          process.exitCode = 1
+          return
+        }
+        if (!NAMESPACE_PATTERN.test(options.namespace)) {
+          console.error(
+            chalk.red(`Invalid --namespace "${options.namespace}".\n`) +
+              chalk.dim(
+                'Expected one lowercase-led word of letters and digits, no hyphens (e.g. carpets, waterInIslam, colours).'
+              )
+          )
+          process.exitCode = 1
+          return
+        }
       }
 
       const outputRoot = resolve(process.cwd(), options.outputDir)
@@ -278,8 +338,7 @@ program
 
           const name = outputName(site)
           const siteDir = join(outputRoot, name)
-          const i18nDir = join(siteDir, 'i18n')
-          mkdirSync(i18nDir, { recursive: true })
+          mkdirSync(siteDir, { recursive: true })
 
           // A site with no common group has nothing to share and owns the lot;
           // the legacy API serves it nothing at all, which `collectWarnings`
@@ -330,13 +389,44 @@ program
             contentFormat: 'markdown',
           })
 
-          writeJson(join(i18nDir, 'index.json'), buildLocaleIndex(stats, layers))
-          const written = layers === undefined ? messages : layers.own
-          for (const locale of Object.keys(written).sort()) {
-            writeJson(join(i18nDir, `${locale}.json`), written[locale])
+          let websiteInfo: ExtractedSite['website']
+          if (website) {
+            const namespace = options.namespace!
+            const built = buildWebsiteCatalogue(messages, site.kind, namespace)
+            // en.json is the fallback locale a rebuilt site loads unconditionally,
+            // so it always exists — even empty — the same way the other layouts
+            // never omit a locale a scaffold expects.
+            const localesOut: MessageCatalogue = { ...built.locales }
+            if (localesOut[FALLBACK_LOCALE] === undefined) {
+              localesOut[FALLBACK_LOCALE] = {}
+            }
+
+            const localesDir = join(siteDir, 'locales')
+            mkdirSync(localesDir, { recursive: true })
+            for (const locale of Object.keys(localesOut).sort()) {
+              writeJson(join(localesDir, `${locale}.json`), localesOut[locale])
+            }
+
+            const mapping = websiteKeyMapping(site.kind, namespace)
+            for (const legacyKey of built.missing) {
+              warnings.push(
+                `Website layout: no English value for legacy key \`${legacyKey}\` — ` +
+                  `\`${mapping[legacyKey]}\` was not written.`
+              )
+            }
+
+            websiteInfo = { namespace, locales: localesOut, notEmitted: built.notEmitted, missing: built.missing }
+          } else {
+            const i18nDir = join(siteDir, 'i18n')
+            mkdirSync(i18nDir, { recursive: true })
+            writeJson(join(i18nDir, 'index.json'), buildLocaleIndex(stats, layers))
+            const written = layers === undefined ? messages : layers.own
+            for (const locale of Object.keys(written).sort()) {
+              writeJson(join(i18nDir, `${locale}.json`), written[locale])
+            }
           }
 
-          extracted.push({ site, messages, stats, warnings, layers })
+          extracted.push({ site, messages, stats, warnings, layers, website: websiteInfo })
 
           const recovered = stats.droppedByLegacyRightJoin.length
           const ownKeys = layers
@@ -369,6 +459,9 @@ program
           logger.info(
             `Merge order: ${SHARED_ROOT}/<commonGroupId>/i18n/<lang>.json, then <site>/i18n/<lang>.json`
           )
+        }
+        if (website) {
+          logger.info('Copy <slug>/locales/ into the site repo as-is; everything else comes from viewer-i18n.')
         }
         logger.info('Report: extraction-report.md')
       } catch (error) {
