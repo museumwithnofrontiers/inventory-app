@@ -1,0 +1,7 @@
+{
+  "kind": "exhibition",
+  "slug": "arts-in-dialogue",
+  "name": "Arts in Dialogue",
+  "collection_id": "0a393936-e887-535c-bf34-e7741e566c1d",
+  "package_name": "@museumwnf/arts-in-dialogue-data"
+}
