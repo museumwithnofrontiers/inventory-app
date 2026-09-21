@@ -1,0 +1,7 @@
+{
+  "kind": "gallery",
+  "slug": "paintings",
+  "name": "Paintings",
+  "collection_id": "1fc8e6d4-c8c9-55d3-9f11-5d456fadc8df",
+  "package_name": "@museumwnf/paintings-data"
+}
