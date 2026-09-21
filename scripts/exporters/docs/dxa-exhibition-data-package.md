@@ -269,20 +269,30 @@ Two counting traps worth knowing before comparing a fork against these numbers:
 
 ## Reference implementation
 
-[`scripts/exporters/the-use-of-colours-in-art`](../the-use-of-colours-in-art/README.md)
-([story #1546](https://github.com/museumwithnofrontiers/inventory-app/issues/1546),
-[`../the-use-of-colours-in-art/tools/VALIDATION-2026-08-28.md`](../the-use-of-colours-in-art/tools/VALIDATION-2026-08-28.md))
-implements this specification and is verified against the live legacy API —
-items, themes (per theme, all fifteen), pictures, tags, both timelines, related
-content and partners all exact. **Fork it** rather than re-deriving the rules;
-every correction marked above was found by counting against the running site,
-and each had a wrong-looking alternative that still produced plausible output.
+[`scripts/exporters/dxa-exhibition`](../dxa-exhibition/README.md) (epic
+[#1734](https://github.com/museumwithnofrontiers/inventory-app/issues/1734), story
+[#1912](https://github.com/museumwithnofrontiers/inventory-app/issues/1912)) implements this
+specification, parameterised per site by an
+[instance file](../instances/README.md) rather than a fork. It replaces the two
+exporters that originally proved the specification against the live legacy
+API, both verified and now retired ([#1913](https://github.com/museumwithnofrontiers/inventory-app/issues/1913)):
 
-[`scripts/exporters/water-in-islam`](../water-in-islam/README.md)
-([story #1548](https://github.com/museumwithnofrontiers/inventory-app/issues/1548),
-[`../water-in-islam/tools/VALIDATION-2026-08-29.md`](../water-in-islam/tools/VALIDATION-2026-08-29.md))
-is that fork, and its value to this specification is the three claims it
-**tested** which Colours alone could only assert:
+**the-use-of-colours-in-art** (`instances/the-use-of-colours-in-art.json`, site
+note [`../instances/the-use-of-colours-in-art.md`](../instances/the-use-of-colours-in-art.md),
+validation [`../docs/validation/the-use-of-colours-in-art-2026-08-28.md`](validation/the-use-of-colours-in-art-2026-08-28.md))
+— [story #1546](https://github.com/museumwithnofrontiers/inventory-app/issues/1546) — matches
+the live legacy API exactly: items, themes (per theme, all fifteen), pictures,
+tags, both timelines, related content and partners all exact. Every
+correction marked above was found by counting against the running site, and
+each had a wrong-looking alternative that still produced plausible output.
+
+**water-in-islam** (`instances/water-in-islam.json`, site note
+[`../instances/water-in-islam.md`](../instances/water-in-islam.md), validation
+[`../docs/validation/water-in-islam-2026-08-29.md`](validation/water-in-islam-2026-08-29.md))
+— [story #1548](https://github.com/museumwithnofrontiers/inventory-app/issues/1548), forked from
+Colours at the time and now sharing the same exporter — its value to this
+specification is the three claims it **tested** which Colours alone could only
+assert:
 
 - `has_timeline` / `has_country_timeline` gate navigation, not data. Colours has
   a local chronology and reports `true / false`; Water in Islam has none and

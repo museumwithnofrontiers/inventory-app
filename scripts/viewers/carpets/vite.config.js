@@ -12,10 +12,10 @@ const here = dirname(fileURLToPath(import.meta.url))
 //   1. DATA_PACKAGE — an npm package name *or* a directory path. Explicit wins.
 //   2. @museumwnf/carpets-data — the published package. This is what `npm
 //      install` brings in, and what CI and the deploy workflow build against.
-//   3. ../../exporters/carpets/output/carpets — a local exporter run, for
+//   3. ../../exporters/dxa-gallery/output/carpets — a local exporter run, for
 //      working against data that has not been published yet:
 //
-//        docker compose --profile jobs run --rm exporter carpets --force \
+//        docker compose --profile jobs run --rm exporter dxa-gallery --instance carpets --force \
 //            --base-url https://inventory.metanull.eu
 //
 //      from the repository root.
@@ -50,17 +50,17 @@ function resolveDataPackage() {
   const published = asPackage('@museumwnf/carpets-data')
   if (published) return published
 
-  const local = asDirectory('../../exporters/carpets/output/carpets')
+  const local = asDirectory('../../exporters/dxa-gallery/output/carpets')
   if (local) return local
 
   throw new Error(
     'No Carpets data package found.\n' +
     '\n' +
     'This viewer reads @museumwnf/carpets-data when it is installed, and falls\n' +
-    'back to the exporter output at scripts/exporters/carpets/output/carpets.\n' +
+    'back to the exporter output at scripts/exporters/dxa-gallery/output/carpets.\n' +
     'Neither is present. Produce the local export with:\n' +
     '\n' +
-    '  docker compose --profile jobs run --rm exporter carpets --force \\\n' +
+    '  docker compose --profile jobs run --rm exporter dxa-gallery --instance carpets --force \\\n' +
     '      --base-url https://inventory.metanull.eu\n' +
     '\n' +
     'or point DATA_PACKAGE at a package name or directory.'

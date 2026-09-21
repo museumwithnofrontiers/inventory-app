@@ -107,7 +107,7 @@ const LEGACY_TO_ISO = { uk: 'GB', pa: 'PS' }
 
 // A lookup, not a parse. The fallback exists only for the regressed-package
 // case described above, and it must agree with GLOBAL_TIMELINE_LIKE_PATTERNS in
-// `scripts/exporters/carpets/src/exporters/timeline-exporter.ts`: the country
+// `scripts/exporters/dxa-gallery/src/exporters/timeline-exporter.ts`: the country
 // sits after the literal `country` segment in BOTH keyspaces
 // (`mwnf3:hcr:country:<cc>` and
 // `mwnf3_sharing_history:sh_hcr:country:<cc>:exhibition:2`), and it is the last

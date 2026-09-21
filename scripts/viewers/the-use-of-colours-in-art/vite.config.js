@@ -13,12 +13,12 @@ const here = dirname(fileURLToPath(import.meta.url))
 //   2. @museumwnf/the-use-of-colours-in-art-data — the published package. This
 //      is what `npm install` brings in, and what CI and the deploy workflow
 //      build against.
-//   3. ../../exporters/the-use-of-colours-in-art/output/the-use-of-colours-in-art
+//   3. ../../exporters/dxa-exhibition/output/the-use-of-colours-in-art
 //      — a local exporter run, for working against data that has not been
 //      published yet:
 //
 //        docker compose --profile jobs run --rm \
-//            exporter the-use-of-colours-in-art --force \
+//            exporter dxa-exhibition --instance the-use-of-colours-in-art --force \
 //            --base-url https://inventory.metanull.eu
 //
 //      from the repository root.
@@ -54,7 +54,7 @@ function resolveDataPackage() {
   if (published) return published
 
   const local = asDirectory(
-    '../../exporters/the-use-of-colours-in-art/output/the-use-of-colours-in-art'
+    '../../exporters/dxa-exhibition/output/the-use-of-colours-in-art'
   )
   if (local) return local
 
@@ -63,11 +63,11 @@ function resolveDataPackage() {
     '\n' +
     'This viewer reads @museumwnf/the-use-of-colours-in-art-data when it is\n' +
     'installed, and falls back to the exporter output at\n' +
-    'scripts/exporters/the-use-of-colours-in-art/output/the-use-of-colours-in-art.\n' +
+    'scripts/exporters/dxa-exhibition/output/the-use-of-colours-in-art.\n' +
     'Neither is present. Produce the local export with:\n' +
     '\n' +
     '  docker compose --profile jobs run --rm \\\n' +
-    '      exporter the-use-of-colours-in-art --force \\\n' +
+    '      exporter dxa-exhibition --instance the-use-of-colours-in-art --force \\\n' +
     '      --base-url https://inventory.metanull.eu\n' +
     '\n' +
     'or point DATA_PACKAGE at a package name or directory.'

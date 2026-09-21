@@ -126,7 +126,7 @@ dead. Without this preflight a dead session only surfaced as a registry 404
 after the whole export had already run.
 
 ```bash
-docker compose --profile jobs run --rm exporter amulets --force --publish
+docker compose --profile jobs run --rm exporter baroqueart --force --publish
 ```
 
 The container has no browser (`NPM_CONFIG_BROWSER=false` in `compose.yml`),
