@@ -92,6 +92,15 @@ docker compose exec staging-app php artisan importer:find-collection gallery <le
 # or: exhibition, in place of gallery
 ```
 
+If the answer is "there are no commands defined in the importer namespace",
+the container runs a built image (`inventory-app:staging`) that predates the
+command. Either rebuild that image first or run the command with the
+checkout mounted over it, which is what the first end-to-end run did:
+
+```bash
+docker compose run --rm --no-deps -T -v "${PWD}:/var/www/app" staging-app php artisan importer:find-collection gallery <legacy id|slug|exact English title> --json
+```
+
 The command's signature and output fields are in
 [`app/Console/Commands/FindCollection.php`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/app/Console/Commands/FindCollection.php).
 
@@ -214,8 +223,16 @@ identified — the lookup command in step 1 already resolved it — rather
 than running a separate `npm run list` search, for consistency (documented
 in
 [`scripts/site-i18n/README.md`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/site-i18n/README.md)).
-Copy `output/<slug>/locales/` into the site repository's own `locales/` as
-is, and open the texts PR there.
+Copy `output/<slug>/locales/` into the site repository's own `locales/`
+and open the texts PR there. One file needs a merge rather than a copy:
+the scaffold's `locales/en.json` already exists and holds placeholder
+entries (`<ns>.identity.*`, `<ns>.home.*`, `<ns>.nav.*`, `<ns>.about.body`)
+that the scaffold's own `src/dataset.config.js` and `tests/smoke.test.js`
+read. Add the extracted entries to that file and keep the placeholders,
+so the texts PR stays green on its own; step 6 removes them together with
+the code that reads them. If the legacy database holds this site's texts
+in English only, `en.json` is the only file the extraction writes, and
+that is not an error.
 
 **Proof:** `ci / Texts (blocking)` on that PR validates the copied keys
 against the `viewer-i18n` dictionary; once merged and deployed, the About
@@ -269,6 +286,13 @@ drop it to also see the site appear in the full discovered list — a site is
 discovered from its `template_repository` link, not from any file listing
 sites by name.
 
+Run it in the `node:lts-alpine` container with `GH_TOKEN`, as
+`MAINTENANCE.md` describes, from a real clone: a git worktree cannot be
+mounted, because its `.git` is a pointer file and `gh auth setup-git`
+refuses it. Run on the host, the same command may answer that the version
+is "not on the registry" while `npm pack` serves it; that is the host-side
+registry lag, not a missing publish, and the container does not see it.
+
 **Proof:** the dry-run's report includes this site.
 
 ## Steps you may find in older notes
@@ -293,5 +317,14 @@ decomposition comment (2026-09-21):
 
 ## First end-to-end run
 
-This recipe was first run end to end on the first site of M5 wave 1 — site:
-*to be recorded*, date: *to be recorded*.
+This recipe was first run end to end on **coins-medals**, the first site of
+M5 wave 1, on **2026-09-21**
+([story #1930](https://github.com/museumwithnofrontiers/inventory-app/issues/1930);
+the run's proofs are its comments). Every step ran as written. Three
+observations were folded into the steps above rather than kept here: the
+built staging image that predates the lookup command (step 1), the
+scaffold's placeholder locale entries that the texts PR must keep until
+step 6 (step 5), and the two container traps of the discovery check
+(step 8). The tool's closing hint about `dependents.json` and a Dependabot
+entry, the two retired steps listed above, was corrected in
+[viewer-workflows#29](https://github.com/museumwithnofrontiers/viewer-workflows/pull/29).

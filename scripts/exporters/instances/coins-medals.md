@@ -113,12 +113,13 @@ Verified during this export, none blocking:
   carriers.
 - **`notice` and `notice_c`** are not imported, per the standing rule
   documented on carpets/amulets; not specifically re-checked here.
-- **Item-count and language-list comparison against the live legacy API is
-  incomplete.** `/thg/galleries/self` (the one call used for this note) does
-  not report an item count or a full language list — it returns gallery
-  chrome only (see above). A count/language comparison needs the paginated
-  `/items` endpoint, out of scope for the recipe's step 2 one-call sanity
-  check; left for the recipe's step 9 comparison.
+- **The live legacy API counts fewer items than the package.** Legacy's
+  `/api/v2/items/count` and `/api/v2/objects/count` both answer 93 where
+  `items.json` holds 100 (read during the site's step 6 comparison,
+  [coins-medals#4](https://github.com/museumwithnofrontiers/coins-medals/pull/4)).
+  `/thg/galleries/self`, the one call step 2 uses, reports no count, so
+  this only surfaced at step 6. The cause was not investigated; it is an
+  open question for the gallery epic, not a blocker for this site.
 
 ## Package contents
 
