@@ -1,0 +1,7 @@
+{
+  "kind": "gallery",
+  "slug": "theatre",
+  "name": "Theatre",
+  "collection_id": "101ffdb9-f3e9-5a1d-9247-a3badbd0feff",
+  "package_name": "@museumwnf/theatre-data"
+}

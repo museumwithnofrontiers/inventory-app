@@ -1,0 +1,7 @@
+{
+  "kind": "gallery",
+  "slug": "scientific-objects",
+  "name": "Scientific Objects",
+  "collection_id": "500eb08d-ca5d-5483-9b2c-5d57ef2ed72e",
+  "package_name": "@museumwnf/scientific-objects-data"
+}
