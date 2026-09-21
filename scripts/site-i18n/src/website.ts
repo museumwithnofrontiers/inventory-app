@@ -5,13 +5,14 @@
  * Almost everything a scaffolded site renders comes from `@museumwnf/viewer-i18n`'s
  * shared gallery/exhibition bundle — the common UI labels, `galleryPartners`,
  * `searchHowTo`, `thg_about_text`, `txt*`, all of it. Only two legacy keys are a
- * site's own editorial copy: `galleryCredits`, which every site owns, and
- * `galleryAbout`, which only a gallery renders — `standardRoutes('exhibition', …)`
- * has no About page (blocked on the Theme epic, inventory-app#1729). This module
- * maps those into the keys the live sites already carry in `locales/<lang>.json`
- * (verified against carpets/amulets/water-in-islam/the-use-of-colours-in-art on
- * `origin/main`, 2026-09-21) and reports everything else as not emitted, so a
- * reviewer can see what the site does not own without diffing 450 keys by hand.
+ * site's own editorial copy: its credits — `galleryCredits` for a gallery,
+ * `exhibitionCredits` for an exhibition — and, for a gallery only, `galleryAbout`
+ * — `standardRoutes('exhibition', …)` has no About page (blocked on the Theme
+ * epic, inventory-app#1729). This module maps those into the keys the live sites
+ * already carry in `locales/<lang>.json` (verified against
+ * carpets/amulets/water-in-islam/the-use-of-colours-in-art on `origin/main`,
+ * 2026-09-21) and reports everything else as not emitted, so a reviewer can see
+ * what the site does not own without diffing 450 keys by hand.
  */
 import type { MessageCatalogue, SiteKind } from './core/types.js'
 
@@ -19,19 +20,26 @@ import type { MessageCatalogue, SiteKind } from './core/types.js'
  * The legacy key -> viewer-i18n key mapping for a site, given its kind and its
  * chosen namespace.
  *
- * `galleryCredits` is namespaced per site (`<ns>.credits.body`) because every
- * site's credits are its own text. `galleryAbout` maps to the fixed
- * `gallery.about.body` — not namespaced — because the About page markup itself
- * is shared across every gallery; only an exhibition has none.
+ * Credits are namespaced per site (`<ns>.credits.body`) because every site's
+ * credits are its own text, but the legacy source key depends on kind: a
+ * gallery's credits are `galleryCredits`, while an exhibition's are
+ * `exhibitionCredits` — the legacy exhibitions client renders that key, and
+ * that is the text the two live exhibition sites (the-use-of-colours-in-art,
+ * water-in-islam) actually carry, not the common group's `galleryCredits`
+ * fallback. `galleryAbout` maps to the fixed `gallery.about.body` — not
+ * namespaced — because the About page markup itself is shared across every
+ * gallery; only an exhibition has none.
  */
 export function websiteKeyMapping(kind: SiteKind, namespace: string): Record<string, string> {
-  const mapping: Record<string, string> = {
+  if (kind === 'exhibition') {
+    return {
+      exhibitionCredits: `${namespace}.credits.body`,
+    }
+  }
+  return {
     galleryCredits: `${namespace}.credits.body`,
+    galleryAbout: 'gallery.about.body',
   }
-  if (kind === 'gallery') {
-    mapping['galleryAbout'] = 'gallery.about.body'
-  }
-  return mapping
 }
 
 export interface WebsiteCatalogue {
@@ -39,7 +47,7 @@ export interface WebsiteCatalogue {
   locales: MessageCatalogue
   /** Legacy keys present in the merged catalogue that the website layout does not own and does not emit. */
   notEmitted: string[]
-  /** Site-owned legacy keys (galleryAbout/galleryCredits) with no English value, so omitted rather than left blank. */
+  /** Site-owned legacy keys (galleryCredits/exhibitionCredits/galleryAbout) with no English value, so omitted rather than left blank. */
   missing: string[]
 }
 

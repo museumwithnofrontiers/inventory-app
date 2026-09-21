@@ -188,15 +188,20 @@ and requires `--namespace <ns>`: one lowercase-led word of letters and digits, n
 hyphens (`carpets`, `waterInIslam`, `colours`), because the namespace is a site's
 own decision, not something derivable from its slug.
 
-Only two legacy keys are a site's own editorial copy: `galleryCredits`, which
-every site owns, and `galleryAbout`, which only a gallery renders — an exhibition
-has no About page (`standardRoutes('exhibition', …)` in `viewer-layout` has none,
-blocked on the Theme epic, inventory-app#1729). They are renamed into the keys the
-viewer-i18n dictionary expects:
+Only two legacy keys are a site's own editorial copy, and which one carries the
+credits depends on kind: a gallery's credits are `galleryCredits`, an
+exhibition's are `exhibitionCredits` — the legacy exhibitions client renders
+that key, and it is the text the two live exhibition sites
+(the-use-of-colours-in-art, water-in-islam) actually carry, not the common
+group's `galleryCredits` fallback. `galleryAbout` is the other, and only a
+gallery renders it — an exhibition has no About page (`standardRoutes('exhibition',
+…)` in `viewer-layout` has none, blocked on the Theme epic, inventory-app#1729).
+They are renamed into the keys the viewer-i18n dictionary expects:
 
 | Legacy key | Kind | viewer-i18n key |
 | --- | --- | --- |
-| `galleryCredits` | gallery, exhibition | `<namespace>.credits.body` |
+| `galleryCredits` | gallery only | `<namespace>.credits.body` |
+| `exhibitionCredits` | exhibition only | `<namespace>.credits.body` |
 | `galleryAbout` | gallery only | `gallery.about.body` |
 
 Output: `output/<slug>/locales/<lang>.json`, one file per legacy language that has
