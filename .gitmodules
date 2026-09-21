@@ -73,3 +73,6 @@
 [submodule ".legacy-code/office4"]
 	path = .legacy-code/office4
 	url = https://bitbucket.org/mwnf/office4
+[submodule ".new-architecture/coins-medals"]
+	path = .new-architecture/coins-medals
+	url = https://github.com/museumwithnofrontiers/coins-medals
