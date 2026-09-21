@@ -28,8 +28,11 @@ export class LanguageExporter extends BaseExporter {
        ORDER BY id`
     )
 
+    // Row order is unspecified; sorted so each language's `names` key order is
+    // byte-identical across two exports of one database.
     const translations = await this.db.query<LangTranslationRow>(
-      `SELECT language_id, display_language_id, name FROM language_translations`
+      `SELECT language_id, display_language_id, name FROM language_translations
+       ORDER BY language_id, display_language_id`
     )
 
     // id -> backward_compatibility (2-char code, e.g. 'en')

@@ -192,10 +192,13 @@ export class PartnerExporter extends BaseExporter {
 
     const [translations, images, logos, levels, groupMemberships, heldItems] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
+        // Row order is unspecified; sorted so two exports of one database are
+        // byte-identical (also makes the "first row wins" extra-fields pick below deterministic).
         `SELECT partner_id, language_id, name, description, city_display, address_notes,
                 contact_website, contact_phone, contact_email_general, extra
          FROM partner_translations
-         WHERE partner_id IN (${partnerPh})`,
+         WHERE partner_id IN (${partnerPh})
+         ORDER BY partner_id, language_id`,
         partnerIds
       ),
       this.db.query<PartnerImageRow>(
@@ -242,12 +245,14 @@ export class PartnerExporter extends BaseExporter {
           )
         : Promise.resolve([] as GroupMembershipRow[]),
       // The member items counted into item_count, by partner — resolved to
-      // project_uuids below.
+      // project_uuids below. Row order is unspecified; sorted so `project_uuids`
+      // is byte-identical across two exports of one database.
       this.db.query<PartnerHeldItemRow>(
         `SELECT partner_id, id AS item_id, project_id
          FROM items
          WHERE partner_id IN (${partnerPh})
-           AND id IN (${itemPh})`,
+           AND id IN (${itemPh})
+         ORDER BY partner_id, project_id`,
         [...partnerIds, ...this.memberItemIds]
       ),
     ])

@@ -63,7 +63,10 @@ export class ManifestExporter extends BaseExporter {
 
     const langCodeMap = await this.buildLangCodeMap()
     const rows = await this.db.query<ExhibitionTranslationRow>(
-      `SELECT language_id, title FROM collection_translations WHERE collection_id = ?`,
+      // Row order is unspecified; sorted so `site.names`' key order is
+      // byte-identical across two exports of one database.
+      `SELECT language_id, title FROM collection_translations WHERE collection_id = ?
+       ORDER BY language_id`,
       [this.exhibition.id]
     )
 
@@ -179,17 +182,23 @@ export class ManifestExporter extends BaseExporter {
 
     const [projects, titles] = await Promise.all([
       this.db.query<ProjectRow>(
+        // Row order is unspecified; sorted so `manifest.projects`' key order
+        // is byte-identical across two exports of one database.
         `SELECT id, backward_compatibility, site_url, related_database_url, artistic_introduction_url
          FROM projects
-         WHERE id IN (${ph})`,
+         WHERE id IN (${ph})
+         ORDER BY id`,
         projectIds
       ),
       this.db.query<ProjectTitleRow>(
+        // Row order is unspecified; sorted so each project's `name` key order
+        // is byte-identical across two exports of one database.
         `SELECT p.id AS project_id, ct.language_id, ct.title
          FROM projects p
          JOIN collections c ON c.backward_compatibility = p.backward_compatibility
          JOIN collection_translations ct ON ct.collection_id = c.id
-         WHERE p.id IN (${ph})`,
+         WHERE p.id IN (${ph})
+         ORDER BY p.id, ct.language_id`,
         projectIds
       ),
     ])

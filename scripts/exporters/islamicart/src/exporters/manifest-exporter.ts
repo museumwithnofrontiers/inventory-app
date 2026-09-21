@@ -119,12 +119,15 @@ export class ManifestExporter extends BaseExporter {
     const primary = this.projectIds[0]
     if (!primary) return {}
     const rows = await this.db.query<ProjectNameRow>(
+      // Row order is unspecified; sorted so `site.names`' key order is
+      // byte-identical across two exports of one database.
       `SELECT l.backward_compatibility AS language_id, ct.title
        FROM collection_translations ct
        JOIN collections c ON c.id = ct.collection_id
        JOIN projects p ON p.backward_compatibility = c.backward_compatibility
        JOIN languages l ON l.id = ct.language_id
-       WHERE p.id = ? AND l.backward_compatibility IS NOT NULL`,
+       WHERE p.id = ? AND l.backward_compatibility IS NOT NULL
+       ORDER BY l.backward_compatibility`,
       [primary]
     )
     const names: Record<string, string> = {}
@@ -149,17 +152,23 @@ export class ManifestExporter extends BaseExporter {
 
     const [projects, titles] = await Promise.all([
       this.db.query<ProjectRow>(
+        // Row order is unspecified; sorted so `manifest.projects`' key order
+        // is byte-identical across two exports of one database.
         `SELECT id, backward_compatibility, site_url, related_database_url, artistic_introduction_url
          FROM projects
-         WHERE id IN (${ph})`,
+         WHERE id IN (${ph})
+         ORDER BY id`,
         projectIds
       ),
       this.db.query<ProjectTitleRow>(
+        // Row order is unspecified; sorted so each project's `name` key order
+        // is byte-identical across two exports of one database.
         `SELECT p.id AS project_id, ct.language_id, ct.title
          FROM projects p
          JOIN collections c ON c.backward_compatibility = p.backward_compatibility
          JOIN collection_translations ct ON ct.collection_id = c.id
-         WHERE p.id IN (${ph})`,
+         WHERE p.id IN (${ph})
+         ORDER BY p.id, ct.language_id`,
         projectIds
       ),
     ])

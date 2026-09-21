@@ -101,9 +101,11 @@ export class CollectionExporter extends BaseExporter {
 
     const [allTranslations, images, itemLinks] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT collection_id, language_id, title, description, quote, url, extra
          FROM collection_translations
-         WHERE collection_id IN (${colPh})`,
+         WHERE collection_id IN (${colPh})
+         ORDER BY collection_id, language_id`,
         collectionIds
       ),
       this.db.query<CollectionImageRow>(

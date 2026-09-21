@@ -51,9 +51,12 @@ export class LanguageExporter extends BaseExporter {
       // Display names are only useful for languages we ship, in languages we
       // ship — a Swahili label for Arabic would never be rendered.
       this.db.query<LangTranslationRow>(
+        // Row order is unspecified; sorted so each language's `names` key
+        // order is byte-identical across two exports of one database.
         `SELECT language_id, display_language_id, name
          FROM language_translations
-         WHERE language_id IN (${usedPh}) AND display_language_id IN (${usedPh})`,
+         WHERE language_id IN (${usedPh}) AND display_language_id IN (${usedPh})
+         ORDER BY language_id, display_language_id`,
         [...used, ...used]
       ),
     ])

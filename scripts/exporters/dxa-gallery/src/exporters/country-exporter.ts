@@ -94,8 +94,10 @@ export class CountryExporter extends BaseExporter {
         countryIds
       ),
       this.db.query<CountryTranslationRow>(
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT country_id, language_id, name
-         FROM country_translations WHERE country_id IN (${countryPh})`,
+         FROM country_translations WHERE country_id IN (${countryPh})
+         ORDER BY country_id`,
         countryIds
       ),
     ])

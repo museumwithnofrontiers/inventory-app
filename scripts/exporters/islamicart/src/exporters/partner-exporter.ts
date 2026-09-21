@@ -145,10 +145,13 @@ export class PartnerExporter extends BaseExporter {
 
     const [translations, images, logos, levels, itemCounts] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
+        // Row order is unspecified; sorted so two exports of one database are
+        // byte-identical (also makes the "first row wins" extra-fields pick below deterministic).
         `SELECT partner_id, language_id, name, description, city_display, address_notes,
                 contact_website, contact_phone, contact_email_general, extra
          FROM partner_translations
-         WHERE partner_id IN (${partnerPh})`,
+         WHERE partner_id IN (${partnerPh})
+         ORDER BY partner_id, language_id`,
         partnerIds
       ),
       this.db.query<PartnerImageRow>(
@@ -170,6 +173,9 @@ export class PartnerExporter extends BaseExporter {
       // which project each attachment belongs to, so a partner curated under more
       // than one exported project (e.g. ISL and EPM both list it) reports all of them.
       this.db.query<PartnerLevelRow>(
+        // Row order is unspecified; sorted so `project_uuids` is byte-identical
+        // across two exports of one database (levelMap's "most prominent tier"
+        // pick is already order-independent by rank).
         `SELECT cp.partner_id, cp.level, proj.id AS project_id
          FROM collection_partner cp
          JOIN collections c ON c.id = cp.collection_id
@@ -177,7 +183,8 @@ export class PartnerExporter extends BaseExporter {
          WHERE cp.collection_type = 'project'
            AND cp.visible = true
            AND proj.id IN (${ph})
-           AND cp.partner_id IN (${partnerPh})`,
+           AND cp.partner_id IN (${partnerPh})
+         ORDER BY cp.partner_id, proj.id`,
         [...this.projectIds, ...partnerIds]
       ),
       // Same item type/project scope as items.json (ItemExporter) — item_count

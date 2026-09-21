@@ -97,7 +97,9 @@ export class GlossaryExporter extends BaseExporter {
         glossaryIds
       ),
       this.db.query<GlossarySpellingRow>(
-        `SELECT glossary_id, language_id, spelling FROM glossary_spellings WHERE glossary_id IN (${glossPh})`,
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
+        `SELECT glossary_id, language_id, spelling FROM glossary_spellings WHERE glossary_id IN (${glossPh})
+         ORDER BY glossary_id, language_id, spelling`,
         glossaryIds
       ),
     ])

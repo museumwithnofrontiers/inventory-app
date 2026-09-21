@@ -64,10 +64,12 @@ export class DynastyExporter extends BaseExporter {
     const langCodeMap = await this.buildLangCodeMap()
 
     const translations = await this.db.query<DynastyTranslationRow>(
+      // Row order is unspecified; sorted so two exports of one database are byte-identical.
       `SELECT dynasty_id, language_id, name, also_known_as, area, history,
               date_description_ah, date_description_ad
        FROM dynasty_translations
-       WHERE dynasty_id IN (${this.placeholders(dynastyIds.length)})`,
+       WHERE dynasty_id IN (${this.placeholders(dynastyIds.length)})
+       ORDER BY dynasty_id`,
       dynastyIds
     )
 

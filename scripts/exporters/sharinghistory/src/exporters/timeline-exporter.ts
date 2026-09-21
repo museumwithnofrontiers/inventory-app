@@ -125,10 +125,12 @@ export class TimelineExporter extends BaseExporter {
 
     const [translations, images, itemLinks] = await Promise.all([
       this.db.query<TimelineEventTranslationRow>(
+        // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT timeline_event_id, language_id, name, description,
                 date_from_description, date_to_description, date_from_ah_description
          FROM timeline_event_translations
-         WHERE timeline_event_id IN (${eventPh})`,
+         WHERE timeline_event_id IN (${eventPh})
+         ORDER BY timeline_event_id, language_id`,
         eventIds
       ),
       this.db.query<TimelineEventImageRow>(
