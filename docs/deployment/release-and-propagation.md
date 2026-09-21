@@ -149,10 +149,15 @@ npm whoami
 ```
 
 `npm whoami` must print your login. A session from the previous morning is
-commonly already dead by the next morning; a dead session makes `npm publish`
-fail with `E404 Not Found - PUT https://registry.npmjs.org/@museumwnf%2f<x>-data`
-("could not be found or you do not have permission") — not with a 401 — so do
-not read that error as a permissions problem.
+commonly already dead by the next morning. `--publish` now runs this same
+check itself, before the export starts, on every dataset in the loop below
+(#1865) — so a dead session fails in seconds on the FIRST dataset, with an
+`npm login` hint, and the loop stops there rather than working through all
+seven exports first and only then failing the publish step with
+`E404 Not Found - PUT https://registry.npmjs.org/@museumwnf%2f<x>-data`
+("could not be found or you do not have permission" — not a 401; do not read
+that error as a permissions problem if you ever do see it past the
+preflight).
 
 Repeat for each of the seven exporters (`islamicart`, `baroqueart`,
 `sharinghistory`, `carpets`, `amulets`, `the-use-of-colours-in-art`,
@@ -170,21 +175,25 @@ That single run per site exports, bumps the patch version, generates
 run `npm publish` yourself afterwards.
 
 npmjs requires a web authentication per publish, and the container cannot open
-a browser: `npm publish` prints `Authenticate your account at:
-https://www.npmjs.com/auth/cli/<id>`, then `Press ENTER to open in the
-browser...`, and pressing ENTER exits with `npm error Set the BROWSER
-environment variable to your desired browser.` instead of opening anything.
-The working procedure: open that URL yourself, sign in, tick "stay
-authenticated for publish for the next 5 minutes", then rerun the loop above —
-all seven publishes complete comfortably inside that window (the whole loop
-took under two minutes on 2026-09-20 and 2026-09-21). This is a known
-limitation of the current tooling; the version-counter behaviour below is what
-makes rerunning the loop inside that window safe.
+a browser: the `exporter` service sets `NPM_CONFIG_BROWSER=false` (#1865), so
+`npm publish` prints `Authenticate your account at:
+https://www.npmjs.com/auth/cli/<id>` and polls the registry for the login to
+complete, instead of trying to launch a browser and exiting with `npm error
+Set the BROWSER environment variable`. Open that URL yourself, sign in, tick
+"stay authenticated for publish for the next 5 minutes"; npm's poll then
+unblocks and the run continues on its own — there is no ENTER prompt to
+answer. All seven publishes complete comfortably inside that window (the
+whole loop took under two minutes on 2026-09-20 and 2026-09-21).
 
 The version counter lives in `output/.version-<site>`, outside the package
-directory and gitignored. The bump happens *before* `npm publish` runs, so a
-failed publish still burns a patch number — gaps in the version sequence are
-normal and harmless. If the counter file is lost entirely, the next publish
+directory and gitignored. As of #1865 it is written only once `npm publish`
+has actually succeeded, so a failed publish never burns a patch number — a
+plain rerun after a failure retries the very same version rather than
+skipping past it; fix the underlying cause, or pass `--package-version`
+explicitly, instead of expecting a rerun to auto-increment. Gaps in the
+version sequence can still occur legitimately (the registry is asked first
+and wins whenever it is ahead of the local counter), just not from a failed
+publish any more. If the counter file is lost entirely, the next publish
 would restart at 1.0.0 and collide; recover with
 `--package-version <next-free-version>` after checking the registry.
 

@@ -96,7 +96,37 @@ export class PublishManager {
   }
 
   /**
-   * Bump patch (1.0.3 → 1.0.4) and persist to versionFile.
+   * Confirm the npm session is alive before the caller spends minutes on an
+   * export that would otherwise only fail at the very end, as a registry 404
+   * right after publish. Throws with the operator-facing fix rather than
+   * just the raw `npm whoami` failure.
+   */
+  assertLoggedIn(): void {
+    const args = ['whoami']
+    if (this.config.registry) {
+      args.push('--registry', this.config.registry)
+    }
+    const result = spawnSync('npm', args, {
+      encoding: 'utf-8',
+      env: process.env,
+      shell: true,
+    })
+    const user = (result.stdout ?? '').trim()
+    if (result.error || result.status !== 0 || !user) {
+      throw new Error(
+        'npm session is not authenticated (npm whoami failed). Run `npm login` on the host, ' +
+          'and on Windows set $env:HOME = $env:USERPROFILE before `docker compose` so the ' +
+          "container mounts the host's ~/.npmrc, then retry."
+      )
+    }
+    this.config.logger.info(`npm session: logged in as ${user}`)
+  }
+
+  /**
+   * Compute the version to publish next, without persisting it. Persisting
+   * happens only once the publish that uses this version has actually
+   * succeeded — see recordPublished() — so a failed publish never burns a
+   * number.
    *
    * The registry is asked first, and wins whenever it is ahead. The counter
    * file is untracked, it lives per exporter, and nothing keeps it in step with
@@ -105,9 +135,8 @@ export class PublishManager {
    * walked straight into a taken number. The registry is the only thing that
    * knows for certain.
    *
-   * The file is still written, and is still the answer when the registry cannot
-   * be reached or has never seen this package. Note that it is written BEFORE
-   * the publish runs, so a failed publish burns the number.
+   * The file is still the answer when the registry cannot be reached or has
+   * never seen this package.
    */
   getNextVersion(): string {
     const local = this.readCurrentVersion()
@@ -124,20 +153,31 @@ export class PublishManager {
     const v = this.parseVersion(current)
     v.patch += 1
     const next = this.formatVersion(v)
-    writeFileSync(this.config.versionFile, next, 'utf-8')
-    this.config.logger.info(`Version bumped: ${current} → ${next}`)
+    this.config.logger.info(`Next version: ${current} → ${next}`)
     return next
   }
 
   /**
-   * Set an explicit version and persist it.
-   * Use when the auto-incremented value is wrong (e.g. first run after version file was lost).
+   * Set an explicit version. Use when the auto-incremented value is wrong
+   * (e.g. first run after version file was lost). Not persisted until the
+   * publish that uses it succeeds — see recordPublished().
    */
   setVersion(version: string): string {
     this.parseVersion(version)
-    writeFileSync(this.config.versionFile, version, 'utf-8')
     this.config.logger.info(`Version set: ${version}`)
     return version
+  }
+
+  /**
+   * Persist the version that was just published successfully. Call only
+   * after publish() returns without throwing. Right after a publish the
+   * registry itself may still answer with the previous version for a
+   * minute or so; this file is what keeps the next run ahead of that lag.
+   */
+  recordPublished(version: string): void {
+    this.parseVersion(version)
+    writeFileSync(this.config.versionFile, version, 'utf-8')
+    this.config.logger.info(`Version recorded as published: ${version}`)
   }
 
   generatePackageJson(version: string): Record<string, unknown> {

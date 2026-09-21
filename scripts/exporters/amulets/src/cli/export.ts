@@ -108,6 +108,32 @@ program
       mkdirSync(outputDir, { recursive: true })
       logger.info(`Output directory: ${outputDir}`)
 
+      // Preflight for --publish: confirm the npm session is alive before
+      // spending minutes on the export below. A dead session would otherwise
+      // only surface at the very end, as a registry 404 right after export.
+      // The gallery (and its real projectKeys) isn't resolved yet, so this
+      // preflight-only instance uses a placeholder — assertLoggedIn() does
+      // not use projectKeys.
+      if (options.publish) {
+        const registry =
+          options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
+        const preflight = new PublishManager({
+          outputDir,
+          versionFile: resolve(outputBaseDir, `.version-${SUBDIRECTORY}`),
+          packageName: PACKAGE_NAME,
+          projectKeys: [SUBDIRECTORY],
+          logger,
+          registry,
+        })
+        try {
+          preflight.assertLoggedIn()
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error(chalk.red(`\n${message}\n`))
+          process.exit(1)
+        }
+      }
+
       const db = new Database()
 
       try {
@@ -225,6 +251,7 @@ program
 
             console.log('')
             publishManager.publish()
+            publishManager.recordPublished(nextVersion)
             console.log(chalk.green(`  ✓ Published: ${PACKAGE_NAME}@${nextVersion}`))
             console.log('')
           } catch (err) {

@@ -47,10 +47,16 @@ The version counter lives in `output/.version-amulets` — deliberately
 *outside* the package directory, so `--force` (which deletes and recreates
 `output/amulets/`) does not reset it.
 
-- Each `--publish` run auto-increments the patch component and persists the
-  result.
-- `--package-version <semver>` sets an explicit version instead (it is also
-  persisted, so subsequent auto-increments continue from it).
+- Each `--publish` run computes the next patch component from the registry
+  and the local counter — the choice between them is unchanged.
+- `--package-version <semver>` sets an explicit version instead.
+- Either way, the version is persisted to the counter file only once
+  `npm publish` has actually succeeded. A failed publish — a collision, a
+  network error, a dead session — leaves the file untouched, so it never
+  burns a number. That also means a plain rerun after a failure retries the
+  very same version and fails the same way; fix the underlying cause, or
+  pass `--package-version` explicitly, rather than expecting a rerun to
+  auto-increment past it.
 
 ⚠ The whole `output/` directory is **gitignored**, version file included. If
 it is lost (fresh clone, deleted output directory), the next `--publish` would
@@ -115,14 +121,22 @@ service mounts that file read-only into the container
 `npm publish` as root inside the container): the container never runs
 `npm login` itself and no token is ever written to a tracked file.
 
+Before touching the database, `--publish` runs `npm whoami` against that
+mounted session and exits immediately — with an `npm login` hint — if it is
+dead. Without this preflight a dead session only surfaced as a registry 404
+after the whole export had already run.
+
 ```bash
 docker compose --profile jobs run --rm exporter amulets --force --publish
 ```
 
-`docker compose run` keeps a TTY attached, so if npmjs still wants a 2FA
-one-time code for this publish, or a web-login confirmation for a brand-new
-package name, the prompt or URL appears right there in the terminal —
-answer it and the run continues.
+The container has no browser (`NPM_CONFIG_BROWSER=false` in `compose.yml`),
+so if npmjs still wants a 2FA one-time code for this publish, or a web-login
+confirmation for a brand-new package name, npm prints the
+`https://www.npmjs.com/auth/cli/...` URL to this terminal instead of trying
+to launch one. Open that URL in your own browser, tick "stay authenticated
+for publish for the next 5 minutes", and npm's poll picks up the completed
+login and the run continues.
 
 **Windows** — PowerShell does not export `$HOME` to child processes, so
 `${HOME}` in `compose.yml` resolves to nothing unless you set it first, in
@@ -140,6 +154,10 @@ The first `--publish` for a package under the `@museumwnf` scope
 additionally needs `--access public` (already passed by `PublishManager`)
 since npm defaults a scoped package to private — after that first publish,
 later versions inherit it automatically.
+
+Later: staged publishing (`npm stage publish`, a stage-only token, one 2FA
+approval covering all seven datasets) needs npm >= 11.15; `node:24-alpine`
+ships 11.13.0, so it stays out of scope here.
 
 ## Consumer usage
 
@@ -166,10 +184,17 @@ per-language translation files live under `translations/`.
 the compose run), or the 2FA/web-login prompt was not completed; see the
 authentication section above.
 
+**`--publish` exits immediately with "npm session is not authenticated"** —
+the preflight `npm whoami` check failed before the export even started (the
+export never ran). Run `npm login` on the host (Windows: set `$env:HOME`
+first, see above) and retry.
+
 **"cannot publish over previously published version"** — that version already
-exists on the registry (e.g. the version file was reset). Pass
-`--package-version` with the next free version, or simply re-run `--publish`
-to auto-increment past it.
+exists on the registry (e.g. the version file was reset, or an earlier run
+actually succeeded despite reporting a failure — check npmjs). The counter
+file is NOT bumped by a failed publish, so a plain rerun retries the very
+same number and fails the same way; pass `--package-version` with the next
+free version instead.
 
 **Version file lost** — do *not* just re-run `--publish` (it would restart at
 1.0.0); see the version management section above.

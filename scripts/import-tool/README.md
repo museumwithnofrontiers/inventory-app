@@ -237,9 +237,14 @@ resolves to nothing unless you set it first, in every new shell:
 $env:HOME = $env:USERPROFILE
 ```
 
-`docker compose run` keeps a TTY attached, so if npmjs asks for a 2FA
-one-time code or a web-login confirmation, the prompt appears right there in
-the terminal.
+`--publish` runs `npm whoami` against that mounted session before the export
+starts and fails fast with an `npm login` hint if it is dead (#1865), instead
+of only surfacing as a registry 404 after the whole export has run. The
+container has no browser (`NPM_CONFIG_BROWSER=false` in `compose.yml`), so if
+npmjs still asks for a 2FA one-time code or a web-login confirmation, npm
+prints the URL right there in the terminal and polls the registry for the
+login to complete — open the URL yourself, tick "stay authenticated for
+publish for the next 5 minutes", and the run continues on its own.
 
 ```bash
 # What is published now — the only reliable way to read it. No credential
@@ -249,13 +254,15 @@ docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view
 docker compose run --rm exporter <dataset> --force --publish
 ```
 
-A single `--publish` run auto-increments the patch version: it asks the
+A single `--publish` run computes the next patch version: it asks the
 registry first and uses it whenever the registry is ahead of the local
 counter in `output/.version-<dataset>` — a gitignored, per-worktree file that
 is absent in any worktree that has never exported, so a fresh worktree or a
-deleted `output/` no longer walks into a taken number. Pass
-`--package-version <next>` yourself only for a minor/major bump, or when the
-registry cannot be reached.
+deleted `output/` no longer walks into a taken number. As of #1865 that
+counter is written only once `npm publish` has actually succeeded, so a
+failed publish never burns the number — a plain rerun retries the very same
+version rather than skipping past it. Pass `--package-version <next>`
+yourself only for a minor/major bump, or when the registry cannot be reached.
 
 The exporter prints `✓ Published: @museumwnf/<dataset>-data@<next>` on
 success; confirm by running the first command again. Seven datasets, seven
