@@ -78,6 +78,38 @@ are gone, their parameterised replacements verified equivalent
 site-specific knowledge — legacy scope, membership reasoning, gaps, decisions
 — now lives next to its instance file as `instances/<slug>.md`.
 
+### Batch: re-export every instance in one run
+
+`docker-entrypoint.sh all` ([#1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922))
+iterates every `instances/*.json` file — the two parameterised DXA instances
+and, via `kind: "standalone"`, the three still-forked exporters below — and
+runs each one's exporter in turn, instead of one `docker compose run` per
+site. See the plan first:
+
+```bash
+docker compose --profile jobs run --rm --no-deps exporter all --dry-run
+```
+
+Then run it for real (add `--publish` only once you mean to publish all
+seven; see *Build + publish a data-package update* below for what a single
+`--publish` run does per package):
+
+```bash
+docker compose --profile jobs run --rm --no-deps exporter all --force
+docker compose --profile jobs run --rm --no-deps exporter all --force --publish
+```
+
+One instance failing does not stop the others: the batch runs every planned
+instance, prints a summary table (instance, exporter, result, published
+version), exits non-zero if any instance failed, and — after a successful
+`--publish` run — prints a ready-to-paste `node tools/propagate.mjs --expect
+<pkg>@<version> …` line for every package it actually published. `--only
+<slug>[,<slug>…]` restricts the batch to specific instances (e.g. to redo one
+after a targeted re-import); an unknown slug is refused rather than silently
+shrinking the batch. An instance file with an unknown `kind`, or a
+`standalone` file missing its `exporter` field, fails the whole batch before
+anything runs, naming the file — see [`instances/README.md`](instances/README.md).
+
 ## Why forked per dataset (deliberate decision)
 
 Exporters are **forked, not shared** (decision from the Baroque Art epic,

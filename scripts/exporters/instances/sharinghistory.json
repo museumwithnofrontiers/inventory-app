@@ -1,0 +1,7 @@
+{
+  "kind": "standalone",
+  "slug": "sharinghistory",
+  "name": "Sharing History",
+  "exporter": "sharinghistory",
+  "package_name": "@museumwnf/sharinghistory-data"
+}

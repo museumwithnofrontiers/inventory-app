@@ -7,6 +7,11 @@ bake into its own source: with an instance file, no legacy id appears
 anywhere in the exporters' code, and adding a new site is authoring a JSON
 file, not copying a directory.
 
+`docker-entrypoint.sh all` ([story #1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922))
+reads every file here to build its batch plan — including the `kind:
+"standalone"` files below, which exist only for that batch and are never read
+by `dxa-gallery` or `dxa-exhibition` themselves.
+
 ## Naming
 
 One file per site, named `<slug>.json`, where `<slug>` is the site's own
@@ -23,10 +28,19 @@ specification doc. It is prose for humans, read by nothing at export time.
 ## Fields
 
 - `kind` — which exporter this instance is for. `"gallery"` is read by
-  `dxa-gallery`; `"exhibition"` is read by `dxa-exhibition` (arriving with
-  story #1912). Each exporter refuses an instance file of the other kind,
-  naming the exporter that should be used instead — a copy-pasted instance
-  file must fail loudly, not export the wrong shape.
+  `dxa-gallery`; `"exhibition"` is read by `dxa-exhibition`. Each of those two
+  exporters refuses an instance file of the other kind, naming the exporter
+  that should be used instead — a copy-pasted instance file must fail loudly,
+  not export the wrong shape.
+
+  `"standalone"` is a third kind, read only by `docker-entrypoint.sh all`
+  (never by `dxa-gallery` or `dxa-exhibition`, which know only `gallery` and
+  `exhibition` — see below): it names one of the three forked exporters
+  (`islamicart`, `baroqueart`, `sharinghistory`) that predate the instance-file
+  design and keep their own hardcoded scope in `src/cli/export.ts` (see the
+  *Why forked per dataset* section of `../README.md`). A `standalone` file
+  carries `slug`, `name`, `exporter` and `package_name` — no `collection_id`,
+  since the exporter it names does not take `--instance` at all.
 - `slug` — the site slug (`^[a-z0-9]+(-[a-z0-9]+)*$`). This is deliberately
   a separate field from the collection's own DB slug (see `collection_id`
   below): the two can differ, and conflating them would leak a legacy naming
@@ -36,13 +50,34 @@ specification doc. It is prose for humans, read by nothing at export time.
 - `collection_id` — the UUID of the `collections` row (type `gallery` or
   `exhibition`) this site is scoped to. This is the one field that replaces
   what used to be a hardcoded legacy id: the exporter resolves the collection
-  by this UUID alone and never touches a legacy identifier.
+  by this UUID alone and never touches a legacy identifier. Required for
+  `kind: "gallery"` and `kind: "exhibition"`; absent from a `standalone` file.
 - `package_name` — the npm package name the export becomes
   (`^@museumwnf\/[a-z0-9-]+-data$`).
+- `exporter` — `kind: "standalone"` only: the exporter directory name
+  (`islamicart`, `baroqueart` or `sharinghistory`) that `docker-entrypoint.sh
+  all` runs for this instance, with no `--instance` argument.
 
-Any field not in this list is rejected: an instance file is hand-authored, so
-a typo in a field name (`"sulg"` for `"slug"`) must fail the load rather than
-silently produce an instance with a missing field.
+Any field not in the list `dxa-gallery`/`dxa-exhibition` know (`kind`, `slug`,
+`name`, `collection_id`, `package_name`) is rejected by their own loader: an
+instance file is hand-authored, so a typo in a field name (`"sulg"` for
+`"slug"`) must fail the load rather than silently produce an instance with a
+missing field. This is also why a `standalone` file's `exporter` field — and
+`kind: "standalone"` itself — makes both DXA loaders refuse it outright, on
+purpose: running `dxa-gallery --instance islamicart` after adding
+`islamicart.json` below fails before touching the database, with
+
+```
+Error: Instance file .../scripts/exporters/instances/islamicart.json has unknown field(s): exporter. A typo here would otherwise pass silently — known fields are: kind, slug, name, collection_id, package_name.
+```
+
+— `dxa-gallery`'s own field check, not `docker-entrypoint.sh all`'s. (A
+`standalone` file with no `exporter` field — nothing left to reject — would
+instead reach the `kind` check and fail with `must have "kind": "gallery"
+(got "standalone")`; either way, the wrong exporter never reaches the
+database.) `docker-entrypoint.sh all` itself never invokes `dxa-gallery` or
+`dxa-exhibition` for a `standalone` instance in the first place — see the
+*Batch* section of `../README.md`.
 
 ## Obtaining a `collection_id`
 

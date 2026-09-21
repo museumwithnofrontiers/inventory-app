@@ -1,0 +1,7 @@
+{
+  "kind": "standalone",
+  "slug": "baroqueart",
+  "name": "Discover Baroque Art",
+  "exporter": "baroqueart",
+  "package_name": "@museumwnf/baroqueart-data"
+}
