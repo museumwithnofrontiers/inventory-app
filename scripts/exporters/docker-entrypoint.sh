@@ -114,7 +114,11 @@ if [ "$MODE" = "all" ]; then
     : > "$RESULTS_FILE"
     BATCH_FAILED=0
 
-    while IFS="$TAB" read -r slug exporterDir argsCsv packageName kind; do
+    # The plan is read on file descriptor 3, not on stdin: each export runs
+    # inside this loop, and `npm publish` needs the terminal on stdin for its
+    # web one-time-password flow (npm gives up with a bare EOTP when stdin is
+    # a file). A `done < "$PLAN_FILE"` here made every --publish fail.
+    while IFS="$TAB" read -r slug exporterDir argsCsv packageName kind <&3; do
         [ -n "$slug" ] || continue
 
         echo ""
@@ -179,7 +183,7 @@ if [ "$MODE" = "all" ]; then
             ")
         fi
         printf '%s\t%s\t%s\t%s\t%s\n' "$slug" "$exporterDir" "ok" "$PUB_VERSION" "$packageName" >> "$RESULTS_FILE"
-    done < "$PLAN_FILE"
+    done 3< "$PLAN_FILE"
 
     echo ""
     echo "=================================================================="
