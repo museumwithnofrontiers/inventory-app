@@ -63,15 +63,26 @@ specification doc. It is prose for humans, read by nothing at export time.
 - `exporter` — `kind: "standalone"` only: the exporter directory name
   (`islamicart`, `baroqueart` or `sharinghistory`) that `docker-entrypoint.sh
   all` runs for this instance, with no `--instance` argument.
+- `languages_enabled` — `kind: "exhibition"` only, optional: a non-empty array
+  of lowercase, de-duplicated 2-char language codes (e.g. `["en", "de"]`).
+  When present, it overrides `exhibition.json`'s `languages_enabled` and
+  `manifest.site.languages`, which otherwise derive from legacy's
+  per-language `exhibition_i18n.enabled` flag. Use it only when that legacy
+  flag is wrong for this site — for example, a record under development that
+  legacy currently enables no language for, but that should still ship a
+  working build. Each code must be one `dxa-exhibition` already knows about
+  the exhibition's languages (i.e. present in the `languages` table); an
+  unrecognised code fails the export rather than silently shipping nothing.
 
-Any field not in the list `dxa-gallery`/`dxa-exhibition` know (`kind`, `slug`,
-`name`, `collection_id`, `package_name`) is rejected by their own loader: an
-instance file is hand-authored, so a typo in a field name (`"sulg"` for
-`"slug"`) must fail the load rather than silently produce an instance with a
-missing field. This is also why a `standalone` file's `exporter` field — and
-`kind: "standalone"` itself — makes both DXA loaders refuse it outright, on
-purpose: running `dxa-gallery --instance islamicart` after adding
-`islamicart.json` below fails before touching the database, with
+Any field not in the list a loader knows (`dxa-gallery`: `kind`, `slug`,
+`name`, `collection_id`, `package_name`; `dxa-exhibition`: the same five plus
+`languages_enabled`) is rejected by that loader: an instance file is
+hand-authored, so a typo in a field name (`"sulg"` for `"slug"`) must fail the
+load rather than silently produce an instance with a missing field. This is
+also why a `standalone` file's `exporter` field — and `kind: "standalone"`
+itself — makes both DXA loaders refuse it outright, on purpose: running
+`dxa-gallery --instance islamicart` after adding `islamicart.json` below fails
+before touching the database, with
 
 ```
 Error: Instance file .../scripts/exporters/instances/islamicart.json has unknown field(s): exporter. A typo here would otherwise pass silently — known fields are: kind, slug, name, collection_id, package_name.
@@ -105,3 +116,9 @@ curatorial data the importer already stores on the collection (from
 reads them from there. A copy of that list in the instance file would have no
 way to stay in sync with a re-import and would drift the first time a
 language is added or removed upstream.
+
+`languages_enabled` (exhibition only, see above) is not that field reborn: it
+does not name the exhibition's full language roster, only overrides which of
+its *already-known* languages are published, and only for a site where
+legacy's own `enabled` flag is wrong. It still drifts if left in place after
+legacy is corrected — remove it once a re-import fixes the underlying data.

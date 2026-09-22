@@ -20,13 +20,27 @@ export interface Instance {
   collectionId: string
   /** The npm package this instance publishes as. */
   packageName: string
+  /**
+   * Override for `exhibition.json`'s `languages_enabled` / `manifest.site.languages`
+   * (2-char codes). Legacy's per-language `enabled` flag drives that list by
+   * default; an instance sets this when legacy enables nothing (or the wrong
+   * set) for a site that should still ship a working build.
+   */
+  languagesEnabled?: string[]
 }
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 const PACKAGE_NAME_PATTERN = /^@museumwnf\/[a-z0-9-]+-data$/
 
-const KNOWN_FIELDS = new Set(['kind', 'slug', 'name', 'collection_id', 'package_name'])
+const KNOWN_FIELDS = new Set([
+  'kind',
+  'slug',
+  'name',
+  'collection_id',
+  'package_name',
+  'languages_enabled',
+])
 
 /**
  * Resolves the `--instance` CLI value to a file path.
@@ -77,7 +91,10 @@ export function loadInstance(ref: string): Instance {
 
   const unknownFields = Object.keys(data).filter(key => !KNOWN_FIELDS.has(key))
   if (unknownFields.length > 0) {
-    throw new Error(`Instance file has unknown field(s): ${unknownFields.join(', ')} (${path})`)
+    throw new Error(
+      `Instance file has unknown field(s): ${unknownFields.join(', ')} (${path}). ` +
+        `Known fields are: ${[...KNOWN_FIELDS].join(', ')}.`
+    )
   }
 
   const kind = data['kind']
@@ -117,5 +134,35 @@ export function loadInstance(ref: string): Instance {
     )
   }
 
-  return { kind: 'exhibition', slug, name, collectionId, packageName }
+  let languagesEnabled: string[] | undefined
+  if ('languages_enabled' in data) {
+    const raw = data['languages_enabled']
+    if (!Array.isArray(raw) || raw.length === 0) {
+      throw new Error(
+        `Instance file 'languages_enabled' must be a non-empty array of language codes (got ${JSON.stringify(raw)}): ${path}`
+      )
+    }
+    for (const code of raw) {
+      if (typeof code !== 'string' || code === '' || code !== code.toLowerCase()) {
+        throw new Error(
+          `Instance file 'languages_enabled' entries must be non-empty lowercase codes (got ${JSON.stringify(code)}): ${path}`
+        )
+      }
+    }
+    if (new Set(raw).size !== raw.length) {
+      throw new Error(
+        `Instance file 'languages_enabled' must not contain duplicate codes (got ${JSON.stringify(raw)}): ${path}`
+      )
+    }
+    languagesEnabled = raw as string[]
+  }
+
+  return {
+    kind: 'exhibition',
+    slug,
+    name,
+    collectionId,
+    packageName,
+    ...(languagesEnabled ? { languagesEnabled } : {}),
+  }
 }

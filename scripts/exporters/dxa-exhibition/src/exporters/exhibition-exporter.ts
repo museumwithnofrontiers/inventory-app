@@ -94,6 +94,12 @@ interface SiblingChromeRow {
  *
  * - **`featured`** and `hidden` are two independent legacy flags sharing one
  *   enum — see isFeatured/isHidden below.
+ *
+ * An instance's `languagesEnabled` override (see `core/instance.ts`) is
+ * authoritative over `exhibition_i18n.enabled` when set: legacy may enable no
+ * language for an exhibition whose content is under development, and the
+ * instance can then say what the site offers instead of shipping an empty,
+ * buildless roster.
  */
 export class ExhibitionExporter extends BaseExporter {
   getName(): string {
@@ -105,6 +111,18 @@ export class ExhibitionExporter extends BaseExporter {
 
     const langCodeMap = await this.buildLangCodeMap()
     const chrome = this.exhibition.chrome
+
+    const languagesOverride = this.context.languagesEnabled
+    if (languagesOverride) {
+      const knownCodes = new Set(langCodeMap.values())
+      for (const code of languagesOverride) {
+        if (!knownCodes.has(code)) {
+          throw new Error(
+            `Instance override 'languages_enabled' names an unknown language code '${code}'`
+          )
+        }
+      }
+    }
 
     const translations = await this.db.query<TranslationRow>(
       `SELECT collection_id, language_id, title, description
@@ -127,7 +145,7 @@ export class ExhibitionExporter extends BaseExporter {
       if (row.title) titles[code] = row.title
 
       const i18n = this.exhibition.i18n.get(row.language_id)
-      if (i18n?.enabled === 'Y') languagesEnabled.push(code)
+      if (!languagesOverride && i18n?.enabled === 'Y') languagesEnabled.push(code)
 
       // The three curated texts, as separate fields when the import preserved
       // them and as a single blob when it did not — see the fallback note below.
@@ -189,7 +207,7 @@ export class ExhibitionExporter extends BaseExporter {
       mwnf3_project_id: this.exhibition.mwnf3ProjectId,
       project_id: this.exhibition.projectId,
       languages: Object.keys(titles).sort(),
-      languages_enabled: languagesEnabled.sort(),
+      languages_enabled: languagesOverride ? [...languagesOverride].sort() : languagesEnabled.sort(),
       titles,
       subtitles,
       headlines,

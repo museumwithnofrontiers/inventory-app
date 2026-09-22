@@ -51,7 +51,9 @@ export interface ProjectEntry {
  * read from `exhibition.json` any more, now that every entity is loaded
  * lazily: the languages legacy actually publishes (`exhibition_i18n.enabled`
  * — the same set as `exhibition.json.languages_enabled`), each with its
- * native label, and the exhibition's title per language.
+ * native label, and the exhibition's title per language. When the instance
+ * carries a `languagesEnabled` override, `site.languages` is built from that
+ * list instead — see `exhibition-exporter.ts`'s note on the same override.
  */
 export class ManifestExporter extends BaseExporter {
   getName(): string {
@@ -70,6 +72,18 @@ export class ManifestExporter extends BaseExporter {
       [this.exhibition.id]
     )
 
+    const languagesOverride = this.context.languagesEnabled
+    if (languagesOverride) {
+      const knownCodes = new Set(langCodeMap.values())
+      for (const code of languagesOverride) {
+        if (!knownCodes.has(code)) {
+          throw new Error(
+            `Instance override 'languages_enabled' names an unknown language code '${code}'`
+          )
+        }
+      }
+    }
+
     const names: Record<string, string> = {}
     const enabledIds: string[] = []
     const languages: string[] = []
@@ -78,9 +92,19 @@ export class ManifestExporter extends BaseExporter {
       if (!code) continue
       languages.push(code)
       if (row.title) names[code] = row.title
-      if (this.exhibition.i18n.get(row.language_id)?.enabled === 'Y') enabledIds.push(row.language_id)
+      if (!languagesOverride && this.exhibition.i18n.get(row.language_id)?.enabled === 'Y') {
+        enabledIds.push(row.language_id)
+      }
     }
     languages.sort()
+
+    if (languagesOverride) {
+      const idByCode = new Map([...langCodeMap.entries()].map(([id, code]) => [code, id]))
+      for (const code of languagesOverride) {
+        const id = idByCode.get(code)
+        if (id) enabledIds.push(id)
+      }
+    }
 
     const manifest = {
       generatedAt: new Date().toISOString(),

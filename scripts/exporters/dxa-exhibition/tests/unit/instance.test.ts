@@ -137,4 +137,46 @@ describe('loadInstance', () => {
     const path = write({ ...VALID, package_name: '@other/the-use-of-colours-in-art-data' })
     expect(() => loadInstance(path)).toThrow("'package_name'")
   })
+
+  it('omits languagesEnabled when the field is absent', () => {
+    const path = write(VALID)
+    const instance = loadInstance(path)
+    expect(instance.languagesEnabled).toBeUndefined()
+  })
+
+  it('accepts an explicit languages_enabled override', () => {
+    const path = write({ ...VALID, languages_enabled: ['en', 'de'] })
+    const instance = loadInstance(path)
+    expect(instance.languagesEnabled).toEqual(['en', 'de'])
+  })
+
+  it('rejects a languages_enabled that is not an array', () => {
+    const path = write({ ...VALID, languages_enabled: 'en' })
+    expect(() => loadInstance(path)).toThrow("'languages_enabled'")
+  })
+
+  it('rejects an empty languages_enabled array', () => {
+    const path = write({ ...VALID, languages_enabled: [] })
+    expect(() => loadInstance(path)).toThrow("'languages_enabled'")
+  })
+
+  it('rejects a languages_enabled entry that is not a lowercase string', () => {
+    const path = write({ ...VALID, languages_enabled: ['EN'] })
+    expect(() => loadInstance(path)).toThrow("'languages_enabled'")
+  })
+
+  it('rejects a languages_enabled entry that is empty', () => {
+    const path = write({ ...VALID, languages_enabled: ['en', ''] })
+    expect(() => loadInstance(path)).toThrow("'languages_enabled'")
+  })
+
+  it('rejects a languages_enabled with a duplicate code', () => {
+    const path = write({ ...VALID, languages_enabled: ['en', 'en'] })
+    expect(() => loadInstance(path)).toThrow('duplicate')
+  })
+
+  it('lists languages_enabled in the unknown-field error’s known-field list', () => {
+    const path = write({ ...VALID, extra_field: 'nope' })
+    expect(() => loadInstance(path)).toThrow('languages_enabled')
+  })
 })

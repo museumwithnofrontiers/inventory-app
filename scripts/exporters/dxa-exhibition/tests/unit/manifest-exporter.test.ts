@@ -233,4 +233,48 @@ describe('ManifestExporter', () => {
     const manifest = written[0] as { projects: Record<string, unknown> }
     expect(manifest.projects).toEqual({})
   })
+
+  // Story #1943: an instance's languagesEnabled override is authoritative
+  // over exhibition_i18n.enabled when set, for a site whose legacy record
+  // enables the wrong (or no) languages.
+  it('builds site.languages from the languagesEnabled override, ignoring exhibition_i18n.enabled', async () => {
+    const context = contextWith({
+      languages: [
+        { id: 'eng', backward_compatibility: 'en' },
+        { id: 'deu', backward_compatibility: 'de' },
+      ],
+      translations: [
+        { language_id: 'eng', title: 'Water in Islam' },
+        { language_id: 'deu', title: 'Wasser im Islam' },
+      ],
+      // Legacy enables 'eng' (see contextWith's fixture i18n), not 'deu' —
+      // the override below still ships 'de' alone.
+      labels: [{ language_id: 'deu', name: 'Deutsch' }],
+    })
+    context.languagesEnabled = ['de']
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { site: { languages: unknown[] } }
+    expect(manifest.site.languages).toEqual([{ code: 'de', label: 'Deutsch' }])
+  })
+
+  it('throws when languagesEnabled names a code the languages table does not know', async () => {
+    const context = contextWith({
+      languages: [{ id: 'eng', backward_compatibility: 'en' }],
+      translations: [],
+      labels: [],
+    })
+    context.languagesEnabled = ['xx']
+    const exporter = new ManifestExporter(context)
+
+    await expect(exporter.export()).rejects.toThrow('xx')
+  })
 })

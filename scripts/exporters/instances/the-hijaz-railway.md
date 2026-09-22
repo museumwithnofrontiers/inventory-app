@@ -49,16 +49,23 @@ https://inventory.metanull.eu`)
   `618c8339-6610-5094-add6-68f91e7e5c49`.
 - **4 themes + 12 sub-themes (16 nodes), 243 curated pictures** —
   `themes.json`.
-- **Languages: `languages_enabled: []` (empty), `languages: ["en"]`.**
-  `exhibition.json` ships an English UI roster but zero enabled languages
-  — `exhibition_i18n.enabled` is `'N'` (or absent) for every language on
-  this record, unlike the other three exhibitions in this wave, all of
-  which enable `en`. Per decision Q2 (per-language builds only exist for
-  enabled languages), no build currently exists for this exhibition on
-  staging data, English included — a fact for whoever runs steps 3+ of the
-  recipe next, not something steps 1–2 resolve. `languages.json` still
-  carries 8 languages overall (carried by borrowed records and partners),
-  with `site_language: true` on `en`.
+- **Languages: `languages_enabled: ["en"]` via instance override,
+  `languages: ["en"]`.** `exhibition_i18n.enabled` is `'N'` (or absent) for
+  every language on this legacy record — unlike the other three exhibitions
+  in this wave, all of which enable `en` there directly — so an unmodified
+  export would ship an English UI roster with zero enabled languages and no
+  build (decision Q2: per-language builds only exist for enabled languages).
+  Content is under development, not missing, so Pascal decided (2026-09-22,
+  story [#1943](https://github.com/museumwithnofrontiers/inventory-app/issues/1943))
+  to ship English now rather than leave the site buildless: `the-hijaz-railway.json`
+  carries `"languages_enabled": ["en"]`, which `dxa-exhibition` treats as
+  authoritative over the legacy flag for both `exhibition.json` and
+  `manifest.json.site.languages`. Remove the override once legacy's own
+  `exhibition_i18n.enabled` is corrected and a re-import/re-export confirms
+  the site builds without it — leaving it in place after that would silently
+  mask a future legacy regression. `languages.json` still carries 8
+  languages overall (carried by borrowed records and partners), with
+  `site_language: true` on `en`.
 - **No hidden museums.** `exhibition.json.hidden_partner_ids` is empty;
   `collections.extra.thg_gallery.hidden_partners` carries nothing for this
   exhibition, unlike [Arts in Dialogue](arts-in-dialogue.md).
@@ -108,9 +115,10 @@ Verified during this export, none blocking:
   [`coins-medals`](coins-medals.md#known-gaps) (empty English description,
   cause not established there either); it reappears here as a native
   member of this exhibition's own project.
-- **`languages_enabled` is empty** — see the languages note above; not a
-  defect in this export, but worth flagging before anyone runs step 3+ of
-  the recipe for this site.
+- **`languages_enabled` is instance-overridden, not legacy-derived** — see
+  the languages note above; not a defect in this export, but worth flagging
+  before anyone runs step 3+ of the recipe for this site, and worth revisiting
+  once legacy enables a language for this record on its own.
 - **1 item with no resolvable source project** — see the membership
   breakdown above.
 - **Legacy comparison unavailable** — the live self endpoint refused this

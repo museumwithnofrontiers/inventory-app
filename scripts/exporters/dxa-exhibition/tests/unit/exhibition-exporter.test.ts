@@ -83,3 +83,101 @@ describe('ExhibitionExporter — project_id', () => {
     expect(output.project_id).toBeNull()
   })
 })
+
+/**
+ * Story #1943: an instance's `languagesEnabled` override is authoritative
+ * over `exhibition_i18n.enabled` when set, for a site whose legacy record
+ * enables the wrong (or no) languages.
+ */
+describe('ExhibitionExporter — languages_enabled override', () => {
+  let outputDir: string
+
+  const exhibition: Exhibition = {
+    id: 'exhibition-uuid',
+    backwardCompatibility: 'mwnf3_thematic_gallery:thg_gallery:55',
+    slug: 'lost_memories',
+    host: 'https://exhibitions.museumwnf.org',
+    mwnf3ProjectId: 'GalEx5',
+    projectId: null,
+    anchor: {},
+    chrome: {},
+    i18n: new Map(),
+  }
+
+  const dbWithLanguages = (
+    languages: { id: string; backward_compatibility: string }[],
+    translations: { collection_id: string; language_id: string; title: string | null; description: string | null }[] = []
+  ): Database =>
+    ({
+      query: async (sql: string) => {
+        if (sql.includes('FROM languages')) return languages
+        if (sql.includes('FROM collection_translations')) return translations
+        return []
+      },
+    }) as unknown as Database
+
+  const context = (db: Database): ExportContext => ({
+    db,
+    outputDir,
+    exhibition,
+    themes: [],
+    memberItemIds: [],
+    itemOwnContextIds: new Map(),
+    baseUrl: 'https://example.test',
+    logger: {
+      info: () => {},
+      success: () => {},
+      warning: () => {},
+      error: () => {},
+    } as unknown as Logger,
+    siteKey: 'the-hijaz-railway',
+  })
+
+  const readOutput = (): Record<string, unknown> =>
+    JSON.parse(readFileSync(join(outputDir, 'exhibition.json'), 'utf-8')) as Record<string, unknown>
+
+  beforeEach(() => {
+    outputDir = mkdtempSync(join(tmpdir(), 'hijaz-exhibition-exporter-'))
+  })
+
+  afterEach(() => {
+    rmSync(outputDir, { recursive: true, force: true })
+  })
+
+  it('derives languages_enabled from exhibition_i18n.enabled when no override is set', async () => {
+    const db = dbWithLanguages(
+      [{ id: 'eng', backward_compatibility: 'en' }],
+      [{ collection_id: 'exhibition-uuid', language_id: 'eng', title: 'Title', description: null }]
+    )
+    const enabledExhibition: Exhibition = { ...exhibition, i18n: new Map([['eng', { enabled: 'Y' }]]) }
+
+    await new ExhibitionExporter({ ...context(db), exhibition: enabledExhibition }).export()
+
+    expect(readOutput().languages_enabled).toEqual(['en'])
+  })
+
+  it('takes languages_enabled from the instance override, ignoring the legacy enabled flag', async () => {
+    const db = dbWithLanguages(
+      [{ id: 'eng', backward_compatibility: 'en' }],
+      [{ collection_id: 'exhibition-uuid', language_id: 'eng', title: 'Title', description: null }]
+    )
+    // Legacy enables nothing for this record — the override still ships 'en'.
+    const noneEnabledExhibition: Exhibition = { ...exhibition, i18n: new Map([['eng', { enabled: 'N' }]]) }
+
+    await new ExhibitionExporter({
+      ...context(db),
+      exhibition: noneEnabledExhibition,
+      languagesEnabled: ['en'],
+    }).export()
+
+    expect(readOutput().languages_enabled).toEqual(['en'])
+  })
+
+  it('rejects an override code the exhibition does not know', async () => {
+    const db = dbWithLanguages([{ id: 'eng', backward_compatibility: 'en' }])
+
+    await expect(
+      new ExhibitionExporter({ ...context(db), languagesEnabled: ['xx'] }).export()
+    ).rejects.toThrow('xx')
+  })
+})
