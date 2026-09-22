@@ -115,6 +115,13 @@ export interface ExportContext {
   logger: Logger
   /** The instance's site slug — `manifest.site.key`. Not always `exhibition.slug`. */
   siteKey: string
+  /**
+   * The instance's `languages_enabled` override (2-char codes), when set.
+   * Authoritative over legacy's per-language `enabled` flag: legacy may
+   * enable no language for an exhibition whose content is under
+   * development, and the instance can then say what the site offers.
+   */
+  languagesEnabled?: string[]
 }
 
 export interface ExportResult {

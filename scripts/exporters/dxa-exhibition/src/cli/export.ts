@@ -206,6 +206,7 @@ program
           baseUrl: options.baseUrl,
           logger,
           siteKey: instance.slug,
+          languagesEnabled: instance.languagesEnabled,
         }
 
         const exporters = [
