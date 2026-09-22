@@ -11,8 +11,8 @@
   },
   "dependencies": {
     "@museumwnf/carpets-data": "^1.0.9",
-    "marked": "^18.0.12",
-    "vue": "^3.5.42",
+    "marked": "^18.0.13",
+    "vue": "^3.5.43",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
