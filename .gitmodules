@@ -175,3 +175,18 @@
 [submodule ".new-architecture/woodwork"]
 	path = .new-architecture/woodwork
 	url = https://github.com/museumwithnofrontiers/woodwork
+[submodule ".new-architecture/historical-cars"]
+	path = .new-architecture/historical-cars
+	url = https://github.com/museumwithnofrontiers/historical-cars
+[submodule ".new-architecture/communication"]
+	path = .new-architecture/communication
+	url = https://github.com/museumwithnofrontiers/communication
+[submodule ".new-architecture/ivory"]
+	path = .new-architecture/ivory
+	url = https://github.com/museumwithnofrontiers/ivory
+[submodule ".new-architecture/archaeology"]
+	path = .new-architecture/archaeology
+	url = https://github.com/museumwithnofrontiers/archaeology
+[submodule ".new-architecture/architectural-elements"]
+	path = .new-architecture/architectural-elements
+	url = https://github.com/museumwithnofrontiers/architectural-elements
