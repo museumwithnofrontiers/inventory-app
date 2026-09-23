@@ -76,3 +76,102 @@
 [submodule ".new-architecture/coins-medals"]
 	path = .new-architecture/coins-medals
 	url = https://github.com/museumwithnofrontiers/coins-medals
+[submodule ".new-architecture/arms-armoury"]
+	path = .new-architecture/arms-armoury
+	url = https://github.com/museumwithnofrontiers/arms-armoury
+[submodule ".new-architecture/arts-in-dialogue"]
+	path = .new-architecture/arts-in-dialogue
+	url = https://github.com/museumwithnofrontiers/arts-in-dialogue
+[submodule ".new-architecture/calligraphy"]
+	path = .new-architecture/calligraphy
+	url = https://github.com/museumwithnofrontiers/calligraphy
+[submodule ".new-architecture/ceramics"]
+	path = .new-architecture/ceramics
+	url = https://github.com/museumwithnofrontiers/ceramics
+[submodule ".new-architecture/clothing"]
+	path = .new-architecture/clothing
+	url = https://github.com/museumwithnofrontiers/clothing
+[submodule ".new-architecture/funerary-objects"]
+	path = .new-architecture/funerary-objects
+	url = https://github.com/museumwithnofrontiers/funerary-objects
+[submodule ".new-architecture/glass"]
+	path = .new-architecture/glass
+	url = https://github.com/museumwithnofrontiers/glass
+[submodule ".new-architecture/gold-silver"]
+	path = .new-architecture/gold-silver
+	url = https://github.com/museumwithnofrontiers/gold-silver
+[submodule ".new-architecture/jewellery"]
+	path = .new-architecture/jewellery
+	url = https://github.com/museumwithnofrontiers/jewellery
+[submodule ".new-architecture/landscapes"]
+	path = .new-architecture/landscapes
+	url = https://github.com/museumwithnofrontiers/landscapes
+[submodule ".new-architecture/leatherworks"]
+	path = .new-architecture/leatherworks
+	url = https://github.com/museumwithnofrontiers/leatherworks
+[submodule ".new-architecture/manuscripts"]
+	path = .new-architecture/manuscripts
+	url = https://github.com/museumwithnofrontiers/manuscripts
+[submodule ".new-architecture/metalwork"]
+	path = .new-architecture/metalwork
+	url = https://github.com/museumwithnofrontiers/metalwork
+[submodule ".new-architecture/mosaics"]
+	path = .new-architecture/mosaics
+	url = https://github.com/museumwithnofrontiers/mosaics
+[submodule ".new-architecture/musical-instruments"]
+	path = .new-architecture/musical-instruments
+	url = https://github.com/museumwithnofrontiers/musical-instruments
+[submodule ".new-architecture/paintings"]
+	path = .new-architecture/paintings
+	url = https://github.com/museumwithnofrontiers/paintings
+[submodule ".new-architecture/photographs"]
+	path = .new-architecture/photographs
+	url = https://github.com/museumwithnofrontiers/photographs
+[submodule ".new-architecture/porcelain"]
+	path = .new-architecture/porcelain
+	url = https://github.com/museumwithnofrontiers/porcelain
+[submodule ".new-architecture/portraits"]
+	path = .new-architecture/portraits
+	url = https://github.com/museumwithnofrontiers/portraits
+[submodule ".new-architecture/precious-stones"]
+	path = .new-architecture/precious-stones
+	url = https://github.com/museumwithnofrontiers/precious-stones
+[submodule ".new-architecture/prints-drawings"]
+	path = .new-architecture/prints-drawings
+	url = https://github.com/museumwithnofrontiers/prints-drawings
+[submodule ".new-architecture/religious-life"]
+	path = .new-architecture/religious-life
+	url = https://github.com/museumwithnofrontiers/religious-life
+[submodule ".new-architecture/scientific-objects"]
+	path = .new-architecture/scientific-objects
+	url = https://github.com/museumwithnofrontiers/scientific-objects
+[submodule ".new-architecture/sculptures"]
+	path = .new-architecture/sculptures
+	url = https://github.com/museumwithnofrontiers/sculptures
+[submodule ".new-architecture/textiles"]
+	path = .new-architecture/textiles
+	url = https://github.com/museumwithnofrontiers/textiles
+[submodule ".new-architecture/the-hijaz-railway"]
+	path = .new-architecture/the-hijaz-railway
+	url = https://github.com/museumwithnofrontiers/the-hijaz-railway
+[submodule ".new-architecture/the-table-is-set"]
+	path = .new-architecture/the-table-is-set
+	url = https://github.com/museumwithnofrontiers/the-table-is-set
+[submodule ".new-architecture/theatre"]
+	path = .new-architecture/theatre
+	url = https://github.com/museumwithnofrontiers/theatre
+[submodule ".new-architecture/toys-games"]
+	path = .new-architecture/toys-games
+	url = https://github.com/museumwithnofrontiers/toys-games
+[submodule ".new-architecture/wallpaintings"]
+	path = .new-architecture/wallpaintings
+	url = https://github.com/museumwithnofrontiers/wallpaintings
+[submodule ".new-architecture/weights-measures"]
+	path = .new-architecture/weights-measures
+	url = https://github.com/museumwithnofrontiers/weights-measures
+[submodule ".new-architecture/with-brush-and-qalam"]
+	path = .new-architecture/with-brush-and-qalam
+	url = https://github.com/museumwithnofrontiers/with-brush-and-qalam
+[submodule ".new-architecture/woodwork"]
+	path = .new-architecture/woodwork
+	url = https://github.com/museumwithnofrontiers/woodwork
