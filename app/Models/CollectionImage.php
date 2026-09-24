@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Contracts\DetachableImage;
 use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
+use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\CollectionImageFactory;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Storage;
 class CollectionImage extends Model implements DetachableImage, HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<CollectionImageFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.
@@ -198,6 +199,9 @@ class CollectionImage extends Model implements DetachableImage, HasCopyright, St
                 'copyright' => $this->copyright,
             ]));
 
+            // The row is deleted to recreate it as an AvailableImage above,
+            // not to discard the image: keep the private original in place.
+            $this->suppressImageFileCleanup = true;
             $this->delete();
 
             return $availableImage;

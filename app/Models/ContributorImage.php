@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Contracts\DetachableImage;
 use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
+use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\ContributorImageFactory;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Storage;
 class ContributorImage extends Model implements DetachableImage, HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<ContributorImageFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     protected $fillable = [
         'contributor_id',
@@ -125,6 +126,9 @@ class ContributorImage extends Model implements DetachableImage, HasCopyright, S
                 'copyright' => $this->copyright,
             ]));
 
+            // The row is deleted to recreate it as an AvailableImage above,
+            // not to discard the image: keep the private original in place.
+            $this->suppressImageFileCleanup = true;
             $this->delete();
 
             return $availableImage;

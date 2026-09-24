@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Contracts\DetachableImage;
 use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
+use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\TimelineEventImageFactory;
@@ -20,7 +21,7 @@ use Illuminate\Support\Facades\Storage;
 class TimelineEventImage extends Model implements DetachableImage, HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<TimelineEventImageFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     protected $fillable = [
         'timeline_event_id',
@@ -127,6 +128,9 @@ class TimelineEventImage extends Model implements DetachableImage, HasCopyright,
                 'copyright' => $this->copyright,
             ]));
 
+            // The row is deleted to recreate it as an AvailableImage above,
+            // not to discard the image: keep the private original in place.
+            $this->suppressImageFileCleanup = true;
             $this->delete();
 
             return $availableImage;

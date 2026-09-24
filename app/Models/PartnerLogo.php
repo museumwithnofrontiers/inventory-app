@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
+use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\PartnerLogoFactory;
@@ -17,7 +18,7 @@ use Illuminate\Support\Facades\Config;
 class PartnerLogo extends Model implements HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<PartnerLogoFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.

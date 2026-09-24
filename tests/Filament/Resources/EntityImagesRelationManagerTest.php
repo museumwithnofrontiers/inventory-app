@@ -105,6 +105,7 @@ class EntityImagesRelationManagerTest extends TestCase
     public function test_item_images_delete_permanently_removes_image_without_returning_to_pool(): void
     {
         Storage::fake('public');
+        Storage::fake('image-originals');
 
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
@@ -112,6 +113,9 @@ class EntityImagesRelationManagerTest extends TestCase
 
         $picturesDir = trim(config('localstorage.pictures.directory'), '/');
         Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/delete-item.jpg', 'fake-data');
+
+        $originalsDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk(config('localstorage.available.images.disk'))->put($originalsDir.'/delete-item.jpg', 'fake-data');
 
         $this->setCurrentPanel();
 
@@ -125,6 +129,8 @@ class EntityImagesRelationManagerTest extends TestCase
 
         $this->assertDatabaseMissing('item_images', ['id' => $image->id]);
         $this->assertDatabaseMissing('available_images', ['id' => $image->id]);
+        Storage::disk(config('localstorage.pictures.disk'))->assertMissing($picturesDir.'/delete-item.jpg');
+        Storage::disk(config('localstorage.available.images.disk'))->assertMissing($originalsDir.'/delete-item.jpg');
     }
 
     public function test_item_images_view_action_url_points_to_admin_route(): void
@@ -255,6 +261,7 @@ class EntityImagesRelationManagerTest extends TestCase
     public function test_collection_images_delete_permanently_removes_image_without_returning_to_pool(): void
     {
         Storage::fake('public');
+        Storage::fake('image-originals');
 
         $user = $this->createCrudUser();
         $collection = Collection::factory()->create();
@@ -262,6 +269,9 @@ class EntityImagesRelationManagerTest extends TestCase
 
         $picturesDir = trim(config('localstorage.pictures.directory'), '/');
         Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/delete-col.jpg', 'fake-data');
+
+        $originalsDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk(config('localstorage.available.images.disk'))->put($originalsDir.'/delete-col.jpg', 'fake-data');
 
         $this->setCurrentPanel();
 
@@ -275,6 +285,8 @@ class EntityImagesRelationManagerTest extends TestCase
 
         $this->assertDatabaseMissing('collection_images', ['id' => $image->id]);
         $this->assertDatabaseMissing('available_images', ['id' => $image->id]);
+        Storage::disk(config('localstorage.pictures.disk'))->assertMissing($picturesDir.'/delete-col.jpg');
+        Storage::disk(config('localstorage.available.images.disk'))->assertMissing($originalsDir.'/delete-col.jpg');
     }
 
     public function test_collection_images_view_and_download_actions_exist(): void
@@ -354,6 +366,7 @@ class EntityImagesRelationManagerTest extends TestCase
     public function test_partner_images_delete_permanently_removes_image_without_returning_to_pool(): void
     {
         Storage::fake('public');
+        Storage::fake('image-originals');
 
         $user = $this->createCrudUser();
         $partner = Partner::factory()->create();
@@ -361,6 +374,9 @@ class EntityImagesRelationManagerTest extends TestCase
 
         $picturesDir = trim(config('localstorage.pictures.directory'), '/');
         Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/delete-partner.jpg', 'fake-data');
+
+        $originalsDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk(config('localstorage.available.images.disk'))->put($originalsDir.'/delete-partner.jpg', 'fake-data');
 
         $this->setCurrentPanel();
 
@@ -374,6 +390,8 @@ class EntityImagesRelationManagerTest extends TestCase
 
         $this->assertDatabaseMissing('partner_images', ['id' => $image->id]);
         $this->assertDatabaseMissing('available_images', ['id' => $image->id]);
+        Storage::disk(config('localstorage.pictures.disk'))->assertMissing($picturesDir.'/delete-partner.jpg');
+        Storage::disk(config('localstorage.available.images.disk'))->assertMissing($originalsDir.'/delete-partner.jpg');
     }
 
     public function test_partner_images_view_and_download_action_urls_are_admin_routes(): void
