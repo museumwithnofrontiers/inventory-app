@@ -24,6 +24,7 @@ import type { LegacyMonumentPicture } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { pickImageCopyright } from '../../utils/image-copyright.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
 
@@ -202,6 +203,12 @@ export class MonumentPictureImporter extends BaseImporter {
     );
     const captionText = bestCaption ? convertHtmlToMarkdown(bestCaption) : null;
 
+    // The image rows carry one burn-ready copyright; each language's own text
+    // still goes to its picture translation's extra.copyright.
+    const copyright = pickImageCopyright(
+      group.translations.map((t) => ({ lang: t.lang, copyright: t.copyright }))
+    );
+
     // Tracker-based isFirstImage
     const firstImageKey = `first_image_attached:${parentItemId}`;
     const firstImageAlreadyAttached = !!this.context.tracker.getMetadata(firstImageKey);
@@ -230,6 +237,7 @@ export class MonumentPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1, // Fake size as required
       alt_text: captionText,
+      copyright,
       display_order: currentDisplayOrder,
     };
     await this.context.strategy.writeItemImage(itemImageData);
@@ -243,6 +251,7 @@ export class MonumentPictureImporter extends BaseImporter {
         mime_type: mimeType,
         size: 1,
         alt_text: captionText,
+        copyright,
         display_order: currentDisplayOrder,
       };
       await this.context.strategy.writeItemImage(parentImageData);

@@ -207,6 +207,29 @@ describe('ShPartnerPictureImporter', () => {
     );
   });
 
+  it('also stores the copyright burn-ready on the image row', async () => {
+    const importer = new ShPartnerPictureImporter(context);
+    await importer.import();
+
+    expect(writePartnerImageMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        path: 'sharing_history/sh_partners/dz_01/1.jpg',
+        copyright: '© DZ Museum',
+        extra: JSON.stringify({ copyright: 'DZ Museum' }),
+      })
+    );
+  });
+
+  it('leaves the image copyright null when the picture has none', async () => {
+    const importer = new ShPartnerPictureImporter(context);
+    await importer.import();
+
+    // at01Row2 has no copyright
+    expect(writePartnerImageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ path: '2.jpg', copyright: null })
+    );
+  });
+
   it('reports error and skips row when path is null', async () => {
     const nullPathRow = {
       image_number: 99,

@@ -21,6 +21,7 @@ import type {
   LegacySchoolPicture,
 } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { toImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 export class SchoolImporter extends BaseImporter {
@@ -288,6 +289,7 @@ export class SchoolImporter extends BaseImporter {
           mime_type: mimeType,
           size: 1, // Placeholder for ImageSyncTool
           alt_text: altText || null,
+          copyright: toImageCopyright(picture.copyright),
           display_order: picture.image_number,
         };
 

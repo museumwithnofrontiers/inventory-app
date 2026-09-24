@@ -8,12 +8,14 @@
  * - No child items created
  * - Each picture becomes a PartnerImage
  * - Caption, photographer, copyright stored as metadata
+ * - Copyright also stored burn-ready ("© " + text) on the image row itself
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult, PartnerImageData } from '../../core/types.js';
 import type { LegacyMuseumPicture, LegacyInstitutionPicture } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { toImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 export class PartnerPictureImporter extends BaseImporter {
@@ -165,6 +167,7 @@ export class PartnerPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1, // Fake size as required
       alt_text: altText || null,
+      copyright: toImageCopyright(picture.copyright),
       display_order: picture.image_number,
       extra: extraField,
     };
@@ -290,6 +293,7 @@ export class PartnerPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1, // Fake size as required
       alt_text: altText || null,
+      copyright: toImageCopyright(picture.copyright),
       display_order: picture.image_number,
       extra: extraField,
     };

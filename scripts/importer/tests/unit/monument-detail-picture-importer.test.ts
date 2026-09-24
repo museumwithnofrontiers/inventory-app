@@ -245,6 +245,24 @@ describe('MonumentDetailPictureImporter', () => {
     expect(name.length).toBeLessThanOrEqual(255);
   });
 
+  it('writes the English copyright, burn-ready, on the image row (rows keyed by lang_id)', async () => {
+    queryMock.mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM mwnf3.monument_detail_pictures'))
+        return [
+          { ...rowPhotographerOnly, lang_id: 'fr', copyright: 'Musée national' },
+          { ...rowPhotographerOnly, lang_id: 'en', copyright: 'National Museum' },
+        ];
+      if (sql.includes('FROM mwnf3.monument_details')) return [{ name: 'Mosque Detail' }];
+      return [];
+    });
+    const importer = new MonumentDetailPictureImporter(context);
+    await importer.import();
+
+    expect(writeItemImageMock).toHaveBeenCalledWith(
+      expect.objectContaining({ copyright: '© National Museum' })
+    );
+  });
+
   it('succeeds for a picture whose parent detail was imported without a parent monument (parentless detail)', async () => {
     // Parent monument is NOT in tracker — detail was imported with parent_id = null.
     // The picture importer should still succeed because it looks up the detail by BC, not the monument.

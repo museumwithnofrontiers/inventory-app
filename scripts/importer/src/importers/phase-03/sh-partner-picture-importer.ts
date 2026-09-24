@@ -12,11 +12,13 @@
  * - path is required; rows with null/empty path are skipped with a warning
  * - alt_text: trimmed caption when present and non-empty; otherwise null
  * - extra: JSON containing photographer and copyright when present
+ * - copyright: the same copyright, burn-ready ("© " + text), on the image row
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult, PartnerImageData } from '../../core/types.js';
 import { formatShBackwardCompatibility } from '../../domain/transformers/index.js';
+import { toImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 const SH_PARTNERS_TABLE = 'sh_partners';
@@ -131,6 +133,7 @@ export class ShPartnerPictureImporter extends BaseImporter {
             mime_type: mimeType,
             size: 1, // Placeholder for ImageSyncTool
             alt_text: altText,
+            copyright: toImageCopyright(picture.copyright),
             display_order: picture.image_number,
             extra: Object.keys(extra).length > 0 ? JSON.stringify(extra) : null,
           };
