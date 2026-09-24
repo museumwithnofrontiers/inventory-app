@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Contracts\DetachableImage;
+use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Traits\HasDisplayOrder;
+use App\Traits\ResolvesCopyright;
 use Database\Factories\TimelineEventImageFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -15,10 +17,10 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class TimelineEventImage extends Model implements DetachableImage, StreamableImageFile
+class TimelineEventImage extends Model implements DetachableImage, HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<TimelineEventImageFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids;
+    use HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     protected $fillable = [
         'timeline_event_id',

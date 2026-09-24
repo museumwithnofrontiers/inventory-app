@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Traits\HasDisplayOrder;
+use App\Traits\ResolvesCopyright;
 use Database\Factories\PartnerLogoFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -12,10 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Config;
 
-class PartnerLogo extends Model implements StreamableImageFile
+class PartnerLogo extends Model implements HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<PartnerLogoFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids;
+    use HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.
@@ -62,6 +64,11 @@ class PartnerLogo extends Model implements StreamableImageFile
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);
+    }
+
+    protected function copyrightProject(): ?Project
+    {
+        return $this->partner?->project;
     }
 
     /**

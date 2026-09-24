@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Contracts\DetachableImage;
+use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Traits\HasDisplayOrder;
+use App\Traits\ResolvesCopyright;
 use Database\Factories\PartnerImageFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -15,10 +17,10 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class PartnerImage extends Model implements DetachableImage, StreamableImageFile
+class PartnerImage extends Model implements DetachableImage, HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<PartnerImageFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids;
+    use HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.
@@ -66,6 +68,11 @@ class PartnerImage extends Model implements DetachableImage, StreamableImageFile
     public function partner(): BelongsTo
     {
         return $this->belongsTo(Partner::class);
+    }
+
+    protected function copyrightProject(): ?Project
+    {
+        return $this->partner?->project;
     }
 
     /**
