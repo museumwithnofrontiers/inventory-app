@@ -182,16 +182,17 @@ class PartnerTranslationImageResourceTest extends TestCase
 
     public function test_filament_partner_translation_image_view_route_returns_image_inline(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('pictures');
+        $disk = config('localstorage.available.images.disk');
+        Storage::fake($disk);
+        Storage::disk($disk)->makeDirectory('images');
 
         $partnerTranslation = $this->makePartnerTranslation();
         $image = PartnerTranslationImage::factory()
             ->forPartnerTranslation($partnerTranslation)
             ->create(['path' => 'pt-view-test.jpg']);
 
-        $picturesDir = trim(config('localstorage.pictures.directory'), '/');
-        Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/'.$image->path, 'fake-jpeg-data');
+        $imagesDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk($disk)->put($imagesDir.'/'.$image->path, 'fake-jpeg-data');
 
         $user = $this->createAuthorizedUser();
 
@@ -208,16 +209,17 @@ class PartnerTranslationImageResourceTest extends TestCase
 
     public function test_filament_partner_translation_image_download_route_returns_attachment(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('pictures');
+        $disk = config('localstorage.available.images.disk');
+        Storage::fake($disk);
+        Storage::disk($disk)->makeDirectory('images');
 
         $partnerTranslation = $this->makePartnerTranslation();
         $image = PartnerTranslationImage::factory()
             ->forPartnerTranslation($partnerTranslation)
             ->create(['path' => 'pt-download-test.jpg']);
 
-        $picturesDir = trim(config('localstorage.pictures.directory'), '/');
-        Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/'.$image->path, 'fake-jpeg-data');
+        $imagesDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk($disk)->put($imagesDir.'/'.$image->path, 'fake-jpeg-data');
 
         $user = $this->createAuthorizedUser();
 
