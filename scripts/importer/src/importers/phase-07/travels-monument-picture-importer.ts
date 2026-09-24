@@ -23,6 +23,7 @@ import type {
   ItemImageData,
 } from '../../core/types.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { pickImageCopyright } from '../../utils/image-copyright.js';
 import { mapLanguageCode } from '../../utils/code-mappings.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
@@ -217,6 +218,12 @@ export class TravelsMonumentPictureImporter extends BaseImporter {
     );
     const captionText = bestCaption ? convertHtmlToMarkdown(bestCaption) : null;
 
+    // The image rows carry one burn-ready copyright; each language's own text
+    // still goes to its picture translation's extra.copyright.
+    const copyright = pickImageCopyright(
+      group.translations.map((t) => ({ lang: t.lang, copyright: t.copyright }))
+    );
+
     const mimeType = this.getMimeType(group.path);
     const originalName = path.basename(group.path);
 
@@ -231,6 +238,7 @@ export class TravelsMonumentPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1,
       alt_text: captionText,
+      copyright,
       display_order: currentDisplayOrder,
     };
     await this.context.strategy.writeItemImage(itemImageData);
@@ -244,6 +252,7 @@ export class TravelsMonumentPictureImporter extends BaseImporter {
         mime_type: mimeType,
         size: 1,
         alt_text: captionText,
+        copyright,
         display_order: currentDisplayOrder,
       };
       await this.context.strategy.writeItemImage(parentImageData);

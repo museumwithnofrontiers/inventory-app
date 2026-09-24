@@ -8,14 +8,14 @@ use App\Http\Requests\Api\StorePartnerLogoRequest;
 use App\Http\Requests\Api\UpdatePartnerLogoRequest;
 use App\Http\Resources\OperationSuccessResource;
 use App\Http\Resources\PartnerLogoResource;
-use App\Http\Responses\FileResponse;
+use App\Http\Responses\Image\DownloadImageResponse;
+use App\Http\Responses\Image\InlineImageResponse;
 use App\Models\PartnerLogo;
 use App\Support\Includes\AllowList;
 use App\Support\Includes\IncludeParser;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Config;
 
 class PartnerLogoController extends Controller
 {
@@ -131,19 +131,7 @@ class PartnerLogoController extends Controller
      */
     public function download(PartnerLogo $partnerLogo): Responsable
     {
-        $disk = Config::string('localstorage.pictures.disk');
-        $directory = trim(Config::string('localstorage.pictures.directory'), '/');
-        $filename = $partnerLogo->original_name ?: basename($partnerLogo->path);
-
-        // Prepend directory to path
-        $storagePath = $directory.'/'.$partnerLogo->path;
-
-        return FileResponse::download(
-            $disk,
-            $storagePath,
-            $filename,
-            $partnerLogo->mime_type
-        );
+        return new DownloadImageResponse($partnerLogo);
     }
 
     /**
@@ -151,16 +139,6 @@ class PartnerLogoController extends Controller
      */
     public function view(PartnerLogo $partnerLogo): Responsable
     {
-        $disk = Config::string('localstorage.pictures.disk');
-        $directory = trim(Config::string('localstorage.pictures.directory'), '/');
-
-        // Prepend directory to path
-        $storagePath = $directory.'/'.$partnerLogo->path;
-
-        return FileResponse::view(
-            $disk,
-            $storagePath,
-            $partnerLogo->mime_type
-        );
+        return new InlineImageResponse($partnerLogo);
     }
 }

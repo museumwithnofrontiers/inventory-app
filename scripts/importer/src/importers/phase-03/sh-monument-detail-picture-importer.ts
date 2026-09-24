@@ -22,6 +22,7 @@ import type {
 import { formatShBackwardCompatibility } from '../../domain/transformers/index.js';
 import { mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { pickImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 interface ShDetailPictureGroup {
@@ -188,6 +189,12 @@ export class ShMonumentDetailPictureImporter extends BaseImporter {
     );
     const captionText = bestCaption ? convertHtmlToMarkdown(bestCaption) : null;
 
+    // The image rows carry one burn-ready copyright; each language's own text
+    // still goes to its picture translation's extra.copyright.
+    const copyright = pickImageCopyright(
+      group.translations.map((t) => ({ lang: t.lang, copyright: t.copyright }))
+    );
+
     // Determine if first image
     const isFirstImage = group.picture_id === 1;
 
@@ -211,6 +218,7 @@ export class ShMonumentDetailPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1,
       alt_text: captionText,
+      copyright,
       display_order: currentDisplayOrder,
     };
     await this.context.strategy.writeItemImage(itemImageData);
@@ -224,6 +232,7 @@ export class ShMonumentDetailPictureImporter extends BaseImporter {
         mime_type: mimeType,
         size: 1,
         alt_text: captionText,
+        copyright,
         display_order: currentDisplayOrder,
       };
       await this.context.strategy.writeItemImage(parentImageData);

@@ -3,8 +3,11 @@
 namespace App\Models;
 
 use App\Contracts\DetachableImage;
+use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
+use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
+use App\Traits\ResolvesCopyright;
 use Database\Factories\PartnerTranslationImageFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -15,10 +18,10 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class PartnerTranslationImage extends Model implements DetachableImage, StreamableImageFile
+class PartnerTranslationImage extends Model implements DetachableImage, HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<PartnerTranslationImageFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.
@@ -32,6 +35,7 @@ class PartnerTranslationImage extends Model implements DetachableImage, Streamab
         'mime_type',
         'size',
         'alt_text',
+        'copyright',
         'display_order',
     ];
 
@@ -63,6 +67,11 @@ class PartnerTranslationImage extends Model implements DetachableImage, Streamab
     public function partnerTranslation(): BelongsTo
     {
         return $this->belongsTo(PartnerTranslation::class);
+    }
+
+    protected function copyrightProject(): ?Project
+    {
+        return $this->partnerTranslation?->partner?->project;
     }
 
     /**
@@ -107,30 +116,19 @@ class PartnerTranslationImage extends Model implements DetachableImage, Streamab
         $result = DB::transaction(function () use ($availableImage, $partnerTranslationId, $altText) {
             $displayOrder = static::getNextDisplayOrderForPartnerTranslation($partnerTranslationId);
 
-            // Move file from available storage to pictures storage
-            $availableDisk = Config::string('localstorage.available.images.disk');
-            $availableDir = trim(Config::string('localstorage.available.images.directory'), '/');
-            $picturesDisk = Config::string('localstorage.pictures.disk');
-            $picturesDir = trim(Config::string('localstorage.pictures.directory'), '/');
-
-            $filename = $availableImage->path; // Already just filename
-
-            // Move the file from images/ to pictures/
-            $readStream = Storage::disk($availableDisk)->readStream($availableDir.'/'.$filename);
-            if ($readStream === null) {
-                throw new \RuntimeException("Failed to open read stream for image: {$filename}");
-            }
-            Storage::disk($picturesDisk)->writeStream($picturesDir.'/'.$filename, $readStream);
-            Storage::disk($availableDisk)->delete($availableDir.'/'.$filename);
-
+            // The file already lives on the private originals disk under this
+            // filename (that disk is shared with AvailableImage - see
+            // localstorage.available.*): attaching is a pure ownership swap,
+            // never a file move.
             $partnerTranslationImage = Model::unguarded(fn () => static::create([
                 'id' => $availableImage->id, // Preserve the ID
                 'partner_translation_id' => $partnerTranslationId,
-                'path' => $filename, // Keep filename unchanged
+                'path' => $availableImage->path, // Keep filename unchanged
                 'original_name' => $availableImage->original_name ?? '',
                 'mime_type' => $availableImage->mime_type ?? '',
                 'size' => $availableImage->size ?? 0,
                 'alt_text' => $altText ?? $availableImage->comment,
+                'copyright' => $availableImage->copyright,
                 'display_order' => $displayOrder,
             ]));
 
@@ -148,31 +146,26 @@ class PartnerTranslationImage extends Model implements DetachableImage, Streamab
     public function detachToAvailableImage(): AvailableImage
     {
         return $this->getConnection()->transaction(function () {
-            // Move file from pictures storage back to available storage
+            // The private original stays put (see attachFromAvailableImage) -
+            // only the public cache, if any, is removed: nothing to serve
+            // once detached (M9 §10 "Two disks").
             $picturesDisk = Config::string('localstorage.pictures.disk');
             $picturesDir = trim(Config::string('localstorage.pictures.directory'), '/');
-            $availableDisk = Config::string('localstorage.available.images.disk');
-            $availableDir = trim(Config::string('localstorage.available.images.directory'), '/');
-
-            $filename = $this->path; // Already just filename
-
-            // Move the file from pictures/ back to images/
-            $readStream = Storage::disk($picturesDisk)->readStream($picturesDir.'/'.$filename);
-            if ($readStream === null) {
-                throw new \RuntimeException("Failed to open read stream for image: {$filename}");
-            }
-            Storage::disk($availableDisk)->writeStream($availableDir.'/'.$filename, $readStream);
-            Storage::disk($picturesDisk)->delete($picturesDir.'/'.$filename);
+            Storage::disk($picturesDisk)->delete($picturesDir.'/'.$this->path);
 
             $availableImage = Model::unguarded(fn () => AvailableImage::create([
                 'id' => $this->id, // Preserve the ID
-                'path' => $filename, // Keep filename unchanged
-                'original_name' => $this->original_name ?: $filename,
+                'path' => $this->path, // Keep filename unchanged
+                'original_name' => $this->original_name ?: $this->path,
                 'mime_type' => $this->mime_type,
                 'size' => $this->size,
                 'comment' => $this->alt_text,
+                'copyright' => $this->copyright,
             ]));
 
+            // The row is deleted to recreate it as an AvailableImage above,
+            // not to discard the image: keep the private original in place.
+            $this->suppressImageFileCleanup = true;
             $this->delete();
 
             return $availableImage;
@@ -181,12 +174,12 @@ class PartnerTranslationImage extends Model implements DetachableImage, Streamab
 
     public function imageDisk(): string
     {
-        return Config::string('localstorage.pictures.disk');
+        return Config::string('localstorage.available.images.disk');
     }
 
     public function imageStoragePath(): string
     {
-        return trim(Config::string('localstorage.pictures.directory'), '/').'/'.$this->path;
+        return trim(Config::string('localstorage.available.images.directory'), '/').'/'.$this->path;
     }
 
     public function imageMimeType(): ?string

@@ -37,6 +37,7 @@ class ProjectFactory extends Factory
             'site_url' => null,
             'related_database_url' => null,
             'artistic_introduction_url' => null,
+            'copyright' => null,
             'context_id' => null, // This should be set to a valid context ID if needed
             'language_id' => null, // This should be set to a valid language ID if needed
         ];

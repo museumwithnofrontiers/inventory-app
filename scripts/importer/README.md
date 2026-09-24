@@ -305,7 +305,7 @@ npx tsx src/cli/import.ts image-sync
 
 - `--copy` - Copy files instead of symlinking (symlink is the default)
 - `--clear-destination` - Clear destination image folder before synchronization starts
-- `--target-dir <path>` - Target image directory (overrides `NEW_IMAGES_ROOT` env var and artisan fallback)
+- `--target-dir <path>` - Target image directory (overrides `NEW_IMAGES_ROOT` env var and the artisan fallback, `php artisan storage:image-path available`: the app's private originals directory)
 - `--dry-run` - Simulate without making changes
 
 **Image Sync Details:**
@@ -444,8 +444,10 @@ DB_DATABASE=inventory
 LEGACY_IMAGES_ROOT=C:\mwnf-server\pictures\images
 
 # New Images Root - override target storage path (optional)
-# If not set, resolved via: php artisan storage:image-path pictures
-NEW_IMAGES_ROOT=C:\path\to\inventory-app\storage\app\pictures
+# If not set, resolved via: php artisan storage:image-path available
+# (the private originals directory; the public pictures directory is only a
+# cache of burned renditions, never a target)
+NEW_IMAGES_ROOT=C:\path\to\inventory-app\storage\app\private\image-originals\images
 ```
 
 Note: only `LEGACY_DB_DATABASE` (the core `mwnf3` schema) is configurable —
@@ -469,7 +471,7 @@ the same `LEGACY_DB_HOST`.
 | `DB_PASSWORD`        | Target database password                           | (empty)                                           |
 | `DB_DATABASE`        | Target database name                               | `inventory`                                       |
 | `LEGACY_IMAGES_ROOT` | Root directory of legacy images                    | `C:\mwnf-server\pictures\images`                  |
-| `NEW_IMAGES_ROOT`    | Target image storage directory (overrides artisan) | _(resolved via `php artisan storage:image-path`)_ |
+| `NEW_IMAGES_ROOT`    | Target image storage directory (overrides artisan) | _(resolved via `php artisan storage:image-path available`)_ |
 
 ### Validating Database Connections
 

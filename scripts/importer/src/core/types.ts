@@ -364,6 +364,7 @@ export interface ItemImageData {
   mime_type: string;
   size: number;
   alt_text?: string | null;
+  copyright?: string | null; // Burned verbatim; see utils/image-copyright.ts
   display_order: number;
 }
 
@@ -378,6 +379,7 @@ export interface PartnerImageData {
   mime_type: string;
   size: number;
   alt_text?: string | null;
+  copyright?: string | null; // Burned verbatim; see utils/image-copyright.ts
   display_order: number;
   extra?: string | null;
 }
@@ -408,6 +410,7 @@ export interface CollectionImageData {
   mime_type: string;
   size: number;
   alt_text?: string | null;
+  copyright?: string | null; // Burned verbatim; see utils/image-copyright.ts
   display_order: number;
   /**
    * Pre-stringified JSON passenger data, mirroring `PartnerImageData.extra`.

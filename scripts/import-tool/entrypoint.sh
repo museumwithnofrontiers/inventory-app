@@ -26,7 +26,9 @@ set -euo pipefail
 #                       etc., see SHIP_EXCLUDED_TABLES below) are copied to
 #                       OVH and loaded there against OVH's own local MySQL
 #                       (see load_staged_dump), then the already-staged
-#                       images are pushed. Does NOT resync the glossary on
+#                       images are pushed to the private originals directory
+#                       and the public pictures cache is emptied (see
+#                       push_staged_images). Does NOT resync the glossary on
 #                       OVH — run the `staging-glossary-sync` compose service
 #                       against staging-mysql before `ship` instead, so the
 #                       item/collection/timeline_event <-> glossary link rows
@@ -136,6 +138,24 @@ ssh_run() {
   ssh "${SSH_OPTS_BASE[@]}" -i "$SSH_KEY" "${OVH_USER}@${OVH_HOST}" \
     "cd '$OVH_APP_DIR' && $cmd" \
     || die "remote command failed: $cmd"
+}
+
+# Absolute path of one of the app's image directories on OVH (`available`:
+# the private originals; `pictures`: the public cache of burned renditions),
+# asked of the deployed app itself so a push always lands where its config
+# reads from. Validated before use: the callers rsync --delete into these and
+# empty them, so a surprising answer must stop the pipeline, not be acted on.
+remote_image_path() {
+  local type="$1" out path
+  out="$(ssh "${SSH_OPTS_BASE[@]}" -i "$SSH_KEY" "${OVH_USER}@${OVH_HOST}" \
+    "cd '$OVH_APP_DIR' && php artisan storage:image-path $type")" \
+    || die "could not resolve the '$type' image directory on OVH"
+  path="$(printf '%s\n' "$out" | tail -n 1 | tr -d '\r')"
+  case "$path" in
+    /*/storage/app/?*) ;;
+    *) die "unexpected '$type' image directory from OVH: '$path'" ;;
+  esac
+  printf '%s\n' "$path"
 }
 
 # ------------------------------------------------------------------------------
@@ -310,21 +330,65 @@ rm -f '$remote_dump'
 REMOTE_SCRIPT
 }
 
+# Where `ship` puts the images, asked of OVH and checked BEFORE the wipe, so a
+# surprising configuration aborts while production is still intact rather than
+# after its database is gone. Sets ORIGINALS_DIR and PICTURES_DIR.
+ORIGINALS_DIR=""
+PICTURES_DIR=""
+resolve_image_destinations() {
+  ORIGINALS_DIR="$(remote_image_path available)"
+  PICTURES_DIR="$(remote_image_path pictures)"
+  case "$ORIGINALS_DIR/" in
+    "$PICTURES_DIR"/*) die "originals ($ORIGINALS_DIR) resolve inside the pictures cache ($PICTURES_DIR) — refusing to ship" ;;
+  esac
+  case "$PICTURES_DIR/" in
+    "$ORIGINALS_DIR"/*) die "the pictures cache ($PICTURES_DIR) resolves inside the originals ($ORIGINALS_DIR) — refusing to ship" ;;
+  esac
+  log "Originals go to ${OVH_HOST}:${ORIGINALS_DIR}; the pictures cache at ${PICTURES_DIR} will be emptied"
+}
+
 # Pushes images already staged by a prior `stage` run (the staging images
 # volume, mounted read-only at $STAGING_DIR) to OVH. The importer's image-sync
 # step is never re-run here — and cannot be, since `ship` has no legacy mount.
-# --delete is always correct here: do_wipe_and_restore already wiped OVH, so
-# whatever is in $STAGING_DIR is the full, authoritative set.
+#
+# Staged files are pristine originals, so they go where the app keeps
+# originals (`storage:image-path available` — the private image-originals disk),
+# never into the public pictures directory: that is only the cache `/pub` fills
+# with burned renditions on demand. Pushing there left every image without an
+# original to burn from (#1984).
+#
+# --delete is always correct here: do_wipe_and_restore already wiped OVH
+# (available_images included), so whatever is in $STAGING_DIR is the full,
+# authoritative set of originals.
 push_staged_images() {
   if [ "$DRY_RUN" = "1" ]; then
     log "DRY_RUN=1 — skipping rsync push to OVH"
     return 0
   fi
-  log "rsync -az --stats --delete $STAGING_DIR/ -> ${OVH_HOST}:${OVH_SHARED_DIR}/storage/app/public/pictures/"
-  rsync -az --stats --delete -e "ssh ${SSH_OPTS_BASE[*]} -i $SSH_KEY" \
+
+  local originals_dir="$ORIGINALS_DIR" pictures_dir="$PICTURES_DIR"
+  [ -n "$originals_dir" ] && [ -n "$pictures_dir" ] \
+    || die "image destinations were not resolved before the push (resolve_image_destinations)"
+
+  # rsync creates only the last path component, and a server that never held
+  # an original has none of the private disk's parents yet.
+  ssh_run "mkdir -p '$originals_dir'"
+
+  # Ownership comes from the receiving side (deploy, and the www-data group of
+  # the setgid storage tree), and group read/write is granted explicitly:
+  # PHP-FPM and the queue (www-data) read originals to burn and delete them,
+  # while deploy pushes and backfills.
+  log "rsync -az --stats --delete --no-owner --no-group --chmod=D2775,F664 $STAGING_DIR/ -> ${OVH_HOST}:${originals_dir}/"
+  rsync -az --stats --delete --no-owner --no-group --chmod=D2775,F664 \
+    -e "ssh ${SSH_OPTS_BASE[*]} -i $SSH_KEY" \
     "$STAGING_DIR"/ \
-    "${OVH_USER}@${OVH_HOST}:${OVH_SHARED_DIR}/storage/app/public/pictures/" \
+    "${OVH_USER}@${OVH_HOST}:${originals_dir}/" \
     || die "rsync push failed"
+
+  # Every cached rendition belongs to the database that was just wiped, and
+  # ships from before the private disk left unburned originals in there.
+  # Empty the cache; `/pub` regenerates each image on its next request.
+  ssh_run "if [ -d '$pictures_dir' ]; then find '$pictures_dir' -mindepth 1 -delete; fi"
 }
 
 # Ships an already-built `stage` copy to OVH. The app layer (users, roles,
@@ -342,6 +406,9 @@ push_staged_images() {
 # resync here would just make inventory-queue.service redo the exact same work
 # a second time.
 do_ship() {
+  prepare_ssh_key
+  resolve_image_destinations
+
   do_wipe_and_restore
 
   # No tunnel here: load_staged_dump copies the dump to OVH and loads it

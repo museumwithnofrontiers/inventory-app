@@ -93,6 +93,7 @@ class ProjectResourceTest extends TestCase
             'launch_date' => '2025-01-01',
             'is_launched' => false,
             'is_enabled' => false,
+            'copyright' => '© Temple catalogue',
             'context_id' => $context->id,
             'language_id' => $language->id,
         ]);
@@ -110,6 +111,7 @@ class ProjectResourceTest extends TestCase
                 'site_url' => 'https://example.org/archive',
                 'related_database_url' => 'https://example.org/archive-db',
                 'artistic_introduction_url' => 'https://example.org/archive-intro',
+                'copyright' => '© Archive rollout',
                 'context_id' => $context->id,
                 'language_id' => $language->id,
             ])
@@ -125,6 +127,7 @@ class ProjectResourceTest extends TestCase
             'site_url' => 'https://example.org/archive',
             'related_database_url' => 'https://example.org/archive-db',
             'artistic_introduction_url' => 'https://example.org/archive-intro',
+            'copyright' => '© Archive rollout',
             'context_id' => $context->id,
             'language_id' => $language->id,
         ]);
@@ -139,6 +142,7 @@ class ProjectResourceTest extends TestCase
                 'launch_date' => '2025-01-01',
                 'is_launched' => false,
                 'is_enabled' => false,
+                'copyright' => '© Temple catalogue',
                 'context_id' => $context->id,
                 'language_id' => $language->id,
             ])
@@ -151,6 +155,7 @@ class ProjectResourceTest extends TestCase
                 'site_url' => 'https://example.org/temple',
                 'related_database_url' => 'https://example.org/temple-db',
                 'artistic_introduction_url' => 'https://example.org/temple-intro',
+                'copyright' => '© Temple migration',
                 'context_id' => $context->id,
                 'language_id' => $language->id,
             ])
@@ -167,6 +172,7 @@ class ProjectResourceTest extends TestCase
             'site_url' => 'https://example.org/temple',
             'related_database_url' => 'https://example.org/temple-db',
             'artistic_introduction_url' => 'https://example.org/temple-intro',
+            'copyright' => '© Temple migration',
         ]);
 
         Livewire::actingAs($user)
@@ -176,6 +182,29 @@ class ProjectResourceTest extends TestCase
 
         $this->assertDatabaseMissing('projects', [
             'id' => $project->id,
+        ]);
+    }
+
+    public function test_project_copyright_stores_null_for_blank(): void
+    {
+        $user = $this->createCrudUser();
+        $project = Project::factory()->create(['copyright' => 'Original copyright']);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(EditProject::class, [
+                'record' => $project->getRouteKey(),
+            ])
+            ->fillForm([
+                'copyright' => '',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('projects', [
+            'id' => $project->id,
+            'copyright' => null,
         ]);
     }
 

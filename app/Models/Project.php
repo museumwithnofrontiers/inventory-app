@@ -21,6 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $site_url
  * @property string|null $related_database_url
  * @property string|null $artistic_introduction_url
+ * @property string|null $copyright
  * @property string|null $context_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -44,6 +45,7 @@ class Project extends Model
         'site_url',
         'related_database_url',
         'artistic_introduction_url',
+        'copyright',
         'context_id',
         'language_id',
     ];

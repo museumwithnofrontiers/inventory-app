@@ -14,9 +14,13 @@ class SyncLegacyImagesCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    private string $disk;
+    private string $privateDisk;
 
-    private string $directory;
+    private string $privateDirectory;
+
+    private string $picturesDisk;
+
+    private string $picturesDirectory;
 
     private string $sourceDir;
 
@@ -24,8 +28,20 @@ class SyncLegacyImagesCommandTest extends TestCase
     {
         parent::setUp();
 
-        $this->disk = config('localstorage.pictures.disk');
-        $this->directory = trim(config('localstorage.pictures.directory'), '/');
+        Storage::fake('image-originals');
+        Storage::fake('public');
+
+        config([
+            'localstorage.available.images.disk' => 'image-originals',
+            'localstorage.available.images.directory' => 'images',
+            'localstorage.pictures.disk' => 'public',
+            'localstorage.pictures.directory' => 'pictures',
+        ]);
+
+        $this->privateDisk = config('localstorage.available.images.disk');
+        $this->privateDirectory = trim(config('localstorage.available.images.directory'), '/');
+        $this->picturesDisk = config('localstorage.pictures.disk');
+        $this->picturesDirectory = trim(config('localstorage.pictures.directory'), '/');
 
         // Create a temporary source directory for legacy images
         $this->sourceDir = sys_get_temp_dir().DIRECTORY_SEPARATOR.'legacy_images_test_'.uniqid();
@@ -64,8 +80,6 @@ class SyncLegacyImagesCommandTest extends TestCase
 
     public function test_command_succeeds_with_no_records_to_sync(): void
     {
-        Storage::fake($this->disk);
-
         $this->artisan('images:sync-legacy', [
             'source' => $this->sourceDir,
             '--force' => true,
@@ -73,10 +87,8 @@ class SyncLegacyImagesCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
-    public function test_command_syncs_item_images_in_copy_mode(): void
+    public function test_command_syncs_item_images_to_the_private_originals_disk(): void
     {
-        Storage::fake($this->disk);
-
         // Create a legacy image file
         $legacyRelative = 'objects/project1/image001.jpg';
         $legacyFullDir = $this->sourceDir.DIRECTORY_SEPARATOR.'objects'.DIRECTORY_SEPARATOR.'project1';
@@ -105,14 +117,13 @@ class SyncLegacyImagesCommandTest extends TestCase
         $this->assertEquals(1024, $image->size);
         // Original name should be set to the legacy relative path
         $this->assertEquals($legacyRelative, $image->original_name);
-        // File should exist in storage
-        $this->assertTrue(Storage::disk($this->disk)->exists($this->directory.'/'.$image->id.'.jpg'));
+        // File must land on the private image-originals disk, not the public one.
+        Storage::disk($this->privateDisk)->assertExists($this->privateDirectory.'/'.$image->id.'.jpg');
+        Storage::disk($this->picturesDisk)->assertMissing($this->picturesDirectory.'/'.$image->id.'.jpg');
     }
 
-    public function test_command_syncs_partner_images(): void
+    public function test_command_syncs_partner_images_to_the_private_originals_disk(): void
     {
-        Storage::fake($this->disk);
-
         // Create a legacy image file
         $legacyRelative = 'partners/logo.png';
         $legacyFullDir = $this->sourceDir.DIRECTORY_SEPARATOR.'partners';
@@ -137,12 +148,12 @@ class SyncLegacyImagesCommandTest extends TestCase
         $this->assertEquals($image->id.'.png', $image->path);
         $this->assertEquals(512, $image->size);
         $this->assertEquals($legacyRelative, $image->original_name);
+        Storage::disk($this->privateDisk)->assertExists($this->privateDirectory.'/'.$image->id.'.png');
+        Storage::disk($this->picturesDisk)->assertMissing($this->picturesDirectory.'/'.$image->id.'.png');
     }
 
-    public function test_command_syncs_collection_images(): void
+    public function test_command_syncs_collection_images_to_the_private_originals_disk(): void
     {
-        Storage::fake($this->disk);
-
         // Create a legacy image file
         $legacyRelative = 'collections/cover.webp';
         $legacyFullDir = $this->sourceDir.DIRECTORY_SEPARATOR.'collections';
@@ -167,12 +178,12 @@ class SyncLegacyImagesCommandTest extends TestCase
         $this->assertEquals($image->id.'.webp', $image->path);
         $this->assertEquals(2048, $image->size);
         $this->assertEquals($legacyRelative, $image->original_name);
+        Storage::disk($this->privateDisk)->assertExists($this->privateDirectory.'/'.$image->id.'.webp');
+        Storage::disk($this->picturesDisk)->assertMissing($this->picturesDirectory.'/'.$image->id.'.webp');
     }
 
     public function test_command_normalizes_leading_slashes_in_path(): void
     {
-        Storage::fake($this->disk);
-
         // Legacy path with leading slash (common in legacy DB)
         $legacyRelative = '/objects/project1/image001.jpg';
         $legacyFullDir = $this->sourceDir.DIRECTORY_SEPARATOR.'objects'.DIRECTORY_SEPARATOR.'project1';
@@ -198,8 +209,6 @@ class SyncLegacyImagesCommandTest extends TestCase
 
     public function test_command_skips_records_with_size_not_equal_to_one(): void
     {
-        Storage::fake($this->disk);
-
         // Create an ItemImage with size != 1 (already synced)
         ItemImage::factory()->create([
             'path' => 'already-synced.jpg',
@@ -216,8 +225,6 @@ class SyncLegacyImagesCommandTest extends TestCase
 
     public function test_command_reports_error_when_legacy_file_missing(): void
     {
-        Storage::fake($this->disk);
-
         // Create an ItemImage record pointing to a non-existent legacy file
         $image = ItemImage::factory()->create([
             'path' => 'nonexistent/image.jpg',
@@ -239,8 +246,6 @@ class SyncLegacyImagesCommandTest extends TestCase
 
     public function test_dry_run_does_not_modify_records(): void
     {
-        Storage::fake($this->disk);
-
         // Create a legacy image file
         $legacyRelative = 'objects/dry-run-test.jpg';
         $legacyFullDir = $this->sourceDir.DIRECTORY_SEPARATOR.'objects';
@@ -267,13 +272,11 @@ class SyncLegacyImagesCommandTest extends TestCase
         $this->assertEquals($legacyRelative, $image->path);
         $this->assertEquals('', $image->original_name);
         // File should NOT exist in storage
-        $this->assertFalse(Storage::disk($this->disk)->exists($this->directory.'/'.$image->id.'.jpg'));
+        Storage::disk($this->privateDisk)->assertMissing($this->privateDirectory.'/'.$image->id.'.jpg');
     }
 
     public function test_command_handles_multiple_tables(): void
     {
-        Storage::fake($this->disk);
-
         // Create legacy files
         $itemDir = $this->sourceDir.DIRECTORY_SEPARATOR.'items';
         File::makeDirectory($itemDir, 0755, true);
@@ -307,12 +310,13 @@ class SyncLegacyImagesCommandTest extends TestCase
 
         $this->assertEquals($partnerImage->id.'.png', $partnerImage->path);
         $this->assertEquals(200, $partnerImage->size);
+
+        Storage::disk($this->privateDisk)->assertExists($this->privateDirectory.'/'.$itemImage->id.'.jpg');
+        Storage::disk($this->privateDisk)->assertExists($this->privateDirectory.'/'.$partnerImage->id.'.png');
     }
 
     public function test_command_aborts_without_force_when_user_declines(): void
     {
-        Storage::fake($this->disk);
-
         $this->artisan('images:sync-legacy', [
             'source' => $this->sourceDir,
         ])

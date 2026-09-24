@@ -24,6 +24,7 @@ import type { LegacyObjectPicture } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { pickImageCopyright } from '../../utils/image-copyright.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
 
@@ -220,6 +221,12 @@ export class ObjectPictureImporter extends BaseImporter {
     // every language.
     const altText = this.captionIsDescription(group) ? null : captionText;
 
+    // The image rows carry one burn-ready copyright; each language's own text
+    // still goes to its picture translation's extra.copyright below.
+    const copyright = pickImageCopyright(
+      group.translations.map((t) => ({ lang: t.lang, copyright: t.copyright }))
+    );
+
     // Determine if this is the first image
     const isFirstImage = group.type === '' && group.image_number === 1;
 
@@ -243,6 +250,7 @@ export class ObjectPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1, // Fake size as required
       alt_text: altText,
+      copyright,
       display_order: currentDisplayOrder,
     };
     await this.context.strategy.writeItemImage(itemImageData);
@@ -256,6 +264,7 @@ export class ObjectPictureImporter extends BaseImporter {
         mime_type: mimeType,
         size: 1,
         alt_text: altText,
+        copyright,
         display_order: currentDisplayOrder,
       };
       await this.context.strategy.writeItemImage(parentImageData);

@@ -23,6 +23,7 @@ import type { ShLegacyObjectImage, ShLegacyObjectImageText } from '../../domain/
 import { formatShBackwardCompatibility } from '../../domain/transformers/index.js';
 import { mapCountryCode, mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { pickImageCopyright } from '../../utils/image-copyright.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
 
@@ -196,6 +197,12 @@ export class ShObjectPictureImporter extends BaseImporter {
     );
     const captionText = bestCaption ? convertHtmlToMarkdown(bestCaption) : null;
 
+    // The image rows carry one burn-ready copyright; each language's own text
+    // still goes to its picture translation's extra.copyright.
+    const copyright = pickImageCopyright(
+      group.translations.map((t) => ({ lang: t.lang, copyright: t.copyright }))
+    );
+
     // Determine if this is the first image
     const isFirstImage = group.type === '' && group.image_number === 1;
 
@@ -219,6 +226,7 @@ export class ShObjectPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1,
       alt_text: captionText,
+      copyright,
       display_order: currentDisplayOrder,
     };
     await this.context.strategy.writeItemImage(itemImageData);
@@ -232,6 +240,7 @@ export class ShObjectPictureImporter extends BaseImporter {
         mime_type: mimeType,
         size: 1,
         alt_text: captionText,
+        copyright,
         display_order: currentDisplayOrder,
       };
       await this.context.strategy.writeItemImage(parentImageData);

@@ -28,6 +28,7 @@ class TimelineEventImageFactory extends Factory
             'mime_type' => 'image/jpeg',
             'size' => $this->faker->numberBetween(1000, 5000000),
             'alt_text' => $this->faker->optional(0.5)->sentence(3),
+            'copyright' => null,
             'display_order' => $this->faker->numberBetween(1, 10),
         ];
     }

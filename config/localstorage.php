@@ -80,11 +80,13 @@ return [
             |
             | This disk is used to store available images that are ready to be
             | attached to Items, Details, or Partners. It is defined in the
-            | filesystem configuration. The default disk is set to **public**, but you
-            | can change it to any other disk defined in your filesystem configuration.
+            | filesystem configuration. It is also where an attached image's
+            | pristine original lives for its whole lifetime (M9 §10) - the
+            | default is the private **image-originals** disk, never `public`;
+            | nothing here should ever be web-reachable.
             |
             */
-            'disk' => env('AVAILABLE_IMAGES_DISK', 'public'),
+            'disk' => env('AVAILABLE_IMAGES_DISK', 'image-originals'),
 
             /*
             |--------------------------------------------------------------------------

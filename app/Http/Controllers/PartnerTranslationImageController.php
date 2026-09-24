@@ -9,7 +9,8 @@ use App\Http\Requests\Api\StorePartnerTranslationImageRequest;
 use App\Http\Requests\Api\UpdatePartnerTranslationImageRequest;
 use App\Http\Resources\OperationSuccessResource;
 use App\Http\Resources\PartnerTranslationImageResource;
-use App\Http\Responses\FileResponse;
+use App\Http\Responses\Image\DownloadImageResponse;
+use App\Http\Responses\Image\InlineImageResponse;
 use App\Models\AvailableImage;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
@@ -18,7 +19,6 @@ use App\Support\Includes\IncludeParser;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Config;
 
 class PartnerTranslationImageController extends Controller
 {
@@ -168,19 +168,7 @@ class PartnerTranslationImageController extends Controller
      */
     public function download(PartnerTranslationImage $partnerTranslationImage): Responsable
     {
-        $disk = Config::string('localstorage.pictures.disk');
-        $directory = trim(Config::string('localstorage.pictures.directory'), '/');
-        $filename = $partnerTranslationImage->original_name ?: basename($partnerTranslationImage->path);
-
-        // Prepend directory to path
-        $storagePath = $directory.'/'.$partnerTranslationImage->path;
-
-        return FileResponse::download(
-            $disk,
-            $storagePath,
-            $filename,
-            $partnerTranslationImage->mime_type
-        );
+        return new DownloadImageResponse($partnerTranslationImage);
     }
 
     /**
@@ -188,16 +176,6 @@ class PartnerTranslationImageController extends Controller
      */
     public function view(PartnerTranslationImage $partnerTranslationImage): Responsable
     {
-        $disk = Config::string('localstorage.pictures.disk');
-        $directory = trim(Config::string('localstorage.pictures.directory'), '/');
-
-        // Prepend directory to path
-        $storagePath = $directory.'/'.$partnerTranslationImage->path;
-
-        return FileResponse::view(
-            $disk,
-            $storagePath,
-            $partnerTranslationImage->mime_type
-        );
+        return new InlineImageResponse($partnerTranslationImage);
     }
 }

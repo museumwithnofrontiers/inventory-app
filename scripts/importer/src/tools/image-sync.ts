@@ -220,13 +220,13 @@ export class ImageSyncTool {
     // Get actual file size
     const actualSize = await getFileSize(newPath);
 
-    // Update database record with just the filename (no leading slash, no directory)
+    // Update database record with just the filename (no leading slash, no directory).
+    // Only the file facts change: alt_text and the rest are the importers' data.
     const filename = `${image.id}${extension}`;
     await this.updateImageRecord(tableName, image.id, {
       path: filename,
       size: actualSize,
       original_name: image.path,
-      alt_text: null,
     });
 
     return true;
@@ -239,7 +239,6 @@ export class ImageSyncTool {
       path: string;
       size: number;
       original_name: string;
-      alt_text: null;
     }
   ): Promise<void> {
     const query = `
@@ -247,17 +246,10 @@ export class ImageSyncTool {
       SET path = ?,
           size = ?,
           original_name = ?,
-          alt_text = ?,
           updated_at = NOW()
       WHERE id = ?
     `;
 
-    await this.db.execute(query, [
-      updates.path,
-      updates.size,
-      updates.original_name,
-      updates.alt_text,
-      id,
-    ]);
+    await this.db.execute(query, [updates.path, updates.size, updates.original_name, id]);
   }
 }

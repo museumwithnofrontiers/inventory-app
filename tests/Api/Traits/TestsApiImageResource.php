@@ -2,6 +2,8 @@
 
 namespace Tests\Api\Traits;
 
+use Illuminate\Support\Facades\Storage;
+
 /**
  * Tests for Image Resource Operations (ItemImage, CollectionImage, PartnerImage, etc.)
  *
@@ -144,13 +146,27 @@ trait TestsApiImageResource
 
     public function test_can_delete_image(): void
     {
+        Storage::fake('public');
+        Storage::fake('image-originals');
+
         $modelClass = $this->getModelClass();
-        $image = $modelClass::factory()->create($this->getFactoryData());
+        $image = $modelClass::factory()->create(array_merge($this->getFactoryData(), ['path' => 'destroy-me.jpg']));
+
+        $picturesDir = trim(config('localstorage.pictures.directory'), '/');
+        Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/destroy-me.jpg', 'fake-data');
+
+        $originalsDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk(config('localstorage.available.images.disk'))->put($originalsDir.'/destroy-me.jpg', 'fake-data');
 
         $response = $this->deleteJson(route($this->getResourceName().'.destroy', $image));
 
         $response->assertNoContent();
         $this->assertDatabaseMissing($modelClass::make()->getTable(), ['id' => $image->id]);
+
+        // destroy() has no explicit cleanup code of its own - this proves the
+        // model-level DeletesImageFilesOnDelete trait covers this entry point too.
+        Storage::disk(config('localstorage.pictures.disk'))->assertMissing($picturesDir.'/destroy-me.jpg');
+        Storage::disk(config('localstorage.available.images.disk'))->assertMissing($originalsDir.'/destroy-me.jpg');
     }
 
     public function test_destroy_returns_404_for_nonexistent_image(): void

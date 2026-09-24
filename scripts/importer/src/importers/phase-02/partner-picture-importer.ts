@@ -8,12 +8,14 @@
  * - No child items created
  * - Each picture becomes a PartnerImage
  * - Caption, photographer, copyright stored as metadata
+ * - Copyright also stored burn-ready ("© " + text) on the image row itself
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult, PartnerImageData } from '../../core/types.js';
 import type { LegacyMuseumPicture, LegacyInstitutionPicture } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { toImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 export class PartnerPictureImporter extends BaseImporter {
@@ -131,14 +133,12 @@ export class PartnerPictureImporter extends BaseImporter {
       return true;
     }
 
-    // Build alt_text from caption or use path
-    let altText = picture.path;
-    if (picture.caption && picture.caption.trim()) {
-      altText = picture.caption.trim();
-    }
+    // Build alt_text from the caption; without one it stays null, since a
+    // legacy file path is no alternative text
+    let altText = picture.caption?.trim() || null;
 
     // Truncate alt_text if too long (database limit)
-    if (altText.length > 500) {
+    if (altText && altText.length > 500) {
       altText = altText.substring(0, 497) + '...';
     }
 
@@ -164,7 +164,8 @@ export class PartnerPictureImporter extends BaseImporter {
       original_name: originalName,
       mime_type: mimeType,
       size: 1, // Fake size as required
-      alt_text: altText || null,
+      alt_text: altText,
+      copyright: toImageCopyright(picture.copyright),
       display_order: picture.image_number,
       extra: extraField,
     };
@@ -256,14 +257,12 @@ export class PartnerPictureImporter extends BaseImporter {
       return true;
     }
 
-    // Build alt_text from caption or use path
-    let altText = picture.path;
-    if (picture.caption && picture.caption.trim()) {
-      altText = picture.caption.trim();
-    }
+    // Build alt_text from the caption; without one it stays null, since a
+    // legacy file path is no alternative text
+    let altText = picture.caption?.trim() || null;
 
     // Truncate alt_text if too long (database limit)
-    if (altText.length > 500) {
+    if (altText && altText.length > 500) {
       altText = altText.substring(0, 497) + '...';
     }
 
@@ -289,7 +288,8 @@ export class PartnerPictureImporter extends BaseImporter {
       original_name: originalName,
       mime_type: mimeType,
       size: 1, // Fake size as required
-      alt_text: altText || null,
+      alt_text: altText,
+      copyright: toImageCopyright(picture.copyright),
       display_order: picture.image_number,
       extra: extraField,
     };

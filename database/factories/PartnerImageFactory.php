@@ -29,6 +29,7 @@ class PartnerImageFactory extends Factory
             'mime_type' => fake()->randomElement(['image/jpeg', 'image/png', 'image/webp', 'image/svg+xml']),
             'size' => fake()->numberBetween(10000, 500000), // 10KB to 500KB (logos are typically smaller)
             'alt_text' => fake()->sentence(4),
+            'copyright' => null,
             'display_order' => fake()->numberBetween(1, 5),
         ];
     }

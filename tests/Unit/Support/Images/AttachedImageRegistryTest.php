@@ -104,6 +104,10 @@ class AttachedImageRegistryTest extends TestCase
         $this->assertNotContains('image_uploads', $tables);
     }
 
+    /**
+     * Since M9 (#1974), imageStoragePath() resolves the private original
+     * on the available-images disk, not the public pictures/cache disk.
+     */
     public function test_referenced_paths_yields_storage_paths_from_database(): void
     {
         $item = ItemImage::factory()->create(['path' => 'test-item.jpg']);
@@ -113,7 +117,22 @@ class AttachedImageRegistryTest extends TestCase
             $paths[] = $path;
         }
 
-        $expectedPath = trim(config('localstorage.pictures.directory'), '/').'/test-item.jpg';
+        $expectedPath = trim(config('localstorage.available.images.directory'), '/').'/test-item.jpg';
         $this->assertContains($expectedPath, $paths);
+    }
+
+    public function test_find_by_path_returns_the_owning_model_instance(): void
+    {
+        $image = CollectionImage::factory()->create(['path' => 'find-me.jpg']);
+
+        $found = AttachedImageRegistry::findByPath('find-me.jpg');
+
+        $this->assertInstanceOf(CollectionImage::class, $found);
+        $this->assertSame($image->id, $found->id);
+    }
+
+    public function test_find_by_path_returns_null_when_no_model_owns_the_path(): void
+    {
+        $this->assertNull(AttachedImageRegistry::findByPath('does-not-exist.jpg'));
     }
 }

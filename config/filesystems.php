@@ -54,6 +54,16 @@ return [
             'report' => false,
         ],
 
+        // Pristine, never-watermarked image originals. Never web-reachable.
+        // Distinct from `local` for clarity, even though it lives on the same
+        // physical volume today (M9 §10 "Two disks").
+        'image-originals' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/image-originals'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

@@ -16,7 +16,6 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 abstract class BaseImagesRelationManager extends RelationManager
 {
@@ -162,6 +161,12 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->numeric()
                             ->integer()
                             ->nullable(),
+                        TextInput::make('copyright')
+                            ->label('Copyright')
+                            ->helperText('Leave blank to inherit from the owning project, or the site-wide default.')
+                            ->maxLength(500)
+                            ->nullable()
+                            ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
                     ]),
                 Action::make('detach')
                     ->label('Detach')
@@ -183,12 +188,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                     ->label('Delete permanently')
                     ->requiresConfirmation()
                     ->modalHeading('Delete image permanently')
-                    ->modalDescription('The image file will be permanently deleted from storage and cannot be recovered. It will NOT be returned to the available image pool.')
-                    ->before(function (Model $record): void {
-                        /** @var Model&StreamableImageFile $record */
-                        Storage::disk($record->imageDisk())
-                            ->delete($record->imageStoragePath());
-                    }),
+                    ->modalDescription('The image file will be permanently deleted from storage and cannot be recovered. It will NOT be returned to the available image pool.'),
             ]);
     }
 

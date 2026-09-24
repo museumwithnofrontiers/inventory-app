@@ -100,6 +100,12 @@ class ProjectResource extends Resource
                     ->label('Artistic introduction URL')
                     ->url()
                     ->maxLength(255),
+                TextInput::make('copyright')
+                    ->label('Copyright')
+                    ->helperText('Default copyright for this project\'s images that don\'t set their own. Leave blank to use the site-wide default.')
+                    ->maxLength(500)
+                    ->nullable()
+                    ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
                 Select::make('context_id')
                     ->label('Context')
                     ->relationship('context', 'internal_name')

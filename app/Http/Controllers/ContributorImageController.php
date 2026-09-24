@@ -9,7 +9,8 @@ use App\Http\Requests\Api\StoreContributorImageRequest;
 use App\Http\Requests\Api\UpdateContributorImageRequest;
 use App\Http\Resources\ContributorImageResource;
 use App\Http\Resources\OperationSuccessResource;
-use App\Http\Responses\FileResponse;
+use App\Http\Responses\Image\DownloadImageResponse;
+use App\Http\Responses\Image\InlineImageResponse;
 use App\Models\AvailableImage;
 use App\Models\Contributor;
 use App\Models\ContributorImage;
@@ -18,7 +19,6 @@ use App\Support\Includes\IncludeParser;
 use Illuminate\Contracts\Support\Responsable;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Config;
 
 class ContributorImageController extends Controller
 {
@@ -164,18 +164,7 @@ class ContributorImageController extends Controller
      */
     public function download(ContributorImage $contributorImage): Responsable
     {
-        $disk = Config::string('localstorage.pictures.disk');
-        $directory = trim(Config::string('localstorage.pictures.directory'), '/');
-        $filename = $contributorImage->original_name ?: basename($contributorImage->path);
-
-        $storagePath = $directory.'/'.$contributorImage->path;
-
-        return FileResponse::download(
-            $disk,
-            $storagePath,
-            $filename,
-            $contributorImage->mime_type
-        );
+        return new DownloadImageResponse($contributorImage);
     }
 
     /**
@@ -183,15 +172,6 @@ class ContributorImageController extends Controller
      */
     public function view(ContributorImage $contributorImage): Responsable
     {
-        $disk = Config::string('localstorage.pictures.disk');
-        $directory = trim(Config::string('localstorage.pictures.directory'), '/');
-
-        $storagePath = $directory.'/'.$contributorImage->path;
-
-        return FileResponse::view(
-            $disk,
-            $storagePath,
-            $contributorImage->mime_type
-        );
+        return new InlineImageResponse($contributorImage);
     }
 }

@@ -21,6 +21,7 @@ class ContributorImageFactory extends Factory
             'mime_type' => $this->faker->mimeType(),
             'size' => $this->faker->numberBetween(1000, 5000000),
             'alt_text' => $this->faker->optional()->sentence(),
+            'copyright' => null,
             'display_order' => $this->faker->numberBetween(0, 10),
         ];
     }

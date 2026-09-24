@@ -27,8 +27,7 @@ class AvailableImageSmokeTest extends TestCase
     public function test_available_image_resource_handles_a_one_thousand_image_pool(): void
     {
         Storage::fake('local');
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
+        Storage::fake('image-originals');
 
         $user = $this->createAuthorizedUser();
         $this->seedAvailableImages(1_000);
@@ -61,16 +60,15 @@ class AvailableImageSmokeTest extends TestCase
             ->assertCanSeeTableRecords([$target]);
     }
 
-    public function test_attach_image_moves_file_from_images_to_pictures_and_removes_from_pool(): void
+    public function test_attach_image_leaves_the_original_in_place_and_removes_from_pool(): void
     {
         Storage::fake('local');
+        Storage::fake('image-originals');
         Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
 
         $availableImage = AvailableImage::factory()->create(['path' => 'test-image.jpg']);
         $imagePath = trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path;
-        Storage::disk('public')->put($imagePath, 'fake-image-data');
+        Storage::disk(config('localstorage.available.images.disk'))->put($imagePath, 'fake-image-data');
 
         $item = Item::factory()->Object()->create();
 
@@ -84,23 +82,36 @@ class AvailableImageSmokeTest extends TestCase
             'alt_text' => 'A test image',
         ]);
 
+        // Attaching never moves bytes: the original stays exactly where it
+        // was, now owned by the attached row instead of the available pool.
+        Storage::disk(config('localstorage.available.images.disk'))->assertExists($imagePath);
+        $this->assertSame(
+            config('localstorage.available.images.disk'),
+            $itemImage->imageDisk(),
+            'imageDisk() must resolve to the private original, not the public cache'
+        );
+
+        // Nothing was burned yet - the public cache stays empty until the
+        // first real request (A3's on-demand pipeline).
         $picturesDir = trim(config('localstorage.pictures.directory'), '/');
-        Storage::disk(config('localstorage.pictures.disk'))->assertExists($picturesDir.'/test-image.jpg');
-        Storage::disk(config('localstorage.available.images.disk'))->assertMissing($imagePath);
+        Storage::disk(config('localstorage.pictures.disk'))->assertMissing($picturesDir.'/test-image.jpg');
     }
 
-    public function test_detach_image_moves_file_from_pictures_to_images_and_returns_to_pool(): void
+    public function test_detach_image_removes_the_public_cache_and_returns_original_to_pool(): void
     {
         Storage::fake('local');
+        Storage::fake('image-originals');
         Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
 
         $item = Item::factory()->Object()->create();
         $itemImage = ItemImage::factory()->forItem($item)->create(['path' => 'test-detach.jpg']);
 
+        $originalPath = trim(config('localstorage.available.images.directory'), '/').'/test-detach.jpg';
+        Storage::disk(config('localstorage.available.images.disk'))->put($originalPath, 'fake-image-data');
+
+        // Simulate a previously-burned public cache copy.
         $picturesDir = trim(config('localstorage.pictures.directory'), '/');
-        Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/test-detach.jpg', 'fake-image-data');
+        Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/test-detach.jpg', 'burned-image-data');
 
         $attachedId = $itemImage->id;
 
@@ -112,21 +123,20 @@ class AvailableImageSmokeTest extends TestCase
             'path' => 'test-detach.jpg',
         ]);
 
-        $imagesDir = trim(config('localstorage.available.images.directory'), '/');
-        Storage::disk(config('localstorage.available.images.disk'))->assertExists($imagesDir.'/test-detach.jpg');
+        // The private original is untouched by detach...
+        Storage::disk(config('localstorage.available.images.disk'))->assertExists($originalPath);
+        // ...but the public cache is gone - nothing to serve once detached.
         Storage::disk(config('localstorage.pictures.disk'))->assertMissing($picturesDir.'/test-detach.jpg');
     }
 
     public function test_same_image_cannot_be_attached_to_two_entities(): void
     {
         Storage::fake('local');
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
+        Storage::fake('image-originals');
 
         $availableImage = AvailableImage::factory()->create(['path' => 'unique-image.jpg']);
         $imagePath = trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path;
-        Storage::disk('public')->put($imagePath, 'fake-image-data');
+        Storage::disk(config('localstorage.available.images.disk'))->put($imagePath, 'fake-image-data');
 
         $item1 = Item::factory()->Object()->create();
         $item2 = Item::factory()->Object()->create();
@@ -142,13 +152,12 @@ class AvailableImageSmokeTest extends TestCase
     public function test_partner_attach_and_detach_works_correctly(): void
     {
         Storage::fake('local');
+        Storage::fake('image-originals');
         Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
 
         $availableImage = AvailableImage::factory()->create(['path' => 'partner-image.jpg']);
         $imagePath = trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path;
-        Storage::disk('public')->put($imagePath, 'fake-image-data');
+        Storage::disk(config('localstorage.available.images.disk'))->put($imagePath, 'fake-image-data');
 
         $partner = Partner::factory()->create();
 
@@ -171,17 +180,16 @@ class AvailableImageSmokeTest extends TestCase
     public function test_metadata_is_preserved_through_attach_to_item(): void
     {
         Storage::fake('local');
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
+        Storage::fake('image-originals');
 
         $availableImage = AvailableImage::factory()->create([
             'path' => 'meta-test.jpg',
             'original_name' => 'my-original-photo.jpg',
             'mime_type' => 'image/jpeg',
             'size' => 12345,
+            'copyright' => '© Meta Test',
         ]);
-        Storage::disk('public')->put(
+        Storage::disk(config('localstorage.available.images.disk'))->put(
             trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path,
             'fake-image-data'
         );
@@ -194,19 +202,20 @@ class AvailableImageSmokeTest extends TestCase
             'original_name' => 'my-original-photo.jpg',
             'mime_type' => 'image/jpeg',
             'size' => 12345,
+            'copyright' => '© Meta Test',
         ]);
         $this->assertEquals($availableImage->id, $itemImage->id);
         $this->assertEquals('my-original-photo.jpg', $itemImage->original_name);
         $this->assertEquals('image/jpeg', $itemImage->mime_type);
         $this->assertEquals(12345, $itemImage->size);
+        $this->assertEquals('© Meta Test', $itemImage->copyright);
     }
 
     public function test_metadata_is_preserved_through_detach_from_item(): void
     {
         Storage::fake('local');
+        Storage::fake('image-originals');
         Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
 
         $item = Item::factory()->Object()->create();
         $itemImage = ItemImage::factory()->forItem($item)->create([
@@ -214,9 +223,10 @@ class AvailableImageSmokeTest extends TestCase
             'original_name' => 'original-upload.jpg',
             'mime_type' => 'image/png',
             'size' => 98765,
+            'copyright' => '© Detach Meta',
         ]);
-        Storage::disk(config('localstorage.pictures.disk'))->put(
-            trim(config('localstorage.pictures.directory'), '/').'/detach-meta.jpg',
+        Storage::disk(config('localstorage.available.images.disk'))->put(
+            trim(config('localstorage.available.images.directory'), '/').'/detach-meta.jpg',
             'fake-image-data'
         );
 
@@ -227,28 +237,30 @@ class AvailableImageSmokeTest extends TestCase
         $this->assertEquals('original-upload.jpg', $availableImage->original_name);
         $this->assertEquals('image/png', $availableImage->mime_type);
         $this->assertEquals(98765, $availableImage->size);
+        $this->assertEquals('© Detach Meta', $availableImage->copyright);
         $this->assertDatabaseHas('available_images', [
             'id' => $attachedId,
             'original_name' => 'original-upload.jpg',
             'mime_type' => 'image/png',
             'size' => 98765,
+            'copyright' => '© Detach Meta',
         ]);
     }
 
     public function test_metadata_survives_full_detach_and_reattach_roundtrip(): void
     {
         Storage::fake('local');
+        Storage::fake('image-originals');
         Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
 
         $availableImage = AvailableImage::factory()->create([
             'path' => 'roundtrip.jpg',
             'original_name' => 'roundtrip-upload.jpg',
             'mime_type' => 'image/jpeg',
             'size' => 55555,
+            'copyright' => '© Roundtrip',
         ]);
-        Storage::disk('public')->put(
+        Storage::disk(config('localstorage.available.images.disk'))->put(
             trim(config('localstorage.available.images.directory'), '/').'/roundtrip.jpg',
             'fake-image-data'
         );
@@ -260,6 +272,7 @@ class AvailableImageSmokeTest extends TestCase
         $itemImage = ItemImage::attachFromAvailableImage($availableImage, $item->id);
         $this->assertEquals($originalId, $itemImage->id);
         $this->assertEquals('roundtrip-upload.jpg', $itemImage->original_name);
+        $this->assertEquals('© Roundtrip', $itemImage->copyright);
 
         // Detach
         $availableImage2 = $itemImage->detachToAvailableImage();
@@ -267,6 +280,7 @@ class AvailableImageSmokeTest extends TestCase
         $this->assertEquals('roundtrip-upload.jpg', $availableImage2->original_name);
         $this->assertEquals('image/jpeg', $availableImage2->mime_type);
         $this->assertEquals(55555, $availableImage2->size);
+        $this->assertEquals('© Roundtrip', $availableImage2->copyright);
 
         // Re-attach to another item
         $item2 = Item::factory()->Object()->create();
@@ -276,22 +290,28 @@ class AvailableImageSmokeTest extends TestCase
         $this->assertEquals('roundtrip-upload.jpg', $itemImage2->original_name);
         $this->assertEquals('image/jpeg', $itemImage2->mime_type);
         $this->assertEquals(55555, $itemImage2->size);
+        $this->assertEquals('© Roundtrip', $itemImage2->copyright);
+
+        // The same private original file survived the whole round trip untouched.
+        Storage::disk(config('localstorage.available.images.disk'))->assertExists(
+            trim(config('localstorage.available.images.directory'), '/').'/roundtrip.jpg'
+        );
     }
 
     public function test_metadata_is_preserved_through_partner_attach_and_detach(): void
     {
         Storage::fake('local');
+        Storage::fake('image-originals');
         Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
-        Storage::disk('public')->makeDirectory('pictures');
 
         $availableImage = AvailableImage::factory()->create([
             'path' => 'partner-meta.jpg',
             'original_name' => 'partner-original.jpg',
             'mime_type' => 'image/jpeg',
             'size' => 77777,
+            'copyright' => '© Partner Meta',
         ]);
-        Storage::disk('public')->put(
+        Storage::disk(config('localstorage.available.images.disk'))->put(
             trim(config('localstorage.available.images.directory'), '/').'/partner-meta.jpg',
             'fake-image-data'
         );
@@ -302,12 +322,14 @@ class AvailableImageSmokeTest extends TestCase
         $partnerImage = PartnerImage::attachFromAvailableImage($availableImage, $partner->id);
         $this->assertEquals($originalId, $partnerImage->id);
         $this->assertEquals('partner-original.jpg', $partnerImage->original_name);
+        $this->assertEquals('© Partner Meta', $partnerImage->copyright);
 
         $returned = $partnerImage->detachToAvailableImage();
         $this->assertEquals($originalId, $returned->id);
         $this->assertEquals('partner-original.jpg', $returned->original_name);
         $this->assertEquals('image/jpeg', $returned->mime_type);
         $this->assertEquals(77777, $returned->size);
+        $this->assertEquals('© Partner Meta', $returned->copyright);
     }
 
     protected function createAuthorizedUser(): User
@@ -342,7 +364,7 @@ class AvailableImageSmokeTest extends TestCase
 
         foreach ($rows as $row) {
             $dir = trim(config('localstorage.available.images.directory'), '/');
-            Storage::disk('public')->put($dir.'/'.$row['path'], 'fake-image');
+            Storage::disk(config('localstorage.available.images.disk'))->put($dir.'/'.$row['path'], 'fake-image');
         }
     }
 

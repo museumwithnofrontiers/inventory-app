@@ -18,6 +18,7 @@ class FakeConnection {
   }>;
 
   public updateCalls = 0;
+  public updates: Array<{ query: string; params: unknown[] }> = [];
 
   constructor(
     selectRows: Array<{
@@ -32,12 +33,13 @@ class FakeConnection {
     this.selectRows = selectRows;
   }
 
-  async execute(query: string): Promise<[unknown[], unknown]> {
+  async execute(query: string, params: unknown[] = []): Promise<[unknown[], unknown]> {
     if (query.includes('SELECT')) {
       return [this.selectRows, []];
     }
     if (query.includes('UPDATE')) {
       this.updateCalls += 1;
+      this.updates.push({ query, params });
       return [[], []];
     }
     return [[], []];
@@ -182,6 +184,44 @@ describe('ImageSyncTool destination clearing', () => {
     expect(result.success).toBe(true);
     await expect(fs.access(oldFile)).resolves.toBeUndefined();
     expect(logger.messages).toContain(`[DRY-RUN] Would clear destination directory: ${newRoot}`);
+  });
+
+  it('keeps the alt text the importer wrote: only the file facts are updated', async () => {
+    const legacyRoot = await createTempDir('importer-legacy-alt-');
+    const newRoot = await createTempDir('importer-new-alt-');
+
+    const sourceRelativePath = 'monuments/it/1/1.jpg';
+    await fs.mkdir(path.join(legacyRoot, 'monuments/it/1'), { recursive: true });
+    await fs.writeFile(path.join(legacyRoot, sourceRelativePath), 'bytes');
+
+    const id = '123e4567-e89b-12d3-a456-426614174001';
+    const fake = new FakeConnection([
+      {
+        id,
+        path: sourceRelativePath,
+        size: 1,
+        original_name: '1.jpg',
+        alt_text: 'Minaret seen from the courtyard',
+        mime_type: 'image/jpeg',
+      },
+    ]);
+
+    const tool = new ImageSyncTool(
+      fake as unknown as Connection,
+      createOptions({ useSymlink: false, legacyImagesRoot: legacyRoot, newImagesRoot: newRoot }),
+      new FakeLogger()
+    );
+
+    const result = await tool.run();
+
+    expect(result.success).toBe(true);
+    // The same row is offered once per synced table.
+    expect(fake.updates.length).toBeGreaterThan(0);
+    for (const { query, params } of fake.updates) {
+      expect(query).not.toMatch(/alt_text/);
+      expect(params).not.toContain('Minaret seen from the courtyard');
+      expect(params).toEqual([`${id}.jpg`, 5, sourceRelativePath, id]);
+    }
   });
 
   it('includes timeline_event_images in the sync table list', async () => {

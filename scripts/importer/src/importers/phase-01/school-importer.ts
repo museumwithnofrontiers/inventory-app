@@ -21,6 +21,7 @@ import type {
   LegacySchoolPicture,
 } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { toImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 export class SchoolImporter extends BaseImporter {
@@ -263,22 +264,21 @@ export class SchoolImporter extends BaseImporter {
           continue;
         }
 
-        // Build alt_text
-        let altText = picture.path;
-        if (picture.caption?.trim()) {
-          altText = picture.caption.trim();
-        }
-        if (altText.length > 500) {
+        // Build alt_text from the caption; without one it stays null, since a
+        // legacy file path is no alternative text
+        let altText = picture.caption?.trim() || null;
+        if (altText && altText.length > 500) {
           altText = altText.substring(0, 497) + '...';
         }
 
         const mimeType = this.getMimeType(picture.path);
         const originalName = path.basename(picture.path);
 
-        // Build extra for photographer/copyright
+        // Build extra JSON for photographer/copyright
         const extra: Record<string, string> = {};
-        if (picture.photographer) extra.photographer = picture.photographer;
-        if (picture.copyright) extra.copyright = picture.copyright;
+        if (picture.photographer?.trim()) extra.photographer = picture.photographer.trim();
+        if (picture.copyright?.trim()) extra.copyright = picture.copyright.trim();
+        const extraField = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
         const imageData: PartnerImageData = {
           id: undefined,
@@ -287,8 +287,10 @@ export class SchoolImporter extends BaseImporter {
           original_name: originalName,
           mime_type: mimeType,
           size: 1, // Placeholder for ImageSyncTool
-          alt_text: altText || null,
+          alt_text: altText,
+          copyright: toImageCopyright(picture.copyright),
           display_order: picture.image_number,
+          extra: extraField,
         };
 
         await this.context.strategy.writePartnerImage(imageData);

@@ -23,6 +23,22 @@ class ProjectFactoryTest extends TestCase
         $this->assertTrue(Schema::hasColumn('projects', 'artistic_introduction_url'), 'projects must carry an `artistic_introduction_url` column');
     }
 
+    public function test_projects_table_has_copyright_column(): void
+    {
+        $this->assertTrue(Schema::hasColumn('projects', 'copyright'), 'projects must carry a `copyright` column');
+    }
+
+    public function test_project_copyright_defaults_to_null_and_can_be_set(): void
+    {
+        $project = Project::factory()->create();
+
+        $this->assertNull($project->copyright);
+
+        $project->update(['copyright' => '© Discover Islamic Art']);
+
+        $this->assertSame('© Discover Islamic Art', $project->fresh()->copyright);
+    }
+
     public function test_factory_creates_valid_project(): void
     {
         $project = Project::factory()->create();

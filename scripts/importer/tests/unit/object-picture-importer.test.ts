@@ -237,6 +237,80 @@ describe('ObjectPictureImporter', () => {
     );
   });
 
+  describe('image copyright', () => {
+    // The same picture, stored once per language, with the languages
+    // disagreeing — as they do for some legacy object pictures.
+    const czechRow = {
+      ...rowCopyrightOnly,
+      lang: 'cs',
+      copyright: 'Moravská galerie v Brně, Muzeum města Brna',
+    };
+    const englishRow = { ...rowCopyrightOnly, lang: 'en', copyright: 'Muzeum města Brna' };
+
+    function withPictureRows(rows: object[]): void {
+      queryMock.mockImplementation(async (sql: string) => {
+        if (sql.includes('FROM mwnf3.objects_pictures')) return rows;
+        if (sql.includes('FROM mwnf3.objects')) return [{ name: 'Museum Object Title' }];
+        return [];
+      });
+    }
+
+    it('writes the English copyright, burn-ready, on both the picture and its parent', async () => {
+      withPictureRows([czechRow, englishRow]);
+
+      await new ObjectPictureImporter(context).import();
+
+      // Image 1 of type '' is the object's first image: written on the picture
+      // Item and on the parent Item.
+      expect(writeItemImageMock).toHaveBeenCalledTimes(2);
+      expect(writeItemImageMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          item_id: 'new-picture-item-uuid',
+          copyright: '© Muzeum města Brna',
+        })
+      );
+      expect(writeItemImageMock).toHaveBeenCalledWith(
+        expect.objectContaining({ item_id: 'parent-item-uuid', copyright: '© Muzeum města Brna' })
+      );
+    });
+
+    it("keeps each language's own text in its translation's extra.copyright", async () => {
+      withPictureRows([czechRow, englishRow]);
+
+      await new ObjectPictureImporter(context).import();
+
+      expect(writeItemTranslationMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          extra: JSON.stringify({ copyright: 'Moravská galerie v Brně, Muzeum města Brna' }),
+        })
+      );
+      expect(writeItemTranslationMock).toHaveBeenCalledWith(
+        expect.objectContaining({ extra: JSON.stringify({ copyright: 'Muzeum města Brna' }) })
+      );
+    });
+
+    it('uses the first filled language when there is no English copyright', async () => {
+      withPictureRows([{ ...rowEmpty, lang: 'fr' }, czechRow]);
+
+      await new ObjectPictureImporter(context).import();
+
+      for (const [image] of writeItemImageMock.mock.calls) {
+        expect(image).toMatchObject({ copyright: '© Moravská galerie v Brně, Muzeum města Brna' });
+      }
+    });
+
+    it('leaves the column null when no language has a copyright', async () => {
+      withPictureRows([rowWithCaption]);
+
+      await new ObjectPictureImporter(context).import();
+
+      expect(writeItemImageMock).toHaveBeenCalled();
+      for (const [image] of writeItemImageMock.mock.calls) {
+        expect(image).toMatchObject({ copyright: null });
+      }
+    });
+  });
+
   describe('partners whose captions are descriptions', () => {
     // epm/at/Mus24 wrote art-historical descriptions of the image into
     // `caption`, where every other partner wrote a short label such as

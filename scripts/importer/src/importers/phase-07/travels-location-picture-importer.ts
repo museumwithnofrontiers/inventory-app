@@ -9,7 +9,7 @@
  *   - Type: usually empty string
  *
  * New schema:
- * - collection_images (collection_id, path, original_name, mime_type, size, alt_text, display_order)
+ * - collection_images (collection_id, path, original_name, mime_type, size, alt_text, copyright, display_order)
  *
  * Dependencies:
  * - TravelsLocationImporter (must run first to create location collections)
@@ -18,6 +18,7 @@
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult, CollectionImageData } from '../../core/types.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { pickImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 /**
@@ -187,6 +188,12 @@ export class TravelsLocationPictureImporter extends BaseImporter {
     );
     const captionText = bestCaption ? convertHtmlToMarkdown(bestCaption) : null;
 
+    // The legacy rows carry the copyright per language; the image keeps one,
+    // burn-ready (English, else the first filled)
+    const copyright = pickImageCopyright(
+      group.translations.map((t) => ({ lang: t.lang, copyright: t.copyright }))
+    );
+
     const mimeType = this.getMimeType(group.path);
     const originalName = path.basename(group.path);
 
@@ -198,6 +205,7 @@ export class TravelsLocationPictureImporter extends BaseImporter {
       mime_type: mimeType,
       size: 1, // Placeholder size
       alt_text: captionText,
+      copyright,
       display_order: displayOrder,
     };
 
