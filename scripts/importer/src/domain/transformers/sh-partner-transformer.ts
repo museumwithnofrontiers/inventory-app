@@ -201,6 +201,7 @@ export function transformShPartnerTranslation(
   // Map contact fields from partner data:
   // - contact_website: primary URL
   // - contact_phone: institution phone
+  // - contact_fax: institution fax
   // - contact_email_general: institution email
   const data: Omit<PartnerTranslationData, 'partner_id' | 'context_id' | 'backward_compatibility'> =
     {
@@ -211,6 +212,7 @@ export function transformShPartnerTranslation(
       address: partner.address ? convertHtmlToMarkdown(partner.address) : null,
       contact_website: partner.url || null,
       contact_phone: partner.phone || null,
+      contact_fax: partner.fax || null,
       contact_email_general: partner.email || null,
       extra: extraJson,
     };

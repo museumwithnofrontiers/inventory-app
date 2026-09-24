@@ -37,6 +37,7 @@ class PartnerTranslationResource extends JsonResource
             'contact_email_general' => $this->contact_email_general,
             'contact_email_press' => $this->contact_email_press,
             'contact_phone' => $this->contact_phone,
+            'contact_fax' => $this->contact_fax,
             'contact_website' => $this->contact_website,
             'contact_notes' => $this->contact_notes,
             'contact_emails' => $this->contact_emails,

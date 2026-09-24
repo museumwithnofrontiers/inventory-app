@@ -176,6 +176,7 @@ export function transformInstitutionTranslation(
   // Map contact fields:
   // - contact_email_general: institution email
   // - contact_phone: institution phone
+  // - contact_fax: institution fax
   // - contact_website: primary URL
   const data: Omit<PartnerTranslationData, 'partner_id' | 'context_id'> = {
     language_id: languageId,
@@ -186,6 +187,7 @@ export function transformInstitutionTranslation(
     address: institution.address || null,
     contact_website: institution.url || null,
     contact_phone: institution.phone || null,
+    contact_fax: institution.fax || null,
     contact_email_general: institution.email || null,
     extra: extraJson,
   };

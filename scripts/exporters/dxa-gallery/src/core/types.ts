@@ -140,8 +140,12 @@ export interface Partner {
   featured: boolean
   /** Languages the partner has a translation in (codes, sorted): its entries across `translations/partners.<lang>.json`. */
   languages: string[]
+  /** Superseded by `contact_persons`; kept until every consumer has moved to it. */
   contact_person_1: PartnerContactPerson | null
+  /** Superseded by `contact_persons`; kept until every consumer has moved to it. */
   contact_person_2: PartnerContactPerson | null
+  /** Contact persons in legacy order (person 1 first); `[]` for none. */
+  contact_persons: PartnerContactPerson[]
   additional_urls: PartnerUrl[]
   images: PartnerImage[]
   logos: PartnerLogo[]

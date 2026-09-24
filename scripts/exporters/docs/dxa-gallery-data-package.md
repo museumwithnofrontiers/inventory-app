@@ -274,6 +274,17 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
   translation in, i.e. the `translations/partners.<lang>.json` files it
   appears in. Same derivation as each item's `languages` in `items.json`;
   `[]` for a partner with no translation.
+- **`contact_persons`**: the legacy `cp1_*`/`cp2_*` contacts as a list in
+  legacy order (person 1 first), leaving out the ones the partner doesn't
+  have. This is how DXA's API builds `contactPerson`, and it keeps the order
+  visible once one of the two is missing. It supersedes
+  `contact_person_1`/`contact_person_2`, which stay in the shape until every
+  viewer and site reads the list, and are then removed (#1959).
+
+`translations/partners.<lang>.json` holds each partner's `name`,
+`description`, `city`, `address`, `website`, `phone`, `fax` and `email`, with
+null fields omitted. `phone` and `fax` are the partner's own numbers,
+repeated in every language.
 
 One shape across every dataset (decision D4, museumwithnofrontiers/inventory-app#1699):
 every `partners.json` row carries `level`, `parent_id`, `project_uuids`,

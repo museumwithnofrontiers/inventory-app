@@ -44,6 +44,7 @@ class PartnerTranslationFactory extends Factory
             'contact_email_general' => $this->faker->optional()->companyEmail(),
             'contact_email_press' => $this->faker->optional()->companyEmail(),
             'contact_phone' => $this->faker->optional()->phoneNumber(),
+            'contact_fax' => $this->faker->optional()->phoneNumber(),
             'contact_website' => $this->faker->optional()->url(),
             'contact_notes' => $this->faker->optional()->sentence(),
             'contact_emails' => $this->faker->optional(0.3)->passthrough([
@@ -149,6 +150,7 @@ class PartnerTranslationFactory extends Factory
                 'contact_email_general' => $this->faker->companyEmail(),
                 'contact_email_press' => $this->faker->companyEmail(),
                 'contact_phone' => $this->faker->phoneNumber(),
+                'contact_fax' => $this->faker->phoneNumber(),
                 'contact_website' => $this->faker->url(),
                 'contact_notes' => $this->faker->sentence(),
                 'contact_emails' => json_encode([

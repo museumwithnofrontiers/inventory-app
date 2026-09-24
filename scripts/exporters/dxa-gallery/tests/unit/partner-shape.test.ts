@@ -55,6 +55,7 @@ describe('PartnerExporter — shared partner shape', () => {
     address_notes: null,
     contact_website: null,
     contact_phone: null,
+    contact_fax: null,
     contact_email_general: null,
     extra: null,
   })
@@ -140,6 +141,44 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(output.find(p => p.id === 'partner-b')?.languages).toEqual([])
   })
 
+  it('ships the partner fax in its translations, next to the phone', async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 1)],
+      translations: [{ ...translationRow('partner-a'), contact_phone: '+34 91 577 79 12', contact_fax: '+34 91 431 68 40' }],
+    })
+    await new PartnerExporter(context(db, null)).export()
+
+    const en = JSON.parse(readFileSync(join(outputDir, 'translations', 'partners.en.json'), 'utf-8')) as Record<string, Record<string, string>>
+    expect(en['partner-a']).toMatchObject({ phone: '+34 91 577 79 12', fax: '+34 91 431 68 40' })
+    expect(queries.find(q => q.sql.includes('FROM partner_translations'))?.sql).toContain('contact_fax')
+  })
+
+  it('lists the contact persons in legacy order, leaving out the missing ones', async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 1), partnerRow('partner-b', 1)],
+      translations: [
+        { ...translationRow('partner-a'), extra: { contact_person_1: { name: 'First' }, contact_person_2: { name: 'Second' } } },
+        { ...translationRow('partner-b'), extra: { contact_person_2: { name: 'Only the second' } } },
+      ],
+    })
+    await new PartnerExporter(context(db, null)).export()
+
+    const output = readOutput()
+    const a = output.find(p => p.id === 'partner-a')
+    const b = output.find(p => p.id === 'partner-b')
+    expect(a?.contact_persons).toEqual([{ name: 'First' }, { name: 'Second' }])
+    expect(b?.contact_persons).toEqual([{ name: 'Only the second' }])
+    // The two keys it supersedes stay until every consumer has moved
+    expect(b?.contact_person_1).toBeNull()
+    expect(b?.contact_person_2).toEqual({ name: 'Only the second' })
+  })
+
+  it('reports an empty contact_persons list for a partner with none', async () => {
+    const db = stubDb({ partners: [partnerRow('partner-a', 1)], translations: [translationRow('partner-a')] })
+    await new PartnerExporter(context(db, null)).export()
+
+    expect(readOutput()[0]?.contact_persons).toEqual([])
+  })
   it('derives level and parent_id from the curated partner_group hierarchy', async () => {
     const db = stubDb({
       partners: [partnerRow('owner', 2), partnerRow('member', 0)],

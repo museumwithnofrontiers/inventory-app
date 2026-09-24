@@ -107,6 +107,10 @@ class TranslationsRelationManager extends RelationManager
                             ->label('Phone')
                             ->placeholder('+1 234 567 8900')
                             ->maxLength(255),
+                        TextInput::make('contact_fax')
+                            ->label('Fax')
+                            ->placeholder('+1 234 567 8901')
+                            ->maxLength(255),
                         TextInput::make('contact_email_general')
                             ->label('General email')
                             ->email()

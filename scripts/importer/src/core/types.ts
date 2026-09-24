@@ -236,6 +236,7 @@ export interface PartnerTranslationData {
   address?: string | null;
   contact_website?: string | null;
   contact_phone?: string | null;
+  contact_fax?: string | null;
   contact_email_general?: string | null;
   extra?: string | null;
 }

@@ -452,8 +452,8 @@ export class SqlWriteStrategy implements IWriteStrategy {
       `partner_translation:${sanitized.backward_compatibility.toLowerCase()}:${sanitized.language_id}:${sanitized.context_id}`
     );
     await this.db.execute(
-      `INSERT INTO partner_translations (id, partner_id, language_id, context_id, name, description, city_display, address_notes, contact_website, contact_phone, contact_email_general, extra, backward_compatibility, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO partner_translations (id, partner_id, language_id, context_id, name, description, city_display, address_notes, contact_website, contact_phone, contact_fax, contact_email_general, extra, backward_compatibility, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         sanitized.partner_id,
@@ -465,6 +465,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
         sanitized.address,
         sanitized.contact_website,
         sanitized.contact_phone,
+        sanitized.contact_fax ?? null,
         sanitized.contact_email_general,
         sanitized.extra,
         sanitized.backward_compatibility,
