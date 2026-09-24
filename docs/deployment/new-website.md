@@ -46,6 +46,7 @@ exporter (see
 | 6. Catalogue, sheet and theme | any developer | the site's own pull request |
 | 7. Record the site in inventory-app | any developer | an ordinary pull request |
 | 8. Discovery check | any developer | a read-only dry run |
+| 9. List the site on the organization site | any developer | reads GitHub, then an ordinary pull request |
 
 ## Standing warning: which database, which environment
 
@@ -294,6 +295,23 @@ is "not on the registry" while `npm pack` serves it; that is the host-side
 registry lag, not a missing publish, and the container does not see it.
 
 **Proof:** the dry-run's report includes this site.
+
+## 9. List the site on the organization site
+
+<https://museumwithnofrontiers.github.io> lists every website, from a
+`sites.json` that
+[`scripts/org-site/list-sites.mjs`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/org-site/README.md)
+generates. The new site is found the way step 8 found it, and takes its
+title and kind from the instance file of step 2. Regenerate the list into the
+`.new-architecture/museumwithnofrontiers.github.io` submodule, then commit
+`sites.json` there on a branch and open a pull request on that repository:
+
+```powershell
+docker run --rm -e GH_TOKEN=$(gh auth token) -v "${PWD}:/w" -w /w node:lts-alpine sh -c "apk add --no-cache github-cli >/dev/null && node scripts/org-site/list-sites.mjs"
+```
+
+**Proof:** once that pull request merges, the site appears on
+<https://museumwithnofrontiers.github.io> under its group.
 
 ## Steps you may find in older notes
 
