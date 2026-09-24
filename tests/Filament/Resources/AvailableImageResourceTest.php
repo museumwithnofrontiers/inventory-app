@@ -80,6 +80,7 @@ class AvailableImageResourceTest extends TestCase
         $user = $this->createCrudUser();
         $availableImage = AvailableImage::factory()->create([
             'comment' => 'Original comment',
+            'copyright' => 'Original copyright',
         ]);
 
         $this->setCurrentPanel();
@@ -90,9 +91,11 @@ class AvailableImageResourceTest extends TestCase
             ])
             ->assertFormSet([
                 'comment' => 'Original comment',
+                'copyright' => 'Original copyright',
             ])
             ->fillForm([
                 'comment' => 'Updated comment',
+                'copyright' => 'Updated copyright',
             ])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -100,6 +103,35 @@ class AvailableImageResourceTest extends TestCase
         $this->assertDatabaseHas('available_images', [
             'id' => $availableImage->id,
             'comment' => 'Updated comment',
+            'copyright' => 'Updated copyright',
+        ]);
+    }
+
+    public function test_available_image_copyright_stores_null_for_blank(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+
+        $user = $this->createCrudUser();
+        $availableImage = AvailableImage::factory()->create([
+            'copyright' => 'Original copyright',
+        ]);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(EditAvailableImage::class, [
+                'record' => $availableImage->getRouteKey(),
+            ])
+            ->fillForm([
+                'copyright' => '',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('available_images', [
+            'id' => $availableImage->id,
+            'copyright' => null,
         ]);
     }
 

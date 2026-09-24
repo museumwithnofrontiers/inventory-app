@@ -77,6 +77,53 @@ class EntityImagesRelationManagerTest extends TestCase
             ->assertTableActionHasLabel('delete', 'Delete permanently');
     }
 
+    public function test_item_images_edit_action_updates_copyright_and_stores_null_for_blank(): void
+    {
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Object()->create();
+        $image = ItemImage::factory()->forItem($item)->create(['path' => 'copyright-item.jpg', 'copyright' => 'Old copyright']);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(ItemImagesRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => EditItem::class,
+            ])
+            ->mountTableAction('edit', $image)
+            ->setTableActionData([
+                'alt_text' => $image->alt_text,
+                'display_order' => $image->display_order,
+                'copyright' => 'New copyright holder',
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('item_images', [
+            'id' => $image->id,
+            'copyright' => 'New copyright holder',
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(ItemImagesRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => EditItem::class,
+            ])
+            ->mountTableAction('edit', $image)
+            ->setTableActionData([
+                'alt_text' => $image->alt_text,
+                'display_order' => $image->display_order,
+                'copyright' => '',
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('item_images', [
+            'id' => $image->id,
+            'copyright' => null,
+        ]);
+    }
+
     public function test_item_images_detach_action_moves_image_to_available_pool(): void
     {
         Storage::fake('public');

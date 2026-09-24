@@ -161,6 +161,12 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->numeric()
                             ->integer()
                             ->nullable(),
+                        TextInput::make('copyright')
+                            ->label('Copyright')
+                            ->helperText('Leave blank to inherit from the owning project, or the site-wide default.')
+                            ->maxLength(500)
+                            ->nullable()
+                            ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
                     ]),
                 Action::make('detach')
                     ->label('Detach')
