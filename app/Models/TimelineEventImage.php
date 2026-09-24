@@ -27,6 +27,7 @@ class TimelineEventImage extends Model implements DetachableImage, StreamableIma
         'mime_type',
         'size',
         'alt_text',
+        'copyright',
         'display_order',
     ];
 

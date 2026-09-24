@@ -27,6 +27,7 @@ class ContributorImage extends Model implements DetachableImage, StreamableImage
         'mime_type',
         'size',
         'alt_text',
+        'copyright',
         'display_order',
     ];
 

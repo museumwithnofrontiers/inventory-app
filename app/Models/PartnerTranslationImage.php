@@ -32,6 +32,7 @@ class PartnerTranslationImage extends Model implements DetachableImage, Streamab
         'mime_type',
         'size',
         'alt_text',
+        'copyright',
         'display_order',
     ];
 

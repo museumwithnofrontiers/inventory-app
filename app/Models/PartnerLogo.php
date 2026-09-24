@@ -30,6 +30,7 @@ class PartnerLogo extends Model implements StreamableImageFile
         'size',
         'logo_type',
         'alt_text',
+        'copyright',
         'display_order',
     ];
 

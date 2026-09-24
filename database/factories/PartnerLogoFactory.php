@@ -30,6 +30,7 @@ class PartnerLogoFactory extends Factory
             'size' => fake()->numberBetween(5000, 100000), // 5KB to 100KB (logos are typically smaller)
             'logo_type' => 'primary',
             'alt_text' => fake()->optional()->sentence(3),
+            'copyright' => null,
             'display_order' => fake()->numberBetween(1, 5),
         ];
     }

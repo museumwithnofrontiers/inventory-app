@@ -31,6 +31,7 @@ class AvailableImageFactory extends Factory
             'mime_type' => 'image/jpeg',
             'size' => Storage::disk($disk)->size($relativePath),
             'comment' => $this->faker->sentence(10),
+            'copyright' => null,
         ];
     }
 }

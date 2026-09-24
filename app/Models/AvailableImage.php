@@ -33,6 +33,7 @@ class AvailableImage extends Model implements StreamableImageFile
         'mime_type',
         'size',
         'comment',
+        'copyright',
     ];
 
     /**

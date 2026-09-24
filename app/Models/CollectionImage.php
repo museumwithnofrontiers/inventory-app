@@ -33,6 +33,7 @@ class CollectionImage extends Model implements DetachableImage, StreamableImageF
         'mime_type',
         'size',
         'alt_text',
+        'copyright',
         'display_order',
         'extra',
     ];

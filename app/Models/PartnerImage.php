@@ -32,6 +32,7 @@ class PartnerImage extends Model implements DetachableImage, StreamableImageFile
         'mime_type',
         'size',
         'alt_text',
+        'copyright',
         'display_order',
         'extra',
     ];

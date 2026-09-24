@@ -30,6 +30,7 @@ class CollectionImageFactory extends Factory
             'mime_type' => fake()->randomElement(['image/jpeg', 'image/png', 'image/webp']),
             'size' => fake()->numberBetween(50000, 2000000), // 50KB to 2MB
             'alt_text' => fake()->sentence(6),
+            'copyright' => null,
             'display_order' => fake()->numberBetween(1, 10),
         ];
     }
