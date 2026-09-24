@@ -54,12 +54,27 @@ return [
             'report' => false,
         ],
 
-        // Pristine, never-watermarked image originals. Never web-reachable.
-        // Distinct from `local` for clarity, even though it lives on the same
-        // physical volume today (M9 §10 "Two disks").
+        // Pristine, never-watermarked image originals. Never web-reachable:
+        // no `url`, and not under storage/app/public. Distinct from `local`
+        // for clarity, even though it lives on the same physical volume today
+        // (M9 §10 "Two disks").
+        //
+        // Two users share it in production: `deploy` (backfill, legacy image
+        // sync, import-tool ship) and `www-data` (uploads, /pub, the queue).
+        // Each file is chmodded to 0660 on write, whatever the umask, so the
+        // group can read and delete it; `other` gets nothing. Directories are
+        // created with mkdir(), which the umask still narrows - so the
+        // provisioning pre-creates the flat images/ directory as
+        // deploy:www-data 2770 (setgid keeps new files in the group).
         'image-originals' => [
             'driver' => 'local',
             'root' => storage_path('app/private/image-originals'),
+            'visibility' => 'private',
+            'directory_visibility' => 'private',
+            'permissions' => [
+                'file' => ['public' => 0660, 'private' => 0660],
+                'dir' => ['public' => 0770, 'private' => 0770],
+            ],
             'throw' => false,
             'report' => false,
         ],

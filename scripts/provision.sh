@@ -468,8 +468,11 @@ info "Nginx configured and reloaded."
 # =============================================================================
 info "Creating application directories at ${APP_DIR}..."
 
+ORIGINALS_DIR="${APP_DIR}/shared/storage/app/private/image-originals"
+
 mkdir -p "${APP_DIR}/releases"
-mkdir -p "${APP_DIR}/shared/storage/app/public"
+mkdir -p "${APP_DIR}/shared/storage/app/public/pictures"
+mkdir -p "${ORIGINALS_DIR}/images"
 mkdir -p "${APP_DIR}/shared/storage/framework/cache/data"
 mkdir -p "${APP_DIR}/shared/storage/framework/sessions"
 mkdir -p "${APP_DIR}/shared/storage/framework/views"
@@ -480,6 +483,15 @@ mkdir -p "${APP_DIR}/backups"
 chown -R "${DEPLOY_USER}:www-data" "${APP_DIR}"
 chmod -R 775 "${APP_DIR}/shared/storage"
 find "${APP_DIR}/shared/storage" -type d -exec chmod g+s {} +
+
+# Image originals: pristine and private, shared by deploy (backfill, legacy
+# image sync, import-tool ship) and www-data (uploads, /pub, the queue).
+# Group read/write, nothing for others; setgid keeps new files in the
+# www-data group. The app chmods each file it writes to 0660, but can't
+# fix a directory the umask narrowed - so images/ is created here.
+# Re-applied after the blanket 775 above, which must not leave them open.
+find "${ORIGINALS_DIR}" -type d -exec chmod 2770 {} +
+find "${ORIGINALS_DIR}" -type f -exec chmod 0660 {} +
 
 info "Application directories created."
 

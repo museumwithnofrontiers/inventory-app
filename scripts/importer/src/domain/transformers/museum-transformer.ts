@@ -240,6 +240,7 @@ export function transformMuseumTranslation(
   // - contact_name: cp1_name (primary contact person)
   // - contact_email_general: institution email
   // - contact_phone: institution phone
+  // - contact_fax: institution fax
   // - contact_website: primary URL (with title1 as description if available)
   const data: Omit<PartnerTranslationData, 'partner_id' | 'context_id'> = {
     language_id: languageId,
@@ -250,6 +251,7 @@ export function transformMuseumTranslation(
     address: museum.address || null,
     contact_website: museum.url || null,
     contact_phone: museum.phone || null,
+    contact_fax: museum.fax || null,
     contact_email_general: museum.email || null,
     extra: extraJson,
   };

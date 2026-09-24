@@ -64,4 +64,27 @@ class PartnerTranslationTest extends TestCase
             ['id' => $resource->id] + array_intersect_key($updateData, array_flip($modelClass::make()->getFillable()))
         );
     }
+
+    public function test_the_partner_fax_is_returned_next_to_its_phone(): void
+    {
+        $translation = PartnerTranslation::factory()->create([
+            'contact_phone' => '+34 91 577 79 12',
+            'contact_fax' => '+34 91 431 68 40',
+        ]);
+
+        $this->getJson(route($this->getResourceName().'.show', $translation))
+            ->assertOk()
+            ->assertJsonPath('data.contact_phone', '+34 91 577 79 12')
+            ->assertJsonPath('data.contact_fax', '+34 91 431 68 40');
+    }
+
+    public function test_a_fax_longer_than_a_phone_number_is_rejected(): void
+    {
+        $data = PartnerTranslation::factory()->make()->toArray();
+        $data = array_diff_key($data, array_flip(['id', 'created_at', 'updated_at', 'deleted_at', 'is_default', 'extra', 'contact_phones', 'contact_emails']));
+
+        $this->postJson(route($this->getResourceName().'.store'), ['contact_fax' => str_repeat('9', 51)] + $data)
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('contact_fax');
+    }
 }

@@ -30,6 +30,11 @@ class PartnerImageTest extends TestCase
         return PartnerImage::class;
     }
 
+    protected function servesBurnedImage(): bool
+    {
+        return true;
+    }
+
     protected function getParentModel()
     {
         return Partner::factory()->create();

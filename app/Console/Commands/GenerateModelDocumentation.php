@@ -243,8 +243,7 @@ class GenerateModelDocumentation extends Command
                 $content[] = '| Attribute | Cast Type |';
                 $content[] = '|-----------|-----------|';
                 foreach ($casts as $attribute => $castType) {
-                    $castTypeStr = is_scalar($castType) ? (string) $castType : '';
-                    $content[] = "| `{$attribute}` | `{$castTypeStr}` |";
+                    $content[] = "| `{$attribute}` | `{$castType}` |";
                 }
                 $content[] = '';
             }

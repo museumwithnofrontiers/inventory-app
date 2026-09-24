@@ -2,41 +2,43 @@
 
 namespace App\Http\Controllers\Pub;
 
-use App\Contracts\HasCopyright;
+use App\Contracts\BurnsCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Http\Controllers\Controller;
 use App\Support\Images\AttachedImageRegistry;
-use App\Support\Images\ImageBurner;
-use Illuminate\Contracts\Cache\LockTimeoutException;
+use App\Support\Images\PublicRenditions;
+use finfo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 
 class PictureController extends Controller
 {
-    public function __construct(private readonly ImageBurner $burner) {}
+    /**
+     * Clients and CDNs may keep a picture but must revalidate it on every
+     * use, so a copyright edit shows on the very next request. Revalidating
+     * is cheap: the 304 path reads no file and burns nothing.
+     */
+    private const string CACHE_CONTROL = 'public, no-cache';
+
+    public function __construct(private readonly PublicRenditions $renditions) {}
 
     /**
-     * Serve a picture at its stable, UUID-keyed public URL - burned with the
+     * Serve a picture at its stable, filename-keyed public URL - burned with the
      * currently-resolved copyright text, generated lazily and cached.
      *
-     * Route: GET /pub/{filename}  (filename constrained to {uuid}.jpg)
+     * Route: GET /pub/{filename}  (a bare stored filename, jpg/jpeg/png/gif/webp)
      *
      * The URL never changes on a copyright edit - downstream npm data
      * packages bake it in - so invalidation happens through a content-based
-     * ETag (derived from the resolved copyright text) rather than a
-     * versioned URL. A matching If-None-Match short-circuits to 304 before
-     * anything is read from disk or burned (M9 epic A3).
+     * ETag (derived from the resolved copyright text and the burner's
+     * version) rather than a versioned URL. A matching If-None-Match
+     * short-circuits to 304 before anything is read from disk or burned
+     * (M9 epic A3). Generation, caching and lock coalescing live in
+     * PublicRenditions, shared with the API's view and download.
      *
-     * Regeneration on a miss or mismatch is coalesced through a per-image
-     * lock: a burst of concurrent requests for the same just-invalidated
-     * image (e.g. right after a popular Project's copyright changes) burns
-     * once, not N times. A request that can't acquire the lock in time
-     * falls back to the existing cached file if there is one - briefly
-     * stale is harmless - or a 503 asking the client to retry shortly.
+     * An image that isn't burned (PartnerLogo) is served as its original.
      */
     public function show(Request $request, string $filename): Response
     {
@@ -45,80 +47,96 @@ class PictureController extends Controller
             abort(400, 'Query parameters are not accepted.');
         }
 
+        /** @var (Model&StreamableImageFile)|null $record */
         $record = AttachedImageRegistry::findByPath($filename);
 
         if ($record === null) {
             abort(404);
         }
 
-        /** @var Model&StreamableImageFile&HasCopyright $record */
-        $copyright = $record->resolveCopyright();
-        $etag = '"'.sha1($filename.'|'.$copyright).'"';
-
-        $ifNoneMatch = $request->header('If-None-Match');
-        if ($ifNoneMatch !== null && $ifNoneMatch === $etag) {
-            return response('', 304);
+        if (! $record instanceof BurnsCopyright) {
+            return $this->original($request, $record);
         }
 
-        $picturesDisk = Config::string('localstorage.pictures.disk');
-        $picturesDirectory = trim(Config::string('localstorage.pictures.directory'), '/');
-        $picturePath = $picturesDirectory.'/'.$filename;
-        $etagCacheKey = 'image-copyright-etag:'.$filename;
+        $etag = $this->renditions->etag($record);
 
-        if (Cache::get($etagCacheKey) === $etag && Storage::disk($picturesDisk)->exists($picturePath)) {
-            return $this->respond(Storage::disk($picturesDisk)->get($picturePath) ?? '', $etag, $record);
+        if ($this->matches($request, $etag)) {
+            return $this->notModified($etag);
         }
 
-        try {
-            $contents = Cache::lock('image-burn:'.$filename, 10)->block(
-                5,
-                fn (): string => $this->regenerate($record, $copyright, $etag, $etagCacheKey, $picturesDisk, $picturePath)
-            );
+        $rendition = $this->renditions->get($record);
 
-            return $this->respond($contents, $etag, $record);
-        } catch (LockTimeoutException) {
-            if (Storage::disk($picturesDisk)->exists($picturePath)) {
-                return $this->respond(
-                    Storage::disk($picturesDisk)->get($picturePath) ?? '',
-                    Cache::get($etagCacheKey) ?? $etag,
-                    $record
-                );
-            }
-
+        if ($rendition === null) {
             return response('', 503, ['Retry-After' => '5']);
         }
-    }
 
-    /**
-     * Burn a fresh rendition and cache it. Re-checks the cache marker first
-     * - now inside the lock - since a concurrent request may have already
-     * finished regenerating this exact image while this one was waiting.
-     *
-     * @param  Model&StreamableImageFile&HasCopyright  $record
-     */
-    private function regenerate(Model $record, string $copyright, string $etag, string $etagCacheKey, string $picturesDisk, string $picturePath): string
-    {
-        if (Cache::get($etagCacheKey) === $etag && Storage::disk($picturesDisk)->exists($picturePath)) {
-            return Storage::disk($picturesDisk)->get($picturePath) ?? '';
+        $headers = ['Content-Type' => $this->contentType($record, $rendition->contents)];
+
+        if ($rendition->etag === null) {
+            // Cached bytes nothing vouches for: serve them, but nobody keeps them
+            $headers['Cache-Control'] = 'no-store';
+        } else {
+            $headers['Cache-Control'] = self::CACHE_CONTROL;
+            $headers['ETag'] = $rendition->etag;
         }
 
-        $original = Storage::disk($record->imageDisk())->get($record->imageStoragePath());
-        $burned = $this->burner->burn($original ?? '', $copyright);
-
-        Storage::disk($picturesDisk)->put($picturePath, $burned);
-        Cache::forever($etagCacheKey, $etag);
-
-        return $burned;
+        return response($rendition->contents, 200, $headers);
     }
 
     /**
+     * The original bytes, with no pictures cache, no lock and no burn. The
+     * ETag comes from the file itself, so replacing the file changes it.
+     *
      * @param  Model&StreamableImageFile  $record
      */
-    private function respond(string $contents, string $etag, Model $record): Response
+    private function original(Request $request, Model $record): Response
     {
+        $disk = Storage::disk($record->imageDisk());
+        $path = $record->imageStoragePath();
+
+        if (! $disk->exists($path)) {
+            abort(404);
+        }
+
+        $etag = '"'.sha1($path.'|'.$disk->size($path).'|'.$disk->lastModified($path)).'"';
+
+        if ($this->matches($request, $etag)) {
+            return $this->notModified($etag);
+        }
+
+        $contents = $disk->get($path) ?? '';
+
         return response($contents, 200, [
-            'Content-Type' => $record->imageMimeType() ?? 'image/jpeg',
-            'Cache-Control' => 'public, max-age=86400, must-revalidate',
+            'Content-Type' => $this->contentType($record, $contents),
+            'Cache-Control' => self::CACHE_CONTROL,
+            'ETag' => $etag,
+        ]);
+    }
+
+    /**
+     * The record's MIME type; the burn keeps the original's format, so for
+     * a record without one, the bytes tell.
+     *
+     * @param  Model&StreamableImageFile  $record
+     */
+    private function contentType(Model $record, string $contents): string
+    {
+        return $record->imageMimeType()
+            ?? ((new finfo(FILEINFO_MIME_TYPE))->buffer($contents) ?: 'application/octet-stream');
+    }
+
+    private function matches(Request $request, string $etag): bool
+    {
+        return $request->header('If-None-Match') === $etag;
+    }
+
+    /**
+     * A 304 carries the headers the 200 would have had (RFC 9110 §15.4.5).
+     */
+    private function notModified(string $etag): Response
+    {
+        return response('', 304, [
+            'Cache-Control' => self::CACHE_CONTROL,
             'ETag' => $etag,
         ]);
     }

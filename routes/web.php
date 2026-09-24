@@ -230,13 +230,16 @@ Route::prefix('web')->group(function () {
 // See app/Providers/FortifyServiceProvider.php for middleware configuration
 
 // Public picture viewer — no authentication, rate-limited
-// Serves any picture from the shared pictures storage by bare UUID filename.
+// Serves any attached image by its bare stored filename: a UUID for synced
+// legacy images, a ULID (admin uploads) or a 40-character hash name (API
+// uploads), in any raster format the image pipeline produces. The extension
+// keeps the case the upload came with; anything else is a 404.
 Route::middleware(['throttle:pub-pictures'])
     ->prefix('pub')
     ->name('pub.')
     ->group(function () {
         Route::get('/{filename}', [PictureController::class, 'show'])
-            ->where('filename', '[0-9a-f-]+\.jpg')
+            ->where('filename', '[0-9A-Za-z-]+\.(?:[jJ][pP][eE]?[gG]|[pP][nN][gG]|[gG][iI][fF]|[wW][eE][bB][pP])')
             ->name('picture');
     });
 

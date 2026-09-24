@@ -30,6 +30,7 @@ interface PartnerTranslationRow {
   address_notes: string | null
   contact_website: string | null
   contact_phone: string | null
+  contact_fax: string | null
   contact_email_general: string | null
   extra: unknown
 }
@@ -195,7 +196,7 @@ export class PartnerExporter extends BaseExporter {
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also makes the "first row wins" extra-fields pick below deterministic).
         `SELECT partner_id, language_id, name, description, city_display, address_notes,
-                contact_website, contact_phone, contact_email_general, extra
+                contact_website, contact_phone, contact_fax, contact_email_general, extra
          FROM partner_translations
          WHERE partner_id IN (${partnerPh})
          ORDER BY partner_id, language_id`,
@@ -274,6 +275,7 @@ export class PartnerExporter extends BaseExporter {
           address: row.address_notes,
           website: row.contact_website,
           phone: row.contact_phone,
+          fax: row.contact_fax,
           email: row.contact_email_general,
         }
         translationMap.set(row.partner_id, byLang)
@@ -388,8 +390,11 @@ export class PartnerExporter extends BaseExporter {
         // Legacy `showOnPortal`. The home page shows a random subset of the
         // featured partners, so the package ships the flag and the viewer picks.
         featured: extra?.portal_display?.toLowerCase() === 'y',
+        // Same derivation as each item's languages in items.json
+        languages: Object.keys(translationMap.get(partner.id) ?? {}).sort(),
         contact_person_1: extra?.contact_person_1 ?? null,
         contact_person_2: extra?.contact_person_2 ?? null,
+        contact_persons: contactPersons(extra),
         additional_urls: extra?.urls ?? [],
         images: imageMap.get(partner.id) ?? [],
         logos: logoMap.get(partner.id) ?? [],
@@ -423,4 +428,16 @@ function parseJson<T>(raw: unknown): T | null {
   } catch {
     return null
   }
+}
+
+/**
+ * The partner's contact persons in legacy order (person 1 first), leaving
+ * out the ones it doesn't have - the way DXA's API builds `contactPerson`.
+ * A list keeps that order visible once one of the two is missing, which two
+ * nullable keys can't.
+ */
+function contactPersons(extra: PartnerExtraFields | undefined): PartnerContactPerson[] {
+  return [extra?.contact_person_1, extra?.contact_person_2].filter(
+    (person): person is PartnerContactPerson => person != null
+  )
 }

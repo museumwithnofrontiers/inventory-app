@@ -62,6 +62,7 @@ class PartnerTranslation extends Model
         'contact_email_general',
         'contact_email_press',
         'contact_phone',
+        'contact_fax',
         'contact_website',
         'contact_notes',
         'contact_emails',

@@ -61,6 +61,34 @@ preflight() {
     [[ -d "${APP_DIR}/shared/storage" ]] || error "${APP_DIR}/shared/storage missing. Run provision.sh first."
 }
 
+# --- Image storage guard -----------------------------------------------------
+# The available-images disk holds the pristine originals, which must never
+# be web-reachable. An .env pinning AVAILABLE_IMAGES_DISK=public (as
+# .env.example did until M9, and deploy.sh copies it only on the first
+# deploy) would put them on the public disk. Resolved by the release itself,
+# with the live .env, so a hand edit or a stale value is caught too.
+check_image_storage() {
+    local RELEASE_DIR="$1"
+    local DISK
+
+    # First deploy: the .env is created from this release's .env.example
+    [[ -f "${APP_DIR}/shared/.env" ]] || return 0
+
+    ln -sfn "${APP_DIR}/shared/.env" "${RELEASE_DIR}/.env"
+    DISK=$(cd "$RELEASE_DIR" && php artisan storage:image-path available --json \
+        | php -r '$path = json_decode(stream_get_contents(STDIN), true); echo is_array($path) ? ($path["disk"] ?? "") : "";') \
+        || error "Could not resolve the available-images disk (php artisan storage:image-path available)."
+
+    [[ -n "$DISK" ]] || error "Could not resolve the available-images disk (php artisan storage:image-path available)."
+
+    if [[ "$DISK" == "public" ]]; then
+        rm -rf "$RELEASE_DIR"
+        error "The available-images disk resolves to 'public': image originals would be web-reachable. Set AVAILABLE_IMAGES_DISK=image-originals in ${APP_DIR}/shared/.env (or remove the line), then deploy again."
+    fi
+
+    info "Available-images disk: ${DISK}"
+}
+
 # --- 1. Extract release -------------------------------------------------------
 deploy_release() {
     local RELEASE_DIR="${APP_DIR}/releases/$(date +%Y%m%d%H%M%S)"
@@ -81,6 +109,10 @@ deploy_release() {
     mkdir -p "${RELEASE_DIR}/bootstrap/cache"
     chgrp www-data "${RELEASE_DIR}/bootstrap/cache" 2>/dev/null || true
     chmod g+w "${RELEASE_DIR}/bootstrap/cache"
+
+    # Before the release goes live, not after: a failed check must leave the
+    # previous release serving
+    check_image_storage "$RELEASE_DIR"
 
     # If provisioning created CURRENT as a real directory, replace it.
     if [[ -d "${CURRENT}" && ! -L "${CURRENT}" ]]; then

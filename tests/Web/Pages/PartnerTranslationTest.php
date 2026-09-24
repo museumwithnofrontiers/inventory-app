@@ -29,6 +29,10 @@ class PartnerTranslationTest extends TestCase
     {
         $data = PartnerTranslation::factory()->make()->toArray();
 
+        // The legacy /web form has no fax field (only Filament and the API edit it),
+        // so posting one would assert a value this form never saves
+        unset($data['contact_fax']);
+
         // Convert JSON fields (extra) from object/array to JSON string if needed
         if (isset($data['extra']) && (is_object($data['extra']) || is_array($data['extra']))) {
             $data['extra'] = json_encode($data['extra']);

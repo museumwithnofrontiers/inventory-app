@@ -22,6 +22,13 @@ $testEnv = [
     'SESSION_DRIVER' => 'array',
     'TELESCOPE_ENABLED' => 'false',
     'VITE_ENABLED' => 'false',
+    // Image disks: a developer's container must not change which disks tests use
+    'UPLOAD_IMAGES_DISK' => 'local',
+    'UPLOAD_IMAGES_DIRECTORY' => 'image_uploads',
+    'AVAILABLE_IMAGES_DISK' => 'image-originals',
+    'AVAILABLE_IMAGES_DIRECTORY' => 'images',
+    'PICTURES_DISK' => 'public',
+    'PICTURES_DIRECTORY' => 'pictures',
 ];
 
 foreach ($testEnv as $key => $value) {

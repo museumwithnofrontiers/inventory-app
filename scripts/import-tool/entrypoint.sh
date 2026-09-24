@@ -377,9 +377,10 @@ push_staged_images() {
   # Ownership comes from the receiving side (deploy, and the www-data group of
   # the setgid storage tree), and group read/write is granted explicitly:
   # PHP-FPM and the queue (www-data) read originals to burn and delete them,
-  # while deploy pushes and backfills.
-  log "rsync -az --stats --delete --no-owner --no-group --chmod=D2775,F664 $STAGING_DIR/ -> ${OVH_HOST}:${originals_dir}/"
-  rsync -az --stats --delete --no-owner --no-group --chmod=D2775,F664 \
+  # while deploy pushes and backfills. Nothing for others: the same modes the
+  # image-originals disk writes and provision.sh creates (2770 and 0660).
+  log "rsync -az --stats --delete --no-owner --no-group --chmod=D2770,F660 $STAGING_DIR/ -> ${OVH_HOST}:${originals_dir}/"
+  rsync -az --stats --delete --no-owner --no-group --chmod=D2770,F660 \
     -e "ssh ${SSH_OPTS_BASE[*]} -i $SSH_KEY" \
     "$STAGING_DIR"/ \
     "${OVH_USER}@${OVH_HOST}:${originals_dir}/" \

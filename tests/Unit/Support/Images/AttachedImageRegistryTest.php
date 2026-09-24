@@ -2,6 +2,8 @@
 
 namespace Tests\Unit\Support\Images;
 
+use App\Contracts\BurnsCopyright;
+use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Models\AvailableImage;
 use App\Models\CollectionImage;
@@ -13,8 +15,11 @@ use App\Models\PartnerLogo;
 use App\Models\PartnerTranslationImage;
 use App\Models\TimelineEventImage;
 use App\Support\Images\AttachedImageRegistry;
+use App\Traits\DeletesImageFilesOnDelete;
+use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class AttachedImageRegistryTest extends TestCase
@@ -74,6 +79,86 @@ class AttachedImageRegistryTest extends TestCase
                 "{$class} must implement StreamableImageFile"
             );
         }
+    }
+
+    public function test_every_registered_model_has_a_copyright_and_deletes_its_files(): void
+    {
+        foreach (AttachedImageRegistry::modelClasses() as $class) {
+            $this->assertTrue(is_subclass_of($class, HasCopyright::class), "{$class} must implement HasCopyright");
+            $this->assertContains(DeletesImageFilesOnDelete::class, class_uses_recursive($class), "{$class} must use DeletesImageFilesOnDelete");
+        }
+    }
+
+    public function test_every_image_model_is_burned_and_the_partner_logo_is_not(): void
+    {
+        foreach (AttachedImageRegistry::modelClasses() as $class) {
+            $this->assertSame(
+                $class !== PartnerLogo::class,
+                is_subclass_of($class, BurnsCopyright::class),
+                "{$class}: every *Image model is burned, a PartnerLogo never is"
+            );
+        }
+    }
+
+    public function test_validation_accepts_a_class_meeting_the_whole_contract(): void
+    {
+        AttachedImageRegistry::validateClass(ItemImage::class);
+        AttachedImageRegistry::validateClass(PartnerLogo::class);
+
+        $this->addToAssertionCount(2);
+    }
+
+    /**
+     * @return array<string, array{Closure(): string, string}>
+     */
+    public static function incompleteClassProvider(): array
+    {
+        return [
+            'missing class' => [fn (): string => 'App\\Models\\NoSuchImage', 'class does not exist'],
+            'not a model' => [fn (): string => (new class {})::class, 'must extend '.Model::class],
+            'no StreamableImageFile' => [
+                fn (): string => (new class extends Model implements HasCopyright
+                {
+                    use DeletesImageFilesOnDelete;
+
+                    public function resolveCopyright(): string
+                    {
+                        return '';
+                    }
+                })::class,
+                'must implement '.StreamableImageFile::class,
+            ],
+            // AvailableImage: a model that streams its file, and nothing more
+            'no HasCopyright' => [
+                fn (): string => (new class extends AvailableImage
+                {
+                    use DeletesImageFilesOnDelete;
+                })::class,
+                'must implement '.HasCopyright::class,
+            ],
+            'no DeletesImageFilesOnDelete' => [
+                fn (): string => (new class extends AvailableImage implements HasCopyright
+                {
+                    public function resolveCopyright(): string
+                    {
+                        return '';
+                    }
+                })::class,
+                'must use '.DeletesImageFilesOnDelete::class,
+            ],
+        ];
+    }
+
+    /**
+     * @param  Closure(): string  $class
+     */
+    #[DataProvider('incompleteClassProvider')]
+    public function test_validation_fails_fast_on_a_class_missing_part_of_the_contract(Closure $class, string $message): void
+    {
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage($message);
+
+        AttachedImageRegistry::validateClass($class());
     }
 
     public function test_table_names_returns_correct_tables(): void

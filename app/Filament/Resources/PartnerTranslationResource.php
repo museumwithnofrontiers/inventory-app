@@ -139,6 +139,10 @@ class PartnerTranslationResource extends Resource
                             ->label('Phone')
                             ->placeholder('+1 234 567 8900')
                             ->maxLength(255),
+                        TextInput::make('contact_fax')
+                            ->label('Fax')
+                            ->placeholder('+1 234 567 8901')
+                            ->maxLength(255),
                         TextInput::make('contact_email_general')
                             ->label('General email')
                             ->email()
@@ -245,6 +249,7 @@ class PartnerTranslationResource extends Resource
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('contact_name', 'Contact name'),
                         TextEntry::make('contact_phone')->label('Phone'),
+                        TextEntry::make('contact_fax')->label('Fax'),
                         TextEntry::make('contact_email_general')->label('General email'),
                         TextEntry::make('contact_email_press')->label('Press email'),
                         TextEntry::make('contact_website')->label('Website'),

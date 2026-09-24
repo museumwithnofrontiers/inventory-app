@@ -146,13 +146,16 @@ DB_DATABASE=inventory_production
 DB_USERNAME=inventory_user
 DB_PASSWORD=secure_password
 
-# Image Storage
-UPLOAD_IMAGES_DISK=local_upload_images
-UPLOAD_IMAGES_PATH=uploads/images
-AVAILABLE_IMAGES_DISK=local_available_images
-AVAILABLE_IMAGES_PATH=available/images
-PICTURES_DISK=local_pictures
-PICTURES_PATH=pictures
+# Image Storage (these are the defaults; see the Configuration guide)
+# Uploads: transient, private
+UPLOAD_IMAGES_DISK=local
+UPLOAD_IMAGES_DIRECTORY=image_uploads
+# Originals: pristine, private, never web-reachable - never "public"
+AVAILABLE_IMAGES_DISK=image-originals
+AVAILABLE_IMAGES_DIRECTORY=images
+# Pictures: the cache of burned renditions that /pub serves
+PICTURES_DISK=public
+PICTURES_DIRECTORY=pictures
 
 # Cache
 CACHE_STORE=file
@@ -298,6 +301,33 @@ netsh advfirewall firewall add rule name="HTTPS" dir=in action=allow protocol=TC
 # Update Apache configuration with certificate paths
 ```
 
+### 4.4 Image Storage Permissions (Linux)
+
+On the Linux server (`scripts/provision.sh`), two users share the image disks:
+
+- `deploy` runs the command-line tools: the deploy itself, `images:backfill-originals`, the legacy image sync and the import-tool `ship`.
+- `www-data` runs PHP-FPM and the queue: uploads and `/pub`.
+
+| Directory (under `/opt/inventory/shared/storage/app`) | Owner | Mode | Why |
+|---|---|---|---|
+| `private/image-originals/` and `images/` | `deploy:www-data` | `2770` | The pristine originals. Group read/write, nothing for others, and setgid keeps new files in `www-data`. |
+| `public/pictures/` | `deploy:www-data` | `2775` | The burned renditions `www-data` writes and `/pub` serves. |
+
+The app chmods every original it writes to `0660`. It can't fix a directory that the process umask narrowed when creating it, which is why the directories are created up front.
+
+`provision.sh` creates them on a new server. On a server provisioned before M9, apply them once as `deploy`, who owns the tree, so no `sudo` is needed:
+
+```bash
+cd /opt/inventory/shared/storage/app
+mkdir -p private/image-originals/images public/pictures
+chgrp -R www-data private/image-originals public/pictures
+find private/image-originals -type d -exec chmod 2770 {} +
+find private/image-originals -type f -exec chmod 0660 {} +
+chmod 2775 public/pictures
+```
+
+If a `find` line reports `Operation not permitted`, the file was created by `www-data`, and only its owner or root can change its mode. Run that line as root.
+
 ## Step 5: Automated Deployment
 
 ### 5.1 Using Deployment Script
@@ -330,7 +360,17 @@ php artisan view:cache
 Restart-Service -Name "Apache2.4"
 ```
 
-## Step 6: Monitoring and Maintenance
+### 5.3 Moving an Existing Server to the M9 Image Storage (once)
+
+Since M9, attached images keep their pristine original on the private originals disk. `/pub` serves them with the copyright burned in, and caches those renditions on the pictures disk. A server that ran an earlier version kept each attached image's only file in the pictures directory. Moving it over is a one-off, in this order:
+
+1. **Fix `.env`.** Check `grep '^AVAILABLE_IMAGES_DISK' /opt/inventory/shared/.env`. `.env.example` pinned `public` before M9, and `deploy.sh` copies it only on the first deploy. Set it to `image-originals`, or delete the line so the default applies. The configuration is cached, so the change takes effect at the next deploy. `deploy.sh` refuses to deploy while the disk resolves to `public`.
+2. **Create the directories** with their ownership and modes (see 4.4).
+3. **Deploy.** This runs the migrations, which add the copyright columns and the path indexes.
+4. **Backfill the originals**, as `deploy`: `php artisan images:backfill-originals --force`.
+   - For every attached image, it copies the file from the pictures directory to the originals disk, then removes the public copy.
+   - The first `/pub` request for each image then burns and caches its rendition.
+   - It reports the rows that have no file in either place and carries on. `--dry-run` shows what it would do.
 
 ### 6.1 Log Files
 

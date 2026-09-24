@@ -30,6 +30,11 @@ class PartnerTranslationImageTest extends TestCase
         return PartnerTranslationImage::class;
     }
 
+    protected function servesBurnedImage(): bool
+    {
+        return true;
+    }
+
     protected function getParentModel()
     {
         return PartnerTranslation::factory()->create();

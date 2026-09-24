@@ -9,8 +9,7 @@ use App\Http\Requests\Api\StoreItemImageRequest;
 use App\Http\Requests\Api\UpdateItemImageRequest;
 use App\Http\Resources\ItemImageResource;
 use App\Http\Resources\OperationSuccessResource;
-use App\Http\Responses\Image\DownloadImageResponse;
-use App\Http\Responses\Image\InlineImageResponse;
+use App\Http\Responses\Image\BurnedImageResponse;
 use App\Models\AvailableImage;
 use App\Models\Item;
 use App\Models\ItemImage;
@@ -163,18 +162,18 @@ class ItemImageController extends Controller
     }
 
     /**
-     * Returns the file to the caller.
+     * Returns the image, with its copyright burned in, as a download.
      */
     public function download(ItemImage $itemImage): Responsable
     {
-        return new DownloadImageResponse($itemImage);
+        return BurnedImageResponse::download($itemImage);
     }
 
     /**
-     * Returns the image file for direct viewing (e.g., for use in <img> src attribute).
+     * Returns the image, with its copyright burned in, for direct viewing (e.g., for use in <img> src attribute): the bytes /pub serves.
      */
     public function view(ItemImage $itemImage): Responsable
     {
-        return new InlineImageResponse($itemImage);
+        return BurnedImageResponse::view($itemImage);
     }
 }

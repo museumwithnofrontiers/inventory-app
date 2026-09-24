@@ -49,6 +49,7 @@ class UpdatePartnerTranslationRequest extends FormRequest
             'contact_email_general' => ['nullable', 'email', 'max:255'],
             'contact_email_press' => ['nullable', 'email', 'max:255'],
             'contact_phone' => ['nullable', 'string', 'max:50'],
+            'contact_fax' => ['nullable', 'string', 'max:50'],
             'contact_website' => ['nullable', 'url', 'max:255'],
             'contact_notes' => ['nullable', 'string'],
             'contact_emails' => ['nullable', 'array'],
