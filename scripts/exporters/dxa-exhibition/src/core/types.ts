@@ -188,6 +188,8 @@ export interface Partner {
   item_count: number
   /** Legacy `portal_display === 'y'` — drives the home page featured strip. */
   featured: boolean
+  /** Languages the partner has a translation in (codes, sorted): its entries across `translations/partners.<lang>.json`. */
+  languages: string[]
   contact_person_1: PartnerContactPerson | null
   contact_person_2: PartnerContactPerson | null
   additional_urls: PartnerUrl[]

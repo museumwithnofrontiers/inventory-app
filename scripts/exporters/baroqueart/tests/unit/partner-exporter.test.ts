@@ -58,7 +58,12 @@ describe('PartnerExporter — shared partner shape', () => {
       query: async (sql: string, params?: unknown) => {
         queries.push({ sql, params })
         if (sql.includes('FROM partners p')) return rows.partners
-        if (sql.includes('FROM languages')) return [{ id: 'eng', backward_compatibility: 'en' }]
+        if (sql.includes('FROM languages')) {
+          return [
+            { id: 'eng', backward_compatibility: 'en' },
+            { id: 'fra', backward_compatibility: 'fr' },
+          ]
+        }
         if (sql.includes('FROM partner_translations')) return rows.translations
         if (sql.includes('FROM partner_images')) return []
         if (sql.includes('FROM partner_logos')) return []
@@ -165,6 +170,19 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(output?.featured).toBe(true)
     expect(output?.contact_person_1).toEqual({ name: 'Jane Curator' })
     expect(output?.additional_urls).toEqual([{ url: 'https://example.test/more' }])
+  })
+
+  it('lists the languages each partner has a translation in, sorted', async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 'A'), partnerRow('partner-b', 'B')],
+      translations: [{ ...translationRow('partner-a'), language_id: 'fra' }, translationRow('partner-a')],
+    })
+    await new PartnerExporter(context(db)).export()
+
+    const output = readOutput()
+    expect(output.find(p => p.id === 'partner-a')?.languages).toEqual(['en', 'fr'])
+    // No translation at all: an empty list, never an absent key
+    expect(output.find(p => p.id === 'partner-b')?.languages).toEqual([])
   })
 
   it('reports null level/parent_id and an empty project_uuids for an uncurated partner, and no legacy project_ids key', async () => {

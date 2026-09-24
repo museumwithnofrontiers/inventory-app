@@ -388,6 +388,8 @@ export class PartnerExporter extends BaseExporter {
         // Legacy `showOnPortal`. The home page shows a random subset of the
         // featured partners, so the package ships the flag and the viewer picks.
         featured: extra?.portal_display?.toLowerCase() === 'y',
+        // Same derivation as each item's languages in items.json
+        languages: Object.keys(translationMap.get(partner.id) ?? {}).sort(),
         contact_person_1: extra?.contact_person_1 ?? null,
         contact_person_2: extra?.contact_person_2 ?? null,
         additional_urls: extra?.urls ?? [],

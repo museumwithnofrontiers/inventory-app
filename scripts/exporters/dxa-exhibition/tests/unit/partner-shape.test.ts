@@ -65,14 +65,20 @@ describe('PartnerExporter — shared partner shape', () => {
     levels?: unknown[]
     groupMemberships?: unknown[]
     heldItems?: unknown[]
+    translations?: unknown[]
   }): Database =>
     ({
       query: async (sql: string, params?: unknown) => {
         queries.push({ sql, params })
         if (sql.includes('FROM partners')) return rows.partners
-        if (sql.includes('FROM languages')) return [{ id: 'eng', backward_compatibility: 'en' }]
+        if (sql.includes('FROM languages')) {
+          return [
+            { id: 'eng', backward_compatibility: 'en' },
+            { id: 'fra', backward_compatibility: 'fr' },
+          ]
+        }
         if (sql.includes('FROM partner_translations')) {
-          return rows.partners.map(p => translationRow((p as { id: string }).id))
+          return rows.translations ?? rows.partners.map(p => translationRow((p as { id: string }).id))
         }
         if (sql.includes('FROM partner_images')) return []
         if (sql.includes('FROM partner_logos')) return []
@@ -121,6 +127,19 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(output?.parent_id).toBeNull()
     expect(output?.project_uuids).toEqual([])
     expect(output).not.toHaveProperty('project_ids')
+  })
+
+  it('lists the languages each partner has a translation in, sorted', async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 1), partnerRow('partner-b', 1)],
+      translations: [{ ...translationRow('partner-a'), language_id: 'fra' }, translationRow('partner-a')],
+    })
+    await new PartnerExporter(context(db, null)).export()
+
+    const output = readOutput()
+    expect(output.find(p => p.id === 'partner-a')?.languages).toEqual(['en', 'fr'])
+    // No translation at all: an empty list, never an absent key
+    expect(output.find(p => p.id === 'partner-b')?.languages).toEqual([])
   })
 
   it('derives level and parent_id from the curated partner_group hierarchy', async () => {
