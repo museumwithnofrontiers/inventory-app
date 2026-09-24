@@ -9,8 +9,7 @@ use App\Http\Requests\Api\StoreContributorImageRequest;
 use App\Http\Requests\Api\UpdateContributorImageRequest;
 use App\Http\Resources\ContributorImageResource;
 use App\Http\Resources\OperationSuccessResource;
-use App\Http\Responses\Image\DownloadImageResponse;
-use App\Http\Responses\Image\InlineImageResponse;
+use App\Http\Responses\Image\BurnedImageResponse;
 use App\Models\AvailableImage;
 use App\Models\Contributor;
 use App\Models\ContributorImage;
@@ -160,18 +159,18 @@ class ContributorImageController extends Controller
     }
 
     /**
-     * Returns the file to the caller.
+     * Returns the image, with its copyright burned in, as a download.
      */
     public function download(ContributorImage $contributorImage): Responsable
     {
-        return new DownloadImageResponse($contributorImage);
+        return BurnedImageResponse::download($contributorImage);
     }
 
     /**
-     * Returns the image file for direct viewing.
+     * Returns the image, with its copyright burned in, for direct viewing: the bytes /pub serves.
      */
     public function view(ContributorImage $contributorImage): Responsable
     {
-        return new InlineImageResponse($contributorImage);
+        return BurnedImageResponse::view($contributorImage);
     }
 }

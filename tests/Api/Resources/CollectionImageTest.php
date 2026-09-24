@@ -30,6 +30,11 @@ class CollectionImageTest extends TestCase
         return CollectionImage::class;
     }
 
+    protected function servesBurnedImage(): bool
+    {
+        return true;
+    }
+
     protected function getParentModel()
     {
         return Collection::factory()->create();

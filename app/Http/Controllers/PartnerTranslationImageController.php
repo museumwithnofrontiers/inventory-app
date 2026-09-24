@@ -9,8 +9,7 @@ use App\Http\Requests\Api\StorePartnerTranslationImageRequest;
 use App\Http\Requests\Api\UpdatePartnerTranslationImageRequest;
 use App\Http\Resources\OperationSuccessResource;
 use App\Http\Resources\PartnerTranslationImageResource;
-use App\Http\Responses\Image\DownloadImageResponse;
-use App\Http\Responses\Image\InlineImageResponse;
+use App\Http\Responses\Image\BurnedImageResponse;
 use App\Models\AvailableImage;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
@@ -164,18 +163,18 @@ class PartnerTranslationImageController extends Controller
     }
 
     /**
-     * Returns the file to the caller.
+     * Returns the image, with its copyright burned in, as a download.
      */
     public function download(PartnerTranslationImage $partnerTranslationImage): Responsable
     {
-        return new DownloadImageResponse($partnerTranslationImage);
+        return BurnedImageResponse::download($partnerTranslationImage);
     }
 
     /**
-     * Returns the image file for direct viewing (e.g., for use in <img> src attribute).
+     * Returns the image, with its copyright burned in, for direct viewing (e.g., for use in <img> src attribute): the bytes /pub serves.
      */
     public function view(PartnerTranslationImage $partnerTranslationImage): Responsable
     {
-        return new InlineImageResponse($partnerTranslationImage);
+        return BurnedImageResponse::view($partnerTranslationImage);
     }
 }

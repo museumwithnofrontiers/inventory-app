@@ -9,8 +9,7 @@ use App\Http\Requests\Api\StoreCollectionImageRequest;
 use App\Http\Requests\Api\UpdateCollectionImageRequest;
 use App\Http\Resources\CollectionImageResource;
 use App\Http\Resources\OperationSuccessResource;
-use App\Http\Responses\Image\DownloadImageResponse;
-use App\Http\Responses\Image\InlineImageResponse;
+use App\Http\Responses\Image\BurnedImageResponse;
 use App\Models\AvailableImage;
 use App\Models\Collection;
 use App\Models\CollectionImage;
@@ -163,18 +162,18 @@ class CollectionImageController extends Controller
     }
 
     /**
-     * Returns the file to the caller.
+     * Returns the image, with its copyright burned in, as a download.
      */
     public function download(CollectionImage $collectionImage): Responsable
     {
-        return new DownloadImageResponse($collectionImage);
+        return BurnedImageResponse::download($collectionImage);
     }
 
     /**
-     * Returns the image file for direct viewing (e.g., for use in <img> src attribute).
+     * Returns the image, with its copyright burned in, for direct viewing (e.g., for use in <img> src attribute): the bytes /pub serves.
      */
     public function view(CollectionImage $collectionImage): Responsable
     {
-        return new InlineImageResponse($collectionImage);
+        return BurnedImageResponse::view($collectionImage);
     }
 }

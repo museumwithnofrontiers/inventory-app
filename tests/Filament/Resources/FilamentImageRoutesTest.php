@@ -13,6 +13,7 @@ use App\Models\PartnerImage;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Tests\TestCase;
 
 class FilamentImageRoutesTest extends TestCase
@@ -78,6 +79,9 @@ class FilamentImageRoutesTest extends TestCase
 
         $response->assertOk();
         $this->assertStringNotContainsString('attachment', $response->headers->get('Content-Disposition') ?? '');
+        // The admin panel shows the original, not the burned rendition the API and /pub serve
+        $this->assertInstanceOf(BinaryFileResponse::class, $response->baseResponse);
+        $this->assertSame('fake-jpeg-data', $response->baseResponse->getFile()->getContent());
     }
 
     public function test_filament_item_image_view_route_returns_404_for_mismatched_item(): void

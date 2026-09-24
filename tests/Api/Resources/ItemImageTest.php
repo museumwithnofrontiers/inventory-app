@@ -30,6 +30,11 @@ class ItemImageTest extends TestCase
         return ItemImage::class;
     }
 
+    protected function servesBurnedImage(): bool
+    {
+        return true;
+    }
+
     protected function getParentModel()
     {
         return Item::factory()->create();
