@@ -80,24 +80,14 @@ class TimelineEventImage extends Model implements DetachableImage, HasCopyright,
         $result = DB::transaction(function () use ($availableImage, $timelineEventId, $altText) {
             $displayOrder = static::getNextDisplayOrderFor(['timeline_event_id' => $timelineEventId]);
 
-            $availableDisk = Config::string('localstorage.available.images.disk');
-            $availableDir = trim(Config::string('localstorage.available.images.directory'), '/');
-            $picturesDisk = Config::string('localstorage.pictures.disk');
-            $picturesDir = trim(Config::string('localstorage.pictures.directory'), '/');
-
-            $filename = $availableImage->path;
-
-            $readStream = Storage::disk($availableDisk)->readStream($availableDir.'/'.$filename);
-            if ($readStream === null) {
-                throw new \RuntimeException("Failed to open read stream for image: {$filename}");
-            }
-            Storage::disk($picturesDisk)->writeStream($picturesDir.'/'.$filename, $readStream);
-            Storage::disk($availableDisk)->delete($availableDir.'/'.$filename);
-
+            // The file already lives on the private originals disk under this
+            // filename (that disk is shared with AvailableImage - see
+            // localstorage.available.*): attaching is a pure ownership swap,
+            // never a file move.
             $image = Model::unguarded(fn () => static::create([
                 'id' => $availableImage->id,
                 'timeline_event_id' => $timelineEventId,
-                'path' => $filename,
+                'path' => $availableImage->path,
                 'original_name' => $availableImage->original_name ?? '',
                 'mime_type' => $availableImage->mime_type ?? '',
                 'size' => $availableImage->size ?? 0,
@@ -120,24 +110,17 @@ class TimelineEventImage extends Model implements DetachableImage, HasCopyright,
     public function detachToAvailableImage(): AvailableImage
     {
         return $this->getConnection()->transaction(function () {
+            // The private original stays put (see attachFromAvailableImage) -
+            // only the public cache, if any, is removed: nothing to serve
+            // once detached (M9 §10 "Two disks").
             $picturesDisk = Config::string('localstorage.pictures.disk');
             $picturesDir = trim(Config::string('localstorage.pictures.directory'), '/');
-            $availableDisk = Config::string('localstorage.available.images.disk');
-            $availableDir = trim(Config::string('localstorage.available.images.directory'), '/');
-
-            $filename = $this->path;
-
-            $readStream = Storage::disk($picturesDisk)->readStream($picturesDir.'/'.$filename);
-            if ($readStream === null) {
-                throw new \RuntimeException("Failed to open read stream for image: {$filename}");
-            }
-            Storage::disk($availableDisk)->writeStream($availableDir.'/'.$filename, $readStream);
-            Storage::disk($picturesDisk)->delete($picturesDir.'/'.$filename);
+            Storage::disk($picturesDisk)->delete($picturesDir.'/'.$this->path);
 
             $availableImage = Model::unguarded(fn () => AvailableImage::create([
                 'id' => $this->id,
-                'path' => $filename,
-                'original_name' => $this->original_name ?: $filename,
+                'path' => $this->path,
+                'original_name' => $this->original_name ?: $this->path,
                 'mime_type' => $this->mime_type,
                 'size' => $this->size,
                 'comment' => $this->alt_text,
@@ -152,12 +135,12 @@ class TimelineEventImage extends Model implements DetachableImage, HasCopyright,
 
     public function imageDisk(): string
     {
-        return Config::string('localstorage.pictures.disk');
+        return Config::string('localstorage.available.images.disk');
     }
 
     public function imageStoragePath(): string
     {
-        return trim(Config::string('localstorage.pictures.directory'), '/').'/'.$this->path;
+        return trim(Config::string('localstorage.available.images.directory'), '/').'/'.$this->path;
     }
 
     public function imageMimeType(): ?string

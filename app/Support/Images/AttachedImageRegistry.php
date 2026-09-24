@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Model;
 class AttachedImageRegistry
 {
     /**
-     * All model classes that own files in localstorage.pictures.
+     * All model classes that own an attached image: a public burned rendition
+     * cached under localstorage.pictures, plus (since M9) a pristine private
+     * original under localstorage.available.images.
      *
      * @var list<class-string<Model&StreamableImageFile>>
      */
@@ -70,8 +72,9 @@ class AttachedImageRegistry
     }
 
     /**
-     * Stream every referenced storage path from registered model rows in chunks.
-     * Yields strings of the form returned by imageStoragePath().
+     * Stream every referenced private-original storage path from registered
+     * model rows in chunks. Yields strings of the form returned by
+     * imageStoragePath() (the available-images disk, not the pictures cache).
      */
     public static function referencedPaths(int $chunkSize = 500): \Generator
     {

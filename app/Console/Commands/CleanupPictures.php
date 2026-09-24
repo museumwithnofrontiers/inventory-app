@@ -113,20 +113,31 @@ class CleanupPictures extends Command
     }
 
     /**
-     * Build the keep-set: storage path => true for every row in registered models.
+     * Build the keep-set: pictures-disk storage path => true for every row in
+     * registered models.
+     *
+     * Built from `path` directly rather than `imageStoragePath()`: since M9,
+     * that method reports the private-originals location for attached
+     * images, not the pictures disk this command cleans - the public copy is
+     * a cache that legitimately exists under the same filename regardless.
      *
      * @return array<string, true>
      */
     private function buildKeepSet(): array
     {
         $keepSet = [];
+        $picturesDir = trim(Config::string('localstorage.pictures.directory'), '/');
 
         foreach (AttachedImageRegistry::modelClasses() as $class) {
-            $class::query()->chunkById(500, function ($records) use (&$keepSet) {
+            $class::query()->chunkById(500, function ($records) use (&$keepSet, $picturesDir) {
                 foreach ($records as $record) {
                     /** @var Model&StreamableImageFile $record */
-                    $storagePath = $record->imageStoragePath();
-                    $keepSet[$storagePath] = true;
+                    $path = $record->getAttribute('path');
+                    if (! is_string($path) || $path === '') {
+                        continue;
+                    }
+
+                    $keepSet[$picturesDir.'/'.$path] = true;
                 }
             });
         }

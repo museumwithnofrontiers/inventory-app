@@ -126,12 +126,12 @@ class PartnerLogo extends Model implements HasCopyright, StreamableImageFile
 
     public function imageDisk(): string
     {
-        return Config::string('localstorage.pictures.disk');
+        return Config::string('localstorage.available.images.disk');
     }
 
     public function imageStoragePath(): string
     {
-        return trim(Config::string('localstorage.pictures.directory'), '/').'/'.$this->path;
+        return trim(Config::string('localstorage.available.images.directory'), '/').'/'.$this->path;
     }
 
     public function imageMimeType(): ?string

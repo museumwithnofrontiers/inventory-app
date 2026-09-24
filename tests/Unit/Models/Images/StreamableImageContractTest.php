@@ -43,11 +43,17 @@ class StreamableImageContractTest extends TestCase
         );
     }
 
+    /**
+     * `imageDisk()`/`imageStoragePath()` resolve the pristine private
+     * original (M9 §10) - the same disk AvailableImage itself uses - not
+     * the public pictures/cache disk. See CopyrightResolutionTest and
+     * Pub\PictureControllerTest for the public-facing, burned rendition.
+     */
     #[DataProvider('picturesBackedModelProvider')]
-    public function test_image_disk_returns_pictures_disk(string $class): void
+    public function test_image_disk_returns_available_images_disk(string $class): void
     {
         $instance = new $class;
-        $this->assertSame(config('localstorage.pictures.disk'), $instance->imageDisk());
+        $this->assertSame(config('localstorage.available.images.disk'), $instance->imageDisk());
     }
 
     #[DataProvider('picturesBackedModelProvider')]
@@ -56,7 +62,7 @@ class StreamableImageContractTest extends TestCase
         $instance = new $class;
         $instance->path = 'abc123.jpg';
 
-        $expected = trim(config('localstorage.pictures.directory'), '/').'/abc123.jpg';
+        $expected = trim(config('localstorage.available.images.directory'), '/').'/abc123.jpg';
         $this->assertSame($expected, $instance->imageStoragePath());
     }
 

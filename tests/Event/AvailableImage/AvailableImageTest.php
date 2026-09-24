@@ -26,8 +26,9 @@ class AvailableImageTest extends TestCase
         parent::setUp();
         Storage::fake('local');
         Storage::fake('public');
+        Storage::fake(config('localstorage.available.images.disk'));
         Storage::disk('local')->makeDirectory('image_uploads');
-        Storage::disk('public')->makeDirectory('images');
+        Storage::disk(config('localstorage.available.images.disk'))->makeDirectory('images');
         Event::fake();
         Http::fake();
         $this->user = User::factory()->create();
@@ -54,7 +55,7 @@ class AvailableImageTest extends TestCase
         $this->assertFileDoesNotExist(Storage::disk('local')->path($imageUpload->path));
     }
 
-    public function test_availableimagelistener_creates_an_image_on_the_public_disk(): void
+    public function test_availableimagelistener_creates_an_image_on_the_available_images_disk(): void
     {
         // Create a fake image upload
         $imageUpload = ImageUpload::factory()->create();
@@ -68,12 +69,13 @@ class AvailableImageTest extends TestCase
         $availableImageListener = new AvailableImageListener;
         $availableImageListener->handle($availableImageEvent);
 
-        // The Listener should have created a new image in the public disk, and have updated
+        // The Listener should have created a new image on the available-images
+        // disk (the private image-originals disk since M9), and have updated
         // the path of the AvailableImage model to point to just the filename
         $availableImage->refresh();
         $directory = trim(config('localstorage.available.images.directory'), '/');
         $fullPath = $directory.'/'.$availableImage->path;
-        $this->assertFileExists(Storage::disk('public')->path($fullPath));
+        $this->assertFileExists(Storage::disk(config('localstorage.available.images.disk'))->path($fullPath));
     }
 
     public function test_availableimagelistener_updates_the_image_path_in_database(): void

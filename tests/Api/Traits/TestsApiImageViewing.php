@@ -24,19 +24,12 @@ trait TestsApiImageViewing
         Storage::fake('local');
         Storage::fake('public');
 
-        // Configure the storage disks for images based on model class
-        $modelClass = $this->getModelClass();
-
-        // AvailableImage uses available.images config
-        if (str_contains($modelClass, 'AvailableImage')) {
-            config(['localstorage.available.images.disk' => 'local']);
-            config(['localstorage.available.images.directory' => 'images']);
-        }
-        // ItemImage, PartnerImage, etc use pictures config
-        else {
-            config(['localstorage.pictures.disk' => 'local']);
-            config(['localstorage.pictures.directory' => 'pictures']);
-        }
+        // Since M9, imageDisk()/imageStoragePath() for every image model -
+        // AvailableImage and the 7 attached-image models alike - resolve via
+        // localstorage.available.images config (the pristine private
+        // original), not localstorage.pictures (the public burned cache).
+        config(['localstorage.available.images.disk' => 'local']);
+        config(['localstorage.available.images.directory' => 'images']);
     }
 
     protected function createTestImageFile(string $path): void
@@ -61,10 +54,8 @@ trait TestsApiImageViewing
 
         $modelClass = $this->getModelClass();
 
-        // Determine directory based on model class
-        $directory = str_contains($modelClass, 'AvailableImage') ? 'images' : 'pictures';
-
-        // Store file with directory on disk
+        // Store file under the configured available-images directory on disk
+        $directory = trim(config('localstorage.available.images.directory'), '/');
         $storagePathOnDisk = $directory.'/test-download.jpg';
         // But database should store just filename
         $pathInDatabase = 'test-download.jpg';
@@ -120,10 +111,8 @@ trait TestsApiImageViewing
 
         $modelClass = $this->getModelClass();
 
-        // Determine directory based on model class
-        $directory = str_contains($modelClass, 'AvailableImage') ? 'images' : 'pictures';
-
-        // Store file with directory on disk
+        // Store file under the configured available-images directory on disk
+        $directory = trim(config('localstorage.available.images.directory'), '/');
         $storagePathOnDisk = $directory.'/test-view.jpg';
         // But database should store just filename
         $pathInDatabase = 'test-view.jpg';

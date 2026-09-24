@@ -154,26 +154,14 @@ class ItemImage extends Model implements DetachableImage, HasCopyright, Streamab
         $result = DB::transaction(function () use ($availableImage, $itemId, $altText) {
             $displayOrder = static::getNextDisplayOrderForItem($itemId);
 
-            // Move file from available storage to pictures storage
-            $availableDisk = Config::string('localstorage.available.images.disk');
-            $availableDir = trim(Config::string('localstorage.available.images.directory'), '/');
-            $picturesDisk = Config::string('localstorage.pictures.disk');
-            $picturesDir = trim(Config::string('localstorage.pictures.directory'), '/');
-
-            $filename = $availableImage->path; // Already just filename
-
-            // Move the file from images/ to pictures/
-            $readStream = Storage::disk($availableDisk)->readStream($availableDir.'/'.$filename);
-            if ($readStream === null) {
-                throw new \RuntimeException("Failed to open read stream for image: {$filename}");
-            }
-            Storage::disk($picturesDisk)->writeStream($picturesDir.'/'.$filename, $readStream);
-            Storage::disk($availableDisk)->delete($availableDir.'/'.$filename);
-
+            // The file already lives on the private originals disk under this
+            // filename (that disk is shared with AvailableImage - see
+            // localstorage.available.*): attaching is a pure ownership swap,
+            // never a file move.
             $itemImage = Model::unguarded(fn () => static::create([
                 'id' => $availableImage->id, // Preserve the ID
                 'item_id' => $itemId,
-                'path' => $filename, // Keep filename unchanged
+                'path' => $availableImage->path, // Keep filename unchanged
                 'original_name' => $availableImage->original_name ?? '',
                 'mime_type' => $availableImage->mime_type ?? '',
                 'size' => $availableImage->size ?? 0,
@@ -196,26 +184,17 @@ class ItemImage extends Model implements DetachableImage, HasCopyright, Streamab
     public function detachToAvailableImage(): AvailableImage
     {
         return $this->getConnection()->transaction(function () {
-            // Move file from pictures storage back to available storage
+            // The private original stays put (see attachFromAvailableImage) -
+            // only the public cache, if any, is removed: nothing to serve
+            // once detached (M9 §10 "Two disks").
             $picturesDisk = Config::string('localstorage.pictures.disk');
             $picturesDir = trim(Config::string('localstorage.pictures.directory'), '/');
-            $availableDisk = Config::string('localstorage.available.images.disk');
-            $availableDir = trim(Config::string('localstorage.available.images.directory'), '/');
-
-            $filename = $this->path; // Already just filename
-
-            // Move the file from pictures/ back to images/
-            $readStream = Storage::disk($picturesDisk)->readStream($picturesDir.'/'.$filename);
-            if ($readStream === null) {
-                throw new \RuntimeException("Failed to open read stream for image: {$filename}");
-            }
-            Storage::disk($availableDisk)->writeStream($availableDir.'/'.$filename, $readStream);
-            Storage::disk($picturesDisk)->delete($picturesDir.'/'.$filename);
+            Storage::disk($picturesDisk)->delete($picturesDir.'/'.$this->path);
 
             $availableImage = Model::unguarded(fn () => AvailableImage::create([
                 'id' => $this->id, // Preserve the ID
-                'path' => $filename, // Keep filename unchanged
-                'original_name' => $this->original_name ?: $filename,
+                'path' => $this->path, // Keep filename unchanged
+                'original_name' => $this->original_name ?: $this->path,
                 'mime_type' => $this->mime_type ?: null,
                 'size' => $this->size ?: null,
                 'comment' => $this->alt_text,
@@ -230,12 +209,12 @@ class ItemImage extends Model implements DetachableImage, HasCopyright, Streamab
 
     public function imageDisk(): string
     {
-        return Config::string('localstorage.pictures.disk');
+        return Config::string('localstorage.available.images.disk');
     }
 
     public function imageStoragePath(): string
     {
-        return trim(Config::string('localstorage.pictures.directory'), '/').'/'.$this->path;
+        return trim(Config::string('localstorage.available.images.directory'), '/').'/'.$this->path;
     }
 
     public function imageMimeType(): ?string
