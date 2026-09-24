@@ -21,12 +21,13 @@ class FilamentImageRoutesTest extends TestCase
 
     public function test_filament_available_image_view_route_returns_image_inline(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
+        $disk = config('localstorage.available.images.disk');
+        Storage::fake($disk);
+        Storage::disk($disk)->makeDirectory('images');
 
         $availableImage = AvailableImage::factory()->create(['path' => 'avail-test.jpg']);
         $imagePath = trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path;
-        Storage::disk('public')->put($imagePath, 'fake-jpeg-data');
+        Storage::disk($disk)->put($imagePath, 'fake-jpeg-data');
 
         $user = $this->createAuthorizedUser();
 
@@ -40,12 +41,13 @@ class FilamentImageRoutesTest extends TestCase
 
     public function test_filament_available_image_download_route_returns_attachment(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('images');
+        $disk = config('localstorage.available.images.disk');
+        Storage::fake($disk);
+        Storage::disk($disk)->makeDirectory('images');
 
         $availableImage = AvailableImage::factory()->create(['path' => 'avail-download-test.jpg']);
         $imagePath = trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path;
-        Storage::disk('public')->put($imagePath, 'fake-jpeg-data');
+        Storage::disk($disk)->put($imagePath, 'fake-jpeg-data');
 
         $user = $this->createAuthorizedUser();
 
@@ -59,13 +61,14 @@ class FilamentImageRoutesTest extends TestCase
 
     public function test_filament_item_image_view_route_returns_image_inline(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('pictures');
+        $disk = config('localstorage.available.images.disk');
+        Storage::fake($disk);
+        Storage::disk($disk)->makeDirectory('images');
 
         $item = Item::factory()->Object()->create();
         $itemImage = ItemImage::factory()->forItem($item)->create(['path' => 'item-view-test.jpg']);
-        $picturesDir = trim(config('localstorage.pictures.directory'), '/');
-        Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/'.$itemImage->path, 'fake-jpeg-data');
+        $imagesDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk($disk)->put($imagesDir.'/'.$itemImage->path, 'fake-jpeg-data');
 
         $user = $this->createAuthorizedUser();
 
@@ -94,13 +97,14 @@ class FilamentImageRoutesTest extends TestCase
 
     public function test_filament_item_image_download_route_returns_attachment(): void
     {
-        Storage::fake('public');
-        Storage::disk('public')->makeDirectory('pictures');
+        $disk = config('localstorage.available.images.disk');
+        Storage::fake($disk);
+        Storage::disk($disk)->makeDirectory('images');
 
         $item = Item::factory()->Object()->create();
         $itemImage = ItemImage::factory()->forItem($item)->create(['path' => 'item-download-test.jpg']);
-        $picturesDir = trim(config('localstorage.pictures.directory'), '/');
-        Storage::disk(config('localstorage.pictures.disk'))->put($picturesDir.'/'.$itemImage->path, 'fake-jpeg-data');
+        $imagesDir = trim(config('localstorage.available.images.directory'), '/');
+        Storage::disk($disk)->put($imagesDir.'/'.$itemImage->path, 'fake-jpeg-data');
 
         $user = $this->createAuthorizedUser();
 
