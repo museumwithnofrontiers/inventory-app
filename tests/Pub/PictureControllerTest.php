@@ -9,6 +9,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Tests\TestCase;
 
 class PictureControllerTest extends TestCase
@@ -55,6 +56,18 @@ class PictureControllerTest extends TestCase
         return Str::uuid()->toString().'.jpg';
     }
 
+    /**
+     * `public, no-cache`: anyone may store the picture, but must ask before
+     * each use - never a max-age that would hide a copyright edit.
+     */
+    private function assertRevalidatedOnEveryUse(TestResponse $response): void
+    {
+        $directives = array_map('trim', explode(',', (string) $response->headers->get('Cache-Control')));
+        sort($directives);
+
+        $this->assertSame(['no-cache', 'public'], $directives);
+    }
+
     // ── Happy path ────────────────────────────────────────────────────────────
 
     public function test_serves_burned_image_with_caching_headers(): void
@@ -69,8 +82,20 @@ class PictureControllerTest extends TestCase
         // The burner's version is part of the ETag, so a change in its output
         // reaches clients that hold the previous rendition
         $response->assertHeader('ETag', '"'.sha1(ImageBurner::VERSION.'|'.$filename.'|Original Owner').'"');
-        $this->assertStringContainsString('public', $response->headers->get('Cache-Control'));
+        $this->assertRevalidatedOnEveryUse($response);
         Storage::disk('public')->assertExists('pictures/'.$filename);
+    }
+
+    public function test_a_cache_hit_is_also_revalidated_on_every_use(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $this->makeItemImage($filename, 'Original Owner');
+
+        $this->get(route('pub.picture', ['filename' => $filename]))->assertOk();
+        $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+        $response->assertOk();
+        $this->assertRevalidatedOnEveryUse($response);
     }
 
     // ── Conditional GET: ETag ─────────────────────────────────────────────────
@@ -87,6 +112,10 @@ class PictureControllerTest extends TestCase
             ->get(route('pub.picture', ['filename' => $filename]));
 
         $response->assertStatus(304);
+        $this->assertSame('', $response->getContent());
+        // The headers the 200 would have had (RFC 9110 §15.4.5)
+        $response->assertHeader('ETag', $etag);
+        $this->assertRevalidatedOnEveryUse($response);
     }
 
     public function test_stale_etag_after_copyright_change_gets_fresh_body_and_new_etag(): void

@@ -13,6 +13,13 @@ use Illuminate\Http\Response;
 
 class PictureController extends Controller
 {
+    /**
+     * Clients and CDNs may keep a picture but must revalidate it on every
+     * use, so a copyright edit shows on the very next request. Revalidating
+     * is cheap: the 304 path reads no file and burns nothing.
+     */
+    private const string CACHE_CONTROL = 'public, no-cache';
+
     public function __construct(private readonly PublicRenditions $renditions) {}
 
     /**
@@ -45,9 +52,13 @@ class PictureController extends Controller
         /** @var Model&StreamableImageFile&HasCopyright $record */
         $etag = $this->renditions->etag($record);
 
+        // A 304 carries the headers the 200 would have had (RFC 9110 §15.4.5)
         $ifNoneMatch = $request->header('If-None-Match');
         if ($ifNoneMatch !== null && $ifNoneMatch === $etag) {
-            return response('', 304);
+            return response('', 304, [
+                'Cache-Control' => self::CACHE_CONTROL,
+                'ETag' => $etag,
+            ]);
         }
 
         $rendition = $this->renditions->get($record);
@@ -58,7 +69,7 @@ class PictureController extends Controller
 
         return response($rendition->contents, 200, [
             'Content-Type' => $record->imageMimeType() ?? 'image/jpeg',
-            'Cache-Control' => 'public, max-age=86400, must-revalidate',
+            'Cache-Control' => self::CACHE_CONTROL,
             'ETag' => $rendition->etag,
         ]);
     }
