@@ -54,6 +54,12 @@
         <env name="SESSION_DRIVER" value="array" force="true"/>
         <env name="TELESCOPE_ENABLED" value="false" force="true"/>
         <env name="VITE_ENABLED" value="false" force="true"/>
+        <env name="UPLOAD_IMAGES_DISK" value="local" force="true"/>
+        <env name="UPLOAD_IMAGES_DIRECTORY" value="image_uploads" force="true"/>
+        <env name="AVAILABLE_IMAGES_DISK" value="image-originals" force="true"/>
+        <env name="AVAILABLE_IMAGES_DIRECTORY" value="images" force="true"/>
+        <env name="PICTURES_DISK" value="public" force="true"/>
+        <env name="PICTURES_DIRECTORY" value="pictures" force="true"/>
         <ini name="memory_limit" value="512M"/>
     </php>
 </phpunit>
