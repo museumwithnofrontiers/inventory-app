@@ -5,11 +5,14 @@ namespace Tests\Pub;
 use App\Models\Item;
 use App\Models\ItemImage;
 use App\Support\Images\ImageBurner;
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Mockery;
 use Tests\TestCase;
 
 class PictureControllerTest extends TestCase
@@ -175,6 +178,34 @@ class PictureControllerTest extends TestCase
 
         $response->assertOk();
         Storage::disk('public')->assertExists('pictures/'.$filename);
+    }
+
+    public function test_a_failed_cache_write_still_serves_the_burn_but_records_no_marker(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $this->makeItemImage($filename, 'Original Owner');
+
+        // A pictures disk that refuses every write, as the public disk does
+        // (throw => false) when it's full or not writable
+        $pictures = Mockery::mock(Filesystem::class);
+        $pictures->shouldReceive('exists')->andReturnFalse();
+        $pictures->shouldReceive('put')->once()->andReturnFalse();
+        Storage::set('public', $pictures);
+        Log::spy();
+
+        $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+        $response->assertOk();
+        $this->assertNotSame(base64_decode(self::MINIMAL_JPEG), $response->getContent());
+        $response->assertHeader('ETag', '"'.sha1(ImageBurner::VERSION.'|'.$filename.'|Original Owner').'"');
+        $this->assertNull(Cache::get('image-copyright-etag:'.$filename));
+        Log::shouldHaveReceived('warning')->once()->withArgs(
+            fn (string $message, array $context): bool => $context === [
+                'disk' => 'public',
+                'path' => 'pictures/'.$filename,
+                'filename' => $filename,
+            ]
+        );
     }
 
     // ── Lock-coalesced regeneration ──────────────────────────────────────────

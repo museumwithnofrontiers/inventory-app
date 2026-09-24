@@ -9,6 +9,7 @@ use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 /**
@@ -112,9 +113,20 @@ class PublicRenditions
 
         $burned = $this->burner->burn($original, $record->resolveCopyright());
 
-        $this->pictures()->put($this->cachePath($record), $burned);
-        Cache::forever($this->markerKey($record), $etag);
+        // The pictures disk doesn't throw: a failed write only shows as
+        // false. A marker for a file that isn't there would send every
+        // request back here to burn again, with nothing saying why
+        if ($this->pictures()->put($this->cachePath($record), $burned)) {
+            Cache::forever($this->markerKey($record), $etag);
+        } else {
+            Log::warning('Could not cache a burned image rendition; each request burns it again until the write succeeds.', [
+                'disk' => Config::string('localstorage.pictures.disk'),
+                'path' => $this->cachePath($record),
+                'filename' => $this->filename($record),
+            ]);
+        }
 
+        // The bytes are right either way
         return new PublicRendition($burned, $etag);
     }
 
