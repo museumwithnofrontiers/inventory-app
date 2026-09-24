@@ -264,12 +264,10 @@ export class SchoolImporter extends BaseImporter {
           continue;
         }
 
-        // Build alt_text
-        let altText = picture.path;
-        if (picture.caption?.trim()) {
-          altText = picture.caption.trim();
-        }
-        if (altText.length > 500) {
+        // Build alt_text from the caption; without one it stays null, since a
+        // legacy file path is no alternative text
+        let altText = picture.caption?.trim() || null;
+        if (altText && altText.length > 500) {
           altText = altText.substring(0, 497) + '...';
         }
 
@@ -288,7 +286,7 @@ export class SchoolImporter extends BaseImporter {
           original_name: originalName,
           mime_type: mimeType,
           size: 1, // Placeholder for ImageSyncTool
-          alt_text: altText || null,
+          alt_text: altText,
           copyright: toImageCopyright(picture.copyright),
           display_order: picture.image_number,
         };

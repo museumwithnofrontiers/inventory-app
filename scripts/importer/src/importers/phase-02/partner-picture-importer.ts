@@ -133,14 +133,12 @@ export class PartnerPictureImporter extends BaseImporter {
       return true;
     }
 
-    // Build alt_text from caption or use path
-    let altText = picture.path;
-    if (picture.caption && picture.caption.trim()) {
-      altText = picture.caption.trim();
-    }
+    // Build alt_text from the caption; without one it stays null, since a
+    // legacy file path is no alternative text
+    let altText = picture.caption?.trim() || null;
 
     // Truncate alt_text if too long (database limit)
-    if (altText.length > 500) {
+    if (altText && altText.length > 500) {
       altText = altText.substring(0, 497) + '...';
     }
 
@@ -166,7 +164,7 @@ export class PartnerPictureImporter extends BaseImporter {
       original_name: originalName,
       mime_type: mimeType,
       size: 1, // Fake size as required
-      alt_text: altText || null,
+      alt_text: altText,
       copyright: toImageCopyright(picture.copyright),
       display_order: picture.image_number,
       extra: extraField,
@@ -259,14 +257,12 @@ export class PartnerPictureImporter extends BaseImporter {
       return true;
     }
 
-    // Build alt_text from caption or use path
-    let altText = picture.path;
-    if (picture.caption && picture.caption.trim()) {
-      altText = picture.caption.trim();
-    }
+    // Build alt_text from the caption; without one it stays null, since a
+    // legacy file path is no alternative text
+    let altText = picture.caption?.trim() || null;
 
     // Truncate alt_text if too long (database limit)
-    if (altText.length > 500) {
+    if (altText && altText.length > 500) {
       altText = altText.substring(0, 497) + '...';
     }
 
@@ -292,7 +288,7 @@ export class PartnerPictureImporter extends BaseImporter {
       original_name: originalName,
       mime_type: mimeType,
       size: 1, // Fake size as required
-      alt_text: altText || null,
+      alt_text: altText,
       copyright: toImageCopyright(picture.copyright),
       display_order: picture.image_number,
       extra: extraField,
