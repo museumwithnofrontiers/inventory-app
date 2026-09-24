@@ -274,10 +274,11 @@ export class SchoolImporter extends BaseImporter {
         const mimeType = this.getMimeType(picture.path);
         const originalName = path.basename(picture.path);
 
-        // Build extra for photographer/copyright
+        // Build extra JSON for photographer/copyright
         const extra: Record<string, string> = {};
-        if (picture.photographer) extra.photographer = picture.photographer;
-        if (picture.copyright) extra.copyright = picture.copyright;
+        if (picture.photographer?.trim()) extra.photographer = picture.photographer.trim();
+        if (picture.copyright?.trim()) extra.copyright = picture.copyright.trim();
+        const extraField = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
         const imageData: PartnerImageData = {
           id: undefined,
@@ -289,6 +290,7 @@ export class SchoolImporter extends BaseImporter {
           alt_text: altText,
           copyright: toImageCopyright(picture.copyright),
           display_order: picture.image_number,
+          extra: extraField,
         };
 
         await this.context.strategy.writePartnerImage(imageData);

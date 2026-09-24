@@ -98,4 +98,37 @@ describe('SchoolImporter pictures', () => {
       expect((await importedImage()).alt_text).toBe('y'.repeat(497) + '...');
     });
   });
+
+  describe('extra', () => {
+    it('keeps the trimmed photographer and copyright', async () => {
+      pictureRows = [picture({ photographer: ' Ana Ruiz ', copyright: ' Colegio Almeria ' })];
+      const image = await importedImage();
+      expect(image.extra).toBe(
+        JSON.stringify({ photographer: 'Ana Ruiz', copyright: 'Colegio Almeria' })
+      );
+      expect(image.copyright).toBe('© Colegio Almeria');
+    });
+
+    it('holds only the key that has a value', async () => {
+      pictureRows = [picture({ photographer: 'Ana Ruiz', copyright: '  ' })];
+      const image = await importedImage();
+      expect(image.extra).toBe(JSON.stringify({ photographer: 'Ana Ruiz' }));
+      expect(image.copyright).toBeNull();
+    });
+
+    it('is null when the picture has neither', async () => {
+      pictureRows = [
+        picture({ photographer: '', copyright: '' }),
+        picture({
+          image_number: 2,
+          path: 'schools/it/sch01/2.jpg',
+          photographer: undefined,
+          copyright: ' ',
+        }),
+      ];
+      const result = await new SchoolImporter(context).import();
+      expect(result.errors).toEqual([]);
+      expect(writePartnerImageMock.mock.calls.map(([data]) => data.extra)).toEqual([null, null]);
+    });
+  });
 });
