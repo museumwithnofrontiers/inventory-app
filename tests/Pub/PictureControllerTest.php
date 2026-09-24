@@ -16,7 +16,11 @@ use App\Models\PartnerTranslationImage;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventImage;
 use App\Support\Images\ImageBurner;
+use App\Support\Images\PublicRenditions;
+use Closure;
 use finfo;
+use Illuminate\Cache\ArrayLock;
+use Illuminate\Cache\ArrayStore;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -98,6 +102,43 @@ class PictureControllerTest extends TestCase
         Storage::disk('image-originals')->put('images/'.$filename, base64_decode(self::MINIMAL_JPEG));
 
         return $image;
+    }
+
+    /**
+     * Make the default cache an array store whose lock runs $otherRequest
+     * before it is acquired: what another request, holding the lock, does
+     * while this one waits in block().
+     */
+    private function useCacheWhoseLockIsHeldUntil(Closure $otherRequest): void
+    {
+        $store = new class($otherRequest) extends ArrayStore
+        {
+            public function __construct(private readonly Closure $otherRequest)
+            {
+                parent::__construct();
+            }
+
+            public function lock($name, $seconds = 0, $owner = null)
+            {
+                return new class($this, $name, $seconds, $owner, $this->otherRequest) extends ArrayLock
+                {
+                    public function __construct($store, $name, $seconds, $owner, private readonly Closure $otherRequest)
+                    {
+                        parent::__construct($store, $name, $seconds, $owner);
+                    }
+
+                    public function block($seconds, $callback = null)
+                    {
+                        ($this->otherRequest)();
+
+                        return parent::block($seconds, $callback);
+                    }
+                };
+            }
+        };
+
+        Cache::extend('held-lock', fn () => Cache::repository($store));
+        config(['cache.stores.held-lock' => ['driver' => 'held-lock'], 'cache.default' => 'held-lock']);
     }
 
     private function uuidJpgFilename(): string
@@ -256,7 +297,32 @@ class PictureControllerTest extends TestCase
 
     // ── Lock-coalesced regeneration ──────────────────────────────────────────
 
-    public function test_concurrent_requests_for_the_same_invalidated_image_burn_exactly_once(): void
+    public function test_a_request_that_waited_for_the_lock_serves_the_rendition_the_holder_just_burned(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $image = $this->makeItemImage($filename, 'Original Owner');
+        $etag = app(PublicRenditions::class)->etag($image);
+
+        // A cache whose lock, while this request waits for it, lets another
+        // request finish burning this very image: it writes the rendition
+        // and records its ETag, as PublicRenditions does, then releases.
+        $this->useCacheWhoseLockIsHeldUntil(function () use ($filename, $etag): void {
+            Storage::disk('public')->put('pictures/'.$filename, 'burned-by-the-lock-holder');
+            Cache::forever('image-copyright-etag:'.$filename, $etag);
+        });
+
+        // Coalescing is the re-check inside the lock: this request must
+        // reuse that rendition, not burn a second one
+        $this->partialMock(ImageBurner::class, fn ($mock) => $mock->shouldNotReceive('burn'));
+
+        $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+        $response->assertOk();
+        $this->assertSame('burned-by-the-lock-holder', $response->getContent());
+        $response->assertHeader('ETag', $etag);
+    }
+
+    public function test_after_an_invalidation_one_request_burns_and_the_next_ones_hit_the_cache(): void
     {
         $filename = $this->uuidJpgFilename();
         $image = $this->makeItemImage($filename, 'Original Owner');
@@ -266,9 +332,11 @@ class PictureControllerTest extends TestCase
         // instance on first dispatch and reuses it for later requests to
         // the same route within this test, so a mock set up afterwards
         // would never actually be used by the already-resolved controller.
-        // Two burns are expected in total: establishing the baseline
-        // rendition below, then exactly one coalesced regeneration shared
-        // across the whole burst of requests after invalidation.
+        // Two burns are expected in total: the baseline rendition below,
+        // then one after the invalidation, which the requests that follow
+        // it one by one find in the cache. (These requests are sequential,
+        // so this is about cache hits; coalescing concurrent requests is
+        // the lock test above.)
         $this->partialMock(ImageBurner::class, fn ($mock) => $mock->shouldReceive('burn')->twice()->passthru());
 
         $this->get(route('pub.picture', ['filename' => $filename]));
