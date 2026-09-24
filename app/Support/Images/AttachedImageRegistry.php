@@ -87,6 +87,26 @@ class AttachedImageRegistry
     }
 
     /**
+     * Find the registered model instance owning the given path, checking
+     * each registered table in turn. Short-circuits on the first match -
+     * cheap thanks to A0.1's index on path across all 7 registry tables.
+     *
+     * @return (Model&StreamableImageFile)|null
+     */
+    public static function findByPath(string $path): ?Model
+    {
+        foreach (self::modelClasses() as $class) {
+            $record = $class::query()->where('path', $path)->first();
+
+            if ($record !== null) {
+                return $record;
+            }
+        }
+
+        return null;
+    }
+
+    /**
      * Validate all registered entries.
      * Fails fast if any class does not exist, does not extend Model,
      * or does not implement StreamableImageFile.

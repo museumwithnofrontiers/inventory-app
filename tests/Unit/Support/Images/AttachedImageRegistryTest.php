@@ -120,4 +120,19 @@ class AttachedImageRegistryTest extends TestCase
         $expectedPath = trim(config('localstorage.available.images.directory'), '/').'/test-item.jpg';
         $this->assertContains($expectedPath, $paths);
     }
+
+    public function test_find_by_path_returns_the_owning_model_instance(): void
+    {
+        $image = CollectionImage::factory()->create(['path' => 'find-me.jpg']);
+
+        $found = AttachedImageRegistry::findByPath('find-me.jpg');
+
+        $this->assertInstanceOf(CollectionImage::class, $found);
+        $this->assertSame($image->id, $found->id);
+    }
+
+    public function test_find_by_path_returns_null_when_no_model_owns_the_path(): void
+    {
+        $this->assertNull(AttachedImageRegistry::findByPath('does-not-exist.jpg'));
+    }
 }
