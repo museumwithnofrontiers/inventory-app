@@ -68,42 +68,27 @@ DB_DATABASE=:memory:
 
 ### Storage Configuration
 
-#### Local Storage (Default)
+Images go through three disks. Each is set by a disk variable and a directory variable (`config/localstorage.php`). These are the defaults:
 
 ```env
-# Upload Images (user uploads)
-UPLOAD_IMAGES_DISK=local_upload_images
-UPLOAD_IMAGES_PATH=uploads/images
+# Uploads: transient and private, the input of the image upload pipeline
+UPLOAD_IMAGES_DISK=local
+UPLOAD_IMAGES_DIRECTORY=image_uploads
 
-# Available Images (processed/optimized)
-AVAILABLE_IMAGES_DISK=local_available_images
-AVAILABLE_IMAGES_PATH=available/images
+# Originals: pristine, private, never web-reachable. They hold the
+# AvailableImage pool and the original of every attached image.
+AVAILABLE_IMAGES_DISK=image-originals
+AVAILABLE_IMAGES_DIRECTORY=images
 
-# Pictures (final processed images)
-PICTURES_DISK=local_pictures
-PICTURES_PATH=pictures
+# Pictures: the cache of burned renditions (copyright drawn in) that
+# /pub/{filename} serves
+PICTURES_DISK=public
+PICTURES_DIRECTORY=pictures
 ```
 
-#### AWS S3 Storage
-
-```env
-# S3 Configuration
-AWS_ACCESS_KEY_ID=your_access_key
-AWS_SECRET_ACCESS_KEY=your_secret_key
-AWS_DEFAULT_REGION=us-east-1
-AWS_BUCKET=inventory-app-storage
-AWS_USE_PATH_STYLE_ENDPOINT=false
-
-# Storage Disks
-UPLOAD_IMAGES_DISK=s3_upload_images
-UPLOAD_IMAGES_PATH=uploads/images
-
-AVAILABLE_IMAGES_DISK=s3_available_images
-AVAILABLE_IMAGES_PATH=available/images
-
-PICTURES_DISK=s3_pictures
-PICTURES_PATH=pictures
-```
+- `AVAILABLE_IMAGES_DISK` must never be `public`, which would put the originals on the web-reachable disk. `scripts/deploy.sh` refuses to deploy when it resolves to `public`. An `.env` created before M9 may still pin it, since `.env.example` did: set it to `image-originals`, or delete the line so the default applies.
+- `php artisan storage:image-path {upload|available|pictures} --json` prints the disk, directory and absolute path each one resolves to.
+- Only local disks are used and tested. `config/filesystems.php` also defines an `s3` disk, but the image pipeline (file moves, the `/pub` cache, the shared permissions) has never been run on it.
 
 ### Caching Configuration
 
@@ -319,41 +304,41 @@ return [
     'default' => env('FILESYSTEM_DISK', 'local'),
 
     'disks' => [
+        // Uploads (UPLOAD_IMAGES_DISK)
         'local' => [
             'driver' => 'local',
-            'root' => storage_path('app'),
+            'root' => storage_path('app/private'),
+            'serve' => true,
             'throw' => false,
+            'report' => false,
         ],
 
+        // The pictures cache (PICTURES_DISK)
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),
             'url' => env('APP_URL').'/storage',
             'visibility' => 'public',
             'throw' => false,
+            'report' => false,
         ],
 
-        // Custom storage disks for image management
-        'local_upload_images' => [
+        // The originals (AVAILABLE_IMAGES_DISK): no url, never under
+        // app/public; files 0660 so deploy and www-data share them
+        'image-originals' => [
             'driver' => 'local',
-            'root' => storage_path('app/'.env('UPLOAD_IMAGES_PATH', 'uploads/images')),
-            'url' => env('APP_URL').'/storage/'.env('UPLOAD_IMAGES_PATH', 'uploads/images'),
-            'visibility' => 'public',
+            'root' => storage_path('app/private/image-originals'),
+            'visibility' => 'private',
+            'directory_visibility' => 'private',
+            'permissions' => [
+                'file' => ['public' => 0660, 'private' => 0660],
+                'dir' => ['public' => 0770, 'private' => 0770],
+            ],
+            'throw' => false,
+            'report' => false,
         ],
 
-        'local_available_images' => [
-            'driver' => 'local',
-            'root' => storage_path('app/'.env('AVAILABLE_IMAGES_PATH', 'available/images')),
-            'url' => env('APP_URL').'/storage/'.env('AVAILABLE_IMAGES_PATH', 'available/images'),
-            'visibility' => 'public',
-        ],
-
-        'local_pictures' => [
-            'driver' => 'local',
-            'root' => storage_path('app/'.env('PICTURES_PATH', 'pictures')),
-            'url' => env('APP_URL').'/storage/'.env('PICTURES_PATH', 'pictures'),
-            'visibility' => 'public',
-        ],
+        // ... public-maintenance and s3
     ],
 ];
 ```
@@ -673,7 +658,11 @@ class ValidateConfiguration extends Command
         }
 
         // Check storage disks
-        $disks = ['local_upload_images', 'local_available_images', 'local_pictures'];
+        $disks = [
+            config('localstorage.uploads.images.disk'),
+            config('localstorage.available.images.disk'),
+            config('localstorage.pictures.disk'),
+        ];
         foreach ($disks as $disk) {
             try {
                 Storage::disk($disk)->exists('test');

@@ -146,13 +146,16 @@ DB_DATABASE=inventory_production
 DB_USERNAME=inventory_user
 DB_PASSWORD=secure_password
 
-# Image Storage
-UPLOAD_IMAGES_DISK=local_upload_images
-UPLOAD_IMAGES_PATH=uploads/images
-AVAILABLE_IMAGES_DISK=local_available_images
-AVAILABLE_IMAGES_PATH=available/images
-PICTURES_DISK=local_pictures
-PICTURES_PATH=pictures
+# Image Storage (these are the defaults; see the Configuration guide)
+# Uploads: transient, private
+UPLOAD_IMAGES_DISK=local
+UPLOAD_IMAGES_DIRECTORY=image_uploads
+# Originals: pristine, private, never web-reachable - never "public"
+AVAILABLE_IMAGES_DISK=image-originals
+AVAILABLE_IMAGES_DIRECTORY=images
+# Pictures: the cache of burned renditions that /pub serves
+PICTURES_DISK=public
+PICTURES_DIRECTORY=pictures
 
 # Cache
 CACHE_STORE=file
@@ -357,7 +360,17 @@ php artisan view:cache
 Restart-Service -Name "Apache2.4"
 ```
 
-## Step 6: Monitoring and Maintenance
+### 5.3 Moving an Existing Server to the M9 Image Storage (once)
+
+Since M9, attached images keep their pristine original on the private originals disk. `/pub` serves them with the copyright burned in, and caches those renditions on the pictures disk. A server that ran an earlier version kept each attached image's only file in the pictures directory. Moving it over is a one-off, in this order:
+
+1. **Fix `.env`.** Check `grep '^AVAILABLE_IMAGES_DISK' /opt/inventory/shared/.env`. `.env.example` pinned `public` before M9, and `deploy.sh` copies it only on the first deploy. Set it to `image-originals`, or delete the line so the default applies. The configuration is cached, so the change takes effect at the next deploy. `deploy.sh` refuses to deploy while the disk resolves to `public`.
+2. **Create the directories** with their ownership and modes (see 4.4).
+3. **Deploy.** This runs the migrations, which add the copyright columns and the path indexes.
+4. **Backfill the originals**, as `deploy`: `php artisan images:backfill-originals --force`.
+   - For every attached image, it copies the file from the pictures directory to the originals disk, then removes the public copy.
+   - The first `/pub` request for each image then burns and caches its rendition.
+   - It reports the rows that have no file in either place and carries on. `--dry-run` shows what it would do.
 
 ### 6.1 Log Files
 
