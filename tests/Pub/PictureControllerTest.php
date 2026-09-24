@@ -16,6 +16,7 @@ use App\Models\PartnerTranslationImage;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventImage;
 use App\Support\Images\ImageBurner;
+use finfo;
 use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +25,13 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\GifEncoder;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
+use Intervention\Image\ImageManager;
+use Intervention\Image\Interfaces\EncoderInterface;
 use Mockery;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
@@ -447,12 +455,78 @@ class PictureControllerTest extends TestCase
         $response->assertStatus(400);
     }
 
-    // ── Non-JPEG filename does not match the route ────────────────────────────
+    // ── Formats and filenames the route accepts ──────────────────────────────
 
-    public function test_non_jpg_extension_does_not_match_route(): void
+    /**
+     * @return array<string, array{string, EncoderInterface, string}>
+     */
+    public static function rasterFormatProvider(): array
     {
-        $response = $this->get('/pub/00000000-0000-0000-0000-000000000000.png');
+        return [
+            'png' => ['png', new PngEncoder, 'image/png'],
+            'gif' => ['gif', new GifEncoder, 'image/gif'],
+            'webp' => ['webp', new WebpEncoder, 'image/webp'],
+            'jpeg' => ['jpeg', new JpegEncoder, 'image/jpeg'],
+        ];
+    }
 
-        $response->assertNotFound();
+    #[DataProvider('rasterFormatProvider')]
+    public function test_every_raster_format_is_served_burned_in_its_own_format(string $extension, EncoderInterface $encoder, string $mimeType): void
+    {
+        $filename = Str::uuid()->toString().'.'.$extension;
+        $original = (new ImageManager(new Driver))->create(160, 120)->fill('808080')->encode($encoder)->toString();
+        ItemImage::factory()->forItem(Item::factory()->Object()->create())->create(['path' => $filename, 'mime_type' => $mimeType]);
+        Storage::disk('image-originals')->put('images/'.$filename, $original);
+
+        $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+        $response->assertOk();
+        $response->assertHeader('Content-Type', $mimeType);
+        $this->assertSame($mimeType, (new finfo(FILEINFO_MIME_TYPE))->buffer((string) $response->getContent()));
+        $this->assertNotSame($original, $response->getContent());
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function uploadedFilenameProvider(): array
+    {
+        return [
+            // Filament's FileUpload: Str::ulid() and the client's extension
+            'admin upload' => ['01J8ZKQ3M5X7Y9A2B4C6D8E0FG.JPG'],
+            // The API's store(): a 40-character hash name
+            'API upload' => ['aB3dE5fG7hJ9kL1mN3pQ5rS7tU9vW1xY3zA5bC7d.jpg'],
+        ];
+    }
+
+    #[DataProvider('uploadedFilenameProvider')]
+    public function test_uploaded_filenames_are_served(string $filename): void
+    {
+        $this->makeItemImage($filename);
+
+        $this->get(route('pub.picture', ['filename' => $filename]))->assertOk();
+    }
+
+    /**
+     * @return array<string, array{string}>
+     */
+    public static function unsupportedFilenameProvider(): array
+    {
+        return [
+            'svg' => ['00000000-0000-0000-0000-000000000000.svg'],
+            'bmp' => ['00000000-0000-0000-0000-000000000000.bmp'],
+            'no extension' => ['00000000-0000-0000-0000-000000000000'],
+            'double extension' => ['00000000-0000-0000-0000-000000000000.jpg.php'],
+            'dot in the name' => ['legacy.name.jpg'],
+        ];
+    }
+
+    #[DataProvider('unsupportedFilenameProvider')]
+    public function test_other_filenames_do_not_match_the_route(string $filename): void
+    {
+        // Registered and on disk, so only the route can turn it away
+        $this->makeItemImage($filename);
+
+        $this->get('/pub/'.$filename)->assertNotFound();
     }
 }

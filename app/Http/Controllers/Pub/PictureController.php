@@ -7,6 +7,7 @@ use App\Contracts\StreamableImageFile;
 use App\Http\Controllers\Controller;
 use App\Support\Images\AttachedImageRegistry;
 use App\Support\Images\PublicRenditions;
+use finfo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -24,10 +25,10 @@ class PictureController extends Controller
     public function __construct(private readonly PublicRenditions $renditions) {}
 
     /**
-     * Serve a picture at its stable, UUID-keyed public URL - burned with the
+     * Serve a picture at its stable, filename-keyed public URL - burned with the
      * currently-resolved copyright text, generated lazily and cached.
      *
-     * Route: GET /pub/{filename}  (filename constrained to {uuid}.jpg)
+     * Route: GET /pub/{filename}  (a bare stored filename, jpg/jpeg/png/gif/webp)
      *
      * The URL never changes on a copyright edit - downstream npm data
      * packages bake it in - so invalidation happens through a content-based
@@ -69,7 +70,7 @@ class PictureController extends Controller
             return response('', 503, ['Retry-After' => '5']);
         }
 
-        $headers = ['Content-Type' => $record->imageMimeType() ?? 'image/jpeg'];
+        $headers = ['Content-Type' => $this->contentType($record, $rendition->contents)];
 
         if ($rendition->etag === null) {
             // Cached bytes nothing vouches for: serve them, but nobody keeps them
@@ -103,11 +104,25 @@ class PictureController extends Controller
             return $this->notModified($etag);
         }
 
-        return response($disk->get($path) ?? '', 200, [
-            'Content-Type' => $record->imageMimeType() ?? 'image/jpeg',
+        $contents = $disk->get($path) ?? '';
+
+        return response($contents, 200, [
+            'Content-Type' => $this->contentType($record, $contents),
             'Cache-Control' => self::CACHE_CONTROL,
             'ETag' => $etag,
         ]);
+    }
+
+    /**
+     * The record's MIME type; the burn keeps the original's format, so for
+     * a record without one, the bytes tell.
+     *
+     * @param  Model&StreamableImageFile  $record
+     */
+    private function contentType(Model $record, string $contents): string
+    {
+        return $record->imageMimeType()
+            ?? ((new finfo(FILEINFO_MIME_TYPE))->buffer($contents) ?: 'application/octet-stream');
     }
 
     private function matches(Request $request, string $etag): bool
