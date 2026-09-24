@@ -160,6 +160,7 @@ import {
   ShBibliographyHbImporter,
 } from '../importers/index.js';
 import { ImageSyncTool } from '../tools/image-sync.js';
+import { resolveImageTargetDir } from '../tools/image-target-dir.js';
 
 // Load environment variables
 dotenv.config({ path: resolve(process.cwd(), '.env') });
@@ -1775,35 +1776,33 @@ program
       const legacyImagesRoot =
         process.env['LEGACY_IMAGES_ROOT'] || 'C:\\mwnf-server\\pictures\\images';
 
-      // Get new images root: prefer CLI option, then env var, fall back to artisan command
-      let newImagesRoot = (options.targetDir as string | undefined)?.trim();
-      if (newImagesRoot) {
-        console.log(chalk.green(`✓ Image storage path (from --target-dir): ${newImagesRoot}`));
-        logger.info(`Image storage path (from --target-dir CLI option): ${newImagesRoot}`);
-      } else {
-        newImagesRoot = process.env['NEW_IMAGES_ROOT']?.trim();
-      }
-      if (newImagesRoot && !options.targetDir) {
-        console.log(chalk.green(`✓ Image storage path (from NEW_IMAGES_ROOT): ${newImagesRoot}`));
-        logger.info(`Image storage path (from NEW_IMAGES_ROOT env): ${newImagesRoot}`);
-      } else if (!newImagesRoot) {
-        console.log(
-          chalk.cyan('NEW_IMAGES_ROOT not set, getting image storage path from Laravel...')
-        );
-        logger.info('NEW_IMAGES_ROOT not set, falling back to php artisan storage:image-path');
-        const { exec } = await import('child_process');
-        const { promisify } = await import('util');
-        const execAsync = promisify(exec);
-
-        const laravelRoot = resolve(process.cwd(), '../..');
-        const { stdout } = await execAsync('php artisan storage:image-path available', {
-          cwd: laravelRoot,
-        });
-        newImagesRoot = stdout.trim();
-
-        console.log(chalk.green(`✓ Image storage path (from artisan): ${newImagesRoot}`));
-        logger.info(`Image storage path (from artisan): ${newImagesRoot}`);
-      }
+      // Get new images root: prefer CLI option, then env var, fall back to
+      // Laravel's private originals directory (see image-target-dir.ts)
+      const { path: newImagesRoot, source: newImagesRootSource } = await resolveImageTargetDir({
+        targetDir: options.targetDir as string | undefined,
+        env: process.env,
+        runArtisan: async (command) => {
+          console.log(
+            chalk.cyan('NEW_IMAGES_ROOT not set, getting image storage path from Laravel...')
+          );
+          logger.info(`NEW_IMAGES_ROOT not set, falling back to ${command}`);
+          const { exec } = await import('child_process');
+          const { promisify } = await import('util');
+          const { stdout } = await promisify(exec)(command, {
+            cwd: resolve(process.cwd(), '../..'),
+          });
+          return stdout;
+        },
+      });
+      const newImagesRootLabel = {
+        option: '--target-dir',
+        env: 'NEW_IMAGES_ROOT',
+        artisan: 'artisan',
+      }[newImagesRootSource];
+      console.log(
+        chalk.green(`✓ Image storage path (from ${newImagesRootLabel}): ${newImagesRoot}`)
+      );
+      logger.info(`Image storage path (from ${newImagesRootLabel}): ${newImagesRoot}`);
 
       // Connect to database
       console.log(chalk.cyan('Connecting to database...'));

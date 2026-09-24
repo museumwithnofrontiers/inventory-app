@@ -1,6 +1,12 @@
 <#
     .SYNOPSIS
         Copy images from local storage to OVH VPS over SSH.
+    .DESCRIPTION
+        The images are pristine originals, so the default destination is the
+        app's private originals directory (localstorage.available.images: the
+        image-originals disk, directory "images"). The public pictures
+        directory is only a cache of burned renditions that /pub fills on
+        demand; never copy originals there.
 #>
 [CmdletBinding()]
 param(
@@ -26,7 +32,7 @@ param(
     [string]$LocalDir,
 
     [Parameter(Mandatory = $false)]
-    [string]$RemoteDir = 'public/pictures/',
+    [string]$RemoteDir = 'private/image-originals/images/',
 
     [Parameter(Mandatory = $false)]
     [string]$RemoteAppRoot = '/opt/inventory/current',
