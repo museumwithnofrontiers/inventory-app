@@ -4,6 +4,7 @@ namespace Tests\Pub;
 
 use App\Models\Item;
 use App\Models\ItemImage;
+use App\Support\Images\ImageBurner;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -143,6 +144,88 @@ class PictureControllerTest extends TestCase
 
         $response->assertOk();
         Storage::disk('public')->assertExists('pictures/'.$filename);
+    }
+
+    // ── Lock-coalesced regeneration ──────────────────────────────────────────
+
+    public function test_concurrent_requests_for_the_same_invalidated_image_burn_exactly_once(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $image = $this->makeItemImage($filename, 'Original Owner');
+
+        // The mock must be bound before the very first request hits this
+        // route: Illuminate\Routing\Route caches its resolved controller
+        // instance on first dispatch and reuses it for later requests to
+        // the same route within this test, so a mock set up afterwards
+        // would never actually be used by the already-resolved controller.
+        // Two burns are expected in total: establishing the baseline
+        // rendition below, then exactly one coalesced regeneration shared
+        // across the whole burst of requests after invalidation.
+        $this->partialMock(ImageBurner::class, fn ($mock) => $mock->shouldReceive('burn')->twice()->passthru());
+
+        $this->get(route('pub.picture', ['filename' => $filename]));
+        $image->update(['copyright' => 'New Owner']);
+
+        $responses = [];
+        for ($i = 0; $i < 5; $i++) {
+            $responses[] = $this->get(route('pub.picture', ['filename' => $filename]));
+        }
+
+        $expectedBody = $responses[0]->getContent();
+        foreach ($responses as $response) {
+            $response->assertOk();
+            $this->assertSame($expectedBody, $response->getContent());
+        }
+    }
+
+    public function test_when_lock_is_held_elsewhere_serves_the_existing_stale_cache_instead_of_burning(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $image = $this->makeItemImage($filename, 'Original Owner');
+
+        $first = $this->get(route('pub.picture', ['filename' => $filename]));
+        $staleBody = $first->getContent();
+
+        $image->update(['copyright' => 'New Owner']);
+
+        // Simulate another process already regenerating this exact image by
+        // holding the same lock the controller itself acquires.
+        $lock = Cache::lock('image-burn:'.$filename, 10);
+        $lock->get();
+
+        try {
+            $this->partialMock(ImageBurner::class, fn ($mock) => $mock->shouldNotReceive('burn'));
+
+            $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+            $response->assertOk();
+            $this->assertSame($staleBody, $response->getContent());
+        } finally {
+            $lock->release();
+        }
+    }
+
+    public function test_when_lock_is_held_elsewhere_and_no_cache_exists_returns_503(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $this->makeItemImage($filename, 'Original Owner');
+
+        // No prior request yet - nothing on the pictures disk to fall back to.
+        Storage::disk('public')->assertMissing('pictures/'.$filename);
+
+        $lock = Cache::lock('image-burn:'.$filename, 10);
+        $lock->get();
+
+        try {
+            $this->partialMock(ImageBurner::class, fn ($mock) => $mock->shouldNotReceive('burn'));
+
+            $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+            $response->assertStatus(503);
+            $this->assertNotEmpty($response->headers->get('Retry-After'));
+        } finally {
+            $lock->release();
+        }
     }
 
     // ── 404 paths ─────────────────────────────────────────────────────────────
