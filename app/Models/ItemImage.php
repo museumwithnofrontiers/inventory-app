@@ -178,6 +178,7 @@ class ItemImage extends Model implements DetachableImage, HasCopyright, Streamab
                 'mime_type' => $availableImage->mime_type ?? '',
                 'size' => $availableImage->size ?? 0,
                 'alt_text' => $altText ?? $availableImage->comment,
+                'copyright' => $availableImage->copyright,
                 'display_order' => $displayOrder,
             ]));
 
@@ -218,6 +219,7 @@ class ItemImage extends Model implements DetachableImage, HasCopyright, Streamab
                 'mime_type' => $this->mime_type ?: null,
                 'size' => $this->size ?: null,
                 'comment' => $this->alt_text,
+                'copyright' => $this->copyright,
             ]));
 
             $this->delete();

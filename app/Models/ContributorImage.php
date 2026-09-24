@@ -102,6 +102,7 @@ class ContributorImage extends Model implements DetachableImage, HasCopyright, S
                 'mime_type' => $availableImage->mime_type ?? '',
                 'size' => $availableImage->size ?? 0,
                 'alt_text' => $altText ?? $availableImage->comment,
+                'copyright' => $availableImage->copyright,
                 'display_order' => $displayOrder,
             ]));
 
@@ -141,6 +142,7 @@ class ContributorImage extends Model implements DetachableImage, HasCopyright, S
                 'mime_type' => $this->mime_type,
                 'size' => $this->size,
                 'comment' => $this->alt_text,
+                'copyright' => $this->copyright,
             ]));
 
             $this->delete();
