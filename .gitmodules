@@ -190,3 +190,6 @@
 [submodule ".new-architecture/architectural-elements"]
 	path = .new-architecture/architectural-elements
 	url = https://github.com/museumwithnofrontiers/architectural-elements
+[submodule ".new-architecture/museumwithnofrontiers.github.io"]
+	path = .new-architecture/museumwithnofrontiers.github.io
+	url = https://github.com/museumwithnofrontiers/museumwithnofrontiers.github.io
