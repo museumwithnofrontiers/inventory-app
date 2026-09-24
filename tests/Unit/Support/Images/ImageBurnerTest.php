@@ -36,32 +36,36 @@ class ImageBurnerTest extends TestCase
         $this->assertNotSame($original, $burned);
     }
 
-    public function test_burn_with_the_global_fallback_copyright_string_produces_a_rendition_that_differs_from_the_original(): void
+    /**
+     * @return array<string, array{int, int, string}>
+     */
+    public static function burnedTextProvider(): array
     {
-        $original = $this->makeTestImage(320, 240);
-
-        $burned = (new ImageBurner)->burn($original, ItemImage::GLOBAL_FALLBACK);
-
-        $manager = new ImageManager(new Driver);
-        $burnedImage = $manager->read($burned);
-
-        $this->assertSame(320, $burnedImage->width());
-        $this->assertSame(240, $burnedImage->height());
-        $this->assertNotSame($original, $burned);
+        return [
+            'global fallback' => [320, 240, ItemImage::GLOBAL_FALLBACK],
+            'short credit' => [640, 480, '© Rights Holder'],
+            'long credit, wrapped' => [400, 300, '© '.str_repeat('A very long rights holder name ', 5).'2026'],
+            'long credit on a narrow image' => [178, 489, self::LONG_CREDIT],
+        ];
     }
 
-    public function test_burn_with_a_long_copyright_string_still_produces_a_valid_rendition_of_the_same_dimensions(): void
+    /**
+     * Proves the notice is really drawn: a plain re-encode of the input
+     * fails from the bar assertions on.
+     */
+    #[DataProvider('burnedTextProvider')]
+    public function test_burn_draws_a_dark_bar_with_light_text_and_nothing_outside_it(int $width, int $height, string $credit): void
     {
-        $original = $this->makeTestImage(400, 300);
-        $longCopyright = '© '.str_repeat('A very long rights holder name ', 5).'2026';
+        $burner = new ImageBurner;
+        $layout = $burner->layout($width, $height, $credit);
 
-        $burned = (new ImageBurner)->burn($original, $longCopyright);
+        $pixels = $this->burnedPixels($burner->burn($this->makeTestImage($width, $height, self::GREY), $credit), $layout);
 
-        $manager = new ImageManager(new Driver);
-        $burnedImage = $manager->read($burned);
-
-        $this->assertSame(400, $burnedImage->width());
-        $this->assertSame(300, $burnedImage->height());
+        $this->assertSame(0, $pixels['changedAboveBar'], 'The image above the bar is unchanged');
+        $this->assertSame($width * $layout->barHeight, $pixels['barPixels']);
+        $this->assertGreaterThan(0.5 * $pixels['barPixels'], $pixels['darkerInBar'], 'The bar darkens the image');
+        $this->assertGreaterThan(0, $pixels['whiteInBar'], 'The bar holds white text');
+        $this->assertGreaterThanOrEqual($layout->barTop, $pixels['top'], 'No text above the bar');
     }
 
     /**
@@ -113,7 +117,7 @@ class ImageBurnerTest extends TestCase
         $this->assertGreaterThan(1, count($layout->lines));
         $this->assertSame(self::LONG_CREDIT, implode(' ', $layout->lines));
 
-        $text = $this->textBounds($burner->burn($this->makeTestImage(178, 489, self::GREY), self::LONG_CREDIT), $layout);
+        $text = $this->burnedPixels($burner->burn($this->makeTestImage(178, 489, self::GREY), self::LONG_CREDIT), $layout);
 
         $this->assertSame(0, $text['changedAboveBar'], 'Nothing may be drawn above the bar');
         $this->assertGreaterThanOrEqual($layout->barTop, $text['top']);
@@ -131,7 +135,7 @@ class ImageBurnerTest extends TestCase
         $this->assertLessThanOrEqual((int) floor(115 * ImageBurner::MAX_BAR_SHARE), $layout->barHeight);
         $this->assertSame([ItemImage::GLOBAL_FALLBACK], $layout->lines);
 
-        $text = $this->textBounds($burner->burn($this->makeTestImage(211, 115, self::GREY), ItemImage::GLOBAL_FALLBACK), $layout);
+        $text = $this->burnedPixels($burner->burn($this->makeTestImage(211, 115, self::GREY), ItemImage::GLOBAL_FALLBACK), $layout);
 
         $this->assertSame(0, $text['changedAboveBar']);
         $this->assertLessThan(115, $text['bottom']);
@@ -159,7 +163,7 @@ class ImageBurnerTest extends TestCase
         $this->assertLessThanOrEqual((int) floor(115 * ImageBurner::MAX_BAR_SHARE), $layout->barHeight);
         $this->assertStringEndsWith('…', $layout->lines[count($layout->lines) - 1]);
 
-        $text = $this->textBounds($burner->burn($this->makeTestImage(211, 115, self::GREY), $credit), $layout);
+        $text = $this->burnedPixels($burner->burn($this->makeTestImage(211, 115, self::GREY), $credit), $layout);
 
         $this->assertSame(0, $text['changedAboveBar']);
         $this->assertLessThan(211 - intdiv($layout->padding, 2), $text['right']);
@@ -174,7 +178,7 @@ class ImageBurnerTest extends TestCase
         $this->assertCount(1, $layout->lines);
         $this->assertStringEndsWith('…', $layout->lines[0]);
 
-        $text = $this->textBounds($burner->burn($this->makeTestImage(120, 200, self::GREY), $credit), $layout);
+        $text = $this->burnedPixels($burner->burn($this->makeTestImage(120, 200, self::GREY), $credit), $layout);
 
         $this->assertLessThan(120 - intdiv($layout->padding, 2), $text['right']);
     }
@@ -187,38 +191,42 @@ class ImageBurnerTest extends TestCase
     }
 
     /**
-     * Where the text landed on a burned GREY image: the bounds of the pixels
-     * lighter than the grey, and how many pixels above the bar changed.
+     * What the burner did to a GREY image, taking the bar geometry from
+     * layout(): the bounds of the pixels lighter than the grey (the text),
+     * how many pixels changed above the bar, and how many in the bar are
+     * darker than the grey or white.
      *
-     * @return array{top: int, bottom: int, left: int, right: int, changedAboveBar: int}
+     * @return array{top: int, bottom: int, left: int, right: int, changedAboveBar: int, barPixels: int, darkerInBar: int, whiteInBar: int}
      */
-    private function textBounds(string $burned, BurnLayout $layout): array
+    private function burnedPixels(string $burned, BurnLayout $layout): array
     {
         $image = imagecreatefromstring($burned);
         $this->assertNotFalse($image);
         $grey = hexdec(self::GREY) & 0xFF;
-        $bounds = ['top' => PHP_INT_MAX, 'bottom' => -1, 'left' => PHP_INT_MAX, 'right' => -1, 'changedAboveBar' => 0];
+        $pixels = ['top' => PHP_INT_MAX, 'bottom' => -1, 'left' => PHP_INT_MAX, 'right' => -1, 'changedAboveBar' => 0, 'barPixels' => 0, 'darkerInBar' => 0, 'whiteInBar' => 0];
 
         for ($y = 0; $y < imagesy($image); $y++) {
             for ($x = 0; $x < imagesx($image); $x++) {
                 $red = (imagecolorat($image, $x, $y) >> 16) & 0xFF;
 
-                if ($y < $layout->barTop && $red !== $grey) {
-                    $bounds['changedAboveBar']++;
+                if ($y < $layout->barTop) {
+                    $pixels['changedAboveBar'] += $red === $grey ? 0 : 1;
+                } else {
+                    $pixels['barPixels']++;
+                    $pixels['darkerInBar'] += $red < $grey ? 1 : 0;
+                    $pixels['whiteInBar'] += $red > 0xF0 ? 1 : 0;
                 }
 
                 if ($red > $grey) {
-                    $bounds['top'] = min($bounds['top'], $y);
-                    $bounds['bottom'] = max($bounds['bottom'], $y);
-                    $bounds['left'] = min($bounds['left'], $x);
-                    $bounds['right'] = max($bounds['right'], $x);
+                    $pixels['top'] = min($pixels['top'], $y);
+                    $pixels['bottom'] = max($pixels['bottom'], $y);
+                    $pixels['left'] = min($pixels['left'], $x);
+                    $pixels['right'] = max($pixels['right'], $x);
                 }
             }
         }
 
-        $this->assertGreaterThan(-1, $bounds['bottom'], 'No text was drawn');
-
-        return $bounds;
+        return $pixels;
     }
 
     /**
