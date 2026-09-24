@@ -46,38 +46,61 @@ You must respect the 3-tier permission system:
 This is a security boundary.
 Never propose shortcuts or alternative flows.
 
+**Three disks:**
+1. Uploads: `localstorage.uploads.images` (private `local` disk, `image_uploads/`). Transient.
+2. Originals: `localstorage.available.images` (private `image-originals` disk, `images/`). The pristine file of every AvailableImage and every attached image. Never web-reachable.
+3. Pictures: `localstorage.pictures` (`public` disk, `pictures/`). Only a cache of burned renditions, written only by `App\Support\Images\PublicRenditions`.
+
 **Canonical pipeline (must always be followed)**:
-1. User uploads → ImageUpload (private local disk)
+1. User uploads → ImageUpload (private uploads disk)
 2. ImageUploadEvent
 3. ImageUploadListener → validates, resizes, creates AvailableImage, deletes ImageUpload, dispatches AvailableImageEvent
-4. AvailableImageListener → moves file to public disk
-5. Entities attach images via:
-   1. ItemImage::attachFromAvailableImage()
-   2. CollectionImage::attachFromAvailableImage()
-   3. PartnerImage::attachFromAvailableImage()
+4. AvailableImageListener → moves the file from the uploads disk to the private originals disk
+5. Entities attach images with `attachFromAvailableImage()` and detach them with `detachToAvailableImage()`. Both exist on every `*Image` model: ItemImage, CollectionImage, PartnerImage, PartnerTranslationImage, ContributorImage and TimelineEventImage (DetachableImage).
+   - Both are row swaps: the id, path and copyright carry over, and the original never moves.
+   - Detaching also removes the burned rendition from the pictures cache.
+6. Deleting an attached image removes its original and its burned rendition (DeletesImageFilesOnDelete).
+   - A row removed by a database cascade skips that hook.
+   - `images:cleanup-originals` sweeps the originals this leaves behind, and `images:cleanup-pictures` sweeps the cache.
+
+**Serving:**
+- **Stable public URL:** `/pub/{filename}` serves every attached image. The npm data packages bake it in, so it never changes.
+- **Burning:** the copyright is burned in on demand (ImageBurner) and the rendition is cached.
+  - The ETag carries the resolved copyright and `ImageBurner::VERSION`. Bump VERSION whenever the burn output changes.
+  - Responses send `Cache-Control: public, no-cache`.
+- **API:** the view and download endpoints of the `*Image` models serve the same burned rendition (BurnedImageResponse).
+- **Originals:** the admin panel (Filament) view and download serve the original (InlineImageResponse/DownloadImageResponse), as do the AvailableImage and PartnerLogo endpoints.
+- **PartnerLogo:** served at `/pub` but never burned. It doesn't implement BurnsCopyright, so `/pub` streams its original.
+- **Copyright resolution:** image → owning Project → "© Museum With No Frontiers" (HasCopyright/ResolvesCopyright).
 
 **Hard prohibitions:**
-- Never write directly to public disk
+- Never write to the public disk outside the burn pipeline (only PublicRenditions writes the pictures cache)
+- Never store an original on the public disk
+- Never serve an attached `*Image` publicly other than through PublicRenditions
 - Never create AvailableImage manually
 - Never use FileUpload->disk('public') in Filament
 - Never treat *Image models as pivot tables
 - Never reimplement attach/detach logic
 
 **Testing rules:**
-- Use Storage::fake('local') and Storage::fake('public')
+- Fake all three disks:
+  - `Storage::fake('local')` for uploads;
+  - the originals disk (`localstorage.available.images.disk`), which the base TestCase already fakes for every test;
+  - `Storage::fake('public')` for pictures.
+- tests/bootstrap.php and phpunit.xml pin the image disk variables, so a developer's environment can't change the disks tests use
 - Dispatch real events
 
 ## Attached Image Contract & Registry
 
-Any model storing images must:
-1. Implement StreamableImageFile
-2. Provide correct:
-   1. imageDisk()
-   2. imageStoragePath()
-   3. imageMimeType()
-   4. imageDownloadFilename()
-3. Be added to AttachedImageRegistry
-4. Have tests covering:
+Any model storing an attached image must:
+1. Extend Eloquent Model and implement StreamableImageFile, with correct:
+   1. imageDisk() and imageStoragePath(): the private original
+   2. imageMimeType()
+   3. imageDownloadFilename()
+2. Implement HasCopyright (use ResolvesCopyright). Also implement BurnsCopyright if its public rendition carries the copyright: every `*Image` model does, PartnerLogo doesn't.
+3. Use the DeletesImageFilesOnDelete trait
+4. Be added to AttachedImageRegistry. `AttachedImageRegistry::validate()` fails fast on a member missing any of 1 to 3.
+5. Have tests covering:
    1. Contract compliance
    2. Registry completeness
 

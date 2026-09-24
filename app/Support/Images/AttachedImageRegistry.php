@@ -2,6 +2,7 @@
 
 namespace App\Support\Images;
 
+use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Models\CollectionImage;
 use App\Models\ContributorImage;
@@ -10,14 +11,16 @@ use App\Models\PartnerImage;
 use App\Models\PartnerLogo;
 use App\Models\PartnerTranslationImage;
 use App\Models\TimelineEventImage;
+use App\Traits\DeletesImageFilesOnDelete;
 use Illuminate\Database\Eloquent\Model;
 
 class AttachedImageRegistry
 {
     /**
-     * All model classes that own an attached image: a public burned rendition
-     * cached under localstorage.pictures, plus (since M9) a pristine private
-     * original under localstorage.available.images.
+     * All model classes that own an attached image: a pristine private
+     * original under localstorage.available.images, served at /pub/{path} -
+     * burned, with its rendition cached under localstorage.pictures, unless
+     * the model doesn't implement BurnsCopyright (PartnerLogo).
      *
      * @var list<class-string<Model&StreamableImageFile>>
      */
@@ -108,17 +111,45 @@ class AttachedImageRegistry
 
     /**
      * Validate all registered entries.
-     * Fails fast if any class does not exist, does not extend Model,
-     * or does not implement StreamableImageFile.
+     * Fails fast on the first class that breaks the attached-image contract
+     * (see validateClass()).
      *
      * @throws \RuntimeException
      */
     public static function validate(): void
     {
         foreach (self::MODELS as $class) {
-            if (! class_exists($class)) {
-                throw new \RuntimeException("AttachedImageRegistry: class does not exist: {$class}");
+            self::validateClass($class);
+        }
+    }
+
+    /**
+     * What every registry member must be: an Eloquent model that streams its
+     * file (StreamableImageFile), resolves a copyright (HasCopyright - /pub
+     * and the API burn it, unless the model is served unburned like
+     * PartnerLogo), and removes both its files when deleted
+     * (DeletesImageFilesOnDelete).
+     *
+     * @throws \RuntimeException naming the class and what it lacks
+     */
+    public static function validateClass(string $class): void
+    {
+        if (! class_exists($class)) {
+            throw new \RuntimeException("AttachedImageRegistry: class does not exist: {$class}");
+        }
+
+        if (! is_subclass_of($class, Model::class)) {
+            throw new \RuntimeException("AttachedImageRegistry: {$class} must extend ".Model::class);
+        }
+
+        foreach ([StreamableImageFile::class, HasCopyright::class] as $contract) {
+            if (! is_subclass_of($class, $contract)) {
+                throw new \RuntimeException("AttachedImageRegistry: {$class} must implement {$contract}");
             }
+        }
+
+        if (! in_array(DeletesImageFilesOnDelete::class, class_uses_recursive($class), true)) {
+            throw new \RuntimeException('AttachedImageRegistry: '.$class.' must use '.DeletesImageFilesOnDelete::class);
         }
     }
 }
