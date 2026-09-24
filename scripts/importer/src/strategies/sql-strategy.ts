@@ -992,8 +992,8 @@ export class SqlWriteStrategy implements IWriteStrategy {
     const trackerKey = `${sanitized.collection_id}:${sanitized.path.toLowerCase()}`;
     try {
       await this.db.execute(
-        `INSERT INTO collection_images (id, collection_id, path, original_name, mime_type, size, alt_text, display_order, extra, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO collection_images (id, collection_id, path, original_name, mime_type, size, alt_text, copyright, display_order, extra, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           sanitized.collection_id,
@@ -1002,6 +1002,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
           sanitized.mime_type,
           sanitized.size,
           sanitized.alt_text,
+          sanitized.copyright ?? null,
           sanitized.display_order,
           sanitized.extra ?? null,
           this.now,

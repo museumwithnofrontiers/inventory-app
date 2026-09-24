@@ -1,6 +1,6 @@
 /**
  * SqlWriteStrategy writes an image row's burn-ready `copyright` into its own
- * column (item_images, partner_images), and NULL — never undefined, which
+ * column (item_images, partner_images, collection_images), and NULL — never undefined, which
  * mysql2 rejects — when the importer has none.
  */
 
@@ -72,6 +72,16 @@ const partnerImage = {
   display_order: 1,
 };
 
+const collectionImage = {
+  collection_id: 'explore-location-409',
+  path: 'explore/locations/409/1.jpg',
+  original_name: '1.jpg',
+  mime_type: 'image/jpeg',
+  size: 1,
+  alt_text: null,
+  display_order: 1,
+};
+
 describe('SqlWriteStrategy — image copyright column', () => {
   it('writeItemImage binds the copyright', async () => {
     const db = makeRecordingDb();
@@ -97,6 +107,23 @@ describe('SqlWriteStrategy — image copyright column', () => {
   it('writePartnerImage binds NULL when there is no copyright', async () => {
     const db = makeRecordingDb();
     await makeStrategy(db).writePartnerImage(partnerImage);
+
+    expect(boundValue(db, 'copyright')).toBeNull();
+  });
+
+  it('writeCollectionImage binds the copyright', async () => {
+    const db = makeRecordingDb();
+    await makeStrategy(db).writeCollectionImage({
+      ...collectionImage,
+      copyright: '© Palazzo Chigi Ariccia',
+    });
+
+    expect(boundValue(db, 'copyright')).toBe('© Palazzo Chigi Ariccia');
+  });
+
+  it('writeCollectionImage binds NULL when there is no copyright', async () => {
+    const db = makeRecordingDb();
+    await makeStrategy(db).writeCollectionImage(collectionImage);
 
     expect(boundValue(db, 'copyright')).toBeNull();
   });
