@@ -298,6 +298,33 @@ netsh advfirewall firewall add rule name="HTTPS" dir=in action=allow protocol=TC
 # Update Apache configuration with certificate paths
 ```
 
+### 4.4 Image Storage Permissions (Linux)
+
+On the Linux server (`scripts/provision.sh`), two users share the image disks:
+
+- `deploy` runs the command-line tools: the deploy itself, `images:backfill-originals`, the legacy image sync and the import-tool `ship`.
+- `www-data` runs PHP-FPM and the queue: uploads and `/pub`.
+
+| Directory (under `/opt/inventory/shared/storage/app`) | Owner | Mode | Why |
+|---|---|---|---|
+| `private/image-originals/` and `images/` | `deploy:www-data` | `2770` | The pristine originals. Group read/write, nothing for others, and setgid keeps new files in `www-data`. |
+| `public/pictures/` | `deploy:www-data` | `2775` | The burned renditions `www-data` writes and `/pub` serves. |
+
+The app chmods every original it writes to `0660`. It can't fix a directory that the process umask narrowed when creating it, which is why the directories are created up front.
+
+`provision.sh` creates them on a new server. On a server provisioned before M9, apply them once as `deploy`, who owns the tree, so no `sudo` is needed:
+
+```bash
+cd /opt/inventory/shared/storage/app
+mkdir -p private/image-originals/images public/pictures
+chgrp -R www-data private/image-originals public/pictures
+find private/image-originals -type d -exec chmod 2770 {} +
+find private/image-originals -type f -exec chmod 0660 {} +
+chmod 2775 public/pictures
+```
+
+If a `find` line reports `Operation not permitted`, the file was created by `www-data`, and only its owner or root can change its mode. Run that line as root.
+
 ## Step 5: Automated Deployment
 
 ### 5.1 Using Deployment Script
