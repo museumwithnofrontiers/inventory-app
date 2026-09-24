@@ -58,11 +58,17 @@ class BurnedImageResponse implements Responsable
         $headers = [
             'Content-Type' => $this->image->imageMimeType()
                 ?? ((new finfo(FILEINFO_MIME_TYPE))->buffer($rendition->contents) ?: 'application/octet-stream'),
+        ];
+
+        if ($rendition->etag === null) {
+            // Cached bytes nothing vouches for: serve them, but nobody keeps them
+            $headers['Cache-Control'] = 'no-store';
+        } else {
             // An authenticated response: only the caller may keep it, and it
             // revalidates, since a copyright edit changes the bytes
-            'Cache-Control' => 'private, no-cache',
-            'ETag' => $rendition->etag,
-        ];
+            $headers['Cache-Control'] = 'private, no-cache';
+            $headers['ETag'] = $rendition->etag;
+        }
 
         if ($this->download) {
             return response()->streamDownload(

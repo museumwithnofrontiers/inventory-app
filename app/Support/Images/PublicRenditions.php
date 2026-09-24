@@ -42,7 +42,8 @@ class PublicRenditions
      * cached to fall back on; the caller should ask the client to retry.
      *
      * A request that can't take the lock in time gets the cached file if
-     * there is one: briefly stale is harmless.
+     * there is one: briefly stale is harmless, as long as it's labelled
+     * with the ETag it was burned for (see cachedAsIs()).
      *
      * @param  Model&StreamableImageFile&HasCopyright  $record
      */
@@ -60,15 +61,34 @@ class PublicRenditions
                 fn (): PublicRendition => $this->regenerate($record, $etag)
             );
         } catch (LockTimeoutException) {
-            if ($this->pictures()->exists($this->cachePath($record))) {
-                return new PublicRendition(
-                    $this->pictures()->get($this->cachePath($record)) ?? '',
-                    Cache::get($this->markerKey($record)) ?? $etag
-                );
-            }
+            return $this->cachedAsIs($record);
+        }
+    }
 
+    /**
+     * Whatever the cache holds, labelled with the ETag its marker recorded
+     * - which may be older than the current one. Never with the current
+     * ETag: a client would keep the bytes under it and get 304s for them
+     * until the copyright changed again.
+     *
+     * With no marker (after a cache:clear or optimize:clear, or a Redis
+     * eviction) nothing says which copyright the file was burned with, so
+     * it goes out with no ETag, and the caller makes sure nobody keeps it.
+     *
+     * The marker is read before the file: a regeneration finishing in
+     * between writes the file first, so the worst case is new bytes under
+     * an old ETag, which the next request corrects.
+     */
+    private function cachedAsIs(Model $record): ?PublicRendition
+    {
+        $marker = Cache::get($this->markerKey($record));
+        $contents = $this->pictures()->get($this->cachePath($record));
+
+        if ($contents === null) {
             return null;
         }
+
+        return new PublicRendition($contents, is_string($marker) ? $marker : null);
     }
 
     /**

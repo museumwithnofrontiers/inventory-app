@@ -216,6 +216,7 @@ class PictureControllerTest extends TestCase
 
         $first = $this->get(route('pub.picture', ['filename' => $filename]));
         $staleBody = $first->getContent();
+        $staleEtag = $first->headers->get('ETag');
 
         $image->update(['copyright' => 'New Owner']);
 
@@ -231,6 +232,40 @@ class PictureControllerTest extends TestCase
 
             $response->assertOk();
             $this->assertSame($staleBody, $response->getContent());
+            // Labelled with the ETag these bytes were burned for, not the
+            // current one a client would then keep them under
+            $response->assertHeader('ETag', $staleEtag);
+            $this->assertNotSame('"'.sha1(ImageBurner::VERSION.'|'.$filename.'|New Owner').'"', $staleEtag);
+            $this->assertRevalidatedOnEveryUse($response);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    public function test_when_lock_is_held_elsewhere_a_cached_file_without_marker_is_served_uncacheable(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $this->makeItemImage($filename, 'Original Owner');
+
+        $this->get(route('pub.picture', ['filename' => $filename]))->assertOk();
+        $cached = Storage::disk('public')->get('pictures/'.$filename);
+
+        // The marker is gone (cache:clear, optimize:clear, an eviction):
+        // nothing says which copyright the cached file was burned with
+        Cache::forget('image-copyright-etag:'.$filename);
+
+        $lock = Cache::lock('image-burn:'.$filename, 10);
+        $lock->get();
+
+        try {
+            $this->partialMock(ImageBurner::class, fn ($mock) => $mock->shouldNotReceive('burn'));
+
+            $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+            $response->assertOk();
+            $this->assertSame($cached, $response->getContent());
+            $response->assertHeaderMissing('ETag');
+            $this->assertStringContainsString('no-store', (string) $response->headers->get('Cache-Control'));
         } finally {
             $lock->release();
         }

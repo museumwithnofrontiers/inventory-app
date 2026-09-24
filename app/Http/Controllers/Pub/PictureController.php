@@ -67,10 +67,16 @@ class PictureController extends Controller
             return response('', 503, ['Retry-After' => '5']);
         }
 
-        return response($rendition->contents, 200, [
-            'Content-Type' => $record->imageMimeType() ?? 'image/jpeg',
-            'Cache-Control' => self::CACHE_CONTROL,
-            'ETag' => $rendition->etag,
-        ]);
+        $headers = ['Content-Type' => $record->imageMimeType() ?? 'image/jpeg'];
+
+        if ($rendition->etag === null) {
+            // Cached bytes nothing vouches for: serve them, but nobody keeps them
+            $headers['Cache-Control'] = 'no-store';
+        } else {
+            $headers['Cache-Control'] = self::CACHE_CONTROL;
+            $headers['ETag'] = $rendition->etag;
+        }
+
+        return response($rendition->contents, 200, $headers);
     }
 }
