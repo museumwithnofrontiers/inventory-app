@@ -444,8 +444,8 @@ DB_DATABASE=inventory
 LEGACY_IMAGES_ROOT=C:\mwnf-server\pictures\images
 
 # New Images Root - override target storage path (optional)
-# If not set, resolved via: php artisan storage:image-path pictures
-NEW_IMAGES_ROOT=C:\path\to\inventory-app\storage\app\pictures
+# If not set, resolved via: php artisan storage:image-path available
+NEW_IMAGES_ROOT=C:\path\to\inventory-app\storage\app\private\image-originals
 ```
 
 Note: only `LEGACY_DB_DATABASE` (the core `mwnf3` schema) is configurable —

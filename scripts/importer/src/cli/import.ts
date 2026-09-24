@@ -1796,7 +1796,7 @@ program
         const execAsync = promisify(exec);
 
         const laravelRoot = resolve(process.cwd(), '../..');
-        const { stdout } = await execAsync('php artisan storage:image-path pictures', {
+        const { stdout } = await execAsync('php artisan storage:image-path available', {
           cwd: laravelRoot,
         });
         newImagesRoot = stdout.trim();

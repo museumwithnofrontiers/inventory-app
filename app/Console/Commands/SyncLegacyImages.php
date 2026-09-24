@@ -2,13 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Contracts\StreamableImageFile;
 use App\Models\CollectionImage;
 use App\Models\ItemImage;
 use App\Models\PartnerImage;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 
@@ -36,7 +36,7 @@ class SyncLegacyImages extends Command
     /**
      * Table name to model class mapping.
      *
-     * @var array<string, class-string<Model>>
+     * @var array<string, class-string<Model&StreamableImageFile>>
      */
     private const TABLE_MODEL_MAP = [
         'item_images' => ItemImage::class,
@@ -66,15 +66,9 @@ class SyncLegacyImages extends Command
             return Command::FAILURE;
         }
 
-        // Resolve target directory from Laravel storage config
-        $targetDisk = Config::string('localstorage.pictures.disk');
-        $targetDir = trim(Config::string('localstorage.pictures.directory'), '/');
-        $targetBasePath = Storage::disk($targetDisk)->path($targetDir);
-
         $this->info('Legacy Image Synchronization');
         $this->info(str_repeat('=', 60));
         $this->info("Source:  {$source}");
-        $this->info("Target:  {$targetBasePath}");
         $this->info('Mode:    '.($useSymlink ? 'SYMLINK' : 'COPY'));
         $this->info('Dry-run: '.($dryRun ? 'YES' : 'NO'));
         $this->info('Tables:  '.implode(', ', $tables));
@@ -88,11 +82,6 @@ class SyncLegacyImages extends Command
             }
         }
 
-        // Ensure target directory exists
-        if (! $dryRun) {
-            Storage::disk($targetDisk)->makeDirectory($targetDir);
-        }
-
         $totalSynced = 0;
         $totalSkipped = 0;
         $totalErrors = 0;
@@ -104,8 +93,6 @@ class SyncLegacyImages extends Command
             $result = $this->syncTable(
                 $table,
                 $source,
-                $targetDisk,
-                $targetDir,
                 $useSymlink,
                 $dryRun,
             );
@@ -158,14 +145,12 @@ class SyncLegacyImages extends Command
     private function syncTable(
         string $table,
         string $source,
-        string $targetDisk,
-        string $targetDir,
         bool $useSymlink,
         bool $dryRun,
     ): array {
         $modelClass = self::TABLE_MODEL_MAP[$table];
 
-        /** @var Builder<Model> $query */
+        /** @var Builder<Model&StreamableImageFile> $query */
         $query = $modelClass::where('size', 1)->orderBy('id');
         $count = $query->count();
 
@@ -184,8 +169,6 @@ class SyncLegacyImages extends Command
 
         $query->chunkById(100, function ($images) use (
             $source,
-            $targetDisk,
-            $targetDir,
             $useSymlink,
             $dryRun,
             &$synced,
@@ -198,8 +181,6 @@ class SyncLegacyImages extends Command
                     $result = $this->syncImage(
                         $image,
                         $source,
-                        $targetDisk,
-                        $targetDir,
                         $useSymlink,
                         $dryRun,
                     );
@@ -230,13 +211,12 @@ class SyncLegacyImages extends Command
     /**
      * Synchronize a single image record.
      *
+     * @param  Model&StreamableImageFile  $image
      * @return bool True if synced, false if skipped.
      */
     private function syncImage(
         Model $image,
         string $source,
-        string $targetDisk,
-        string $targetDir,
         bool $useSymlink,
         bool $dryRun,
     ): bool {
@@ -263,7 +243,6 @@ class SyncLegacyImages extends Command
         $imageIdRaw = $image->getAttribute('id');
         $imageId = is_scalar($imageIdRaw) ? (string) $imageIdRaw : '';
         $newFilename = $imageId.'.'.$extension;
-        $storageRelativePath = $targetDir.'/'.$newFilename;
 
         if ($dryRun) {
             $this->line("  [DRY-RUN] Would sync {$imageId}: {$normalized} → {$newFilename}");
@@ -271,7 +250,16 @@ class SyncLegacyImages extends Command
             return true;
         }
 
-        // Get the absolute target path
+        // Resolve disk/path via the model's own StreamableImageFile contract
+        // - not a hardcoded config lookup - so this always targets wherever
+        // an attached image's private original actually lives (the
+        // image-originals disk, since A2.2), never the public pictures
+        // cache, even if that resolution ever changes.
+        $image->setAttribute('path', $newFilename);
+        $targetDisk = $image->imageDisk();
+        $storageRelativePath = $image->imageStoragePath();
+
+        Storage::disk($targetDisk)->makeDirectory(dirname($storageRelativePath));
         $targetFullPath = Storage::disk($targetDisk)->path($storageRelativePath);
 
         if ($useSymlink) {
