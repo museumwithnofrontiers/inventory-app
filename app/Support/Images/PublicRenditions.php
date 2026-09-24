@@ -2,7 +2,7 @@
 
 namespace App\Support\Images;
 
-use App\Contracts\HasCopyright;
+use App\Contracts\BurnsCopyright;
 use App\Contracts\StreamableImageFile;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Filesystem\Filesystem;
@@ -30,7 +30,7 @@ class PublicRenditions
     public function __construct(private readonly ImageBurner $burner) {}
 
     /**
-     * @param  Model&StreamableImageFile&HasCopyright  $record
+     * @param  Model&StreamableImageFile&BurnsCopyright  $record
      */
     public function etag(Model $record): string
     {
@@ -46,7 +46,7 @@ class PublicRenditions
      * there is one: briefly stale is harmless, as long as it's labelled
      * with the ETag it was burned for (see cachedAsIs()).
      *
-     * @param  Model&StreamableImageFile&HasCopyright  $record
+     * @param  Model&StreamableImageFile&BurnsCopyright  $record
      */
     public function get(Model $record): ?PublicRendition
     {
@@ -97,7 +97,7 @@ class PublicRenditions
      * inside the lock - since a concurrent request may have just finished
      * regenerating this exact image while this one was waiting.
      *
-     * @param  Model&StreamableImageFile&HasCopyright  $record
+     * @param  Model&StreamableImageFile&BurnsCopyright  $record
      */
     private function regenerate(Model $record, string $etag): PublicRendition
     {

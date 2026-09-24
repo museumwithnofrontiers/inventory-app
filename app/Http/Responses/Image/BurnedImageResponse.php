@@ -2,7 +2,7 @@
 
 namespace App\Http\Responses\Image;
 
-use App\Contracts\HasCopyright;
+use App\Contracts\BurnsCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Support\Images\PublicRenditions;
 use finfo;
@@ -21,7 +21,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class BurnedImageResponse implements Responsable
 {
     /**
-     * @param  Model&StreamableImageFile&HasCopyright  $image
+     * @param  Model&StreamableImageFile&BurnsCopyright  $image
      */
     private function __construct(
         private readonly Model $image,
@@ -29,7 +29,7 @@ class BurnedImageResponse implements Responsable
     ) {}
 
     /**
-     * @param  Model&StreamableImageFile&HasCopyright  $image
+     * @param  Model&StreamableImageFile&BurnsCopyright  $image
      */
     public static function view(Model $image): self
     {
@@ -37,7 +37,7 @@ class BurnedImageResponse implements Responsable
     }
 
     /**
-     * @param  Model&StreamableImageFile&HasCopyright  $image
+     * @param  Model&StreamableImageFile&BurnsCopyright  $image
      */
     public static function download(Model $image): self
     {

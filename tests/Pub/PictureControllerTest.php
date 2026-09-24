@@ -2,10 +2,22 @@
 
 namespace Tests\Pub;
 
+use App\Models\Collection;
+use App\Models\CollectionImage;
+use App\Models\Contributor;
+use App\Models\ContributorImage;
 use App\Models\Item;
 use App\Models\ItemImage;
+use App\Models\Partner;
+use App\Models\PartnerImage;
+use App\Models\PartnerLogo;
+use App\Models\PartnerTranslation;
+use App\Models\PartnerTranslationImage;
+use App\Models\TimelineEvent;
+use App\Models\TimelineEventImage;
 use App\Support\Images\ImageBurner;
 use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -13,6 +25,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Testing\TestResponse;
 use Mockery;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class PictureControllerTest extends TestCase
@@ -48,6 +61,31 @@ class PictureControllerTest extends TestCase
             'copyright' => $copyright,
             'mime_type' => 'image/jpeg',
         ]);
+
+        Storage::disk('image-originals')->put('images/'.$filename, base64_decode(self::MINIMAL_JPEG));
+
+        return $image;
+    }
+
+    /**
+     * A record of any registry model, with its original on the originals disk.
+     *
+     * @param  class-string<Model>  $class
+     */
+    private function makeRegisteredImage(string $class, string $filename): Model
+    {
+        $attributes = ['path' => $filename, 'mime_type' => 'image/jpeg'];
+
+        $image = match ($class) {
+            ItemImage::class => ItemImage::factory()->create($attributes + ['item_id' => Item::factory()->create()->id]),
+            CollectionImage::class => CollectionImage::factory()->create($attributes + ['collection_id' => Collection::factory()->create()->id]),
+            PartnerImage::class => PartnerImage::factory()->create($attributes + ['partner_id' => Partner::factory()->create()->id]),
+            PartnerTranslationImage::class => PartnerTranslationImage::factory()->create($attributes + ['partner_translation_id' => PartnerTranslation::factory()->create()->id]),
+            ContributorImage::class => ContributorImage::factory()->create($attributes + ['contributor_id' => Contributor::factory()->create()->id]),
+            TimelineEventImage::class => TimelineEventImage::factory()->create($attributes + ['timeline_event_id' => TimelineEvent::factory()->create()->id]),
+            PartnerLogo::class => PartnerLogo::factory()->create($attributes + ['partner_id' => Partner::factory()->create()->id]),
+            default => throw new \InvalidArgumentException("Unhandled class: {$class}"),
+        };
 
         Storage::disk('image-originals')->put('images/'.$filename, base64_decode(self::MINIMAL_JPEG));
 
@@ -323,6 +361,69 @@ class PictureControllerTest extends TestCase
         } finally {
             $lock->release();
         }
+    }
+
+    // ── Burned or not: *Image models vs PartnerLogo ──────────────────────────
+
+    /**
+     * @return array<string, array{class-string<Model>}>
+     */
+    public static function burnedModelProvider(): array
+    {
+        return [
+            'ItemImage' => [ItemImage::class],
+            'CollectionImage' => [CollectionImage::class],
+            'PartnerImage' => [PartnerImage::class],
+            'PartnerTranslationImage' => [PartnerTranslationImage::class],
+            'ContributorImage' => [ContributorImage::class],
+            'TimelineEventImage' => [TimelineEventImage::class],
+        ];
+    }
+
+    /**
+     * @param  class-string<Model>  $class
+     */
+    #[DataProvider('burnedModelProvider')]
+    public function test_every_image_model_is_served_burned(string $class): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $this->makeRegisteredImage($class, $filename);
+
+        $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+        $response->assertOk();
+        $this->assertNotSame(base64_decode(self::MINIMAL_JPEG), $response->getContent());
+        Storage::disk('public')->assertExists('pictures/'.$filename);
+    }
+
+    public function test_a_partner_logo_is_served_as_its_original_and_never_burned(): void
+    {
+        $this->partialMock(ImageBurner::class, fn ($mock) => $mock->shouldNotReceive('burn'));
+        $filename = $this->uuidJpgFilename();
+        $this->makeRegisteredImage(PartnerLogo::class, $filename);
+
+        $response = $this->get(route('pub.picture', ['filename' => $filename]));
+
+        $response->assertOk();
+        $this->assertSame(base64_decode(self::MINIMAL_JPEG), $response->getContent());
+        $response->assertHeader('Content-Type', 'image/jpeg');
+        $this->assertNotEmpty($response->headers->get('ETag'));
+        $this->assertRevalidatedOnEveryUse($response);
+        Storage::disk('public')->assertMissing('pictures/'.$filename);
+    }
+
+    public function test_a_partner_logo_answers_a_conditional_request_with_304(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $this->makeRegisteredImage(PartnerLogo::class, $filename);
+        $etag = $this->get(route('pub.picture', ['filename' => $filename]))->headers->get('ETag');
+
+        $response = $this->withHeaders(['If-None-Match' => $etag])
+            ->get(route('pub.picture', ['filename' => $filename]));
+
+        $response->assertStatus(304);
+        $response->assertHeader('ETag', $etag);
+        $this->assertRevalidatedOnEveryUse($response);
     }
 
     // ── 404 paths ─────────────────────────────────────────────────────────────

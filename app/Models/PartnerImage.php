@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
+use App\Contracts\BurnsCopyright;
 use App\Contracts\DetachableImage;
-use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
-class PartnerImage extends Model implements DetachableImage, HasCopyright, StreamableImageFile
+class PartnerImage extends Model implements BurnsCopyright, DetachableImage, StreamableImageFile
 {
     /** @use HasFactory<PartnerImageFactory> */
     use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
