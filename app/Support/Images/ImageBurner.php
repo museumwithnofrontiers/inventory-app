@@ -3,6 +3,7 @@
 namespace App\Support\Images;
 
 use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\Encoders\AutoEncoder;
 use Intervention\Image\Geometry\Factories\RectangleFactory;
 use Intervention\Image\ImageManager;
 use Intervention\Image\Typography\FontFactory;
@@ -16,6 +17,16 @@ use Intervention\Image\Typography\FontFactory;
  */
 class ImageBurner
 {
+    /**
+     * Part of every burned image's ETag. Bump it whenever burn() gives
+     * different bytes for the same input, or clients keep the old rendition
+     * and the pictures cache is never refreshed.
+     */
+    public const int VERSION = 2;
+
+    /** Output quality of lossy formats (JPEG, WebP); lossless ones ignore it. */
+    public const int QUALITY = 90;
+
     private const string FONT_PATH = 'fonts/Roboto-Regular.ttf';
 
     public function burn(string $originalContents, string $copyrightText): string
@@ -44,6 +55,8 @@ class ImageBurner
             $font->wrap($width - (2 * $padding));
         });
 
-        return $image->encode()->toString();
+        // Encodes in the original's format; the quality only reaches the
+        // encoders that take one
+        return $image->encode(new AutoEncoder(quality: self::QUALITY))->toString();
     }
 }

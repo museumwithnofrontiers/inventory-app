@@ -27,8 +27,8 @@ class PictureController extends Controller
      *
      * The URL never changes on a copyright edit - downstream npm data
      * packages bake it in - so invalidation happens through a content-based
-     * ETag (derived from the resolved copyright text) rather than a
-     * versioned URL. A matching If-None-Match short-circuits to 304 before
+     * ETag (derived from the resolved copyright text and the burner's
+     * version) rather than a versioned URL. A matching If-None-Match short-circuits to 304 before
      * anything is read from disk or burned (M9 epic A3).
      *
      * Regeneration on a miss or mismatch is coalesced through a per-image
@@ -53,7 +53,7 @@ class PictureController extends Controller
 
         /** @var Model&StreamableImageFile&HasCopyright $record */
         $copyright = $record->resolveCopyright();
-        $etag = '"'.sha1($filename.'|'.$copyright).'"';
+        $etag = '"'.sha1(ImageBurner::VERSION.'|'.$filename.'|'.$copyright).'"';
 
         $ifNoneMatch = $request->header('If-None-Match');
         if ($ifNoneMatch !== null && $ifNoneMatch === $etag) {

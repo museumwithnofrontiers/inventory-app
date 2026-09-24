@@ -66,7 +66,9 @@ class PictureControllerTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'image/jpeg');
-        $this->assertNotEmpty($response->headers->get('ETag'));
+        // The burner's version is part of the ETag, so a change in its output
+        // reaches clients that hold the previous rendition
+        $response->assertHeader('ETag', '"'.sha1(ImageBurner::VERSION.'|'.$filename.'|Original Owner').'"');
         $this->assertStringContainsString('public', $response->headers->get('Cache-Control'));
         Storage::disk('public')->assertExists('pictures/'.$filename);
     }
@@ -134,7 +136,7 @@ class PictureControllerTest extends TestCase
         $this->makeItemImage($filename, 'Original Owner');
 
         $copyright = 'Original Owner';
-        $etag = '"'.sha1($filename.'|'.$copyright).'"';
+        $etag = '"'.sha1(ImageBurner::VERSION.'|'.$filename.'|'.$copyright).'"';
         Cache::forever('image-copyright-etag:'.$filename, $etag);
 
         // No file ever put on the pictures disk for this path.
