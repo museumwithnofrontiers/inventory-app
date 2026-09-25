@@ -5,10 +5,11 @@
 [museumwithnofrontiers.github.io](https://github.com/museumwithnofrontiers/museumwithnofrontiers.github.io),
 submodule `.new-architecture/museumwithnofrontiers.github.io`).
 
-- **Which sites:** every public, unarchived repository created from
-  `museumwithnofrontiers/website-template` that has GitHub Pages enabled. This
-  is the rule `propagate.mjs` (viewer-workflows) uses, so there is no list to
-  keep by hand.
+- **Which sites:** every public, unarchived repository created from one of the
+  three site templates (`museumwithnofrontiers/website-template`,
+  `gallery-template`, `exhibition-template`) that has GitHub Pages enabled.
+  This is the rule `propagate.mjs` (viewer-workflows) uses, so there is no list
+  to keep by hand.
 - **Title and kind:** from the exporter instance with the same slug
   (`scripts/exporters/instances/<slug>.json`: `name`, `kind`). A site with no
   instance is still listed, under its repository name, in "Other websites".
