@@ -336,8 +336,6 @@ export class PartnerExporter extends BaseExporter {
       featured: extraMap.get(p.id)?.portal_display?.toLowerCase() === 'y',
       // Same derivation as each item's languages in items.json
       languages: Object.keys(translationMap.get(p.id) ?? {}).sort(),
-      contact_person_1: extraMap.get(p.id)?.contact_person_1 ?? null,
-      contact_person_2: extraMap.get(p.id)?.contact_person_2 ?? null,
       contact_persons: contactPersons(extraMap.get(p.id)),
       additional_urls: extraMap.get(p.id)?.urls ?? [],
       images: imageMap.get(p.id) ?? [],

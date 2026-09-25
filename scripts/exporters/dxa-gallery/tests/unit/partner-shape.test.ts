@@ -168,9 +168,9 @@ describe('PartnerExporter — shared partner shape', () => {
     const b = output.find(p => p.id === 'partner-b')
     expect(a?.contact_persons).toEqual([{ name: 'First' }, { name: 'Second' }])
     expect(b?.contact_persons).toEqual([{ name: 'Only the second' }])
-    // The two keys it supersedes stay until every consumer has moved
-    expect(b?.contact_person_1).toBeNull()
-    expect(b?.contact_person_2).toEqual({ name: 'Only the second' })
+    // The list is the only key: contact_person_1/_2 are gone (inventory-app#2007)
+    expect(b).not.toHaveProperty('contact_person_1')
+    expect(b).not.toHaveProperty('contact_person_2')
   })
 
   it('reports an empty contact_persons list for a partner with none', async () => {

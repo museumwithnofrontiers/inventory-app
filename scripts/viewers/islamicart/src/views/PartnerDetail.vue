@@ -58,7 +58,7 @@ function normalizeUrl(url) {
 
 const contactPersons = computed(() => {
   if (!partner.value) return []
-  return [partner.value.contact_person_1, partner.value.contact_person_2].filter(
+  return (partner.value.contact_persons ?? []).filter(
     cp => cp && (cp.name || cp.title)
   )
 })
