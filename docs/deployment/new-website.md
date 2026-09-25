@@ -162,10 +162,23 @@ one check).
 
 ## 4. Create and configure the repository
 
-From a `viewer-workflows` checkout (or its container — same pattern as
-`propagate.mjs`), by an operator authenticated with `gh` and holding admin
-rights on the `museumwithnofrontiers` org (this tool never stores a
-token):
+Two paths end in the same site; pick one.
+
+**With the tool.** From a `viewer-workflows` checkout (or its container —
+same pattern as `propagate.mjs`), by an operator authenticated with `gh` and
+holding admin rights on the `museumwithnofrontiers` org (this tool never
+stores a token). `--class` picks the template: `gallery-template` or
+`exhibition-template`. A gallery or an exhibition also needs its own colours,
+in a small JSON file, one entry per `__PALETTE_<NAME>__` placeholder of the
+template's `src/styles/site.css` — a gallery's five from
+`.legacy-code/dxa-client/src/sites/<code>/_variables.scss` plus `$theme-dark`
+as three numbers, an exhibition's six from its legacy compiled stylesheet
+(the comment above the placeholders says how):
+
+```json
+{ "THEME_DARK": "#504819", "THEME_DARK_RGB": "80, 72, 25", "THEME_MEDIUM_DARK": "#6b612b",
+  "THEME_MEDIUM": "#7e743e", "THEME_LIGHT": "#91864d", "BACKGROUND_COLOR": "#fffff0" }
+```
 
 ```bash
 export GH_TOKEN=$(gh auth token)
@@ -173,41 +186,50 @@ docker run --rm -it \
   -e GH_TOKEN \
   -v "$PWD:/w" \
   -w /w node:lts-alpine sh -c "apk add --no-cache git github-cli >/dev/null && \
-    node tools/new-website.mjs --slug <slug> --class gallery|exhibition --namespace <ns> --title '<Site name>'"
+    node tools/new-website.mjs --slug <slug> --class gallery|exhibition --namespace <ns> --title '<Site name>' --palette <slug>.json"
 ```
 
-Add `--dry-run` first to preview without touching anything. The full flag
-reference is in `viewer-workflows`'
+Add `--dry-run` first to preview without touching anything; it also checks
+the palette file against the template. The full flag reference is in
+`viewer-workflows`'
 [`MAINTENANCE.md`](https://github.com/museumwithnofrontiers/viewer-workflows/blob/main/MAINTENANCE.md#creating-a-website)
-("Creating a website") and `website-template`'s
-[`README.md`](https://github.com/museumwithnofrontiers/website-template/blob/main/README.md#admin--creating-a-new-website)
-("Admin — creating a new website"). The tool requires the data package
-published on npmjs first (step 3) — it refuses to run otherwise, unless
-`--settings-only`.
+("Creating a website"). The tool requires the data package published on
+npmjs first (step 3) — it refuses to run otherwise, unless `--settings-only`.
 
-The tool creates the repository from `website-template`, switches on Pages
+The tool creates the repository from the class's template, switches on Pages
 (source: GitHub Actions), the `main-requires-pr` ruleset, classic branch
 protection with the four required checks, allow-auto-merge,
 delete-branch-on-merge, CodeQL default setup and Dependabot security
-fixes/alerts, then opens and auto-merges the first PR (placeholder
-replacement, `@museumwnf/<slug>-data@latest` installed).
+fixes/alerts, then opens and auto-merges the first PR (the placeholders and
+the palette replaced, `@museumwnf/<slug>-data@latest` installed).
+
+**By hand.** Anyone with a GitHub account: "Use this template" on
+[`gallery-template`](https://github.com/museumwithnofrontiers/gallery-template)
+or [`exhibition-template`](https://github.com/museumwithnofrontiers/exhibition-template),
+then that template's own `scripts/setup-repo.sh` (or `.ps1`) and its
+README's "Admin" steps: the same settings, the placeholders and the palette
+replaced by hand, the dataset installed. The template's install guard
+refuses to install while a placeholder or a palette colour is left.
 
 **Proof:**
 
-- the tool's own console summary (`[Repository]`, `[Pull request]` lines);
-- the first PR reaches `MERGED` by itself (auto-merge armed, unless
-  `--no-merge` was passed);
+- the tool's own console summary (`[Repository]`, `[Palette]`,
+  `[Pull request]` lines), or the setup script's report;
+- the first PR reaches `MERGED` once its checks pass (auto-merge armed,
+  unless `--no-merge` was passed). A gallery's or an exhibition's smoke test
+  keeps a few curatorial picks as `TODO(dataset)` on purpose, so that PR's
+  `ci / Test` stays red until the picks (step 6) are pushed onto it;
 - ```bash
   gh api repos/museumwithnofrontiers/<slug> --jq .template_repository.full_name
   ```
-  prints `museumwithnofrontiers/website-template`;
+  prints `museumwithnofrontiers/gallery-template` or
+  `museumwithnofrontiers/exhibition-template`;
 - ```bash
   gh run list -R museumwithnofrontiers/<slug> --workflow=deploy.yml --branch main --limit 1
   ```
   is `completed success`;
-- `https://museumwithnofrontiers.github.io/<slug>/` answers.
-
-## 5. Texts
+- `https://museumwithnofrontiers.github.io/<slug>/` answers, in its own
+  colours.## 5. Texts
 
 From `scripts/site-i18n` (inventory-app checkout), any developer, reading
 the **production** legacy database over the VPN (see the standing warning
@@ -226,29 +248,26 @@ in
 [`scripts/site-i18n/README.md`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/site-i18n/README.md)).
 Copy `output/<slug>/locales/` into the site repository's own `locales/`
 and open the texts PR there. One file needs a merge rather than a copy:
-the scaffold's `locales/en.json` already exists and holds placeholder
-entries (`<ns>.identity.*`, `<ns>.home.*`, `<ns>.nav.*`, `<ns>.about.body`)
-that the scaffold's own `src/dataset.config.js` and `tests/smoke.test.js`
-read. Add the extracted entries to that file and keep the placeholders,
-so the texts PR stays green on its own; step 6 removes them together with
-the code that reads them. If the legacy database holds this site's texts
+the scaffold's `locales/en.json` already exists and holds the placeholder
+entry `<ns>.credits.body` that the credits page reads. Replace its value
+with the extracted credits and add the other extracted entries. If the legacy database holds this site's texts
 in English only, `en.json` is the only file the extraction writes, and
 that is not an error.
 
 **Proof:** `ci / Texts (blocking)` on that PR validates the copied keys
 against the `viewer-i18n` dictionary; once merged and deployed, the About
-page shows the extracted text for a **gallery** (an exhibition has no About
-page — blocked on the Theme epic, inventory-app#1729) and the Credits page
-shows it for both.
+page shows the extracted text for a **gallery** (an exhibition's About page
+is its about theme, from the data package) and the Credits page shows it
+for both.
 
-## 6. Declare the catalogue, the sheet and the theme
+## 6. The site's own values
 
-The site's own work, on the repository step 4 created. Starting from
-`website-template`'s
-[`README.md`](https://github.com/museumwithnofrontiers/website-template/blob/main/README.md#admin--creating-a-new-website),
-step 2 ("Declare the catalogue and the sheet") onward, and the "Webdesigner
-— theming the website" section for the palette and tokens. Not repeated
-here.
+The site's own work, on the repository step 4 created. Its pages are the
+family's (`@museumwnf/viewer-layout/dxa`); what is its own is the source
+chips and the Explore-partner notice in `src/dataset.config.js`, the
+curatorial picks of `tests/smoke.test.js`, and the theme beyond the palette —
+each marked `TODO(dataset)` in the file, and described in the family
+template's README (steps 4 to 7). Not repeated here.
 
 **Proof:** the site's own tests (`npm run test`) and build pass.
 
@@ -328,7 +347,7 @@ decomposition comment (2026-09-21):
   that link directly.
 - **Adding a Dependabot entry in `inventory-app` for the new site.** A
   website is its own repository, with its own `dependabot.yml` inherited
-  from `website-template`. `inventory-app`'s own hand-maintained,
+  from its template. `inventory-app`'s own hand-maintained,
   CI-enforced `dependabot.yml` only lists `inventory-app`'s own Node
   projects; its exporter and viewer entries are already globbed patterns,
   so a new site adds nothing there.
