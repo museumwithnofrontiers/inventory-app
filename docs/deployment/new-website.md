@@ -215,8 +215,10 @@ refuses to install while a placeholder or a palette colour is left.
 
 - the tool's own console summary (`[Repository]`, `[Palette]`,
   `[Pull request]` lines), or the setup script's report;
-- the first PR reaches `MERGED` by itself (auto-merge armed, unless
-  `--no-merge` was passed);
+- the first PR reaches `MERGED` once its checks pass (auto-merge armed,
+  unless `--no-merge` was passed). A gallery's or an exhibition's smoke test
+  keeps a few curatorial picks as `TODO(dataset)` on purpose, so that PR's
+  `ci / Test` stays red until the picks (step 6) are pushed onto it;
 - ```bash
   gh api repos/museumwithnofrontiers/<slug> --jq .template_repository.full_name
   ```
