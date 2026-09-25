@@ -277,9 +277,9 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
 - **`contact_persons`**: the legacy `cp1_*`/`cp2_*` contacts as a list in
   legacy order (person 1 first), leaving out the ones the partner doesn't
   have. This is how DXA's API builds `contactPerson`, and it keeps the order
-  visible once one of the two is missing. It supersedes
-  `contact_person_1`/`contact_person_2`, which stay in the shape until every
-  viewer and site reads the list, and are then removed (#1959).
+  visible once one of the two is missing. It replaced the two keys
+  `contact_person_1`/`contact_person_2` (#1959), removed once every viewer
+  and site read the list (#2007).
 
 `translations/partners.<lang>.json` holds each partner's `name`,
 `description`, `city`, `address`, `website`, `phone`, `fax` and `email`, with

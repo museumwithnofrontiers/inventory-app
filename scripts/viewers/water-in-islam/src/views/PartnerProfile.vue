@@ -69,7 +69,7 @@ function slide(direction) {
 }
 
 const contacts = computed(() =>
-  [partner.value?.contact_person_1, partner.value?.contact_person_2].filter(Boolean)
+  (partner.value?.contact_persons ?? []).filter(Boolean)
 )
 const hasContact = computed(() =>
   Boolean(info.value.address || info.value.phone || info.value.email || info.value.website || contacts.value.length)
