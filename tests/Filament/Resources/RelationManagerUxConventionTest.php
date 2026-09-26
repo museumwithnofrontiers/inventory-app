@@ -512,6 +512,13 @@ class RelationManagerUxConventionTest extends TestCase
             ->assertTableActionsExistInOrder(['viewTranslation', 'editTranslation', 'viewParentItem', 'delete']);
     }
 
+    /**
+     * M7 Story A2.1 (#1900) brought the collection_item pivot up to the
+     * pivot convention: row actions are now [view, edit, detach], plus the
+     * pinned view_appearance action this manager keeps alongside them
+     * (RelationManagerConventionTest is the authority on the convention
+     * itself; this only re-asserts the UX ordering convention still holds).
+     */
     public function test_collection_items_relation_manager_row_actions_are_in_convention_order(): void
     {
         $user = $this->createCrudUser();
@@ -529,7 +536,7 @@ class RelationManagerUxConventionTest extends TestCase
                 'ownerRecord' => $collection,
                 'pageClass' => EditCollection::class,
             ])
-            ->assertTableActionsExistInOrder(['detach']);
+            ->assertTableActionsExistInOrder(['view', 'edit', 'detach', 'view_appearance']);
     }
 
     public function test_role_permissions_relation_manager_row_actions_are_in_convention_order(): void
