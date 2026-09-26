@@ -8,6 +8,7 @@ use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Item;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -37,6 +38,15 @@ class TranslationsRelationManager extends BaseOwnerTranslationsRelationManager
             ->icon('heroicon-o-arrow-top-right-on-square')
             ->url(fn (Model $r): string => ItemResource::getUrl('view', ['record' => $r->getAttribute('item_id')]))
             ->openUrlInNewTab();
+    }
+
+    protected static function extraColumns(): array
+    {
+        return [
+            TextColumn::make('alternate_name')
+                ->label('Alternate name')
+                ->toggleable(),
+        ];
     }
 
     protected static function defaultTranslationFormFields(): array

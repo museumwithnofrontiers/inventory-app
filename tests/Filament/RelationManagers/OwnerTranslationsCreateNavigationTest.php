@@ -159,6 +159,21 @@ class OwnerTranslationsCreateNavigationTest extends TestCase
             ));
     }
 
+    public function test_item_translations_table_keeps_its_alternate_name_column(): void
+    {
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Object()->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(ItemTranslationsRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => ViewItem::class,
+            ])
+            ->assertTableColumnExists('alternate_name');
+    }
+
     public function test_item_translations_create_default_translation_still_creates_without_a_form(): void
     {
         $user = $this->createCrudUser();

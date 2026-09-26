@@ -88,6 +88,17 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
     abstract protected static function defaultTranslationFormFields(): array;
 
     /**
+     * Columns only one parent's translations have, shown after the title
+     * column. Item adds `alternate_name`.
+     *
+     * @return array<int, TextColumn>
+     */
+    protected static function extraColumns(): array
+    {
+        return [];
+    }
+
+    /**
      * The owner record's `translations()` relation. Typed and implemented by
      * the concrete subclass so this base class never has to call a relation
      * method on the bare `Model` the RelationManager stores $ownerRecord as.
@@ -158,6 +169,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
                 TextColumn::make($titleAttr)
                     ->searchable()
                     ->sortable(),
+                ...static::extraColumns(),
                 TextColumn::make('created_at')
                     ->label('Created')
                     ->dateTime()
