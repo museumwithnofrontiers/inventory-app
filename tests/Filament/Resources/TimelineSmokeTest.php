@@ -2,27 +2,26 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\TimelineEventResource\Pages\ListTimelineEvent;
 use App\Filament\Resources\TimelineResource\Pages\ListTimeline;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class TimelineSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_timeline_resource_handles_a_large_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $this->seedTimelines(100);
 
         DB::flushQueryLog();
@@ -54,7 +53,7 @@ class TimelineSmokeTest extends TestCase
 
     public function test_timeline_event_resource_handles_a_large_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $timeline = Timeline::factory()->create(['internal_name' => 'Bulk Timeline']);
         $this->seedTimelineEvents($timeline->id, 100);
 
@@ -77,17 +76,6 @@ class TimelineSmokeTest extends TestCase
             ->searchTable('Event 099')
             ->assertCanSeeTableRecords([$target])
             ->assertCanNotSeeTableRecords([$nonTarget]);
-    }
-
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
     }
 
     protected function seedTimelines(int $count): void
@@ -140,10 +128,5 @@ class TimelineSmokeTest extends TestCase
         foreach (array_chunk($rows, 500) as $chunk) {
             TimelineEvent::query()->insert($chunk);
         }
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

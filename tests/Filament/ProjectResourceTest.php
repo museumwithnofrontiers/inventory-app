@@ -14,14 +14,15 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Project;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class ProjectResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_project_resource_pages_and_relations(): void
@@ -221,24 +222,5 @@ class ProjectResourceTest extends TestCase
         $response = $this->actingAs($user)->get('/admin/projects');
 
         $response->assertForbidden();
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

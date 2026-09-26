@@ -11,15 +11,16 @@ use App\Models\Context;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class BrowseCollectionTreePageTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     protected function createViewUser(): User
@@ -31,11 +32,6 @@ class BrowseCollectionTreePageTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
     /**

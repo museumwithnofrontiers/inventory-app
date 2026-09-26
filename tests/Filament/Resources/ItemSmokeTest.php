@@ -3,29 +3,28 @@
 namespace Tests\Filament\Resources;
 
 use App\Enums\ItemType;
-use App\Enums\Permission;
 use App\Filament\Pages\BrowseItemTree;
 use App\Filament\Resources\ItemResource\Pages\ListItem;
 use App\Models\Country;
 use App\Models\Item;
 use App\Models\Partner;
 use App\Models\Project;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class ItemSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_item_resource_handles_a_ten_thousand_row_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $this->seedItems(10_000);
 
         DB::flushQueryLog();
@@ -58,7 +57,7 @@ class ItemSmokeTest extends TestCase
 
     public function test_browse_item_tree_expands_five_levels_deep(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $hierarchy = $this->seedHierarchy(5);
 
         $this->setCurrentPanel();
@@ -117,31 +116,6 @@ class ItemSmokeTest extends TestCase
         $this->assertLessThan(50, $editQueryCount, "Edit form issued too many queries ($editQueryCount), likely still preloading option datasets.");
     }
 
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function seedItems(int $count): void
     {
         $timestamp = Carbon::now();
@@ -197,10 +171,5 @@ class ItemSmokeTest extends TestCase
         }
 
         return $nodes;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

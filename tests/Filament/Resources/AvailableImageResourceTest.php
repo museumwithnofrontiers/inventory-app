@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Events\AvailableImageEvent;
 use App\Events\ImageUploadEvent;
 use App\Filament\Resources\AvailableImageResource\Pages\EditAvailableImage;
@@ -11,17 +10,17 @@ use App\Listeners\AvailableImageListener;
 use App\Listeners\ImageUploadListener;
 use App\Models\AvailableImage;
 use App\Models\ImageUpload;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class AvailableImageResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_available_image_list_and_view_pages(): void
@@ -286,24 +285,5 @@ class AvailableImageResourceTest extends TestCase
         $this->assertStringNotContainsString('/api/', $viewUrl);
         $this->assertStringNotContainsString('/web/', $downloadUrl);
         $this->assertStringNotContainsString('/api/', $downloadUrl);
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

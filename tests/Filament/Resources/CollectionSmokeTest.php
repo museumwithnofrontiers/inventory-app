@@ -2,28 +2,27 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Pages\BrowseCollectionTree;
 use App\Filament\Resources\CollectionResource\Pages\ListCollection;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Language;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class CollectionSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_collection_resource_handles_a_ten_thousand_row_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $this->seedCollections();
 
         DB::flushQueryLog();
@@ -58,7 +57,7 @@ class CollectionSmokeTest extends TestCase
 
     public function test_browse_collection_tree_expands_five_levels_deep(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $hierarchy = $this->seedHierarchy(5);
 
         $this->setCurrentPanel();
@@ -129,31 +128,6 @@ class CollectionSmokeTest extends TestCase
         $this->assertDatabaseHas('collections', ['id' => $child->id, 'parent_id' => $parent->id]);
     }
 
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function seedCollections(): void
     {
         $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
@@ -206,10 +180,5 @@ class CollectionSmokeTest extends TestCase
         }
 
         return $nodes;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

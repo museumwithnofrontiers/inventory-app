@@ -14,13 +14,14 @@ use App\Models\Language;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class BrowseTimelineTreePageTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     protected function createViewUser(): User
@@ -32,11 +33,6 @@ class BrowseTimelineTreePageTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
     // -------------------------------------------------------------------------

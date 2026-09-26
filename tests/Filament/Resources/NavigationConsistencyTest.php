@@ -35,6 +35,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -46,6 +47,7 @@ use Tests\TestCase;
  */
 class NavigationConsistencyTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -59,22 +61,6 @@ class NavigationConsistencyTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function createReferenceDataUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
     // ── Navigation group label ─────────────────────────────────────────────────

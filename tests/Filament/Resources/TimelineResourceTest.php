@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\TimelineResource\Pages\CreateTimeline;
 use App\Filament\Resources\TimelineResource\Pages\EditTimeline;
 use App\Filament\Resources\TimelineResource\Pages\ListTimeline;
@@ -10,15 +9,15 @@ use App\Filament\Resources\TimelineResource\Pages\ViewTimeline;
 use App\Filament\Resources\TimelineResource\RelationManagers\EventsRelationManager;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class TimelineResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_timeline_resource_pages(): void
@@ -172,24 +171,5 @@ class TimelineResourceTest extends TestCase
         $this->assertDatabaseMissing('timeline_events', [
             'id' => $event->id,
         ]);
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

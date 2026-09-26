@@ -3,27 +3,26 @@
 namespace Tests\Filament\Resources;
 
 use App\Enums\ItemType;
-use App\Enums\Permission;
 use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Models\Item;
 use App\Models\Partner;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class PartnerSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_partner_resource_handles_a_ten_thousand_owned_item_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $partner = Partner::factory()->create(['internal_name' => 'Jordan Museum']);
         $this->seedOwnedItems($partner);
 
@@ -100,31 +99,6 @@ class PartnerSmokeTest extends TestCase
         $this->assertLessThan(50, $editQueryCount, "Edit form issued too many queries ($editQueryCount), likely still preloading monument_item/country/project datasets.");
     }
 
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function seedOwnedItems(Partner $partner): void
     {
         $timestamp = Carbon::now();
@@ -148,10 +122,5 @@ class PartnerSmokeTest extends TestCase
         foreach (array_chunk($rows, 1000) as $chunk) {
             Item::query()->insert($chunk);
         }
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

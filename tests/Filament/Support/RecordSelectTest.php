@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Support;
 
-use App\Enums\Permission;
 use App\Filament\Concerns\HasChangeParentAction;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
@@ -14,12 +13,11 @@ use App\Models\Dynasty;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\Tag;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\AttachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use ReflectionClass;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -30,6 +28,7 @@ use Tests\TestCase;
  */
 class RecordSelectTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     /**
@@ -54,25 +53,6 @@ class RecordSelectTest extends TestCase
             'app/Filament/Support/TranslationFormSchema.php',
             'app/Filament/Support/RecordSelect.php',
         ];
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
     protected function makeCollection(): Collection

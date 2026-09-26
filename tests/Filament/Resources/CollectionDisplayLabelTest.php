@@ -9,9 +9,9 @@ use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Language;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -27,16 +27,12 @@ use Tests\TestCase;
  */
 class CollectionDisplayLabelTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     // ──────────────────────────────────────────────────────────────────────────
     // Helpers
     // ──────────────────────────────────────────────────────────────────────────
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-    }
 
     protected function createViewUser(): User
     {

@@ -9,17 +9,17 @@ use App\Models\Context;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
-use Tests\Traits\InteractsWithFilamentReferenceData;
 
 class ContextResourceTest extends TestCase
 {
-    use InteractsWithFilamentReferenceData;
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_context_resource_pages(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $context = Context::factory()->withIsDefault()->create(['internal_name' => 'Catalogue']);
 
         $this->actingAs($user)->get('/admin/contexts')
@@ -41,7 +41,7 @@ class ContextResourceTest extends TestCase
 
     public function test_authorized_users_can_create_edit_and_delete_contexts(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $context = Context::factory()->create([
             'internal_name' => 'Catalogue',
             'backward_compatibility' => 'ctx-01',
@@ -96,7 +96,7 @@ class ContextResourceTest extends TestCase
 
     public function test_context_resource_filters_by_default_status_and_sets_the_default_context(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $defaultContext = Context::factory()->withIsDefault()->create(['internal_name' => 'Catalogue']);
         $exhibition = Context::factory()->create([
             'internal_name' => 'Exhibition',

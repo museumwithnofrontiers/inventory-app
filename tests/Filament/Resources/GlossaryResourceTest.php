@@ -13,17 +13,17 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
-use Tests\Traits\InteractsWithFilamentReferenceData;
 
 class GlossaryResourceTest extends TestCase
 {
-    use InteractsWithFilamentReferenceData;
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_glossary_resource_pages(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $glossary = Glossary::factory()->create(['internal_name' => 'Mashrabiya']);
 
         $this->actingAs($user)->get('/admin/glossaries')
@@ -47,7 +47,7 @@ class GlossaryResourceTest extends TestCase
 
     public function test_authorized_users_can_create_edit_and_delete_glossaries(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $glossary = Glossary::factory()->create([
             'internal_name' => 'Mashrabiya',
             'backward_compatibility' => 'g-01',
@@ -102,7 +102,7 @@ class GlossaryResourceTest extends TestCase
 
     public function test_glossary_relation_managers_allow_editing_translations_and_spellings(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $glossary = Glossary::factory()->create(['internal_name' => 'Mashrabiya']);
         $english = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
         $arabic = Language::factory()->create(['id' => 'ara', 'internal_name' => 'Arabic']);

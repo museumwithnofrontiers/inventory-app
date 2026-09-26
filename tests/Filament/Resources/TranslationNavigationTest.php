@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
 use App\Filament\Resources\CollectionTranslationResource;
@@ -33,11 +32,10 @@ use App\Models\ItemTranslation;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerTranslation;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\View\ViewException;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -53,39 +51,8 @@ use Tests\TestCase;
  */
 class TranslationNavigationTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createViewOnlyUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-    }
 
     // ── Item Translations: Relation Manager Row Actions ────────────────────────
 

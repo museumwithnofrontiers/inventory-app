@@ -3,7 +3,6 @@
 namespace Tests\Filament\Resources;
 
 use App\Enums\MediaType;
-use App\Enums\Permission;
 use App\Filament\Resources\CountryResource\Pages\EditCountry;
 use App\Filament\Resources\CountryResource\RelationManagers\TranslationsRelationManager as CountryTranslationsRelationManager;
 use App\Filament\Resources\GlossaryResource\Pages\EditGlossary;
@@ -30,12 +29,11 @@ use App\Models\Language;
 use App\Models\LanguageTranslation;
 use App\Models\Partner;
 use App\Models\Project;
-use App\Models\User;
 use App\Models\Workshop;
-use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -49,39 +47,8 @@ use Tests\TestCase;
  */
 class NewRelationManagersTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
-
-    // ── Helpers ────────────────────────────────────────────────────────────────
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createReferenceDataUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-    }
 
     // ── ProjectResource: PartnersRelationManager ───────────────────────────────
 

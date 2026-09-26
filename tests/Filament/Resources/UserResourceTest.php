@@ -8,16 +8,17 @@ use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUser;
 use App\Models\User;
 use App\Notifications\AdminPasswordResetNotification;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;
 use Spatie\Permission\Models\Role;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class UserResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     // ── Helpers ───────────────────────────────────────────────────────────────
@@ -43,11 +44,6 @@ class UserResourceTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
     // ── Page rendering ────────────────────────────────────────────────────────

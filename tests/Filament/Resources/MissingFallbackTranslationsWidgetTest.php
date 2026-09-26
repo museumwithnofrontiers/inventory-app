@@ -10,13 +10,14 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class MissingFallbackTranslationsWidgetTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_widget_shows_items_missing_fallback_translation(): void
@@ -175,10 +176,5 @@ class MissingFallbackTranslationsWidgetTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

@@ -9,17 +9,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
-use Tests\Traits\InteractsWithFilamentReferenceData;
 
 class ContextSmokeTest extends TestCase
 {
-    use InteractsWithFilamentReferenceData;
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_context_resource_handles_a_ten_thousand_row_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $this->seedContexts();
 
         DB::flushQueryLog();

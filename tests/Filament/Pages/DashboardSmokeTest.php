@@ -7,16 +7,17 @@ use App\Enums\Permission;
 use App\Filament\Pages\Dashboard;
 use App\Models\Item;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class DashboardSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_dashboard_renders_for_authorized_user(): void
@@ -85,20 +86,6 @@ class DashboardSmokeTest extends TestCase
         return $user;
     }
 
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function seedItems(int $count): void
     {
         $timestamp = Carbon::now();
@@ -130,10 +117,5 @@ class DashboardSmokeTest extends TestCase
         foreach (array_chunk($rows, 1000) as $chunk) {
             Item::query()->insert($chunk);
         }
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }
