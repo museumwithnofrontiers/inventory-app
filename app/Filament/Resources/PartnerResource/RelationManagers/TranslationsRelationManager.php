@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PartnerResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Resources\PartnerResource;
@@ -31,6 +32,8 @@ use Illuminate\Validation\Rules\Unique;
 
 class TranslationsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'translations';
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -249,10 +252,12 @@ class TranslationsRelationManager extends RelationManager
                         'language_id' => Language::default()->first()?->id,
                         'context_id' => Context::default()->first()?->id,
                     ])
-                    ->visible(fn (): bool => ! $this->ownerPartner()->translations()
-                        ->whereHas('language', fn (Builder $q): Builder => $q->where('is_default', true))
-                        ->whereHas('context', fn (Builder $q): Builder => $q->where('is_default', true))
-                        ->exists()
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated()
+                        && (auth()->user()?->can('create', PartnerTranslation::class) ?? false)
+                        && ! $this->ownerPartner()->translations()
+                            ->whereHas('language', fn (Builder $q): Builder => $q->where('is_default', true))
+                            ->whereHas('context', fn (Builder $q): Builder => $q->where('is_default', true))
+                            ->exists()
                     )
                     ->action(function (array $data): void {
                         /** @var array<string, mixed> $data */
@@ -287,7 +292,8 @@ class TranslationsRelationManager extends RelationManager
                     ->label('Edit translation')
                     ->icon('heroicon-o-pencil')
                     ->url(fn (PartnerTranslation $r): string => PartnerTranslationResource::getUrl('edit', ['record' => $r]))
-                    ->visible(fn (PartnerTranslation $r): bool => auth()->user()?->can('update', $r) ?? false),
+                    ->visible(fn (PartnerTranslation $r): bool => $this->hostRecordCanBeUpdated()
+                        && (auth()->user()?->can('update', $r) ?? false)),
                 Action::make('viewParentPartner')
                     ->label('View parent partner')
                     ->icon('heroicon-o-arrow-top-right-on-square')

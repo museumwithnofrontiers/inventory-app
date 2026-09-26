@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemTranslationResource;
@@ -30,6 +31,8 @@ use Illuminate\Validation\Rules\Unique;
 
 class TranslationsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'translations';
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -233,10 +236,12 @@ class TranslationsRelationManager extends RelationManager
                         'language_id' => Language::default()->first()?->id,
                         'context_id' => Context::default()->first()?->id,
                     ])
-                    ->visible(fn (): bool => ! $this->ownerItem()->translations()
-                        ->whereHas('language', fn ($q) => $q->where('is_default', true))
-                        ->whereHas('context', fn ($q) => $q->where('is_default', true))
-                        ->exists()
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated()
+                        && (auth()->user()?->can('create', ItemTranslation::class) ?? false)
+                        && ! $this->ownerItem()->translations()
+                            ->whereHas('language', fn ($q) => $q->where('is_default', true))
+                            ->whereHas('context', fn ($q) => $q->where('is_default', true))
+                            ->exists()
                     )
                     ->action(function (array $data): void {
                         /** @var array<string, mixed> $data */
@@ -271,7 +276,8 @@ class TranslationsRelationManager extends RelationManager
                     ->label('Edit translation')
                     ->icon('heroicon-o-pencil')
                     ->url(fn (ItemTranslation $r): string => ItemTranslationResource::getUrl('edit', ['record' => $r]))
-                    ->visible(fn (ItemTranslation $r): bool => auth()->user()?->can('update', $r) ?? false),
+                    ->visible(fn (ItemTranslation $r): bool => $this->hostRecordCanBeUpdated()
+                        && (auth()->user()?->can('update', $r) ?? false)),
                 Action::make('viewParentItem')
                     ->label('View parent item')
                     ->icon('heroicon-o-arrow-top-right-on-square')

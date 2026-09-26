@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\DynastyDisplayLabel;
 use App\Models\Dynasty;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DynastiesRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'dynasties';
 
     protected static ?string $recordTitleAttribute = 'display_label';

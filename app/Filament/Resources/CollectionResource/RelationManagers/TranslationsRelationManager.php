@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\ContextResource;
@@ -30,6 +31,8 @@ use Illuminate\Validation\Rules\Unique;
 
 class TranslationsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'translations';
 
     protected static ?string $recordTitleAttribute = 'title';
@@ -174,10 +177,12 @@ class TranslationsRelationManager extends RelationManager
                         'language_id' => Language::default()->first()?->id,
                         'context_id' => Context::default()->first()?->id,
                     ])
-                    ->visible(fn (): bool => ! $this->ownerCollection()->translations()
-                        ->whereHas('language', fn ($q) => $q->where('is_default', true))
-                        ->whereHas('context', fn ($q) => $q->where('is_default', true))
-                        ->exists()
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated()
+                        && (auth()->user()?->can('create', CollectionTranslation::class) ?? false)
+                        && ! $this->ownerCollection()->translations()
+                            ->whereHas('language', fn ($q) => $q->where('is_default', true))
+                            ->whereHas('context', fn ($q) => $q->where('is_default', true))
+                            ->exists()
                     )
                     ->action(function (array $data): void {
                         /** @var array<string, mixed> $data */
@@ -212,7 +217,8 @@ class TranslationsRelationManager extends RelationManager
                     ->label('Edit translation')
                     ->icon('heroicon-o-pencil')
                     ->url(fn (CollectionTranslation $r): string => CollectionTranslationResource::getUrl('edit', ['record' => $r]))
-                    ->visible(fn (CollectionTranslation $r): bool => auth()->user()?->can('update', $r) ?? false),
+                    ->visible(fn (CollectionTranslation $r): bool => $this->hostRecordCanBeUpdated()
+                        && (auth()->user()?->can('update', $r) ?? false)),
                 Action::make('viewParentCollection')
                     ->label('View parent collection')
                     ->icon('heroicon-o-arrow-top-right-on-square')

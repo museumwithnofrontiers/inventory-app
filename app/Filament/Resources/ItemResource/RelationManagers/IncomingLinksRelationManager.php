@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Enums\ItemType;
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\ItemItemLinkResource;
 use App\Filament\Resources\ItemResource;
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class IncomingLinksRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'incomingLinks';
 
     protected static ?string $recordTitleAttribute = 'id';

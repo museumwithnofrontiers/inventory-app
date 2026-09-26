@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\AttachAction;
 use Filament\Tables\Actions\DetachAction;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ArtistsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'artists';
 
     protected static ?string $recordTitleAttribute = 'internal_name';

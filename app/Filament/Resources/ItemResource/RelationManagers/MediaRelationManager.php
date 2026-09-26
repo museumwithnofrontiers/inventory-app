@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Enums\MediaType;
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Models\ItemMedia;
 use Filament\Forms\Components\Select;
@@ -20,6 +21,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class MediaRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'itemMedia';
 
     protected static ?string $recordTitleAttribute = 'title';

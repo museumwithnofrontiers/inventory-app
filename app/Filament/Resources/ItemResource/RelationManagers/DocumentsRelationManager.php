@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Models\ItemDocument;
 use App\Support\FileSize;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class DocumentsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'itemDocuments';
 
     protected static ?string $recordTitleAttribute = 'original_name';
