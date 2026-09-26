@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property string|null $display_label
+ */
 class Dynasty extends Model
 {
     /** @use HasFactory<DynastyFactory> */

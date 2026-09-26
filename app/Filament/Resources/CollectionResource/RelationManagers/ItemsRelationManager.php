@@ -10,6 +10,7 @@ use App\Filament\Resources\PartnerResource;
 use App\Filament\Resources\ProjectResource;
 use App\Filament\Support\CollectionItemAppearance;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Item;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -77,8 +78,7 @@ class ItemsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                AttachAction::make()
-                    ->recordSelectSearchColumns(['internal_name']),
+                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::ITEMS),
             ])
             ->actions([
                 Action::make('view_appearance')
