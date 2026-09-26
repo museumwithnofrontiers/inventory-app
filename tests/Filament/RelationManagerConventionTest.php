@@ -176,8 +176,8 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // has-many (4) — #1864's audit: no actions at all today.
-        ChildCollectionsRelationManager::class,
+        // has-many (3) — #1864's audit: no actions at all today.
+        // ChildCollectionsRelationManager: done by A1.1 (#1896).
         ChildItemsRelationManager::class,
         PictureItemsRelationManager::class,
         OwnedItemsRelationManager::class,
