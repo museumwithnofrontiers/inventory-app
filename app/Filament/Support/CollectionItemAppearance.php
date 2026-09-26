@@ -4,6 +4,8 @@ namespace App\Filament\Support;
 
 use App\Models\CollectionItem;
 use App\Models\Language;
+use Filament\Forms\Components\Component;
+use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Actions\Action;
@@ -20,6 +22,25 @@ use Illuminate\Database\Eloquent\Model;
  */
 class CollectionItemAppearance
 {
+    /**
+     * Returns the collection_item pivot's own editable fields — display_order
+     * and extra — used identically by both ItemsRelationManager's and
+     * CollectionAppearancesRelationManager's Attach and Edit-pivot forms (M7
+     * story A2.1, #1900).
+     *
+     * @return array<int, Component>
+     */
+    public static function pivotFormFields(): array
+    {
+        return [
+            TextInput::make('display_order')
+                ->label('Display order')
+                ->numeric()
+                ->integer(),
+            ExtraJsonField::formComponent(),
+        ];
+    }
+
     /**
      * Returns a TextColumn for the pivot display_order field.
      */

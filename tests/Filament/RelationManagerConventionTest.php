@@ -169,9 +169,12 @@ class RelationManagerConventionTest extends TestCase
     ];
 
     /**
-     * Managers that don't yet meet their kind's full target. Expected today:
-     * every has-many, pivot, translations and inline manager (18) — nothing
-     * has migrated yet. Each story removes its own entry as part of its PR.
+     * Managers that don't yet meet their kind's full target. Originally every
+     * has-many, pivot, translations and inline manager (18) — nothing had
+     * migrated yet. M7 Story A2.1 (#1900) was the first to land, removing
+     * CollectionItemsRelationManager and CollectionAppearancesRelationManager
+     * (the collection_item pivot, both sides). Each story removes its own
+     * entry as part of its PR.
      *
      * @var array<int, class-string>
      */
@@ -182,10 +185,8 @@ class RelationManagerConventionTest extends TestCase
         PictureItemsRelationManager::class,
         OwnedItemsRelationManager::class,
 
-        // pivot (9)
-        CollectionItemsRelationManager::class,
+        // pivot (7)
         CollectionPartnersRelationManager::class,
-        CollectionAppearancesRelationManager::class,
         TagsRelationManager::class,
         ArtistsRelationManager::class,
         WorkshopsRelationManager::class,
