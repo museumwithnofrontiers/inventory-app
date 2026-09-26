@@ -86,6 +86,21 @@ trait AuthorizesRelationMutations
     }
 
     /**
+     * M7 Story A0.6 (#1895): every entry point into a resource lands on its
+     * View page (table `recordUrl` and every cross-resource link use
+     * `getUrl('view')`), so Filament's own default — read-only relation
+     * managers on View pages — hid Create/Edit/Delete everywhere a user
+     * actually lands, leaving them reachable only via the Edit page. A
+     * manager using this concern stays safe to unlock: every mutating action,
+     * built-in or custom, is already gated on `hostRecordCanBeUpdated()`
+     * above, so a view-only user (who fails that check) still sees none.
+     */
+    public function isReadOnly(): bool
+    {
+        return false;
+    }
+
+    /**
      * Whether the signed-in user may `update` this relation manager's owner
      * (host) record, via that record's own Tier-3 policy. Every mutating
      * action of the manager — built-in or custom — must be gated on this.
