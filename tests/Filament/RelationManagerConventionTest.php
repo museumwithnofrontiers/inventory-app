@@ -169,9 +169,9 @@ class RelationManagerConventionTest extends TestCase
     ];
 
     /**
-     * Managers that don't yet meet their kind's full target. Expected today:
-     * every has-many, pivot, translations and inline manager (18) — nothing
-     * has migrated yet. Each story removes its own entry as part of its PR.
+     * Managers that don't yet meet their kind's full target. Each story
+     * removes its own entry as part of its PR; translations (3) left this
+     * list in #1904 (M7 story A3.1).
      *
      * @var array<int, class-string>
      */
@@ -192,11 +192,6 @@ class RelationManagerConventionTest extends TestCase
         DynastiesRelationManager::class,
         TimelineEventsRelationManager::class,
         CollectionParticipationsRelationManager::class,
-
-        // translations (3)
-        CollectionTranslationsRelationManager::class,
-        ItemTranslationsRelationManager::class,
-        PartnerTranslationsRelationManager::class,
 
         // inline (2)
         MediaRelationManager::class,

@@ -11,14 +11,17 @@ use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsR
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\User;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -288,22 +291,24 @@ class CollectionResourceTest extends TestCase
 
         $this->setCurrentPanel();
 
+        // M7 story A3.1 (#1904): Create no longer opens an inline form — it
+        // navigates to CollectionTranslationResource's Create page, collection pre-filled.
         Livewire::actingAs($user)
             ->test(TranslationsRelationManager::class, [
                 'ownerRecord' => $collection,
                 'pageClass' => EditCollection::class,
             ])
-            ->mountTableAction('create')
-            ->setTableActionData([
-                'language_id' => $language->id,
-                'context_id' => $context->id,
-                'title' => 'Temple of Amman',
-                'description' => 'A temple in Amman.',
-            ])
-            ->callMountedTableAction()
-            ->assertHasNoTableActionErrors();
+            ->assertTableActionExists('create', fn (Action $action): bool => $action->getUrl() === ResourceCreateUrl::for(
+                CollectionTranslationResource::class,
+                ['collection_id' => $collection->id]
+            ));
 
-        $translation = $collection->translations()->firstOrFail();
+        $translation = $collection->translations()->create([
+            'language_id' => $language->id,
+            'context_id' => $context->id,
+            'title' => 'Temple of Amman',
+            'description' => 'A temple in Amman.',
+        ]);
 
         Livewire::actingAs($user)
             ->test(TranslationsRelationManager::class, [
