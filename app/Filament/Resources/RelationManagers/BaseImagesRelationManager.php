@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RelationManagers;
 
 use App\Contracts\DetachableImage;
 use App\Contracts\StreamableImageFile;
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Models\AvailableImage;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseImagesRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static ?string $recordTitleAttribute = 'path';
 
     protected static ?string $title = 'Images';
@@ -87,6 +90,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                 Action::make('attach')
                     ->label('Attach image')
                     ->icon('heroicon-o-paper-clip')
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
                     ->form([
                         Select::make('available_image_id')
                             ->label('Available image')
@@ -172,6 +176,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                     ->label('Detach')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
                     ->requiresConfirmation()
                     ->modalHeading('Detach image')
                     ->modalDescription('This will move the image back to the available image pool. You can re-attach it later.')

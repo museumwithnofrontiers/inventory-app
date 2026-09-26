@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\TimelineEventResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Support\ItemDisplayLabel;
 use App\Models\Item;
@@ -16,6 +17,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ItemsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'items';
 
     protected static ?string $recordTitleAttribute = 'internal_name';

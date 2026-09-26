@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
 use App\Enums\ItemType;
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Pages\ViewCollectionItemAppearance;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
@@ -22,6 +23,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ItemsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'attachedItems';
 
     protected static ?string $recordTitleAttribute = 'internal_name';

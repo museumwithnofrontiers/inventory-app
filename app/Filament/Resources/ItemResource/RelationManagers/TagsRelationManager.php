@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Enums\Permission;
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\TagResource;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\AttachAction;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class TagsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'tags';
 
     protected static ?string $recordTitleAttribute = 'internal_name';

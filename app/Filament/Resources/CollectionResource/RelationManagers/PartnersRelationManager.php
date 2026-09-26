@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
 use App\Enums\PartnerLevel;
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\CountryResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\PartnerDisplayLabel;
@@ -19,6 +20,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class PartnersRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'partners';
 
     protected static ?string $recordTitleAttribute = 'internal_name';
