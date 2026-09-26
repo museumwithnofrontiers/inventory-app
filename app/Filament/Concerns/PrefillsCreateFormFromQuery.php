@@ -20,7 +20,7 @@ use Illuminate\Support\Facades\Auth;
  * that query string back into a filled form.
  *
  * Locked convention:
- *  - Only {@see self::WHITELISTED_QUERY_KEYS} are ever read; a page declares
+ *  - Only {@see ResourceCreateUrl::QUERY_KEYS} are ever read; a page declares
  *    the subset it accepts, and what each one refers to, via
  *    {@see self::queryPrefillFields()}. Anything outside that master set is
  *    ignored even if a page's map mentions it, so a typo can never smuggle an
@@ -46,13 +46,6 @@ use Illuminate\Support\Facades\Auth;
  */
 trait PrefillsCreateFormFromQuery
 {
-    /**
-     * The only query-string keys any page may ever read.
-     *
-     * @var array<int, string>
-     */
-    private const WHITELISTED_QUERY_KEYS = ['parent_id', 'partner_id', 'type', 'item_id', 'collection_id'];
-
     /**
      * The keys this page accepts, and what each one refers to.
      *
@@ -82,7 +75,7 @@ trait PrefillsCreateFormFromQuery
         $resolved = [];
 
         /** @var array<string, class-string<Model>|class-string<BackedEnum>> $fields */
-        $fields = Arr::only($this->queryPrefillFields(), self::WHITELISTED_QUERY_KEYS);
+        $fields = Arr::only($this->queryPrefillFields(), ResourceCreateUrl::QUERY_KEYS);
 
         foreach ($fields as $key => $type) {
             $raw = request()->query($key);

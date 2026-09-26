@@ -26,9 +26,12 @@ use InvalidArgumentException;
 class ResourceCreateUrl
 {
     /**
+     * The only query-string keys a create page may ever be given. The
+     * pre-fill trait reads this same list, so the two can't drift apart.
+     *
      * @var array<int, string>
      */
-    private const WHITELISTED_KEYS = ['parent_id', 'partner_id', 'type', 'item_id', 'collection_id'];
+    public const QUERY_KEYS = ['parent_id', 'partner_id', 'type', 'item_id', 'collection_id'];
 
     /**
      * @param  class-string<\Filament\Resources\Resource>  $resource
@@ -36,7 +39,7 @@ class ResourceCreateUrl
      */
     public static function for(string $resource, array $parameters): string
     {
-        $unknown = array_diff(array_keys($parameters), self::WHITELISTED_KEYS);
+        $unknown = array_diff(array_keys($parameters), self::QUERY_KEYS);
 
         if ($unknown !== []) {
             throw new InvalidArgumentException('Unsupported create-page query key(s): '.implode(', ', $unknown));
