@@ -12,7 +12,6 @@ use App\Models\Collection;
 use App\Models\Item;
 use App\Models\Partner;
 use App\Models\User;
-use App\Policies\ItemPolicy;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -105,18 +104,16 @@ class PrefillsCreateFormFromQueryTest extends TestCase
     }
 
     /**
-     * ItemPolicy::view() normally just mirrors viewAny() (VIEW_DATA), so
-     * there is no permission subset that lets a user open /admin/items/create
-     * (itself gated on ItemResource::canViewAny(), i.e. VIEW_DATA) while
-     * failing `view` on an Item specifically. Standing in a policy that
-     * denies `view` for this one record — every other ability still
-     * delegates to the real ItemPolicy — is the only way to exercise "exists,
-     * but not viewable" without touching the page's own access gate.
+     * ItemPolicy::view() mirrors viewAny() (VIEW_DATA), and the create page
+     * itself requires viewAny(), so no permission set opens the page while
+     * failing `view` on one Item. A gate hook that denies only `view` on this
+     * record stands in for that case; every other ability still goes through
+     * the real ItemPolicy.
      */
     public function test_create_item_falls_back_to_clean_form_for_non_viewable_parent(): void
     {
         $parent = Item::factory()->Object()->create();
-        Gate::policy(Item::class, DenyItemViewPolicy::class);
+        Gate::before(fn (User $user, string $ability, array $arguments) => $ability === 'view' && ($arguments[0] ?? null) instanceof Item && $arguments[0]->is($parent) ? false : null);
 
         $user = $this->createCrudUser();
 
@@ -202,19 +199,5 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ->withQueryParams(['partner_id' => $partner->id])
             ->test(CreatePartnerTranslation::class)
             ->assertFormSet(['partner_id' => $partner->id]);
-    }
-}
-
-/**
- * Test-only stand-in for ItemPolicy: every ability behaves exactly as the
- * real policy except `view`, which always denies. Used to exercise "record
- * exists but this user can't view it" without touching production code — see
- * test_create_item_falls_back_to_clean_form_for_non_viewable_parent().
- */
-class DenyItemViewPolicy extends ItemPolicy
-{
-    public function view(User $user, Item $item): bool
-    {
-        return false;
     }
 }
