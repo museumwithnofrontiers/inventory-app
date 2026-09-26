@@ -11,6 +11,7 @@ use App\Models\Language;
 use App\Models\Partner;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -22,6 +23,7 @@ use Tests\TestCase;
  */
 class InfolistLayoutTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     // ── Item ────────────────────────────────────────────────────────────────────
@@ -151,37 +153,12 @@ class InfolistLayoutTest extends TestCase
 
     // ── Helpers ─────────────────────────────────────────────────────────────────
 
-    protected function createReferenceDataUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function createViewUser(): User
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
             Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
         ]);
 
         return $user;

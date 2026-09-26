@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Models\AvailableImage;
 use App\Models\Collection;
 use App\Models\CollectionImage;
@@ -10,14 +9,15 @@ use App\Models\Item;
 use App\Models\ItemImage;
 use App\Models\Partner;
 use App\Models\PartnerImage;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class FilamentImageRoutesTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_filament_available_image_view_route_returns_image_inline(): void
@@ -30,7 +30,7 @@ class FilamentImageRoutesTest extends TestCase
         $imagePath = trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path;
         Storage::disk($disk)->put($imagePath, 'fake-jpeg-data');
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $response = $this->actingAs($user)->get(
             route('filament.admin.available-image.view', ['availableImage' => $availableImage])
@@ -50,7 +50,7 @@ class FilamentImageRoutesTest extends TestCase
         $imagePath = trim(config('localstorage.available.images.directory'), '/').'/'.$availableImage->path;
         Storage::disk($disk)->put($imagePath, 'fake-jpeg-data');
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $response = $this->actingAs($user)->get(
             route('filament.admin.available-image.download', ['availableImage' => $availableImage])
@@ -71,7 +71,7 @@ class FilamentImageRoutesTest extends TestCase
         $imagesDir = trim(config('localstorage.available.images.directory'), '/');
         Storage::disk($disk)->put($imagesDir.'/'.$itemImage->path, 'fake-jpeg-data');
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $response = $this->actingAs($user)->get(
             route('filament.admin.item-image.view', ['item' => $item, 'itemImage' => $itemImage])
@@ -92,7 +92,7 @@ class FilamentImageRoutesTest extends TestCase
         $item2 = Item::factory()->Object()->create();
         $itemImage = ItemImage::factory()->forItem($item1)->create(['path' => 'mismatch-test.jpg']);
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $this->actingAs($user)->get(
             route('filament.admin.item-image.view', ['item' => $item2, 'itemImage' => $itemImage])
@@ -110,7 +110,7 @@ class FilamentImageRoutesTest extends TestCase
         $imagesDir = trim(config('localstorage.available.images.directory'), '/');
         Storage::disk($disk)->put($imagesDir.'/'.$itemImage->path, 'fake-jpeg-data');
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $response = $this->actingAs($user)->get(
             route('filament.admin.item-image.download', ['item' => $item, 'itemImage' => $itemImage])
@@ -128,7 +128,7 @@ class FilamentImageRoutesTest extends TestCase
         $collection2 = Collection::factory()->create();
         $collectionImage = CollectionImage::factory()->forCollection($collection1)->create(['path' => 'col-mismatch.jpg']);
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $this->actingAs($user)->get(
             route('filament.admin.collection-image.view', ['collection' => $collection2, 'collectionImage' => $collectionImage])
@@ -143,7 +143,7 @@ class FilamentImageRoutesTest extends TestCase
         $partner2 = Partner::factory()->create();
         $partnerImage = PartnerImage::factory()->forPartner($partner1)->create(['path' => 'par-mismatch.jpg']);
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $this->actingAs($user)->get(
             route('filament.admin.partner-image.view', ['partner' => $partner2, 'partnerImage' => $partnerImage])
@@ -159,16 +159,5 @@ class FilamentImageRoutesTest extends TestCase
         $this->get(
             route('filament.admin.available-image.view', ['availableImage' => $availableImage])
         )->assertRedirect('/admin/login');
-    }
-
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
     }
 }

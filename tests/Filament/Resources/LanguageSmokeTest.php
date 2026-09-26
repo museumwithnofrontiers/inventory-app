@@ -2,25 +2,24 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\LanguageResource\Pages\ListLanguage;
 use App\Models\Language;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class LanguageSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_language_resource_handles_a_ten_thousand_row_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $this->seedLanguages();
 
         DB::flushQueryLog();
@@ -66,17 +65,6 @@ class LanguageSmokeTest extends TestCase
             ->assertCanSeeTableRecords($expectedSortedDescending, inOrder: true);
     }
 
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function seedLanguages(): void
     {
         $timestamp = Carbon::now();
@@ -106,10 +94,5 @@ class LanguageSmokeTest extends TestCase
     protected function isoCodeFromIndex(int $index): string
     {
         return str_pad(strtolower(base_convert($index, 10, 36)), 3, '0', STR_PAD_LEFT);
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

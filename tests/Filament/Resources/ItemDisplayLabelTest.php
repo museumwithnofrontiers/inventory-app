@@ -14,9 +14,9 @@ use App\Models\Context;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -33,16 +33,12 @@ use Tests\TestCase;
  */
 class ItemDisplayLabelTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     // ──────────────────────────────────────────────────────────────────────────
     // Helpers
     // ──────────────────────────────────────────────────────────────────────────
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-    }
 
     protected function createViewUser(): User
     {
@@ -50,20 +46,6 @@ class ItemDisplayLabelTest extends TestCase
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
             Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
         ]);
 
         return $user;

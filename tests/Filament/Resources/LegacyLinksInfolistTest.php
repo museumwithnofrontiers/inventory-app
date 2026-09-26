@@ -3,17 +3,17 @@
 namespace Tests\Filament\Resources;
 
 use App\Enums\ItemType;
-use App\Enums\Permission;
 use App\Models\Collection;
 use App\Models\Item;
 use App\Models\Partner;
 use App\Models\Project;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class LegacyLinksInfolistTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_item_view_shows_resolved_legacy_links(): void
@@ -87,19 +87,5 @@ class LegacyLinksInfolistTest extends TestCase
             ->assertSee('Legacy links')
             ->assertSee('Requires lookup')
             ->assertSee('The partner legacy URL needs a project code');
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
     }
 }

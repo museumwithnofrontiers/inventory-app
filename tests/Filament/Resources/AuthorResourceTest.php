@@ -9,17 +9,17 @@ use App\Models\Author;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
-use Tests\Traits\InteractsWithFilamentReferenceData;
 
 class AuthorResourceTest extends TestCase
 {
-    use InteractsWithFilamentReferenceData;
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_author_resource_pages(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $author = Author::factory()->create([
             'name' => 'Jane Doe',
             'internal_name' => 'jane-doe',
@@ -45,7 +45,7 @@ class AuthorResourceTest extends TestCase
 
     public function test_authorized_users_can_create_edit_and_delete_authors(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $author = Author::factory()->create([
             'name' => 'Jane Doe',
             'internal_name' => 'jane-doe',

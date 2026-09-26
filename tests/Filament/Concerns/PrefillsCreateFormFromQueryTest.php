@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Concerns;
 
-use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource\Pages\CreateCollection;
 use App\Filament\Resources\CollectionTranslationResource\Pages\CreateCollectionTranslation;
 use App\Filament\Resources\ItemResource\Pages\CreateItem;
@@ -12,7 +11,6 @@ use App\Models\Collection;
 use App\Models\Item;
 use App\Models\Partner;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
@@ -33,28 +31,8 @@ use Tests\TestCase;
  */
 class PrefillsCreateFormFromQueryTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
-
-    // ── Helpers ──────────────────────────────────────────────────────────────
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-    }
 
     // ── CreateItem: parent_id (Item) + type (ItemType enum) ─────────────────
 

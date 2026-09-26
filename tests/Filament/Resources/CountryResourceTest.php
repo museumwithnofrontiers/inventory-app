@@ -2,25 +2,24 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\CountryResource\Pages\CreateCountry;
 use App\Filament\Resources\CountryResource\Pages\EditCountry;
 use App\Filament\Resources\CountryResource\Pages\ListCountry;
 use App\Models\Country;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class CountryResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_country_resource_pages(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $country = Country::factory()->create(['id' => 'jor', 'internal_name' => 'Jordan']);
 
         $this->actingAs($user)->get('/admin/countries')
@@ -43,7 +42,7 @@ class CountryResourceTest extends TestCase
 
     public function test_authorized_users_can_create_edit_and_delete_countries(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $country = Country::factory()->create([
             'id' => 'jor',
             'internal_name' => 'Jordan',
@@ -98,21 +97,5 @@ class CountryResourceTest extends TestCase
         $this->assertDatabaseMissing('countries', [
             'id' => 'jor',
         ]);
-    }
-
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

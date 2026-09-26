@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
 use App\Filament\Resources\TimelineEventResource\Pages\CreateTimelineEvent;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
@@ -14,10 +13,9 @@ use App\Models\ItemTranslation;
 use App\Models\Language;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
@@ -30,6 +28,7 @@ use Tests\TestCase;
  */
 class ExtraJsonFieldTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     // ─── Timeline ────────────────────────────────────────────────────────────────
@@ -348,23 +347,4 @@ class ExtraJsonFieldTest extends TestCase
     }
 
     // ─── Helpers ────────────────────────────────────────────────────────────────
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-    }
 }

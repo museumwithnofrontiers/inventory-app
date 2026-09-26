@@ -2,25 +2,24 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\LanguageResource\Pages\CreateLanguage;
 use App\Filament\Resources\LanguageResource\Pages\EditLanguage;
 use App\Filament\Resources\LanguageResource\Pages\ListLanguage;
 use App\Models\Language;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class LanguageResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_language_resource_pages(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
 
         $this->actingAs($user)->get('/admin/languages')
@@ -43,7 +42,7 @@ class LanguageResourceTest extends TestCase
 
     public function test_authorized_users_can_create_edit_and_delete_languages(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $language = Language::factory()->create([
             'id' => 'eng',
             'internal_name' => 'English',
@@ -102,7 +101,7 @@ class LanguageResourceTest extends TestCase
 
     public function test_language_resource_filters_by_default_status_and_sets_the_default_language(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $defaultLanguage = Language::factory()->withIsDefault()->create([
             'id' => 'eng',
             'internal_name' => 'English',
@@ -141,21 +140,5 @@ class LanguageResourceTest extends TestCase
 
         $this->assertTrue($arabic->fresh()->is_default);
         $this->assertFalse($french->fresh()->is_default);
-    }
-
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

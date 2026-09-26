@@ -5,13 +5,14 @@ namespace Tests\Filament\Pages;
 use App\Enums\Permission;
 use App\Filament\Pages\PendingRegistrationsPage;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class PendingRegistrationsPageTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     protected function createManagerUser(): User
@@ -23,11 +24,6 @@ class PendingRegistrationsPageTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
     public function test_pending_registrations_page_is_accessible_to_authorized_users(): void

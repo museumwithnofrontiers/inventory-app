@@ -2,15 +2,12 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\AvailableImageResource\Pages\ListAvailableImage;
 use App\Models\AvailableImage;
 use App\Models\Item;
 use App\Models\ItemImage;
 use App\Models\Partner;
 use App\Models\PartnerImage;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -18,10 +15,12 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class AvailableImageSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_available_image_resource_handles_a_one_thousand_image_pool(): void
@@ -29,7 +28,7 @@ class AvailableImageSmokeTest extends TestCase
         Storage::fake('local');
         Storage::fake('image-originals');
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $this->seedAvailableImages(1_000);
 
         DB::flushQueryLog();
@@ -332,17 +331,6 @@ class AvailableImageSmokeTest extends TestCase
         $this->assertEquals('© Partner Meta', $returned->copyright);
     }
 
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function seedAvailableImages(int $count): void
     {
         $timestamp = Carbon::now();
@@ -366,10 +354,5 @@ class AvailableImageSmokeTest extends TestCase
             $dir = trim(config('localstorage.available.images.directory'), '/');
             Storage::disk(config('localstorage.available.images.disk'))->put($dir.'/'.$row['path'], 'fake-image');
         }
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

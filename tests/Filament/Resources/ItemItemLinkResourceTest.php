@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\ItemItemLinkResource\Pages\CreateItemItemLink;
 use App\Filament\Resources\ItemItemLinkResource\Pages\EditItemItemLink;
 use App\Filament\Resources\ItemItemLinkResource\Pages\ListItemItemLink;
@@ -15,37 +14,16 @@ use App\Models\Item;
 use App\Models\ItemItemLink;
 use App\Models\ItemItemLinkTranslation;
 use App\Models\Language;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class ItemItemLinkResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
-    }
 
     // ── ItemItemLinkResource pages ────────────────────────────────────────────
 

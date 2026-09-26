@@ -2,25 +2,24 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\ProjectResource\Pages\ListProject;
 use App\Models\Project;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Database\Eloquent\Factories\Sequence;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class ProjectSmokeTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_project_resource_handles_a_ten_thousand_row_dataset(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
         $this->seedProjects();
 
         DB::flushQueryLog();
@@ -66,17 +65,6 @@ class ProjectSmokeTest extends TestCase
             ->assertCanSeeTableRecords($expectedSortedDescending, inOrder: true);
     }
 
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function seedProjects(): void
     {
         $timestamp = Carbon::now();
@@ -101,10 +89,5 @@ class ProjectSmokeTest extends TestCase
         foreach (array_chunk($rows, 1000) as $chunk) {
             Project::query()->insert($chunk);
         }
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

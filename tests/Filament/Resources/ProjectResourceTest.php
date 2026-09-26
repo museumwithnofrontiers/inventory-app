@@ -15,14 +15,15 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Project;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class ProjectResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_project_resource_pages(): void
@@ -158,20 +159,6 @@ class ProjectResourceTest extends TestCase
             );
     }
 
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
     protected function createViewAndReferenceDataUser(): User
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
@@ -182,10 +169,5 @@ class ProjectResourceTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

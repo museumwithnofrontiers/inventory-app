@@ -13,17 +13,17 @@ use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
-use Tests\Traits\InteractsWithFilamentReferenceData;
 
 class TagResourceTest extends TestCase
 {
-    use InteractsWithFilamentReferenceData;
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     public function test_authorized_users_can_render_all_tag_resource_pages(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $tag = Tag::factory()->keyword()->create([
             'internal_name' => 'woodwork',
             'description' => 'Woodwork',
@@ -48,7 +48,7 @@ class TagResourceTest extends TestCase
 
     public function test_authorized_users_can_create_edit_and_delete_tags(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
         $tag = Tag::factory()->keyword()->create([
             'internal_name' => 'woodwork',
@@ -120,7 +120,7 @@ class TagResourceTest extends TestCase
 
     public function test_tag_resource_uses_description_as_the_human_label_and_filters_by_category(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $keyword = Tag::factory()->keyword()->create([
             'internal_name' => 'woodwork',
             'description' => 'Woodwork',
@@ -148,7 +148,7 @@ class TagResourceTest extends TestCase
 
     public function test_tag_table_language_column_links_to_language_resource_with_manage_reference_data(): void
     {
-        $user = $this->createAuthorizedUser();
+        $user = $this->createReferenceDataUser();
         $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
         $tag = Tag::factory()->keyword()->create([
             'internal_name' => 'woodwork',

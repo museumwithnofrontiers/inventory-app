@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
 use App\Filament\Resources\PartnerTranslationResource\RelationManagers\ImagesRelationManager;
 use App\Models\AvailableImage;
@@ -11,15 +10,15 @@ use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
-use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class PartnerTranslationImageResourceTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     // ─── Images relation manager ──────────────────────────────────────────────
@@ -194,7 +193,7 @@ class PartnerTranslationImageResourceTest extends TestCase
         $imagesDir = trim(config('localstorage.available.images.directory'), '/');
         Storage::disk($disk)->put($imagesDir.'/'.$image->path, 'fake-jpeg-data');
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $response = $this->actingAs($user)->get(
             route('filament.admin.partner-translation-image.view', [
@@ -221,7 +220,7 @@ class PartnerTranslationImageResourceTest extends TestCase
         $imagesDir = trim(config('localstorage.available.images.directory'), '/');
         Storage::disk($disk)->put($imagesDir.'/'.$image->path, 'fake-jpeg-data');
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $response = $this->actingAs($user)->get(
             route('filament.admin.partner-translation-image.download', [
@@ -244,7 +243,7 @@ class PartnerTranslationImageResourceTest extends TestCase
             ->forPartnerTranslation($translation1)
             ->create(['path' => 'pt-mismatch.jpg']);
 
-        $user = $this->createAuthorizedUser();
+        $user = $this->createViewOnlyUser();
 
         $this->actingAs($user)->get(
             route('filament.admin.partner-translation-image.view', [
@@ -304,35 +303,5 @@ class PartnerTranslationImageResourceTest extends TestCase
             'context_id' => $context->id,
             'name' => 'Test Translation',
         ]);
-    }
-
-    protected function createCrudUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function createAuthorizedUser(): User
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 }

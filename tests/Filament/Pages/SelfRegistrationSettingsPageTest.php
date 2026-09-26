@@ -6,13 +6,14 @@ use App\Enums\Permission;
 use App\Filament\Pages\SelfRegistrationSettingsPage;
 use App\Models\Setting;
 use App\Models\User;
-use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
+use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 class SelfRegistrationSettingsPageTest extends TestCase
 {
+    use InteractsWithAdminPanel;
     use RefreshDatabase;
 
     protected function createManagerUser(): User
@@ -24,11 +25,6 @@ class SelfRegistrationSettingsPageTest extends TestCase
         ]);
 
         return $user;
-    }
-
-    protected function setCurrentPanel(): void
-    {
-        Filament::setCurrentPanel(Filament::getPanel('admin'));
     }
 
     public function test_self_registration_settings_page_is_accessible_to_authorized_users(): void
