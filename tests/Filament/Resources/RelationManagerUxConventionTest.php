@@ -54,7 +54,7 @@ use Tests\TestCase;
  * 4. Metadata columns (timestamps, mime_type, size) are toggleable and hidden by default.
  * 5. Pagination defaults are consistent: defaultPaginationPageOption(25), paginated([25, 50, 100]).
  */
-class RelationManagerConventionTest extends TestCase
+class RelationManagerUxConventionTest extends TestCase
 {
     use InteractsWithAdminPanel;
     use RefreshDatabase;
