@@ -447,7 +447,9 @@ class RelationManagerConventionTest extends TestCase
 
     /**
      * Target per #1906/#1907: a header `Upload` action (queued validation),
-     * row `Download` / `Edit` (metadata modal) / `Delete`.
+     * row `Download` / `Edit` (metadata modal) / `Delete`. Provisional: the
+     * documents design story (A4.1, #1905) may rename these, and the story
+     * that implements the design updates this expectation to match.
      */
     private function assertDocumentsConvention(string $class, array $config): void
     {
@@ -514,17 +516,19 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * M7 story A0.2 locked RecordSelect as the one place a record select is
-     * built, but it sets no marker on the Select it returns — there's
-     * nothing to introspect at runtime that proves "this came from
-     * RecordSelect". So this is two checks instead of one:
+     * M7 story A0.2 locked RecordSelect as the one place an attach, associate
+     * or parent select is built, but it sets no marker on the Select it
+     * returns — there's nothing to introspect at runtime that proves "this
+     * came from RecordSelect". So this is two checks instead of one:
      *
-     * 1. Source (here): the manager's own file never constructs a raw
-     *    `Select::make(...)`, never calls `->preload()`, and routes any
+     * 1. Source (here): the manager's file, and those of its own base classes
+     *    under app/, never preload a select, never replace or re-search the
+     *    attach/associate record select themselves, and route every
      *    AttachAction/AssociateAction through `RecordSelect::recordSelectFor()`.
-     *    A blunt heuristic — it would flag an unrelated enum Select in the
-     *    same file — but it's what the story asked for and keeps this test
-     *    simple.
+     *    A Select over an enum or a small reference table (a pivot's `level`,
+     *    a media `type`, a language) is not a record select and stays
+     *    allowed, and so does narrowing the options with
+     *    `recordSelectOptionsQuery()` (a cycle guard).
      * 2. Behaviour ({@see self::assertRecordSelectBehaviour()}): the actual
      *    record select every attach/associate action ends up with is
      *    searchable and never preloaded, which is what RecordSelect
@@ -532,16 +536,40 @@ class RelationManagerConventionTest extends TestCase
      */
     private function assertRecordSelectSourceRule(string $class): void
     {
-        $file = (new ReflectionClass($class))->getFileName();
-        $contents = $file !== false ? file_get_contents($file) : false;
-        $this->assertIsString($contents, "Could not read the source file of [{$class}].");
+        foreach ($this->sourceFilesOf($class) as $file) {
+            $contents = file_get_contents($file);
+            $this->assertIsString($contents, "Could not read [{$file}].");
 
-        $this->assertStringNotContainsString('Select::make(', $contents, "{$class}: must not construct a raw Select::make(...) — build record selects via RecordSelect.");
-        $this->assertStringNotContainsString('->preload(', $contents, "{$class}: must not call ->preload() — RecordSelect never preloads.");
+            $this->assertStringNotContainsString('->preload(', $contents, "{$class}: {$file} must not preload a select — RecordSelect never preloads.");
+            $this->assertStringNotContainsString('->recordSelect(', $contents, "{$class}: {$file} must not replace the attach/associate record select — build it with RecordSelect::recordSelectFor().");
+            $this->assertStringNotContainsString('->recordSelectSearchColumns(', $contents, "{$class}: {$file} must not set its own record-select search columns — RecordSelect owns the search.");
 
-        if (str_contains($contents, 'AttachAction::make(') || str_contains($contents, 'AssociateAction::make(')) {
-            $this->assertStringContainsString('RecordSelect::recordSelectFor(', $contents, "{$class}: AttachAction/AssociateAction must be adapted via RecordSelect::recordSelectFor().");
+            if (str_contains($contents, 'AttachAction::make(') || str_contains($contents, 'AssociateAction::make(')) {
+                $this->assertStringContainsString('RecordSelect::recordSelectFor(', $contents, "{$class}: {$file} must adapt AttachAction/AssociateAction via RecordSelect::recordSelectFor().");
+            }
         }
+    }
+
+    /**
+     * The manager's own file and those of its parent classes that live under
+     * app/ (BaseImagesRelationManager, for instance), so a select moved into
+     * a shared base class is still checked.
+     *
+     * @return array<int, string>
+     */
+    private function sourceFilesOf(string $class): array
+    {
+        $files = [];
+
+        for ($reflection = new ReflectionClass($class); $reflection !== false; $reflection = $reflection->getParentClass()) {
+            $file = $reflection->getFileName();
+
+            if ($file !== false && str_starts_with($file, app_path())) {
+                $files[] = $file;
+            }
+        }
+
+        return $files;
     }
 
     private function assertRecordSelectBehaviour(AttachAction|AssociateAction $action, string $class): void
