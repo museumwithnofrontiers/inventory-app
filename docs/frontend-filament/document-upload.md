@@ -8,7 +8,17 @@ parent: Filament Admin Frontend
 # Document Upload Pipeline
 
 {: .important }
-> This is a **design document**. It specifies the pipeline that [M7 Story A4.2](https://github.com/museumwithnofrontiers/inventory-app/issues/1906) and [M7 Story A4.3](https://github.com/museumwithnofrontiers/inventory-app/issues/1907) implement. It contains no application code, no migration file and no config change of its own — see [Proposed migration](#proposed-migration--needs-pascals-approval) for the one schema change it asks Pascal to approve before A4.2 starts.
+> This is a **design document**. It specifies the pipeline that [M7 Story A4.2](https://github.com/museumwithnofrontiers/inventory-app/issues/1906) and [M7 Story A4.3](https://github.com/museumwithnofrontiers/inventory-app/issues/1907) implement. It contains no application code, no migration file and no config change of its own. The one schema change it needs, the [`document_uploads` migration](#approved-migration), was approved by Pascal on 2026-09-26 ([#1905](https://github.com/museumwithnofrontiers/inventory-app/issues/1905)), together with the [decisions](#decisions-2026-09-26) below.
+
+## Decisions (2026-09-26)
+
+Pascal took three decisions on this design ([#1905](https://github.com/museumwithnofrontiers/inventory-app/issues/1905)):
+
+1. **The `document_uploads` staging table is approved as proposed.** It is M7's only data-model change.
+2. **A rejected upload is reported by email:** a mail-channel notification, with no `notifications` table and no in-panel bell. See [Rejection & notification](#rejection--notification).
+3. **`DocumentUpload` is an explicit exception to CLAUDE.md's new-model rule.** That rule asks for a migration, factory, seeder, API resource, controller with Form Request, and tests. `DocumentUpload` is an internal, transient row that only the Filament `Upload` action writes, so it gets a migration, a factory and tests, and nothing else: no API resource, controller, Form Request, seeder or document-upload API endpoint.
+   
+   `ImageUpload` does have an upload API, because images are uploaded from several places. Documents are uploaded only from `DocumentsRelationManager`.
 
 Parent epic: [#1875 — M7 Epic A4: Media and documents](https://github.com/museumwithnofrontiers/inventory-app/issues/1875). This story: [#1905](https://github.com/museumwithnofrontiers/inventory-app/issues/1905). Locked decision (2026-09-21): documents get their own epic with a design story first — "own epic, design story first; must mirror the image pipeline's shape (upload → queued pre-processing → only validated files become attachable); validate only what the framework can (size range, extension allowlist e.g. pdf)".
 
@@ -39,7 +49,7 @@ Parent epic: [#1875 — M7 Epic A4: Media and documents](https://github.com/muse
   ],
   ```
 
-  **This default is wrong for a security boundary and must change before A4.2 ships real uploads.** `config/filesystems.php` has no `documents` disk of its own, so `DOCUMENTS_DISK=public` resolves to the `public` disk (`storage/app/public`, symlinked to `public/storage`) — i.e. every attached document would sit at a guessable, web-reachable URL with no authorization at all, the exact thing CLAUDE.md's image pipeline forbids ("Never store an original on the public disk"). A4.2 must add a private disk (mirroring `image-originals`) and point `documents.disk` at it. This is a **config change**, not a data-model change, and does not need the approval this document asks for below — but it is load-bearing enough that it is called out explicitly so A4.2 doesn't ship on the current default by accident.
+  **This default is wrong for a security boundary and must change before A4.2 ships real uploads.** `config/filesystems.php` has no `documents` disk of its own, so `DOCUMENTS_DISK=public` resolves to the `public` disk (`storage/app/public`, symlinked to `public/storage`) — i.e. every attached document would sit at a guessable, web-reachable URL with no authorization at all, the exact thing CLAUDE.md's image pipeline forbids ("Never store an original on the public disk"). A4.2 must add a private disk (mirroring `image-originals`) and point `documents.disk` at it. This is a **config change**, not a data-model change, and did not need the approval this design asked for — but it is load-bearing enough that it is called out explicitly so A4.2 doesn't ship on the current default by accident.
 - No `ItemDocumentPolicy` exists. `AuthorizesRelationMutations`'s own docblock (`app/Filament/Concerns/AuthorizesRelationMutations.php`) already lists `ItemDocument` among the related entities with "nothing further to check" beyond host `update` — confirmed by `relatedEntityAllows()` returning `true` when `Gate::getPolicyFor()` finds no policy. Documents stay outside `AttachedImageRegistry` (`app/Support/Images/AttachedImageRegistry.php`) too: that registry is for models implementing `StreamableImageFile`/`HasCopyright`/`BurnsCopyright` and served (burned) at `/pub`; `ItemDocument` does none of that (see [Contrast](#contrast-with-the-image-pipeline)).
 - No `notifications` table exists (`database/migrations/` has no `create_notifications_table` migration), and `AdminPanelProvider` doesn't call `->databaseNotifications()`. `User` already `use`s `Illuminate\Notifications\Notifiable` (`app/Models/User.php`), and the app already ships two notification classes on the `mail` channel — `App\Notifications\AdminPasswordResetNotification` and `App\Notifications\Filament\Auth\EmailTwoFactorCodeNotification` — which need no notifications table. This shapes the [notification](#rejection--notification) design below.
 
@@ -71,10 +81,10 @@ Mirrors the image pipeline's shape end to end — an upload lands privately, an 
 
 An alternative that avoids a new table — serializing the metadata directly onto `DocumentUploadEvent`'s constructor and letting Laravel's queue serialize the plain event object — was considered and rejected: it would lose the single durable, ID-addressable, queryable row that this codebase already uses for exactly this purpose (`ImageUpload::find($id)` is real, inspectable state; a job's serialized payload is not something anyone would `find()` in Tinker or log against), and it would leave `documents:cleanup-pending` (below) with no way to notice a stuck upload.
 
-### Proposed migration — needs Pascal's approval
+### Approved migration
 
-{: .warning }
-> No migration file is included in this PR. This schema is proposed here for review only; Pascal posts it as a comment on [#1905](https://github.com/museumwithnofrontiers/inventory-app/issues/1905) for explicit approval before A4.2 starts, per the epic's "no data-model change anywhere except what the documents design story (A4.1) explicitly asks Pascal to approve."
+{: .note }
+> Approved by Pascal on 2026-09-26 ([#1905](https://github.com/museumwithnofrontiers/inventory-app/issues/1905)), as the epic requires: "no data-model change anywhere except what the documents design story (A4.1) explicitly asks Pascal to approve." A4.2 writes the migration file; this document only specifies it.
 
 ```php
 Schema::create('document_uploads', function (Blueprint $table) {
@@ -160,9 +170,9 @@ No bulk actions are specified for documents (parity with `MediaRelationManager`'
 
 The queued listener is, by construction, running after the HTTP request that started the upload has already finished — a flash/session notification cannot reach the user, and Filament's own database-notification bell (`Notification::make()->sendToDatabase()`) needs a `notifications` table that doesn't exist in this app today (`php artisan notifications:table` was never run; `AdminPanelProvider` doesn't call `->databaseNotifications()`). Adding that table would be a second schema change on top of `document_uploads`, which conflicts with the issue's own framing of this design's migration as "the milestone's only data-model change."
 
-**Recommendation: a `mail`-channel Laravel notification**, sent to `$documentUpload->uploaded_by`'s user record — no schema change, and it's already this codebase's established pattern for user-facing notifications (`App\Notifications\AdminPasswordResetNotification`, `App\Notifications\Filament\Auth\EmailTwoFactorCodeNotification`; `User` already `use`s `Notifiable`). A new `App\Notifications\ItemDocumentUploadRejected` notification, carrying the original filename, the Item it was destined for, and a short, generic reason ("file type not allowed", "file too large/small") — never an internal exception message. Sent via `Notification::send($user, new ItemDocumentUploadRejected(...))` from inside the listener's rejection branch, for both "invalid file" and "unexpected error" outcomes (see [step 3](#the-pipeline)) — the user only ever needs to know "your upload didn't go through," not why the server-side code failed.
+**Decision: a `mail`-channel Laravel notification**, sent to `$documentUpload->uploaded_by`'s user record — no schema change, and it's already this codebase's established pattern for user-facing notifications (`App\Notifications\AdminPasswordResetNotification`, `App\Notifications\Filament\Auth\EmailTwoFactorCodeNotification`; `User` already `use`s `Notifiable`). A new `App\Notifications\ItemDocumentUploadRejected` notification, carrying the original filename, the Item it was destined for, and a short, generic reason ("file type not allowed", "file too large/small") — never an internal exception message. Sent via `Notification::send($user, new ItemDocumentUploadRejected(...))` from inside the listener's rejection branch, for both "invalid file" and "unexpected error" outcomes (see [step 3](#the-pipeline)) — the user only ever needs to know "your upload didn't go through," not why the server-side code failed.
 
-If Pascal would rather have in-panel (bell-icon) notifications instead of email, that only requires adding the standard Laravel `notifications` table (`php artisan notifications:table`, a stock migration with no app-specific columns) and turning on `->databaseNotifications()` in `AdminPanelProvider` — technically simple, but it is an additional schema change this document does not propose, to keep this design's approval ask to the single `document_uploads` table above. If Pascal approves both, A4.2 can add the stock notifications table alongside `document_uploads` in the same approved comment.
+Pascal chose email on 2026-09-26. In-panel (bell-icon) notifications were the alternative. They would need Laravel's stock `notifications` table and `->databaseNotifications()` in `AdminPanelProvider`, a second schema change, and were not chosen.
 
 ## Filament routing and download
 
@@ -227,5 +237,6 @@ All of the above are config changes for **A4.2** to make, not this PR.
 - Content-level validation (real PDF parsing, malware/virus scanning) — "validate only what the framework can" is Pascal's explicit boundary for this epic.
 - Any reuse/library concept for documents (no `AvailableDocument`, no cross-Item document picker) — nothing in the epic or its stories asks for one, and `ItemDocument.item_id` is a plain FK, not a pivot.
 - Public/`/pub`-style serving of documents, and therefore no copyright burning, no `ImageBurner`/`PublicRenditions` equivalent, no `AttachedImageRegistry` membership.
-- In-panel (database) notifications — recommended as a follow-up if Pascal prefers them over email, contingent on a separate, explicitly-approved `notifications` table (see [Rejection & notification](#rejection--notification)).
+- In-panel (database) notifications: Pascal chose email (see [Rejection & notification](#rejection--notification)).
+- An API endpoint for uploading documents: `DocumentUpload` is Filament-only (see [Decisions](#decisions-2026-09-26)).
 - Editing or replacing the file behind an existing `ItemDocument` — A4.3's `Edit` modal is metadata-only (`title`, `language`, `display_order`, `extra`); replacing the file itself would mean uploading a new document and deleting the old one.
