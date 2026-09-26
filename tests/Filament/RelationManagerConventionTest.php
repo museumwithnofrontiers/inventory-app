@@ -169,23 +169,19 @@ class RelationManagerConventionTest extends TestCase
     ];
 
     /**
-     * Managers that don't yet meet their kind's full target. Originally every
-     * has-many, pivot, translations and inline manager (18) — nothing had
-     * migrated yet. M7 Story A2.1 (#1900) was the first to land, removing
-     * CollectionItemsRelationManager and CollectionAppearancesRelationManager
-     * (the collection_item pivot, both sides). Each story removes its own
-     * entry as part of its PR.
+     * Managers that don't yet meet their kind's full target. Each story
+     * removes its own entry as part of its PR; the milestone is done when
+     * this list is empty.
      *
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // has-many (3) — #1864's audit: no actions at all today.
-        // ChildCollectionsRelationManager: done by A1.1 (#1896).
+        // has-many
         ChildItemsRelationManager::class,
         PictureItemsRelationManager::class,
         OwnedItemsRelationManager::class,
 
-        // pivot (7)
+        // pivot
         CollectionPartnersRelationManager::class,
         TagsRelationManager::class,
         ArtistsRelationManager::class,
@@ -194,12 +190,7 @@ class RelationManagerConventionTest extends TestCase
         TimelineEventsRelationManager::class,
         CollectionParticipationsRelationManager::class,
 
-        // translations (3)
-        CollectionTranslationsRelationManager::class,
-        ItemTranslationsRelationManager::class,
-        PartnerTranslationsRelationManager::class,
-
-        // inline (2)
+        // inline
         MediaRelationManager::class,
         DocumentsRelationManager::class,
     ];

@@ -13,7 +13,9 @@ use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\CollectionParticipationsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Resources\PartnerTranslationResource;
 use App\Filament\Resources\ProjectResource;
+use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Country;
@@ -22,6 +24,7 @@ use App\Models\Language;
 use App\Models\Partner;
 use App\Models\Project;
 use App\Models\User;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -209,22 +212,24 @@ class PartnerResourceTest extends TestCase
 
         $this->setCurrentPanel();
 
+        // M7 story A3.1 (#1904): Create no longer opens an inline form — it
+        // navigates to PartnerTranslationResource's Create page, partner pre-filled.
         Livewire::actingAs($user)
             ->test(TranslationsRelationManager::class, [
                 'ownerRecord' => $partner,
                 'pageClass' => EditPartner::class,
             ])
-            ->mountTableAction('create')
-            ->setTableActionData([
-                'language_id' => $language->id,
-                'context_id' => $context->id,
-                'name' => 'Jordan Museum',
-                'description' => 'Museum description',
-            ])
-            ->callMountedTableAction()
-            ->assertHasNoTableActionErrors();
+            ->assertTableActionExists('create', fn (Action $action): bool => $action->getUrl() === ResourceCreateUrl::for(
+                PartnerTranslationResource::class,
+                ['partner_id' => $partner->id]
+            ));
 
-        $translation = $partner->translations()->firstOrFail();
+        $translation = $partner->translations()->create([
+            'language_id' => $language->id,
+            'context_id' => $context->id,
+            'name' => 'Jordan Museum',
+            'description' => 'Museum description',
+        ]);
 
         Livewire::actingAs($user)
             ->test(TranslationsRelationManager::class, [

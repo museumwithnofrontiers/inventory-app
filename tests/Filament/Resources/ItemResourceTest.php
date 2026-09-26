@@ -16,8 +16,10 @@ use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationMa
 use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Resources\ItemTranslationResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Resources\ProjectResource;
+use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Country;
@@ -28,6 +30,7 @@ use App\Models\Partner;
 use App\Models\Project;
 use App\Models\Tag;
 use App\Models\User;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -272,23 +275,25 @@ class ItemResourceTest extends TestCase
 
         $this->setCurrentPanel();
 
+        // M7 story A3.1 (#1904): Create no longer opens an inline form — it
+        // navigates to ItemTranslationResource's Create page, item pre-filled.
         Livewire::actingAs($user)
             ->test(TranslationsRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
-            ->mountTableAction('create')
-            ->setTableActionData([
-                'language_id' => $language->id,
-                'context_id' => $context->id,
-                'name' => 'Temple Relief',
-                'alternate_name' => 'Relief fragment',
-                'description' => 'A carved stone relief.',
-            ])
-            ->callMountedTableAction()
-            ->assertHasNoTableActionErrors();
+            ->assertTableActionExists('create', fn (Action $action): bool => $action->getUrl() === ResourceCreateUrl::for(
+                ItemTranslationResource::class,
+                ['item_id' => $item->id]
+            ));
 
-        $translation = $item->translations()->firstOrFail();
+        $translation = $item->translations()->create([
+            'language_id' => $language->id,
+            'context_id' => $context->id,
+            'name' => 'Temple Relief',
+            'alternate_name' => 'Relief fragment',
+            'description' => 'A carved stone relief.',
+        ]);
 
         Livewire::actingAs($user)
             ->test(TranslationsRelationManager::class, [
