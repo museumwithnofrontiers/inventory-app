@@ -2,12 +2,15 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Pages\ViewCollectionItemAppearance;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\CollectionItemAppearance;
+use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Item;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -18,6 +21,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CollectionAppearancesRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+    use PivotRelationActions;
+
     protected static string $relationship = 'attachedToCollections';
 
     protected static ?string $recordTitleAttribute = 'internal_name';
@@ -79,7 +85,13 @@ class CollectionAppearancesRelationManager extends RelationManager
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->headerActions([
+                $this->pivotAttachAction(RecordSelect::COLLECTIONS, CollectionItemAppearance::pivotFormFields()),
+            ])
             ->actions([
+                $this->pivotViewAction(CollectionResource::class),
+                $this->pivotEditAction(CollectionItemAppearance::pivotFormFields()),
+                $this->pivotDetachAction(),
                 Action::make('view_appearance')
                     ->label('View appearance')
                     ->icon('heroicon-o-document-text')
@@ -90,6 +102,9 @@ class CollectionAppearancesRelationManager extends RelationManager
 
                         return ViewCollectionItemAppearance::getAppearanceUrl($record, $item);
                     }),
+            ])
+            ->bulkActions([
+                $this->pivotDetachBulkAction(),
             ]);
     }
 

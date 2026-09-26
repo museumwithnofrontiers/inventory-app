@@ -170,22 +170,19 @@ class RelationManagerConventionTest extends TestCase
 
     /**
      * Managers that don't yet meet their kind's full target. Each story
-     * removes its own entry as part of its PR; translations (3) left this
-     * list in #1904 (M7 story A3.1).
+     * removes its own entry as part of its PR; the milestone is done when
+     * this list is empty.
      *
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // has-many (4) — #1864's audit: no actions at all today.
-        ChildCollectionsRelationManager::class,
+        // has-many
         ChildItemsRelationManager::class,
         PictureItemsRelationManager::class,
         OwnedItemsRelationManager::class,
 
-        // pivot (9)
-        CollectionItemsRelationManager::class,
+        // pivot
         CollectionPartnersRelationManager::class,
-        CollectionAppearancesRelationManager::class,
         TagsRelationManager::class,
         ArtistsRelationManager::class,
         WorkshopsRelationManager::class,
@@ -193,7 +190,7 @@ class RelationManagerConventionTest extends TestCase
         TimelineEventsRelationManager::class,
         CollectionParticipationsRelationManager::class,
 
-        // inline (2)
+        // inline
         MediaRelationManager::class,
         DocumentsRelationManager::class,
     ];

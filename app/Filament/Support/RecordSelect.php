@@ -10,6 +10,7 @@ use App\Models\Partner;
 use App\Models\Tag;
 use App\Models\TimelineEvent;
 use App\Models\Workshop;
+use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\AssociateAction;
 use Filament\Tables\Actions\AttachAction;
@@ -284,52 +285,75 @@ class RecordSelect
      * `for*()` factory above. Never calls `preloadRecordSelect()`.
      *
      * $entity is one of the self::ITEMS / self::COLLECTIONS / ... constants.
+     *
+     * $scope, when given, narrows the options query further — e.g. a cycle
+     * guard for a self-relation's Attach-existing/Associate select (M7 story
+     * A1.1: {@see self::excludingAncestorsOf()}). It must be applied inside
+     * each arm's own options-query closure rather than via a second call to
+     * `recordSelectOptionsQuery()` afterwards: Filament keeps only the last
+     * closure it's given, so a second call would silently replace this
+     * method's labels/ordering instead of composing with them.
      */
-    public static function recordSelectFor(AttachAction|AssociateAction $action, string $entity): AttachAction|AssociateAction
+    public static function recordSelectFor(AttachAction|AssociateAction $action, string $entity, ?Closure $scope = null): AttachAction|AssociateAction
     {
         return match ($entity) {
             self::ITEMS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => ItemDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope(ItemDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'), $scope))
                 ->recordTitle(fn (Item $record): string => self::compositeLabel($record->display_label, $record->internal_name, $record->backward_compatibility)),
 
             self::COLLECTIONS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => CollectionDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope(CollectionDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'), $scope))
                 ->recordTitle(fn (Collection $record): string => self::compositeLabel($record->display_label, $record->internal_name, $record->backward_compatibility)),
 
             self::PARTNERS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => PartnerDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope(PartnerDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'), $scope))
                 ->recordTitle(fn (Partner $record): string => self::compositeLabel($record->display_label, $record->internal_name, $record->backward_compatibility)),
 
             self::TIMELINE_EVENTS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => TimelineEventDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope(TimelineEventDisplayLabel::withDisplayLabel($query)->orderBy('internal_name'), $scope))
                 ->recordTitle(fn (TimelineEvent $record): string => self::compositeLabel($record->display_label, $record->internal_name, $record->backward_compatibility)),
 
             self::TAGS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->orderBy('description'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('description'), $scope))
                 ->recordTitle(fn (Tag $record): string => self::legacyLabel($record->description, $record->backward_compatibility)),
 
             self::ARTISTS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->orderBy('name'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('name'), $scope))
                 ->recordTitle(fn (Artist $record): string => self::legacyLabel($record->name, $record->backward_compatibility)),
 
             self::WORKSHOPS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->orderBy('name'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('name'), $scope))
                 ->recordTitle(fn (Workshop $record): string => self::legacyLabel($record->name, $record->backward_compatibility)),
 
             self::DYNASTIES => $action
                 ->recordSelectSearchColumns(self::ID_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => DynastyDisplayLabel::withDisplayLabel($query)->orderBy('from_ad'))
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope(DynastyDisplayLabel::withDisplayLabel($query)->orderBy('from_ad'), $scope))
                 ->recordTitle(fn (Dynasty $record): string => $record->display_label),
 
             default => throw new InvalidArgumentException("Unknown RecordSelect entity [{$entity}]."),
         };
+    }
+
+    /**
+     * Applies an optional narrowing closure to a record-select options query,
+     * for callers of {@see self::recordSelectFor()} that pass a `$scope`
+     * (e.g. a cycle guard for a self-relation).
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    private static function applyScope(Builder $query, ?Closure $scope): Builder
+    {
+        return $scope !== null ? $scope($query) : $query;
     }
 
     // ── Generic helpers for callers that need the filtered query itself ────
@@ -380,6 +404,35 @@ class RecordSelect
 
         /** @var Builder<TModel> $scoped */
         $scoped = $query->excludingDescendantsOf($id); // @phpstan-ignore method.notFound (magic local scope on a generic template; existence already checked above)
+
+        return $scoped;
+    }
+
+    /**
+     * Scopes a self-relation query to exclude a record and all its transitive
+     * ancestors, via the model's own `excludingAncestorsOf` local scope (Item,
+     * Collection). This is the cycle guard for the has-many convention's
+     * Attach-existing/Associate select (M7 story A1.1): making a record a
+     * child of $record would create a cycle if the candidate is $record
+     * itself or one of its ancestors. A no-op for models that don't define
+     * the scope.
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Builder<TModel>
+     */
+    public static function excludingAncestorsOf(Builder $query, Model $record): Builder
+    {
+        $key = $record->getKey();
+        $id = is_scalar($key) ? (string) $key : '';
+
+        if ($id === '' || ! method_exists($query->getModel(), 'scopeExcludingAncestorsOf')) {
+            return $query;
+        }
+
+        /** @var Builder<TModel> $scoped */
+        $scoped = $query->excludingAncestorsOf($id); // @phpstan-ignore method.notFound (magic local scope on a generic template; existence already checked above)
 
         return $scoped;
     }

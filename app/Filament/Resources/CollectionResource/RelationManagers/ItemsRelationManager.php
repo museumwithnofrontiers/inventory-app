@@ -4,6 +4,7 @@ namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
 use App\Enums\ItemType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Pages\ViewCollectionItemAppearance;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
@@ -15,9 +16,6 @@ use App\Models\Collection;
 use App\Models\Item;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -25,6 +23,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ItemsRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
+    use PivotRelationActions;
 
     protected static string $relationship = 'attachedItems';
 
@@ -78,9 +77,12 @@ class ItemsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::ITEMS),
+                $this->pivotAttachAction(RecordSelect::ITEMS, CollectionItemAppearance::pivotFormFields()),
             ])
             ->actions([
+                $this->pivotViewAction(ItemResource::class),
+                $this->pivotEditAction(CollectionItemAppearance::pivotFormFields()),
+                $this->pivotDetachAction(),
                 Action::make('view_appearance')
                     ->label('View appearance')
                     ->icon('heroicon-o-document-text')
@@ -91,10 +93,9 @@ class ItemsRelationManager extends RelationManager
 
                         return ViewCollectionItemAppearance::getAppearanceUrl($collection, $record);
                     }),
-                DetachAction::make(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }

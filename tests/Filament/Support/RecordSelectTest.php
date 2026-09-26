@@ -13,6 +13,7 @@ use App\Models\Dynasty;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\Tag;
+use Filament\Tables\Actions\AssociateAction;
 use Filament\Tables\Actions\AttachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -185,6 +186,110 @@ class RecordSelectTest extends TestCase
 
         $this->assertContains($tag->id, $ids);
         $this->assertContains($other->id, $ids);
+    }
+
+    // ── excludingAncestorsOf() (M7 story A1.1, #1896) ────────────────────────
+
+    /**
+     * A 4-level chain proves transitivity: every ancestor up the chain is
+     * excluded, not just the immediate parent (great-grandparent is two
+     * levels removed from $collection).
+     */
+    public function test_excluding_ancestors_of_excludes_the_record_and_its_ancestors(): void
+    {
+        $greatGrandparent = $this->makeCollection();
+        $grandparent = Collection::factory()->create([
+            'context_id' => $greatGrandparent->context_id,
+            'language_id' => $greatGrandparent->language_id,
+            'parent_id' => $greatGrandparent->id,
+        ]);
+        $parent = Collection::factory()->create([
+            'context_id' => $greatGrandparent->context_id,
+            'language_id' => $greatGrandparent->language_id,
+            'parent_id' => $grandparent->id,
+        ]);
+        $collection = Collection::factory()->create([
+            'context_id' => $greatGrandparent->context_id,
+            'language_id' => $greatGrandparent->language_id,
+            'parent_id' => $parent->id,
+        ]);
+        $unrelated = Collection::factory()->create([
+            'context_id' => $greatGrandparent->context_id,
+            'language_id' => $greatGrandparent->language_id,
+        ]);
+
+        $ids = RecordSelect::excludingAncestorsOf(Collection::query(), $collection)->pluck('id')->all();
+
+        $this->assertNotContains($collection->id, $ids);
+        $this->assertNotContains($parent->id, $ids);
+        $this->assertNotContains($grandparent->id, $ids);
+        $this->assertNotContains($greatGrandparent->id, $ids);
+        $this->assertContains($unrelated->id, $ids);
+    }
+
+    public function test_excluding_ancestors_of_is_a_noop_for_a_model_without_the_scope(): void
+    {
+        $tag = Tag::factory()->create();
+        $other = Tag::factory()->create();
+
+        $ids = RecordSelect::excludingAncestorsOf(Tag::query(), $tag)->pluck('id')->all();
+
+        $this->assertContains($tag->id, $ids);
+        $this->assertContains($other->id, $ids);
+    }
+
+    // ── recordSelectFor(): the optional $scope parameter (#1896) ────────────
+
+    /**
+     * The second correction from #1896: a cycle guard must be applied INSIDE
+     * recordSelectFor()'s own options-query closure (via $scope), never by
+     * calling recordSelectOptionsQuery() a second time afterwards — Filament
+     * keeps only the last closure it's given, so a second call would
+     * silently drop the labels/ordering recordSelectFor() just set. This
+     * proves both survive together: the scope narrows the candidates AND the
+     * composite label/order this method sets stay intact.
+     */
+    public function test_record_select_for_applies_a_scope_while_keeping_its_labels(): void
+    {
+        $ancestor = $this->makeCollection();
+        $collection = Collection::factory()->create([
+            'context_id' => $ancestor->context_id,
+            'language_id' => $ancestor->language_id,
+            'parent_id' => $ancestor->id,
+            'internal_name' => 'the-collection',
+            'backward_compatibility' => null,
+        ]);
+        $unrelated = Collection::factory()->create([
+            'context_id' => $ancestor->context_id,
+            'language_id' => $ancestor->language_id,
+            'internal_name' => 'unrelated-collection',
+            'backward_compatibility' => null,
+        ]);
+
+        $action = RecordSelect::recordSelectFor(
+            AssociateAction::make(),
+            RecordSelect::COLLECTIONS,
+            fn ($query) => RecordSelect::excludingAncestorsOf($query, $collection)
+        );
+
+        $reflection = new ReflectionClass($action);
+        $property = $reflection->getProperty('modifyRecordSelectOptionsQueryUsing');
+        $property->setAccessible(true);
+
+        // get(), not pluck(): the options query carries a raw display_label
+        // COALESCE column (from CollectionDisplayLabel::withDisplayLabel()),
+        // so the records must be hydrated through it for getRecordTitle()
+        // below to resolve the same label the real select would show.
+        $records = $property->getValue($action)(Collection::query())->get();
+        $ids = $records->pluck('id')->all();
+
+        $this->assertNotContains($ancestor->id, $ids, 'the scope must still exclude the ancestor');
+        $this->assertContains($unrelated->id, $ids, 'an unrelated collection must still be offered');
+
+        // The label/order recordSelectFor() itself sets must survive the scope.
+        $rehydratedUnrelated = $records->firstWhere('id', $unrelated->id);
+        $this->assertNotNull($rehydratedUnrelated);
+        $this->assertSame('unrelated-collection', $action->getRecordTitle($rehydratedUnrelated));
     }
 
     // ── recordSelectFor(): the AttachAction adapter, end to end ─────────────
