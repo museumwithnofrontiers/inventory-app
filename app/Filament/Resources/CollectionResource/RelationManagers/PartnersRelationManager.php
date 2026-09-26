@@ -7,6 +7,7 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\CountryResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\PartnerDisplayLabel;
+use App\Filament\Support\RecordSelect;
 use App\Models\Partner;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -68,8 +69,7 @@ class PartnersRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                AttachAction::make()
-                    ->recordSelectSearchColumns(['internal_name'])
+                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::PARTNERS)
                     ->form(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
                         Select::make('level')

@@ -3,14 +3,10 @@
 namespace App\Filament\Support;
 
 use App\Models\Author;
-use App\Models\Collection;
 use App\Models\Context;
-use App\Models\Item;
-use App\Models\Partner;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Database\Eloquent\Builder;
 
 class TranslationFormSchema
 {
@@ -87,115 +83,43 @@ class TranslationFormSchema
             });
     }
 
+    /**
+     * $includeIdInSearch is kept for backward compatibility with existing call
+     * sites; RecordSelect's locked convention (story #1891) always searches
+     * `id` alongside `internal_name` and `backward_compatibility` now, so this
+     * flag no longer changes anything.
+     */
     public static function itemSelectField(
         string $name = 'item_id',
         string $label = 'Item',
         bool $required = true,
         bool $includeIdInSearch = false
     ): Select {
-        $select = Select::make($name)
-            ->label($label)
-            ->searchable()
-            ->getSearchResultsUsing(function (string $search) use ($includeIdInSearch): array {
-                $query = Item::query()
-                    ->where(function (Builder $query) use ($search, $includeIdInSearch): void {
-                        $query->where('internal_name', 'like', "%{$search}%")
-                            ->orWhere('backward_compatibility', 'like', "%{$search}%");
-
-                        if ($includeIdInSearch) {
-                            $query->orWhere('id', 'like', "%{$search}%");
-                        }
-                    })
-                    ->orderBy('internal_name')
-                    ->limit(50);
-
-                return ItemDisplayLabel::withDisplayLabel($query)
-                    ->get()
-                    ->mapWithKeys(fn (Item $item): array => [
-                        $item->id => $item->display_label !== $item->internal_name
-                            ? $item->display_label.' ['.$item->internal_name.']'
-                            : static::legacyLabel($item->internal_name, $item->backward_compatibility),
-                    ])->all();
-            })
-            ->getOptionLabelUsing(function (mixed $value): string {
-                return ItemDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : '');
-            });
-
-        return static::requiredOrNullable($select, $required);
+        return RecordSelect::forItems($name, $label, $required);
     }
 
+    /**
+     * $includeIdInSearch is kept for backward compatibility; see itemSelectField().
+     */
     public static function collectionSelectField(
         string $name = 'collection_id',
         string $label = 'Collection',
         bool $required = true,
         bool $includeIdInSearch = false
     ): Select {
-        $select = Select::make($name)
-            ->label($label)
-            ->searchable()
-            ->getSearchResultsUsing(function (string $search) use ($includeIdInSearch): array {
-                $query = Collection::query()
-                    ->where(function (Builder $query) use ($search, $includeIdInSearch): void {
-                        $query->where('internal_name', 'like', "%{$search}%")
-                            ->orWhere('backward_compatibility', 'like', "%{$search}%");
-
-                        if ($includeIdInSearch) {
-                            $query->orWhere('id', 'like', "%{$search}%");
-                        }
-                    })
-                    ->orderBy('internal_name')
-                    ->limit(50);
-
-                return CollectionDisplayLabel::withDisplayLabel($query)
-                    ->get()
-                    ->mapWithKeys(fn (Collection $collection): array => [
-                        $collection->id => $collection->display_label !== $collection->internal_name
-                            ? $collection->display_label.' ['.$collection->internal_name.']'
-                            : static::legacyLabel($collection->internal_name, $collection->backward_compatibility),
-                    ])->all();
-            })
-            ->getOptionLabelUsing(function (mixed $value): string {
-                return CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : '');
-            });
-
-        return static::requiredOrNullable($select, $required);
+        return RecordSelect::forCollections($name, $label, $required);
     }
 
+    /**
+     * $includeIdInSearch is kept for backward compatibility; see itemSelectField().
+     */
     public static function partnerSelectField(
         string $name = 'partner_id',
         string $label = 'Partner',
         bool $required = true,
         bool $includeIdInSearch = false
     ): Select {
-        $select = Select::make($name)
-            ->label($label)
-            ->searchable()
-            ->getSearchResultsUsing(function (string $search) use ($includeIdInSearch): array {
-                $query = Partner::query()
-                    ->where(function (Builder $query) use ($search, $includeIdInSearch): void {
-                        $query->where('internal_name', 'like', "%{$search}%")
-                            ->orWhere('backward_compatibility', 'like', "%{$search}%");
-
-                        if ($includeIdInSearch) {
-                            $query->orWhere('id', 'like', "%{$search}%");
-                        }
-                    })
-                    ->orderBy('internal_name')
-                    ->limit(50);
-
-                return PartnerDisplayLabel::withDisplayLabel($query)
-                    ->get()
-                    ->mapWithKeys(fn (Partner $partner): array => [
-                        $partner->id => $partner->display_label !== $partner->internal_name
-                            ? $partner->display_label.' ['.$partner->internal_name.']'
-                            : static::legacyLabel($partner->internal_name, $partner->backward_compatibility),
-                    ])->all();
-            })
-            ->getOptionLabelUsing(function (mixed $value): string {
-                return PartnerDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : '');
-            });
-
-        return static::requiredOrNullable($select, $required);
+        return RecordSelect::forPartners($name, $label, $required);
     }
 
     public static function contextSelectField(
@@ -244,12 +168,5 @@ class TranslationFormSchema
     protected static function requiredOrNullable(Select $select, bool $required): Select
     {
         return $required ? $select->required() : $select->nullable();
-    }
-
-    protected static function legacyLabel(string $internalName, ?string $backwardCompatibility): string
-    {
-        return $backwardCompatibility
-            ? "{$internalName} [{$backwardCompatibility}]"
-            : $internalName;
     }
 }

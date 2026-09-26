@@ -5,6 +5,7 @@ namespace App\Filament\Resources\TimelineEventResource\RelationManagers;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\RecordSelect;
 use App\Models\Item;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -55,8 +56,7 @@ class ItemsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                AttachAction::make()
-                    ->recordSelectSearchColumns(['internal_name'])
+                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::ITEMS)
                     ->form(fn (AttachAction $action): array => [
                         $action->getRecordSelect(),
                         TextInput::make('display_order')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Concerns;
 
+use App\Filament\Support\RecordSelect;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
@@ -28,12 +29,15 @@ trait HasChangeParentAction
     /**
      * Override to restrict the search query for the row action (e.g., excluding descendants).
      *
+     * Defaults to RecordSelect::excludingDescendantsOf(), which is a no-op for
+     * a model that doesn't define an `excludingDescendantsOf` local scope.
+     *
      * @param  Builder<TModel>  $query
      * @return Builder<TModel>
      */
     protected static function changeParentRowQueryScope(Builder $query, Model $record): Builder
     {
-        return $query;
+        return RecordSelect::excludingDescendantsOf($query, $record);
     }
 
     /**
@@ -74,13 +78,10 @@ trait HasChangeParentAction
                     ->label(static::changeParentSelectLabel())
                     ->nullable()
                     ->getSearchResultsUsing(fn (string $search): array => static::changeParentSearchResults(
-                        static::changeParentRowQueryScope(
-                            $modelClass::query(), $record)
-                            ->where('internal_name', 'like', "%{$search}%")
-                            ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                            ->orWhere('id', 'like', "%{$search}%")
-                            ->orderBy('internal_name')
-                            ->limit(50)
+                        RecordSelect::applyBoundedSearch(
+                            static::changeParentRowQueryScope($modelClass::query(), $record),
+                            $search
+                        )
                     ))
                     ->getOptionLabelUsing(fn ($value): string => static::changeParentOptionLabel($value))
                     ->searchable(),
@@ -125,12 +126,7 @@ trait HasChangeParentAction
                     ->label(static::changeParentSelectLabel())
                     ->nullable()
                     ->getSearchResultsUsing(fn (string $search): array => static::changeParentSearchResults(
-                        $modelClass::query()
-                            ->where('internal_name', 'like', "%{$search}%")
-                            ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                            ->orWhere('id', 'like', "%{$search}%")
-                            ->orderBy('internal_name')
-                            ->limit(50)
+                        RecordSelect::applyBoundedSearch($modelClass::query(), $search)
                     ))
                     ->getOptionLabelUsing(fn ($value): string => static::changeParentOptionLabel($value))
                     ->searchable(),

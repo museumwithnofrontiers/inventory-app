@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 use App\Enums\Permission;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\TagResource;
+use App\Filament\Support\RecordSelect;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\AttachAction;
 use Filament\Tables\Actions\DetachAction;
@@ -58,8 +59,7 @@ class TagsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                AttachAction::make()
-                    ->recordSelectSearchColumns(['internal_name', 'description']),
+                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::TAGS),
             ])
             ->actions([
                 DetachAction::make(),

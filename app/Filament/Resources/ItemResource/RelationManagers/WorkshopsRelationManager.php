@@ -3,13 +3,13 @@
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\RecordSelect;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\AttachAction;
 use Filament\Tables\Actions\DetachAction;
 use Filament\Tables\Actions\DetachBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 
 class WorkshopsRelationManager extends RelationManager
 {
@@ -46,9 +46,7 @@ class WorkshopsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                AttachAction::make()
-                    ->recordSelectSearchColumns(['name', 'internal_name'])
-                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->orderBy('internal_name')),
+                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::WORKSHOPS),
             ])
             ->actions([
                 DetachAction::make(),

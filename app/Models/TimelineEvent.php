@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property string $id
+ * @property string|null $display_label
  */
 class TimelineEvent extends Model
 {
