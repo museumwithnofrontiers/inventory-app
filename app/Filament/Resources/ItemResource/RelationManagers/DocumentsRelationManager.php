@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 use App\Events\DocumentUploadEvent;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\ExtraJsonField;
 use App\Models\DocumentUpload;
 use App\Models\Item;
 use App\Models\ItemDocument;
@@ -17,6 +18,7 @@ use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -145,6 +147,39 @@ class DocumentsRelationManager extends RelationManager
                     }),
             ])
             ->actions([
+                Action::make('download')
+                    ->label('Download')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
+                    ->url(fn (ItemDocument $record): string => route('filament.admin.item-document.download', [
+                        'item' => $this->ownerItem(),
+                        'itemDocument' => $record,
+                    ])),
+                EditAction::make()
+                    ->form([
+                        TextInput::make('title')
+                            ->maxLength(255)
+                            ->nullable(),
+                        Select::make('language_id')
+                            ->label('Language')
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search): array => Language::query()
+                                ->where('internal_name', 'like', "%{$search}%")
+                                ->orderBy('internal_name')
+                                ->limit(50)
+                                ->pluck('internal_name', 'id')
+                                ->all()
+                            )
+                            ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Language::find($value)->internal_name ?? $value) : '')
+                            ->nullable(),
+                        TextInput::make('display_order')
+                            ->label('Display order')
+                            ->numeric()
+                            ->integer()
+                            ->nullable(),
+                        ExtraJsonField::formComponent(),
+                    ]),
                 DeleteAction::make(),
             ]);
     }

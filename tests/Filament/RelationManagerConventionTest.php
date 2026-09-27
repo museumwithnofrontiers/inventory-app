@@ -176,10 +176,7 @@ class RelationManagerConventionTest extends TestCase
      *
      * @var array<int, class-string>
      */
-    private const PENDING = [
-        // inline
-        DocumentsRelationManager::class,
-    ];
+    private const PENDING = [];
 
     // ── Discovery ────────────────────────────────────────────────────────────
 
