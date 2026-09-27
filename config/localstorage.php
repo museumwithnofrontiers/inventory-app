@@ -55,6 +55,71 @@ return [
             */
             'directory' => env('UPLOAD_IMAGES_DIRECTORY', 'image_uploads'),
         ],
+
+        'documents' => [
+            /*
+            |--------------------------------------------------------------------------
+            | The Disk for Pending Document Uploads
+            |--------------------------------------------------------------------------
+            |
+            | This private disk holds a document while DocumentUploadListener
+            | validates it on the queue (M7 Story A4.2, #1906). Never `public`.
+            |
+            */
+            'disk' => env('UPLOAD_DOCUMENTS_DISK', 'local'),
+
+            /*
+            |--------------------------------------------------------------------------
+            | The Directory for Pending Document Uploads
+            |--------------------------------------------------------------------------
+            |
+            | Relative to the _disk_ disk above.
+            |
+            */
+            'directory' => env('UPLOAD_DOCUMENTS_DIRECTORY', 'document_uploads'),
+
+            /*
+            |--------------------------------------------------------------------------
+            | The Minimum Size for Document Uploads
+            |--------------------------------------------------------------------------
+            |
+            | In kilobytes. Rejects empty/near-empty files.
+            |
+            */
+            'min_size' => (int) env('UPLOAD_DOCUMENTS_MIN_SIZE', 1),
+
+            /*
+            |--------------------------------------------------------------------------
+            | The Maximum Size for Document Uploads
+            |--------------------------------------------------------------------------
+            |
+            | In kilobytes. The default is 20MB (20480 kilobytes), matching
+            | uploads.images.max_size's default.
+            |
+            */
+            'max_size' => (int) env('UPLOAD_DOCUMENTS_MAX_SIZE', 20480),
+
+            /*
+            |--------------------------------------------------------------------------
+            | The Allowed Extensions for Document Uploads
+            |--------------------------------------------------------------------------
+            |
+            | Comma-separated extension allow-list.
+            |
+            */
+            'extensions' => env('UPLOAD_DOCUMENTS_EXTENSIONS', 'pdf'),
+
+            /*
+            |--------------------------------------------------------------------------
+            | The Allowed MIME Types for Document Uploads
+            |--------------------------------------------------------------------------
+            |
+            | Comma-separated MIME allow-list, checked against the framework's
+            | own (Symfony) guesser — not the browser-declared type.
+            |
+            */
+            'mime' => env('UPLOAD_DOCUMENTS_MIME_TYPES', 'application/pdf'),
+        ],
     ],
 
     'available' => [
@@ -134,11 +199,13 @@ return [
         |--------------------------------------------------------------------------
         |
         | This disk is used to store documents (PDFs, etc.) attached to Items.
-        | The default disk is set to **public**, but you can change it to any
-        | other disk defined in your filesystem configuration.
+        | The default is the private **document-originals** disk (M7 Story
+        | A4.2, #1906) — never `public`; nothing here should ever be
+        | web-reachable, the same rule CLAUDE.md's image pipeline enforces for
+        | `image-originals`.
         |
         */
-        'disk' => env('DOCUMENTS_DISK', 'public'),
+        'disk' => env('DOCUMENTS_DISK', 'document-originals'),
 
         /*
         |--------------------------------------------------------------------------
