@@ -4,6 +4,7 @@ namespace Tests\Filament\Support;
 
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
+use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Support\ResourceCreateUrl;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
@@ -28,6 +29,15 @@ class ResourceCreateUrlTest extends TestCase
         $this->assertStringContainsString('/admin/items/create', $url);
         $this->assertStringContainsString('parent_id=abc-123', $url);
         $this->assertStringContainsString('type=picture', $url);
+    }
+
+    /** M7 story A5.4 (#2090): timeline_id, EventsRelationManager's required-parent pre-fill key. */
+    public function test_builds_a_create_url_with_the_timeline_id(): void
+    {
+        $url = ResourceCreateUrl::for(TimelineEventResource::class, ['timeline_id' => 'tl-123']);
+
+        $this->assertStringContainsString('/admin/timeline-events/create', $url);
+        $this->assertStringContainsString('timeline_id=tl-123', $url);
     }
 
     public function test_builds_a_plain_create_url_when_no_parameters_are_given(): void
