@@ -323,7 +323,6 @@ class RelationManagerConventionTest extends TestCase
      */
     private const PINNED_PENDING = [
         // missing AuthorizesRelationMutations
-        ItemItemLinkTranslationsRelationManager::class,
         ProjectCollectionsRelationManager::class,
     ];
 
