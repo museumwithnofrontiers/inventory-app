@@ -747,11 +747,10 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $collection = $this->makeCollection();
         $context = Context::factory()->create();
-        $english = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
         $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
 
         $translation = $collection->translations()->create([
-            'language_id' => $english->id,
+            'language_id' => $collection->language_id,
             'context_id' => $context->id,
             'title' => 'Titre EN',
         ]);
@@ -777,11 +776,10 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $collection = $this->makeCollection();
         $context = Context::factory()->create();
-        $english = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
         $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
 
         $translation = $collection->translations()->create([
-            'language_id' => $english->id,
+            'language_id' => $collection->language_id,
             'context_id' => $context->id,
             'title' => 'Titre EN',
         ]);
