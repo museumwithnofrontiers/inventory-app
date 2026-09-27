@@ -325,7 +325,6 @@ class RelationManagerConventionTest extends TestCase
         // missing AuthorizesRelationMutations
         LanguageTranslationsRelationManager::class,
         ItemItemLinkTranslationsRelationManager::class,
-        TimelineEventTranslationsRelationManager::class,
         ProjectCollectionsRelationManager::class,
         UsersRelationManager::class,
 
