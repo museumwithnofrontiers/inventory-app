@@ -315,10 +315,6 @@ class RelationManagerConventionTest extends TestCase
         // has-many-shaped, but timeline_events.timeline_id is NOT NULL — the alignment story
         // must resolve what "detach" means (or doesn't) for a required parent
         TimelineEventsRelationManagerForTimeline::class,
-
-        // pivot, but attaches via its own recordSelectSearchColumns()/recordSelectOptionsQuery()
-        // instead of RecordSelect::recordSelectFor(), and has no 'view' row action
-        GlossarySynonymsRelationManager::class,
     ];
 
     /**
