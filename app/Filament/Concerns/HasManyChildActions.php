@@ -4,6 +4,7 @@ namespace App\Filament\Concerns;
 
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\ResourceCreateUrl;
+use Filament\Forms\Components\Component;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\AssociateAction;
@@ -112,6 +113,22 @@ trait HasManyChildActions
     }
 
     /**
+     * Extra form components appended after the `Attach existing` record
+     * select — e.g. A1.4's reactive placeholder naming an item's current
+     * partner before re-assigning it, so the admin sees who they're taking
+     * the record away from. Empty by default, in which case the select is
+     * left exactly as Filament/{@see RecordSelect::recordSelectFor()} built
+     * it. When non-empty, the select is additionally marked `->live()` so the
+     * extra components can react to it via `Get`.
+     *
+     * @return array<int, Component>
+     */
+    protected function hasManyChildAssociateFormExtra(): array
+    {
+        return [];
+    }
+
+    /**
      * @return array<int, Action|AssociateAction>
      */
     protected function hasManyChildHeaderActions(): array
@@ -119,6 +136,21 @@ trait HasManyChildActions
         $resource = static::hasManyChildResource();
         $foreignKey = static::hasManyChildForeignKey();
         $owner = $this->getOwnerRecord();
+
+        $associate = RecordSelect::recordSelectFor(
+            AssociateAction::make()->label('Attach existing'),
+            static::hasManyChildRecordSelectEntity(),
+            fn (Builder $query): Builder => $this->hasManyChildAssociateScope($query)
+        );
+
+        $associateFormExtra = $this->hasManyChildAssociateFormExtra();
+
+        if ($associateFormExtra !== []) {
+            $associate = $associate->form(fn (): array => [
+                $associate->getRecordSelect()->live(),
+                ...$associateFormExtra,
+            ]);
+        }
 
         return [
             Action::make('create')
@@ -130,11 +162,7 @@ trait HasManyChildActions
                 ]))
                 ->visible(fn (): bool => $this->canCreate()),
 
-            RecordSelect::recordSelectFor(
-                AssociateAction::make()->label('Attach existing'),
-                static::hasManyChildRecordSelectEntity(),
-                fn (Builder $query): Builder => $this->hasManyChildAssociateScope($query)
-            ),
+            $associate,
         ];
     }
 

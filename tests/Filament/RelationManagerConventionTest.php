@@ -179,7 +179,7 @@ class RelationManagerConventionTest extends TestCase
         // has-many
         ChildItemsRelationManager::class,
         PictureItemsRelationManager::class,
-        OwnedItemsRelationManager::class,
+        // OwnedItemsRelationManager: done by A1.4 (#1899).
 
         // pivot
         CollectionPartnersRelationManager::class,
