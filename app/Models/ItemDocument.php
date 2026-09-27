@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\DeletesDocumentFileOnDelete;
 use App\Traits\HasDisplayOrder;
 use Database\Factories\ItemDocumentFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class ItemDocument extends Model
 {
     /** @use HasFactory<ItemDocumentFactory> */
-    use HasDisplayOrder, HasFactory, HasUuids;
+    use DeletesDocumentFileOnDelete, HasDisplayOrder, HasFactory, HasUuids;
 
     protected $fillable = [
         'item_id',

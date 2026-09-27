@@ -13,6 +13,7 @@ use App\Filament\Pages\ProfilePage;
 use App\Filament\Pages\ViewCollectionItemAppearance;
 use App\Http\Controllers\Filament\AvailableImageController as FilamentAvailableImageController;
 use App\Http\Controllers\Filament\CollectionImageController as FilamentCollectionImageController;
+use App\Http\Controllers\Filament\ItemDocumentController as FilamentItemDocumentController;
 use App\Http\Controllers\Filament\ItemImageController as FilamentItemImageController;
 use App\Http\Controllers\Filament\PartnerImageController as FilamentPartnerImageController;
 use App\Http\Controllers\Filament\PartnerTranslationImageController as FilamentPartnerTranslationImageController;
@@ -135,6 +136,9 @@ class AdminPanelProvider extends PanelProvider
                     ->name('item-image.view');
                 Route::get('/items/{item}/images/{itemImage}/download', [FilamentItemImageController::class, 'download'])
                     ->name('item-image.download');
+
+                Route::get('/items/{item}/documents/{itemDocument}/download', [FilamentItemDocumentController::class, 'download'])
+                    ->name('item-document.download');
 
                 Route::get('/collections/{collection}/images/{collectionImage}/view', [FilamentCollectionImageController::class, 'view'])
                     ->name('collection-image.view');

@@ -12,14 +12,15 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
+use ReflectionProperty;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
- * M7 Story A4.2 (#1906): the `upload` header action on DocumentsRelationManager.
- * DocumentsRelationManager stays on RelationManagerConventionTest::PENDING
- * after this story — its row actions are still [delete] only, not the full
- * [download, edit, delete] target A4.3 delivers.
+ * M7 Stories A4.2 (#1906, the `upload` header action) and A4.3 (#1907, the
+ * `download` / `edit` / `delete` row actions). After A4.3,
+ * DocumentsRelationManager is removed from
+ * RelationManagerConventionTest::PENDING.
  */
 class DocumentsRelationManagerTest extends TestCase
 {
@@ -81,11 +82,11 @@ class DocumentsRelationManagerTest extends TestCase
             ->assertTableActionHidden('upload');
     }
 
-    public function test_row_actions_are_still_delete_only_pending_a43(): void
+    public function test_row_actions_are_download_edit_delete(): void
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
-        ItemDocument::factory()->forItem($item)->create();
+        $itemDocument = ItemDocument::factory()->forItem($item)->create();
 
         $this->setCurrentPanel();
 
@@ -94,9 +95,145 @@ class DocumentsRelationManagerTest extends TestCase
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
+            ->assertTableActionExists('download')
+            ->assertTableActionExists('edit')
             ->assertTableActionExists('delete')
-            ->assertTableActionDoesNotExist('download')
-            ->assertTableActionDoesNotExist('edit');
+            ->assertTableActionVisible('download', $itemDocument)
+            ->assertTableActionVisible('edit', $itemDocument)
+            ->assertTableActionVisible('delete', $itemDocument);
+    }
+
+    public function test_download_row_action_points_at_the_filament_download_route(): void
+    {
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Object()->create();
+        $itemDocument = ItemDocument::factory()->forItem($item)->create();
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)
+            ->test(DocumentsRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => ViewItem::class,
+            ]);
+
+        $table = $component->instance()->getTable();
+        $action = null;
+        foreach ($table->getActions() as $candidate) {
+            if ($candidate->getName() === 'download') {
+                $action = $candidate;
+
+                break;
+            }
+        }
+
+        $this->assertNotNull($action, 'The download row action must exist.');
+
+        // The url() closure is an arrow function bound to the mounted
+        // manager instance, so invoking it directly (bypassing Filament's
+        // own action-evaluation machinery) still resolves $this->ownerItem()
+        // correctly against the record this test mounted.
+        $property = new ReflectionProperty($action, 'url');
+        $property->setAccessible(true);
+        $urlClosure = $property->getValue($action);
+
+        $this->assertIsCallable($urlClosure);
+        $actualUrl = $urlClosure($itemDocument);
+
+        $expectedUrl = route('filament.admin.item-document.download', [
+            'item' => $item,
+            'itemDocument' => $itemDocument,
+        ]);
+
+        $this->assertSame($expectedUrl, $actualUrl);
+    }
+
+    public function test_download_row_action_is_hidden_for_a_view_only_user(): void
+    {
+        $user = $this->createViewOnlyUser();
+        $item = Item::factory()->Object()->create();
+        $itemDocument = ItemDocument::factory()->forItem($item)->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(DocumentsRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => ViewItem::class,
+            ])
+            ->assertTableActionHidden('download', $itemDocument)
+            ->assertTableActionHidden('edit', $itemDocument)
+            ->assertTableActionHidden('delete', $itemDocument);
+    }
+
+    public function test_edit_action_updates_metadata_without_touching_the_file(): void
+    {
+        Storage::fake(Config::string('localstorage.documents.disk'));
+
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Object()->create();
+        $language = Language::factory()->create();
+        $itemDocument = ItemDocument::factory()->forItem($item)->create([
+            'path' => 'unchanged.pdf',
+            'title' => 'Old title',
+            'display_order' => 1,
+        ]);
+
+        $directory = trim(Config::string('localstorage.documents.directory'), '/');
+        Storage::disk(Config::string('localstorage.documents.disk'))->put($directory.'/unchanged.pdf', 'original-bytes');
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(DocumentsRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => ViewItem::class,
+            ])
+            ->mountTableAction('edit', $itemDocument)
+            ->setTableActionData([
+                'title' => 'New title',
+                'language_id' => $language->id,
+                'display_order' => 7,
+                'extra' => '{"reviewed":true}',
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $itemDocument->refresh();
+        $this->assertSame('New title', $itemDocument->title);
+        $this->assertSame($language->id, $itemDocument->language_id);
+        $this->assertSame(7, $itemDocument->display_order);
+        $this->assertSame(['reviewed' => true], (array) $itemDocument->extra);
+        // The file itself is untouched: same path, same bytes still on disk.
+        $this->assertSame('unchanged.pdf', $itemDocument->path);
+        Storage::disk(Config::string('localstorage.documents.disk'))
+            ->assertExists($directory.'/unchanged.pdf');
+    }
+
+    public function test_delete_action_removes_the_record_and_its_file(): void
+    {
+        Storage::fake(Config::string('localstorage.documents.disk'));
+
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Object()->create();
+        $itemDocument = ItemDocument::factory()->forItem($item)->create(['path' => 'to-delete.pdf']);
+
+        $directory = trim(Config::string('localstorage.documents.directory'), '/');
+        $disk = Config::string('localstorage.documents.disk');
+        Storage::disk($disk)->put($directory.'/to-delete.pdf', 'bytes-to-remove');
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(DocumentsRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => ViewItem::class,
+            ])
+            ->callTableAction('delete', $itemDocument)
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseMissing('item_documents', ['id' => $itemDocument->id]);
+        Storage::disk($disk)->assertMissing($directory.'/to-delete.pdf');
     }
 
     public function test_uploading_a_valid_pdf_from_the_item_view_page_creates_an_item_document(): void
