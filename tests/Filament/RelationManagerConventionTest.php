@@ -308,10 +308,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // has-many, but currently a read-only listing (no actions at all)
-        ProjectItemsRelationManager::class,
-        ProjectPartnersRelationManager::class,
-
         // has-many-shaped, but timeline_events.timeline_id is NOT NULL — the alignment story
         // must resolve what "detach" means (or doesn't) for a required parent
         TimelineEventsRelationManagerForTimeline::class,
