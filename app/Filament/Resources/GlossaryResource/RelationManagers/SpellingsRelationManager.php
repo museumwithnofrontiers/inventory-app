@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\GlossaryResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\GlossarySpelling;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class SpellingsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'spellings';
 
     protected static ?string $recordTitleAttribute = 'spelling';

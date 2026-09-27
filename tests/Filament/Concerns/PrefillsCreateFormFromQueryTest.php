@@ -8,10 +8,12 @@ use App\Filament\Resources\ItemResource\Pages\CreateItem;
 use App\Filament\Resources\ItemTranslationResource\Pages\CreateItemTranslation;
 use App\Filament\Resources\PartnerResource\Pages\CreatePartner;
 use App\Filament\Resources\PartnerTranslationResource\Pages\CreatePartnerTranslation;
+use App\Filament\Resources\TimelineEventResource\Pages\CreateTimelineEvent;
 use App\Models\Collection;
 use App\Models\Item;
 use App\Models\Partner;
 use App\Models\Project;
+use App\Models\Timeline;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -253,5 +255,47 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ->withQueryParams(['project_id' => $project->id])
             ->test(CreatePartner::class)
             ->assertFormSet(['project_id' => $project->id]);
+    }
+
+    // ── CreateTimelineEvent: timeline_id (Timeline) ─────────────────────────
+
+    public function test_create_timeline_event_prefills_timeline_from_query(): void
+    {
+        $timeline = Timeline::factory()->create();
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->withQueryParams(['timeline_id' => $timeline->id])
+            ->test(CreateTimelineEvent::class)
+            ->assertFormSet(['timeline_id' => $timeline->id]);
+    }
+
+    public function test_create_timeline_event_prefilled_timeline_shows_its_label(): void
+    {
+        $timeline = Timeline::factory()->create(['internal_name' => 'Islamic Timeline']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)
+            ->withQueryParams(['timeline_id' => $timeline->id])
+            ->test(CreateTimelineEvent::class);
+
+        $form = $component->instance()->getForm('form');
+
+        $this->assertSame('Islamic Timeline', $form->getFlatFields()['timeline_id']->getOptionLabel());
+    }
+
+    public function test_create_timeline_event_form_is_clean_without_query_params(): void
+    {
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CreateTimelineEvent::class)
+            ->assertFormSet(['timeline_id' => null]);
     }
 }

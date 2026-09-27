@@ -7,6 +7,8 @@ use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager as CollectionPartnersRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
+use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
+use App\Filament\Resources\CollectionTranslationResource\RelationManagers\SiblingTranslationsRelationManager as CollectionTranslationSiblingTranslationsRelationManager;
 use App\Filament\Resources\ItemResource\Pages\EditItem;
 use App\Filament\Resources\ItemResource\RelationManagers\ArtistsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\DocumentsRelationManager;
@@ -18,8 +20,14 @@ use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationMa
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
+use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTranslationsRelationManager as ItemTranslationSiblingTranslationsRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\EditPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager as PartnerTranslationsRelationManager;
+use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
+use App\Filament\Resources\PartnerTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PartnerTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\RoleResource\Pages\ViewRole;
+use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
 use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationManager as TimelineEventItemsRelationManager;
 use App\Models\Artist;
@@ -38,7 +46,10 @@ use App\Models\TimelineEvent;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission as SpatiePermission;
+use Spatie\Permission\Models\Role;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
@@ -70,6 +81,17 @@ class AuthorizesRelationMutationsTest extends TestCase
             'context_id' => $context->id,
             'language_id' => $language->id,
         ]);
+    }
+
+    protected function makeRole(): Role
+    {
+        /** @var Role $role */
+        $role = Role::create([
+            'name' => 'Test role '.Str::random(8),
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+
+        return $role;
     }
 
     // ── Collection: ItemsRelationManager (pivot) ────────────────────────────
@@ -733,5 +755,243 @@ class AuthorizesRelationMutationsTest extends TestCase
             ->assertTableActionVisible('edit', $image)
             ->assertTableActionVisible('detach', $image)
             ->assertTableActionVisible('delete', $image);
+    }
+
+    // ── CollectionTranslationResource: SiblingTranslationsRelationManager (pinned) ─
+
+    public function test_collection_translation_sibling_translations_relation_manager_hides_edit_for_view_only_user(): void
+    {
+        $collection = $this->makeCollection();
+        $context = Context::factory()->create();
+        $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
+
+        $translation = $collection->translations()->create([
+            'language_id' => $collection->language_id,
+            'context_id' => $context->id,
+            'title' => 'Titre EN',
+        ]);
+        $sibling = $collection->translations()->create([
+            'language_id' => $french->id,
+            'context_id' => $context->id,
+            'title' => 'Titre FR',
+        ]);
+        $user = $this->createViewOnlyUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionTranslationSiblingTranslationsRelationManager::class, [
+                'ownerRecord' => $translation,
+                'pageClass' => EditCollectionTranslation::class,
+            ])
+            ->assertTableActionVisible('viewTranslation', $sibling)
+            ->assertTableActionHidden('editTranslation', $sibling);
+    }
+
+    public function test_collection_translation_sibling_translations_relation_manager_keeps_edit_for_crud_user(): void
+    {
+        $collection = $this->makeCollection();
+        $context = Context::factory()->create();
+        $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
+
+        $translation = $collection->translations()->create([
+            'language_id' => $collection->language_id,
+            'context_id' => $context->id,
+            'title' => 'Titre EN',
+        ]);
+        $sibling = $collection->translations()->create([
+            'language_id' => $french->id,
+            'context_id' => $context->id,
+            'title' => 'Titre FR',
+        ]);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionTranslationSiblingTranslationsRelationManager::class, [
+                'ownerRecord' => $translation,
+                'pageClass' => EditCollectionTranslation::class,
+            ])
+            ->assertTableActionVisible('viewTranslation', $sibling)
+            ->assertTableActionVisible('editTranslation', $sibling);
+    }
+
+    // ── ItemTranslationResource: SiblingTranslationsRelationManager (pinned) ──────
+
+    public function test_item_translation_sibling_translations_relation_manager_hides_edit_for_view_only_user(): void
+    {
+        $item = Item::factory()->Object()->create();
+        $context = Context::factory()->create();
+        $english = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
+        $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
+
+        $translation = $item->translations()->create([
+            'language_id' => $english->id,
+            'context_id' => $context->id,
+            'name' => 'Name EN',
+        ]);
+        $sibling = $item->translations()->create([
+            'language_id' => $french->id,
+            'context_id' => $context->id,
+            'name' => 'Name FR',
+        ]);
+        $user = $this->createViewOnlyUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(ItemTranslationSiblingTranslationsRelationManager::class, [
+                'ownerRecord' => $translation,
+                'pageClass' => EditItemTranslation::class,
+            ])
+            ->assertTableActionVisible('viewTranslation', $sibling)
+            ->assertTableActionHidden('editTranslation', $sibling);
+    }
+
+    public function test_item_translation_sibling_translations_relation_manager_keeps_edit_for_crud_user(): void
+    {
+        $item = Item::factory()->Object()->create();
+        $context = Context::factory()->create();
+        $english = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
+        $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
+
+        $translation = $item->translations()->create([
+            'language_id' => $english->id,
+            'context_id' => $context->id,
+            'name' => 'Name EN',
+        ]);
+        $sibling = $item->translations()->create([
+            'language_id' => $french->id,
+            'context_id' => $context->id,
+            'name' => 'Name FR',
+        ]);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(ItemTranslationSiblingTranslationsRelationManager::class, [
+                'ownerRecord' => $translation,
+                'pageClass' => EditItemTranslation::class,
+            ])
+            ->assertTableActionVisible('viewTranslation', $sibling)
+            ->assertTableActionVisible('editTranslation', $sibling);
+    }
+
+    // ── PartnerTranslationResource: SiblingTranslationsRelationManager (pinned) ───
+
+    public function test_partner_translation_sibling_translations_relation_manager_hides_edit_for_view_only_user(): void
+    {
+        $partner = Partner::factory()->create();
+        $context = Context::factory()->create();
+        $english = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
+        $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
+
+        $translation = $partner->translations()->create([
+            'language_id' => $english->id,
+            'context_id' => $context->id,
+            'name' => 'Name EN',
+        ]);
+        $sibling = $partner->translations()->create([
+            'language_id' => $french->id,
+            'context_id' => $context->id,
+            'name' => 'Name FR',
+        ]);
+        $user = $this->createViewOnlyUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PartnerTranslationSiblingTranslationsRelationManager::class, [
+                'ownerRecord' => $translation,
+                'pageClass' => EditPartnerTranslation::class,
+            ])
+            ->assertTableActionVisible('viewTranslation', $sibling)
+            ->assertTableActionHidden('editTranslation', $sibling);
+    }
+
+    public function test_partner_translation_sibling_translations_relation_manager_keeps_edit_for_crud_user(): void
+    {
+        $partner = Partner::factory()->create();
+        $context = Context::factory()->create();
+        $english = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
+        $french = Language::factory()->create(['id' => 'fra', 'internal_name' => 'French']);
+
+        $translation = $partner->translations()->create([
+            'language_id' => $english->id,
+            'context_id' => $context->id,
+            'name' => 'Name EN',
+        ]);
+        $sibling = $partner->translations()->create([
+            'language_id' => $french->id,
+            'context_id' => $context->id,
+            'name' => 'Name FR',
+        ]);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PartnerTranslationSiblingTranslationsRelationManager::class, [
+                'ownerRecord' => $translation,
+                'pageClass' => EditPartnerTranslation::class,
+            ])
+            ->assertTableActionVisible('viewTranslation', $sibling)
+            ->assertTableActionVisible('editTranslation', $sibling);
+    }
+
+    // ── Role: PermissionsRelationManager (pinned) ─────────────────────────────
+    //
+    // RolePolicy gates every ability on `manage-roles`, so there is no user who
+    // can view a Role but not update it; the view-only user, who lacks
+    // `manage-roles`, stands in for one who can't update the Role.
+
+    public function test_role_permissions_relation_manager_hides_mutations_for_a_user_who_cannot_update_the_role(): void
+    {
+        $role = $this->makeRole();
+        $permission = SpatiePermission::firstOrCreate([
+            'name' => 'sample-permission-view-only',
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+        $role->givePermissionTo($permission);
+        $user = $this->createViewOnlyUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PermissionsRelationManager::class, [
+                'ownerRecord' => $role,
+                'pageClass' => ViewRole::class,
+            ])
+            ->assertTableActionHidden('attach')
+            ->assertTableActionHidden('createPermission')
+            ->assertTableActionHidden('edit', $permission->getKey())
+            ->assertTableActionHidden('detach', $permission->getKey())
+            ->assertTableActionHidden('deletePermission', $permission->getKey());
+    }
+
+    public function test_role_permissions_relation_manager_keeps_mutations_for_role_manager_user(): void
+    {
+        $role = $this->makeRole();
+        $permission = SpatiePermission::firstOrCreate([
+            'name' => 'sample-permission-role-manager',
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+        $role->givePermissionTo($permission);
+        $user = $this->createRoleManagerUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PermissionsRelationManager::class, [
+                'ownerRecord' => $role,
+                'pageClass' => ViewRole::class,
+            ])
+            ->assertTableActionVisible('attach')
+            ->assertTableActionVisible('createPermission')
+            ->assertTableActionVisible('edit', $permission->getKey())
+            ->assertTableActionVisible('detach', $permission->getKey())
+            ->assertTableActionVisible('deletePermission', $permission->getKey());
     }
 }
