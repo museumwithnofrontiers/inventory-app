@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 use App\Enums\MediaType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\ExtraJsonField;
 use App\Models\ItemMedia;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -47,11 +48,19 @@ class MediaRelationManager extends RelationManager
                 Textarea::make('description')
                     ->rows(3)
                     ->columnSpanFull(),
+                // Optional, unlike a translation's language, so not
+                // TranslationFormSchema::languageField() (which is required).
+                Select::make('language_id')
+                    ->label('Language')
+                    ->relationship('language', 'internal_name')
+                    ->searchable()
+                    ->nullable(),
                 TextInput::make('display_order')
                     ->label('Display order')
                     ->numeric()
                     ->integer()
                     ->default(0),
+                ExtraJsonField::formComponent(),
             ]);
     }
 
