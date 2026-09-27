@@ -127,6 +127,11 @@ class DocumentUploadListener implements ShouldQueue
      * Move the validated file to the documents disk and create the
      * `ItemDocument` directly — promotion and attachment are the same step,
      * because documents have no reuse pool to attach from.
+     *
+     * The pending file is only deleted once the `ItemDocument` exists, so a
+     * failed copy or a failed insert never loses the upload: both end in the
+     * rejection path, which still has the pending file to clean up. The disks
+     * don't throw (`'throw' => false`), so the copy's return value is checked.
      */
     private function promote(DocumentUpload $documentUpload, string $pendingDisk, string $pendingPath, string $filename): void
     {
@@ -142,26 +147,45 @@ class DocumentUploadListener implements ShouldQueue
             return;
         }
 
-        Storage::disk($finalDisk)->writeStream($finalPath, $readStream);
+        try {
+            $written = Storage::disk($finalDisk)->writeStream($finalPath, $readStream);
+        } finally {
+            if (is_resource($readStream)) {
+                fclose($readStream);
+            }
+        }
+
+        if ($written !== true) {
+            Storage::disk($finalDisk)->delete($finalPath);
+            $this->reject($documentUpload, $pendingDisk, $pendingPath, 'the file could not be stored');
+
+            return;
+        }
+
+        try {
+            // Recommended by the design: give the ItemDocument the same id as
+            // the DocumentUpload it came from, mirroring how AvailableImage
+            // preserves ImageUpload's id.
+            $itemDocument = new ItemDocument([
+                'item_id' => $documentUpload->item_id,
+                'language_id' => $documentUpload->language_id,
+                'path' => $filename,
+                'original_name' => $documentUpload->original_name,
+                'mime_type' => $documentUpload->mime_type,
+                'size' => $documentUpload->size,
+                'title' => $documentUpload->title,
+                'display_order' => $documentUpload->display_order
+                    ?? ItemDocument::getNextDisplayOrderFor(['item_id' => $documentUpload->item_id]),
+            ]);
+            $itemDocument->id = $documentUpload->id;
+            $itemDocument->save();
+        } catch (Throwable $e) {
+            Storage::disk($finalDisk)->delete($finalPath);
+
+            throw $e;
+        }
+
         Storage::disk($pendingDisk)->delete($pendingPath);
-
-        // Recommended by the design: give the ItemDocument the same id as
-        // the DocumentUpload it came from, mirroring how AvailableImage
-        // preserves ImageUpload's id.
-        $itemDocument = new ItemDocument([
-            'item_id' => $documentUpload->item_id,
-            'language_id' => $documentUpload->language_id,
-            'path' => $filename,
-            'original_name' => $documentUpload->original_name,
-            'mime_type' => $documentUpload->mime_type,
-            'size' => $documentUpload->size,
-            'title' => $documentUpload->title,
-            'display_order' => $documentUpload->display_order
-                ?? ItemDocument::getNextDisplayOrderFor(['item_id' => $documentUpload->item_id]),
-        ]);
-        $itemDocument->id = $documentUpload->id;
-        $itemDocument->save();
-
         $documentUpload->delete();
     }
 
