@@ -5,6 +5,8 @@ namespace Tests\Filament\Support;
 use App\Filament\Concerns\HasChangeParentAction;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
+use App\Filament\Resources\RoleResource\Pages\EditRole;
+use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Collection;
@@ -19,8 +21,11 @@ use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\AssociateAction;
 use Filament\Tables\Actions\AttachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use ReflectionClass;
+use Spatie\Permission\Models\Permission as SpatiePermission;
+use Spatie\Permission\Models\Role;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
@@ -68,6 +73,17 @@ class RecordSelectTest extends TestCase
             'context_id' => $context->id,
             'language_id' => $language->id,
         ]);
+    }
+
+    protected function makeRole(): Role
+    {
+        /** @var Role $role */
+        $role = Role::create([
+            'name' => 'Test role '.Str::random(8),
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+
+        return $role;
     }
 
     // ── Convention: no record select preloads ───────────────────────────────
@@ -303,6 +319,35 @@ class RecordSelectTest extends TestCase
         $this->assertSame('other-glossary', $action->getRecordTitle($other));
     }
 
+    // ── Permission (Spatie): no internal_name or backward_compatibility ──────
+
+    public function test_record_select_for_permissions_searches_by_name_and_orders_by_name(): void
+    {
+        $guard = config('fortify.guard', 'web');
+        $target = SpatiePermission::firstOrCreate(['name' => 'zzz-target-permission', 'guard_name' => $guard]);
+        SpatiePermission::firstOrCreate(['name' => 'aaa-unrelated-permission', 'guard_name' => $guard]);
+
+        $action = RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::PERMISSIONS);
+
+        $this->assertFalse($action->isRecordSelectPreloaded());
+        $this->assertSame(['name', 'guard_name'], $action->getRecordSelectSearchColumns());
+
+        $reflection = new ReflectionClass($action);
+        $property = $reflection->getProperty('modifyRecordSelectOptionsQueryUsing');
+        $property->setAccessible(true);
+
+        // The app seeds its own permissions (access-admin-panel, view-data, ...)
+        // for every test, so scope down to just the two rows this test created
+        // before asserting order — the orderBy('name') the options query
+        // applies stays intact underneath this added whereIn().
+        $names = $property->getValue($action)(SpatiePermission::query())
+            ->whereIn('name', ['aaa-unrelated-permission', 'zzz-target-permission'])
+            ->pluck('name')->all();
+        $this->assertSame(['aaa-unrelated-permission', 'zzz-target-permission'], $names);
+
+        $this->assertSame("{$target->name} [{$guard}]", $action->getRecordTitle($target));
+    }
+
     // ── excludingDescendantsOf() ──────────────────────────────────────────────
 
     public function test_excluding_descendants_of_excludes_the_record_and_its_descendants(): void
@@ -471,6 +516,39 @@ class RecordSelectTest extends TestCase
 
         $this->assertArrayHasKey($target->id, $select->getSearchResults($target->id));
         $this->assertArrayHasKey($target->id, $select->getSearchResults('ATTACH-001'));
+        $this->assertArrayHasKey($target->id, $select->getSearchResults('attach-target'));
+    }
+
+    /**
+     * The Role Permissions manager's mounted attach select goes through
+     * RecordSelect::recordSelectFor(): searchable by name, never preloaded.
+     */
+    public function test_role_permissions_attach_record_select_searches_by_name_and_never_preloads(): void
+    {
+        $user = $this->createRoleManagerUser();
+        $role = $this->makeRole();
+        $guard = config('fortify.guard', 'web');
+        $target = SpatiePermission::firstOrCreate(['name' => 'attach-target-permission', 'guard_name' => $guard]);
+        SpatiePermission::firstOrCreate(['name' => 'attach-noise-permission', 'guard_name' => $guard]);
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)->test(PermissionsRelationManager::class, [
+            'ownerRecord' => $role,
+            'pageClass' => EditRole::class,
+        ]);
+
+        $component->mountTableAction('attach');
+
+        $action = $component->instance()->getMountedTableAction();
+        $this->assertInstanceOf(AttachAction::class, $action);
+        $this->assertFalse($action->isRecordSelectPreloaded());
+
+        $form = $component->instance()->getMountedTableActionForm();
+        $this->assertNotNull($form);
+        $select = $form->getFlatFields()['recordId'];
+
+        $this->assertTrue($select->isSearchable());
         $this->assertArrayHasKey($target->id, $select->getSearchResults('attach-target'));
     }
 

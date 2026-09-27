@@ -322,18 +322,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PINNED_PENDING = [
-        // missing AuthorizesRelationMutations
-        LanguageTranslationsRelationManager::class,
-        GlossaryTranslationsRelationManager::class,
-        GlossarySpellingsRelationManager::class,
-        ItemItemLinkTranslationsRelationManager::class,
-        TimelineEventTranslationsRelationManager::class,
-        ProjectCollectionsRelationManager::class,
-        UsersRelationManager::class,
-
-        // missing AuthorizesRelationMutations; AttachAction preloads its record select
-        // (preloadRecordSelect()) and builds it directly instead of via RecordSelect::recordSelectFor()
-        PermissionsRelationManager::class,
     ];
 
     // ── Discovery ────────────────────────────────────────────────────────────

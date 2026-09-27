@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemItemLinkResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Models\ItemItemLink;
 use App\Models\ItemItemLinkTranslation;
@@ -24,6 +25,8 @@ use Illuminate\Validation\Rules\Unique;
 
 class TranslationsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'translations';
 
     protected static ?string $recordTitleAttribute = 'language_id';
