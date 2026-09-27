@@ -14,6 +14,7 @@ use App\Filament\Resources\TimelineResource\Pages\ViewTimeline;
 use App\Filament\Resources\TimelineResource\RelationManagers\EventsRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Country;
 use App\Models\Timeline;
@@ -87,20 +88,7 @@ class TimelineResource extends Resource
                             ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Country::find($value)->internal_name ?? $value) : '')
                             ->searchable()
                             ->nullable(),
-                        Select::make('collection_id')
-                            ->label('Collection')
-                            ->getSearchResultsUsing(fn (string $search): array => Collection::query()
-                                ->where('internal_name', 'like', "%{$search}%")
-                                ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                                ->orWhere('id', 'like', "%{$search}%")
-                                ->orderBy('internal_name')
-                                ->limit(50)
-                                ->pluck('internal_name', 'id')
-                                ->all()
-                            )
-                            ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Collection::find($value)->internal_name ?? $value) : '')
-                            ->searchable()
-                            ->nullable(),
+                        RecordSelect::forCollections(required: false),
                         TextInput::make('backward_compatibility')
                             ->label('Legacy code')
                             ->maxLength(255)

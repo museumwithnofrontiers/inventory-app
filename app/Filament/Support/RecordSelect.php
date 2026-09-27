@@ -9,6 +9,7 @@ use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\Partner;
 use App\Models\Tag;
+use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\Workshop;
 use Closure;
@@ -30,10 +31,11 @@ use Spatie\Permission\Models\Permission;
  * exists, ordered, capped at {@see self::RESULT_LIMIT} results, and never
  * preloaded.
  *
- * Tag, Artist, Workshop and Glossary have no `*DisplayLabel` helper. Their
- * label is the model's own natural name column: Tag::description
- * (TagResource's own `$recordTitleAttribute`), Artist::name, Workshop::name,
- * Glossary::internal_name — suffixed with the legacy `backward_compatibility`
+ * Tag, Artist, Workshop, Glossary and Timeline have no `*DisplayLabel`
+ * helper. Their label is the model's own natural name column:
+ * Tag::description (TagResource's own `$recordTitleAttribute`),
+ * Artist::name, Workshop::name, Glossary::internal_name,
+ * Timeline::internal_name — suffixed with the legacy `backward_compatibility`
  * code the same way the display-label entities are, via
  * {@see self::legacyLabel()}.
  *
@@ -228,6 +230,28 @@ class RecordSelect
                 ])
                 ->all())
             ->getOptionLabelUsing(fn (mixed $value): string => TimelineEventDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''));
+
+        return self::requiredOrNullable($select, $required);
+    }
+
+    public static function forTimelines(string $name = 'timeline_id', string $label = 'Timeline', bool $required = true): Select
+    {
+        $select = Select::make($name)
+            ->label($label)
+            ->searchable()
+            ->getSearchResultsUsing(fn (string $search): array => self::applyBoundedSearch(Timeline::query(), $search)
+                ->get()
+                ->mapWithKeys(fn (Timeline $timeline): array => [
+                    $timeline->id => self::legacyLabel($timeline->internal_name, $timeline->backward_compatibility),
+                ])
+                ->all())
+            ->getOptionLabelUsing(function (mixed $value): string {
+                $timeline = Timeline::query()->whereKey($value)->first();
+
+                return $timeline instanceof Timeline
+                    ? self::legacyLabel($timeline->internal_name, $timeline->backward_compatibility)
+                    : (is_scalar($value) ? (string) $value : '');
+            });
 
         return self::requiredOrNullable($select, $required);
     }
