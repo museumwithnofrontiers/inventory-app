@@ -176,9 +176,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // has-many
-        OwnedItemsRelationManager::class,
-
         // pivot
         TimelineEventsRelationManager::class,
 
