@@ -4,12 +4,10 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Enums\Permission;
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\TagResource;
 use App\Filament\Support\RecordSelect;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
@@ -17,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 class TagsRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
+    use PivotRelationActions;
 
     protected static string $relationship = 'tags';
 
@@ -59,13 +58,14 @@ class TagsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::TAGS),
+                $this->pivotAttachAction(RecordSelect::TAGS, []),
             ])
             ->actions([
-                DetachAction::make(),
+                $this->pivotViewAction(TagResource::class),
+                $this->pivotDetachAction(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }

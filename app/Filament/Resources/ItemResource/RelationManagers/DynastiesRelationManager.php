@@ -3,12 +3,13 @@
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Support\DynastyDisplayLabel;
 use App\Filament\Support\RecordSelect;
+use App\Models\Dynasty;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -16,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 class DynastiesRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
+    use PivotRelationActions;
 
     protected static string $relationship = 'dynasties';
 
@@ -58,13 +60,27 @@ class DynastiesRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::DYNASTIES),
+                $this->pivotAttachAction(RecordSelect::DYNASTIES, []),
             ])
             ->actions([
-                DetachAction::make(),
+                // Dynasty has no Filament Resource of its own (M7 story A2.4,
+                // #1903) — see ArtistsRelationManager's row 'view' comment for
+                // why a plain ViewAction (rather than pivotViewAction()) is
+                // correct here and needs no extra authorization wiring.
+                ViewAction::make()
+                    ->modalHeading('Dynasty')
+                    ->infolist(fn (Dynasty $record): array => [
+                        TextEntry::make('display_label')->label('Dynasty'),
+                        TextEntry::make('from_ad')->label('From (AD)'),
+                        TextEntry::make('to_ad')->label('To (AD)'),
+                        TextEntry::make('from_ah')->label('From (AH)'),
+                        TextEntry::make('to_ah')->label('To (AH)'),
+                        TextEntry::make('backward_compatibility')->label('Legacy code'),
+                    ]),
+                $this->pivotDetachAction(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }

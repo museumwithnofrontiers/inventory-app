@@ -182,11 +182,8 @@ class RelationManagerConventionTest extends TestCase
         OwnedItemsRelationManager::class,
 
         // pivot
+        // Tags/Artists/Workshops/Dynasties: done by A2.4 (#1903).
         CollectionPartnersRelationManager::class,
-        TagsRelationManager::class,
-        ArtistsRelationManager::class,
-        WorkshopsRelationManager::class,
-        DynastiesRelationManager::class,
         TimelineEventsRelationManager::class,
         CollectionParticipationsRelationManager::class,
 
