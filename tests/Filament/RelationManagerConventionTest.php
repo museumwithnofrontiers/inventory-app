@@ -45,6 +45,7 @@ use Filament\Tables\Actions\AssociateAction;
 use Filament\Tables\Actions\AttachAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
 use Livewire\Features\SupportTesting\Testable;
@@ -176,11 +177,7 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // pivot
-        TimelineEventsRelationManager::class,
-
         // inline
-        MediaRelationManager::class,
         DocumentsRelationManager::class,
     ];
 
@@ -422,7 +419,7 @@ class RelationManagerConventionTest extends TestCase
         $this->assertSame(['edit', 'delete'], $this->namesOf($row), "{$class}: row actions must be exactly [edit, delete].");
 
         $fields = $this->mountedActionFieldNames($component, 'create');
-        $this->assertContains('language', $fields, "{$class}: the inline Create/Edit form must include a 'language' field (#1908).");
+        $this->assertContains('language_id', $fields, "{$class}: the inline Create/Edit form must include a language field, 'language_id' (#1908).");
         $this->assertContains('extra', $fields, "{$class}: the inline Create/Edit form must include an 'extra' field (#1908).");
     }
 
@@ -492,7 +489,7 @@ class RelationManagerConventionTest extends TestCase
         }
 
         if ($config['bcColumn'] ?? false) {
-            $this->assertPivotBackwardCompatibilityRule($component, $table, $class);
+            $this->assertPivotBackwardCompatibilityRule($component, $table, $class, $config);
         }
     }
 
@@ -562,12 +559,13 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * Scoped to what's reachable without a manager-specific attached-record
-     * fixture: the pivot column's toggle state and the attach form. The
-     * edit-pivot modal's fields are the implementing story's responsibility
-     * to also verify once it has a real attached record to mount 'edit' on.
+     * The pivot column's toggle state, the attach form, AND (M7 story A2.3,
+     * #1902) the edit-pivot modal, which needs a real attached record to
+     * mount 'edit' on (it's a row action) — built here via the manager's own
+     * relationship, off the same cached owner record every other check in
+     * this test case already mounted against.
      */
-    private function assertPivotBackwardCompatibilityRule(Testable $component, Table $table, string $class): void
+    private function assertPivotBackwardCompatibilityRule(Testable $component, Table $table, string $class, array $config): void
     {
         $column = null;
 
@@ -588,6 +586,29 @@ class RelationManagerConventionTest extends TestCase
 
         $attachFields = $this->mountedActionFieldNames($component, 'attach');
         $this->assertNotContains('backward_compatibility', $attachFields, "{$class}: the attach form must not expose backward_compatibility (importer-owned).");
+
+        [$owner] = $this->ownerFor($config['owner']);
+        $relationshipName = $this->relationshipNameOf($class);
+        /** @var BelongsToMany<Model, Model> $relation */
+        $relation = $owner->{$relationshipName}();
+        $relatedRecord = $relation->getRelated()::factory()->create();
+        $relation->attach($relatedRecord->getKey());
+
+        $editFields = $this->mountedActionFieldNames($component, 'edit', $relatedRecord);
+        $this->assertNotContains('backward_compatibility', $editFields, "{$class}: the edit-pivot modal must not expose backward_compatibility (importer-owned).");
+    }
+
+    /**
+     * Reads a relation manager class's own `protected static string
+     * $relationship` without instantiating it.
+     */
+    private function relationshipNameOf(string $class): string
+    {
+        $property = new ReflectionProperty($class, 'relationship');
+        $property->setAccessible(true);
+
+        /** @var string */
+        return $property->getValue();
     }
 
     // ── Action introspection helpers ─────────────────────────────────────────
@@ -655,16 +676,18 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * Reads a header table action's mounted form field names via Filament's
-     * own action-mounting lifecycle — the only way to observe a
+     * Reads a table action's mounted form field names via Filament's own
+     * action-mounting lifecycle — the only way to observe a
      * `->form(fn (...) => [...])` closure's real output without
-     * reimplementing Filament's own evaluation.
+     * reimplementing Filament's own evaluation. $record is required for a
+     * row action (e.g. 'edit') and omitted for a header action (e.g.
+     * 'attach').
      *
      * @return array<int, string>
      */
-    private function mountedActionFieldNames(Testable $component, string $actionName): array
+    private function mountedActionFieldNames(Testable $component, string $actionName, ?Model $record = null): array
     {
-        $component->mountTableAction($actionName);
+        $component->mountTableAction($actionName, $record);
         $form = $component->instance()->getMountedTableActionForm();
         $fields = $form !== null ? array_keys($form->getFlatFields()) : [];
         $component->call('unmountTableAction', false, false);

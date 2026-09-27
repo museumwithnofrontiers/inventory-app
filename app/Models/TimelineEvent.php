@@ -104,11 +104,12 @@ class TimelineEvent extends Model
     /**
      * Get the items associated with this event.
      *
-     * @return BelongsToMany<Item, $this>
+     * @return BelongsToMany<Item, $this, TimelineEventItem>
      */
     public function items(): BelongsToMany
     {
         return $this->belongsToMany(Item::class, 'timeline_event_item')
+            ->using(TimelineEventItem::class)
             ->withPivot('display_order', 'backward_compatibility', 'extra')
             ->withTimestamps();
     }
