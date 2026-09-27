@@ -326,11 +326,6 @@ class RelationManagerConventionTest extends TestCase
         LanguageTranslationsRelationManager::class,
         ItemItemLinkTranslationsRelationManager::class,
         ProjectCollectionsRelationManager::class,
-        UsersRelationManager::class,
-
-        // missing AuthorizesRelationMutations; AttachAction preloads its record select
-        // (preloadRecordSelect()) and builds it directly instead of via RecordSelect::recordSelectFor()
-        PermissionsRelationManager::class,
     ];
 
     // ── Discovery ────────────────────────────────────────────────────────────

@@ -18,6 +18,7 @@ use Filament\Tables\Actions\AttachAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
+use Spatie\Permission\Models\Permission;
 
 /**
  * The one record-select helper (M7 epic #1871, story A0.2).
@@ -35,6 +36,11 @@ use InvalidArgumentException;
  * Glossary::internal_name — suffixed with the legacy `backward_compatibility`
  * code the same way the display-label entities are, via
  * {@see self::legacyLabel()}.
+ *
+ * Permission (Spatie) has an auto-increment integer id with no natural
+ * meaning to search on, and no `internal_name`/`backward_compatibility`
+ * columns at all, so it searches `name` and `guard_name` only, ordered by
+ * `name`, labelled `{name} [{guard_name}]` via {@see self::permissionLabel()}.
  *
  * Two shapes are exposed:
  *  - `for*()` return a plain, ready-to-use `Select` for form fields (e.g.
@@ -71,6 +77,8 @@ class RecordSelect
 
     public const GLOSSARIES = 'glossaries';
 
+    public const PERMISSIONS = 'permissions';
+
     private const RESULT_LIMIT = 50;
 
     /** @var array<int, string> */
@@ -78,6 +86,9 @@ class RecordSelect
 
     /** @var array<int, string> */
     private const ID_BC = ['id', 'backward_compatibility'];
+
+    /** @var array<int, string> */
+    private const NAME_GUARD = ['name', 'guard_name'];
 
     // ── Plain Select factories ──────────────────────────────────────────────
 
@@ -396,6 +407,11 @@ class RecordSelect
                 ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('internal_name'), $scope))
                 ->recordTitle(fn (Glossary $record): string => self::legacyLabel($record->internal_name, $record->backward_compatibility)),
 
+            self::PERMISSIONS => $action
+                ->recordSelectSearchColumns(self::NAME_GUARD)
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('name'), $scope))
+                ->recordTitle(fn (Permission $record): string => self::permissionLabel($record->name, $record->guard_name)),
+
             default => throw new InvalidArgumentException("Unknown RecordSelect entity [{$entity}]."),
         };
     }
@@ -524,5 +540,14 @@ class RecordSelect
         return $backwardCompatibility
             ? "{$name} [{$backwardCompatibility}]"
             : $name;
+    }
+
+    /**
+     * Permission's label: name suffixed with its guard, since a Permission
+     * name is only unique per guard (Spatie's own uniqueness rule).
+     */
+    private static function permissionLabel(string $name, string $guardName): string
+    {
+        return "{$name} [{$guardName}]";
     }
 }
