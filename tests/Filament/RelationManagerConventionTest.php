@@ -177,15 +177,10 @@ class RelationManagerConventionTest extends TestCase
      */
     private const PENDING = [
         // has-many
-        ChildItemsRelationManager::class,
         PictureItemsRelationManager::class,
         OwnedItemsRelationManager::class,
 
         // pivot
-        TagsRelationManager::class,
-        ArtistsRelationManager::class,
-        WorkshopsRelationManager::class,
-        DynastiesRelationManager::class,
         TimelineEventsRelationManager::class,
 
         // inline
