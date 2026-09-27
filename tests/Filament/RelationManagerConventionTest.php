@@ -177,7 +177,7 @@ class RelationManagerConventionTest extends TestCase
      */
     private const PENDING = [
         // has-many
-        ChildItemsRelationManager::class,
+        // ChildItemsRelationManager: done by A1.2 (#1897).
         PictureItemsRelationManager::class,
         OwnedItemsRelationManager::class,
 
