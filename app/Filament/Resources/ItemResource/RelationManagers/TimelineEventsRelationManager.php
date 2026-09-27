@@ -2,9 +2,13 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Resources\TimelineResource;
+use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TimelineEventDisplayLabel;
+use App\Filament\Support\TimelineEventItemPivot;
 use App\Models\TimelineEvent;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -13,6 +17,9 @@ use Illuminate\Database\Eloquent\Builder;
 
 class TimelineEventsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+    use PivotRelationActions;
+
     protected static string $relationship = 'timelineEvents';
 
     protected static ?string $recordTitleAttribute = 'internal_name';
@@ -51,10 +58,8 @@ class TimelineEventsRelationManager extends RelationManager
                     ->label('Year to')
                     ->sortable()
                     ->toggleable(),
-                TextColumn::make('pivot.display_order')
-                    ->label('Display order')
-                    ->sortable()
-                    ->toggleable(),
+                TimelineEventItemPivot::displayOrderColumn(),
+                TimelineEventItemPivot::backwardCompatibilityColumn(),
                 TextColumn::make('internal_name')
                     ->label('Internal name')
                     ->searchable()
@@ -65,6 +70,17 @@ class TimelineEventsRelationManager extends RelationManager
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->headerActions([
+                $this->pivotAttachAction(RecordSelect::TIMELINE_EVENTS, TimelineEventItemPivot::pivotFormFields()),
+            ])
+            ->actions([
+                $this->pivotViewAction(TimelineEventResource::class),
+                $this->pivotEditAction(TimelineEventItemPivot::pivotFormFields()),
+                $this->pivotDetachAction(),
+            ])
+            ->bulkActions([
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }
