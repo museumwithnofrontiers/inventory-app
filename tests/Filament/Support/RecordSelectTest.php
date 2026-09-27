@@ -10,6 +10,7 @@ use App\Filament\Support\TranslationFormSchema;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Dynasty;
+use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\Tag;
@@ -249,6 +250,57 @@ class RecordSelectTest extends TestCase
 
         $this->assertArrayHasKey($target->id, $select->getSearchResults($target->id));
         $this->assertArrayHasKey($target->id, $select->getSearchResults('DYN-001'));
+    }
+
+    // ── Glossary: self-pivot, no *DisplayLabel helper (M7 story A5.5, #2091) ──
+
+    public function test_for_glossaries_searches_by_id_internal_name_and_backward_compatibility_and_labels_with_legacy_code(): void
+    {
+        $target = Glossary::factory()->create([
+            'internal_name' => 'glossary-alpha',
+            'backward_compatibility' => 'LEGACY-GLOSS-001',
+        ]);
+        Glossary::factory()->create(['internal_name' => 'unrelated-glossary']);
+
+        $action = RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::GLOSSARIES);
+
+        $this->assertFalse($action->isRecordSelectPreloaded());
+        $this->assertSame(['id', 'internal_name', 'backward_compatibility'], $action->getRecordSelectSearchColumns());
+
+        $reflection = new ReflectionClass($action);
+        $property = $reflection->getProperty('modifyRecordSelectOptionsQueryUsing');
+        $property->setAccessible(true);
+
+        $ids = $property->getValue($action)(Glossary::query())->pluck('id')->all();
+        $this->assertContains($target->id, $ids);
+
+        $this->assertSame('glossary-alpha [LEGACY-GLOSS-001]', $action->getRecordTitle($target));
+    }
+
+    /**
+     * The Synonyms relation manager's cycle guard: a Glossary can't be its
+     * own synonym, so its Attach select's $scope excludes the owner record.
+     */
+    public function test_record_select_for_glossaries_scope_excludes_the_given_record_while_keeping_labels(): void
+    {
+        $owner = Glossary::factory()->create(['internal_name' => 'owner-glossary', 'backward_compatibility' => null]);
+        $other = Glossary::factory()->create(['internal_name' => 'other-glossary', 'backward_compatibility' => null]);
+
+        $action = RecordSelect::recordSelectFor(
+            AttachAction::make(),
+            RecordSelect::GLOSSARIES,
+            fn ($query) => $query->where('id', '!=', $owner->id)
+        );
+
+        $reflection = new ReflectionClass($action);
+        $property = $reflection->getProperty('modifyRecordSelectOptionsQueryUsing');
+        $property->setAccessible(true);
+
+        $ids = $property->getValue($action)(Glossary::query())->pluck('id')->all();
+
+        $this->assertNotContains($owner->id, $ids);
+        $this->assertContains($other->id, $ids);
+        $this->assertSame('other-glossary', $action->getRecordTitle($other));
     }
 
     // ── excludingDescendantsOf() ──────────────────────────────────────────────
