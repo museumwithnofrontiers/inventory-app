@@ -3,14 +3,22 @@
 namespace Tests\Filament;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
-use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ImagesRelationManager as CollectionImagesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager as CollectionPartnersRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
-use App\Filament\Resources\ItemResource;
+use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
+use App\Filament\Resources\CollectionTranslationResource\RelationManagers\SiblingTranslationsRelationManager as CollectionTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\CountryResource\Pages\EditCountry;
+use App\Filament\Resources\CountryResource\RelationManagers\TranslationsRelationManager as CountryTranslationsRelationManager;
+use App\Filament\Resources\GlossaryResource\Pages\EditGlossary;
+use App\Filament\Resources\GlossaryResource\RelationManagers\SpellingsRelationManager as GlossarySpellingsRelationManager;
+use App\Filament\Resources\GlossaryResource\RelationManagers\SynonymsRelationManager as GlossarySynonymsRelationManager;
+use App\Filament\Resources\GlossaryResource\RelationManagers\TranslationsRelationManager as GlossaryTranslationsRelationManager;
+use App\Filament\Resources\ItemItemLinkResource\Pages\EditItemItemLink;
+use App\Filament\Resources\ItemItemLinkResource\RelationManagers\TranslationsRelationManager as ItemItemLinkTranslationsRelationManager;
 use App\Filament\Resources\ItemResource\Pages\EditItem;
 use App\Filament\Resources\ItemResource\RelationManagers\ArtistsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\ChildItemsRelationManager;
@@ -26,27 +34,58 @@ use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
-use App\Filament\Resources\PartnerResource;
+use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTranslationsRelationManager as ItemTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\LanguageResource\Pages\EditLanguage;
+use App\Filament\Resources\LanguageResource\RelationManagers\TranslationsRelationManager as LanguageTranslationsRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\EditPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\CollectionParticipationsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManager as PartnerImagesRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager as PartnerTranslationsRelationManager;
+use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
+use App\Filament\Resources\PartnerTranslationResource\RelationManagers\ImagesRelationManager as PartnerTranslationImagesRelationManager;
+use App\Filament\Resources\PartnerTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PartnerTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\ProjectResource\Pages\EditProject;
+use App\Filament\Resources\ProjectResource\RelationManagers\CollectionsRelationManager as ProjectCollectionsRelationManager;
+use App\Filament\Resources\ProjectResource\RelationManagers\ItemsRelationManager as ProjectItemsRelationManager;
+use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager as ProjectPartnersRelationManager;
+use App\Filament\Resources\RoleResource\Pages\EditRole;
+use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
+use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
+use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
+use App\Filament\Resources\TimelineEventResource\RelationManagers\ImagesRelationManager as TimelineEventImagesRelationManager;
+use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationManager as TimelineEventItemsRelationManager;
+use App\Filament\Resources\TimelineEventResource\RelationManagers\TranslationsRelationManager as TimelineEventTranslationsRelationManager;
+use App\Filament\Resources\TimelineResource\Pages\EditTimeline;
+use App\Filament\Resources\TimelineResource\RelationManagers\EventsRelationManager as TimelineEventsRelationManagerForTimeline;
 use App\Models\Collection;
+use App\Models\CollectionTranslation;
 use App\Models\Context;
+use App\Models\Country;
+use App\Models\Glossary;
 use App\Models\Item;
+use App\Models\ItemItemLink;
+use App\Models\ItemTranslation;
 use App\Models\Language;
 use App\Models\Partner;
+use App\Models\PartnerTranslation;
+use App\Models\Project;
+use App\Models\Timeline;
+use App\Models\TimelineEvent;
+use App\Models\User;
 use Filament\Actions\ActionGroup as BaseActionGroup;
 use Filament\Actions\MountableAction;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Resources\Resource;
 use Filament\Tables\Actions\AssociateAction;
 use Filament\Tables\Actions\AttachAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -55,43 +94,60 @@ use PHPUnit\Framework\AssertionFailedError;
 use PHPUnit\Framework\Attributes\DataProvider;
 use ReflectionClass;
 use ReflectionProperty;
+use Spatie\Permission\Models\Role;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
- * M7 Story A0.5 (epic #1871): the milestone's enforcement mechanism.
+ * M7 Story A0.5 (epic #1871), extended panel-wide by Story A5.1 (epic #1876).
  *
- * Iterates every relation manager registered via getRelations() on
- * CollectionResource, PartnerResource and ItemResource (RelationGroups
- * flattened) and classifies each into exactly one kind:
+ * Iterates every relation manager registered via getRelations() on every
+ * Resource the admin panel discovers (RelationGroups flattened — see
+ * {@see self::allManagers()}) and classifies each into exactly one kind:
  *
- * - has-many:      #1896-#1899 (Collection/Item children, Item picture items,
- *                  Partner owned items).
- * - pivot:         #1900-#1903 (collection_item, collection_partner,
- *                  timeline_event_item, tags/artists/workshops/dynasties).
- * - translations:  #1904 (Collection/Item/Partner TranslationsRelationManager).
- * - inline:        #1906-#1908 (Item Media, Item Documents).
- * - pinned:        the three Images managers and the two Item Links managers.
- *                  No convention fits them and no story migrates them; their
- *                  CURRENT action names/order are pinned exactly as-is.
+ * - has-many:      a child row carries the owner's FK. Header: Create
+ *                  (navigates to the child Resource) + Attach existing. Row:
+ *                  view/edit/dissociate/delete. Bulk: dissociate.
+ * - pivot:         a many-to-many relation, optionally with its own metadata
+ *                  columns. Header: Attach. Row: view/(edit)/detach. Bulk:
+ *                  detach.
+ * - translations:  the owner-side manager listing a Collection/Item/Partner's
+ *                  own translations, each of which has its own
+ *                  TranslationResource. Header: create (navigates there) +
+ *                  createDefaultTranslation. Row: viewTranslation,
+ *                  editTranslation, viewParent(Owner), delete.
+ * - inline:        Item Media and Item Documents — no Resource exists for
+ *                  either, so Create/Edit stay inline modals.
+ * - pinned:        no convention fits (a Base*RelationManager shared by
+ *                  several resources whose shape isn't one of the above, a
+ *                  read-only rollup, a relation with no Resource of its own
+ *                  to navigate to, or a manager Pascal named directly — Role
+ *                  permissions/users). No story migrates these; their CURRENT
+ *                  action names/order are pinned exactly as-is. Each entry's
+ *                  comment says why no convention applies.
  *
  * self::PENDING lists every has-many/pivot/translations/inline manager that
- * doesn't yet meet its kind's full target. Each later story (A1-A5) removes
- * its own manager(s) from this list as part of its PR; the milestone's DoD is
- * this list being empty.
+ * doesn't yet meet its kind's full target. self::PINNED_PENDING lists every
+ * pinned manager that doesn't yet meet the shared rules below (a pinned
+ * manager's action shape is never pending — only its compliance with the
+ * shared rules can be). Each alignment story removes its own manager(s) from
+ * whichever list it's on; both lists being empty is part of the milestone's
+ * DoD.
  *
  * Per manager (data-provider driven, one case per manager):
- * - Not pending (and every pinned manager): must fully meet its target,
- *   including the shared rules below. This is the acceptance: removing an
- *   entry without implementing the convention fails the test.
- * - Pending: only asserted to be a real manager of one of the three
- *   resources, AND asserted to NOT already fully meet its target (a stale
- *   compliant entry left on the pending list also fails the test).
+ * - Not pending, not pinned-pending: must fully meet its target, including
+ *   the shared rules below. This is the acceptance: removing an entry without
+ *   implementing the convention fails the test.
+ * - Pending: only asserted to be a real, registered manager, AND asserted to
+ *   NOT already fully meet its target plus the shared rules (a stale
+ *   compliant entry left on the list also fails the test).
+ * - Pinned-pending: same as pending, but for a pinned manager — asserted to
+ *   NOT already meet its pinned snapshot plus the shared rules.
  * - Unclassified (not in self::CLASSIFICATION): fails with a clear message.
  *
- * Shared rules, asserted on every non-pending manager (all kinds, including
- * pinned): AuthorizesRelationMutations is used; every record select comes
- * from RecordSelect (source + behaviour checks, see
+ * Shared rules, asserted on every non-pending, non-pinned-pending manager
+ * (all kinds, including pinned): AuthorizesRelationMutations is used; every
+ * record select comes from RecordSelect (source + behaviour checks, see
  * {@see self::assertRecordSelectSourceRule()}); pagination is capped at
  * [25, 50, 100]; a pivot's backward_compatibility column, where present, is
  * hidden-by-default and excluded from the attach form.
@@ -112,21 +168,24 @@ class RelationManagerConventionTest extends TestCase
     private const KIND_PINNED = 'pinned';
 
     /**
-     * Every relation manager of CollectionResource, PartnerResource and
-     * ItemResource, classified into exactly one kind. A manager registered
-     * via getRelations() but missing here fails the test with a clear
-     * message (see {@see self::classify()}).
+     * Every relation manager registered on the admin panel (see
+     * {@see self::allManagers()}), classified into exactly one kind. A
+     * manager registered via getRelations() but missing here fails the test
+     * with a clear message (see {@see self::classify()}).
      *
      * @var array<class-string, array<string, mixed>>
      */
     private const CLASSIFICATION = [
-        // ── has-many (#1896-#1899) ──────────────────────────────────────
+        // ── has-many ──────────────────────────────────────────────────
         ChildCollectionsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'collection'],
         ChildItemsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'item'],
         PictureItemsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'item'],
         OwnedItemsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'partner'],
+        ProjectItemsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'project'],
+        ProjectPartnersRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'project'],
+        TimelineEventsRelationManagerForTimeline::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'timeline'],
 
-        // ── pivot (#1900-#1903) ─────────────────────────────────────────
+        // ── pivot ─────────────────────────────────────────────────────
         CollectionItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true, 'extraRow' => ['view_appearance']],
         CollectionPartnersRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true],
         CollectionAppearancesRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => true, 'extraRow' => ['view_appearance']],
@@ -136,17 +195,19 @@ class RelationManagerConventionTest extends TestCase
         DynastiesRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
         TimelineEventsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => true, 'bcColumn' => true],
         CollectionParticipationsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'partner', 'edit' => true],
+        TimelineEventItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'timelineevent', 'edit' => true, 'bcColumn' => true],
+        GlossarySynonymsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'glossary', 'edit' => false],
 
-        // ── translations (#1904) ────────────────────────────────────────
+        // ── translations ──────────────────────────────────────────────
         CollectionTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'collection', 'viewParent' => 'viewParentCollection'],
         ItemTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'item', 'viewParent' => 'viewParentItem'],
         PartnerTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'partner', 'viewParent' => 'viewParentPartner'],
 
-        // ── inline (#1906-#1908) ────────────────────────────────────────
+        // ── inline ────────────────────────────────────────────────────
         MediaRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'media'],
         DocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'documents'],
 
-        // ── pinned — current shape, never migrated ─────────────────────
+        // ── pinned: the three original Images managers + the two Item Links managers ──
         CollectionImagesRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'collection',
             'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
@@ -167,16 +228,130 @@ class RelationManagerConventionTest extends TestCase
             'kind' => self::KIND_PINNED, 'owner' => 'item',
             'pinnedHeader' => ['create'], 'pinnedRow' => ['viewLink', 'edit', 'delete'], 'pinnedBulk' => [],
         ],
+
+        // ── pinned: BaseImagesRelationManager on other resources — same shape as the three above ──
+        PartnerTranslationImagesRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'partnertranslation',
+            'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
+        ],
+        TimelineEventImagesRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'timelineevent',
+            'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
+        ],
+
+        // ── pinned: BaseSiblingTranslationsRelationManager — shared base class, its own read-only shape ──
+        CollectionTranslationSiblingTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'collectiontranslation',
+            'pinnedHeader' => [], 'pinnedRow' => ['viewTranslation', 'editTranslation'], 'pinnedBulk' => [],
+        ],
+        ItemTranslationSiblingTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'itemtranslation',
+            'pinnedHeader' => [], 'pinnedRow' => ['viewTranslation', 'editTranslation'], 'pinnedBulk' => [],
+        ],
+        PartnerTranslationSiblingTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'partnertranslation',
+            'pinnedHeader' => [], 'pinnedRow' => ['viewTranslation', 'editTranslation'], 'pinnedBulk' => [],
+        ],
+
+        // ── pinned: translation-shaped, but no *TranslationResource exists to navigate to — inline Create/Edit stays ──
+        CountryTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'country',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
+        LanguageTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'language',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
+        GlossaryTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'glossary',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
+        GlossarySpellingsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'glossary',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
+        ItemItemLinkTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'itemitemlink',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['view', 'edit', 'delete'], 'pinnedBulk' => [],
+        ],
+        TimelineEventTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'timelineevent',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
+
+        // ── pinned: Project's rollup of the collections that appear via its own items — a derived,
+        // read-only BelongsToMany over the items table (no collection_project pivot), not a real FK
+        // relation, so nothing here can genuinely be attached/detached ──
+        ProjectCollectionsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'project',
+            'pinnedHeader' => [], 'pinnedRow' => [], 'pinnedBulk' => [],
+        ],
+
+        // ── pinned: Role permissions/users — named directly by Pascal (2026-09-27); Spatie's
+        // Permission/User models have no *DisplayLabel/RecordSelect entity and Permission has no
+        // Resource of its own to navigate to ──
+        PermissionsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'role',
+            'pinnedHeader' => ['attach', 'createPermission'], 'pinnedRow' => ['edit', 'detach', 'deletePermission'], 'pinnedBulk' => [],
+        ],
+        UsersRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'role',
+            'pinnedHeader' => [], 'pinnedRow' => [], 'pinnedBulk' => [],
+        ],
     ];
 
     /**
-     * Managers that don't yet meet their kind's full target. Each story
-     * removes its own entry as part of its PR; the milestone is done when
-     * this list is empty.
+     * Managers that don't yet meet their kind's full target plus the shared
+     * rules. Each alignment story removes its own entry as part of its PR;
+     * the milestone's DoD is this list being empty.
      *
      * @var array<int, class-string>
      */
-    private const PENDING = [];
+    private const PENDING = [
+        // has-many, but currently a read-only listing (no actions at all)
+        ProjectItemsRelationManager::class,
+        ProjectPartnersRelationManager::class,
+
+        // has-many-shaped, but timeline_events.timeline_id is NOT NULL — the alignment story
+        // must resolve what "detach" means (or doesn't) for a required parent
+        TimelineEventsRelationManagerForTimeline::class,
+
+        // pivot, but attaches via its own recordSelectSearchColumns()/recordSelectOptionsQuery()
+        // instead of RecordSelect::recordSelectFor(), and has no 'view' row action
+        GlossarySynonymsRelationManager::class,
+    ];
+
+    /**
+     * Pinned managers that don't yet meet the shared rules (their pinned
+     * action shape is exempt from ever changing, but AuthorizesRelationMutations,
+     * the RecordSelect rule, and the pagination rule are not). A pinned
+     * manager is never on self::PENDING — this is its equivalent. Each
+     * alignment story removes its own entry as part of its PR; the
+     * milestone's DoD is this list being empty too.
+     *
+     * @var array<int, class-string>
+     */
+    private const PINNED_PENDING = [
+        // missing AuthorizesRelationMutations, and paginated(false) leaves the default
+        // [5, 10, 25, 50, 'all'] page options instead of [25, 50, 100]
+        CollectionTranslationSiblingTranslationsRelationManager::class,
+        ItemTranslationSiblingTranslationsRelationManager::class,
+        PartnerTranslationSiblingTranslationsRelationManager::class,
+
+        // missing AuthorizesRelationMutations
+        CountryTranslationsRelationManager::class,
+        LanguageTranslationsRelationManager::class,
+        GlossaryTranslationsRelationManager::class,
+        GlossarySpellingsRelationManager::class,
+        ItemItemLinkTranslationsRelationManager::class,
+        TimelineEventTranslationsRelationManager::class,
+        ProjectCollectionsRelationManager::class,
+        UsersRelationManager::class,
+
+        // missing AuthorizesRelationMutations; AttachAction preloads its record select
+        // (preloadRecordSelect()) and builds it directly instead of via RecordSelect::recordSelectFor()
+        PermissionsRelationManager::class,
+    ];
 
     // ── Discovery ────────────────────────────────────────────────────────────
 
@@ -195,20 +370,56 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * Every relation manager currently registered on the three resources,
-     * discovered from their own getRelations() rather than a hardcoded list
-     * — so a manager added later without updating self::CLASSIFICATION is
-     * caught by {@see self::classify()} instead of silently skipped.
+     * Every relation manager currently registered on the admin panel,
+     * discovered from each registered Resource's own getRelations() rather
+     * than a hardcoded manager list — so a manager added later without
+     * updating self::CLASSIFICATION is caught by {@see self::classify()}
+     * instead of silently skipped.
      *
      * @return array<int, class-string>
      */
     private static function allManagers(): array
     {
-        return array_values(array_unique([
-            ...self::flattenRelations(CollectionResource::getRelations()),
-            ...self::flattenRelations(PartnerResource::getRelations()),
-            ...self::flattenRelations(ItemResource::getRelations()),
-        ]));
+        $managers = [];
+
+        foreach (self::allResources() as $resourceClass) {
+            $managers = [...$managers, ...self::flattenRelations($resourceClass::getRelations())];
+        }
+
+        return array_values(array_unique($managers));
+    }
+
+    /**
+     * Every Resource class the admin panel registers, i.e. what
+     * `Filament::getPanel('admin')->getResources()` returns — read directly
+     * off disk instead of through the Filament facade, because
+     * self::allManagers() backs a static #[DataProvider]: PHPUnit calls a
+     * data provider while building the test suite, before the Laravel
+     * application (and so the Filament facade) has booted. AdminPanelProvider
+     * registers every Resource via `discoverResources(in:
+     * app_path('Filament/Resources'), for: 'App\Filament\Resources')` — a
+     * flat, non-recursive scan of that one directory, which this mirrors
+     * exactly via glob() so it stays in sync automatically as resources are
+     * added or removed.
+     *
+     * @return array<int, class-string<\Filament\Resources\Resource>>
+     */
+    private static function allResources(): array
+    {
+        $directory = dirname(__DIR__, 2).'/app/Filament/Resources';
+        $classes = [];
+
+        foreach (glob($directory.'/*Resource.php') ?: [] as $file) {
+            $class = 'App\\Filament\\Resources\\'.basename($file, '.php');
+
+            if (is_subclass_of($class, Resource::class)) {
+                $classes[] = $class;
+            }
+        }
+
+        sort($classes);
+
+        return $classes;
     }
 
     /**
@@ -244,8 +455,19 @@ class RelationManagerConventionTest extends TestCase
         $config = $this->classify($managerClass);
 
         if ($config['kind'] === self::KIND_PINNED) {
-            // Pinned managers are never on the pending list: they must always
-            // match their current snapshot exactly, plus the shared rules.
+            if (in_array($managerClass, self::PINNED_PENDING, true)) {
+                $this->assertIsRealManager($managerClass, $config);
+                $this->assertFalse(
+                    $this->fullyCompliant($managerClass, $config),
+                    "{$managerClass} is on the pinned-pending allow-list but already fully meets its pinned snapshot ".
+                    'plus the shared rules — remove it from RelationManagerConventionTest::PINNED_PENDING.'
+                );
+
+                return;
+            }
+
+            // A pinned manager not on PINNED_PENDING must always match its
+            // current snapshot exactly, plus the shared rules.
             $this->assertMeetsTarget($managerClass, $config);
             $this->assertSharedRules($managerClass, $config);
 
@@ -267,25 +489,52 @@ class RelationManagerConventionTest extends TestCase
         $this->assertSharedRules($managerClass, $config);
     }
 
-    public function test_pending_allow_list_only_names_managers_registered_on_the_three_resources(): void
+    public function test_pending_and_pinned_pending_allow_lists_only_name_registered_managers_of_the_right_kind(): void
     {
-        $unknown = array_diff(self::PENDING, self::allManagers());
+        $allManagers = self::allManagers();
 
+        $unknownPending = array_diff(self::PENDING, $allManagers);
         $this->assertSame(
             [],
-            array_values($unknown),
-            'RelationManagerConventionTest::PENDING references manager(s) that are not registered on CollectionResource, PartnerResource or ItemResource: '.implode(', ', $unknown)
+            array_values($unknownPending),
+            'RelationManagerConventionTest::PENDING references manager(s) that are not registered on the admin panel: '.implode(', ', $unknownPending)
         );
+
+        $unknownPinnedPending = array_diff(self::PINNED_PENDING, $allManagers);
+        $this->assertSame(
+            [],
+            array_values($unknownPinnedPending),
+            'RelationManagerConventionTest::PINNED_PENDING references manager(s) that are not registered on the admin panel: '.implode(', ', $unknownPinnedPending)
+        );
+
+        // A pinned manager's action shape is never pending — only PINNED_PENDING applies to it —
+        // and a pending manager (has-many/pivot/translations/inline) is never pinned.
+        foreach (self::PENDING as $class) {
+            $this->assertNotSame(
+                self::KIND_PINNED,
+                $this->classify($class)['kind'],
+                "{$class} is classified pinned but listed on RelationManagerConventionTest::PENDING — a pinned manager belongs on PINNED_PENDING instead."
+            );
+        }
+
+        foreach (self::PINNED_PENDING as $class) {
+            $this->assertSame(
+                self::KIND_PINNED,
+                $this->classify($class)['kind'],
+                "{$class} is on RelationManagerConventionTest::PINNED_PENDING but isn't classified pinned — a non-pinned manager belongs on PENDING instead."
+            );
+        }
     }
 
-    public function test_the_three_resources_register_the_expected_number_of_relation_managers(): void
+    public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 4 has-many + 9 pivot + 3 translations + 2 inline + 5 pinned = 23.
-        // A change here means a manager was added or removed on Collection,
-        // Partner or Item — classify it in self::CLASSIFICATION (and, if it
-        // isn't yet convention-compliant, list it in self::PENDING) rather
-        // than letting this count silently drift.
-        $this->assertCount(23, self::allManagers());
+        // 7 has-many + 11 pivot + 3 translations + 2 inline + 19 pinned = 42.
+        // A change here means a manager was added or removed on some Resource
+        // registered on the admin panel — classify it in
+        // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
+        // list it on self::PENDING or self::PINNED_PENDING) rather than
+        // letting this count silently drift.
+        $this->assertCount(42, self::allManagers());
     }
 
     private function classify(string $class): array
@@ -294,7 +543,7 @@ class RelationManagerConventionTest extends TestCase
 
         if ($config === null) {
             Assert::fail(
-                "Relation manager [{$class}] is registered via getRelations() on CollectionResource, PartnerResource or ItemResource ".
+                "Relation manager [{$class}] is registered via getRelations() on a Resource the admin panel discovers ".
                 'but is not classified in RelationManagerConventionTest::CLASSIFICATION. Classify it as has-many, pivot, translations, '.
                 'inline or pinned before this test can hold it to (or exempt it from) a convention.'
             );
@@ -323,6 +572,7 @@ class RelationManagerConventionTest extends TestCase
             self::KIND_TRANSLATIONS => $this->assertTranslationsConvention($class, $config),
             self::KIND_INLINE => $this->assertInlineConvention($class, $config),
             self::KIND_PINNED => $this->assertPinnedConvention($class, $config),
+            default => Assert::fail("{$class}: unknown kind [{$config['kind']}] in RelationManagerConventionTest::CLASSIFICATION."),
         };
     }
 
@@ -396,6 +646,7 @@ class RelationManagerConventionTest extends TestCase
         match ($config['variant']) {
             'media' => $this->assertMediaConvention($class, $config),
             'documents' => $this->assertDocumentsConvention($class, $config),
+            default => Assert::fail("{$class}: unknown inline variant [{$config['variant']}] in RelationManagerConventionTest::CLASSIFICATION."),
         };
     }
 
@@ -588,7 +839,7 @@ class RelationManagerConventionTest extends TestCase
         $relationshipName = $this->relationshipNameOf($class);
         /** @var BelongsToMany<Model, Model> $relation */
         $relation = $owner->{$relationshipName}();
-        $relatedRecord = $relation->getRelated()::factory()->create();
+        $relatedRecord = $relation->getRelated()::factory()->create(); // @phpstan-ignore staticMethod.notFound (HasFactory is on every concrete model here, just not on the generic Model type)
         $relation->attach($relatedRecord->getKey());
 
         $editFields = $this->mountedActionFieldNames($component, 'edit', $relatedRecord);
@@ -615,7 +866,7 @@ class RelationManagerConventionTest extends TestCase
      * ActionGroup/BulkActionGroup in place, mirroring how Filament's own
      * `assertTableActionsExistInOrder()` flattens groups before comparing.
      *
-     * @param  array<int, mixed>  $definitions
+     * @param  array<int|string, mixed>  $definitions
      * @return array<int, MountableAction>
      */
     private function flattenActions(array $definitions): array
@@ -703,7 +954,7 @@ class RelationManagerConventionTest extends TestCase
 
     private function mountManager(string $class, array $config): Testable
     {
-        $user = $this->createCrudUser();
+        $user = $this->userFor($config['owner']);
         $this->setCurrentPanel();
 
         [$owner, $pageClass] = $this->ownerFor($config['owner']);
@@ -735,6 +986,17 @@ class RelationManagerConventionTest extends TestCase
             'collection' => EditCollection::class,
             'item' => EditItem::class,
             'partner' => EditPartner::class,
+            'project' => EditProject::class,
+            'timeline' => EditTimeline::class,
+            'timelineevent' => EditTimelineEvent::class,
+            'country' => EditCountry::class,
+            'language' => EditLanguage::class,
+            'glossary' => EditGlossary::class,
+            'role' => EditRole::class,
+            'itemitemlink' => EditItemItemLink::class,
+            'collectiontranslation' => EditCollectionTranslation::class,
+            'itemtranslation' => EditItemTranslation::class,
+            'partnertranslation' => EditPartnerTranslation::class,
             default => throw new InvalidArgumentException("Unknown owner resource [{$owner}]."),
         };
 
@@ -742,9 +1004,38 @@ class RelationManagerConventionTest extends TestCase
             'collection' => $this->makeCollection(),
             'item' => $this->makeItem(),
             'partner' => $this->makePartner(),
+            'project' => $this->makeProject(),
+            'timeline' => $this->makeTimeline(),
+            'timelineevent' => $this->makeTimelineEvent(),
+            'country' => $this->makeCountry(),
+            'language' => $this->makeLanguage(),
+            'glossary' => $this->makeGlossary(),
+            'role' => $this->makeRole(),
+            'itemitemlink' => $this->makeItemItemLink(),
+            'collectiontranslation' => $this->makeCollectionTranslation(),
+            'itemtranslation' => $this->makeItemTranslation(),
+            'partnertranslation' => $this->makePartnerTranslation(),
         };
 
         return [$this->ownerCache[$owner], $pageClass];
+    }
+
+    /**
+     * The user a manager is mounted as. Country, Language and Glossary sit
+     * behind Tier-2 `manage-reference-data` rather than the ordinary CRUD
+     * permissions (see their Policies' viewAny()), and Role sits behind its
+     * own `manage-roles` — both gate every ability on that one permission, so
+     * {@see InteractsWithAdminPanel}'s matching helper covers create/update/
+     * delete too. Every other owner's Policy uses the ordinary view/create/
+     * update/delete-data permissions createCrudUser() already grants.
+     */
+    private function userFor(string $owner): User
+    {
+        return match ($owner) {
+            'country', 'language', 'glossary' => $this->createReferenceDataUser(),
+            'role' => $this->createRoleManagerUser(),
+            default => $this->createCrudUser(),
+        };
     }
 
     private function makeCollection(): Collection
@@ -766,5 +1057,66 @@ class RelationManagerConventionTest extends TestCase
     private function makePartner(): Partner
     {
         return Partner::factory()->create();
+    }
+
+    private function makeProject(): Project
+    {
+        return Project::factory()->create();
+    }
+
+    private function makeTimeline(): Timeline
+    {
+        return Timeline::factory()->create();
+    }
+
+    private function makeTimelineEvent(): TimelineEvent
+    {
+        return TimelineEvent::factory()->create();
+    }
+
+    private function makeCountry(): Country
+    {
+        return Country::factory()->create();
+    }
+
+    private function makeLanguage(): Language
+    {
+        return Language::factory()->create();
+    }
+
+    private function makeGlossary(): Glossary
+    {
+        return Glossary::factory()->create();
+    }
+
+    private function makeRole(): Role
+    {
+        /** @var Role $role */
+        $role = Role::create([
+            'name' => 'Test role '.Str::random(8),
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+
+        return $role;
+    }
+
+    private function makeItemItemLink(): ItemItemLink
+    {
+        return ItemItemLink::factory()->create();
+    }
+
+    private function makeCollectionTranslation(): CollectionTranslation
+    {
+        return CollectionTranslation::factory()->create();
+    }
+
+    private function makeItemTranslation(): ItemTranslation
+    {
+        return ItemTranslation::factory()->create();
+    }
+
+    private function makePartnerTranslation(): PartnerTranslation
+    {
+        return PartnerTranslation::factory()->create();
     }
 }
