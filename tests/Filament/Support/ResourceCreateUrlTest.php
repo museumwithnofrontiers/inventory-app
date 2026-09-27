@@ -30,6 +30,14 @@ class ResourceCreateUrlTest extends TestCase
         $this->assertStringContainsString('type=picture', $url);
     }
 
+    public function test_builds_a_create_url_with_the_project_id_key(): void
+    {
+        $url = ResourceCreateUrl::for(ItemResource::class, ['project_id' => 'proj-123']);
+
+        $this->assertStringContainsString('/admin/items/create', $url);
+        $this->assertStringContainsString('project_id=proj-123', $url);
+    }
+
     public function test_builds_a_plain_create_url_when_no_parameters_are_given(): void
     {
         $url = ResourceCreateUrl::for(CollectionResource::class, []);
