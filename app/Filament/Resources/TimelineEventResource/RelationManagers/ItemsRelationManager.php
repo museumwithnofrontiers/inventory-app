@@ -3,15 +3,13 @@
 namespace App\Filament\Resources\TimelineEventResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Support\ItemDisplayLabel;
 use App\Filament\Support\RecordSelect;
+use App\Filament\Support\TimelineEventItemPivot;
 use App\Models\Item;
-use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -19,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 class ItemsRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
+    use PivotRelationActions;
 
     protected static string $relationship = 'items';
 
@@ -29,6 +28,7 @@ class ItemsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('timelineEvents')
             ->modifyQueryUsing(fn (Builder $query): Builder => ItemDisplayLabel::withDisplayLabel(
                 $query->with([
                     'partner:id,internal_name',
@@ -46,31 +46,23 @@ class ItemsRelationManager extends RelationManager
                 TextColumn::make('type')
                     ->badge()
                     ->sortable(),
-                TextColumn::make('pivot.display_order')
-                    ->label('Display order')
-                    ->sortable()
-                    ->toggleable(),
+                TimelineEventItemPivot::displayOrderColumn(),
+                TimelineEventItemPivot::backwardCompatibilityColumn(),
                 TextColumn::make('internal_name')
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::ITEMS)
-                    ->form(fn (AttachAction $action): array => [
-                        $action->getRecordSelect(),
-                        TextInput::make('display_order')
-                            ->label('Display order')
-                            ->numeric()
-                            ->integer()
-                            ->default(0),
-                    ]),
+                $this->pivotAttachAction(RecordSelect::ITEMS, TimelineEventItemPivot::pivotFormFields()),
             ])
             ->actions([
-                DetachAction::make(),
+                $this->pivotViewAction(ItemResource::class),
+                $this->pivotEditAction(TimelineEventItemPivot::pivotFormFields()),
+                $this->pivotDetachAction(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }
