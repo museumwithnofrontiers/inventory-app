@@ -60,6 +60,10 @@
         <env name="AVAILABLE_IMAGES_DIRECTORY" value="images" force="true"/>
         <env name="PICTURES_DISK" value="public" force="true"/>
         <env name="PICTURES_DIRECTORY" value="pictures" force="true"/>
+        <env name="UPLOAD_DOCUMENTS_DISK" value="local" force="true"/>
+        <env name="UPLOAD_DOCUMENTS_DIRECTORY" value="document_uploads" force="true"/>
+        <env name="DOCUMENTS_DISK" value="document-originals" force="true"/>
+        <env name="DOCUMENTS_DIRECTORY" value="documents" force="true"/>
         <ini name="memory_limit" value="512M"/>
     </php>
 </phpunit>

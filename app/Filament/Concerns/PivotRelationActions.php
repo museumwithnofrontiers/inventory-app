@@ -3,6 +3,7 @@
 namespace App\Filament\Concerns;
 
 use App\Filament\Support\RecordSelect;
+use Closure;
 use Filament\Forms\Components\Component;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\AssociateAction;
@@ -50,11 +51,16 @@ trait PivotRelationActions
      * labels, order, the 50-result cap — never preloaded) whose form appends
      * $pivotFields after the record select itself.
      *
+     * $scope, when given, narrows the record select's options query — e.g.
+     * A2.2's Partner-side Attach restricted to `Collection::scopeCollections()`
+     * — and is passed straight through to
+     * {@see RecordSelect::recordSelectFor()}.
+     *
      * @param  array<int, Component>  $pivotFields
      */
-    protected function pivotAttachAction(string $recordSelectEntity, array $pivotFields): AttachAction|AssociateAction
+    protected function pivotAttachAction(string $recordSelectEntity, array $pivotFields, ?Closure $scope = null): AttachAction|AssociateAction
     {
-        return RecordSelect::recordSelectFor(AttachAction::make(), $recordSelectEntity)
+        return RecordSelect::recordSelectFor(AttachAction::make(), $recordSelectEntity, $scope)
             ->form(fn (AttachAction $action): array => [
                 $action->getRecordSelect(),
                 ...$pivotFields,

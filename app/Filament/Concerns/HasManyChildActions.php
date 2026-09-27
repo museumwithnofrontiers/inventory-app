@@ -73,12 +73,15 @@ trait HasManyChildActions
 
     /**
      * Extra fixed query-string values for the header `Create` action's
-     * {@see ResourceCreateUrl}, beyond the owning foreign key — e.g.
-     * `['type' => 'picture']` for A1.3's picture items. Empty by default.
+     * {@see ResourceCreateUrl}, beyond the owning foreign key — e.g. A1.2's
+     * `partner_id` pre-fill from the parent Item's own partner, or
+     * `['type' => 'picture']` for A1.3's picture items. An instance method
+     * (not static) so a manager can compute values from
+     * `$this->getOwnerRecord()`. Empty by default.
      *
      * @return array<string, scalar>
      */
-    protected static function hasManyChildCreateExtra(): array
+    protected function hasManyChildCreateExtra(): array
     {
         return [];
     }
@@ -158,7 +161,7 @@ trait HasManyChildActions
                 ->icon('heroicon-o-plus')
                 ->url(fn (): string => ResourceCreateUrl::for($resource, [
                     $foreignKey => $owner->getKey(),
-                    ...static::hasManyChildCreateExtra(),
+                    ...$this->hasManyChildCreateExtra(),
                 ]))
                 ->visible(fn (): bool => $this->canCreate()),
 

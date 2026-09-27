@@ -2,76 +2,22 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
-use App\Enums\ItemType;
-use App\Filament\Resources\CountryResource;
-use App\Filament\Resources\ItemResource;
-use App\Filament\Resources\PartnerResource;
-use App\Filament\Support\ItemDisplayLabel;
-use App\Models\Item;
-use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
+use App\Filament\Concerns\HasManyChildActions;
+use App\Filament\Support\RecordSelect;
 
-class ChildItemsRelationManager extends RelationManager
+/**
+ * M7 story A1.2 (epic #1872): the has-many convention on an item's own
+ * children. Header `Create` (Item's own Create page, `parent_id` and — when
+ * the parent has one — `partner_id` pre-filled) and `Attach existing`
+ * (AssociateAction, cycle-guarded via
+ * {@see RecordSelect::excludingAncestorsOf()} so an
+ * ancestor of this item can never become one of its children). Row `View` ·
+ * `Edit` · `Detach` (clears `parent_id` only) · `Delete`. Bulk `Detach`. All
+ * shared wiring lives on {@see BaseChildItemsRelationManager} (and
+ * {@see HasManyChildActions}), which A1.3's
+ * PictureItemsRelationManager also extends.
+ */
+class ChildItemsRelationManager extends BaseChildItemsRelationManager
 {
-    protected static string $relationship = 'children';
-
-    protected static ?string $recordTitleAttribute = 'internal_name';
-
     protected static ?string $title = 'Child items';
-
-    public function table(Table $table): Table
-    {
-        return $table
-            ->modifyQueryUsing(fn (Builder $query): Builder => ItemDisplayLabel::withDisplayLabel(
-                $query->with([
-                    'partner:id,internal_name',
-                    'country:id,internal_name',
-                ])
-            ))
-            ->defaultSort('display_order', 'asc')
-            ->paginated([25, 50, 100])
-            ->defaultPaginationPageOption(25)
-            ->columns([
-                ItemDisplayLabel::displayLabelColumn()
-                    ->url(fn (Item $record): string => ItemResource::getUrl('view', ['record' => $record])),
-                TextColumn::make('type')
-                    ->badge()
-                    ->formatStateUsing(fn (?ItemType $state): ?string => $state?->label())
-                    ->sortable(),
-                TextColumn::make('partner.internal_name')
-                    ->label('Partner')
-                    ->sortable()
-                    ->url(fn (Item $record): ?string => $record->partner
-                        ? (auth()->user()?->can('view', $record->partner) ? PartnerResource::getUrl('view', ['record' => $record->partner]) : null)
-                        : null),
-                TextColumn::make('country.internal_name')
-                    ->label('Country')
-                    ->sortable()
-                    ->url(fn (Item $record): ?string => $record->country
-                        ? (auth()->user()?->can('view', $record->country) ? CountryResource::getUrl('view', ['record' => $record->country]) : null)
-                        : null),
-                TextColumn::make('display_order')
-                    ->label('Order')
-                    ->sortable(),
-                TextColumn::make('internal_name')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('created_at')
-                    ->label('Created')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                SelectFilter::make('type')
-                    ->options([
-                        ItemType::DETAIL->value => ItemType::DETAIL->label(),
-                        ItemType::PICTURE->value => ItemType::PICTURE->label(),
-                    ]),
-            ]);
-    }
 }
