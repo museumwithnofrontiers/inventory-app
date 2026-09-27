@@ -3,7 +3,6 @@
 namespace Tests\Filament\RelationManagers;
 
 use App\Filament\Resources\GlossaryResource\Pages\ViewGlossary;
-use App\Filament\Resources\GlossaryResource\RelationManagers\TranslationsRelationManager as GlossaryTranslationsRelationManager;
 use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\IncomingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
@@ -16,6 +15,7 @@ use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
+use Tests\Filament\Fixtures\GlossaryTranslationsWithoutConcernRelationManager;
 use Tests\TestCase;
 
 /**
@@ -205,16 +205,15 @@ class ItemLinksViewPageTest extends TestCase
     // ── read-only on its resource's View page ──────────────────────────────
 
     /**
-     * GlossaryResource's TranslationsRelationManager doesn't use
-     * AuthorizesRelationMutations, so it's untouched by this story's fix and
-     * stays governed by Filament's panel-wide default (read-only relation
-     * managers on View pages) until its own alignment story migrates it
-     * (M7 story A5.5, #2091, moved this control off SynonymsRelationManager,
-     * which now uses the concern). A full `manage-reference-data` user is
+     * The concern unlocks View pages only for managers that use it; any
+     * other manager stays governed by Filament's panel-wide default
+     * (read-only relation managers on View pages). A test-only manager
+     * without the concern stands in, so this control never depends on which
+     * real managers have adopted it. A full `manage-reference-data` user is
      * used, rather than a view-only one, so this isolates the View-page
      * read-only effect from any permission gate.
      */
-    public function test_glossary_translations_relation_manager_without_the_concern_stays_read_only_on_its_view_page(): void
+    public function test_a_relation_manager_without_the_concern_stays_read_only_on_a_view_page(): void
     {
         $glossary = Glossary::factory()->create();
         $translation = GlossaryTranslation::factory()->create(['glossary_id' => $glossary->id]);
@@ -223,11 +222,12 @@ class ItemLinksViewPageTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(GlossaryTranslationsRelationManager::class, [
+            ->test(GlossaryTranslationsWithoutConcernRelationManager::class, [
                 'ownerRecord' => $glossary,
                 'pageClass' => ViewGlossary::class,
             ])
             ->assertTableActionHidden('create')
-            ->assertTableActionHidden('edit', $translation);
+            ->assertTableActionHidden('edit', $translation->getKey())
+            ->assertTableActionHidden('delete', $translation->getKey());
     }
 }
