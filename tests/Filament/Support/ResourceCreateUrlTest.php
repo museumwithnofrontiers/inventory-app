@@ -31,13 +31,12 @@ class ResourceCreateUrlTest extends TestCase
         $this->assertStringContainsString('type=picture', $url);
     }
 
-    /** M7 story A5.4 (#2090): timeline_id, EventsRelationManager's required-parent pre-fill key. */
-    public function test_builds_a_create_url_with_the_timeline_id(): void
+    public function test_builds_a_create_url_with_the_project_id_key(): void
     {
-        $url = ResourceCreateUrl::for(TimelineEventResource::class, ['timeline_id' => 'tl-123']);
+        $url = ResourceCreateUrl::for(ItemResource::class, ['project_id' => 'proj-123']);
 
-        $this->assertStringContainsString('/admin/timeline-events/create', $url);
-        $this->assertStringContainsString('timeline_id=tl-123', $url);
+        $this->assertStringContainsString('/admin/items/create', $url);
+        $this->assertStringContainsString('project_id=proj-123', $url);
     }
 
     public function test_builds_a_plain_create_url_when_no_parameters_are_given(): void
@@ -95,5 +94,13 @@ class ResourceCreateUrlTest extends TestCase
         }
 
         $this->assertSame([], $offenders, "Only ResourceCreateUrl may build a create-page query string:\n".implode("\n", $offenders));
+    }
+
+    public function test_builds_a_create_url_with_the_timeline_id(): void
+    {
+        $url = ResourceCreateUrl::for(TimelineEventResource::class, ['timeline_id' => 'tl-123']);
+
+        $this->assertStringContainsString('/admin/timeline-events/create', $url);
+        $this->assertStringContainsString('timeline_id=tl-123', $url);
     }
 }
