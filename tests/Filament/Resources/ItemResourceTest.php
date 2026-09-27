@@ -184,6 +184,74 @@ class ItemResourceTest extends TestCase
         $this->assertDatabaseHas('items', ['id' => $child2->id, 'parent_id' => $parent->id]);
     }
 
+    // ── Item form: parent_id / partner_id via RecordSelect (M7 story A1.5, #2074) ──
+
+    /**
+     * The form's own `parent_id` select (as opposed to the `changeParent`
+     * table action tested above) must carry the same cycle guard: a record
+     * being edited never offers itself or a descendant as its own parent.
+     */
+    public function test_item_form_parent_select_excludes_the_record_and_its_descendants(): void
+    {
+        $user = $this->createCrudUser();
+        $grandparent = Item::factory()->Object()->create(['internal_name' => 'grandparent-item']);
+        $parent = Item::factory()->Object()->create(['internal_name' => 'parent-item', 'parent_id' => $grandparent->id]);
+        $child = Item::factory()->Object()->create(['internal_name' => 'child-item', 'parent_id' => $parent->id]);
+        $unrelated = Item::factory()->Object()->create(['internal_name' => 'unrelated-item']);
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)->test(EditItem::class, [
+            'record' => $parent->getRouteKey(),
+        ]);
+
+        $form = $component->instance()->getForm('form');
+        $select = $form->getFlatFields()['parent_id'];
+
+        $results = $select->getSearchResults('item');
+
+        $this->assertArrayNotHasKey($parent->id, $results);
+        $this->assertArrayNotHasKey($child->id, $results);
+        $this->assertArrayHasKey($grandparent->id, $results);
+        $this->assertArrayHasKey($unrelated->id, $results);
+    }
+
+    /**
+     * Search results and option labels for `parent_id` and `partner_id` must
+     * match every other RecordSelect field: the composite label (internal
+     * name plus the legacy code in brackets) and a search that finds a record
+     * by its legacy code.
+     */
+    public function test_item_form_parent_and_partner_selects_search_and_labels_match_record_select(): void
+    {
+        $user = $this->createCrudUser();
+        $parent = Item::factory()->Object()->create([
+            'internal_name' => 'legacy-parent-item',
+            'backward_compatibility' => 'itm-legacy-01',
+        ]);
+        $partner = Partner::factory()->create([
+            'internal_name' => 'legacy-partner',
+            'backward_compatibility' => 'ptn-legacy-01',
+        ]);
+        $item = Item::factory()->Object()->create(['internal_name' => 'the-item']);
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)->test(EditItem::class, [
+            'record' => $item->getRouteKey(),
+        ]);
+
+        $form = $component->instance()->getForm('form');
+
+        $parentResults = $form->getFlatFields()['parent_id']->getSearchResults('itm-legacy-01');
+        $this->assertArrayHasKey($parent->id, $parentResults);
+        $this->assertSame('legacy-parent-item [itm-legacy-01]', $parentResults[$parent->id]);
+
+        $partnerResults = $form->getFlatFields()['partner_id']->getSearchResults('ptn-legacy-01');
+        $this->assertArrayHasKey($partner->id, $partnerResults);
+        $this->assertSame('legacy-partner [ptn-legacy-01]', $partnerResults[$partner->id]);
+    }
+
     public function test_authorized_users_can_attach_items_to_collection_in_bulk(): void
     {
         $user = $this->createCrudUser();

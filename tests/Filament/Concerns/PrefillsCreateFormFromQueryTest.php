@@ -119,6 +119,30 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ]);
     }
 
+    /**
+     * M7 story A1.5 (#2074): since parent_id/partner_id are now built by
+     * RecordSelect, the pre-filled value must resolve to its display label
+     * (via getOptionLabelUsing), not just show the raw id in the form state
+     * (already covered above).
+     */
+    public function test_create_item_prefilled_parent_and_partner_show_their_labels(): void
+    {
+        $parent = Item::factory()->Object()->create(['internal_name' => 'root-item']);
+        $partner = Partner::factory()->create(['internal_name' => 'Jordan Museum']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)
+            ->withQueryParams(['parent_id' => $parent->id, 'partner_id' => $partner->id])
+            ->test(CreateItem::class);
+
+        $form = $component->instance()->getForm('form');
+
+        $this->assertSame('root-item', $form->getFlatFields()['parent_id']->getOptionLabel());
+        $this->assertSame('Jordan Museum', $form->getFlatFields()['partner_id']->getOptionLabel());
+    }
+
     // ── CreateCollection: parent_id (Collection) ────────────────────────────
 
     public function test_create_collection_prefills_parent_from_query(): void
@@ -132,6 +156,23 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ->withQueryParams(['parent_id' => $parent->id])
             ->test(CreateCollection::class)
             ->assertFormSet(['parent_id' => $parent->id]);
+    }
+
+    /** M7 story A1.5 (#2074): same label-resolution guarantee as CreateItem's parent_id above. */
+    public function test_create_collection_prefilled_parent_shows_its_label(): void
+    {
+        $parent = Collection::factory()->create(['internal_name' => 'root-collection']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)
+            ->withQueryParams(['parent_id' => $parent->id])
+            ->test(CreateCollection::class);
+
+        $form = $component->instance()->getForm('form');
+
+        $this->assertSame('root-collection', $form->getFlatFields()['parent_id']->getOptionLabel());
     }
 
     // ── CreateItemTranslation: item_id (Item) ───────────────────────────────

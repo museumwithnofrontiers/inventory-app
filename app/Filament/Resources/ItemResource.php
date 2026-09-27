@@ -31,6 +31,7 @@ use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationMan
 use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Country;
 use App\Models\Item;
@@ -176,31 +177,19 @@ class ItemResource extends Resource
                                     ->all()
                             )
                             ->required(),
-                        Select::make('parent_id')
-                            ->label('Parent item')
-                            ->getSearchResultsUsing(fn (string $search, ?Item $record): array => ItemDisplayLabel::withDisplayLabel(
-                                ($record
-                                    ? Item::query()->excludingDescendantsOf($record->id)
-                                    : Item::query())
-                                    ->where(fn (Builder $q) => $q
-                                        ->where('internal_name', 'like', "%{$search}%")
-                                        ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                                        ->orWhere('id', 'like', "%{$search}%"))
-                                    ->orderBy('internal_name')
-                                    ->limit(50)
-                            )->get()->mapWithKeys(fn (Item $item): array => [
-                                $item->id => $item->display_label !== $item->internal_name
-                                    ? $item->display_label.' ['.$item->internal_name.']'
-                                    : $item->internal_name,
-                            ])->all())
-                            ->getOptionLabelUsing(fn ($value): string => ItemDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''))
-                            ->searchable()
-                            ->nullable(),
-                        Select::make('partner_id')
-                            ->label('Partner')
-                            ->relationship('partner', 'internal_name')
-                            ->searchable()
-                            ->nullable(),
+                        RecordSelect::forItems(
+                            name: 'parent_id',
+                            label: 'Parent item',
+                            required: false,
+                            scope: fn (Builder $query, ?Model $record): Builder => $record instanceof Item
+                                ? RecordSelect::excludingDescendantsOf($query, $record)
+                                : $query,
+                        ),
+                        RecordSelect::forPartners(
+                            name: 'partner_id',
+                            label: 'Partner',
+                            required: false,
+                        ),
                         Select::make('country_id')
                             ->label('Country')
                             ->relationship('country', 'internal_name')

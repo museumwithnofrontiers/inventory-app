@@ -189,6 +189,66 @@ class CollectionResourceTest extends TestCase
         $this->assertDatabaseHas('collections', ['id' => $child2->id, 'parent_id' => $parent->id]);
     }
 
+    // ── Collection form: parent_id via RecordSelect (M7 story A1.5, #2074) ──
+
+    /**
+     * The form's own `parent_id` select (as opposed to the `changeParent`
+     * table action tested above) must carry the same cycle guard: a record
+     * being edited never offers itself or a descendant as its own parent.
+     */
+    public function test_collection_form_parent_select_excludes_the_record_and_its_descendants(): void
+    {
+        $user = $this->createCrudUser();
+        $grandparent = Collection::factory()->create(['internal_name' => 'grandparent-collection']);
+        $parent = Collection::factory()->create(['internal_name' => 'parent-collection', 'parent_id' => $grandparent->id]);
+        $child = Collection::factory()->create(['internal_name' => 'child-collection', 'parent_id' => $parent->id]);
+        $unrelated = Collection::factory()->create(['internal_name' => 'unrelated-collection']);
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)->test(EditCollection::class, [
+            'record' => $parent->getRouteKey(),
+        ]);
+
+        $form = $component->instance()->getForm('form');
+        $select = $form->getFlatFields()['parent_id'];
+
+        $results = $select->getSearchResults('collection');
+
+        $this->assertArrayNotHasKey($parent->id, $results);
+        $this->assertArrayNotHasKey($child->id, $results);
+        $this->assertArrayHasKey($grandparent->id, $results);
+        $this->assertArrayHasKey($unrelated->id, $results);
+    }
+
+    /**
+     * Search results and option labels for `parent_id` must match every
+     * other RecordSelect field: the composite label (internal name plus the
+     * legacy code in brackets) and a search that finds a record by its
+     * legacy code.
+     */
+    public function test_collection_form_parent_select_search_and_labels_match_record_select(): void
+    {
+        $user = $this->createCrudUser();
+        $parent = Collection::factory()->create([
+            'internal_name' => 'legacy-parent-collection',
+            'backward_compatibility' => 'col-legacy-01',
+        ]);
+        $collection = Collection::factory()->create(['internal_name' => 'the-collection']);
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)->test(EditCollection::class, [
+            'record' => $collection->getRouteKey(),
+        ]);
+
+        $form = $component->instance()->getForm('form');
+
+        $results = $form->getFlatFields()['parent_id']->getSearchResults('col-legacy-01');
+        $this->assertArrayHasKey($parent->id, $results);
+        $this->assertSame('legacy-parent-collection [col-legacy-01]', $results[$parent->id]);
+    }
+
     public function test_child_collections_relation_manager_shows_children(): void
     {
         $user = $this->createCrudUser();

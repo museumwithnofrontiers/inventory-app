@@ -21,6 +21,7 @@ use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationM
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Country;
 use App\Models\Partner;
@@ -192,26 +193,14 @@ class CollectionResource extends Resource
                             ->label('Context')
                             ->relationship('context', 'internal_name')
                             ->searchable(),
-                        Select::make('parent_id')
-                            ->label('Parent collection')
-                            ->getSearchResultsUsing(fn (string $search, ?Collection $record): array => CollectionDisplayLabel::withDisplayLabel(
-                                ($record
-                                    ? Collection::query()->excludingDescendantsOf($record->id)
-                                    : Collection::query())
-                                    ->where(fn (Builder $q) => $q
-                                        ->where('internal_name', 'like', "%{$search}%")
-                                        ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                                        ->orWhere('id', 'like', "%{$search}%"))
-                                    ->orderBy('internal_name')
-                                    ->limit(50)
-                            )->get()->mapWithKeys(fn (Collection $c): array => [
-                                $c->id => $c->display_label !== $c->internal_name
-                                    ? $c->display_label.' ['.$c->internal_name.']'
-                                    : $c->internal_name,
-                            ])->all())
-                            ->getOptionLabelUsing(fn ($value): string => CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''))
-                            ->searchable()
-                            ->nullable(),
+                        RecordSelect::forCollections(
+                            name: 'parent_id',
+                            label: 'Parent collection',
+                            required: false,
+                            scope: fn (Builder $query, ?Model $record): Builder => $record instanceof Collection
+                                ? RecordSelect::excludingDescendantsOf($query, $record)
+                                : $query,
+                        ),
                         Select::make('country_id')
                             ->label('Country')
                             ->relationship('country', 'internal_name')
