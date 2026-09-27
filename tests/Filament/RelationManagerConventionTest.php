@@ -177,15 +177,10 @@ class RelationManagerConventionTest extends TestCase
      */
     private const PENDING = [
         // has-many
-        // ChildItemsRelationManager: done by A1.2 (#1897).
-        // PictureItemsRelationManager: done by A1.3 (#1898).
         OwnedItemsRelationManager::class,
 
         // pivot
-        // Tags/Artists/Workshops/Dynasties: done by A2.4 (#1903).
-        CollectionPartnersRelationManager::class,
         TimelineEventsRelationManager::class,
-        CollectionParticipationsRelationManager::class,
 
         // inline
         MediaRelationManager::class,
