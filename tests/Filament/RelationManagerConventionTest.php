@@ -176,11 +176,7 @@ class RelationManagerConventionTest extends TestCase
      *
      * @var array<int, class-string>
      */
-    private const PENDING = [
-        // inline
-        MediaRelationManager::class,
-        // DocumentsRelationManager: done by A4.3 (#1907).
-    ];
+    private const PENDING = [];
 
     // ── Discovery ────────────────────────────────────────────────────────────
 
@@ -420,7 +416,7 @@ class RelationManagerConventionTest extends TestCase
         $this->assertSame(['edit', 'delete'], $this->namesOf($row), "{$class}: row actions must be exactly [edit, delete].");
 
         $fields = $this->mountedActionFieldNames($component, 'create');
-        $this->assertContains('language', $fields, "{$class}: the inline Create/Edit form must include a 'language' field (#1908).");
+        $this->assertContains('language_id', $fields, "{$class}: the inline Create/Edit form must include a language field, 'language_id' (#1908).");
         $this->assertContains('extra', $fields, "{$class}: the inline Create/Edit form must include an 'extra' field (#1908).");
     }
 
