@@ -20,6 +20,8 @@ use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationMan
 use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\EditPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager as PartnerTranslationsRelationManager;
+use App\Filament\Resources\RoleResource\Pages\ViewRole;
+use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
 use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationManager as TimelineEventItemsRelationManager;
 use App\Models\Artist;
@@ -38,7 +40,10 @@ use App\Models\TimelineEvent;
 use App\Models\User;
 use App\Models\Workshop;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
+use Spatie\Permission\Models\Permission as SpatiePermission;
+use Spatie\Permission\Models\Role;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
@@ -70,6 +75,17 @@ class AuthorizesRelationMutationsTest extends TestCase
             'context_id' => $context->id,
             'language_id' => $language->id,
         ]);
+    }
+
+    protected function makeRole(): Role
+    {
+        /** @var Role $role */
+        $role = Role::create([
+            'name' => 'Test role '.Str::random(8),
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+
+        return $role;
     }
 
     // ── Collection: ItemsRelationManager (pivot) ────────────────────────────
@@ -733,5 +749,59 @@ class AuthorizesRelationMutationsTest extends TestCase
             ->assertTableActionVisible('edit', $image)
             ->assertTableActionVisible('detach', $image)
             ->assertTableActionVisible('delete', $image);
+    }
+
+    // ── Role: PermissionsRelationManager (pinned) ─────────────────────────────
+    //
+    // RolePolicy gates every ability on `manage-roles`, so there is no user who
+    // can view a Role but not update it; the view-only user, who lacks
+    // `manage-roles`, stands in for one who can't update the Role.
+
+    public function test_role_permissions_relation_manager_hides_mutations_for_a_user_who_cannot_update_the_role(): void
+    {
+        $role = $this->makeRole();
+        $permission = SpatiePermission::firstOrCreate([
+            'name' => 'sample-permission-view-only',
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+        $role->givePermissionTo($permission);
+        $user = $this->createViewOnlyUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PermissionsRelationManager::class, [
+                'ownerRecord' => $role,
+                'pageClass' => ViewRole::class,
+            ])
+            ->assertTableActionHidden('attach')
+            ->assertTableActionHidden('createPermission')
+            ->assertTableActionHidden('edit', $permission->getKey())
+            ->assertTableActionHidden('detach', $permission->getKey())
+            ->assertTableActionHidden('deletePermission', $permission->getKey());
+    }
+
+    public function test_role_permissions_relation_manager_keeps_mutations_for_role_manager_user(): void
+    {
+        $role = $this->makeRole();
+        $permission = SpatiePermission::firstOrCreate([
+            'name' => 'sample-permission-role-manager',
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+        $role->givePermissionTo($permission);
+        $user = $this->createRoleManagerUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PermissionsRelationManager::class, [
+                'ownerRecord' => $role,
+                'pageClass' => ViewRole::class,
+            ])
+            ->assertTableActionVisible('attach')
+            ->assertTableActionVisible('createPermission')
+            ->assertTableActionVisible('edit', $permission->getKey())
+            ->assertTableActionVisible('detach', $permission->getKey())
+            ->assertTableActionVisible('deletePermission', $permission->getKey());
     }
 }
