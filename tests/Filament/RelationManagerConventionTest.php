@@ -332,12 +332,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PINNED_PENDING = [
-        // missing AuthorizesRelationMutations, and paginated(false) leaves the default
-        // [5, 10, 25, 50, 'all'] page options instead of [25, 50, 100]
-        CollectionTranslationSiblingTranslationsRelationManager::class,
-        ItemTranslationSiblingTranslationsRelationManager::class,
-        PartnerTranslationSiblingTranslationsRelationManager::class,
-
         // missing AuthorizesRelationMutations
         CountryTranslationsRelationManager::class,
         LanguageTranslationsRelationManager::class,
