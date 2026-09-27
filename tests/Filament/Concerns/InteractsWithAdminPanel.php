@@ -45,6 +45,17 @@ trait InteractsWithAdminPanel
         return $user;
     }
 
+    protected function createRoleManagerUser(): User
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $user->givePermissionTo([
+            Permission::ACCESS_ADMIN_PANEL->value,
+            Permission::MANAGE_ROLES->value,
+        ]);
+
+        return $user;
+    }
+
     protected function createViewOnlyUser(): User
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
