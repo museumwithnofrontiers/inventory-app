@@ -5,6 +5,7 @@ namespace App\Filament\Support;
 use App\Models\Artist;
 use App\Models\Collection;
 use App\Models\Dynasty;
+use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\Partner;
 use App\Models\Tag;
@@ -28,11 +29,12 @@ use InvalidArgumentException;
  * exists, ordered, capped at {@see self::RESULT_LIMIT} results, and never
  * preloaded.
  *
- * Tag, Artist and Workshop have no `*DisplayLabel` helper. Their label is the
- * model's own natural name column: Tag::description (TagResource's own
- * `$recordTitleAttribute`), Artist::name, Workshop::name — suffixed with the
- * legacy `backward_compatibility` code the same way the display-label entities
- * are, via {@see self::legacyLabel()}.
+ * Tag, Artist, Workshop and Glossary have no `*DisplayLabel` helper. Their
+ * label is the model's own natural name column: Tag::description
+ * (TagResource's own `$recordTitleAttribute`), Artist::name, Workshop::name,
+ * Glossary::internal_name — suffixed with the legacy `backward_compatibility`
+ * code the same way the display-label entities are, via
+ * {@see self::legacyLabel()}.
  *
  * Two shapes are exposed:
  *  - `for*()` return a plain, ready-to-use `Select` for form fields (e.g.
@@ -66,6 +68,8 @@ class RecordSelect
     public const WORKSHOPS = 'workshops';
 
     public const DYNASTIES = 'dynasties';
+
+    public const GLOSSARIES = 'glossaries';
 
     private const RESULT_LIMIT = 50;
 
@@ -386,6 +390,11 @@ class RecordSelect
                 ->recordSelectSearchColumns(self::ID_BC)
                 ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope(DynastyDisplayLabel::withDisplayLabel($query)->orderBy('from_ad'), $scope))
                 ->recordTitle(fn (Dynasty $record): string => $record->display_label),
+
+            self::GLOSSARIES => $action
+                ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('internal_name'), $scope))
+                ->recordTitle(fn (Glossary $record): string => self::legacyLabel($record->internal_name, $record->backward_compatibility)),
 
             default => throw new InvalidArgumentException("Unknown RecordSelect entity [{$entity}]."),
         };
