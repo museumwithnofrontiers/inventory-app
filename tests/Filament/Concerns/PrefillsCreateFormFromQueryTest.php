@@ -6,10 +6,14 @@ use App\Filament\Resources\CollectionResource\Pages\CreateCollection;
 use App\Filament\Resources\CollectionTranslationResource\Pages\CreateCollectionTranslation;
 use App\Filament\Resources\ItemResource\Pages\CreateItem;
 use App\Filament\Resources\ItemTranslationResource\Pages\CreateItemTranslation;
+use App\Filament\Resources\PartnerResource\Pages\CreatePartner;
 use App\Filament\Resources\PartnerTranslationResource\Pages\CreatePartnerTranslation;
+use App\Filament\Resources\TimelineEventResource\Pages\CreateTimelineEvent;
 use App\Models\Collection;
 use App\Models\Item;
 use App\Models\Partner;
+use App\Models\Project;
+use App\Models\Timeline;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Gate;
@@ -143,6 +147,23 @@ class PrefillsCreateFormFromQueryTest extends TestCase
         $this->assertSame('Jordan Museum', $form->getFlatFields()['partner_id']->getOptionLabel());
     }
 
+    /**
+     * M7 story A5.3 (#2089): project_id joins the whitelist, declared on
+     * CreateItem alongside parent_id/partner_id/type.
+     */
+    public function test_create_item_prefills_project_from_query(): void
+    {
+        $project = Project::factory()->create(['internal_name' => 'The project']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->withQueryParams(['project_id' => $project->id])
+            ->test(CreateItem::class)
+            ->assertFormSet(['project_id' => $project->id]);
+    }
+
     // ── CreateCollection: parent_id (Collection) ────────────────────────────
 
     public function test_create_collection_prefills_parent_from_query(): void
@@ -218,5 +239,63 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ->withQueryParams(['partner_id' => $partner->id])
             ->test(CreatePartnerTranslation::class)
             ->assertFormSet(['partner_id' => $partner->id]);
+    }
+
+    // ── CreatePartner: project_id (Project) ──────────────────────────────────
+
+    /** M7 story A5.3 (#2089): CreatePartner gains PrefillsCreateFormFromQuery for project_id. */
+    public function test_create_partner_prefills_project_from_query(): void
+    {
+        $project = Project::factory()->create(['internal_name' => 'The project']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->withQueryParams(['project_id' => $project->id])
+            ->test(CreatePartner::class)
+            ->assertFormSet(['project_id' => $project->id]);
+    }
+
+    // ── CreateTimelineEvent: timeline_id (Timeline) ─────────────────────────
+
+    public function test_create_timeline_event_prefills_timeline_from_query(): void
+    {
+        $timeline = Timeline::factory()->create();
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->withQueryParams(['timeline_id' => $timeline->id])
+            ->test(CreateTimelineEvent::class)
+            ->assertFormSet(['timeline_id' => $timeline->id]);
+    }
+
+    public function test_create_timeline_event_prefilled_timeline_shows_its_label(): void
+    {
+        $timeline = Timeline::factory()->create(['internal_name' => 'Islamic Timeline']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)
+            ->withQueryParams(['timeline_id' => $timeline->id])
+            ->test(CreateTimelineEvent::class);
+
+        $form = $component->instance()->getForm('form');
+
+        $this->assertSame('Islamic Timeline', $form->getFlatFields()['timeline_id']->getOptionLabel());
+    }
+
+    public function test_create_timeline_event_form_is_clean_without_query_params(): void
+    {
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CreateTimelineEvent::class)
+            ->assertFormSet(['timeline_id' => null]);
     }
 }
