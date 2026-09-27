@@ -11,6 +11,7 @@ use App\Models\Context;
 use App\Models\Language;
 use App\Models\Partner;
 use Filament\Tables\Actions\DetachAction;
+use Filament\Tables\Actions\DetachBulkAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
@@ -177,7 +178,7 @@ class CollectionPartnerPivotTest extends TestCase
                 'ownerRecord' => $partner,
                 'pageClass' => ViewPartner::class,
             ])
-            ->callTableAction(DetachAction::class, $collection->fresh())
+            ->callTableAction(DetachAction::class, $collection->getKey())
             ->assertHasNoTableActionErrors();
 
         $this->assertDatabaseMissing('collection_partner', [
@@ -207,13 +208,11 @@ class CollectionPartnerPivotTest extends TestCase
     }
 
     /**
-     * The story's headline acceptance line: from Partner, attaching a
-     * collection is restricted to `collection_type = collection` (the
-     * `collections` table's own `type` column, via Collection's
-     * `scopeCollections()` — distinct from the collection_partner pivot's own
-     * fixed `collection_type` discriminator column).
+     * "Restricted to `collection_type = collection`" is the pivot's link type:
+     * Attach always writes a `collection` link, and it offers every kind of
+     * collection, exhibitions included — as the Collection side does.
      */
-    public function test_partner_side_attach_select_is_restricted_to_collections_of_type_collection(): void
+    public function test_partner_side_attach_offers_any_collection_and_writes_a_collection_link(): void
     {
         $partner = Partner::factory()->create();
         $collection = $this->makeCollection();
@@ -234,11 +233,76 @@ class CollectionPartnerPivotTest extends TestCase
 
         $form = $component->instance()->getMountedTableActionForm();
         $this->assertNotNull($form);
-        $select = $form->getFlatFields()['recordId'];
-        $options = $select->getSearchResults('');
+        $options = $form->getFlatFields()['recordId']->getSearchResults('');
 
         $this->assertArrayHasKey($collection->id, $options);
-        $this->assertArrayNotHasKey($exhibition->id, $options);
+        $this->assertArrayHasKey($exhibition->id, $options);
+
+        $component
+            ->setTableActionData([
+                'recordId' => $exhibition->id,
+                'level' => 'partner',
+                'visible' => true,
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $exhibition->id,
+            'partner_id' => $partner->id,
+            'collection_type' => 'collection',
+        ]);
+    }
+
+    public function test_a_project_link_is_listed_with_its_type_but_cannot_be_edited_or_detached(): void
+    {
+        $partner = Partner::factory()->create();
+        $projectRoot = $this->makeCollection();
+        $partner->collections()->attach($projectRoot->id, ['collection_type' => 'project', 'level' => 'partner']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionParticipationsRelationManager::class, [
+                'ownerRecord' => $partner,
+                'pageClass' => ViewPartner::class,
+            ])
+            ->assertCanSeeTableRecords([$projectRoot])
+            ->assertTableColumnStateSet('pivot.collection_type', 'project', $projectRoot->getKey())
+            ->assertTableActionVisible('view', $projectRoot->getKey())
+            ->assertTableActionHidden('edit', $projectRoot->getKey())
+            ->assertTableActionHidden('detach', $projectRoot->getKey());
+    }
+
+    public function test_detaching_a_collection_link_never_removes_a_project_link_of_the_same_pair(): void
+    {
+        $partner = Partner::factory()->create();
+        $collection = $this->makeCollection();
+        $partner->collections()->attach($collection->id, ['collection_type' => 'collection', 'level' => 'partner']);
+        $partner->collections()->attach($collection->id, ['collection_type' => 'project', 'level' => 'partner']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionParticipationsRelationManager::class, [
+                'ownerRecord' => $partner,
+                'pageClass' => ViewPartner::class,
+            ])
+            ->callTableBulkAction(DetachBulkAction::class, [$collection])
+            ->assertHasNoTableBulkActionErrors();
+
+        $this->assertDatabaseMissing('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $partner->id,
+            'collection_type' => 'collection',
+        ]);
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $partner->id,
+            'collection_type' => 'project',
+        ]);
     }
 
     private function makeCollection(): Collection
