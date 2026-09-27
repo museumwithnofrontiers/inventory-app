@@ -3,17 +3,19 @@
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Support\RecordSelect;
+use App\Models\Workshop;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class WorkshopsRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
+    use PivotRelationActions;
 
     protected static string $relationship = 'workshops';
 
@@ -46,13 +48,24 @@ class WorkshopsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::WORKSHOPS),
+                $this->pivotAttachAction(RecordSelect::WORKSHOPS, []),
             ])
             ->actions([
-                DetachAction::make(),
+                // Workshop has no Filament Resource of its own (M7 story A2.4,
+                // #1903) — see ArtistsRelationManager's row 'view' comment for
+                // why a plain ViewAction (rather than pivotViewAction()) is
+                // correct here and needs no extra authorization wiring.
+                ViewAction::make()
+                    ->modalHeading('Workshop')
+                    ->infolist(fn (Workshop $record): array => [
+                        TextEntry::make('name')->label('Name'),
+                        TextEntry::make('internal_name')->label('Internal name'),
+                        TextEntry::make('backward_compatibility')->label('Legacy code'),
+                    ]),
+                $this->pivotDetachAction(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }
