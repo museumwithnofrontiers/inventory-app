@@ -15,12 +15,12 @@ use App\Filament\Resources\TimelineEventResource\RelationManagers\ImagesRelation
 use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\TimelineEventResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TimelineEventDisplayLabel;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section as InfolistSection;
@@ -73,20 +73,7 @@ class TimelineEventResource extends Resource
             ->schema([
                 Section::make('Core information')
                     ->schema([
-                        Select::make('timeline_id')
-                            ->label('Timeline')
-                            ->required()
-                            ->getSearchResultsUsing(fn (string $search): array => Timeline::query()
-                                ->where('internal_name', 'like', "%{$search}%")
-                                ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                                ->orWhere('id', 'like', "%{$search}%")
-                                ->orderBy('internal_name')
-                                ->limit(50)
-                                ->pluck('internal_name', 'id')
-                                ->all()
-                            )
-                            ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Timeline::find($value)->internal_name ?? $value) : '')
-                            ->searchable(),
+                        RecordSelect::forTimelines(),
                         TextInput::make('year_from')
                             ->label('Year from')
                             ->numeric()

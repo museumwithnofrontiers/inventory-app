@@ -274,7 +274,7 @@ class PrefillsCreateFormFromQueryTest extends TestCase
 
     public function test_create_timeline_event_prefilled_timeline_shows_its_label(): void
     {
-        $timeline = Timeline::factory()->create(['internal_name' => 'Islamic Timeline']);
+        $timeline = Timeline::factory()->create(['internal_name' => 'Islamic Timeline', 'backward_compatibility' => null]);
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();

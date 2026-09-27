@@ -435,23 +435,7 @@ class ItemResource extends Resource
                     ->label('Attach to collection')
                     ->icon('heroicon-o-archive-box')
                     ->form([
-                        Select::make('collection_id')
-                            ->label('Collection')
-                            ->required()
-                            ->getSearchResultsUsing(fn (string $search): array => CollectionDisplayLabel::withDisplayLabel(
-                                Collection::query()
-                                    ->where('internal_name', 'like', "%{$search}%")
-                                    ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                                    ->orWhere('id', 'like', "%{$search}%")
-                                    ->orderBy('internal_name')
-                                    ->limit(50)
-                            )->get()->mapWithKeys(fn (Collection $c): array => [
-                                $c->id => $c->display_label !== $c->internal_name
-                                    ? $c->display_label.' ['.$c->internal_name.']'
-                                    : $c->internal_name,
-                            ])->all())
-                            ->getOptionLabelUsing(fn ($value): string => CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''))
-                            ->searchable(),
+                        RecordSelect::forCollections(),
                     ])
                     ->action(function (EloquentCollection $records, array $data): void {
                         $collectionId = $data['collection_id'];
@@ -470,21 +454,7 @@ class ItemResource extends Resource
                     ->label('Attach tag')
                     ->icon('heroicon-o-tag')
                     ->form([
-                        Select::make('tag_id')
-                            ->label('Tag')
-                            ->required()
-                            ->getSearchResultsUsing(fn (string $search): array => Tag::query()
-                                ->where('internal_name', 'like', "%{$search}%")
-                                ->orWhere('description', 'like', "%{$search}%")
-                                ->orWhere('backward_compatibility', 'like', "%{$search}%")
-                                ->orderBy('description')
-                                ->limit(50)
-                                ->get()
-                                ->mapWithKeys(fn (Tag $tag): array => [$tag->id => "{$tag->description} [{$tag->internal_name}]"])
-                                ->all()
-                            )
-                            ->getOptionLabelUsing(fn ($value): string => ($tag = Tag::find(is_scalar($value) ? (string) $value : '')) instanceof Tag ? "{$tag->description} [{$tag->internal_name}]" : (is_scalar($value) ? (string) $value : ''))
-                            ->searchable(),
+                        RecordSelect::forTags(),
                     ])
                     ->action(function (EloquentCollection $records, array $data): void {
                         $tagId = $data['tag_id'];

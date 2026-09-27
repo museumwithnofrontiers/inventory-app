@@ -16,6 +16,7 @@ use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\Tag;
+use App\Models\Timeline;
 use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\AssociateAction;
@@ -41,10 +42,11 @@ class RecordSelectTest extends TestCase
     use RefreshDatabase;
 
     /**
-     * The seven attach managers this story rewired, plus the two shared
-     * helpers whose own record selects it also rewired. None of these may
-     * call ->preload() — every record select goes through RecordSelect,
-     * which never preloads.
+     * The seven attach managers this story rewired, the two shared helpers
+     * whose own record selects it also rewired, and the resources whose form
+     * record selects later moved onto RecordSelect. None of these may call
+     * ->preload() — every record select goes through RecordSelect, which
+     * never preloads.
      *
      * @return array<int, string>
      */
@@ -61,6 +63,9 @@ class RecordSelectTest extends TestCase
             'app/Filament/Concerns/HasChangeParentAction.php',
             'app/Filament/Support/TranslationFormSchema.php',
             'app/Filament/Support/RecordSelect.php',
+            'app/Filament/Resources/ItemResource.php',
+            'app/Filament/Resources/TimelineResource.php',
+            'app/Filament/Resources/TimelineEventResource.php',
         ];
     }
 
@@ -266,6 +271,32 @@ class RecordSelectTest extends TestCase
 
         $this->assertArrayHasKey($target->id, $select->getSearchResults($target->id));
         $this->assertArrayHasKey($target->id, $select->getSearchResults('DYN-001'));
+    }
+
+    // ── Timeline: no *DisplayLabel helper ────────────────────────────────────
+
+    public function test_for_timelines_searches_by_id_internal_name_and_backward_compatibility_and_labels_with_legacy_code(): void
+    {
+        $target = Timeline::factory()->create([
+            'internal_name' => 'islamic-timeline',
+            'backward_compatibility' => 'mwnf3:hcr:country:01',
+        ]);
+        $plain = Timeline::factory()->create([
+            'internal_name' => 'baroque-timeline',
+            'backward_compatibility' => null,
+        ]);
+
+        $select = RecordSelect::forTimelines();
+
+        $this->assertFalse($select->isPreloaded());
+        $this->assertTrue($select->isRequired());
+        $this->assertArrayHasKey($target->id, $select->getSearchResults($target->id));
+        $this->assertArrayHasKey($target->id, $select->getSearchResults('hcr:country:01'));
+        $this->assertArrayHasKey($target->id, $select->getSearchResults('islamic'));
+        $this->assertArrayNotHasKey($plain->id, $select->getSearchResults('islamic'));
+
+        $this->assertSame('islamic-timeline [mwnf3:hcr:country:01]', $select->getSearchResults('islamic')[$target->id]);
+        $this->assertSame('baroque-timeline', $select->getSearchResults('baroque')[$plain->id]);
     }
 
     // ── Glossary: self-pivot, no *DisplayLabel helper (M7 story A5.5, #2091) ──
