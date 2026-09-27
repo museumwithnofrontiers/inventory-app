@@ -309,9 +309,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // pivot, but attaches via its own recordSelectSearchColumns()/recordSelectOptionsQuery()
-        // instead of RecordSelect::recordSelectFor(), and has no 'view' row action
-        GlossarySynonymsRelationManager::class,
     ];
 
     /**

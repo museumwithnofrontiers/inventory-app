@@ -2,17 +2,20 @@
 
 namespace App\Filament\Resources\GlossaryResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\GlossaryResource;
+use App\Filament\Support\RecordSelect;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class SynonymsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+    use PivotRelationActions;
+
     protected static string $relationship = 'synonyms';
 
     protected static ?string $recordTitleAttribute = 'internal_name';
@@ -42,15 +45,19 @@ class SynonymsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                AttachAction::make()
-                    ->recordSelectSearchColumns(['internal_name', 'backward_compatibility'])
-                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->orderBy('internal_name')),
+                // A Glossary can't be its own synonym: excludes the owner record from the select.
+                $this->pivotAttachAction(
+                    RecordSelect::GLOSSARIES,
+                    [],
+                    fn (Builder $query): Builder => $query->where('id', '!=', $this->getOwnerRecord()->getKey()),
+                ),
             ])
             ->actions([
-                DetachAction::make(),
+                $this->pivotViewAction(GlossaryResource::class),
+                $this->pivotDetachAction(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }
