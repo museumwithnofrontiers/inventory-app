@@ -2,55 +2,57 @@
 
 namespace Tests\Filament\RelationManagers;
 
-use App\Filament\Concerns\AuthorizesRelationMutations;
-use App\Filament\Resources\CountryResource\Pages\EditCountry;
+use App\Filament\Resources\CountryResource\Pages\ViewCountry;
 use App\Filament\Resources\CountryResource\RelationManagers\TranslationsRelationManager;
 use App\Models\Country;
+use App\Models\CountryTranslation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
+/**
+ * Every mutation of a Country's translations needs `update` on the Country,
+ * which CountryPolicy grants with `manage-reference-data`.
+ */
 class CountryTranslationsRelationManagerTest extends TestCase
 {
     use InteractsWithAdminPanel;
     use RefreshDatabase;
 
-    public function test_country_translations_relation_manager_uses_authorizes_relation_mutations(): void
+    public function test_view_only_user_sees_no_mutating_actions(): void
     {
-        $this->assertTrue(
-            in_array(AuthorizesRelationMutations::class, class_uses_recursive(TranslationsRelationManager::class), true),
-            'TranslationsRelationManager must use AuthorizesRelationMutations trait.'
-        );
-    }
-
-    public function test_manager_renders_for_reference_data_user(): void
-    {
-        $user = $this->createReferenceDataUser();
         $country = Country::factory()->create();
-
-        $this->setCurrentPanel();
-
-        $component = Livewire::actingAs($user)->test(TranslationsRelationManager::class, [
-            'ownerRecord' => $country,
-            'pageClass' => EditCountry::class,
-        ]);
-
-        $component->assertSuccessful();
-    }
-
-    public function test_manager_renders_for_view_only_user(): void
-    {
+        $translation = CountryTranslation::factory()->create(['country_id' => $country->id]);
         $user = $this->createViewOnlyUser();
-        $country = Country::factory()->create();
 
         $this->setCurrentPanel();
 
-        $component = Livewire::actingAs($user)->test(TranslationsRelationManager::class, [
-            'ownerRecord' => $country,
-            'pageClass' => EditCountry::class,
-        ]);
+        Livewire::actingAs($user)
+            ->test(TranslationsRelationManager::class, [
+                'ownerRecord' => $country,
+                'pageClass' => ViewCountry::class,
+            ])
+            ->assertTableActionHidden('create')
+            ->assertTableActionHidden('edit', $translation->getKey())
+            ->assertTableActionHidden('delete', $translation->getKey());
+    }
 
-        $component->assertSuccessful();
+    public function test_reference_data_user_keeps_every_mutating_action(): void
+    {
+        $country = Country::factory()->create();
+        $translation = CountryTranslation::factory()->create(['country_id' => $country->id]);
+        $user = $this->createReferenceDataUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(TranslationsRelationManager::class, [
+                'ownerRecord' => $country,
+                'pageClass' => ViewCountry::class,
+            ])
+            ->assertTableActionVisible('create')
+            ->assertTableActionVisible('edit', $translation->getKey())
+            ->assertTableActionVisible('delete', $translation->getKey());
     }
 }
