@@ -182,13 +182,11 @@ class RelationManagerConventionTest extends TestCase
         OwnedItemsRelationManager::class,
 
         // pivot
-        CollectionPartnersRelationManager::class,
         TagsRelationManager::class,
         ArtistsRelationManager::class,
         WorkshopsRelationManager::class,
         DynastiesRelationManager::class,
         TimelineEventsRelationManager::class,
-        CollectionParticipationsRelationManager::class,
 
         // inline
         MediaRelationManager::class,
