@@ -3,17 +3,19 @@
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Support\RecordSelect;
+use App\Models\Artist;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
+use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
 class ArtistsRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
+    use PivotRelationActions;
 
     protected static string $relationship = 'artists';
 
@@ -50,13 +52,33 @@ class ArtistsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::ARTISTS),
+                $this->pivotAttachAction(RecordSelect::ARTISTS, []),
             ])
             ->actions([
-                DetachAction::make(),
+                // Artist has no Filament Resource of its own (M7 story A2.4,
+                // #1903), so — unlike TagsRelationManager's pivotViewAction(),
+                // which navigates to TagResource — this is a plain ViewAction
+                // opening a read-only modal built from Artist's own fields.
+                // Filament's own default canView() (RelationManager::canView(),
+                // untouched by AuthorizesRelationMutations) already allows
+                // when a model has no policy of its own, which is the case
+                // here.
+                ViewAction::make()
+                    ->modalHeading('Artist')
+                    ->infolist(fn (Artist $record): array => [
+                        TextEntry::make('name')->label('Name'),
+                        TextEntry::make('internal_name')->label('Internal name'),
+                        TextEntry::make('period_of_activity')->label('Period of activity'),
+                        TextEntry::make('place_of_birth')->label('Place of birth'),
+                        TextEntry::make('place_of_death')->label('Place of death'),
+                        TextEntry::make('date_of_birth')->label('Date of birth'),
+                        TextEntry::make('date_of_death')->label('Date of death'),
+                        TextEntry::make('backward_compatibility')->label('Legacy code'),
+                    ]),
+                $this->pivotDetachAction(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }

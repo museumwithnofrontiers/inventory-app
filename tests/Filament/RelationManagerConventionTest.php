@@ -177,20 +177,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // has-many
-        // ChildItemsRelationManager: done by A1.2 (#1897).
-        PictureItemsRelationManager::class,
-        OwnedItemsRelationManager::class,
-
-        // pivot
-        // TimelineEventsRelationManager: done by A2.3 (#1902).
-        CollectionPartnersRelationManager::class,
-        TagsRelationManager::class,
-        ArtistsRelationManager::class,
-        WorkshopsRelationManager::class,
-        DynastiesRelationManager::class,
-        CollectionParticipationsRelationManager::class,
-
         // inline
         MediaRelationManager::class,
         DocumentsRelationManager::class,

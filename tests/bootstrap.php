@@ -29,6 +29,11 @@ $testEnv = [
     'AVAILABLE_IMAGES_DIRECTORY' => 'images',
     'PICTURES_DISK' => 'public',
     'PICTURES_DIRECTORY' => 'pictures',
+    // Document disks: same rule as the image disks above.
+    'UPLOAD_DOCUMENTS_DISK' => 'local',
+    'UPLOAD_DOCUMENTS_DIRECTORY' => 'document_uploads',
+    'DOCUMENTS_DISK' => 'document-originals',
+    'DOCUMENTS_DIRECTORY' => 'documents',
 ];
 
 foreach ($testEnv as $key => $value) {

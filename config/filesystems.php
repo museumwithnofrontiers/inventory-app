@@ -79,6 +79,24 @@ return [
             'report' => false,
         ],
 
+        // Pristine document originals (PDFs, etc.) attached to Items via
+        // ItemDocument. Never web-reachable: no `url`, and not under
+        // storage/app/public. Mirrors `image-originals` (M7 Story A4.2,
+        // #1906): CLAUDE.md's image pipeline forbids storing an original on
+        // the public disk, and the same rule applies to documents.
+        'document-originals' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private/document-originals'),
+            'visibility' => 'private',
+            'directory_visibility' => 'private',
+            'permissions' => [
+                'file' => ['public' => 0660, 'private' => 0660],
+                'dir' => ['public' => 0770, 'private' => 0770],
+            ],
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

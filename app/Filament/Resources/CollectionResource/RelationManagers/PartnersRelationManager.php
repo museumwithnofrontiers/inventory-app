@@ -2,19 +2,15 @@
 
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
-use App\Enums\PartnerLevel;
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CountryResource;
 use App\Filament\Resources\PartnerResource;
+use App\Filament\Support\CollectionPartnerPivot;
 use App\Filament\Support\PartnerDisplayLabel;
 use App\Filament\Support\RecordSelect;
 use App\Models\Partner;
-use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -22,6 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 class PartnersRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
+    use PivotRelationActions;
 
     protected static string $relationship = 'partners';
 
@@ -48,10 +45,8 @@ class PartnersRelationManager extends RelationManager
                 TextColumn::make('type')
                     ->badge()
                     ->sortable(),
-                TextColumn::make('pivot.level')
-                    ->label('Level')
-                    ->formatStateUsing(fn (?string $state): ?string => $state ? PartnerLevel::from($state)->label() : null)
-                    ->sortable(),
+                CollectionPartnerPivot::levelColumn(),
+                CollectionPartnerPivot::visibleColumn(),
                 TextColumn::make('country.internal_name')
                     ->label('Country')
                     ->sortable()
@@ -69,26 +64,15 @@ class PartnersRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::PARTNERS)
-                    ->form(fn (AttachAction $action): array => [
-                        $action->getRecordSelect(),
-                        Select::make('level')
-                            ->label('Level')
-                            ->options(
-                                collect(PartnerLevel::cases())
-                                    ->mapWithKeys(fn (PartnerLevel $level) => [$level->value => $level->label()])
-                                    ->all()
-                            )
-                            ->required(),
-                        Hidden::make('collection_type')
-                            ->default('collection'),
-                    ]),
+                $this->pivotAttachAction(RecordSelect::PARTNERS, CollectionPartnerPivot::attachFormFields()),
             ])
             ->actions([
-                DetachAction::make(),
+                $this->pivotViewAction(PartnerResource::class),
+                $this->pivotEditAction(CollectionPartnerPivot::pivotFormFields()),
+                $this->pivotDetachAction(),
             ])
             ->bulkActions([
-                DetachBulkAction::make(),
+                $this->pivotDetachBulkAction(),
             ]);
     }
 }
