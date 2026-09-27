@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RoleResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Models\User;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\IconColumn;
@@ -10,6 +11,8 @@ use Filament\Tables\Table;
 
 class UsersRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'users';
 
     protected static ?string $title = 'Users';
