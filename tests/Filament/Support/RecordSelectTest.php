@@ -13,6 +13,8 @@ use App\Models\Dynasty;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\Tag;
+use Closure;
+use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\AssociateAction;
 use Filament\Tables\Actions\AttachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -145,6 +147,95 @@ class RecordSelectTest extends TestCase
         $results = RecordSelect::forItems()->getSearchResults('cap-test-item');
 
         $this->assertCount(50, $results);
+    }
+
+    // ── forItems() / forCollections(): the optional $scope parameter (#2074) ──
+
+    /**
+     * M7 story A1.5: a resource form's own parent-picker (ItemResource,
+     * CollectionResource) passes $scope for its cycle guard. The
+     * getSearchResultsUsing closure only gains a $record parameter when
+     * $scope is given (see forItems()'s docblock) — Filament resolves that
+     * parameter through the field's container, which a bare Select built by
+     * these factories never has outside a mounted form. So this pulls the
+     * raw closure via reflection and calls it directly, the same way
+     * test_record_select_for_applies_a_scope_while_keeping_its_labels() below
+     * reaches into an action's options-query closure.
+     */
+    private function getSearchResultsUsingCallback(Select $select): Closure
+    {
+        $reflection = new ReflectionClass($select);
+        $property = $reflection->getProperty('getSearchResultsUsing');
+        $property->setAccessible(true);
+
+        /** @var Closure $callback */
+        $callback = $property->getValue($select);
+
+        return $callback;
+    }
+
+    public function test_for_items_scope_excludes_the_record_and_its_descendants_while_keeping_labels_and_cap(): void
+    {
+        $parent = Item::factory()->Object()->create(['internal_name' => 'root-item', 'backward_compatibility' => null]);
+        $child = Item::factory()->Object()->create(['internal_name' => 'child-item', 'parent_id' => $parent->id]);
+        $unrelated = Item::factory()->Object()->create(['internal_name' => 'unrelated-item', 'backward_compatibility' => null]);
+
+        $select = RecordSelect::forItems(
+            scope: fn ($query, $record) => $record instanceof Item
+                ? RecordSelect::excludingDescendantsOf($query, $record)
+                : $query,
+        );
+
+        $callback = $this->getSearchResultsUsingCallback($select);
+
+        $scoped = $callback('item', $parent);
+        $this->assertArrayNotHasKey($parent->id, $scoped);
+        $this->assertArrayNotHasKey($child->id, $scoped);
+        $this->assertArrayHasKey($unrelated->id, $scoped);
+        $this->assertSame('unrelated-item', $scoped[$unrelated->id]);
+
+        // No record (the create page): nothing is excluded.
+        $unscoped = $callback('item', null);
+        $this->assertArrayHasKey($parent->id, $unscoped);
+        $this->assertArrayHasKey($child->id, $unscoped);
+    }
+
+    public function test_for_collections_scope_excludes_the_record_and_its_descendants_while_keeping_labels_and_cap(): void
+    {
+        $parent = $this->makeCollection();
+        $parent->update(['internal_name' => 'root-collection', 'backward_compatibility' => null]);
+        $child = Collection::factory()->create([
+            'context_id' => $parent->context_id,
+            'language_id' => $parent->language_id,
+            'internal_name' => 'child-collection',
+            'parent_id' => $parent->id,
+            'backward_compatibility' => null,
+        ]);
+        $unrelated = Collection::factory()->create([
+            'context_id' => $parent->context_id,
+            'language_id' => $parent->language_id,
+            'internal_name' => 'unrelated-collection',
+            'backward_compatibility' => null,
+        ]);
+
+        $select = RecordSelect::forCollections(
+            scope: fn ($query, $record) => $record instanceof Collection
+                ? RecordSelect::excludingDescendantsOf($query, $record)
+                : $query,
+        );
+
+        $callback = $this->getSearchResultsUsingCallback($select);
+
+        $scoped = $callback('collection', $parent);
+        $this->assertArrayNotHasKey($parent->id, $scoped);
+        $this->assertArrayNotHasKey($child->id, $scoped);
+        $this->assertArrayHasKey($unrelated->id, $scoped);
+        $this->assertSame('unrelated-collection', $scoped[$unrelated->id]);
+
+        // No record (the create page): nothing is excluded.
+        $unscoped = $callback('collection', null);
+        $this->assertArrayHasKey($parent->id, $unscoped);
+        $this->assertArrayHasKey($child->id, $unscoped);
     }
 
     // ── Dynasty: no internal_name column ─────────────────────────────────────
