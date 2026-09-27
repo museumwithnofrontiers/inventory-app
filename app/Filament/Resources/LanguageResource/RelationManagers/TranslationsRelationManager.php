@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\LanguageResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Models\Language;
 use App\Models\LanguageTranslation;
@@ -18,6 +19,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class TranslationsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'translations';
 
     protected static ?string $recordTitleAttribute = 'name';

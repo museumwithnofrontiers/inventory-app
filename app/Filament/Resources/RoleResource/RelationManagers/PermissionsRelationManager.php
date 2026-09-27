@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\RoleResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\RecordSelect;
 use App\Support\Filament\CriticalPermissions;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -12,13 +14,14 @@ use Filament\Tables\Actions\DetachAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 
 class PermissionsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'permissions';
 
     protected static ?string $title = 'Permissions';
@@ -42,13 +45,12 @@ class PermissionsRelationManager extends RelationManager
                     ->sortable(),
             ])
             ->headerActions([
-                AttachAction::make()
-                    ->preloadRecordSelect()
-                    ->recordSelectOptionsQuery(fn (Builder $query): Builder => $query->orderBy('name')),
+                RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::PERMISSIONS),
                 Action::make('createPermission')
                     ->label('Create Permission')
                     ->icon('heroicon-o-plus')
                     ->color('success')
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
                     ->form([
                         TextInput::make('name')
                             ->label('Permission name')
@@ -87,6 +89,7 @@ class PermissionsRelationManager extends RelationManager
                     ->icon('heroicon-o-trash')
                     ->color('danger')
                     ->requiresConfirmation()
+                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
                     ->disabled(fn (Permission $record): bool => in_array($record->name, CriticalPermissions::names(), true))
                     ->tooltip(fn (Permission $record): ?string => in_array($record->name, CriticalPermissions::names(), true)
                         ? 'This permission is used by system policies and cannot be deleted.'

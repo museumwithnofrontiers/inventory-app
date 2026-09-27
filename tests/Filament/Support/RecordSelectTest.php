@@ -5,11 +5,14 @@ namespace Tests\Filament\Support;
 use App\Filament\Concerns\HasChangeParentAction;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
+use App\Filament\Resources\RoleResource\Pages\EditRole;
+use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Dynasty;
+use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\Tag;
@@ -18,8 +21,11 @@ use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\AssociateAction;
 use Filament\Tables\Actions\AttachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Livewire\Livewire;
 use ReflectionClass;
+use Spatie\Permission\Models\Permission as SpatiePermission;
+use Spatie\Permission\Models\Role;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
@@ -67,6 +73,17 @@ class RecordSelectTest extends TestCase
             'context_id' => $context->id,
             'language_id' => $language->id,
         ]);
+    }
+
+    protected function makeRole(): Role
+    {
+        /** @var Role $role */
+        $role = Role::create([
+            'name' => 'Test role '.Str::random(8),
+            'guard_name' => config('fortify.guard', 'web'),
+        ]);
+
+        return $role;
     }
 
     // ── Convention: no record select preloads ───────────────────────────────
@@ -251,6 +268,86 @@ class RecordSelectTest extends TestCase
         $this->assertArrayHasKey($target->id, $select->getSearchResults('DYN-001'));
     }
 
+    // ── Glossary: self-pivot, no *DisplayLabel helper (M7 story A5.5, #2091) ──
+
+    public function test_for_glossaries_searches_by_id_internal_name_and_backward_compatibility_and_labels_with_legacy_code(): void
+    {
+        $target = Glossary::factory()->create([
+            'internal_name' => 'glossary-alpha',
+            'backward_compatibility' => 'LEGACY-GLOSS-001',
+        ]);
+        Glossary::factory()->create(['internal_name' => 'unrelated-glossary']);
+
+        $action = RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::GLOSSARIES);
+
+        $this->assertFalse($action->isRecordSelectPreloaded());
+        $this->assertSame(['id', 'internal_name', 'backward_compatibility'], $action->getRecordSelectSearchColumns());
+
+        $reflection = new ReflectionClass($action);
+        $property = $reflection->getProperty('modifyRecordSelectOptionsQueryUsing');
+        $property->setAccessible(true);
+
+        $ids = $property->getValue($action)(Glossary::query())->pluck('id')->all();
+        $this->assertContains($target->id, $ids);
+
+        $this->assertSame('glossary-alpha [LEGACY-GLOSS-001]', $action->getRecordTitle($target));
+    }
+
+    /**
+     * The Synonyms relation manager's cycle guard: a Glossary can't be its
+     * own synonym, so its Attach select's $scope excludes the owner record.
+     */
+    public function test_record_select_for_glossaries_scope_excludes_the_given_record_while_keeping_labels(): void
+    {
+        $owner = Glossary::factory()->create(['internal_name' => 'owner-glossary', 'backward_compatibility' => null]);
+        $other = Glossary::factory()->create(['internal_name' => 'other-glossary', 'backward_compatibility' => null]);
+
+        $action = RecordSelect::recordSelectFor(
+            AttachAction::make(),
+            RecordSelect::GLOSSARIES,
+            fn ($query) => $query->where('id', '!=', $owner->id)
+        );
+
+        $reflection = new ReflectionClass($action);
+        $property = $reflection->getProperty('modifyRecordSelectOptionsQueryUsing');
+        $property->setAccessible(true);
+
+        $ids = $property->getValue($action)(Glossary::query())->pluck('id')->all();
+
+        $this->assertNotContains($owner->id, $ids);
+        $this->assertContains($other->id, $ids);
+        $this->assertSame('other-glossary', $action->getRecordTitle($other));
+    }
+
+    // ── Permission (Spatie): no internal_name or backward_compatibility ──────
+
+    public function test_record_select_for_permissions_searches_by_name_and_orders_by_name(): void
+    {
+        $guard = config('fortify.guard', 'web');
+        $target = SpatiePermission::firstOrCreate(['name' => 'zzz-target-permission', 'guard_name' => $guard]);
+        SpatiePermission::firstOrCreate(['name' => 'aaa-unrelated-permission', 'guard_name' => $guard]);
+
+        $action = RecordSelect::recordSelectFor(AttachAction::make(), RecordSelect::PERMISSIONS);
+
+        $this->assertFalse($action->isRecordSelectPreloaded());
+        $this->assertSame(['name', 'guard_name'], $action->getRecordSelectSearchColumns());
+
+        $reflection = new ReflectionClass($action);
+        $property = $reflection->getProperty('modifyRecordSelectOptionsQueryUsing');
+        $property->setAccessible(true);
+
+        // The app seeds its own permissions (access-admin-panel, view-data, ...)
+        // for every test, so scope down to just the two rows this test created
+        // before asserting order — the orderBy('name') the options query
+        // applies stays intact underneath this added whereIn().
+        $names = $property->getValue($action)(SpatiePermission::query())
+            ->whereIn('name', ['aaa-unrelated-permission', 'zzz-target-permission'])
+            ->pluck('name')->all();
+        $this->assertSame(['aaa-unrelated-permission', 'zzz-target-permission'], $names);
+
+        $this->assertSame("{$target->name} [{$guard}]", $action->getRecordTitle($target));
+    }
+
     // ── excludingDescendantsOf() ──────────────────────────────────────────────
 
     public function test_excluding_descendants_of_excludes_the_record_and_its_descendants(): void
@@ -419,6 +516,39 @@ class RecordSelectTest extends TestCase
 
         $this->assertArrayHasKey($target->id, $select->getSearchResults($target->id));
         $this->assertArrayHasKey($target->id, $select->getSearchResults('ATTACH-001'));
+        $this->assertArrayHasKey($target->id, $select->getSearchResults('attach-target'));
+    }
+
+    /**
+     * The Role Permissions manager's mounted attach select goes through
+     * RecordSelect::recordSelectFor(): searchable by name, never preloaded.
+     */
+    public function test_role_permissions_attach_record_select_searches_by_name_and_never_preloads(): void
+    {
+        $user = $this->createRoleManagerUser();
+        $role = $this->makeRole();
+        $guard = config('fortify.guard', 'web');
+        $target = SpatiePermission::firstOrCreate(['name' => 'attach-target-permission', 'guard_name' => $guard]);
+        SpatiePermission::firstOrCreate(['name' => 'attach-noise-permission', 'guard_name' => $guard]);
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)->test(PermissionsRelationManager::class, [
+            'ownerRecord' => $role,
+            'pageClass' => EditRole::class,
+        ]);
+
+        $component->mountTableAction('attach');
+
+        $action = $component->instance()->getMountedTableAction();
+        $this->assertInstanceOf(AttachAction::class, $action);
+        $this->assertFalse($action->isRecordSelectPreloaded());
+
+        $form = $component->instance()->getMountedTableActionForm();
+        $this->assertNotNull($form);
+        $select = $form->getFlatFields()['recordId'];
+
+        $this->assertTrue($select->isSearchable());
         $this->assertArrayHasKey($target->id, $select->getSearchResults('attach-target'));
     }
 

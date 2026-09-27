@@ -183,7 +183,8 @@ class RelationManagerConventionTest extends TestCase
         OwnedItemsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'partner'],
         ProjectItemsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'project'],
         ProjectPartnersRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'project'],
-        TimelineEventsRelationManagerForTimeline::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'timeline'],
+        // required parent: timeline_events.timeline_id is NOT NULL, so no Attach existing/Detach (Pascal, 2026-09-27)
+        TimelineEventsRelationManagerForTimeline::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'timeline', 'required' => true],
 
         // ── pivot ─────────────────────────────────────────────────────
         CollectionItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true, 'extraRow' => ['view_appearance']],
@@ -308,13 +309,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PENDING = [
-        // has-many-shaped, but timeline_events.timeline_id is NOT NULL — the alignment story
-        // must resolve what "detach" means (or doesn't) for a required parent
-        TimelineEventsRelationManagerForTimeline::class,
-
-        // pivot, but attaches via its own recordSelectSearchColumns()/recordSelectOptionsQuery()
-        // instead of RecordSelect::recordSelectFor(), and has no 'view' row action
-        GlossarySynonymsRelationManager::class,
     ];
 
     /**
@@ -328,24 +322,8 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PINNED_PENDING = [
-        // missing AuthorizesRelationMutations, and paginated(false) leaves the default
-        // [5, 10, 25, 50, 'all'] page options instead of [25, 50, 100]
-        CollectionTranslationSiblingTranslationsRelationManager::class,
-        ItemTranslationSiblingTranslationsRelationManager::class,
-        PartnerTranslationSiblingTranslationsRelationManager::class,
-
         // missing AuthorizesRelationMutations
-        CountryTranslationsRelationManager::class,
-        LanguageTranslationsRelationManager::class,
-        GlossaryTranslationsRelationManager::class,
-        GlossarySpellingsRelationManager::class,
-        TimelineEventTranslationsRelationManager::class,
         ProjectCollectionsRelationManager::class,
-        UsersRelationManager::class,
-
-        // missing AuthorizesRelationMutations; AttachAction preloads its record select
-        // (preloadRecordSelect()) and builds it directly instead of via RecordSelect::recordSelectFor()
-        PermissionsRelationManager::class,
     ];
 
     // ── Discovery ────────────────────────────────────────────────────────────
@@ -578,6 +556,12 @@ class RelationManagerConventionTest extends TestCase
         $component = $this->mountManager($class, $config);
         $table = $component->instance()->getTable();
 
+        if ($config['required'] ?? false) {
+            $this->assertRequiredParentHasManyConvention($class, $table);
+
+            return;
+        }
+
         $header = $this->flattenActions($table->getHeaderActions());
         $this->assertSame(['create', 'associate'], $this->namesOf($header), "{$class}: header actions must be exactly [create, associate] in that order.");
         $this->assertActionHasUrl($header[0], "{$class}: header 'create' must navigate to the child Resource's Create page (via ResourceCreateUrl), not open a modal form.");
@@ -591,6 +575,29 @@ class RelationManagerConventionTest extends TestCase
 
         $bulk = $this->flattenActions($table->getBulkActions());
         $this->assertSame(['dissociate'], $this->namesOf($bulk), "{$class}: bulk actions must be exactly [dissociate].");
+    }
+
+    /**
+     * The has-many convention adapted for a required parent (a NOT NULL
+     * owning foreign key, e.g. timeline_events.timeline_id): no
+     * `Attach existing` and no `Detach`, since the child can never exist
+     * without its owner and is moved to another owner via its own Edit form.
+     * Header: `create` only. Row: `view`, `edit`, `delete` — no `dissociate`.
+     * Bulk: none.
+     */
+    private function assertRequiredParentHasManyConvention(string $class, Table $table): void
+    {
+        $header = $this->flattenActions($table->getHeaderActions());
+        $this->assertSame(['create'], $this->namesOf($header), "{$class}: header actions must be exactly [create] — a required parent has no 'Attach existing'.");
+        $this->assertActionHasUrl($header[0], "{$class}: header 'create' must navigate to the child Resource's Create page (via ResourceCreateUrl), not open a modal form.");
+
+        $row = $this->flattenActions($table->getActions());
+        $this->assertSame(['view', 'edit', 'delete'], $this->namesOf($row), "{$class}: row actions must be exactly [view, edit, delete] — a required parent has no 'Detach'.");
+        $this->assertActionHasUrl($row[0], "{$class}: row 'view' must navigate to the child Resource's View page.");
+        $this->assertActionHasUrl($row[1], "{$class}: row 'edit' must navigate to the child Resource's Edit page.");
+
+        $bulk = $this->flattenActions($table->getBulkActions());
+        $this->assertSame([], $this->namesOf($bulk), "{$class}: bulk actions must be exactly [] — a required parent has no bulk action.");
     }
 
     // ── pivot (#1900-#1903) ──────────────────────────────────────────────────

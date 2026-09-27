@@ -31,7 +31,7 @@ class ResourceCreateUrl
      *
      * @var array<int, string>
      */
-    public const QUERY_KEYS = ['parent_id', 'partner_id', 'type', 'item_id', 'collection_id', 'project_id'];
+    public const QUERY_KEYS = ['parent_id', 'partner_id', 'type', 'item_id', 'collection_id', 'project_id', 'timeline_id'];
 
     /**
      * @param  class-string<\Filament\Resources\Resource>  $resource
