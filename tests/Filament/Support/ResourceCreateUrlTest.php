@@ -4,6 +4,7 @@ namespace Tests\Filament\Support;
 
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
+use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Support\ResourceCreateUrl;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use InvalidArgumentException;
@@ -93,5 +94,13 @@ class ResourceCreateUrlTest extends TestCase
         }
 
         $this->assertSame([], $offenders, "Only ResourceCreateUrl may build a create-page query string:\n".implode("\n", $offenders));
+    }
+
+    public function test_builds_a_create_url_with_the_timeline_id(): void
+    {
+        $url = ResourceCreateUrl::for(TimelineEventResource::class, ['timeline_id' => 'tl-123']);
+
+        $this->assertStringContainsString('/admin/timeline-events/create', $url);
+        $this->assertStringContainsString('timeline_id=tl-123', $url);
     }
 }

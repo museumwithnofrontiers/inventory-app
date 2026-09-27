@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
 use App\Models\Context;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseSiblingTranslationsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'siblingTranslations';
 
     protected static ?string $title = 'Sibling Translations';
@@ -45,7 +48,8 @@ abstract class BaseSiblingTranslationsRelationManager extends RelationManager
                 ->where('id', '!=', $this->ownerRecord->getKey())
                 ->orderBy('updated_at', 'desc')
             )
-            ->paginated(false)
+            ->paginated([25, 50, 100])
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('language.internal_name')
                     ->label('Language')
@@ -111,7 +115,7 @@ abstract class BaseSiblingTranslationsRelationManager extends RelationManager
                     ->label('Edit')
                     ->icon('heroicon-o-pencil')
                     ->url(fn (Model $r): string => (string) $resource::getUrl('edit', ['record' => $r]))
-                    ->visible(fn (Model $r): bool => auth()->user()?->can('update', $r) ?? false),
+                    ->visible(fn (Model $r): bool => $this->canEdit($r)),
             ]);
     }
 }
