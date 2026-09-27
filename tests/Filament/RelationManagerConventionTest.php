@@ -339,7 +339,6 @@ class RelationManagerConventionTest extends TestCase
         PartnerTranslationSiblingTranslationsRelationManager::class,
 
         // missing AuthorizesRelationMutations
-        CountryTranslationsRelationManager::class,
         LanguageTranslationsRelationManager::class,
         GlossaryTranslationsRelationManager::class,
         GlossarySpellingsRelationManager::class,
