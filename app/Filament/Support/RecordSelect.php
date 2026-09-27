@@ -37,7 +37,13 @@ use InvalidArgumentException;
  * Two shapes are exposed:
  *  - `for*()` return a plain, ready-to-use `Select` for form fields (e.g.
  *    TranslationFormSchema's item/collection/partner fields, or a parent
- *    picker built from scratch).
+ *    picker built from scratch). `forItems()` and `forCollections()` take an
+ *    optional `$scope` (M7 story A1.5, #2074) for a resource form's own
+ *    parent-picker cycle guard, the same shape as `recordSelectFor()`'s:
+ *    `fn (Builder $query, ?Model $record): Builder`, applied inside the
+ *    factory's own search-results query so the labels, ordering and cap are
+ *    kept. `$record` is the record currently being edited (Filament injects
+ *    it by the closure parameter name; null on create).
  *  - `recordSelectFor()` adapts a relation manager's `AttachAction` or
  *    `AssociateAction` in place, since Filament builds those record selects
  *    internally (relationship-scoped, excludes already-attached records) —
@@ -71,52 +77,96 @@ class RecordSelect
 
     // ── Plain Select factories ──────────────────────────────────────────────
 
-    public static function forItems(string $name = 'item_id', string $label = 'Item', bool $required = true): Select
+    /**
+     * $scope, when given, narrows the candidates for a resource form's own
+     * parent-picker (M7 story A1.5, #2074) — e.g. the cycle guard via
+     * {@see self::excludingDescendantsOf()}. It receives the base query and
+     * the record currently being edited (null on create), and must be applied
+     * inside this method's own search-results closure so the composite
+     * label, ordering and result cap set below stay intact — the same reason
+     * {@see self::recordSelectFor()} applies its own `$scope` internally
+     * rather than via a second, overriding call.
+     *
+     * The search-results closure only declares a `$record` parameter when
+     * `$scope` is given: Filament resolves that parameter via the field's
+     * container, which a bare `Select` built outside a mounted form (as
+     * several of this class's own tests do, and every caller that has no
+     * cycle guard) never has, and reading it would throw. Callers that never
+     * pass `$scope` keep the original single-parameter closure untouched.
+     */
+    public static function forItems(string $name = 'item_id', string $label = 'Item', bool $required = true, ?Closure $scope = null): Select
     {
         $select = Select::make($name)
             ->label($label)
             ->searchable()
-            ->getSearchResultsUsing(fn (string $search): array => ItemDisplayLabel::withDisplayLabel(
-                Item::query()->where(function (Builder $query) use ($search): void {
-                    $query->where('id', 'like', "%{$search}%")
-                        ->orWhere('internal_name', 'like', "%{$search}%")
-                        ->orWhere('backward_compatibility', 'like', "%{$search}%");
+            ->getSearchResultsUsing($scope === null
+                ? fn (string $search): array => self::itemSearchResults($search, Item::query())
+                : function (string $search, ?Model $record) use ($scope): array {
+                    return self::itemSearchResults($search, $scope(Item::query(), $record));
                 })
-            )
-                ->orderBy('internal_name')
-                ->limit(self::RESULT_LIMIT)
-                ->get()
-                ->mapWithKeys(fn (Item $item): array => [
-                    $item->id => self::compositeLabel($item->display_label, $item->internal_name, $item->backward_compatibility),
-                ])
-                ->all())
             ->getOptionLabelUsing(fn (mixed $value): string => ItemDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''));
 
         return self::requiredOrNullable($select, $required);
     }
 
-    public static function forCollections(string $name = 'collection_id', string $label = 'Collection', bool $required = true): Select
+    /**
+     * @param  Builder<Item>  $query
+     * @return array<string, string>
+     */
+    private static function itemSearchResults(string $search, Builder $query): array
+    {
+        return ItemDisplayLabel::withDisplayLabel(
+            $query->where(function (Builder $query) use ($search): void {
+                $query->where('id', 'like', "%{$search}%")
+                    ->orWhere('internal_name', 'like', "%{$search}%")
+                    ->orWhere('backward_compatibility', 'like', "%{$search}%");
+            })
+        )
+            ->orderBy('internal_name')
+            ->limit(self::RESULT_LIMIT)
+            ->get()
+            ->mapWithKeys(fn (Item $item): array => [
+                $item->id => self::compositeLabel($item->display_label, $item->internal_name, $item->backward_compatibility),
+            ])
+            ->all();
+    }
+
+    /** @see self::forItems() for the optional `$scope` parameter and why its arity varies. */
+    public static function forCollections(string $name = 'collection_id', string $label = 'Collection', bool $required = true, ?Closure $scope = null): Select
     {
         $select = Select::make($name)
             ->label($label)
             ->searchable()
-            ->getSearchResultsUsing(fn (string $search): array => CollectionDisplayLabel::withDisplayLabel(
-                Collection::query()->where(function (Builder $query) use ($search): void {
-                    $query->where('id', 'like', "%{$search}%")
-                        ->orWhere('internal_name', 'like', "%{$search}%")
-                        ->orWhere('backward_compatibility', 'like', "%{$search}%");
+            ->getSearchResultsUsing($scope === null
+                ? fn (string $search): array => self::collectionSearchResults($search, Collection::query())
+                : function (string $search, ?Model $record) use ($scope): array {
+                    return self::collectionSearchResults($search, $scope(Collection::query(), $record));
                 })
-            )
-                ->orderBy('internal_name')
-                ->limit(self::RESULT_LIMIT)
-                ->get()
-                ->mapWithKeys(fn (Collection $collection): array => [
-                    $collection->id => self::compositeLabel($collection->display_label, $collection->internal_name, $collection->backward_compatibility),
-                ])
-                ->all())
             ->getOptionLabelUsing(fn (mixed $value): string => CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''));
 
         return self::requiredOrNullable($select, $required);
+    }
+
+    /**
+     * @param  Builder<Collection>  $query
+     * @return array<string, string>
+     */
+    private static function collectionSearchResults(string $search, Builder $query): array
+    {
+        return CollectionDisplayLabel::withDisplayLabel(
+            $query->where(function (Builder $query) use ($search): void {
+                $query->where('id', 'like', "%{$search}%")
+                    ->orWhere('internal_name', 'like', "%{$search}%")
+                    ->orWhere('backward_compatibility', 'like', "%{$search}%");
+            })
+        )
+            ->orderBy('internal_name')
+            ->limit(self::RESULT_LIMIT)
+            ->get()
+            ->mapWithKeys(fn (Collection $collection): array => [
+                $collection->id => self::compositeLabel($collection->display_label, $collection->internal_name, $collection->backward_compatibility),
+            ])
+            ->all();
     }
 
     public static function forPartners(string $name = 'partner_id', string $label = 'Partner', bool $required = true): Select
