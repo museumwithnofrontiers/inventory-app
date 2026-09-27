@@ -13,3 +13,4 @@ Filament `/admin` is the only active back-office UI (see [Filament Back-Office](
 ## Pages
 
 - [Document Upload Pipeline]({{ '/frontend-filament/document-upload' | relative_url }}) — the design for uploading, validating and attaching `ItemDocument` files from the Item page.
+- [Relation Managers]({{ '/frontend-filament/relation-managers' | relative_url }}) — the has-many and pivot conventions, the authorization and select rules, and a checklist for adding a relation manager.
