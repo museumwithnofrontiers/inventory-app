@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 use App\Enums\MediaType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\ExtraJsonField;
 use App\Models\ItemMedia;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -47,11 +48,24 @@ class MediaRelationManager extends RelationManager
                 Textarea::make('description')
                     ->rows(3)
                     ->columnSpanFull(),
+                // Named 'language' rather than the 'language_id' column
+                // TranslationFormSchema::languageField() uses: item_media.language_id
+                // is nullable metadata (unlike a required *Translation language), and
+                // the inline convention (#1908) targets a 'language' field name. The
+                // relationship()-backed searchable select is otherwise the same idiom;
+                // mapLanguageForSave()/mapLanguageForEdit() below bridge it to the
+                // language_id column on save and on opening the edit form.
+                Select::make('language')
+                    ->label('Language')
+                    ->relationship('language', 'internal_name')
+                    ->searchable()
+                    ->nullable(),
                 TextInput::make('display_order')
                     ->label('Display order')
                     ->numeric()
                     ->integer()
                     ->default(0),
+                ExtraJsonField::formComponent(),
             ]);
     }
 
@@ -97,11 +111,45 @@ class MediaRelationManager extends RelationManager
                     ->options(collect(MediaType::cases())->mapWithKeys(fn (MediaType $t) => [$t->value => $t->label()])),
             ])
             ->headerActions([
-                CreateAction::make(),
+                CreateAction::make()
+                    ->mutateFormDataUsing(fn (array $data): array => $this->mapLanguageForSave($data)),
             ])
             ->actions([
-                EditAction::make(),
+                EditAction::make()
+                    ->mutateRecordDataUsing(fn (array $data): array => $this->mapLanguageForEdit($data))
+                    ->mutateFormDataUsing(fn (array $data): array => $this->mapLanguageForSave($data)),
                 DeleteAction::make(),
             ]);
+    }
+
+    /**
+     * Maps the form's 'language' field (see form()) onto the language_id
+     * column before the record is created or updated.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function mapLanguageForSave(array $data): array
+    {
+        if (array_key_exists('language', $data)) {
+            $data['language_id'] = $data['language'];
+            unset($data['language']);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Populates the form's 'language' field from language_id when the Edit
+     * modal opens.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function mapLanguageForEdit(array $data): array
+    {
+        $data['language'] = $data['language_id'] ?? null;
+
+        return $data;
     }
 }

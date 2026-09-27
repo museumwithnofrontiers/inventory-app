@@ -178,7 +178,6 @@ class RelationManagerConventionTest extends TestCase
      */
     private const PENDING = [
         // inline
-        MediaRelationManager::class,
         DocumentsRelationManager::class,
     ];
 
