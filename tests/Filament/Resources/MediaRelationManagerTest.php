@@ -99,7 +99,7 @@ class MediaRelationManagerTest extends TestCase
                 'type' => MediaType::VIDEO->value,
                 'url' => 'https://www.youtube.com/watch?v=abc123',
                 'title' => 'Conservation video',
-                'language' => $language->id,
+                'language_id' => $language->id,
                 'extra' => json_encode(['source' => 'youtube']),
             ])
             ->callMountedTableAction()
@@ -154,13 +154,13 @@ class MediaRelationManagerTest extends TestCase
 
         $form = $component->instance()->getMountedTableActionForm();
         $this->assertNotNull($form);
-        $this->assertSame($originalLanguage->id, $form->getFlatFields()['language']->getState());
+        $this->assertSame($originalLanguage->id, $form->getFlatFields()['language_id']->getState());
 
         $component->setTableActionData([
             'type' => $media->type->value,
             'url' => $media->url,
             'title' => $media->title,
-            'language' => $newLanguage->id,
+            'language_id' => $newLanguage->id,
             'display_order' => $media->display_order,
             'extra' => json_encode(['source' => 'updated']),
         ])
