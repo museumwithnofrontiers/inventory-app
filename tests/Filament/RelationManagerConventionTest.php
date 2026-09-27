@@ -322,8 +322,6 @@ class RelationManagerConventionTest extends TestCase
      * @var array<int, class-string>
      */
     private const PINNED_PENDING = [
-        // missing AuthorizesRelationMutations
-        ProjectCollectionsRelationManager::class,
     ];
 
     // ── Discovery ────────────────────────────────────────────────────────────

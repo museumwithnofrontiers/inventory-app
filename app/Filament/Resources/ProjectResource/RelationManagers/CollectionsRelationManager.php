@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
+use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class CollectionsRelationManager extends RelationManager
 {
+    use AuthorizesRelationMutations;
+
     protected static string $relationship = 'collections';
 
     protected static ?string $recordTitleAttribute = 'internal_name';
