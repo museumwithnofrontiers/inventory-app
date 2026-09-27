@@ -340,7 +340,6 @@ class RelationManagerConventionTest extends TestCase
         GlossaryTranslationsRelationManager::class,
         GlossarySpellingsRelationManager::class,
         ItemItemLinkTranslationsRelationManager::class,
-        TimelineEventTranslationsRelationManager::class,
         ProjectCollectionsRelationManager::class,
         UsersRelationManager::class,
 
