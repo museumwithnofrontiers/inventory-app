@@ -4,12 +4,21 @@
  * Creates ItemTranslation records for each travel monument in all available languages.
  *
  * Legacy schema:
- * - mwnf3_travels.tr_monuments (project_id, country, itinerary_id, location_id, number, lang, trail_id, title)
+ * - mwnf3_travels.tr_monuments (project_id, country, itinerary_id, location_id, number, lang, trail_id,
+ *   title, description, how_to_reach, info, contact, prepared_by)
  *   - One row per language
- *   - Note: Unlike explore locations, tr_monuments only has title (no description, how_to_reach, etc.)
  *
  * New schema:
- * - item_translations (item_id, language_id, context_id, title, ...)
+ * - item_translations (item_id, language_id, context_id, name, description, extra, ...)
+ *
+ * Mapping:
+ * - title → name
+ * - description → description: the monument's text, which Explore shows on
+ *   the sheet of a monument that resolves to it
+ * - how_to_reach, info, contact, prepared_by → extra, each only when set
+ *
+ * A translation imported before its text was carried keeps its row: the text is
+ * filled in on it rather than skipped.
  *
  * Dependencies:
  * - TravelsContextImporter
@@ -22,7 +31,6 @@ import type { ImportResult } from '../../core/types.js';
 
 /**
  * Legacy travel monument translation structure
- * Note: tr_monuments table only has basic columns (title), no visitor info fields
  */
 interface LegacyTravelMonumentTranslation {
   project_id: string;
@@ -33,6 +41,27 @@ interface LegacyTravelMonumentTranslation {
   lang: string;
   trail_id: number;
   title: string;
+  description: string | null;
+  how_to_reach: string | null;
+  info: string | null;
+  contact: string | null;
+  prepared_by: string | null;
+}
+
+/** The monument's visitor texts and author, each only when set. */
+export function monumentTextExtra(
+  legacy: Pick<LegacyTravelMonumentTranslation, 'how_to_reach' | 'info' | 'contact' | 'prepared_by'>
+): Record<string, string> | null {
+  const extra: Record<string, string> = {};
+  for (const field of ['how_to_reach', 'info', 'contact', 'prepared_by'] as const) {
+    const value = legacy[field]?.trim();
+    if (value) extra[field] = value;
+  }
+  return Object.keys(extra).length > 0 ? extra : null;
+}
+
+function monumentDescription(legacy: LegacyTravelMonumentTranslation): string | null {
+  return legacy.description && legacy.description.trim() ? legacy.description : null;
 }
 
 export class TravelsMonumentTranslationImporter extends BaseImporter {
@@ -65,10 +94,10 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
       this.logInfo('Importing travel monument translations...');
 
       // Query all travel monument translations
-      // Note: tr_monuments only has title column, no description or visitor info fields
       const translations = await this.context.legacyDb.query<LegacyTravelMonumentTranslation>(
-        `SELECT project_id, country, itinerary_id, location_id, number, lang, trail_id, title
-        FROM mwnf3_travels.tr_monuments 
+        `SELECT project_id, country, itinerary_id, location_id, number, lang, trail_id, title,
+                description, how_to_reach, info, contact, prepared_by
+        FROM mwnf3_travels.tr_monuments
          ORDER BY project_id, country, trail_id, itinerary_id, location_id, number, lang`
       );
 
@@ -105,6 +134,9 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
             translationBackwardCompat
           );
           if (existsCheck) {
+            if (!this.isDryRun && !this.isSampleOnlyMode) {
+              await this.fillMonumentText(monumentId, languageId, legacy);
+            }
             result.skipped++;
             this.showSkipped();
             continue;
@@ -128,16 +160,15 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
             continue;
           }
 
-          // Write translation
-          // Note: Travel monuments only have title in legacy, no description or visitor info
+          const extra = monumentTextExtra(legacy);
           await this.context.strategy.writeItemTranslation({
             item_id: monumentId,
             language_id: languageId,
             context_id: this.travelsContextId,
             backward_compatibility: translationBackwardCompat,
             name: legacy.title || '',
-            description: '',
-            extra: null,
+            description: monumentDescription(legacy) ?? '',
+            extra: extra ? JSON.stringify(extra) : null,
           });
 
           result.imported++;
@@ -169,5 +200,40 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
     }
 
     return result;
+  }
+
+  /**
+   * Brings the text onto a translation written before it was imported. Its
+   * `extra` is merged, not replaced, so whatever else it holds stays; the
+   * Explore context's row of the same monument is never touched.
+   */
+  private async fillMonumentText(
+    itemId: string,
+    languageId: string,
+    legacy: LegacyTravelMonumentTranslation
+  ): Promise<void> {
+    const description = monumentDescription(legacy);
+    const text = monumentTextExtra(legacy);
+    if (description) {
+      await this.context.strategy.setItemTranslationDescriptionByContext(
+        itemId,
+        languageId,
+        this.travelsContextId,
+        description
+      );
+    }
+    if (text) {
+      const current = await this.context.strategy.getItemTranslationExtraByContext(
+        itemId,
+        languageId,
+        this.travelsContextId
+      );
+      await this.context.strategy.setItemTranslationExtraByContext(
+        itemId,
+        languageId,
+        this.travelsContextId,
+        JSON.stringify({ ...(current ?? {}), ...text })
+      );
+    }
   }
 }
