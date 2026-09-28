@@ -1,0 +1,290 @@
+#!/usr/bin/env node
+/**
+ * Static JSON Exporter CLI — Explore
+ *
+ * Reads the inventory database and writes a set of denormalized JSON files
+ * for consumption by frontend applications (the new Explore site).
+ *
+ * This exporter is single-purpose: it always exports Explore, as
+ * `@museumwnf/explore-data`. Explore is no project: the scope is the
+ * collection tree under the Explore root and the items it holds (see
+ * core/scope.ts), and the package is specified in
+ * `scripts/exporters/docs/explore-data-package.md`. It has no dynasty and no
+ * timeline exporter; it keeps the usage-scoped glossary exporter.
+ *
+ * Usage:
+ *   npm run export -- [options]
+ *
+ * Examples:
+ *   # Standard export
+ *   npm run export -- --force
+ *
+ *   # Export, bump the version, generate package.json/README.md, and publish
+ *   npm run export -- --force --publish
+ */
+
+import dotenv from 'dotenv'
+import { resolve } from 'path'
+import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs'
+import { Command } from 'commander'
+import chalk from 'chalk'
+
+import { Database } from '../core/database.js'
+import { Logger } from '../core/logger.js'
+import { PublishManager } from '../core/publish-manager.js'
+import { resolveScope } from '../core/scope.js'
+import type { ExportContext } from '../core/types.js'
+import {
+  ManifestExporter,
+  LanguageExporter,
+  CountryExporter,
+  PartnerExporter,
+  ItemExporter,
+  CollectionExporter,
+  GlossaryExporter,
+} from '../exporters/index.js'
+
+dotenv.config({ path: resolve(process.cwd(), '.env') })
+
+// Dataset identity — hardcoded on purpose. This fork exports exactly one
+// dataset; there are no scope arguments to pass or get wrong.
+const SUBDIRECTORY = 'explore'
+const PROJECT_KEYS = ['explore']
+const PACKAGE_NAME = '@museumwnf/explore-data'
+
+const program = new Command()
+
+program
+  .name('explore-exporter')
+  .description('Static JSON data exporter for the Explore website')
+  .version('1.0.0')
+  .allowExcessArguments(false)
+  .option('--force', 'Overwrite output directory if it already exists', false)
+  .option('--output-dir <path>', 'Base output directory (relative to cwd or absolute)', 'output')
+  .option(
+    '--base-url <url>',
+    'Base URL for media files',
+    process.env['BASE_URL'] ?? './images'
+  )
+  .option('--publish', 'Generate npm package.json, bump version, and publish to registry', false)
+  .option(
+    '--package-version <semver>',
+    'Set an explicit version instead of auto-incrementing (e.g. 1.0.4)'
+  )
+  .option(
+    '--npm-registry <url>',
+    'npm registry URL for publish (overrides NPM_REGISTRY env var)'
+  )
+  .action(
+    async (options: {
+      force: boolean
+      outputDir: string
+      baseUrl: string
+      publish: boolean
+      packageVersion?: string
+      npmRegistry?: string
+    }) => {
+      const subdirectory = SUBDIRECTORY
+      const projectKeys = PROJECT_KEYS
+      const logger = new Logger('Exporter')
+
+      console.log(chalk.bold('='.repeat(70)))
+      console.log(chalk.bold.cyan('MWNF STATIC DATA EXPORTER'))
+      console.log(chalk.bold('='.repeat(70)))
+      console.log(chalk.gray(`Start time:    ${new Date().toISOString()}`))
+      console.log(chalk.gray(`Project keys:  ${projectKeys.join(', ')}`))
+      console.log(chalk.gray(`Subdirectory:  ${subdirectory}`))
+      console.log(chalk.gray(`Force:         ${options.force ? 'YES' : 'NO'}`))
+      console.log('')
+
+      const outputBaseDir = resolve(process.cwd(), options.outputDir)
+      const outputDir = resolve(outputBaseDir, subdirectory)
+
+      // Guard: fail if output directory exists and --force not given
+      if (existsSync(outputDir)) {
+        if (!options.force) {
+          console.error(chalk.red(`\nOutput directory already exists: ${outputDir}`))
+          console.error(chalk.red('Use --force to overwrite it.\n'))
+          process.exit(1)
+        }
+        logger.warning(`Removing existing output directory (--force): ${outputDir}`)
+        rmSync(outputDir, { recursive: true, force: true })
+      }
+
+      mkdirSync(outputDir, { recursive: true })
+      logger.info(`Output directory: ${outputDir}`)
+
+      // Preflight for --publish: confirm the npm session is alive before
+      // spending minutes on the export below. A dead session would otherwise
+      // only surface at the very end, as a registry 404 right after export.
+      if (options.publish) {
+        const registry =
+          options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
+        const preflight = new PublishManager({
+          outputDir,
+          versionFile: resolve(outputBaseDir, `.version-${subdirectory}`),
+          packageName: PACKAGE_NAME,
+          projectKeys,
+          logger,
+          registry,
+        })
+        try {
+          preflight.assertLoggedIn()
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error(chalk.red(`\n${message}\n`))
+          process.exit(1)
+        }
+      }
+
+      // Connect to the inventory database
+      const db = new Database()
+
+      try {
+        logger.info('Connecting to database...')
+        await db.connect()
+        console.log(chalk.green('  ✓ Database connected'))
+
+        // The collection tree under the Explore root, and what it holds.
+        logger.info('Resolving the Explore tree...')
+        const scope = await resolveScope(db)
+        console.log(
+          chalk.green(
+            `  ✓ ${scope.collectionIds.length} collections, ${scope.itemIds.length} items, ` +
+              `${scope.projectIds.length} projects`
+          )
+        )
+        console.log('')
+
+        const context: ExportContext = {
+          db,
+          outputDir,
+          scope,
+          projectIds: scope.projectIds,
+          contextIds: scope.contextIds,
+          projectKeys,
+          baseUrl: options.baseUrl,
+          logger,
+        }
+
+        // No DynastyExporter and no TimelineExporter: Explore has neither.
+        const exporters = [
+          new ManifestExporter(context),
+          new LanguageExporter(context),
+          new CountryExporter(context),
+          new PartnerExporter(context),
+          new ItemExporter(context),
+          new CollectionExporter(context),
+          new GlossaryExporter(context),
+        ]
+
+        const results = []
+        for (const exporter of exporters) {
+          try {
+            const result = await exporter.export()
+            results.push({ name: exporter.getName(), ...result, error: null })
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            logger.error(`${exporter.getName()} failed: ${message}`)
+            results.push({ name: exporter.getName(), file: '', count: 0, error: message })
+          }
+        }
+
+        const hasErrors = results.some(r => r.error !== null)
+
+        // Handle npm package publishing if --publish flag is set
+        if (options.publish && !hasErrors) {
+          console.log('')
+          console.log(chalk.bold('='.repeat(70)))
+          console.log(chalk.bold.cyan('PUBLISHING NPM PACKAGE'))
+          console.log(chalk.bold('='.repeat(70)))
+
+          try {
+            const packageName = PACKAGE_NAME
+            const registry =
+              options.npmRegistry ||
+              process.env['NPM_REGISTRY'] ||
+              'https://registry.npmjs.org'
+
+            // Version file lives next to the output base dir, NOT inside the project
+            // output directory, so it survives --force cleans.
+            const versionFile = resolve(outputBaseDir, `.version-${subdirectory}`)
+
+            const publishManager = new PublishManager({
+              outputDir,
+              versionFile,
+              packageName,
+              projectKeys,
+              logger,
+              author: process.env['PACKAGE_AUTHOR'],
+              license: process.env['PACKAGE_LICENSE'],
+              repositoryUrl: process.env['PACKAGE_REPO_URL'],
+              registry,
+            })
+
+            const nextVersion = options.packageVersion
+              ? publishManager.setVersion(options.packageVersion)
+              : publishManager.getNextVersion()
+            console.log(chalk.green(`  ✓ Version: ${nextVersion}`))
+
+            const packageJson = publishManager.generatePackageJson(nextVersion)
+            const packageJsonPath = resolve(outputDir, 'package.json')
+            writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2), 'utf-8')
+            console.log(chalk.green(`  ✓ Generated: package.json`))
+
+            const readmePath = resolve(outputDir, 'README.md')
+            const readmeContent = publishManager.generateReadme(packageName)
+            writeFileSync(readmePath, readmeContent, 'utf-8')
+            console.log(chalk.green(`  ✓ Generated: README.md`))
+
+            publishManager.writeLicense()
+            console.log(chalk.green(`  ✓ Generated: LICENSE.md`))
+
+            console.log('')
+            publishManager.publish()
+            publishManager.recordPublished(nextVersion)
+            console.log(chalk.green(`  ✓ Published: ${packageName}@${nextVersion}`))
+            console.log('')
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            console.error(chalk.red(`\nPublish failed: ${message}`))
+            process.exit(1)
+          }
+        }
+
+        console.log('')
+        console.log(chalk.bold('='.repeat(70)))
+        if (hasErrors) {
+          console.log(chalk.bold.red('EXPORT COMPLETED WITH ERRORS'))
+        } else {
+          console.log(chalk.bold.green('EXPORT COMPLETED'))
+        }
+        console.log(chalk.gray(`End time: ${new Date().toISOString()}`))
+        console.log(chalk.gray(`Output:   ${outputDir}`))
+        console.log('')
+
+        for (const r of results) {
+          if (r.error) {
+            console.log(chalk.red(`  ✗ ${r.name}: ${r.error}`))
+          } else {
+            console.log(chalk.green(`  ✓ ${r.file} (${r.count})`))
+          }
+        }
+
+        console.log(chalk.bold('='.repeat(70)))
+
+        process.exit(hasErrors ? 1 : 0)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.error(chalk.red(`\nFatal error: ${message}`))
+        if (err instanceof Error && err.stack) {
+          console.error(chalk.gray(err.stack))
+        }
+        process.exit(1)
+      } finally {
+        await db.disconnect()
+      }
+    }
+  )
+
+program.parse()
