@@ -13,7 +13,10 @@ export interface ExploreScope {
   rootId: string
   /** The collections shipped, parents before children. */
   collectionIds: string[]
-  /** Their member items: monuments, objects and details. */
+  /**
+   * Their member items (monuments, objects and details), the members' own
+   * details, and the records the members link to.
+   */
   itemIds: string[]
   /** The projects those items belong to. */
   projectIds: string[]
@@ -173,7 +176,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
   const collectionIds = tree.map(c => c.id)
 
   const ph = collectionIds.map(() => '?').join(', ')
-  const items = await db.query<{ id: string; project_id: string | null }>(
+  const members = await db.query<{ id: string; project_id: string | null }>(
     `SELECT DISTINCT i.id, i.project_id
      FROM collection_item ci
      JOIN items i ON i.id = ci.item_id
@@ -181,6 +184,35 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
        AND i.type IN ('object', 'monument', 'detail')
      ORDER BY i.id`,
     collectionIds
+  )
+  // A monument sheet also shows its details (legacy's "Special Features")
+  // and the records it links to (its "Virtual Museum", Travels and Sharing
+  // History related content): they ship too, one hop out.
+  const memberIds = members.map(i => i.id)
+  const details =
+    memberIds.length === 0
+      ? []
+      : await db.query<{ id: string; project_id: string | null }>(
+          `SELECT id, project_id FROM items
+           WHERE parent_id IN (${memberIds.map(() => '?').join(', ')}) AND type = 'detail'
+           ORDER BY id`,
+          memberIds
+        )
+  const sourceIds = [...memberIds, ...details.map(i => i.id)]
+  const linked =
+    sourceIds.length === 0
+      ? []
+      : await db.query<{ id: string; project_id: string | null }>(
+          `SELECT DISTINCT i.id, i.project_id
+           FROM item_item_links l
+           JOIN items i ON i.id = l.target_id
+           WHERE l.source_id IN (${sourceIds.map(() => '?').join(', ')})
+             AND i.type IN ('object', 'monument', 'detail')
+           ORDER BY i.id`,
+          sourceIds
+        )
+  const items = [...new Map([...members, ...details, ...linked].map(i => [i.id, i])).values()].sort(
+    (a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)
   )
   const itemIds = items.map(i => i.id)
   const projectIds = [

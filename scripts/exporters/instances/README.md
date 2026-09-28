@@ -45,8 +45,8 @@ specification doc. It is prose for humans, read by nothing at export time.
   exactly one package and keeps its own hardcoded scope in
   `src/cli/export.ts`. Those are the three forked exporters (`islamicart`,
   `baroqueart`, `sharinghistory`) that predate the instance-file design (see
-  the *Why forked per dataset* section of `../README.md`), and the galleries
-  hub's `galleries`. A `standalone` file
+  the *Why forked per dataset* section of `../README.md`), the galleries
+  hub's `galleries`, and `explore`. A `standalone` file
   carries `slug`, `name`, `exporter` and `package_name` — no `collection_id`,
   since the exporter it names does not take `--instance` at all.
 - `slug` — the site slug (`^[a-z0-9]+(-[a-z0-9]+)*$`). This is deliberately

@@ -1,8 +1,8 @@
 # NPM Package Publishing Guide
 
 How `--publish` turns an export into a released version of
-`@museumwnf/sharinghistory-data` on npmjs. What the package
-*contains* is documented in [`README.md`](README.md#what-it-exports); this
+`@museumwnf/explore-data` on npmjs. What the package
+*contains* is specified in [`../docs/explore-data-package.md`](../docs/explore-data-package.md); this
 guide covers the publishing mechanics only.
 
 ## Quick start
@@ -13,11 +13,11 @@ npm run export -- --force --publish
 
 That single run does everything:
 
-1. Exports the dataset to `output/sharinghistory/`
-2. Bumps the patch version persisted in `output/.version-sharinghistory`
+1. Exports the dataset to `output/explore/`
+2. Bumps the patch version persisted in `output/.version-explore`
    (1.1.0 → 1.1.1, …)
 3. Generates `package.json` and a consumer `README.md` inside
-   `output/sharinghistory/`
+   `output/explore/`
 4. Runs `npm publish` from that directory against npmjs
 
 There is **no separate manual `npm publish` step** — running one after
@@ -44,9 +44,9 @@ fields until then.
 
 ## Version management
 
-The version counter lives in `output/.version-sharinghistory` — deliberately
+The version counter lives in `output/.version-explore` — deliberately
 *outside* the package directory, so `--force` (which deletes and recreates
-`output/sharinghistory/`) does not reset it.
+`output/explore/`) does not reset it.
 
 - Each `--publish` run computes the next patch component from the registry
   and the local counter — the choice between them is unchanged.
@@ -70,7 +70,7 @@ published versions on npmjs first).
 The published package is the output directory itself:
 
 ```
-output/sharinghistory/
+output/explore/
 ├── package.json          ← generated on every --publish run
 ├── README.md             ← generated consumer usage guide
 ├── LICENSE.md            ← copy of docs/LICENSE.md.template (the MWNF legal notice)
@@ -91,7 +91,7 @@ not need to be, in the `files` allow-list.
 
 The generated `package.json` carries:
 
-- **name** — `@museumwnf/sharinghistory-data` (hardcoded in the exporter CLI)
+- **name** — `@museumwnf/explore-data` (hardcoded in the exporter CLI)
 - **version** — from the version file (see above)
 - **description** — names the exported project key
 - **exports** — `manifest.json` as the entry point, plus every top-level
@@ -126,7 +126,7 @@ dead. Without this preflight a dead session only surfaced as a registry 404
 after the whole export had already run.
 
 ```bash
-docker compose --profile jobs run --rm exporter sharinghistory --force --publish
+docker compose --profile jobs run --rm exporter explore --force --publish
 ```
 
 The container has no browser (`NPM_CONFIG_BROWSER=false` in `compose.yml`),
@@ -161,15 +161,15 @@ ships 11.13.0, so it stays out of scope here.
 ## Consumer usage
 
 ```bash
-npm install @museumwnf/sharinghistory-data
+npm install @museumwnf/explore-data
 ```
 
 ```javascript
-import manifest from '@museumwnf/sharinghistory-data/manifest.json' assert { type: 'json' }
-import items from '@museumwnf/sharinghistory-data/items.json' assert { type: 'json' }
+import manifest from '@museumwnf/explore-data/manifest.json' assert { type: 'json' }
+import items from '@museumwnf/explore-data/items.json' assert { type: 'json' }
 
 // Lazy-load translations for a language
-const { default: t } = await import(`@museumwnf/sharinghistory-data/translations/items.${lang}.json`)
+const { default: t } = await import(`@museumwnf/explore-data/translations/items.${lang}.json`)
 ```
 
 All data files sit at the package root (there is no `data/` directory);
