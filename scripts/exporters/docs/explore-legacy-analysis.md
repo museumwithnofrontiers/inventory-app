@@ -61,7 +61,7 @@ location 498. So the counts below are of distinct record ids.
 | Travel information | on every level; see the next section | none | **Gap G4**: not imported; D1 carries it all |
 | Home banners | 1 banner record | none | **Gap G6**, per D2 |
 | Featured partnerships | 5 | none | **Gap G6**, per D2 |
-| Text pages | 6 (`texts/*`), in `explore_pages` | none; `site-i18n` reads `mwnf3.translation`, not `mwnf3_explore` | **Gap G6**, per D2 |
+| Text pages | 6 (`texts/*`): the home page's five `Home-*` words in `mwnf3_explore.translation`, the other five pages in `explore_pages_langs`; English only | not the inventory's: `site-i18n`'s `extract:explore` writes them to the site's locales | Extracted (G6a, #2132); the output matches the live API's text |
 
 ## The travel layer
 

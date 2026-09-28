@@ -8,6 +8,7 @@
     "build": "tsc",
     "list": "tsx src/cli/list.ts",
     "extract": "tsx src/cli/extract.ts",
+    "extract:explore": "tsx src/cli/extract-explore.ts",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --fix",

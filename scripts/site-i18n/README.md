@@ -222,6 +222,26 @@ viewer-i18n dictionary and deliberately **not emitted**.
 site, so a reviewer sees exactly what the site does not own before the texts PR
 is opened.
 
+### Explore
+
+```powershell
+docker run --rm --network host -v "${PWD}:/app" -v site-i18n-node-modules:/app/node_modules -w /app node:22-alpine npm run extract:explore -- --namespace explore --force
+```
+
+Explore is not a DXA site: it has no registry row, so no selector names it.
+Its copy is its six text pages, which legacy keeps in `mwnf3_explore`, not in
+`mwnf3.translation`. `extract:explore` writes them in the website layout, to
+`output/explore/locales/<lang>.json`, ready to copy into the site repo:
+
+| Legacy | viewer-i18n entries |
+| --- | --- |
+| `mwnf3_explore.translation`: `Home-Leitmotif`, `Home-Description`, `Home-Explore-by-Theme`, `-by-Country`, `-by-Itinerary` | `<namespace>.home.leitmotif`, `.description`, `.byTheme`, `.byCountry`, `.byItinerary` |
+| `explore_pages_langs` of the pages About, Get Involved, Credits, What's new, Important Information | `<namespace>.<page>.title` and `.body`, `<page>` being `about`, `getInvolved`, `credits`, `whatsNew`, `importantInformation` |
+
+These are the texts legacy's API serves at `texts/home`, `texts/about` and the
+others. The values go through the same conversion as every other layout, and a
+page with a text but no mapped section is named in a warning, not written.
+
 ## Values are Markdown, not HTML
 
 The legacy strings are HTML fragments — the legacy client renders them straight

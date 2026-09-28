@@ -7,6 +7,7 @@
  */
 import mysql from 'mysql2/promise'
 
+import type { ExplorePageRow } from '../explore.js'
 import type { SiteRegistryEntry, SiteKind, TranslationRow } from './types.js'
 
 interface LegacyGalleryRow {
@@ -97,6 +98,31 @@ export class LegacyDatabase {
         WHERE group_id = ?
         ORDER BY word_id, lang_id`,
       [groupId]
+    )
+    return rows.map((row) => ({ wordId: row.word_id, langId: row.lang_id, value: row.value }))
+  }
+
+  /** Load every language of every Explore page (`explore_pages` + `explore_pages_langs`). */
+  async loadExplorePages(): Promise<ExplorePageRow[]> {
+    return this.query<ExplorePageRow>(
+      `SELECT p.pagename, l.langId, l.title, l.description
+         FROM mwnf3_explore.explore_pages p
+         JOIN mwnf3_explore.explore_pages_langs l ON l.pageId = p.pageId
+        ORDER BY p.pageId, l.langId`
+    )
+  }
+
+  /** Load the named words of Explore's own dictionary, `mwnf3_explore.translation`, in every group. */
+  async loadExploreWords(wordIds: string[]): Promise<TranslationRow[]> {
+    if (wordIds.length === 0) {
+      return []
+    }
+    const rows = await this.query<{ word_id: string; lang_id: string; value: string | null }>(
+      `SELECT word_id, lang_id, \`value\`
+         FROM mwnf3_explore.translation
+        WHERE word_id IN (${wordIds.map(() => '?').join(', ')})
+        ORDER BY word_id, lang_id, group_id`,
+      wordIds
     )
     return rows.map((row) => ({ wordId: row.word_id, langId: row.lang_id, value: row.value }))
   }
