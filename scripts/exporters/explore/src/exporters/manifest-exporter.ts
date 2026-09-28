@@ -139,7 +139,9 @@ export class ManifestExporter extends BaseExporter {
    * `projects` (nullable, populated at import time — epic #1727 phase 1,
    * #1753/#1756).
    */
-  protected async buildProjectsSection(projectIds: string[]): Promise<Record<string, ProjectEntry>> {
+  protected async buildProjectsSection(
+    projectIds: string[]
+  ): Promise<Record<string, ProjectEntry>> {
     if (projectIds.length === 0) return {}
     const ph = this.placeholders(projectIds.length)
     const langCodeMap = await this.buildLangCodeMap()

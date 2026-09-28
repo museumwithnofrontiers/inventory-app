@@ -151,7 +151,9 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
   )
   const roots = rows.filter(r => r.purpose === EXPLORE_ROOT_PURPOSE)
   if (roots.length !== 1) {
-    throw new Error(`Expected one collection with purpose '${EXPLORE_ROOT_PURPOSE}', found ${roots.length}`)
+    throw new Error(
+      `Expected one collection with purpose '${EXPLORE_ROOT_PURPOSE}', found ${roots.length}`
+    )
   }
   const rootId = roots[0]!.id
 
@@ -181,7 +183,9 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
     collectionIds
   )
   const itemIds = items.map(i => i.id)
-  const projectIds = [...new Set(items.map(i => i.project_id).filter((p): p is string => !!p))].sort()
+  const projectIds = [
+    ...new Set(items.map(i => i.project_id).filter((p): p is string => !!p)),
+  ].sort()
 
   // Every context the items are translated in: their projects', and the
   // Travels context for its records, which belong to no project.

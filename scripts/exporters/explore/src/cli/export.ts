@@ -61,20 +61,13 @@ program
   .allowExcessArguments(false)
   .option('--force', 'Overwrite output directory if it already exists', false)
   .option('--output-dir <path>', 'Base output directory (relative to cwd or absolute)', 'output')
-  .option(
-    '--base-url <url>',
-    'Base URL for media files',
-    process.env['BASE_URL'] ?? './images'
-  )
+  .option('--base-url <url>', 'Base URL for media files', process.env['BASE_URL'] ?? './images')
   .option('--publish', 'Generate npm package.json, bump version, and publish to registry', false)
   .option(
     '--package-version <semver>',
     'Set an explicit version instead of auto-incrementing (e.g. 1.0.4)'
   )
-  .option(
-    '--npm-registry <url>',
-    'npm registry URL for publish (overrides NPM_REGISTRY env var)'
-  )
+  .option('--npm-registry <url>', 'npm registry URL for publish (overrides NPM_REGISTRY env var)')
   .action(
     async (options: {
       force: boolean
@@ -202,9 +195,7 @@ program
           try {
             const packageName = PACKAGE_NAME
             const registry =
-              options.npmRegistry ||
-              process.env['NPM_REGISTRY'] ||
-              'https://registry.npmjs.org'
+              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
 
             // Version file lives next to the output base dir, NOT inside the project
             // output directory, so it survives --force cleans.

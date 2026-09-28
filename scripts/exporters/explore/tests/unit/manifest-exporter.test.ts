@@ -2,201 +2,118 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { ManifestExporter } from '../../src/exporters/manifest-exporter.js'
 import type { ExportContext } from '../../src/core/types.js'
+import { contextWith, scopeWith } from './support.js'
 
 /**
  * `manifest.site` is the one thing a website reads before it mounts: the
  * languages it offers, in switcher order with their native labels, and its
- * name per language. For a project website the offered languages are the
- * ones at least one exported item is translated in — the manifest's
- * `languages` list is every language in the database, and most of them have
- * no content here.
+ * name per language. Explore's monuments are other databases' records and
+ * carry their languages; the site offers the languages Explore's own texts
+ * are written in, and its name is the Explore root's title.
  */
-function contextWith(rows: Record<string, unknown[]>): ExportContext {
-  const query = vi.fn(async (sql: string) => {
-    if (sql.includes('FROM item_translations')) return rows.itemLanguages
-    // buildLangCodeMap's own unconditional `id, backward_compatibility`
-    // select — distinct from the top-level `languages` list query below.
-    if (sql.startsWith('SELECT id, backward_compatibility FROM languages')) return rows.langCodeMap ?? []
-    // The primary-project-name lookup (siteNames) and the projects-section
-    // title lookup (buildProjectsSection) both join collection_translations,
-    // but only the latter starts from `projects p` — check it first.
-    if (sql.includes('JOIN collection_translations')) return rows.projectTitles ?? []
-    if (sql.includes('FROM collection_translations')) return rows.names
+function exporterWith(
+  rows: Record<string, unknown[]>,
+  scope = scopeWith({ collectionIds: ['root', 'theme-1'] })
+) {
+  const query = vi.fn(async (sql: string, _params?: unknown[]) => {
+    if (sql.startsWith('SELECT id, backward_compatibility FROM languages'))
+      return rows.langCodeMap ?? []
+    if (sql.includes('lt.name')) return rows.siteLanguages ?? []
+    if (sql.includes('FROM projects p')) return rows.projectTitles ?? []
+    if (sql.includes('ct.collection_id = ?')) return rows.names ?? []
     if (sql.includes('FROM projects')) return rows.projects ?? []
-    if (sql.includes('FROM languages')) return rows.languages
+    if (sql.includes('FROM languages')) return rows.languages ?? []
     throw new Error(`Unexpected query: ${sql}`)
   })
-  return {
-    db: { query } as unknown as ExportContext['db'],
-    outputDir: '/tmp/none',
-    projectIds: ['isl-uuid', 'epm-uuid'],
-    contextIds: ['isl-context', 'epm-context'],
-    projectKeys: ['ISL', 'EPM'],
-    baseUrl: 'https://example.org',
-    logger: { info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn() } as unknown as ExportContext['logger'],
-  }
+  const context = contextWith({ query } as unknown as ExportContext['db'], '/tmp/none', scope)
+  const exporter = new ManifestExporter(context)
+  const written: unknown[] = []
+  vi.spyOn(
+    exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> },
+    'writeJson'
+  ).mockImplementation(async (_file, data) => {
+    written.push(data)
+  })
+  return { exporter, written, query }
 }
 
 describe('ManifestExporter', () => {
-  it('offers the languages the items carry, with native labels, and names the primary project', async () => {
-    const context = contextWith({
-      languages: [
-        { backward_compatibility: 'en' },
-        { backward_compatibility: 'fr' },
-        { backward_compatibility: 'fa' },
-      ],
-      itemLanguages: [
-        { language_id: 'fra', code: 'fr', name: 'Français' },
+  it("offers the languages of Explore's own texts, with native labels, and the root's name", async () => {
+    const { exporter, written, query } = exporterWith({
+      languages: [{ backward_compatibility: 'en' }, { backward_compatibility: 'fr' }],
+      siteLanguages: [
+        { language_id: 'ita', code: 'it', name: 'Italiano' },
         { language_id: 'eng', code: 'en', name: 'English' },
-        { language_id: 'ara', code: 'ar', name: null },
+        { language_id: 'deu', code: 'de', name: null },
       ],
-      names: [
-        { language_id: 'en', title: 'Discover Islamic Art' },
-        { language_id: 'fr', title: 'Découvrir l’art islamique' },
-      ],
+      names: [{ language_id: 'en', title: 'Explore' }],
     })
-    const exporter = new ManifestExporter(context)
-    const written: unknown[] = []
-    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
-      async (_file, data) => {
-        written.push(data)
-      }
-    )
 
     await exporter.export()
 
     const manifest = written[0] as {
+      kind: string
       site: { key: string; languages: unknown[]; names: unknown }
       languages: string[]
-      projectKeys: string[]
-      rights: { rights_holder: string; terms_url: string; attribution: string }
     }
-    expect(manifest.languages).toEqual(['en', 'fr', 'fa'])
-    expect(manifest.projectKeys).toEqual(['ISL', 'EPM'])
-    expect(manifest.site.key).toBe('sharinghistory')
+    expect(manifest.kind).toBe('explore')
+    expect(manifest.site.key).toBe('explore')
     expect(manifest.site.languages).toEqual([
-      { code: 'ar', label: 'AR' },
+      { code: 'de', label: 'DE' },
       { code: 'en', label: 'English' },
-      { code: 'fr', label: 'Français' },
+      { code: 'it', label: 'Italiano' },
     ])
-    expect(manifest.site.names).toEqual({ en: 'Discover Islamic Art', fr: 'Découvrir l’art islamique' })
+    expect(manifest.site.names).toEqual({ en: 'Explore' })
+    expect(manifest.languages).toEqual(['en', 'fr'])
+
+    const languagesQuery = query.mock.calls.find(([sql]) => String(sql).includes('lt.name'))!
+    expect(languagesQuery[1]).toEqual(['root', 'theme-1', 'explore-context'])
   })
 
-  // Epic #1727 phase 2: the manifest carries one `projects` entry per
-  // referenced project UUID — for a project-scoped exporter that is exactly
-  // `context.projectIds`, additive alongside the untouched `projectKeys`/
-  // `projectIds` arrays.
-  it('builds manifest.projects with per-language names and the three URL columns', async () => {
-    const context = contextWith({
-      languages: [],
-      itemLanguages: [],
-      names: [],
-      langCodeMap: [
-        { id: 'eng', backward_compatibility: 'en' },
-        { id: 'fra', backward_compatibility: 'fr' },
-      ],
-      projects: [
-        {
-          id: 'isl-uuid',
-          backward_compatibility: 'mwnf3:projects:ISL',
-          site_url: 'https://islamicart.museumwnf.org',
-          related_database_url: null,
-          artistic_introduction_url: 'https://islamicart.museumwnf.org/gai/ISL/',
-        },
-        {
-          id: 'epm-uuid',
-          backward_compatibility: 'mwnf3:projects:EPM',
-          site_url: null,
-          related_database_url: null,
-          artistic_introduction_url: null,
-        },
-      ],
-      projectTitles: [
-        { project_id: 'isl-uuid', language_id: 'eng', title: 'Discover Islamic Art' },
-        { project_id: 'isl-uuid', language_id: 'fra', title: 'Découvrir l’art islamique' },
-        { project_id: 'epm-uuid', language_id: 'eng', title: null },
-      ],
-    })
-    const exporter = new ManifestExporter(context)
-    const written: unknown[] = []
-    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
-      async (_file, data) => {
-        written.push(data)
-      }
+  it('builds manifest.projects for the projects the shipped items belong to', async () => {
+    const { exporter, written } = exporterWith(
+      {
+        langCodeMap: [{ id: 'eng', backward_compatibility: 'en' }],
+        projects: [
+          {
+            id: 'bar-uuid',
+            backward_compatibility: 'mwnf3:projects:BAR',
+            site_url: 'https://baroqueart.museumwnf.org',
+            related_database_url: null,
+            artistic_introduction_url: null,
+          },
+        ],
+        projectTitles: [
+          { project_id: 'bar-uuid', language_id: 'eng', title: 'Discover Baroque Art' },
+        ],
+      },
+      scopeWith({ projectIds: ['bar-uuid'] })
     )
 
     await exporter.export()
 
-    const manifest = written[0] as {
-      projectKeys: string[]
-      projectIds: string[]
-      projects: Record<
-        string,
-        {
-          name: Record<string, string>
-          site_url: string | null
-          related_database_url: string | null
-          artistic_introduction_url: string | null
-        }
-      >
-    }
-    // Additive: the legacy arrays stay untouched.
-    expect(manifest.projectKeys).toEqual(['ISL', 'EPM'])
-    expect(manifest.projectIds).toEqual(['isl-uuid', 'epm-uuid'])
+    const manifest = written[0] as { projects: Record<string, unknown> }
     expect(manifest.projects).toEqual({
-      'isl-uuid': {
-        name: { en: 'Discover Islamic Art', fr: 'Découvrir l’art islamique' },
-        site_url: 'https://islamicart.museumwnf.org',
-        related_database_url: null,
-        artistic_introduction_url: 'https://islamicart.museumwnf.org/gai/ISL/',
-      },
-      'epm-uuid': {
-        // Project has no translation title in this fixture (null tolerated).
-        name: {},
-        site_url: null,
+      'bar-uuid': {
+        name: { en: 'Discover Baroque Art' },
+        site_url: 'https://baroqueart.museumwnf.org',
         related_database_url: null,
         artistic_introduction_url: null,
       },
     })
   })
 
-  it('reports an empty projects section when there are no projects in scope', async () => {
-    const context = contextWith({ languages: [], itemLanguages: [], names: [] })
-    context.projectIds = []
-    const exporter = new ManifestExporter(context)
-    const written: unknown[] = []
-    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
-      async (_file, data) => {
-        written.push(data)
-      }
-    )
-
-    await exporter.export()
-
-    const manifest = written[0] as { projects: Record<string, unknown> }
-    expect(manifest.projects).toEqual({})
-  })
-
   // Story #1690: the site's "Source: <origin><path>" credit is composed from
   // this block, so the field names are a contract with viewer-core#79 — not
   // free to rename.
   it('carries the MWNF rights block', async () => {
-    const context = contextWith({
-      languages: [],
-      itemLanguages: [],
-      names: [],
-    })
-    const exporter = new ManifestExporter(context)
-    const written: unknown[] = []
-    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
-      async (_file, data) => {
-        written.push(data)
-      }
-    )
+    const { exporter, written } = exporterWith({})
 
     await exporter.export()
 
-    const manifest = written[0] as { rights: { rights_holder: string; terms_url: string; attribution: string } }
+    const manifest = written[0] as {
+      rights: { rights_holder: string; terms_url: string; attribution: string }
+    }
     expect(manifest.rights).toEqual({
       rights_holder: 'Museum Ohne Grenzen e.V. (Museum With No Frontiers)',
       terms_url: 'https://www.museumwnf.org/about/legal-notice',

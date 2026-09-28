@@ -122,7 +122,7 @@ export class PartnerExporter extends BaseExporter {
             itemIds
           )
 
-    if (partners.length === 0 || this.projectIds.length === 0) {
+    if (partners.length === 0) {
       await this.writeJson('partners.json', [])
       this.logger.warning('partners.json (0 partners)')
       return { file: 'partners.json', count: 0 }
@@ -161,11 +161,14 @@ export class PartnerExporter extends BaseExporter {
       // collections that represent the exported projects themselves. Also carries
       // which project each attachment belongs to, so a partner curated under more
       // than one exported project (e.g. ISL and EPM both list it) reports all of them.
-      this.db.query<PartnerLevelRow>(
-        // Row order is unspecified; sorted so `project_uuids` is byte-identical
-        // across two exports of one database (levelMap's "most prominent tier"
-        // pick is already order-independent by rank).
-        `SELECT cp.partner_id, cp.level, proj.id AS project_id
+      // No project in scope (only native monuments): no curated tier to read.
+      this.projectIds.length === 0
+        ? Promise.resolve([] as PartnerLevelRow[])
+        : this.db.query<PartnerLevelRow>(
+            // Row order is unspecified; sorted so `project_uuids` is byte-identical
+            // across two exports of one database (levelMap's "most prominent tier"
+            // pick is already order-independent by rank).
+            `SELECT cp.partner_id, cp.level, proj.id AS project_id
          FROM collection_partner cp
          JOIN collections c ON c.id = cp.collection_id
          JOIN projects proj ON proj.context_id = c.context_id
@@ -174,8 +177,8 @@ export class PartnerExporter extends BaseExporter {
            AND proj.id IN (${ph})
            AND cp.partner_id IN (${partnerPh})
          ORDER BY cp.partner_id, proj.id`,
-        [...this.projectIds, ...partnerIds]
-      ),
+            [...this.projectIds, ...partnerIds]
+          ),
       // The shipped items (items.json) — item_count answers "how many of the
       // shipped items does this partner hold", so it has to agree with that
       // file, not the raw items table.
@@ -199,16 +202,19 @@ export class PartnerExporter extends BaseExporter {
     // other member's parent_id is that owner's id. A partner can own or belong to at most one
     // group per project (mirrors legacy: one partner_museums/partner_institutions row per
     // museum/institution per project).
-    const groupMemberships = await this.db.query<GroupMembershipRow>(
-      `SELECT cp.collection_id, cp.partner_id, cp.level
+    const groupMemberships =
+      this.projectIds.length === 0
+        ? []
+        : await this.db.query<GroupMembershipRow>(
+            `SELECT cp.collection_id, cp.partner_id, cp.level
        FROM collection_partner cp
        JOIN collections c ON c.id = cp.collection_id
        WHERE cp.collection_type = 'collection'
          AND c.internal_name LIKE 'partner_group:%'
          AND c.context_id IN (SELECT p.context_id FROM projects p WHERE p.id IN (${ph}))
          AND cp.partner_id IN (${partnerPh})`,
-      [...this.projectIds, ...partnerIds]
-    )
+            [...this.projectIds, ...partnerIds]
+          )
 
     // partner_id -> item_count, defaulting to 0 for a partner holding none.
     const itemCountMap = new Map(itemCounts.map(r => [r.partner_id, Number(r.item_count)]))
@@ -253,7 +259,9 @@ export class PartnerExporter extends BaseExporter {
     const imageMap = new Map<string, PartnerImage[]>()
     for (const img of images) {
       if (!imageMap.has(img.partner_id)) imageMap.set(img.partner_id, [])
-      const extra = img.extra ? parseJson<{ photographer?: string; copyright?: string }>(img.extra) : null
+      const extra = img.extra
+        ? parseJson<{ photographer?: string; copyright?: string }>(img.extra)
+        : null
       imageMap.get(img.partner_id)!.push({
         url: this.imageUrl(img.path),
         alt_text: img.alt_text,

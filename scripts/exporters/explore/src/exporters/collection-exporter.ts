@@ -123,7 +123,10 @@ export class CollectionExporter extends BaseExporter {
     }
     await this.writeTranslationFiles('collections', byLang)
 
-    const imageMap = new Map<string, { url: string; alt_text: string | null; display_order: number }[]>()
+    const imageMap = new Map<
+      string,
+      { url: string; alt_text: string | null; display_order: number }[]
+    >()
     for (const img of images) {
       if (!imageMap.has(img.collection_id)) imageMap.set(img.collection_id, [])
       imageMap.get(img.collection_id)!.push({

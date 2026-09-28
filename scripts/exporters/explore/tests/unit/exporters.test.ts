@@ -10,26 +10,27 @@ const testDir = dirname(fileURLToPath(import.meta.url))
 const srcDir = join(testDir, '..', '..', 'src')
 
 /**
- * Sharing History has no dynasty entity at all (dynasty survives only as a
- * legacy free-text field). This fork must therefore ship no dynasty exporter.
- * The glossary exporter STAYS: SH content carries ~2,800 glossary spelling
- * links (usage-scoped; verified on production 2026-08-22).
+ * Explore has no dynasty entity and no timeline. This fork must therefore
+ * ship neither exporter; the glossary exporter stays, for the terms the
+ * shipped texts use.
  */
-describe('sharinghistory exporter run list', () => {
-  it('exposes no DynastyExporter', () => {
+describe('explore exporter run list', () => {
+  it('exposes no DynastyExporter and no TimelineExporter', () => {
     expect(Object.keys(exporters)).not.toContain('DynastyExporter')
+    expect(Object.keys(exporters)).not.toContain('TimelineExporter')
   })
 
-  it('has no dynasty-exporter source file', () => {
+  it('has no dynasty or timeline source file', () => {
     expect(existsSync(join(srcDir, 'exporters', 'dynasty-exporter.ts'))).toBe(false)
+    expect(existsSync(join(srcDir, 'exporters', 'timeline-exporter.ts'))).toBe(false)
   })
 
-  it('does not reference DynastyExporter in the CLI run list', () => {
+  it('does not reference them in the CLI run list', () => {
     const cliSource = readFileSync(join(srcDir, 'cli', 'export.ts'), 'utf-8')
-    expect(cliSource).not.toMatch(/new DynastyExporter/)
+    expect(cliSource).not.toMatch(/new (Dynasty|Timeline)Exporter/)
   })
 
-  it('exposes the exporters the SH package is built from (incl. glossary)', () => {
+  it('exposes the exporters the Explore package is built from', () => {
     expect(Object.keys(exporters).sort()).toEqual(
       [
         'CollectionExporter',
@@ -39,7 +40,6 @@ describe('sharinghistory exporter run list', () => {
         'LanguageExporter',
         'ManifestExporter',
         'PartnerExporter',
-        'TimelineExporter',
       ].sort()
     )
   })

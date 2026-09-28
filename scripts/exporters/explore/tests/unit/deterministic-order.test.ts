@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ItemExporter } from '../../src/exporters/item-exporter.js'
 import type { Database } from '../../src/core/database.js'
 import type { ExportContext } from '../../src/core/types.js'
-import type { Logger } from '../../src/core/logger.js'
+import { contextWith, scopeWith } from './support.js'
 
 /**
  * #1916 — a per-item list assembled from a query with no ORDER BY comes out
@@ -49,23 +49,19 @@ describe('ItemExporter — deterministic list order (#1916)', () => {
       },
     }) as unknown as Database
 
-  const context = (db: Database): ExportContext => ({
-    db,
-    outputDir,
-    projectIds: ['awe-project-uuid'],
-    contextIds: ['awe-context-uuid'],
-    projectKeys: ['awe'],
-    baseUrl: 'https://example.test',
-    logger: {
-      info: () => {},
-      success: () => {},
-      warning: () => {},
-      error: () => {},
-    } as unknown as Logger,
-  })
+  const context = (db: Database): ExportContext =>
+    contextWith(
+      db,
+      outputDir,
+      scopeWith({
+        itemIds: ['item-a'],
+        projectIds: ['awe-project-uuid'],
+        contextIds: ['explore-context', 'awe-context-uuid'],
+      })
+    )
 
   beforeEach(() => {
-    outputDir = mkdtempSync(join(tmpdir(), 'sharinghistory-deterministic-order-'))
+    outputDir = mkdtempSync(join(tmpdir(), 'explore-deterministic-order-'))
     queries = []
   })
 
@@ -85,7 +81,15 @@ describe('ItemExporter — deterministic list order (#1916)', () => {
         queries.push(sql)
         if (sql.includes('ORDER BY type, display_order, internal_name')) return [itemRow]
         if (sql.includes("pic.type = 'picture'")) {
-          return [{ picture_id: 'pic-1', item_id: 'item-a', display_order: 1, path: 'x.jpg', alt_text: null }]
+          return [
+            {
+              picture_id: 'pic-1',
+              item_id: 'item-a',
+              display_order: 1,
+              path: 'x.jpg',
+              alt_text: null,
+            },
+          ]
         }
         return []
       },
@@ -121,9 +125,9 @@ describe('ItemExporter — deterministic list order (#1916)', () => {
   it('orders the THG-gallery cross-reference query by item_id, internal_name, id', async () => {
     const db = stubDb()
     await new ItemExporter(context(db)).export()
-    expect(
-      queries.some(sql => sql.includes('ORDER BY ci.item_id, c.internal_name, c.id'))
-    ).toBe(true)
+    expect(queries.some(sql => sql.includes('ORDER BY ci.item_id, c.internal_name, c.id'))).toBe(
+      true
+    )
   })
 
   it('orders item_item_links by source_id, target_id, language_id', async () => {

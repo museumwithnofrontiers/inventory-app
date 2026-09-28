@@ -31,13 +31,13 @@ const registrySilent = () =>
   vi.mocked(spawnSync).mockReturnValue({ status: 1, stdout: '' } as never)
 
 function manager(fileContent?: string) {
-  const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-sharinghistory')
+  const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-explore')
   if (fileContent !== undefined) writeFileSync(versionFile, fileContent, 'utf-8')
   const publisher = new PublishManager({
     outputDir: '.',
     versionFile,
-    packageName: '@museumwnf/sharinghistory-data',
-    projectKeys: ['sharinghistory'],
+    packageName: '@museumwnf/explore-data',
+    projectKeys: ['explore'],
     logger: new Logger('test'),
     registry: 'https://npm.pkg.github.com',
   })
@@ -95,7 +95,7 @@ describe('choosing the next version', () => {
     expect(command).toBe('npm')
     expect(args).toEqual([
       'view',
-      '@museumwnf/sharinghistory-data',
+      '@museumwnf/explore-data',
       'version',
       '--registry',
       'https://npm.pkg.github.com',
@@ -208,7 +208,10 @@ describe('persisting the published version', () => {
  * LICENSE.md' is the encoding, and the file it points at must actually ship.
  */
 describe('licence', () => {
-  const templatePath = resolve(dirname(fileURLToPath(import.meta.url)), '../../../docs/LICENSE.md.template')
+  const templatePath = resolve(
+    dirname(fileURLToPath(import.meta.url)),
+    '../../../docs/LICENSE.md.template'
+  )
 
   it('defaults package.json license to the custom-terms marker', () => {
     const { publisher } = manager('1.0.0')
@@ -216,12 +219,12 @@ describe('licence', () => {
   })
 
   it('still honours an explicit PACKAGE_LICENSE override', () => {
-    const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-sharinghistory')
+    const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-explore')
     const publisher = new PublishManager({
       outputDir: '.',
       versionFile,
-      packageName: '@museumwnf/sharinghistory-data',
-      projectKeys: ['sharinghistory'],
+      packageName: '@museumwnf/explore-data',
+      projectKeys: ['explore'],
       logger: new Logger('test'),
       license: 'MIT',
     })
@@ -230,19 +233,19 @@ describe('licence', () => {
 
   it('generates a README with a Terms of use section linking the notice', () => {
     const { publisher } = manager('1.0.0')
-    const readme = publisher.generateReadme('@museumwnf/sharinghistory-data')
+    const readme = publisher.generateReadme('@museumwnf/explore-data')
     expect(readme).toContain('## Terms of use')
     expect(readme).toContain('https://www.museumwnf.org/about/legal-notice')
   })
 
   it('writes LICENSE.md as an exact copy of the shared template', () => {
     const outputDir = mkdtempSync(join(tmpdir(), 'publish-output-'))
-    const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-sharinghistory')
+    const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-explore')
     const publisher = new PublishManager({
       outputDir,
       versionFile,
-      packageName: '@museumwnf/sharinghistory-data',
-      projectKeys: ['sharinghistory'],
+      packageName: '@museumwnf/explore-data',
+      projectKeys: ['explore'],
       logger: new Logger('test'),
     })
 

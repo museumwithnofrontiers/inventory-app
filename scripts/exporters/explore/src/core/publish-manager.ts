@@ -8,7 +8,10 @@ import { Logger } from './logger.js'
 // seven packages (and the `rights` block each ManifestExporter writes) cannot
 // drift from each other. Path is relative to this file's own location, not
 // to outputDir, so it resolves the same way regardless of --output-dir.
-const LICENSE_TEMPLATE_PATH = resolve(dirname(fileURLToPath(import.meta.url)), '../../../docs/LICENSE.md.template')
+const LICENSE_TEMPLATE_PATH = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../../docs/LICENSE.md.template'
+)
 
 export interface PublishConfig {
   outputDir: string
@@ -144,10 +147,14 @@ export class PublishManager {
 
     let current = local
     if (published && this.isAfter(this.parseVersion(published), this.parseVersion(local))) {
-      this.config.logger.info(`Registry is ahead of ${this.config.versionFile}: ${local} → ${published}`)
+      this.config.logger.info(
+        `Registry is ahead of ${this.config.versionFile}: ${local} → ${published}`
+      )
       current = published
     } else if (!published) {
-      this.config.logger.info(`Registry did not answer for ${this.config.packageName}; using ${local}`)
+      this.config.logger.info(
+        `Registry did not answer for ${this.config.packageName}; using ${local}`
+      )
     }
 
     const v = this.parseVersion(current)
@@ -200,11 +207,7 @@ export class PublishManager {
         './translations/*': './translations/*',
       },
       // Explicitly list .json only — .gz companion files are not useful to consumers
-      files: [
-        '*.json',
-        'translations/*.json',
-        'README.md',
-      ],
+      files: ['*.json', 'translations/*.json', 'README.md'],
       engines: {
         node: '>=16.0.0',
         npm: '>=8.0.0',
@@ -212,7 +215,8 @@ export class PublishManager {
     }
 
     if (this.config.author) pkg['author'] = this.config.author
-    if (this.config.repositoryUrl) pkg['repository'] = { type: 'git', url: this.config.repositoryUrl }
+    if (this.config.repositoryUrl)
+      pkg['repository'] = { type: 'git', url: this.config.repositoryUrl }
 
     return pkg
   }
@@ -224,7 +228,8 @@ export class PublishManager {
     // genuinely different registry (e.g. GitHub Packages, still in use for
     // versions published before this package's move to npmjs).
     const isDefaultRegistry =
-      !this.config.registry || this.config.registry.replace(/\/$/, '') === 'https://registry.npmjs.org'
+      !this.config.registry ||
+      this.config.registry.replace(/\/$/, '') === 'https://registry.npmjs.org'
     const installLine = isDefaultRegistry
       ? `npm install ${packageName}`
       : `npm install ${packageName} --registry ${this.config.registry}`

@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { PartnerExporter } from '../../src/exporters/partner-exporter.js'
 import type { Database } from '../../src/core/database.js'
 import type { ExportContext, Partner } from '../../src/core/types.js'
-import type { Logger } from '../../src/core/logger.js'
+import { contextWith, scopeWith } from './support.js'
 
 /**
  * Every dataset's partners.json carries the same five fields — level,
@@ -70,31 +70,23 @@ describe('PartnerExporter — shared partner shape', () => {
         if (sql.includes('FROM partner_logos')) return []
         if (sql.includes('cp.level, proj.id AS project_id')) return rows.levels ?? []
         if (sql.includes("internal_name LIKE 'partner_group:%'")) return rows.groupMemberships ?? []
-        if (sql.includes('FROM items')) return rows.itemCounts ?? []
+        if (sql.includes('AS item_count')) return rows.itemCounts ?? []
         return []
       },
     }) as unknown as Database
 
-  const context = (db: Database): ExportContext => ({
-    db,
-    outputDir,
-    projectIds: ['project-awe'],
-    contextIds: ['context-awe'],
-    projectKeys: ['awe'],
-    baseUrl: 'https://example.test',
-    logger: {
-      info: () => {},
-      success: () => {},
-      warning: () => {},
-      error: () => {},
-    } as unknown as Logger,
-  })
+  const context = (db: Database): ExportContext =>
+    contextWith(
+      db,
+      outputDir,
+      scopeWith({ itemIds: ['item-1', 'item-2'], projectIds: ['project-awe'] })
+    )
 
   const readOutput = (): Partner[] =>
     JSON.parse(readFileSync(join(outputDir, 'partners.json'), 'utf-8')) as Partner[]
 
   beforeEach(() => {
-    outputDir = mkdtempSync(join(tmpdir(), 'sharinghistory-partners-'))
+    outputDir = mkdtempSync(join(tmpdir(), 'explore-partners-'))
     queries = []
   })
 
@@ -102,7 +94,7 @@ describe('PartnerExporter — shared partner shape', () => {
     rmSync(outputDir, { recursive: true, force: true })
   })
 
-  it('sums item_count from the same item type/project scope as items.json', async () => {
+  it('sums item_count over the shipped items, as items.json has them', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A')],
       translations: [translationRow('partner-a')],
@@ -113,9 +105,9 @@ describe('PartnerExporter — shared partner shape', () => {
     const output = readOutput()
     expect(output[0]?.item_count).toBe(3)
 
-    const itemCountQuery = queries.find(q => q.sql.includes('FROM items'))
+    const itemCountQuery = queries.find(q => q.sql.includes('AS item_count'))
     expect(itemCountQuery?.sql).toContain("type IN ('object', 'monument', 'detail')")
-    expect(itemCountQuery?.sql).toContain('project_id IN')
+    expect(itemCountQuery?.sql).toContain('WHERE id IN')
   })
 
   it('defaults item_count to 0 for a partner holding no exported item', async () => {
@@ -176,7 +168,10 @@ describe('PartnerExporter — shared partner shape', () => {
   it('lists the languages each partner has a translation in, sorted', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A'), partnerRow('partner-b', 'B')],
-      translations: [{ ...translationRow('partner-a'), language_id: 'fra' }, translationRow('partner-a')],
+      translations: [
+        { ...translationRow('partner-a'), language_id: 'fra' },
+        translationRow('partner-a'),
+      ],
     })
     await new PartnerExporter(context(db)).export()
 
@@ -189,21 +184,37 @@ describe('PartnerExporter — shared partner shape', () => {
   it('ships the partner fax in its translations, next to the phone', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A')],
-      translations: [{ ...translationRow('partner-a'), contact_phone: '+34 91 577 79 12', contact_fax: '+34 91 431 68 40' }],
+      translations: [
+        {
+          ...translationRow('partner-a'),
+          contact_phone: '+34 91 577 79 12',
+          contact_fax: '+34 91 431 68 40',
+        },
+      ],
     })
     await new PartnerExporter(context(db)).export()
 
-    const en = JSON.parse(readFileSync(join(outputDir, 'translations', 'partners.en.json'), 'utf-8')) as Record<string, Record<string, string>>
+    const en = JSON.parse(
+      readFileSync(join(outputDir, 'translations', 'partners.en.json'), 'utf-8')
+    ) as Record<string, Record<string, string>>
     expect(en['partner-a']).toMatchObject({ phone: '+34 91 577 79 12', fax: '+34 91 431 68 40' })
-    expect(queries.find(q => q.sql.includes('FROM partner_translations'))?.sql).toContain('contact_fax')
+    expect(queries.find(q => q.sql.includes('FROM partner_translations'))?.sql).toContain(
+      'contact_fax'
+    )
   })
 
   it('lists the contact persons in legacy order, leaving out the missing ones', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A'), partnerRow('partner-b', 'B')],
       translations: [
-        { ...translationRow('partner-a'), extra: { contact_person_1: { name: 'First' }, contact_person_2: { name: 'Second' } } },
-        { ...translationRow('partner-b'), extra: { contact_person_2: { name: 'Only the second' } } },
+        {
+          ...translationRow('partner-a'),
+          extra: { contact_person_1: { name: 'First' }, contact_person_2: { name: 'Second' } },
+        },
+        {
+          ...translationRow('partner-b'),
+          extra: { contact_person_2: { name: 'Only the second' } },
+        },
       ],
     })
     await new PartnerExporter(context(db)).export()
@@ -219,7 +230,10 @@ describe('PartnerExporter — shared partner shape', () => {
   })
 
   it('reports an empty contact_persons list for a partner with none', async () => {
-    const db = stubDb({ partners: [partnerRow('partner-a', 'A')], translations: [translationRow('partner-a')] })
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 'A')],
+      translations: [translationRow('partner-a')],
+    })
     await new PartnerExporter(context(db)).export()
 
     expect(readOutput()[0]?.contact_persons).toEqual([])

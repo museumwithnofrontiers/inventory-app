@@ -149,7 +149,9 @@ export class ItemExporter extends BaseExporter {
     // per context, by design — contexts are additive, not overlapping
     // duplicates). Used below to know which row is the item's primary
     // translation vs. a secondary one (see short_description handling).
-    const itemProjectIds = [...new Set(items.map(i => i.project_id).filter((p): p is string => !!p))]
+    const itemProjectIds = [
+      ...new Set(items.map(i => i.project_id).filter((p): p is string => !!p)),
+    ]
     const itemOwnContext = new Map<string, string>()
     if (itemProjectIds.length > 0) {
       const projectRows = await this.db.query<{ id: string; context_id: string | null }>(
@@ -241,7 +243,15 @@ export class ItemExporter extends BaseExporter {
     }
 
     // ── 3. Dynasty, tag, glossary, artist, THG gallery, media, and item-item links ──
-    const [dynastyLinks, tagLinks, glossaryLinks, artistLinks, thgGalleryLinks, mediaRows, itemItemLinks] = await Promise.all([
+    const [
+      dynastyLinks,
+      tagLinks,
+      glossaryLinks,
+      artistLinks,
+      thgGalleryLinks,
+      mediaRows,
+      itemItemLinks,
+    ] = await Promise.all([
       this.db.query<ItemDynastyRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT item_id, dynasty_id FROM item_dynasty WHERE item_id IN (${itemPh})
@@ -355,16 +365,21 @@ export class ItemExporter extends BaseExporter {
       // Explore's name for it and, now and then, Explore's own texts: it is
       // shipped apart, as `explore`, and never counts as a second source.
       const ownContext = itemOwnContext.get(itemId)
-      const ownRow = (ownContext ? rows.find(r => r.context_id === ownContext) : undefined) ?? rows[0]!
+      const ownRow =
+        (ownContext ? rows.find(r => r.context_id === ownContext) : undefined) ?? rows[0]!
       const exploreRow =
-        ownRow.context_id === exploreContextId ? undefined : rows.find(r => r.context_id === exploreContextId)
+        ownRow.context_id === exploreContextId
+          ? undefined
+          : rows.find(r => r.context_id === exploreContextId)
       const otherRow = rows.find(r => r !== ownRow && r !== exploreRow)
 
       // Fields without a dedicated column live in item_translations.extra
       // JSON; the importers store an item-type-dependent set there. Spread
       // every extra key into the translation output, letting dedicated
       // columns win on collision.
-      const extra = ownRow.extra ? (parseJson(ownRow.extra) as Record<string, unknown> | null) : null
+      const extra = ownRow.extra
+        ? (parseJson(ownRow.extra) as Record<string, unknown> | null)
+        : null
 
       if (!translationMap.has(itemId)) translationMap.set(itemId, {})
       const fields: Record<string, unknown> = {
