@@ -125,6 +125,14 @@ export class ExploreMonumentImporter extends BaseImporter {
           }
 
           if (resolution.mode === 'native' && resolution.itemId) {
+            // Already imported: its location membership still has to carry
+            // the Explore id, which memberships written before it was kept lack.
+            const existingLocation = legacy.locationId
+              ? await this.getLocationCollectionId(legacy.locationId)
+              : null;
+            if (existingLocation && !this.isDryRun && !this.isSampleOnlyMode) {
+              await this.writeLocationLink(existingLocation, resolution.itemId, legacy.monumentId);
+            }
             result.skipped++;
             this.showSkipped();
             continue;
@@ -161,12 +169,7 @@ export class ExploreMonumentImporter extends BaseImporter {
             for (const candidate of resolution.resolvedCandidates ?? []) {
               this.context.tracker.set(backwardCompat, candidate.itemId, 'item');
               if (!this.isDryRun && !this.isSampleOnlyMode && collectionId) {
-                await this.context.strategy.writeCollectionItem({
-                  collection_id: collectionId,
-                  item_id: candidate.itemId,
-                  backward_compatibility: `${backwardCompat}:collection_link:${transformed.locationId}:${candidate.source}`,
-                  display_order: null,
-                });
+                await this.writeLocationLink(collectionId, candidate.itemId, legacy.monumentId);
               }
             }
             result.imported++;
@@ -187,12 +190,7 @@ export class ExploreMonumentImporter extends BaseImporter {
               );
               this.registerEntity(resolution.itemId, backwardCompat, 'item');
             } else if (collectionId) {
-              await this.context.strategy.writeCollectionItem({
-                collection_id: collectionId,
-                item_id: resolution.itemId,
-                backward_compatibility: `${backwardCompat}:collection_link:${transformed.locationId}`,
-                display_order: null,
-              });
+              await this.writeLocationLink(collectionId, resolution.itemId, legacy.monumentId);
             }
 
             result.imported++;
@@ -222,12 +220,7 @@ export class ExploreMonumentImporter extends BaseImporter {
 
           // Link item to location collection if available
           if (collectionId) {
-            await this.context.strategy.writeCollectionItem({
-              collection_id: collectionId,
-              item_id: itemId,
-              backward_compatibility: `${backwardCompat}:collection_link:${transformed.locationId}`,
-              display_order: null,
-            });
+            await this.writeLocationLink(collectionId, itemId, legacy.monumentId);
           }
 
           result.imported++;
@@ -249,6 +242,32 @@ export class ExploreMonumentImporter extends BaseImporter {
     }
 
     return result;
+  }
+
+  /**
+   * Links an item into its Explore location, keeping on the membership the
+   * Explore monument id it stands for: `extra.explore_monument_ids`.
+   *
+   * Most Explore monuments resolve onto an existing record of another
+   * database, whose own key says nothing of Explore, so the membership is the
+   * one place legacy's monument id survives. It is a list because two Explore
+   * monuments can resolve to the same record in the same location. The write
+   * replaces the membership's `extra` (writeCollectionItem's upsert), so the
+   * current value is read and merged first.
+   */
+  private async writeLocationLink(collectionId: string, itemId: string, monumentId: number): Promise<void> {
+    const current = (await this.context.strategy.getCollectionItemExtra(collectionId, itemId)) ?? {};
+    const known = Array.isArray(current['explore_monument_ids'])
+      ? (current['explore_monument_ids'] as unknown[]).filter((id): id is number => typeof id === 'number')
+      : [];
+    const ids = [...new Set([...known, monumentId])].sort((a, b) => a - b);
+
+    await this.context.strategy.writeCollectionItem({
+      collection_id: collectionId,
+      item_id: itemId,
+      display_order: null,
+      extra: { ...current, explore_monument_ids: ids },
+    });
   }
 
   /**

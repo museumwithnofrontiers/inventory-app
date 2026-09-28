@@ -111,6 +111,7 @@ describe('ExploreMonumentImporter', () => {
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       writeItem: writeItemMock,
       writeCollectionItem: writeCollectionItemMock,
+      getCollectionItemExtra: vi.fn().mockResolvedValue(null),
     } as unknown as IWriteStrategy;
 
     context = {
@@ -130,11 +131,27 @@ describe('ExploreMonumentImporter', () => {
     expect(writeCollectionItemMock).toHaveBeenCalledWith({
       collection_id: 'location-collection-uuid',
       item_id: 'canonical-item-uuid',
-      backward_compatibility: 'mwnf3_explore:monument:123:collection_link:2',
       display_order: null,
+      extra: { explore_monument_ids: [123] },
     });
     expect(result.success).toBe(true);
     expect(result.imported).toBe(1);
+  });
+
+  // The reused record's own key says nothing of Explore, so the location
+  // membership is where legacy's monument id survives; the upsert replaces
+  // `extra`, so what the membership already holds is merged, not lost.
+  it("keeps legacy's monument id on the membership, merged with what it already holds", async () => {
+    vi.mocked(strategy.getCollectionItemExtra).mockResolvedValue({ explore_monument_ids: [456], note: 'kept' });
+
+    await new ExploreMonumentImporter(context).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledWith({
+      collection_id: 'location-collection-uuid',
+      item_id: 'canonical-item-uuid',
+      display_order: null,
+      extra: { explore_monument_ids: [123, 456], note: 'kept' },
+    });
   });
 
   /**
@@ -153,47 +170,69 @@ describe('ExploreMonumentImporter', () => {
     expect(writeCollectionItemMock.mock.calls[0]![0]).not.toHaveProperty('country_id');
   });
 
-  it('derives country_id from the joined location for a natively created monument', async () => {
-    // Monument 777 matches no cross-reference table → native creation path.
-    queryMock = vi.fn(async (sql: string) => {
-      if (
-        sql.includes('FROM mwnf3_explore.exploremonument_vm') ||
-        sql.includes('FROM mwnf3_explore.exploremonument_tr') ||
-        sql.includes('FROM mwnf3_explore.exploremonument_sh')
-      ) {
-        return [];
-      }
-      if (sql.includes('FROM mwnf3_explore.exploremonumentext')) {
-        return [{ monumentId: 777, langId: 'en', name: 'Native monument' }];
-      }
-      if (sql.includes('FROM mwnf3_explore.exploremonument')) {
-        return [
-          {
-            monumentId: 777,
-            locationId: 2,
-            title: 'Native monument',
-            geoCoordinates: null,
-            zoom: null,
-            special_monument: null,
-            related_monument: null,
-            countryId: 'in',
-            REF_tr_monuments_project_id: null,
-            REF_tr_monuments_country: null,
-            REF_tr_monuments_itinerary_id: null,
-            REF_tr_monuments_location_id: null,
-            REF_tr_monuments_number: null,
-            REF_tr_monuments_lang: null,
-            REF_tr_monuments_trail_id: null,
-            REF_monuments_project_id: null,
-            REF_monuments_country: null,
-            REF_monuments_institution_id: null,
-            REF_monuments_number: null,
-            REF_monuments_lang: null,
-          },
-        ];
-      }
+  // Monument 777 matches no cross-reference table → native creation path.
+  const nativeMonumentQuery = async (sql: string) => {
+    if (
+      sql.includes('FROM mwnf3_explore.exploremonument_vm') ||
+      sql.includes('FROM mwnf3_explore.exploremonument_tr') ||
+      sql.includes('FROM mwnf3_explore.exploremonument_sh')
+    ) {
       return [];
+    }
+    if (sql.includes('FROM mwnf3_explore.exploremonumentext')) {
+      return [{ monumentId: 777, langId: 'en', name: 'Native monument' }];
+    }
+    if (sql.includes('FROM mwnf3_explore.exploremonument')) {
+      return [
+        {
+          monumentId: 777,
+          locationId: 2,
+          title: 'Native monument',
+          geoCoordinates: null,
+          zoom: null,
+          special_monument: null,
+          related_monument: null,
+          countryId: 'in',
+          REF_tr_monuments_project_id: null,
+          REF_tr_monuments_country: null,
+          REF_tr_monuments_itinerary_id: null,
+          REF_tr_monuments_location_id: null,
+          REF_tr_monuments_number: null,
+          REF_tr_monuments_lang: null,
+          REF_tr_monuments_trail_id: null,
+          REF_monuments_project_id: null,
+          REF_monuments_country: null,
+          REF_monuments_institution_id: null,
+          REF_monuments_number: null,
+          REF_monuments_lang: null,
+        },
+      ];
+    }
+    return [];
+  };
+
+  it('links a monument imported before the Explore id was kept, on a re-run', async () => {
+    tracker.set('mwnf3_explore:monument:777', 'native-item-uuid', 'item');
+    queryMock = vi.fn(nativeMonumentQuery);
+    context = {
+      ...context,
+      legacyDb: { query: queryMock as ILegacyDatabase['query'], execute: vi.fn(), connect: vi.fn(), disconnect: vi.fn() },
+    };
+
+    const result = await new ExploreMonumentImporter(context).import();
+
+    expect(writeItemMock).not.toHaveBeenCalled();
+    expect(writeCollectionItemMock).toHaveBeenCalledWith({
+      collection_id: 'location-collection-uuid',
+      item_id: 'native-item-uuid',
+      display_order: null,
+      extra: { explore_monument_ids: [777] },
     });
+    expect(result.skipped).toBe(1);
+  });
+
+  it('derives country_id from the joined location for a natively created monument', async () => {
+    queryMock = vi.fn(nativeMonumentQuery);
 
     context = {
       ...context,
@@ -213,6 +252,9 @@ describe('ExploreMonumentImporter', () => {
         backward_compatibility: 'mwnf3_explore:monument:777',
         country_id: 'ind',
       })
+    );
+    expect(writeCollectionItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({ item_id: 'native-item-uuid', extra: { explore_monument_ids: [777] } })
     );
     expect(result.success).toBe(true);
   });
