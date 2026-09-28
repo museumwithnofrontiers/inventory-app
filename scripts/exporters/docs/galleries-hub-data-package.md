@@ -179,8 +179,13 @@ The fields the hub needs:
 - **`featured`:** kept for shape compatibility. The hub's carousel picks 3
   of the 8 at random, as legacy does.
 
-**Dropped:** `item_count` and anything item-related. The hub ships no items,
-so "View objects" has nothing to open.
+**`item_count` is 0 for every partner.** It counts the exported items a
+partner holds, and the hub exports none. The key stays because the partner
+shape is one shape across every dataset (decision D4, inventory-app#1699).
+
+A count of 0 is also what makes viewer-core's partner record
+(`record/partners.js`) omit both the object count and the objects link. So
+legacy's "View objects" disappears without any hub-specific rule.
 
 ## countries.json
 
