@@ -76,6 +76,7 @@ import {
   ExploreRegionLocationLinker,
   ExploreLocationImporter,
   ExploreLocationPictureImporter,
+  ExploreCountryPictureImporter,
   ExploreLocationTranslationImporter,
   ExploreMonumentImporter,
   ExploreMonumentPictureImporter,
@@ -598,6 +599,13 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description: 'Import location pictures from Explore database',
     importerClass: ExploreLocationPictureImporter,
     dependencies: ['explore-location'],
+  },
+  {
+    key: 'explore-country-picture',
+    name: 'Explore Country Pictures',
+    description: 'Import country pictures from Explore database',
+    importerClass: ExploreCountryPictureImporter,
+    dependencies: ['explore-country'],
   },
   {
     key: 'explore-location-translation',
