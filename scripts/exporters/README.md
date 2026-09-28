@@ -24,6 +24,7 @@ legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter,
 | [`baroqueart/`](baroqueart/README.md) | project `BAR` | `@museumwnf/baroqueart-data` | `scripts/viewers/baroqueart` |
 | [`sharinghistory/`](sharinghistory/README.md) | project `awe` (SH keyspace, lowercase) | `@museumwnf/sharinghistory-data` | `scripts/viewers/sharinghistory` |
 | [`dxa-gallery/`](dxa-gallery/README.md) | any THG gallery, scoped per run by `--instance`: [`carpets`](instances/carpets.md) (gallery 9, membership union, DCA-native + borrowed), [`amulets`](instances/amulets.md) (gallery 4, membership union) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/carpets`, `scripts/viewers/amulets` |
+| [`galleries/`](galleries/README.md) | the galleries hub: every gallery under the galleries root, and the museums of project `GALLERIES` ([`galleries`](instances/galleries.md)) | `@museumwnf/galleries-data` | the galleries hub website |
 | [`dxa-exhibition/`](dxa-exhibition/README.md) | any THG exhibition, scoped per run by `--instance`: [`the-use-of-colours-in-art`](instances/the-use-of-colours-in-art.md) (exhibition 47), [`water-in-islam`](instances/water-in-islam.md) (exhibition 56) — both membership union + curated theme tree | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/the-use-of-colours-in-art` *(water viewer not built yet)* |
 
 Each directory is a **self-contained Node/TypeScript project** (own
@@ -81,8 +82,8 @@ site-specific knowledge — legacy scope, membership reasoning, gaps, decisions
 ### Batch: re-export every instance in one run
 
 `docker-entrypoint.sh all` ([#1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922))
-iterates every `instances/*.json` file — the two parameterised DXA instances
-and, via `kind: "standalone"`, the three still-forked exporters below — and
+iterates every `instances/*.json` file — the parameterised DXA instances
+and, via `kind: "standalone"`, the standalone exporters below — and
 runs each one's exporter in turn, instead of one `docker compose run` per
 site. See the plan first:
 
@@ -130,6 +131,11 @@ each (see *Parameterised DXA exporters and instance files* above). The
 standalone trio (`islamicart`, `baroqueart`, `sharinghistory`) stays forked:
 their differences are real per-site features, not copy-paste duplication, and
 the decision above still applies to them.
+
+**2026-09-28.** [`galleries`](galleries/README.md), the galleries hub's
+exporter (epic #1744), is a fourth standalone exporter. It is not a fork of
+the trio: it ships a shape of its own (a galleries list and a partner
+directory, no items), built from `dxa-gallery`'s core.
 
 ## Package layout
 
