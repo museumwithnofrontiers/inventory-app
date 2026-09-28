@@ -1704,6 +1704,19 @@ export class SqlWriteStrategy implements IWriteStrategy {
     );
   }
 
+  async setCollectionTranslationDescriptionByKey(
+    collectionId: string,
+    languageId: string,
+    contextId: string,
+    description: string
+  ): Promise<void> {
+    const sanitized = sanitizeAllStrings({ description });
+    await this.db.execute(
+      `UPDATE collection_translations SET description = ?, updated_at = ? WHERE collection_id = ? AND language_id = ? AND context_id = ?`,
+      [sanitized.description, this.now, collectionId, languageId, contextId]
+    );
+  }
+
   async findCollectionTranslationsWithSerializedBuffers(): Promise<
     Array<{ id: string; extra: Record<string, unknown> }>
   > {

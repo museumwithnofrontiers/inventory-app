@@ -168,6 +168,18 @@ describe('extra reaching the database', () => {
     }
   });
 
+  it('converts a description written on its own', async () => {
+    await strategy.setCollectionTranslationDescriptionByKey(
+      'c1',
+      'eng',
+      'ctx',
+      'The <i>medina</i>.'
+    );
+
+    const call = mock.calls.find((c) => c.sql.includes('SET description = ?'))!;
+    expect(call.values[0]).toBe('The *medina*.');
+  });
+
   it('leaves a row with no extra alone', async () => {
     await strategy.writeCollectionItem({
       collection_id: 'c1',
