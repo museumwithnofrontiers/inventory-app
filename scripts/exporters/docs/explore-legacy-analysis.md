@@ -58,10 +58,10 @@ location 498. So the counts below are of distinct record ids.
 | Related content | 452 monuments: "Special Features" and "Virtual Museum" links to records in other databases, plus Travels and Sharing History ones | not examined | To specify in E.2 |
 | Related itineraries | 1,003 monuments | derivable from itinerary membership | Derivable |
 | Glossary | per monument, per language (1,255 monuments) | the glossary entities | Derivable, the way the other main sites highlight terms |
-| Travel information | on every level; see the next section | none | **Gap G4**: not imported, pending decision D1 |
-| Home banners | 1 banner record | none | **Gap G6**, pending decision D2 |
-| Featured partnerships | 5 | none | **Gap G6**, pending decision D2 |
-| Text pages | 6 (`texts/*`), in `explore_pages` | none; `site-i18n` reads `mwnf3.translation`, not `mwnf3_explore` | **Gap G6**, pending decision D2 |
+| Travel information | on every level; see the next section | none | **Gap G4**: not imported; D1 carries it all |
+| Home banners | 1 banner record | none | **Gap G6**, per D2 |
+| Featured partnerships | 5 | none | **Gap G6**, per D2 |
+| Text pages | 6 (`texts/*`), in `explore_pages` | none; `site-i18n` reads `mwnf3.translation`, not `mwnf3_explore` | **Gap G6**, per D2 |
 
 ## The travel layer
 
@@ -86,10 +86,20 @@ reads none of them.
 
 Books and Travels as products were ruled out of the migration on 2026-09-14
 ("Travels, LAS, Books, Virtual Office OUT"). The travel layer is their
-presence inside Explore. That is why it needs a decision rather than an
-importer story by default.
+presence inside Explore. That is why it needed a decision (D1) rather than
+an importer story by default.
 
-## Decisions needed
+## Decisions
+
+Pascal took all three on 2026-09-28:
+- **D1: carry the whole travel layer.**
+- **D2: the text pages go to the site's i18n**, through `site-i18n` reading
+  `explore_pages`. **The home banner and the featured partnerships go in the
+  package**, through the importer.
+- **D3: yes**, the package ships the records Explore's monuments resolve to,
+  whatever database they came from.
+
+The questions as they were put:
 
 - **D1, the travel layer:** carry it, part of it, or none of it?
   - `usefulWebsites` is the most used block and the one least tied to the
@@ -112,19 +122,23 @@ importer story by default.
 
 ## Importer gaps
 
-Each confirmed gap becomes one story in milestone M11, filed once D1 and D2
-are taken:
+Each gap is one story in milestone M11, sub-issues of epic #1745, and each
+blocks the exporter (story E.2):
 
-- **G1:** import `thematiccycle.status`, so the exporter can leave out the
+- **G1** (#2127): import `thematiccycle.status`, so the exporter can leave out the
   cycles legacy hides.
-- **G2:** the itinerary parent and visibility: file sub-itineraries 113, 114,
+- **G2** (#2128): the itinerary parent and visibility: file sub-itineraries 113, 114,
   115, 124 and 126 under their legacy parent, and carry the status that hides
   141–143.
-- **G3:** keep the Explore monument id on a resolved monument, on the
+- **G3** (#2129): keep the Explore monument id on a resolved monument, on the
   location membership row (`collection_item.extra`) or next to it. Without it
   the package can't be compared with legacy, and legacy's monument ids can't
   be honoured.
-- **G4:** the travel layer, per D1.
-- **G5:** verify the location texts (historical background, `description_1`,
+- **G4** (#2130): the whole travel layer (D1): Travel Books, Tours, accommodations,
+  guided visits and useful websites, on every level that carries them.
+- **G5** (#2131): verify the location texts (historical background, `description_1`,
   `prepared_by`) against the legacy columns, and import what is missing.
-- **G6:** the text pages, the banner and the featured partnerships, per D2.
+- **G6a** (#2132): `site-i18n` reads `explore_pages`, so the six text pages reach the
+  site's texts PR (D2).
+- **G6b** (#2133): import the home banner and the featured partnerships, for the
+  package (D2).
