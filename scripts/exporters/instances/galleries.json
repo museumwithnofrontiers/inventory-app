@@ -1,0 +1,7 @@
+{
+  "kind": "standalone",
+  "slug": "galleries",
+  "name": "MWNF Galleries",
+  "exporter": "galleries",
+  "package_name": "@museumwnf/galleries-data"
+}
