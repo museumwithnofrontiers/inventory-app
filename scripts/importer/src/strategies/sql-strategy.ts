@@ -1793,6 +1793,19 @@ export class SqlWriteStrategy implements IWriteStrategy {
     );
   }
 
+  async setItemTranslationDescriptionByContext(
+    itemId: string,
+    languageId: string,
+    contextId: string,
+    description: string
+  ): Promise<void> {
+    const sanitized = sanitizeAllStrings({ description });
+    await this.db.execute(
+      `UPDATE item_translations SET description = ?, updated_at = ? WHERE item_id = ? AND language_id = ? AND context_id = ?`,
+      [sanitized.description, this.now, itemId, languageId, contextId]
+    );
+  }
+
   // The database's actual uniqueness constraint — distinct from checking
   // existence by backward_compatibility, which is per-source-record and
   // says nothing when a different source record already claimed the same

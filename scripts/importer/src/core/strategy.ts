@@ -638,6 +638,17 @@ export interface IWriteStrategy {
   ): Promise<void>;
 
   /**
+   * Set the description on an item_translations row, scoped to one context:
+   * for a text a row written before it was imported still lacks.
+   */
+  setItemTranslationDescriptionByContext(
+    itemId: string,
+    languageId: string,
+    contextId: string,
+    description: string
+  ): Promise<void>;
+
+  /**
    * Whether an item_translations row already exists for this exact
    * (item, language, context) triple — the database's real uniqueness
    * constraint, independent of any one source record's backward_compatibility.

@@ -180,6 +180,20 @@ describe('extra reaching the database', () => {
     expect(call.values[0]).toBe('The *medina*.');
   });
 
+  it('converts an item description written on its own', async () => {
+    await strategy.setItemTranslationDescriptionByContext(
+      'i1',
+      'eng',
+      'ctx',
+      'The <i>kasbah</i>.'
+    );
+
+    const call = mock.calls.find((c) =>
+      c.sql.includes('UPDATE item_translations SET description')
+    )!;
+    expect(call.values[0]).toBe('The *kasbah*.');
+  });
+
   it('leaves a row with no extra alone', async () => {
     await strategy.writeCollectionItem({
       collection_id: 'c1',

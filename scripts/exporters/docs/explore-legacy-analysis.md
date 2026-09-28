@@ -54,7 +54,7 @@ location 498. So the counts below are of distinct record ids.
 | Filters | per country (`availableFilters`) | 30 tags, category `filter`, linked to the items | Imported |
 | Itineraries | 12 top-level, 114 sub-itineraries, across 11 countries | 20 `itinerary` and 109 `exhibition trail` collections (`mwnf3_explore:itinerary:{id}`) | **Gap G2**: all 12 live itineraries exist. But 5 live sub-itineraries (113, 114, 115, 124, 126) are imported as top-level itineraries, and 3 itineraries legacy doesn't show (141, 142, 143) are imported. |
 | Location texts | name, description, how to reach, info, contact, prepared by; a historical background on 138 locations | `collection_translations` title and description, plus `extra` `how_to_reach`, `info`, `prepared_by`, `showOnMonument`, `additional_regions`; the collection's `extra.historical_background` | Imported (G5, #2131). See [Historical background](#historical-background). |
-| Monument content | one `monumentDetails` entry per monument, from its source database | the resolved record's own translations | Imported through resolution. Where it comes from, over 1,386 crawled monuments: 993 Travels "Exhibition Trails" (project IAM), 333 "Virtual Museum" (BAR, GPA, ISL, AWE), 60 native to Explore. |
+| Monument content | one `monumentDetails` entry per monument, from its source database | the resolved record's own translations | Imported through resolution. Where it comes from, over 1,386 crawled monuments: 993 Travels "Exhibition Trails" (project IAM), 333 "Virtual Museum" (BAR, GPA, ISL, AWE), 60 native to Explore. The Travels records' texts were missing (**gap G7**, #2143): now imported. |
 | Related content | 452 monuments: "Special Features" and "Virtual Museum" links to records in other databases, plus Travels and Sharing History ones | not examined | To specify in E.2 |
 | Related itineraries | 1,003 monuments | derivable from itinerary membership | Derivable |
 | Glossary | per monument, per language (1,255 monuments) | the glossary entities | Derivable, the way the other main sites highlight terms |
@@ -241,3 +241,11 @@ blocks the exporter (story E.2):
   site's texts PR (D2).
 - **G6b** (#2133): import the home banner and the featured partnerships, for the
   package (D2).
+- **G7** (#2143), found in E.2: the Travels monuments' texts (`tr_monuments`
+  `description`, `how_to_reach`, `info`, `contact`, `prepared_by`) were never
+  imported, though Explore shows them for the monuments that resolve to
+  Travels records. Now imported, as G5 did for the Travels locations.
+- **G8** (#2146), found in E.2: the country pictures (`mwnf3_explore.countries.path`,
+  16 live countries show one) were never imported. Now a step,
+  `explore-country-picture`, attaches each to its country collection, like the
+  location pictures.

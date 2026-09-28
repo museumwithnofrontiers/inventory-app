@@ -29,6 +29,7 @@ export { ExploreRegionImporter } from './explore-region-importer.js';
 export { ExploreRegionLocationLinker } from './explore-region-location-linker.js';
 export { ExploreLocationImporter } from './explore-location-importer.js';
 export { ExploreLocationPictureImporter } from './explore-location-picture-importer.js';
+export { ExploreCountryPictureImporter } from './explore-country-picture-importer.js';
 export { ExploreLocationTranslationImporter } from './explore-location-translation-importer.js';
 export { ExploreMonumentImporter } from './explore-monument-importer.js';
 export { ExploreMonumentPictureImporter } from './explore-monument-picture-importer.js';
