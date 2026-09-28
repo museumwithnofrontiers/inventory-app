@@ -105,6 +105,7 @@ export {
   ExploreRegionLocationLinker,
   ExploreLocationImporter,
   ExploreLocationPictureImporter,
+  ExploreCountryPictureImporter,
   ExploreLocationTranslationImporter,
   ExploreMonumentImporter,
   ExploreMonumentPictureImporter,

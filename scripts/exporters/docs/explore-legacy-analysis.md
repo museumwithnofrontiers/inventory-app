@@ -245,3 +245,7 @@ blocks the exporter (story E.2):
   `description`, `how_to_reach`, `info`, `contact`, `prepared_by`) were never
   imported, though Explore shows them for the monuments that resolve to
   Travels records. Now imported, as G5 did for the Travels locations.
+- **G8** (#2146), found in E.2: the country pictures (`mwnf3_explore.countries.path`,
+  16 live countries show one) were never imported. Now a step,
+  `explore-country-picture`, attaches each to its country collection, like the
+  location pictures.
