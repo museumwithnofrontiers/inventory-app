@@ -16,6 +16,7 @@
  * - parent_itineraries_id → parent_id (for nested itineraries)
  * - cycle → link to thematic cycle collection
  * - type = 'itinerary' (or 'exhibition trail' for sub-itineraries)
+ * - type, itinorder, location_home_link → extra.explore_itinerary (see itineraryExtra)
  *
  * Note: Itineraries contain comma-separated lists of locationIds and monumentIds.
  * These will be linked to the itinerary collection in a separate step.
@@ -63,10 +64,35 @@ interface LegacyItinerary {
   parent_itineraries_id: number | null;
   type: string | null;
   itinorder: number | null;
+  location_home_link: string | null;
   path: string | null;
   // GPS from thematiccycle join
   geoCoordinates: string | null;
   zoom: number | null;
+}
+
+/**
+ * What an itinerary is in legacy, kept on the collection as
+ * `extra.explore_itinerary`, because the collection type alone ('itinerary' or
+ * 'exhibition trail') cannot say it:
+ *
+ * - `type`: legacy's kind, per the column comment in `explore_itineraries`:
+ *   1 explore, 2 not to be missed, 3 to know more, 4 thematic, 5 territorial.
+ *   The live site's itineraries page lists the top-level thematic ones (4);
+ *   kinds 1–3 are routes a location links to, served only from there.
+ * - `order`: `itinorder`, the order among its siblings.
+ * - `location_home_link`: 'Y' where legacy shows the route on its location's home.
+ */
+export function itineraryExtra(legacy: Pick<LegacyItinerary, 'type' | 'itinorder' | 'location_home_link'>): {
+  type: string | null;
+  order: number | null;
+  location_home_link: string | null;
+} {
+  return {
+    type: legacy.type ?? null,
+    order: legacy.itinorder ?? null,
+    location_home_link: legacy.location_home_link ?? null,
+  };
 }
 
 /**
@@ -131,7 +157,7 @@ export class ExploreItineraryImporter extends BaseImporter {
       // Order by parent first to ensure hierarchy
       const itineraries = await this.context.legacyDb.query<LegacyItinerary>(
         `SELECT ei.itineraries_id, ei.cycle, ei.country, ei.regionId, ei.locationId, ei.monumentId, 
-                ei.parent_itineraries_id, ei.type, ei.itinorder, ei.path,
+                ei.parent_itineraries_id, ei.type, ei.itinorder, ei.location_home_link, ei.path,
                 tc.geoCoordinates, tc.zoom
          FROM mwnf3_explore.explore_itineraries ei
          LEFT JOIN mwnf3_explore.thematiccycle tc ON ei.cycle = tc.cycleId
@@ -166,8 +192,10 @@ export class ExploreItineraryImporter extends BaseImporter {
     try {
       const backwardCompat = `mwnf3_explore:itinerary:${legacy.itineraries_id}`;
 
-      // Check if already exists
+      // Already imported: only make sure it carries the legacy fields, which
+      // collections imported before they were kept lack.
       if (await this.entityExistsAsync(backwardCompat, 'collection')) {
+        await this.ensureItineraryExtra(backwardCompat, legacy);
         result.skipped++;
         this.showSkipped();
         return;
@@ -219,6 +247,7 @@ export class ExploreItineraryImporter extends BaseImporter {
         longitude,
         map_zoom: legacy.zoom ?? null,
         country_id: null,
+        extra: JSON.stringify({ explore_itinerary: itineraryExtra(legacy) }),
       });
 
       this.registerEntity(collectionId, backwardCompat, 'collection');
@@ -247,6 +276,26 @@ export class ExploreItineraryImporter extends BaseImporter {
       });
       this.showError();
     }
+  }
+
+  /**
+   * Merges `extra.explore_itinerary` into an existing itinerary collection,
+   * keeping whatever else its `extra` holds. Writes nothing when it is already
+   * there, so a re-run is idempotent.
+   */
+  private async ensureItineraryExtra(backwardCompat: string, legacy: LegacyItinerary): Promise<void> {
+    if (this.isDryRun || this.isSampleOnlyMode) return;
+    const collectionId = await this.getEntityUuidAsync(backwardCompat, 'collection');
+    if (!collectionId) return;
+
+    const wanted = itineraryExtra(legacy);
+    const current = (await this.context.strategy.getCollectionExtra(collectionId)) ?? {};
+    if (JSON.stringify(current['explore_itinerary']) === JSON.stringify(wanted)) return;
+
+    await this.context.strategy.setCollectionExtra(
+      collectionId,
+      JSON.stringify({ ...current, explore_itinerary: wanted })
+    );
   }
 
   /**
