@@ -25,6 +25,7 @@ legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter,
 | [`sharinghistory/`](sharinghistory/README.md) | project `awe` (SH keyspace, lowercase) | `@museumwnf/sharinghistory-data` | `scripts/viewers/sharinghistory` |
 | [`dxa-gallery/`](dxa-gallery/README.md) | any THG gallery, scoped per run by `--instance`: [`carpets`](instances/carpets.md) (gallery 9, membership union, DCA-native + borrowed), [`amulets`](instances/amulets.md) (gallery 4, membership union) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/carpets`, `scripts/viewers/amulets` |
 | [`galleries/`](galleries/README.md) | the galleries hub: every gallery under the galleries root, and the museums of project `GALLERIES` ([`galleries`](instances/galleries.md)) | `@museumwnf/galleries-data` | the galleries hub website |
+| [`explore/`](explore/README.md) | Explore: the collection tree under the Explore root and the records it holds, whatever their project ([`explore`](instances/explore.md)) | `@museumwnf/explore-data` | the Explore website |
 | [`dxa-exhibition/`](dxa-exhibition/README.md) | any THG exhibition, scoped per run by `--instance`: [`the-use-of-colours-in-art`](instances/the-use-of-colours-in-art.md) (exhibition 47), [`water-in-islam`](instances/water-in-islam.md) (exhibition 56) — both membership union + curated theme tree | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/the-use-of-colours-in-art` *(water viewer not built yet)* |
 
 Each directory is a **self-contained Node/TypeScript project** (own
@@ -136,6 +137,10 @@ the decision above still applies to them.
 exporter (epic #1744), is a fourth standalone exporter. It is not a fork of
 the trio: it ships a shape of its own (a galleries list and a partner
 directory, no items), built from `dxa-gallery`'s core.
+
+**2026-09-28.** [`explore`](explore/README.md), Explore's exporter (epic
+#1745), is a fork of `sharinghistory`. Explore is no project, so its scope is
+a collection tree and the records it holds, not a project key.
 
 ## Package layout
 
