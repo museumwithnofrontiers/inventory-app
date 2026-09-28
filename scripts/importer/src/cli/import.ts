@@ -86,6 +86,7 @@ import {
   ExploreItineraryContentImporter,
   ExploreFilterImporter,
   ExploreHomeImporter,
+  ExploreTravelImporter,
   // Phase 07: Travels
   TravelsContextImporter,
   TravelsRootCollectionImporter,
@@ -669,6 +670,14 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     name: 'Explore Home',
     description: 'Import the Explore home banners and featured partnerships onto the site root',
     importerClass: ExploreHomeImporter,
+    dependencies: ['explore-root-collections', 'language'],
+  },
+  {
+    key: 'explore-travel',
+    name: 'Explore Travel',
+    description:
+      'Import the Explore travel layer (travel books, tours, accommodations, guided visits, useful websites) onto the site root',
+    importerClass: ExploreTravelImporter,
     dependencies: ['explore-root-collections', 'language'],
   },
   // Phase 07: Travels (virtual visits and exhibition trails)

@@ -39,3 +39,4 @@ export { ExploreItineraryImporter } from './explore-itinerary-importer.js';
 export { ExploreItineraryContentImporter } from './explore-itinerary-content-importer.js';
 export { ExploreFilterImporter } from './explore-filter-importer.js';
 export { ExploreHomeImporter } from './explore-home-importer.js';
+export { ExploreTravelImporter } from './explore-travel-importer.js';
