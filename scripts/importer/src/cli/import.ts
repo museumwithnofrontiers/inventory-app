@@ -600,7 +600,8 @@ const ALL_IMPORTERS: ImporterConfig[] = [
   {
     key: 'explore-location-translation',
     name: 'Explore Location Translations',
-    description: 'Import multilingual translations, visibility flags, and contacts for locations',
+    description:
+      'Import multilingual translations, visibility flags, contacts and historical backgrounds for locations',
     importerClass: ExploreLocationTranslationImporter,
     dependencies: ['explore-location'],
   },
@@ -715,7 +716,7 @@ const ALL_IMPORTERS: ImporterConfig[] = [
   {
     key: 'travels-location-translation',
     name: 'Travels Location Translations',
-    description: 'Import location translations',
+    description: 'Import location translations and their texts',
     importerClass: TravelsLocationTranslationImporter,
     dependencies: ['travels-location', 'language'],
   },
