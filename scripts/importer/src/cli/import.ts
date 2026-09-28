@@ -85,6 +85,7 @@ import {
   ExploreItineraryImporter,
   ExploreItineraryContentImporter,
   ExploreFilterImporter,
+  ExploreHomeImporter,
   // Phase 07: Travels
   TravelsContextImporter,
   TravelsRootCollectionImporter,
@@ -536,7 +537,7 @@ const ALL_IMPORTERS: ImporterConfig[] = [
   {
     key: 'explore-root-collections',
     name: 'Explore Root Collections',
-    description: 'Create root collections for Explore (by Theme, Country, Itinerary)',
+    description: 'Create the Explore root and its section roots (by Theme, Country, Itinerary)',
     importerClass: ExploreRootCollectionsImporter,
     dependencies: ['explore-context', 'language'],
   },
@@ -662,6 +663,13 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description: 'Import Explore filter tags and filter-monument links',
     importerClass: ExploreFilterImporter,
     dependencies: ['explore-monument'],
+  },
+  {
+    key: 'explore-home',
+    name: 'Explore Home',
+    description: 'Import the Explore home banners and featured partnerships onto the site root',
+    importerClass: ExploreHomeImporter,
+    dependencies: ['explore-root-collections', 'language'],
   },
   // Phase 07: Travels (virtual visits and exhibition trails)
   {

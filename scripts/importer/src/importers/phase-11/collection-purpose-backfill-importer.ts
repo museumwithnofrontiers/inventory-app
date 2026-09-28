@@ -47,6 +47,7 @@ const BACKFILL_RULES: PurposeBackfillRule[] = [
   // Travels
   { literal: 'mwnf3_travels:root', exact: true, purpose: 'travels-root' },
   // Explore
+  { literal: 'mwnf3_explore:root', exact: true, purpose: 'explore-root' },
   { literal: 'mwnf3_explore:root:explore_by_theme', exact: true, purpose: 'explore-themes-root' },
   { literal: 'mwnf3_explore:root:explore_by_country', exact: true, purpose: 'explore-countries-root' },
   { literal: 'mwnf3_explore:root:explore_by_itinerary', exact: true, purpose: 'explore-itineraries-root' },

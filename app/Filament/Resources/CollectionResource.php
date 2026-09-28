@@ -79,6 +79,7 @@ class CollectionResource extends Resource
         'topics-root' => 'Topics root',
         'galleries-root' => 'Galleries root',
         'travels-root' => 'Travels root',
+        'explore-root' => 'Explore root',
         'explore-themes-root' => 'Explore themes root',
         'explore-countries-root' => 'Explore countries root',
         'explore-itineraries-root' => 'Explore itineraries root',
