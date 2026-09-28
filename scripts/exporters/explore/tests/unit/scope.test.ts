@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { isShown, shippedTree, type TreeCollection } from '../../src/core/scope.js'
+import { isShown, resolveScope, shippedTree, type TreeCollection } from '../../src/core/scope.js'
+import type { Database } from '../../src/core/database.js'
 
 const collection = (
   id: string,
@@ -87,5 +88,52 @@ describe('shippedTree', () => {
     ])
 
     expect(tree.map(c => c.id)).toEqual(['root', 'itineraries'])
+  })
+})
+
+describe('resolveScope', () => {
+  it("ships the tree's members, their details and the records they link to", async () => {
+    const db = {
+      query: async (sql: string) => {
+        if (sql.includes('FROM contexts')) return [{ id: 'explore-context' }]
+        if (sql.includes('FROM collections c')) {
+          return [
+            {
+              id: 'root',
+              parent_id: null,
+              type: 'collection',
+              purpose: 'explore-root',
+              display_order: null,
+              internal_name: 'explore',
+              extra: null,
+              english_extra: null,
+            },
+            {
+              id: 'loc',
+              parent_id: 'root',
+              type: 'location',
+              purpose: null,
+              display_order: null,
+              internal_name: 'loc',
+              extra: null,
+              english_extra: null,
+            },
+          ]
+        }
+        if (sql.includes('FROM collection_item ci')) return [{ id: 'monument', project_id: 'bar' }]
+        if (sql.includes("type = 'detail'")) return [{ id: 'detail', project_id: 'bar' }]
+        if (sql.includes('FROM item_item_links')) return [{ id: 'object', project_id: 'isl' }]
+        if (sql.includes('FROM item_translations'))
+          return [{ context_id: 'bar-context' }, { context_id: 'explore-context' }]
+        return []
+      },
+    } as unknown as Database
+
+    const scope = await resolveScope(db)
+
+    expect(scope.collectionIds).toEqual(['root', 'loc'])
+    expect(scope.itemIds).toEqual(['detail', 'monument', 'object'])
+    expect(scope.projectIds).toEqual(['bar', 'isl'])
+    expect(scope.contextIds).toEqual(['explore-context', 'bar-context'])
   })
 })
