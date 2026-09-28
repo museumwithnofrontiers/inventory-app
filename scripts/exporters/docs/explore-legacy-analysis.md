@@ -58,7 +58,7 @@ location 498. So the counts below are of distinct record ids.
 | Related content | 452 monuments: "Special Features" and "Virtual Museum" links to records in other databases, plus Travels and Sharing History ones | not examined | To specify in E.2 |
 | Related itineraries | 1,003 monuments | derivable from itinerary membership | Derivable |
 | Glossary | per monument, per language (1,255 monuments) | the glossary entities | Derivable, the way the other main sites highlight terms |
-| Travel information | on every level; see the next section | none | **Gap G4**: not imported; D1 carries it all |
+| Travel information | on every level; see the next section | the Explore root's `extra.explore_travel` | Imported (G4, #2130); see [Site records](#site-records) |
 | Home banners | 1 per request, drawn at random from the 15 active ones | the Explore root's `extra.explore_home.banners` | Imported (G6b, #2133); see [Site records](#site-records) |
 | Featured partnerships | 5, each on the home page and/or the pages it is scoped to | the Explore root's `extra.explore_home.featured_partnerships` | Imported (G6b, #2133); see [Site records](#site-records) |
 | Text pages | 6 (`texts/*`): the home page's five `Home-*` words in `mwnf3_explore.translation`, the other five pages in `explore_pages_langs`; English only | not the inventory's: `site-i18n`'s `extract:explore` writes them to the site's locales | Extracted (G6a, #2132); the output matches the live API's text |
@@ -78,11 +78,28 @@ Number of records carrying each block, of those crawled:
 | `guidedVisits` | 2 | 7 | 3 | 11 | — | Guided-visit contacts |
 | `usefulWebsites` | 14 | 8 | 492 | 1,169 | — | Tourism and institution websites |
 
-The legacy tables behind it are `explorecountry*` and `explorelocation*`
-(books, travels, hotels, don't-miss), `accommodation*`, `eating*`,
-`excursions*`, `guided_visits*`, `hotels`, `otherbooks`, `othertravels`,
-`featured_books*`, `featured_tours*` and `useful_websites`. The importer
-reads none of them.
+What the live API serves comes from five tables, each record scoped to its
+pages (see [Site records](#site-records)):
+
+| Block | Legacy table | Also from |
+|---|---|---|
+| `mwnfTravelBook` | `featured_books_explore` | — |
+| `mwnfTour` | `featured_tours_explore` | the tour's picture (`tr_images`) and places (`travels_countries`, `travels_clocations_texts`) in `mwnf3_travels` |
+| `accommodations` | `accommodation_hotels`, `_langs` | the categories (`accommodation_types`) |
+| `guidedVisits` | `guided_visits_contacts`, `_langs` | — |
+| `usefulWebsites` | `useful_websites` | — |
+
+The other tables are not served. The older link tables
+(`explorecountrymwnfbooks`, `explorecountrymwnftravels`,
+`explorelocationmwnfbooks`, `explorelocationmwnftravels`,
+`explorelocationhotels`) and `hotels`, `otherbooks` and `othertravels` are
+empty. `eating…`, `excursions…`, `accommodation` and the guided-visit
+introductions (`guided_visits`) appear in no response.
+
+A Travel Book's cover is the one field not carried. Legacy's API picks one
+among the Books database's covers, and no rule in the data explains the pick:
+neither the language, the edition, the date nor the image number. The book
+keeps its link to the Books site.
 
 Books and Travels as products were ruled out of the migration on 2026-09-14
 ("Travels, LAS, Books, Virtual Office OUT"). The travel layer is their
@@ -110,7 +127,11 @@ roots. Its `extra` holds every record once, with its scope:
 - `explore_home.featured_partnerships`: the 5 sponsors. Each has its logo path,
   whether the home page shows it (`home`), its `scope`, and per language a
   title, a name and a link.
-- `explore_travel` (G4, #2130): the travel layer's records, the same way.
+- `explore_travel` (G4, #2130): the travel layer's records, the same way:
+  `books`, `tours` (with the tour's picture and, per language, its subtitle),
+  `accommodations` (with their `category`, named in `accommodation_categories`),
+  `guided_visits` and `useful_websites`. Each has its legacy id, its order
+  where legacy has one, its scope, and per language the fields legacy fills.
 
 **A scope** keeps legacy's ids, one list per level: `themes`, `countries`,
 `territories`, `locations`, `monuments`, `itineraries`. Each names the

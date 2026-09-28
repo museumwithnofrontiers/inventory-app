@@ -115,6 +115,7 @@ export {
   ExploreItineraryContentImporter,
   ExploreFilterImporter,
   ExploreHomeImporter,
+  ExploreTravelImporter,
 } from './phase-06/index.js';
 
 // Phase 07: Travels
