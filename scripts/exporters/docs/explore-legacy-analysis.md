@@ -53,7 +53,7 @@ location 498. So the counts below are of distinct record ids.
 | Monuments | 1,693, as listed by the locations | 1,971 monument items linked to the location collections; 106 of them native (`mwnf3_explore:monument:{id}`), the rest resolved onto existing mwnf3, Sharing History and Travels records | **Gap G3**: a resolved monument keeps no trace of its Explore id, so it can't be matched to legacy. The larger staging count is expected: one Explore monument that references several source records resolves to all of them (`explore-filter-importer.ts`). |
 | Filters | per country (`availableFilters`) | 30 tags, category `filter`, linked to the items | Imported |
 | Itineraries | 12 top-level, 114 sub-itineraries, across 11 countries | 20 `itinerary` and 109 `exhibition trail` collections (`mwnf3_explore:itinerary:{id}`) | **Gap G2**: all 12 live itineraries exist. But 5 live sub-itineraries (113, 114, 115, 124, 126) are imported as top-level itineraries, and 3 itineraries legacy doesn't show (141, 142, 143) are imported. |
-| Location texts | name, description, how to reach, info, contact, prepared by; a historical background on 138 locations | `collection_translations` title and description, plus `extra` `how_to_reach`, `info`, `showOnMonument`, `additional_regions` | **Gap G5, to verify:** no historical background, and `description_1`/`prepared_by` never appear in `extra` on staging |
+| Location texts | name, description, how to reach, info, contact, prepared by; a historical background on 138 locations | `collection_translations` title and description, plus `extra` `how_to_reach`, `info`, `prepared_by`, `showOnMonument`, `additional_regions`; the collection's `extra.historical_background` | Imported (G5, #2131). See [Historical background](#historical-background). |
 | Monument content | one `monumentDetails` entry per monument, from its source database | the resolved record's own translations | Imported through resolution. Where it comes from, over 1,386 crawled monuments: 993 Travels "Exhibition Trails" (project IAM), 333 "Virtual Museum" (BAR, GPA, ISL, AWE), 60 native to Explore. |
 | Related content | 452 monuments: "Special Features" and "Virtual Museum" links to records in other databases, plus Travels and Sharing History ones | not examined | To specify in E.2 |
 | Related itineraries | 1,003 monuments | derivable from itinerary membership | Derivable |
@@ -88,6 +88,40 @@ Books and Travels as products were ruled out of the migration on 2026-09-14
 ("Travels, LAS, Books, Virtual Office OUT"). The travel layer is their
 presence inside Explore. That is why it needed a decision (D1) rather than
 an importer story by default.
+
+## Historical background
+
+A location's historical background (`locationHistoricalBackground`) is up
+to two texts, in this order:
+
+1. **Explore's own**, when `locationtranslated.description` is set, signed by
+   its `prepared_by`. Five translations on four locations carry one.
+2. **A Travels location's introduction**: `tr_locations.description` in every
+   language that has one, signed by its `author`. Legacy's API picks the
+   Travels location this way:
+   - the ones the Explore office picked in `locations.et_loc_introduction`
+     (`project;country;itinerary;number;lang;trail#order`), those that have a
+     text, in their order. An order of `-` doesn't hide one.
+   - with none picked, the Travels location of the same country whose title
+     is the location's name in the country's language (`mwnf3.countries.lang_id`),
+     or its English name when it has none in that language. Case, accents and
+     trailing spaces don't count. The office proposes candidates the same way.
+   - `introd_type` plays no part: the live site shows Explore's own text even
+     where it says `Other#-`.
+
+On staging:
+
+- Explore's own text is the location translation's description, with
+  `extra.prepared_by`.
+- The Travels texts are the Travels location translations: `description`, and
+  `author`, `about` and `prepared_by` in `extra`.
+- Each Explore location lists the Travels locations it shows, in order, in its
+  `extra.historical_background`, by their keys
+  (`mwnf3_travels:location:{project}:{country}:{trail}:{itinerary}:{number}`).
+
+Checked against the live API: the same Travels locations on the same 136
+locations, in the same order, and Explore's own text on its four. Together
+they are the 138 locations with a background.
 
 ## Decisions
 
@@ -136,8 +170,8 @@ blocks the exporter (story E.2):
   be honoured.
 - **G4** (#2130): the whole travel layer (D1): Travel Books, Tours, accommodations,
   guided visits and useful websites, on every level that carries them.
-- **G5** (#2131): verify the location texts (historical background, `description_1`,
-  `prepared_by`) against the legacy columns, and import what is missing.
+- **G5** (#2131), done: the location texts, historical background included; see
+  [Historical background](#historical-background).
 - **G6a** (#2132): `site-i18n` reads `explore_pages`, so the six text pages reach the
   site's texts PR (D2).
 - **G6b** (#2133): import the home banner and the featured partnerships, for the

@@ -575,6 +575,18 @@ export interface IWriteStrategy {
   ): Promise<void>;
 
   /**
+   * Update the description on a collection_translations row identified by
+   * (collectionId, languageId, contextId): for a text a row written before it
+   * was imported still lacks.
+   */
+  setCollectionTranslationDescriptionByKey(
+    collectionId: string,
+    languageId: string,
+    contextId: string,
+    description: string
+  ): Promise<void>;
+
+  /**
    * Find collection_translations rows whose `extra` holds a serialized Node
    * Buffer (`{"type":"Buffer","data":[…]}`) — the shape an importer leaves
    * behind when it stores a mysql2 `bit(1)` value without normalising it.

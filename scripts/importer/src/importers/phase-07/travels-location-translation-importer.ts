@@ -4,11 +4,21 @@
  * Creates CollectionTranslation records for each location in all available languages.
  *
  * Legacy schema:
- * - mwnf3_travels.tr_locations (project_id, country, itinerary_id, number, lang, trail_id, title)
+ * - mwnf3_travels.tr_locations (project_id, country, itinerary_id, number, lang, trail_id, title,
+ *   description, author, about, prepared_by)
  *   - One row per language
  *
  * New schema:
- * - collection_translations (collection_id, language_id, context_id, title, description, ...)
+ * - collection_translations (collection_id, language_id, context_id, title, description, extra, ...)
+ *
+ * Mapping:
+ * - title → title
+ * - description → description: the location's introduction, which Explore also
+ *   shows as a location's historical background
+ * - author, about, prepared_by → extra, each only when set
+ *
+ * A translation imported before its text was carried keeps its row: the text is
+ * filled in on it rather than skipped.
  *
  * Dependencies:
  * - TravelsContextImporter
@@ -30,6 +40,26 @@ interface LegacyLocationTranslation {
   lang: string;
   trail_id: number;
   title: string;
+  description: string | null;
+  author: string | null;
+  about: string | null;
+  prepared_by: string | null;
+}
+
+/** The location's text besides its title and introduction: who wrote it, and about whom. */
+export function locationTextExtra(
+  legacy: Pick<LegacyLocationTranslation, 'author' | 'about' | 'prepared_by'>
+): Record<string, string> | null {
+  const extra: Record<string, string> = {};
+  for (const field of ['author', 'about', 'prepared_by'] as const) {
+    const value = legacy[field]?.trim();
+    if (value) extra[field] = value;
+  }
+  return Object.keys(extra).length > 0 ? extra : null;
+}
+
+function locationDescription(legacy: LegacyLocationTranslation): string | null {
+  return legacy.description && legacy.description.trim() ? legacy.description : null;
 }
 
 export class TravelsLocationTranslationImporter extends BaseImporter {
@@ -63,8 +93,9 @@ export class TravelsLocationTranslationImporter extends BaseImporter {
 
       // Query all location translations
       const translations = await this.context.legacyDb.query<LegacyLocationTranslation>(
-        `SELECT project_id, country, itinerary_id, number, lang, trail_id, title
-        FROM mwnf3_travels.tr_locations 
+        `SELECT project_id, country, itinerary_id, number, lang, trail_id, title,
+                description, author, about, prepared_by
+        FROM mwnf3_travels.tr_locations
          ORDER BY project_id, country, trail_id, itinerary_id, number, lang`
       );
 
@@ -101,6 +132,9 @@ export class TravelsLocationTranslationImporter extends BaseImporter {
             translationBackwardCompat
           );
           if (existsCheck) {
+            if (!this.isDryRun && !this.isSampleOnlyMode) {
+              await this.fillLocationText(locationId, languageId, legacy);
+            }
             result.skipped++;
             this.showSkipped();
             continue;
@@ -124,15 +158,15 @@ export class TravelsLocationTranslationImporter extends BaseImporter {
             continue;
           }
 
-          // Write translation
-          // Note: Locations only have title, no description in legacy
+          const extra = locationTextExtra(legacy);
           await this.context.strategy.writeCollectionTranslation({
             collection_id: locationId,
             language_id: languageId,
             context_id: this.travelsContextId,
             backward_compatibility: translationBackwardCompat,
             title: legacy.title || '',
-            description: null,
+            description: locationDescription(legacy),
+            extra: extra ? JSON.stringify(extra) : null,
           });
 
           result.imported++;
@@ -163,5 +197,43 @@ export class TravelsLocationTranslationImporter extends BaseImporter {
     }
 
     return result;
+  }
+
+  /**
+   * Brings the text onto a translation written before it was imported. Its
+   * `extra` is merged, not replaced, so whatever else it holds stays.
+   */
+  private async fillLocationText(
+    collectionId: string,
+    languageId: string,
+    legacy: LegacyLocationTranslation
+  ): Promise<void> {
+    const description = locationDescription(legacy);
+    const text = locationTextExtra(legacy);
+    if (!description && !text) return;
+
+    const current = await this.context.strategy.getCollectionTranslationByKey(
+      collectionId,
+      languageId,
+      this.travelsContextId
+    );
+    if (!current) return;
+
+    if (description) {
+      await this.context.strategy.setCollectionTranslationDescriptionByKey(
+        collectionId,
+        languageId,
+        this.travelsContextId,
+        description
+      );
+    }
+    if (text) {
+      await this.context.strategy.setCollectionTranslationExtraByKey(
+        collectionId,
+        languageId,
+        this.travelsContextId,
+        JSON.stringify({ ...(current.extra ?? {}), ...text })
+      );
+    }
   }
 }
