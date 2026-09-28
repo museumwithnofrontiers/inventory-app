@@ -193,3 +193,6 @@
 [submodule ".new-architecture/museumwithnofrontiers.github.io"]
 	path = .new-architecture/museumwithnofrontiers.github.io
 	url = https://github.com/museumwithnofrontiers/museumwithnofrontiers.github.io
+[submodule ".new-architecture/galleries"]
+	path = .new-architecture/galleries
+	url = https://github.com/museumwithnofrontiers/galleries
