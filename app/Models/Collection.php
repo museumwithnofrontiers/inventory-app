@@ -92,6 +92,8 @@ class Collection extends Model
 
     public const PURPOSE_TRAVELS_ROOT = 'travels-root';
 
+    public const PURPOSE_EXPLORE_ROOT = 'explore-root';
+
     public const PURPOSE_EXPLORE_THEMES_ROOT = 'explore-themes-root';
 
     public const PURPOSE_EXPLORE_COUNTRIES_ROOT = 'explore-countries-root';
@@ -115,6 +117,7 @@ class Collection extends Model
         self::PURPOSE_TOPICS_ROOT,
         self::PURPOSE_GALLERIES_ROOT,
         self::PURPOSE_TRAVELS_ROOT,
+        self::PURPOSE_EXPLORE_ROOT,
         self::PURPOSE_EXPLORE_THEMES_ROOT,
         self::PURPOSE_EXPLORE_COUNTRIES_ROOT,
         self::PURPOSE_EXPLORE_ITINERARIES_ROOT,

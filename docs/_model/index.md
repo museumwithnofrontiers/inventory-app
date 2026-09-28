@@ -354,6 +354,7 @@ const PURPOSE_HISTORICAL_BACKGROUND_ROOT = 'historical-background-root';
 const PURPOSE_TOPICS_ROOT = 'topics-root';
 const PURPOSE_GALLERIES_ROOT = 'galleries-root';
 const PURPOSE_TRAVELS_ROOT = 'travels-root';
+const PURPOSE_EXPLORE_ROOT = 'explore-root';
 const PURPOSE_EXPLORE_THEMES_ROOT = 'explore-themes-root';
 const PURPOSE_EXPLORE_COUNTRIES_ROOT = 'explore-countries-root';
 const PURPOSE_EXPLORE_ITINERARIES_ROOT = 'explore-itineraries-root';

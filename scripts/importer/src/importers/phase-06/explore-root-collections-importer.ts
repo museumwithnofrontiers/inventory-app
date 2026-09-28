@@ -1,12 +1,15 @@
 /**
  * Explore Root Collections Importer
  *
- * Creates the three top-level Collections for Explore navigation:
+ * Creates the Explore website's root and, under it, the three Collections for
+ * Explore navigation:
+ * 0. "Explore" - the site itself (purpose `explore-root`); its `extra` holds the
+ *    site's own records, which ExploreHomeImporter writes
  * 1. "Explore by Theme" - Navigation by thematic cycles
  * 2. "Explore by Country" - Navigation by country
  * 3. "Explore by Itinerary" - Navigation by curated itineraries
  *
- * These collections serve as root nodes for the Explore hierarchy.
+ * A section root created before the site root existed is filed under it.
  *
  * Dependencies:
  * - ExploreContextImporter (must run first to create the Explore context)
@@ -33,7 +36,11 @@ interface RootCollectionConfig {
   purpose: string;
   title: string;
   description: string;
+  /** The site root has none; each section root sits under the site root. */
+  parent: 'site' | null;
 }
+
+export const EXPLORE_ROOT_KEY = 'mwnf3_explore:root';
 
 export class ExploreRootCollectionsImporter extends BaseImporter {
   private exploreContextId: string | null = null;
@@ -49,12 +56,23 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
   private getRootCollections(): RootCollectionConfig[] {
     return [
       {
+        internal_name: 'explore',
+        backward_compatibility: EXPLORE_ROOT_KEY,
+        type: 'collection',
+        purpose: 'explore-root',
+        title: 'Explore',
+        description:
+          'Islamic art and architecture where it stands: by theme, by country and by itinerary',
+        parent: null,
+      },
+      {
         internal_name: 'explore_by_theme',
         backward_compatibility: 'mwnf3_explore:root:explore_by_theme',
         type: 'collection',
         purpose: 'explore-themes-root',
         title: 'Explore by Theme',
         description: 'Discover Islamic art and architecture organized by thematic cycles',
+        parent: 'site',
       },
       {
         internal_name: 'explore_by_country',
@@ -63,6 +81,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
         purpose: 'explore-countries-root',
         title: 'Explore by Country',
         description: 'Browse monuments and sites by country and region',
+        parent: 'site',
       },
       {
         internal_name: 'explore_by_itinerary',
@@ -71,6 +90,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
         purpose: 'explore-itineraries-root',
         title: 'Explore by Itinerary',
         description: 'Follow curated routes through Islamic heritage sites',
+        parent: 'site',
       },
     ];
   }
@@ -105,20 +125,38 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
 
       for (const config of rootCollections) {
         try {
+          const parentId =
+            config.parent === 'site'
+              ? await this.getEntityUuidAsync(EXPLORE_ROOT_KEY, 'collection')
+              : null;
+
           // Check if already exists
           if (await this.entityExistsAsync(config.backward_compatibility, 'collection')) {
             this.logInfo(`Collection ${config.internal_name} already exists`);
             // Ensure-semantics (#1505): a marker created before the purpose
-            // column existed must still end up purposed, without a re-import.
+            // column existed must still end up purposed, and one created before
+            // the site root existed must end up under it, without a re-import.
             const existingId = await this.getEntityUuidAsync(
               config.backward_compatibility,
               'collection'
             );
             if (existingId && !this.isDryRun && !this.isSampleOnlyMode) {
+              let changed = false;
               const currentPurpose = await this.context.strategy.getCollectionPurpose(existingId);
               if (currentPurpose === null) {
                 await this.context.strategy.updateCollectionPurpose(existingId, config.purpose);
                 this.logInfo(`Set purpose '${config.purpose}' on ${config.backward_compatibility}`);
+                changed = true;
+              }
+              if (
+                parentId &&
+                (await this.context.strategy.getCollectionParentId(existingId)) !== parentId
+              ) {
+                await this.context.strategy.updateCollectionParentId(existingId, parentId);
+                this.logInfo(`Filed ${config.backward_compatibility} under ${EXPLORE_ROOT_KEY}`);
+                changed = true;
+              }
+              if (changed) {
                 result.imported++;
                 this.showProgress();
                 continue;
@@ -160,7 +198,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
             backward_compatibility: config.backward_compatibility,
             context_id: this.exploreContextId,
             language_id: this.defaultLanguageId,
-            parent_id: null,
+            parent_id: parentId,
             type: config.type,
             purpose: config.purpose,
             latitude: null,

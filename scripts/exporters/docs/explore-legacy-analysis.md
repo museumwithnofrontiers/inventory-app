@@ -59,8 +59,8 @@ location 498. So the counts below are of distinct record ids.
 | Related itineraries | 1,003 monuments | derivable from itinerary membership | Derivable |
 | Glossary | per monument, per language (1,255 monuments) | the glossary entities | Derivable, the way the other main sites highlight terms |
 | Travel information | on every level; see the next section | none | **Gap G4**: not imported; D1 carries it all |
-| Home banners | 1 banner record | none | **Gap G6**, per D2 |
-| Featured partnerships | 5 | none | **Gap G6**, per D2 |
+| Home banners | 1 per request, drawn at random from the 15 active ones | the Explore root's `extra.explore_home.banners` | Imported (G6b, #2133); see [Site records](#site-records) |
+| Featured partnerships | 5, each on the home page and/or the pages it is scoped to | the Explore root's `extra.explore_home.featured_partnerships` | Imported (G6b, #2133); see [Site records](#site-records) |
 | Text pages | 6 (`texts/*`): the home page's five `Home-*` words in `mwnf3_explore.translation`, the other five pages in `explore_pages_langs`; English only | not the inventory's: `site-i18n`'s `extract:explore` writes them to the site's locales | Extracted (G6a, #2132); the output matches the live API's text |
 
 ## The travel layer
@@ -88,6 +88,50 @@ Books and Travels as products were ruled out of the migration on 2026-09-14
 ("Travels, LAS, Books, Virtual Office OUT"). The travel layer is their
 presence inside Explore. That is why it needed a decision (D1) rather than
 an importer story by default.
+
+## Site records
+
+The home banners, the featured partnerships and the travel layer are
+records of the site, not of a page: legacy keeps each once and scopes it to
+the pages it shows on. Several tables share that shape (`featured_partnerships`,
+`featured_books_explore`, `featured_tours_explore`, `accommodation_hotels`,
+`guided_visits_contacts`, `useful_websites`): one comma-separated list of ids
+per level, in `cycle`/`cycleId`, `country`, `regionId`, `locationId`,
+`monumentId` and `itineraryId`.
+
+**Where they live** (Pascal, 2026-09-28): on a collection for the whole site,
+`mwnf3_explore:root`, purpose `explore-root`, the parent of the three section
+roots. Its `extra` holds every record once, with its scope:
+
+- `explore_home.banners`: the 15 active banners (`status = 'Y'`). Each has a
+  name, the country, location and monument it shows, where it leads (`link`:
+  a monument page, or a page outside Explore, with legacy's `url`) and its
+  image path.
+- `explore_home.featured_partnerships`: the 5 sponsors. Each has its logo path,
+  whether the home page shows it (`home`), its `scope`, and per language a
+  title, a name and a link.
+- `explore_travel` (G4, #2130): the travel layer's records, the same way.
+
+**A scope** keeps legacy's ids, one list per level: `themes`, `countries`,
+`territories`, `locations`, `monuments`, `itineraries`. Each names the
+Explore collection `mwnf3_explore:{thematiccycle|country|region|location|itinerary}:{id}`.
+A monument id is the one location memberships keep in `explore_monument_ids`
+(G3): a monument resolved onto another database's record has no Explore key.
+
+**Which page shows a record**, read from the live API over every crawled
+page:
+
+- a country, territory, location or monument page shows the records whose
+  list for its level holds its id. This matches the live API on every crawled
+  page, for every block;
+- except that monument pages show no Travel Book and no Tour, whatever their
+  scope;
+- a sub-itinerary shows the Travel Books and Tours scoped to its locations,
+  and no other block (227 of the 228 crawled cases; sub-itinerary 3 leaves out
+  book 31, which has no theme and no country, and goes to E.6).
+
+Images stay paths on legacy's media server, like a gallery's chrome. Texts are
+keyed by the inventory's language id.
 
 ## Historical background
 

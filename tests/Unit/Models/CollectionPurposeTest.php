@@ -35,6 +35,7 @@ class CollectionPurposeTest extends TestCase
         $this->assertContains(Collection::PURPOSE_TOPICS_ROOT, Collection::PURPOSES);
         $this->assertContains(Collection::PURPOSE_GALLERIES_ROOT, Collection::PURPOSES);
         $this->assertContains(Collection::PURPOSE_TRAVELS_ROOT, Collection::PURPOSES);
+        $this->assertContains(Collection::PURPOSE_EXPLORE_ROOT, Collection::PURPOSES);
         $this->assertContains(Collection::PURPOSE_EXPLORE_THEMES_ROOT, Collection::PURPOSES);
         $this->assertContains(Collection::PURPOSE_EXPLORE_COUNTRIES_ROOT, Collection::PURPOSES);
         $this->assertContains(Collection::PURPOSE_EXPLORE_ITINERARIES_ROOT, Collection::PURPOSES);
