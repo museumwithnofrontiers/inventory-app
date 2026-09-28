@@ -210,6 +210,11 @@ the other layouts. `en.json` always exists, even empty, because it is the
 fallback locale a site loads unconditionally; a site-owned key legacy has no
 English value for is omitted (not written with a blank value) and the run warns.
 
+Legacy wrote its texts for a vue-i18n client, so a literal `@` is stored as
+`{'@'}` and an address inside a link as `{'mailto:…'}`. The website layout
+unwraps each of those to the text it stands for (`dropVueI18nLiterals`): a
+site's texts are plain Markdown, and the locale check rejects any brace.
+
 Every other legacy key of the site — the UI labels, `galleryPartners`,
 `searchHowTo`, `thg_about_text`, `txt*` and the rest — is provided by the
 viewer-i18n dictionary and deliberately **not emitted**.

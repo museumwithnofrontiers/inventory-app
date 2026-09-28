@@ -75,7 +75,7 @@ export function buildWebsiteCatalogue(
     for (const legacyKey of ownedLegacyKeys) {
       const value = source[legacyKey]
       if (value !== undefined) {
-        localeMessages[mapping[legacyKey]!] = value
+        localeMessages[mapping[legacyKey]!] = dropVueI18nLiterals(value)
       }
     }
     if (Object.keys(localeMessages).length === 0) {
@@ -101,6 +101,17 @@ export function buildWebsiteCatalogue(
   }
 
   return { locales, notEmitted: [...notEmittedSet].sort(), missing }
+}
+
+/**
+ * Legacy texts were written for the legacy client's vue-i18n, which reads `@`,
+ * `{` and `|` as syntax: an editor who wanted a literal `@` wrote `{'@'}`, and
+ * an address inside a link became `{'mailto:…'}`. A website's texts are plain
+ * Markdown with nothing interpolated (the locale check rejects any brace), so
+ * each such literal is unwrapped to the text it stood for.
+ */
+export function dropVueI18nLiterals(value: string): string {
+  return value.replace(/\{'([^'{}]*)'\}/g, '$1')
 }
 
 /** One lowercase-led word of letters and digits — a namespace, not a class or a slug. */

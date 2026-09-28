@@ -10,7 +10,9 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { buildWebsiteCatalogue, NAMESPACE_PATTERN, websiteKeyMapping } from '../../src/website.js'
+import {
+  buildWebsiteCatalogue, dropVueI18nLiterals, NAMESPACE_PATTERN, websiteKeyMapping,
+} from '../../src/website.js'
 import { mergeTranslationGroups } from '../../src/extract.js'
 import type { MessageCatalogue, TranslationRow } from '../../src/core/types.js'
 
@@ -165,6 +167,36 @@ describe('buildWebsiteCatalogue', () => {
     buildWebsiteCatalogue(messages, 'gallery', 'carpets')
 
     expect(messages).toEqual(before)
+  })
+})
+
+// Legacy gallery 45's galleryAbout, as its i18n group stores it for the
+// legacy vue-i18n client (read from the live API on 2026-09-28).
+describe('dropVueI18nLiterals', () => {
+  it("unwraps legacy's vue-i18n literals, in text and inside a link", () => {
+    const { messages } = mergeTranslationGroups(
+      [],
+      [
+        row(
+          'galleryAbout',
+          'en',
+          `Please contact the editorial team at <a href="{'mailto:editing@museumwnf.net'}">editing{'@'}museumwnf.net</a>.`
+        ),
+      ]
+    )
+
+    const { locales } = buildWebsiteCatalogue(messages, 'gallery', 'galleries')
+
+    expect(locales['en']!['gallery.about.body']).toBe(
+      'Please contact the editorial team at [editing@museumwnf.net](mailto:editing@museumwnf.net).'
+    )
+  })
+
+  it('leaves a text without literals, and any other brace, as it is', () => {
+    expect(dropVueI18nLiterals('Plain text, no braces.')).toBe('Plain text, no braces.')
+    expect(dropVueI18nLiterals('A {placeholder} stays for the locale check to report.')).toBe(
+      'A {placeholder} stays for the locale check to report.'
+    )
   })
 })
 
