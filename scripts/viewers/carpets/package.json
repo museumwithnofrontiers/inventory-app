@@ -10,9 +10,9 @@
     "sync-i18n": "node tools/sync-i18n.mjs"
   },
   "dependencies": {
-    "@museumwnf/carpets-data": "^1.0.9",
-    "marked": "^18.0.12",
-    "vue": "^3.5.42",
+    "@museumwnf/carpets-data": "^1.0.16",
+    "marked": "^18.0.14",
+    "vue": "^3.5.43",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
