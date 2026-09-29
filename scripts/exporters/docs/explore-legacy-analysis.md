@@ -282,9 +282,11 @@ blocks the exporter (story E.2):
   English rows) and files each monument under a location
   (`explore_itineraries_rel_monuments.location_id`); `location_ids` came in
   id order, and the itinerary membership, the monument's Travels record, did
-  not say which Explore monument or location it stands for. Now
-  `location_ids` keeps legacy's order, and the membership keeps
-  `explore_monument_id` and `location_id`.
+  not say which Explore monument or location it stands for; a thematic
+  itinerary's own country (`explore_itineraries.country`, which legacy's API
+  names it by) was not carried. Now `location_ids` keeps legacy's order, the
+  membership keeps `explore_monument_id` and `location_id`, and the itinerary
+  keeps `explore_itinerary.countries`.
 - **G16** (#2168), found in E.5: the countries' positions. Legacy centres a
   country's map on `countries.geoCoordinates` at its `zoom`; the country step
   wrote none. Now it carries them, on a country already imported too.

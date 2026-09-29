@@ -91,7 +91,7 @@ there.
 | the root | `explore_home` | the home banners and the featured partnerships ([Site records](explore-legacy-analysis.md#site-records)) |
 | the root | `explore_travel` | the travel layer: books, tours, accommodations and their categories, guided visits, useful websites |
 | a location | `historical_background` | the keys (`backward_compatibility`) of the Travels locations whose introduction it shows, in order ([Historical background](explore-legacy-analysis.md#historical-background)); each ships after the tree |
-| an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link` |
+| an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link`, and `countries`: its own `country` list, by which legacy names a thematic itinerary's country (G17, #2171) |
 | a location's membership | `explore_monument_ids` | the Explore monument ids the member stands for |
 | a location's membership | `explore_geo` | each of those monuments' position, by id: `{ latitude, longitude, map_zoom }` (G12, #2161). The member's own `latitude`/`longitude` are its own database's, when it has any: a map reads this |
 | an itinerary's membership | `mn_order`, `desc_types`, `explore_mn_desc`, `tr_mn_desc`, `vm_mn_desc` | the monument's place and texts in the itinerary |

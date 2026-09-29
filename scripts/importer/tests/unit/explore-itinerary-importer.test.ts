@@ -126,7 +126,7 @@ describe('ExploreItineraryImporter', () => {
 
     expect(result.success).toBe(true);
     expect(JSON.parse(written(1).extra)).toEqual({
-      explore_itinerary: { type: '4', order: 9, location_home_link: 'N' },
+      explore_itinerary: { type: '4', order: 9, location_home_link: 'N', countries: ['tn'] },
     });
     // A top-level route of another kind stays top-level, as in legacy: only its
     // kind tells the exporter that the itineraries page does not list it.
@@ -134,6 +134,19 @@ describe('ExploreItineraryImporter', () => {
     expect(JSON.parse(written(113).extra).explore_itinerary.type).toBe('1');
     expect(written(3)).toMatchObject({ type: 'exhibition trail', parent_id: 'mwnf3_explore:itinerary:1-uuid' });
     expect(JSON.parse(written(3).extra).explore_itinerary.order).toBe(1);
+  });
+
+  // Legacy's API names a thematic itinerary's country from its own `country`
+  // list; a route has none.
+  it("keeps the itinerary's own countries", async () => {
+    await new ExploreItineraryImporter(context).import();
+
+    expect(JSON.parse(written(1).extra).explore_itinerary.countries).toEqual(['tn']);
+    expect(JSON.parse(written(113).extra).explore_itinerary.countries).toEqual([]);
+    expect(itineraryExtra({ type: '4', itinorder: 1, location_home_link: 'N', country: 'es, pt' }).countries).toEqual([
+      'es',
+      'pt',
+    ]);
   });
 
   // The title it derives from the theme's name is not legacy's: every
@@ -155,7 +168,7 @@ describe('ExploreItineraryImporter', () => {
     expect(written(1)).toBeUndefined();
     expect(setCollectionExtra).toHaveBeenCalledWith(
       'existing-itinerary-uuid',
-      JSON.stringify({ note: 'kept', explore_itinerary: { type: '4', order: 9, location_home_link: 'N' } })
+      JSON.stringify({ note: 'kept', explore_itinerary: { type: '4', order: 9, location_home_link: 'N', countries: ['tn'] } })
     );
   });
 
