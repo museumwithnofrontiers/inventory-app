@@ -18,6 +18,10 @@
  * - type = 'itinerary' (or 'exhibition trail' for sub-itineraries)
  * - type, itinorder, location_home_link → extra.explore_itinerary (see itineraryExtra)
  *
+ * It writes no translation: the derived title is not legacy's. Every
+ * translation, English included, comes from explore_itineraries_langs through
+ * ExploreItineraryContentImporter.
+ *
  * Note: Itineraries contain comma-separated lists of locationIds and monumentIds.
  * These will be linked to the itinerary collection in a separate step.
  *
@@ -252,18 +256,6 @@ export class ExploreItineraryImporter extends BaseImporter {
 
       this.registerEntity(collectionId, backwardCompat, 'collection');
       this.parentCache.set(legacy.itineraries_id, collectionId);
-
-      // Create translation
-      const translationBackwardCompat = `${backwardCompat}:translation:${this.defaultLanguageId}`;
-
-      await this.context.strategy.writeCollectionTranslation({
-        collection_id: collectionId,
-        language_id: this.defaultLanguageId,
-        context_id: this.exploreContextId,
-        backward_compatibility: translationBackwardCompat,
-        title,
-        description: '',
-      });
 
       result.imported++;
       this.showProgress();

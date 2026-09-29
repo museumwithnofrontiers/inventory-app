@@ -152,6 +152,11 @@ describe('ExploreItineraryContentImporter', () => {
       writeCollectionItem: writeCollectionItemMock,
       getCollectionTranslationExtra: vi.fn().mockResolvedValue(null),
       setCollectionTranslationExtra: vi.fn().mockResolvedValue(undefined),
+      getCollectionTranslationByKey: vi.fn().mockResolvedValue(null),
+      setCollectionTranslationTitleByKey: vi.fn().mockResolvedValue(undefined),
+      setCollectionTranslationDescriptionByKey: vi.fn().mockResolvedValue(undefined),
+      setCollectionTranslationExtraByKey: vi.fn().mockResolvedValue(undefined),
+      deleteCollectionTranslations: vi.fn().mockResolvedValue(undefined),
     } as unknown as IWriteStrategy;
 
     context = {
@@ -181,6 +186,53 @@ describe('ExploreItineraryContentImporter', () => {
       undefined
     );
     expect(result.success).toBe(true);
+  });
+
+  // The itinerary importer used to title every itinerary's English row itself,
+  // legacy's untitled ones included.
+  it('removes the row of a language legacy gives no title', async () => {
+    await new ExploreItineraryContentImporter(context).import();
+
+    expect(strategy.deleteCollectionTranslations).toHaveBeenCalledWith(
+      'itinerary-8-uuid',
+      'explore-context-uuid',
+      'eng'
+    );
+    expect(strategy.deleteCollectionTranslations).toHaveBeenCalledTimes(1);
+  });
+
+  // The itinerary importer used to write the English row itself, titled from
+  // the theme's name and with no description: legacy's texts replace them, and
+  // the row's extra keeps what the metadata step put there.
+  it("gives a row already written legacy's title, description and fields", async () => {
+    vi.mocked(strategy.getCollectionTranslationByKey).mockImplementation(async (collectionId) =>
+      collectionId === 'itinerary-7-uuid' ? { id: 'row-7', extra: { location_ids: [12] } } : null
+    );
+
+    await new ExploreItineraryContentImporter(context).import();
+
+    expect(writeCollectionTranslationMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({ collection_id: 'itinerary-7-uuid' })
+    );
+    expect(strategy.setCollectionTranslationTitleByKey).toHaveBeenCalledWith(
+      'itinerary-7-uuid',
+      'eng',
+      'explore-context-uuid',
+      'The Seat of the Sultanate'
+    );
+    expect(strategy.setCollectionTranslationDescriptionByKey).toHaveBeenCalledWith(
+      'itinerary-7-uuid',
+      'eng',
+      'explore-context-uuid',
+      expect.stringContaining('seat of the Sultanate')
+    );
+    const [, , , extra] = vi.mocked(strategy.setCollectionTranslationExtraByKey).mock.calls[0]!;
+    expect(JSON.parse(extra)).toEqual({
+      location_ids: [12],
+      duration: 'One day',
+      introd_type: 'ET-short#-',
+      et_title: 'IAM;eg;I;en;1',
+    });
   });
 
   it('uses the resolved source item for itinerary membership instead of an Explore shell item', async () => {

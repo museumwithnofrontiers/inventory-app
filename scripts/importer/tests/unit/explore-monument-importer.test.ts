@@ -154,6 +154,50 @@ describe('ExploreMonumentImporter', () => {
     });
   });
 
+  // The reused record's position is its own database's, if any: Explore's
+  // position of the monument survives on the membership too, by monument id.
+  it("keeps legacy's position of the monument on the membership, next to another monument's", async () => {
+    const rows = queryMock.getMockImplementation() as (sql: string) => Promise<unknown>;
+    queryMock.mockImplementation(async (sql: string) => {
+      const result = (await rows(sql)) as Array<Record<string, unknown>>;
+      return sql.includes('FROM mwnf3_explore.exploremonument m')
+        ? result.map((row) => ({ ...row, geoCoordinates: '39.8584, -4.0236', zoom: 17 }))
+        : result;
+    });
+    vi.mocked(strategy.getCollectionItemExtra).mockResolvedValue({
+      explore_monument_ids: [456],
+      explore_geo: { '456': { latitude: 1, longitude: 2, map_zoom: null } },
+    });
+
+    await new ExploreMonumentImporter(context).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledWith({
+      collection_id: 'location-collection-uuid',
+      item_id: 'canonical-item-uuid',
+      display_order: null,
+      extra: {
+        explore_monument_ids: [123, 456],
+        explore_geo: {
+          '123': { latitude: 39.8584, longitude: -4.0236, map_zoom: 17 },
+          '456': { latitude: 1, longitude: 2, map_zoom: null },
+        },
+      },
+    });
+  });
+
+  it('drops a position legacy no longer has', async () => {
+    vi.mocked(strategy.getCollectionItemExtra).mockResolvedValue({
+      explore_monument_ids: [123],
+      explore_geo: { '123': { latitude: 1, longitude: 2, map_zoom: null } },
+    });
+
+    await new ExploreMonumentImporter(context).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({ extra: { explore_monument_ids: [123] } })
+    );
+  });
+
   /**
    * The dedup guard for #1593. A referenced monument reuses an existing
    * BAR/Travels/Sharing-History item whose `country_id` is authoritative —

@@ -113,6 +113,7 @@ export {
   ExploreMonumentCrossRefImporter,
   ExploreMonumentThemeLinkImporter,
   ExploreItineraryImporter,
+  ExploreItineraryPictureImporter,
   ExploreItineraryContentImporter,
   ExploreFilterImporter,
   ExploreHomeImporter,

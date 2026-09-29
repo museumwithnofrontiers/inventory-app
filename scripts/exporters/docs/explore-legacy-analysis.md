@@ -50,9 +50,9 @@ location 498. So the counts below are of distinct record ids.
 | Countries | 23 | 23 collections under `explore-countries-root` | Same set |
 | Territories (`regions`) | 18 | 18 collections of type `region` | Same set |
 | Locations | 649 | 649 collections of type `location` | Same set |
-| Monuments | 1,693, as listed by the locations | 1,971 monument items linked to the location collections; 106 of them native (`mwnf3_explore:monument:{id}`), the rest resolved onto existing mwnf3, Sharing History and Travels records | Imported (G3, #2129): a location membership keeps the Explore monument ids it stands for (`explore_monument_ids`), 1,691 of the 1,693. The larger item count is expected: one Explore monument that references several source records resolves to all of them. |
+| Monuments | 1,693, as listed by the locations | 1,971 monument items linked to the location collections; 106 of them native (`mwnf3_explore:monument:{id}`), the rest resolved onto existing mwnf3, Sharing History and Travels records | Imported (G3, #2129): a location membership keeps the Explore monument ids it stands for (`explore_monument_ids`), 1,691 of the 1,693, and their positions (`explore_geo`, G12, #2161). The larger item count is expected: one Explore monument that references several source records resolves to all of them. |
 | Filters | per country (`availableFilters`) | 30 tags, category `filter`, linked to the items | Imported |
-| Itineraries | 12 top-level, 114 sub-itineraries, across 11 countries | 20 `itinerary` and 109 `exhibition trail` collections (`mwnf3_explore:itinerary:{id}`), plus the old site's itineraries (`mwnf3_explore:old_itinerary:*`) | Imported (G2, #2128): each keeps legacy's `type` in `extra.explore_itinerary`. The 12 are the type-4 ones; the 5 location routes (types 1–3 with a location: 113, 114, 115, 124, 126) are the other live sub-itineraries; 141–143 have no location and are not shown. The exporter applies this. |
+| Itineraries | 12 top-level, 114 sub-itineraries, across 11 countries | 20 `itinerary` and 109 `exhibition trail` collections (`mwnf3_explore:itinerary:{id}`), plus the old site's itineraries (`mwnf3_explore:old_itinerary:*`) | Imported (G2, #2128): each keeps legacy's `type` in `extra.explore_itinerary`. The 12 are the type-4 ones; the 5 location routes (types 1–3 with a location: 113, 114, 115, 124, 126) are the other live sub-itineraries; 141–143 have no location and are not shown. The exporter applies this. Their English texts: G11 (#2160); the top-level ones' pictures: G13 (#2162). |
 | Location texts | name, description, how to reach, info, contact, prepared by; a historical background on 138 locations | `collection_translations` title and description, plus `extra` `how_to_reach`, `info`, `prepared_by`, `showOnMonument`, `additional_regions`; the collection's `extra.historical_background` | Imported (G5, #2131); the Travels texts ship after the tree (G10, #2156). See [Historical background](#historical-background). |
 | Monument content | one `monumentDetails` entry per monument, from its source database | the resolved record's own translations | Imported through resolution. Where it comes from, over 1,386 crawled monuments: 993 Travels "Exhibition Trails" (project IAM), 333 "Virtual Museum" (BAR, GPA, ISL, AWE), 60 native to Explore. The Travels records' texts were missing (**gap G7**, #2143): now imported. |
 | Related content | 452 monuments: "Special Features" and "Virtual Museum" links to records in other databases, plus Travels and Sharing History ones | a monument's `detail` child items (its Special Features) and its `item_item_links` | Shipped by the exporter (E.2): the details and the linked records, one hop out. |
@@ -258,3 +258,22 @@ blocks the exporter (story E.2):
 - **G10** (#2156), found in E.4: the package named the Travels locations
   whose introductions are the historical backgrounds, but didn't ship them.
   Now the exporter ships them after the tree.
+- **G11** (#2160), found in E.5: the itineraries' English texts. The
+  itinerary step wrote each English translation itself, titled from the
+  theme's name and the country code ("… - TN") and undescribed, and the
+  content step then skipped the English row of `explore_itineraries_langs`.
+  Now only the content step writes translations, and it gives a row already
+  written legacy's title, description and fields; a row legacy gives no title
+  (itinerary 143) is removed.
+- **G12** (#2161), found in E.5: the monuments' positions. Only the monuments
+  created natively kept `exploremonument.geoCoordinates` and `zoom`. Now the
+  location membership keeps each Explore monument's position next to its id,
+  `extra.explore_geo`, whichever record it resolves to.
+- **G13** (#2162), found in E.5: the 12 top-level itineraries' pictures
+  (`explore_itineraries.path`). Now a step, `explore-itinerary-picture`,
+  attaches each to its itinerary collection, like the country pictures (G8).
+- **G14** (#2163), found auditing E.4 against the rule that no text is
+  fabricated (Pascal, 2026-09-29): the root and section collections carried
+  titles and descriptions no legacy source has. Now dictionary or nothing: the
+  root is titled by the dictionary word `explore_mwnf` and has no description;
+  the sections have no translation, their texts being the site's labels.

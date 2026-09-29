@@ -84,6 +84,7 @@ import {
   ExploreMonumentCrossRefImporter,
   ExploreMonumentThemeLinkImporter,
   ExploreItineraryImporter,
+  ExploreItineraryPictureImporter,
   ExploreItineraryContentImporter,
   ExploreFilterImporter,
   ExploreHomeImporter,
@@ -657,6 +658,13 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description: 'Import itineraries (curated routes) from Explore',
     importerClass: ExploreItineraryImporter,
     dependencies: ['explore-root-collections', 'explore-thematiccycle'],
+  },
+  {
+    key: 'explore-itinerary-picture',
+    name: 'Explore Itinerary Pictures',
+    description: 'Import itinerary pictures from Explore database',
+    importerClass: ExploreItineraryPictureImporter,
+    dependencies: ['explore-itinerary'],
   },
   {
     key: 'explore-itinerary-content',

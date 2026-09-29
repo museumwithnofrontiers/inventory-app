@@ -228,14 +228,39 @@ describe('ExploreHomeImporter', () => {
 });
 
 describe('ExploreRootCollectionsImporter', () => {
-  it('files the section roots under the site root, and moves ones that predate it', async () => {
-    const tracker = new UnifiedTracker();
+  let tracker: UnifiedTracker;
+  let strategy: IWriteStrategy;
+
+  const run = () =>
+    new ExploreRootCollectionsImporter({
+      // Legacy's dictionary word, as mwnf3_explore.translation holds it.
+      legacyDb: legacyDb((sql) =>
+        sql.includes('FROM mwnf3_explore.translation')
+          ? [
+              { lang_id: 'en', value: 'EXPLORE with MWNF' },
+              { lang_id: 'es', value: 'Explorar con MWNF' },
+              { lang_id: 'it', value: '' },
+            ]
+          : []
+      ),
+      strategy,
+      tracker,
+      logger,
+      dryRun: false,
+    }).import();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    tracker = new UnifiedTracker();
     tracker.set('mwnf3_explore:context', 'context-uuid', 'context');
     tracker.setMetadata('default_language_id', 'eng');
+    tracker.set('en', 'eng', 'language');
+    tracker.set('es', 'spa', 'language');
+    tracker.set('it', 'ita', 'language');
     // A section root imported before the site root existed.
     tracker.set('mwnf3_explore:root:explore_by_theme', 'themes-uuid', 'collection');
 
-    const strategy = {
+    strategy = {
       exists: vi.fn().mockResolvedValue(false),
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       writeCollection: vi.fn(async (data: { backward_compatibility: string }) =>
@@ -244,19 +269,16 @@ describe('ExploreRootCollectionsImporter', () => {
           : `${data.backward_compatibility}-uuid`
       ),
       writeCollectionTranslation: vi.fn().mockResolvedValue(undefined),
+      deleteCollectionTranslations: vi.fn().mockResolvedValue(undefined),
       getCollectionPurpose: vi.fn().mockResolvedValue('explore-themes-root'),
       getCollectionParentId: vi.fn().mockResolvedValue(null),
       updateCollectionParentId: vi.fn().mockResolvedValue(undefined),
       updateCollectionPurpose: vi.fn().mockResolvedValue(undefined),
     } as unknown as IWriteStrategy;
+  });
 
-    const result = await new ExploreRootCollectionsImporter({
-      legacyDb: legacyDb(() => []),
-      strategy,
-      tracker,
-      logger,
-      dryRun: false,
-    }).import();
+  it('files the section roots under the site root, and moves ones that predate it', async () => {
+    const result = await run();
 
     expect(result.success).toBe(true);
     const written = vi.mocked(strategy.writeCollection).mock.calls.map(([data]) => data);
@@ -267,5 +289,40 @@ describe('ExploreRootCollectionsImporter', () => {
     });
     expect(written.slice(1).map((data) => data.parent_id)).toEqual(['site-uuid', 'site-uuid']);
     expect(strategy.updateCollectionParentId).toHaveBeenCalledWith('themes-uuid', 'site-uuid');
+  });
+
+  // Dictionary or nothing: the site root is titled by legacy's word in each
+  // language that has it, and described by nothing; a section root has no
+  // legacy text of its own, so no translation.
+  it("titles the site root with legacy's dictionary word, and the section roots with nothing", async () => {
+    await run();
+
+    const rows = vi.mocked(strategy.writeCollectionTranslation).mock.calls.map(([data]) => data);
+    expect(rows).toEqual([
+      expect.objectContaining({
+        collection_id: 'site-uuid',
+        language_id: 'eng',
+        title: 'EXPLORE with MWNF',
+        description: null,
+      }),
+      expect.objectContaining({
+        collection_id: 'site-uuid',
+        language_id: 'spa',
+        title: 'Explorar con MWNF',
+        description: null,
+      }),
+    ]);
+  });
+
+  it('removes the rows a section root was given before', async () => {
+    await run();
+
+    expect(strategy.deleteCollectionTranslations).toHaveBeenCalledWith(
+      'themes-uuid',
+      'context-uuid'
+    );
+    expect(strategy.writeCollectionTranslation).not.toHaveBeenCalledWith(
+      expect.objectContaining({ collection_id: 'themes-uuid' })
+    );
   });
 });

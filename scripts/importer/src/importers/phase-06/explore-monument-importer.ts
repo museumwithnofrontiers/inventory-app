@@ -16,7 +16,8 @@
  * - exploremonumentext.name → internal_name (default language first, then first named translation)
  * - geoCoordinates → latitude, longitude
  * - zoom → map_zoom
- * - locationId → collection link (via collection_item pivot)
+ * - locationId → collection link (via collection_item pivot), which keeps the
+ *   monument's id and position whichever record it resolves to (writeLocationLink)
  * - locations.countryId → country_id (natively created monuments only — the
  *   `referenced` and `resolvedCandidates` paths reuse an existing BAR/Travels/
  *   Sharing-History item whose country is authoritative, #1593)
@@ -29,6 +30,7 @@
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import {
+  parseGeoCoordinates,
   transformExploreMonument,
   type ExploreLegacyMonument,
   type ExploreMonumentNameTranslation,
@@ -131,7 +133,7 @@ export class ExploreMonumentImporter extends BaseImporter {
               ? await this.getLocationCollectionId(legacy.locationId)
               : null;
             if (existingLocation && !this.isDryRun && !this.isSampleOnlyMode) {
-              await this.writeLocationLink(existingLocation, resolution.itemId, legacy.monumentId);
+              await this.writeLocationLink(existingLocation, resolution.itemId, legacy);
             }
             result.skipped++;
             this.showSkipped();
@@ -169,7 +171,7 @@ export class ExploreMonumentImporter extends BaseImporter {
             for (const candidate of resolution.resolvedCandidates ?? []) {
               this.context.tracker.set(backwardCompat, candidate.itemId, 'item');
               if (!this.isDryRun && !this.isSampleOnlyMode && collectionId) {
-                await this.writeLocationLink(collectionId, candidate.itemId, legacy.monumentId);
+                await this.writeLocationLink(collectionId, candidate.itemId, legacy);
               }
             }
             result.imported++;
@@ -190,7 +192,7 @@ export class ExploreMonumentImporter extends BaseImporter {
               );
               this.registerEntity(resolution.itemId, backwardCompat, 'item');
             } else if (collectionId) {
-              await this.writeLocationLink(collectionId, resolution.itemId, legacy.monumentId);
+              await this.writeLocationLink(collectionId, resolution.itemId, legacy);
             }
 
             result.imported++;
@@ -220,7 +222,7 @@ export class ExploreMonumentImporter extends BaseImporter {
 
           // Link item to location collection if available
           if (collectionId) {
-            await this.writeLocationLink(collectionId, itemId, legacy.monumentId);
+            await this.writeLocationLink(collectionId, itemId, legacy);
           }
 
           result.imported++;
@@ -245,28 +247,59 @@ export class ExploreMonumentImporter extends BaseImporter {
   }
 
   /**
-   * Links an item into its Explore location, keeping on the membership the
-   * Explore monument id it stands for: `extra.explore_monument_ids`.
+   * Links an item into its Explore location, keeping on the membership what
+   * legacy knows of the Explore monument it stands for:
+   * - `extra.explore_monument_ids`: its id;
+   * - `extra.explore_geo`: its position, by id — `{ latitude, longitude, map_zoom }`.
    *
    * Most Explore monuments resolve onto an existing record of another
-   * database, whose own key says nothing of Explore, so the membership is the
-   * one place legacy's monument id survives. It is a list because two Explore
-   * monuments can resolve to the same record in the same location. The write
-   * replaces the membership's `extra` (writeCollectionItem's upsert), so the
-   * current value is read and merged first.
+   * database, whose own key and position say nothing of Explore, so the
+   * membership is the one place legacy's monument survives. The ids are a
+   * list, and the positions keyed by id, because two Explore monuments can
+   * resolve to the same record in the same location. The position is written
+   * for every monument, a native one included, so a map reads one place. The
+   * write replaces the membership's `extra` (writeCollectionItem's upsert), so
+   * the current value is read and merged first.
    */
-  private async writeLocationLink(collectionId: string, itemId: string, monumentId: number): Promise<void> {
+  private async writeLocationLink(
+    collectionId: string,
+    itemId: string,
+    legacy: ExploreLegacyMonument
+  ): Promise<void> {
     const current = (await this.context.strategy.getCollectionItemExtra(collectionId, itemId)) ?? {};
     const known = Array.isArray(current['explore_monument_ids'])
       ? (current['explore_monument_ids'] as unknown[]).filter((id): id is number => typeof id === 'number')
       : [];
-    const ids = [...new Set([...known, monumentId])].sort((a, b) => a - b);
+    const ids = [...new Set([...known, legacy.monumentId])].sort((a, b) => a - b);
+
+    // This monument's position is legacy's current one, or none.
+    const knownGeo =
+      current['explore_geo'] !== null && typeof current['explore_geo'] === 'object'
+        ? (current['explore_geo'] as Record<string, unknown>)
+        : {};
+    const [latitude, longitude] = parseGeoCoordinates(legacy.geoCoordinates);
+    const position =
+      latitude !== null && longitude !== null
+        ? { latitude, longitude, map_zoom: legacy.zoom ?? null }
+        : null;
+    const geo = Object.fromEntries(
+      Object.entries({ ...knownGeo, [String(legacy.monumentId)]: position }).filter(
+        ([, value]) => value !== null
+      )
+    );
+
+    const { explore_geo: _previous, ...rest } = current;
+    const extra: Record<string, unknown> = {
+      ...rest,
+      explore_monument_ids: ids,
+      ...(Object.keys(geo).length > 0 ? { explore_geo: geo } : {}),
+    };
 
     await this.context.strategy.writeCollectionItem({
       collection_id: collectionId,
       item_id: itemId,
       display_order: null,
-      extra: { ...current, explore_monument_ids: ids },
+      extra,
     });
   }
 
