@@ -303,10 +303,10 @@ export class ExploreItineraryContentImporter extends BaseImporter {
           continue;
         }
 
-        const monumentResolution = await this.monumentResolver.resolveForSource(link.monumentId, 'travels');
-        if (!monumentResolution.itemId || !monumentResolution.itemBackwardCompatibility) {
+        const memberId = await this.resolveItineraryMember(link.monumentId);
+        if (!memberId) {
           this.logWarning(
-            `${monumentResolution.message ?? `Explore monument mwnf3_explore:monument:${link.monumentId} did not resolve to a travels item`}, skipping`
+            `Explore monument mwnf3_explore:monument:${link.monumentId} did not resolve to any record, skipping`
           );
           result.skipped++;
           this.showSkipped();
@@ -336,7 +336,7 @@ export class ExploreItineraryContentImporter extends BaseImporter {
         const linkBC = `mwnf3_explore:itinerary_monument:${link.itineraries_id}:${link.monumentId}`;
         await this.context.strategy.writeCollectionItem({
           collection_id: collectionId,
-          item_id: monumentResolution.itemId,
+          item_id: memberId,
           backward_compatibility: linkBC,
           display_order: link.mn_order,
           extra: Object.keys(extra).length > 0 ? extra : null,
@@ -358,6 +358,21 @@ export class ExploreItineraryContentImporter extends BaseImporter {
         }
       }
     }
+  }
+
+  /**
+   * The record an itinerary membership points at: the monument's Travels
+   * record, legacy's itineraries being Travels trails; else the record it
+   * resolves to (a Virtual Museum one, for a monument Travels never
+   * described). The membership keeps the Explore monument it stands for
+   * either way.
+   */
+  private async resolveItineraryMember(monumentId: number): Promise<string | null> {
+    const travels = await this.monumentResolver.resolveForSource(monumentId, 'travels');
+    if (travels.itemId) return travels.itemId;
+    const any = await this.monumentResolver.resolve(monumentId);
+    if (any.itemId) return any.itemId;
+    return any.resolvedCandidates?.[0]?.itemId ?? null;
   }
 
   private async importMetadata(_result: ImportResult): Promise<void> {

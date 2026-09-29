@@ -263,6 +263,53 @@ describe('ExploreItineraryContentImporter', () => {
     );
   });
 
+  // Monument 54 of legacy's sub-itinerary 38 is a Virtual Museum record only:
+  // its membership points at that record, and still says which monument it is.
+  it('links a monument Travels never described through the record it resolves to', async () => {
+    tracker.set('mwnf3:monuments:ISL:pt:Mon01:33', 'vm-record-uuid', 'item');
+    const rows = queryMock.getMockImplementation() as (sql: string) => Promise<unknown[]>;
+    queryMock.mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM mwnf3_explore.explore_itineraries_rel_monuments')) {
+        return [
+          {
+            itineraries_id: 7,
+            monumentId: 54,
+            locationId: 79,
+            mn_order: 1,
+            desc_types: null,
+            explore_mn_desc: null,
+            tr_mn_desc: null,
+            vm_mn_desc: null,
+          },
+        ];
+      }
+      if (sql.includes('FROM mwnf3_explore.exploremonument_tr')) return [];
+      if (sql.includes('FROM mwnf3_explore.exploremonument_vm')) {
+        return [
+          {
+            monumentId: 54,
+            REF_monuments_project_id: 'ISL',
+            REF_monuments_country: 'pt',
+            REF_monuments_institution_id: 'Mon01',
+            REF_monuments_number: 33,
+            REF_monuments_lang: 'en',
+          },
+        ];
+      }
+      return rows(sql);
+    });
+
+    await new ExploreItineraryContentImporter(context).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection_id: 'itinerary-7-uuid',
+        item_id: 'vm-record-uuid',
+        extra: { explore_monument_id: 54, location_id: 79, mn_order: 1 },
+      })
+    );
+  });
+
   it("keeps a sub-itinerary's locations in legacy's order, once each", async () => {
     const rows = queryMock.getMockImplementation() as (sql: string) => Promise<unknown>;
     queryMock.mockImplementation(async (sql: string) =>
