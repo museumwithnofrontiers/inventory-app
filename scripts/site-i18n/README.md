@@ -261,7 +261,8 @@ data (Pascal, 2026-09-29), from the first of these that has it.
    located by a selector over the parsed template (`src/core/vue-template.ts`)
    — tag, id, class, attribute — never by the text itself. Where legacy
    renders a label in several forms (`v-if`), the entry names the branch;
-   an element whose text is built from data is refused.
+   an element whose text is built from data is refused, unless the entry
+   reads the text beside the value ("Author: {{ … }}" gives "Author:").
 
 A label found in neither is not the site's to have. A client label that can't
 be read fails the run: the client's code does not change, so a failure is a

@@ -74,6 +74,17 @@ export const EXPLORE_LABEL_WORDS: Record<string, string> = {
   vm: 'source.virtualMuseum',
   // The link to MWNF's portal (include.php).
   mwnf_portal: 'nav.mwnfPortal',
+  // A country's itineraries and an itinerary's sub-itineraries
+  // (country_it.php, it_location_tab_*.php).
+  itineraries: 'itinerary.itineraries',
+  sub_itinerary: 'itinerary.subItineraries',
+  // A place's map (location.php).
+  map: 'monument.map',
+  // A location's routes by kind: the names legacy's API gives them
+  // (ExploreRouteResource.php), as country_it.php does.
+  explore: 'route.explore',
+  not_to_missed: 'route.notToBeMissed',
+  to_know: 'route.toKnowMore',
 }
 
 /** Where a label stands in the live client: a component, and the element in its template. */
@@ -89,6 +100,8 @@ const APP = 'src/App.vue'
 const MENU = 'src/components/NavigationMenu.vue'
 const SIDE = 'src/components/SideNavigation.vue'
 const MONUMENT = 'src/components/MonumentComponent.vue'
+const PAGE = 'src/pages/ExplorePage.vue'
+const SUB = 'src/components/SubItinerary.vue'
 const icons = { exclude: ['font-awesome-icon'] }
 // A selection label's step number is a span of its own.
 const numbered = { exclude: ['span'] }
@@ -188,6 +201,44 @@ export const EXPLORE_CLIENT_LABELS: Record<string, ClientLabel> = {
     selector: '#monument-menu-additional',
     options: icons,
   },
+  'monument.itineraries': { file: MONUMENT, selector: '#monument-menu-itineraries', options: icons },
+  // The itineraries: the home page's picks, a country's list, an itinerary's
+  // sub-itineraries, a sub-itinerary's locations.
+  'nav.byItinerary': { file: MENU, selector: '#navigation-menu-itinerary > a' },
+  'itinerary.pickItinerary': {
+    file: 'src/components/ExploreItinerary.vue',
+    selector: 'select#itinerary-select > option[value=""]',
+  },
+  'itinerary.inCountry': { file: PAGE, selector: '#explore-header > span:nth(0) > span:nth(0)' },
+  'itinerary.readMore': {
+    file: 'src/components/ItineraryList.vue',
+    selector: 'div.subs-link-wrapper > router-link',
+  },
+  'itinerary.author': {
+    file: SUB,
+    selector: '#sub-itinerary-description-author',
+    options: { skipValues: true },
+  },
+  'itinerary.inside': { file: SUB, selector: '#sub-itinerary-list-label', options: { branches: [0] } },
+  'itinerary.showLocalTeam': {
+    file: SUB,
+    selector: '#sub-itinerary-local-team-toggle',
+    options: { branches: [0] },
+  },
+  'itinerary.hideLocalTeam': {
+    file: SUB,
+    selector: '#sub-itinerary-local-team-toggle',
+    options: { branches: [1] },
+  },
+  // A location's routes (Ariccia's).
+  'route.heading': { file: PAGE, selector: 'a#suggested-routes' },
+  'route.intro': { file: PAGE, selector: '#explore-routes-description' },
+  'route.pickRoute': {
+    file: PAGE,
+    selector: 'div.routes-select-container:nth(1) > select > option[value=""]',
+  },
+  'route.inside': { file: SUB, selector: '#sub-itinerary-list-label', options: { branches: [1] } },
+  'route.back': { file: PAGE, selector: '#return-route-link > a' },
 }
 
 /**
