@@ -186,6 +186,15 @@ export class ExploreItineraryContentImporter extends BaseImporter {
 
         const title = trans.title?.trim() ?? '';
         if (title === '') {
+          // The itinerary importer used to write an English row, titled from
+          // the theme's name, even where legacy gives no title: it goes.
+          if (!this.isDryRun && !this.isSampleOnlyMode) {
+            await this.context.strategy.deleteCollectionTranslations(
+              collectionId,
+              this.exploreContextId,
+              languageId
+            );
+          }
           this.logWarning(
             `Explore itinerary ${itineraryBC} is missing a required source title for ${trans.langId}, skipping translation`
           );
@@ -195,11 +204,6 @@ export class ExploreItineraryContentImporter extends BaseImporter {
         }
 
         const translationBC = `${itineraryBC}:translation:${languageId}`;
-        if (await this.entityExistsAsync(translationBC, 'collection_translation')) {
-          result.skipped++;
-          this.showSkipped();
-          continue;
-        }
 
         // Build extra for supplementary fields
         const extra: Record<string, unknown> = {};
@@ -213,6 +217,42 @@ export class ExploreItineraryContentImporter extends BaseImporter {
         const visibleDescription = await this.resolveVisibleDescription(trans);
 
         if (this.isDryRun || this.isSampleOnlyMode) {
+          result.imported++;
+          this.showProgress();
+          continue;
+        }
+
+        // A row already written takes legacy's texts: the itinerary importer
+        // used to write the English row itself, with a title composed from the
+        // theme's name and no description. Its extra keeps what the metadata
+        // step put there.
+        const existing = await this.context.strategy.getCollectionTranslationByKey(
+          collectionId,
+          languageId,
+          this.exploreContextId
+        );
+        if (existing) {
+          await this.context.strategy.setCollectionTranslationTitleByKey(
+            collectionId,
+            languageId,
+            this.exploreContextId,
+            title
+          );
+          await this.context.strategy.setCollectionTranslationDescriptionByKey(
+            collectionId,
+            languageId,
+            this.exploreContextId,
+            visibleDescription
+          );
+          const merged = { ...(existing.extra ?? {}), ...extra };
+          if (Object.keys(merged).length > 0) {
+            await this.context.strategy.setCollectionTranslationExtraByKey(
+              collectionId,
+              languageId,
+              this.exploreContextId,
+              JSON.stringify(merged)
+            );
+          }
           result.imported++;
           this.showProgress();
           continue;

@@ -68,7 +68,9 @@ with the differences below.
 - `site.languages`: the languages of Explore's own texts, those of the shipped
   collections' translations in the Explore context, with their native labels.
   A monument's source record may carry more.
-- `site.names`: the Explore root's title per language.
+- `site.names`: the Explore root's title per language: legacy's dictionary
+  word `explore_mwnf` ("EXPLORE with MWNF"), in English, Spanish and Italian
+  (G14, #2163).
 - `projects`: the projects the shipped items belong to (Discover Islamic Art,
   Discover Baroque Art, Sharing History). Travels records and native Explore
   monuments belong to none.
@@ -91,13 +93,24 @@ there.
 | a location | `historical_background` | the keys (`backward_compatibility`) of the Travels locations whose introduction it shows, in order ([Historical background](explore-legacy-analysis.md#historical-background)); each ships after the tree |
 | an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link` |
 | a location's membership | `explore_monument_ids` | the Explore monument ids the member stands for |
+| a location's membership | `explore_geo` | each of those monuments' position, by id: `{ latitude, longitude, map_zoom }` (G12, #2161). The member's own `latitude`/`longitude` are its own database's, when it has any: a map reads this |
 | an itinerary's membership | `mn_order`, `desc_types`, `explore_mn_desc`, `tr_mn_desc`, `vm_mn_desc` | the monument's place and texts in the itinerary |
+
+A top-level itinerary has one image, legacy's picture of it (G13, #2162). A
+sub-itinerary has none: legacy's API shows the first picture of its first
+location's first monument instead.
 
 The translations (`translations/collections.<lang>.json`) carry the title and
 description and their `extra`: a location's `how_to_reach`, `info`, `contact`,
 `prepared_by`; a Travels location's `author`, `about` and `prepared_by`; a
 theme's `country_ids` and `country_texts`; an itinerary's `location_ids`,
-`country_ids`, `territory_ids`, `duration`, `et_title`.
+`country_ids`, `territory_ids`, `duration`, `local_team`, `author`,
+`introd_type`, `et_title`, `et_introduction` (G11, #2160).
+
+Only legacy's texts are shipped (G14, #2163): the root's title is its
+dictionary word, it has no description, and the three sections have no
+translation at all. Their texts, "Explore by Theme" and the home page's
+section introductions, are the site's own labels, carried by its i18n.
 
 **Which page shows a site record** (banners, partnerships, travel layer) is
 the rule of the analysis doc's "Site records" section, applied by the site
@@ -157,9 +170,12 @@ Against the live API, per the analysis doc's parity map:
 | Itineraries | 12 | 12 |
 | Sub-itineraries | 114 (109 exhibition trails, 5 location routes) | 114 |
 | Monument ids on location memberships | 1,691 | 1,693 |
+| Monument positions on location memberships | 1,679 | 1,681 |
+| Itinerary pictures | 12 | 12 |
 
 The two monuments missing are legacy's data defects (1682 has no name, 1801
 points at a record never imported), left for the comparison story (E.6).
+Twelve monuments have no position in legacy either.
 
 In all, 962 collections (the tree's 826, and 136 Travels locations for the
 historical backgrounds) and 3,191 items: 1,982 monuments, their 878 details

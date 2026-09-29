@@ -37,6 +37,7 @@ export { ExploreMonumentTranslationImporter } from './explore-monument-translati
 export { ExploreMonumentCrossRefImporter } from './explore-monument-crossref-importer.js';
 export { ExploreMonumentThemeLinkImporter } from './explore-monument-theme-link-importer.js';
 export { ExploreItineraryImporter } from './explore-itinerary-importer.js';
+export { ExploreItineraryPictureImporter } from './explore-itinerary-picture-importer.js';
 export { ExploreItineraryContentImporter } from './explore-itinerary-content-importer.js';
 export { ExploreFilterImporter } from './explore-filter-importer.js';
 export { ExploreHomeImporter } from './explore-home-importer.js';
