@@ -112,17 +112,21 @@ export class LegacyDatabase {
     )
   }
 
-  /** Load the named words of Explore's own dictionary, `mwnf3_explore.translation`, in every group. */
-  async loadExploreWords(wordIds: string[]): Promise<TranslationRow[]> {
+  /**
+   * Load the named words of one group of Explore's own dictionary,
+   * `mwnf3_explore.translation`. Other groups reuse word ids with other values
+   * ("contact" is "Contacter le Musée" in one).
+   */
+  async loadExploreWords(wordIds: string[], groupId: number): Promise<TranslationRow[]> {
     if (wordIds.length === 0) {
       return []
     }
     const rows = await this.query<{ word_id: string; lang_id: string; value: string | null }>(
       `SELECT word_id, lang_id, \`value\`
          FROM mwnf3_explore.translation
-        WHERE word_id IN (${wordIds.map(() => '?').join(', ')})
-        ORDER BY word_id, lang_id, group_id`,
-      wordIds
+        WHERE group_id = ? AND word_id IN (${wordIds.map(() => '?').join(', ')})
+        ORDER BY word_id, lang_id`,
+      [groupId, ...wordIds]
     )
     return rows.map((row) => ({ wordId: row.word_id, langId: row.lang_id, value: row.value }))
   }

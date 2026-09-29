@@ -7,7 +7,13 @@
  */
 import { describe, expect, it } from 'vitest'
 
-import { buildExploreCatalogue, type ExplorePageRow } from '../../src/explore.js'
+import {
+  buildExploreCatalogue,
+  EXPLORE_CLIENT_LABELS,
+  EXPLORE_HOME_WORDS,
+  EXPLORE_LABEL_WORDS,
+  type ExplorePageRow,
+} from '../../src/explore.js'
 import type { TranslationRow } from '../../src/core/types.js'
 
 const word = (wordId: string, langId: string, value: string | null): TranslationRow => ({
@@ -96,6 +102,56 @@ describe('buildExploreCatalogue', () => {
 
     expect(notEmitted).toEqual(['Press'])
     expect(locales).toEqual({ en: {} })
+  })
+
+  it("writes a dictionary label in every language legacy's dictionary has it", () => {
+    const { locales } = buildExploreCatalogue(
+      [],
+      [
+        word('sel_country', 'en', 'Select a Country'),
+        word('sel_country', 'es', 'Selecciona un país'),
+        word('vm', 'it', '(Museo Virtuale)'),
+      ],
+      'explore'
+    )
+
+    expect(locales).toEqual({
+      en: { 'explore.select.pickCountry': 'Select a Country' },
+      es: { 'explore.select.pickCountry': 'Selecciona un país' },
+      it: { 'explore.source.virtualMuseum': '(Museo Virtuale)' },
+    })
+  })
+
+  it("writes a client label in English, the client's only language, and never over the dictionary's", () => {
+    const { locales } = buildExploreCatalogue(
+      [],
+      [word('how_reach', 'es', 'Cómo llegar'), word('how_reach', 'en', 'How To Reach')],
+      'explore',
+      {
+        'select.heading': 'Make Your Selection',
+        'info.howToReach': 'How to Reach',
+      }
+    )
+
+    expect(locales).toEqual({
+      en: {
+        'explore.info.howToReach': 'How To Reach',
+        'explore.select.heading': 'Make Your Selection',
+      },
+      es: { 'explore.info.howToReach': 'Cómo llegar' },
+    })
+  })
+
+  it('gives every entry one source, and a name the site can use', () => {
+    const dictionary = [...Object.values(EXPLORE_HOME_WORDS), ...Object.values(EXPLORE_LABEL_WORDS)]
+    const client = Object.keys(EXPLORE_CLIENT_LABELS)
+
+    expect(new Set(dictionary).size).toBe(dictionary.length)
+    expect(client.filter((entry) => dictionary.includes(entry))).toEqual([])
+    // With the namespace in front, a viewer-i18n name: three parts.
+    for (const entry of [...dictionary, ...client]) {
+      expect(entry).toMatch(/^[a-z][a-zA-Z0-9]*\.[a-z][a-zA-Z0-9]*$/)
+    }
   })
 
   it("unwraps legacy's vue-i18n literals", () => {

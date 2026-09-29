@@ -225,13 +225,19 @@ is opened.
 ### Explore
 
 ```powershell
-docker run --rm --network host -v "${PWD}:/app" -v site-i18n-node-modules:/app/node_modules -w /app node:22-alpine npm run extract:explore -- --namespace explore --force
+docker run --rm --network host -v "${PWD}:/app" -v site-i18n-node-modules:/app/node_modules -v "${PWD}/../../.legacy-code/explore-client:/legacy/explore-client:ro" -w /app node:22-alpine npm run extract:explore -- --namespace explore --client /legacy/explore-client --force
 ```
+
+`--client` is a checkout of legacy's live client,
+[bitbucket.org/mwnf/explore-client](https://bitbucket.org/mwnf/explore-client/src),
+cloned into `.legacy-code/explore-client` (ignored by git, like the rest of
+`.legacy-code`).
 
 Explore is not a DXA site: it has no registry row, so no selector names it.
 Its copy is its six text pages, which legacy keeps in `mwnf3_explore`, not in
-`mwnf3.translation`. `extract:explore` writes them in the website layout, to
-`output/explore/locales/<lang>.json`, ready to copy into the site repo:
+`mwnf3.translation`, and its labels. `extract:explore` writes them in the
+website layout, to `output/explore/locales/<lang>.json`, ready to copy into
+the site repo:
 
 | Legacy | viewer-i18n entries |
 | --- | --- |
@@ -241,6 +247,25 @@ Its copy is its six text pages, which legacy keeps in `mwnf3_explore`, not in
 These are the texts legacy's API serves at `texts/home`, `texts/about` and the
 others. The values go through the same conversion as every other layout, and a
 page with a text but no mapped section is named in a warning, not written.
+
+**The labels.** No label is typed by hand: each comes from legacy's code or
+data (Pascal, 2026-09-29), from the first of these that has it.
+
+1. **Legacy's dictionary**, `mwnf3_explore.translation` group 12, in every
+   language it has (English, Spanish, Italian): `EXPLORE_LABEL_WORDS` in
+   `src/explore.ts`, each word the one the old PHP site
+   (`.legacy-code/explore`) prints on the same element. Only group 12 is
+   read: other groups reuse word ids with other values.
+2. **The live client's templates**, in English, the only language that client
+   is written in: `EXPLORE_CLIENT_LABELS`, each the static text of one element,
+   located by a selector over the parsed template (`src/core/vue-template.ts`)
+   — tag, id, class, attribute — never by the text itself. Where legacy
+   renders a label in several forms (`v-if`), the entry names the branch;
+   an element whose text is built from data is refused.
+
+A label found in neither is not the site's to have. A client label that can't
+be read fails the run: the client's code does not change, so a failure is a
+wrong selector.
 
 ## Values are Markdown, not HTML
 
