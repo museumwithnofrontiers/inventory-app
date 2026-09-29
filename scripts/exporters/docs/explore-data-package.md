@@ -112,6 +112,10 @@ monument, a linked object belongs to its own project.
 `related_items` lists the outgoing links whose target ships: after the scope
 above, that is every one.
 
+`filters` lists the item's Explore filters (the tags of category `filter`,
+such as `Mudejar` or `Religious`), which also stay in `tags`: the by-country
+page narrows a country's monuments by them.
+
 ## translations/items.<lang>.json
 
 A monument's content is its own record's:

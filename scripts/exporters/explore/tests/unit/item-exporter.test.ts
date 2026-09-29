@@ -77,6 +77,13 @@ describe('ItemExporter — Explore translations', () => {
       if (sql.includes('SELECT id, context_id FROM projects'))
         return [{ id: 'bar', context_id: 'bar-context' }]
       if (sql.includes('FROM languages')) return [{ id: 'eng', backward_compatibility: 'en' }]
+      if (sql.includes('FROM item_tag')) {
+        return [
+          { item_id: 'travels', tag: 'Manueline', category: 'filter' },
+          { item_id: 'travels', tag: 'monastery', category: 'keyword' },
+          { item_id: 'travels', tag: 'Religious', category: 'filter' },
+        ]
+      }
       if (sql.includes('LEFT JOIN authors')) {
         return [
           translation(
@@ -146,5 +153,24 @@ describe('ItemExporter — Explore translations', () => {
       ['travels', ['en']],
       ['native', ['en']],
     ])
+  })
+
+  it('ships the Explore filters apart from the other tags', async () => {
+    await new ItemExporter(
+      contextWith(
+        db,
+        outputDir,
+        scopeWith({
+          itemIds: ['baroque', 'travels', 'native'],
+          projectIds: ['bar'],
+          contextIds: ['explore-context', 'bar-context', 'travels-context'],
+        })
+      )
+    ).export()
+
+    const items = JSON.parse(readFileSync(join(outputDir, 'items.json'), 'utf-8'))
+    const travels = items.find((i: { id: string }) => i.id === 'travels')
+    expect(travels.tags).toEqual(['Manueline', 'monastery', 'Religious'])
+    expect(travels.filters).toEqual(['Manueline', 'Religious'])
   })
 })

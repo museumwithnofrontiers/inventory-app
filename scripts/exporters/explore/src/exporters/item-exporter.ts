@@ -77,6 +77,7 @@ interface ItemItemLinkRow {
 interface ItemTagRow {
   item_id: string
   tag: string
+  category: string | null
 }
 
 interface ItemGlossaryRow {
@@ -260,7 +261,7 @@ export class ItemExporter extends BaseExporter {
       ),
       this.db.query<ItemTagRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
-        `SELECT it2.item_id, t.description AS tag
+        `SELECT it2.item_id, t.description AS tag, t.category
          FROM item_tag it2
          JOIN tags t ON t.id = it2.tag_id
          WHERE it2.item_id IN (${itemPh})
@@ -482,11 +483,17 @@ export class ItemExporter extends BaseExporter {
       dynastyMap.get(link.item_id)!.push(link.dynasty_id)
     }
 
-    // item_id -> tags[]
+    // item_id -> tags[], and the Explore filters among them (category
+    // `filter`): the by-country page narrows a country's monuments by those.
     const tagMap = new Map<string, string[]>()
+    const filterMap = new Map<string, string[]>()
     for (const link of tagLinks) {
       if (!tagMap.has(link.item_id)) tagMap.set(link.item_id, [])
       tagMap.get(link.item_id)!.push(link.tag)
+      if (link.category === 'filter') {
+        if (!filterMap.has(link.item_id)) filterMap.set(link.item_id, [])
+        filterMap.get(link.item_id)!.push(link.tag)
+      }
     }
 
     // item_id -> glossary_ids[]
@@ -565,6 +572,7 @@ export class ItemExporter extends BaseExporter {
         justifications: justificationMap.get(item.id)?.get(targetId) ?? {},
       })),
       tags: tagMap.get(item.id) ?? [],
+      filters: filterMap.get(item.id) ?? [],
       glossary_ids: glossaryMap.get(item.id) ?? [],
       artist_names: artistMap.get(item.id) ?? [],
       thg_galleries: thgGalleryMap.get(item.id) ?? [],
