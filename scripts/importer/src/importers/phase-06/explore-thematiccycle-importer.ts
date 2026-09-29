@@ -14,6 +14,7 @@
  * - cycleId → backward_compatibility (mwnf3_explore:thematiccycle:{cycleId})
  * - cycleDescription/cycleLabel → internal_name (human-readable title)
  * - geoCoordinates → latitude, longitude (parsed from "lat,lon" format)
+ * - order → display_order (legacy's order of the cycles on the home page)
  * - zoom → map_zoom
  * - type = 'theme'
  * - parent_id = explore_by_theme root collection
@@ -124,8 +125,13 @@ export class ExploreThematicCycleImporter extends BaseImporter {
         try {
           const backwardCompat = `mwnf3_explore:thematiccycle:${legacy.cycleId}`;
 
-          // Check if already exists
-          if (await this.entityExistsAsync(backwardCompat, 'collection')) {
+          // Already imported: legacy's order still has to reach a cycle written
+          // before it was kept (the home page lists the cycles in it).
+          const existingId = await this.getEntityUuidAsync(backwardCompat, 'collection');
+          if (existingId) {
+            if (!this.isDryRun && !this.isSampleOnlyMode) {
+              await this.context.strategy.updateCollectionDisplayOrder(existingId, legacy.order);
+            }
             result.skipped++;
             this.showSkipped();
             continue;
@@ -176,6 +182,7 @@ export class ExploreThematicCycleImporter extends BaseImporter {
             latitude,
             longitude,
             map_zoom: legacy.zoom,
+            display_order: legacy.order,
             country_id: null,
           });
 

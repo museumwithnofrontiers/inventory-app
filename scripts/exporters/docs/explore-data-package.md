@@ -26,6 +26,9 @@ databases' records that Explore's locations, themes and itineraries point at
     location route (types 1–3) only when it is linked to a location
     (`location_ids`): legacy reaches a route from its location's page;
   - a hidden collection hides its whole subtree;
+- **the Travels locations the historical backgrounds show** (G10, #2156): a
+  location's background is their introduction, and they are no part of the
+  Explore tree, so they ship after it, reached by their key;
 - **the items**: the members of those collections, their own details
   (legacy's "Special Features") and the records they link to (their
   "Virtual Museum", Travels and Sharing History related content), one hop out.
@@ -73,24 +76,28 @@ with the differences below.
 ## collections.json
 
 The tree, parents first, siblings in display order: the root, its three
-sections, then themes, countries, territories, locations, itineraries and
-sub-itineraries. Each record adds `map_zoom` and `extra` to the standalone
-shape, and each membership in `items` keeps its `extra`: Explore keeps its
-structure there.
+sections, then themes (in legacy's order, G9, #2155), countries,
+territories, locations, itineraries and sub-itineraries. After the tree, the
+Travels locations the historical backgrounds name, in the order they are
+first named: their parents are not shipped, so no walk of the tree reaches
+them. Each record adds `map_zoom` and `extra` to the standalone shape, and
+each membership in `items` keeps its `extra`: Explore keeps its structure
+there.
 
 | Where | `extra` key | What it is |
 |---|---|---|
 | the root | `explore_home` | the home banners and the featured partnerships ([Site records](explore-legacy-analysis.md#site-records)) |
 | the root | `explore_travel` | the travel layer: books, tours, accommodations and their categories, guided visits, useful websites |
-| a location | `historical_background` | the Travels locations whose introduction it shows, in order ([Historical background](explore-legacy-analysis.md#historical-background)) |
+| a location | `historical_background` | the keys (`backward_compatibility`) of the Travels locations whose introduction it shows, in order ([Historical background](explore-legacy-analysis.md#historical-background)); each ships after the tree |
 | an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link` |
 | a location's membership | `explore_monument_ids` | the Explore monument ids the member stands for |
 | an itinerary's membership | `mn_order`, `desc_types`, `explore_mn_desc`, `tr_mn_desc`, `vm_mn_desc` | the monument's place and texts in the itinerary |
 
 The translations (`translations/collections.<lang>.json`) carry the title and
 description and their `extra`: a location's `how_to_reach`, `info`, `contact`,
-`prepared_by`; a theme's `country_ids` and `country_texts`; an itinerary's
-`location_ids`, `country_ids`, `territory_ids`, `duration`, `et_title`.
+`prepared_by`; a Travels location's `author`, `about` and `prepared_by`; a
+theme's `country_ids` and `country_texts`; an itinerary's `location_ids`,
+`country_ids`, `territory_ids`, `duration`, `et_title`.
 
 **Which page shows a site record** (banners, partnerships, travel layer) is
 the rule of the analysis doc's "Site records" section, applied by the site
@@ -104,6 +111,10 @@ monument, a linked object belongs to its own project.
 
 `related_items` lists the outgoing links whose target ships: after the scope
 above, that is every one.
+
+`filters` lists the item's Explore filters (the tags of category `filter`,
+such as `Mudejar` or `Religious`), which also stay in `tags`: the by-country
+page narrows a country's monuments by them.
 
 ## translations/items.<lang>.json
 
@@ -133,7 +144,7 @@ of the items' projects, where it has them.
 As in every package. The glossary is the entries a spelling of the shipped
 items or collections references.
 
-## Numbers (staging, 2026-09-28)
+## Numbers (staging, 2026-09-29)
 
 Against the live API, per the analysis doc's parity map:
 
@@ -150,7 +161,8 @@ Against the live API, per the analysis doc's parity map:
 The two monuments missing are legacy's data defects (1682 has no name, 1801
 points at a record never imported), left for the comparison story (E.6).
 
-In all, 826 collections and 3,191 items: 1,982 monuments, their 878 details
+In all, 962 collections (the tree's 826, and 136 Travels locations for the
+historical backgrounds) and 3,191 items: 1,982 monuments, their 878 details
 and 331 linked objects. Also 82 partners and 379 glossary entries.
 
 ## Verification

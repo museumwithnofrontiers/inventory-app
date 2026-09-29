@@ -11,7 +11,10 @@ import type { Database } from './database.js'
 export interface ExploreScope {
   exploreContextId: string
   rootId: string
-  /** The collections shipped, parents before children. */
+  /**
+   * The collections shipped: the tree, parents before children, then the
+   * Travels locations its historical backgrounds show.
+   */
   collectionIds: string[]
   /**
    * Their member items (monuments, objects and details), the members' own
@@ -115,6 +118,22 @@ export function shippedTree(rootId: string, collections: TreeCollection[]): Tree
   return shipped
 }
 
+/**
+ * The keys of the Travels locations whose introductions the tree's locations
+ * show as their historical background, in the order the tree names them.
+ */
+export function backgroundKeys(tree: TreeCollection[]): string[] {
+  const keys = new Set<string>()
+  for (const collection of tree) {
+    const background = collection.extra?.['historical_background']
+    if (!Array.isArray(background)) continue
+    for (const key of background) {
+      if (typeof key === 'string') keys.add(key)
+    }
+  }
+  return [...keys]
+}
+
 function parse(raw: unknown): Record<string, unknown> | null {
   if (raw == null) return null
   if (typeof raw === 'object') return raw as Record<string, unknown>
@@ -173,9 +192,29 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
       english_extra: parse(r.english_extra),
     }))
   )
-  const collectionIds = tree.map(c => c.id)
+  const treeIds = tree.map(c => c.id)
 
-  const ph = collectionIds.map(() => '?').join(', ')
+  // A location's historical background is a Travels location's introduction
+  // (`historical_background`, the analysis doc's "Historical background"),
+  // and the Travels locations are no part of the Explore tree: they ship
+  // after it, reached by their key.
+  const keys = backgroundKeys(tree)
+  const backgrounds =
+    keys.length === 0
+      ? []
+      : await db.query<{ id: string; backward_compatibility: string }>(
+          `SELECT id, backward_compatibility FROM collections
+           WHERE backward_compatibility IN (${keys.map(() => '?').join(', ')})
+           ORDER BY id`,
+          keys
+        )
+  const backgroundByKey = new Map(backgrounds.map(c => [c.backward_compatibility, c.id]))
+  const backgroundIds = keys
+    .map(key => backgroundByKey.get(key))
+    .filter((id): id is string => id !== undefined && !treeIds.includes(id))
+  const collectionIds = [...treeIds, ...backgroundIds]
+
+  const ph = treeIds.map(() => '?').join(', ')
   const members = await db.query<{ id: string; project_id: string | null }>(
     `SELECT DISTINCT i.id, i.project_id
      FROM collection_item ci
@@ -183,7 +222,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
      WHERE ci.collection_id IN (${ph})
        AND i.type IN ('object', 'monument', 'detail')
      ORDER BY i.id`,
-    collectionIds
+    treeIds
   )
   // A monument sheet also shows its details (legacy's "Special Features")
   // and the records it links to (its "Virtual Museum", Travels and Sharing

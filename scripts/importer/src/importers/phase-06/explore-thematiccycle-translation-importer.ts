@@ -2,7 +2,8 @@
  * Explore Thematic Cycle Translation Importer (Story 11.3)
  *
  * Enhances existing thematic cycle collections with:
- * 1. Multilingual translations from thematiccycletranslated (25 rows)
+ * 1. Multilingual translations from thematiccycletranslated (25 rows), whose
+ *    description is the cycle's introduction, English included
  * 2. Country associations from thematiccyclecountries (25 rows) → extra.country_ids
  * 3. Country-specific texts from thematiccycle_country_texts (19 rows) → extra.country_texts
  * 4. Country-specific pictures from thematiccycle_country_pictures (3 rows) → CollectionImage
@@ -96,8 +97,19 @@ export class ExploreThematicCycleTranslationImporter extends BaseImporter {
 
           const translationBC = `${cycleBC}:translation:${languageId}`;
 
-          // Skip if already exists (English was created by ExploreThematicCycleImporter)
+          // Already written: the English row ExploreThematicCycleImporter creates
+          // carries the cycle's name as its description, so the introduction
+          // legacy shows still has to reach it.
           if (await this.entityExistsAsync(translationBC, 'collection_translation')) {
+            const description = trans.description ?? '';
+            if (description.trim() && !this.isDryRun && !this.isSampleOnlyMode) {
+              await this.context.strategy.setCollectionTranslationDescriptionByKey(
+                collectionId,
+                languageId,
+                this.exploreContextId,
+                description
+              );
+            }
             result.skipped++;
             this.showSkipped();
             continue;
