@@ -1963,6 +1963,18 @@ export class SqlWriteStrategy implements IWriteStrategy {
     ]);
   }
 
+  async updateCollectionGeo(
+    collectionId: string,
+    latitude: number | null,
+    longitude: number | null,
+    mapZoom: number | null
+  ): Promise<void> {
+    await this.db.execute(
+      `UPDATE collections SET latitude = ?, longitude = ?, map_zoom = ?, updated_at = ? WHERE id = ?`,
+      [latitude, longitude, mapZoom, this.now, collectionId]
+    );
+  }
+
   async getCollectionContextId(collectionId: string): Promise<string | null> {
     const [rows] = await this.db.execute<RowDataPacket[]>(
       `SELECT context_id FROM collections WHERE id = ?`,

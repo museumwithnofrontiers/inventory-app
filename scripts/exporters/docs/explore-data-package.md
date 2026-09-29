@@ -96,6 +96,10 @@ there.
 | a location's membership | `explore_geo` | each of those monuments' position, by id: `{ latitude, longitude, map_zoom }` (G12, #2161). The member's own `latitude`/`longitude` are its own database's, when it has any: a map reads this |
 | an itinerary's membership | `mn_order`, `desc_types`, `explore_mn_desc`, `tr_mn_desc`, `vm_mn_desc` | the monument's place and texts in the itinerary |
 
+A country, a territory and a location carry their position in `latitude`,
+`longitude` and `map_zoom`: where legacy centres their map (a country's since
+G16, #2168). A monument's is on its location membership, above.
+
 A top-level itinerary has one image, legacy's picture of it (G13, #2162). A
 sub-itinerary has none: legacy's API shows the first picture of its first
 location's first monument instead.

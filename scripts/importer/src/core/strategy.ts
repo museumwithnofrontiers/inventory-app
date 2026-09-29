@@ -751,6 +751,17 @@ export interface IWriteStrategy {
   updateCollectionDisplayOrder(collectionId: string, displayOrder: number | null): Promise<void>;
 
   /**
+   * Set a collection's position: for a collection written before its legacy
+   * coordinates were carried.
+   */
+  updateCollectionGeo(
+    collectionId: string,
+    latitude: number | null,
+    longitude: number | null,
+    mapZoom: number | null
+  ): Promise<void>;
+
+  /**
    * Get a collection's current context_id.
    * Used by re-context steps to detect no-op updates on reruns.
    */
