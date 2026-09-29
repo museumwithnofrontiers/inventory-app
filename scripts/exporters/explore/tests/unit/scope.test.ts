@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest'
 
-import { isShown, resolveScope, shippedTree, type TreeCollection } from '../../src/core/scope.js'
+import {
+  backgroundKeys,
+  isShown,
+  resolveScope,
+  shippedTree,
+  type TreeCollection,
+} from '../../src/core/scope.js'
 import type { Database } from '../../src/core/database.js'
 
 const collection = (
@@ -135,5 +141,70 @@ describe('resolveScope', () => {
     expect(scope.itemIds).toEqual(['detail', 'monument', 'object'])
     expect(scope.projectIds).toEqual(['bar', 'isl'])
     expect(scope.contextIds).toEqual(['explore-context', 'bar-context'])
+  })
+
+  it('ships the Travels locations the historical backgrounds show, after the tree', async () => {
+    const tree = [
+      {
+        id: 'root',
+        parent_id: null,
+        type: 'collection',
+        purpose: 'explore-root',
+        display_order: null,
+        internal_name: 'explore',
+        extra: null,
+        english_extra: null,
+      },
+      {
+        id: 'loc',
+        parent_id: 'root',
+        type: 'location',
+        purpose: null,
+        display_order: null,
+        internal_name: 'loc',
+        extra: JSON.stringify({
+          historical_background: ['travels:b', 'travels:a', 'travels:gone'],
+        }),
+        english_extra: null,
+      },
+    ]
+    const db = {
+      query: async (sql: string, params: unknown[] = []) => {
+        if (sql.includes('FROM contexts')) return [{ id: 'explore-context' }]
+        if (sql.includes('FROM collections c')) return tree
+        if (sql.includes('WHERE backward_compatibility IN')) {
+          expect(params).toEqual(['travels:b', 'travels:a', 'travels:gone'])
+          return [
+            { id: 'travels-a', backward_compatibility: 'travels:a' },
+            { id: 'travels-b', backward_compatibility: 'travels:b' },
+          ]
+        }
+        if (sql.includes('FROM collection_item ci')) {
+          // The Travels locations' own members are no part of Explore.
+          expect(params).toEqual(['root', 'loc'])
+          return []
+        }
+        return []
+      },
+    } as unknown as Database
+
+    const scope = await resolveScope(db)
+
+    expect(scope.collectionIds).toEqual(['root', 'loc', 'travels-b', 'travels-a'])
+  })
+})
+
+describe('backgroundKeys', () => {
+  it('lists each Travels location once, in the order the tree names them', () => {
+    const location = (id: string, background: unknown) =>
+      collection(id, 'root', 'location', { extra: { historical_background: background } })
+
+    expect(
+      backgroundKeys([
+        location('a', ['t:1', 't:2']),
+        location('b', ['t:2', 't:3']),
+        location('c', 'not a list'),
+      ])
+    ).toEqual(['t:1', 't:2', 't:3'])
   })
 })

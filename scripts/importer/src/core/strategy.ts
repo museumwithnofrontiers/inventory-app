@@ -722,6 +722,12 @@ export interface IWriteStrategy {
   updateCollectionParentId(collectionId: string, parentId: string): Promise<void>;
 
   /**
+   * Update a collection's display_order: for an order a collection written
+   * before it was imported still lacks.
+   */
+  updateCollectionDisplayOrder(collectionId: string, displayOrder: number | null): Promise<void>;
+
+  /**
    * Get a collection's current context_id.
    * Used by re-context steps to detect no-op updates on reruns.
    */

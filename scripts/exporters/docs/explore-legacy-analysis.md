@@ -46,14 +46,14 @@ location 498. So the counts below are of distinct record ids.
 
 | Legacy | Live count | Staging | Status |
 |---|---|---|---|
-| Themes (`thematiccycle`) | 6: ids 1, 2, 3, 8, 10, 11 | 11 collections of type `theme` under `explore-themes-root` | Not a gap (G1, #2127): the English translation's `extra.legacy_status` is `e` for exactly the 6 live ones. The exporter ships those. |
+| Themes (`thematiccycle`) | 6: ids 1, 2, 3, 8, 10, 11 | 11 collections of type `theme` under `explore-themes-root` | Not a gap (G1, #2127): the English translation's `extra.legacy_status` is `e` for exactly the 6 live ones. The exporter ships those. Their introductions and legacy's order: G9 (#2155). |
 | Countries | 23 | 23 collections under `explore-countries-root` | Same set |
 | Territories (`regions`) | 18 | 18 collections of type `region` | Same set |
 | Locations | 649 | 649 collections of type `location` | Same set |
 | Monuments | 1,693, as listed by the locations | 1,971 monument items linked to the location collections; 106 of them native (`mwnf3_explore:monument:{id}`), the rest resolved onto existing mwnf3, Sharing History and Travels records | Imported (G3, #2129): a location membership keeps the Explore monument ids it stands for (`explore_monument_ids`), 1,691 of the 1,693. The larger item count is expected: one Explore monument that references several source records resolves to all of them. |
 | Filters | per country (`availableFilters`) | 30 tags, category `filter`, linked to the items | Imported |
 | Itineraries | 12 top-level, 114 sub-itineraries, across 11 countries | 20 `itinerary` and 109 `exhibition trail` collections (`mwnf3_explore:itinerary:{id}`), plus the old site's itineraries (`mwnf3_explore:old_itinerary:*`) | Imported (G2, #2128): each keeps legacy's `type` in `extra.explore_itinerary`. The 12 are the type-4 ones; the 5 location routes (types 1–3 with a location: 113, 114, 115, 124, 126) are the other live sub-itineraries; 141–143 have no location and are not shown. The exporter applies this. |
-| Location texts | name, description, how to reach, info, contact, prepared by; a historical background on 138 locations | `collection_translations` title and description, plus `extra` `how_to_reach`, `info`, `prepared_by`, `showOnMonument`, `additional_regions`; the collection's `extra.historical_background` | Imported (G5, #2131). See [Historical background](#historical-background). |
+| Location texts | name, description, how to reach, info, contact, prepared by; a historical background on 138 locations | `collection_translations` title and description, plus `extra` `how_to_reach`, `info`, `prepared_by`, `showOnMonument`, `additional_regions`; the collection's `extra.historical_background` | Imported (G5, #2131); the Travels texts ship after the tree (G10, #2156). See [Historical background](#historical-background). |
 | Monument content | one `monumentDetails` entry per monument, from its source database | the resolved record's own translations | Imported through resolution. Where it comes from, over 1,386 crawled monuments: 993 Travels "Exhibition Trails" (project IAM), 333 "Virtual Museum" (BAR, GPA, ISL, AWE), 60 native to Explore. The Travels records' texts were missing (**gap G7**, #2143): now imported. |
 | Related content | 452 monuments: "Special Features" and "Virtual Museum" links to records in other databases, plus Travels and Sharing History ones | a monument's `detail` child items (its Special Features) and its `item_item_links` | Shipped by the exporter (E.2): the details and the linked records, one hop out. |
 | Related itineraries | 1,003 monuments | derivable from itinerary membership | Derivable |
@@ -249,3 +249,12 @@ blocks the exporter (story E.2):
   16 live countries show one) were never imported. Now a step,
   `explore-country-picture`, attaches each to its country collection, like the
   location pictures.
+- **G9** (#2155), found in E.4: the themes' introductions and order. The
+  English translation carried the cycle's name as its description, and the
+  translation step skipped the English row of `thematiccycletranslated` that
+  holds the introduction; `thematiccycle.order` wasn't carried. Now the
+  translation step fills the description of a row already written, and the
+  cycle step keeps `order` as `display_order`.
+- **G10** (#2156), found in E.4: the package named the Travels locations
+  whose introductions are the historical backgrounds, but didn't ship them.
+  Now the exporter ships them after the tree.
