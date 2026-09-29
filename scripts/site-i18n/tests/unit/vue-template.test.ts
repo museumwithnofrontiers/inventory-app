@@ -179,8 +179,9 @@ describe('selectElement and elementText', () => {
     ).toThrow('for no v-if chain')
   })
 
-  it('refuses a text built from data', () => {
+  it('refuses a text built from data, unless told to read the text beside the value', () => {
     expect(() => read(APP, '#copyright')).toThrow('interpolates a value')
+    expect(read(APP, '#copyright', { skipValues: true })).toBe('Museum With No Frontiers (MWNF), 2004—')
   })
 
   it('refuses a selector that names no element, or more than one', () => {
