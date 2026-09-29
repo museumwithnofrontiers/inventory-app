@@ -34,7 +34,7 @@ export interface TransformedExploreMonument {
   locationId: number | null;
 }
 
-function parseGeoCoordinates(coords: string | null): [number | null, number | null] {
+export function parseGeoCoordinates(coords: string | null): [number | null, number | null] {
   if (coords === null) {
     return [null, null];
   }

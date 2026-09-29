@@ -136,6 +136,14 @@ describe('ExploreItineraryImporter', () => {
     expect(JSON.parse(written(3).extra).explore_itinerary.order).toBe(1);
   });
 
+  // The title it derives from the theme's name is not legacy's: every
+  // translation comes from explore_itineraries_langs (ExploreItineraryContentImporter).
+  it('writes no translation', async () => {
+    await new ExploreItineraryImporter(context).import();
+
+    expect(context.strategy.writeCollectionTranslation).not.toHaveBeenCalled();
+  });
+
   it('adds the legacy fields to an itinerary imported before they were kept, keeping its other extra', async () => {
     tracker.set('mwnf3_explore:itinerary:1', 'existing-itinerary-uuid', 'collection');
     getCollectionExtra.mockImplementation(async (id: string) =>

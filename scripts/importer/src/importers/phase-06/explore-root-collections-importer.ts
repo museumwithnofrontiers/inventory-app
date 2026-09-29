@@ -11,6 +11,14 @@
  *
  * A section root created before the site root existed is filed under it.
  *
+ * Texts: dictionary or nothing (Pascal, 2026-09-29). The site root's title is
+ * legacy's dictionary word `explore_mwnf`, in every language the dictionary
+ * has it; it has no description, because legacy's is the home page's
+ * `Home-Description`, a site text site-i18n carries. The section roots have no
+ * translation: their only legacy texts are the home page's `Home-Explore-by-*`
+ * words and the live client's labels, both site texts. Rows written before
+ * this rule are replaced.
+ *
  * Dependencies:
  * - ExploreContextImporter (must run first to create the Explore context)
  *
@@ -34,13 +42,21 @@ interface RootCollectionConfig {
   backward_compatibility: string;
   type: 'collection' | 'itinerary';
   purpose: string;
-  title: string;
-  description: string;
+  /** The dictionary word that titles it, or null for no translation at all. */
+  titleWord: string | null;
   /** The site root has none; each section root sits under the site root. */
   parent: 'site' | null;
 }
 
+interface DictionaryWord {
+  lang_id: string;
+  value: string | null;
+}
+
 export const EXPLORE_ROOT_KEY = 'mwnf3_explore:root';
+
+/** Explore's group in legacy's dictionary, `mwnf3_explore.translation`. */
+export const EXPLORE_DICTIONARY_GROUP = 12;
 
 export class ExploreRootCollectionsImporter extends BaseImporter {
   private exploreContextId: string | null = null;
@@ -60,9 +76,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
         backward_compatibility: EXPLORE_ROOT_KEY,
         type: 'collection',
         purpose: 'explore-root',
-        title: 'Explore',
-        description:
-          'Islamic art and architecture where it stands: by theme, by country and by itinerary',
+        titleWord: 'explore_mwnf',
         parent: null,
       },
       {
@@ -70,8 +84,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
         backward_compatibility: 'mwnf3_explore:root:explore_by_theme',
         type: 'collection',
         purpose: 'explore-themes-root',
-        title: 'Explore by Theme',
-        description: 'Discover Islamic art and architecture organized by thematic cycles',
+        titleWord: null,
         parent: 'site',
       },
       {
@@ -79,8 +92,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
         backward_compatibility: 'mwnf3_explore:root:explore_by_country',
         type: 'collection',
         purpose: 'explore-countries-root',
-        title: 'Explore by Country',
-        description: 'Browse monuments and sites by country and region',
+        titleWord: null,
         parent: 'site',
       },
       {
@@ -88,8 +100,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
         backward_compatibility: 'mwnf3_explore:root:explore_by_itinerary',
         type: 'itinerary',
         purpose: 'explore-itineraries-root',
-        title: 'Explore by Itinerary',
-        description: 'Follow curated routes through Islamic heritage sites',
+        titleWord: null,
         parent: 'site',
       },
     ];
@@ -156,6 +167,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
                 this.logInfo(`Filed ${config.backward_compatibility} under ${EXPLORE_ROOT_KEY}`);
                 changed = true;
               }
+              await this.writeTranslations(existingId, config);
               if (changed) {
                 result.imported++;
                 this.showProgress();
@@ -176,8 +188,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
               backward_compatibility: config.backward_compatibility,
               context_id: this.exploreContextId,
               language_id: this.defaultLanguageId,
-              title: config.title,
-              description: config.description,
+              title_word: config.titleWord,
             } as Record<string, unknown>,
             'success'
           );
@@ -210,19 +221,7 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
           this.registerEntity(collectionId, config.backward_compatibility, 'collection');
           this.logInfo(`Created collection: ${config.internal_name} (${collectionId})`);
 
-          // Create translation for the collection
-          const translationBackwardCompat = `${config.backward_compatibility}:translation:${this.defaultLanguageId}`;
-
-          await this.context.strategy.writeCollectionTranslation({
-            collection_id: collectionId,
-            language_id: this.defaultLanguageId,
-            context_id: this.exploreContextId,
-            backward_compatibility: translationBackwardCompat,
-            title: config.title,
-            description: config.description,
-          });
-
-          this.logInfo(`Created translation for: ${config.internal_name}`);
+          await this.writeTranslations(collectionId, config);
 
           result.imported++;
           this.showProgress();
@@ -245,5 +244,52 @@ export class ExploreRootCollectionsImporter extends BaseImporter {
     }
 
     return result;
+  }
+
+  /**
+   * Replaces the collection's Explore translations with its dictionary word, one
+   * row per language the dictionary has it in, titled and never described; a
+   * collection with no word keeps none. Deterministic ids make a re-run write
+   * the same rows.
+   */
+  private async writeTranslations(
+    collectionId: string,
+    config: RootCollectionConfig
+  ): Promise<void> {
+    const words = config.titleWord
+      ? await this.context.legacyDb.query<DictionaryWord>(
+          `SELECT lang_id, value
+           FROM mwnf3_explore.translation
+           WHERE group_id = ? AND word_id = ?
+           ORDER BY lang_id`,
+          [EXPLORE_DICTIONARY_GROUP, config.titleWord]
+        )
+      : [];
+
+    const rows: Array<{ languageId: string; title: string }> = [];
+    for (const word of words) {
+      const title = word.value?.trim() ?? '';
+      if (title === '') continue;
+      const languageId = await this.getLanguageIdByLegacyCodeAsync(word.lang_id);
+      if (!languageId) {
+        this.logWarning(
+          `Unknown language code '${word.lang_id}' for dictionary word ${config.titleWord}, skipping`
+        );
+        continue;
+      }
+      rows.push({ languageId, title });
+    }
+
+    await this.context.strategy.deleteCollectionTranslations(collectionId, this.exploreContextId!);
+    for (const row of rows) {
+      await this.context.strategy.writeCollectionTranslation({
+        collection_id: collectionId,
+        language_id: row.languageId,
+        context_id: this.exploreContextId!,
+        backward_compatibility: `${config.backward_compatibility}:translation:${row.languageId}`,
+        title: row.title,
+        description: null,
+      });
+    }
   }
 }
