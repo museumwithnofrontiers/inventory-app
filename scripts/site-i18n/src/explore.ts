@@ -181,6 +181,11 @@ export const EXPLORE_CLIENT_LABELS: Record<string, ClientLabel> = {
     selector: 'div.side-navigation-select p',
     options: { ...exploring, branches: [2, 1] },
   },
+  'select.exploringItinerary': {
+    file: SIDE,
+    selector: 'div.side-navigation-select p',
+    options: { ...exploring, branches: [0, 0] },
+  },
   'select.returnHome': {
     file: SIDE,
     selector: 'router-link#side-navigation-home',
@@ -208,6 +213,10 @@ export const EXPLORE_CLIENT_LABELS: Record<string, ClientLabel> = {
   'itinerary.pickItinerary': {
     file: 'src/components/ExploreItinerary.vue',
     selector: 'select#itinerary-select > option[value=""]',
+  },
+  'itinerary.pickSubItinerary': {
+    file: SIDE,
+    selector: 'select#subItinerary-select > option[value=""]',
   },
   'itinerary.inCountry': { file: PAGE, selector: '#explore-header > span:nth(0) > span:nth(0)' },
   'itinerary.readMore': {
