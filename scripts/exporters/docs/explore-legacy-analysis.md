@@ -277,3 +277,6 @@ blocks the exporter (story E.2):
   titles and descriptions no legacy source has. Now dictionary or nothing: the
   root is titled by the dictionary word `explore_mwnf` and has no description;
   the sections have no translation, their texts being the site's labels.
+- **G16** (#2168), found in E.5: the countries' positions. Legacy centres a
+  country's map on `countries.geoCoordinates` at its `zoom`; the country step
+  wrote none. Now it carries them, on a country already imported too.
