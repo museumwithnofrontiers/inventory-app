@@ -6,15 +6,19 @@
  *
  * Legacy schema:
  * - mwnf3_explore.locations (countryId references existing countries)
+ * - mwnf3_explore.countries (countryId, geoCoordinates, zoom, path)
  * - mwnf3_explore.explorecountry (countryId, showOnLocation, showOnMonument)
  *
  * New schema:
- * - collections (id, context_id, language_id, parent_id, type, internal_name, backward_compatibility, country_id)
+ * - collections (id, context_id, language_id, parent_id, type, internal_name, backward_compatibility, country_id,
+ *   latitude, longitude, map_zoom)
  *
  * Mapping:
  * - countryId → backward_compatibility (mwnf3_explore:country:{countryId})
  * - countryId → country_id (FK to countries table)
  * - country name → internal_name (human-readable title)
+ * - countries.geoCoordinates, zoom → latitude, longitude, map_zoom: where the
+ *   country's map is centred; set on a country imported before they were carried
  * - type = 'collection'
  * - parent_id = explore_by_country root collection
  *
@@ -26,13 +30,29 @@
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
+import { parseGeoCoordinates } from '../../domain/transformers/explore-monument-transformer.js';
 import { mapCountryCode } from '../../utils/code-mappings.js';
 
 /**
- * Country info from locations
+ * Country info from locations, with its map position from `countries`
  */
 interface LegacyExploreCountry {
   countryId: string;
+  geoCoordinates: string | null;
+  zoom: number | null;
+}
+
+/** A country's position, or none: a zoom means nothing without coordinates. */
+export function countryGeo(legacy: Pick<LegacyExploreCountry, 'geoCoordinates' | 'zoom'>): {
+  latitude: number | null;
+  longitude: number | null;
+  map_zoom: number | null;
+} {
+  const [latitude, longitude] = parseGeoCoordinates(legacy.geoCoordinates ?? null);
+  if (latitude === null || longitude === null) {
+    return { latitude: null, longitude: null, map_zoom: null };
+  }
+  return { latitude, longitude, map_zoom: legacy.zoom ?? null };
 }
 
 export class ExploreCountryImporter extends BaseImporter {
@@ -85,7 +105,11 @@ export class ExploreCountryImporter extends BaseImporter {
 
       // Get distinct countries from locations table
       const countries = await this.context.legacyDb.query<LegacyExploreCountry>(
-        `SELECT DISTINCT countryId FROM mwnf3_explore.locations WHERE countryId IS NOT NULL AND countryId != '' ORDER BY countryId`
+        `SELECT l.countryId, c.geoCoordinates, c.zoom
+         FROM (SELECT DISTINCT countryId FROM mwnf3_explore.locations
+               WHERE countryId IS NOT NULL AND countryId != '') l
+         LEFT JOIN mwnf3_explore.countries c ON c.countryId = l.countryId
+         ORDER BY l.countryId`
       );
 
       this.logInfo(`Found ${countries.length} unique countries in Explore locations`);
@@ -93,9 +117,20 @@ export class ExploreCountryImporter extends BaseImporter {
       for (const legacy of countries) {
         try {
           const backwardCompat = `mwnf3_explore:country:${legacy.countryId}`;
+          const geo = countryGeo(legacy);
 
-          // Check if already exists
+          // Already imported: only make sure it carries its position, which
+          // countries imported before it was kept lack.
           if (await this.entityExistsAsync(backwardCompat, 'collection')) {
+            const existingId = await this.getEntityUuidAsync(backwardCompat, 'collection');
+            if (existingId && !this.isDryRun && !this.isSampleOnlyMode) {
+              await this.context.strategy.updateCollectionGeo(
+                existingId,
+                geo.latitude,
+                geo.longitude,
+                geo.map_zoom
+              );
+            }
             result.skipped++;
             this.showSkipped();
             continue;
@@ -140,9 +175,7 @@ export class ExploreCountryImporter extends BaseImporter {
             language_id: this.defaultLanguageId,
             parent_id: this.exploreByCountryId,
             type: 'collection',
-            latitude: null,
-            longitude: null,
-            map_zoom: null,
+            ...geo,
             country_id: countryId,
           });
 

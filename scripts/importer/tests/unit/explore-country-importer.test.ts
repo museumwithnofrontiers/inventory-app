@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ExploreCountryImporter } from '../../src/importers/phase-06/explore-country-importer.js';
+import {
+  ExploreCountryImporter,
+  countryGeo,
+} from '../../src/importers/phase-06/explore-country-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
 import type { IWriteStrategy } from '../../src/core/strategy.js';
@@ -36,7 +39,8 @@ describe('ExploreCountryImporter', () => {
 
     queryMock = vi.fn(async (sql: string, values?: unknown) => {
       if (sql.includes('SELECT DISTINCT countryId FROM mwnf3_explore.locations')) {
-        return [{ countryId: 'at' }];
+        // As mwnf3_explore.countries holds Austria's position.
+        return [{ countryId: 'at', geoCoordinates: '48.210033, 16.363449', zoom: 7 }];
       }
 
       if (sql.includes('SELECT name FROM mwnf3.countries WHERE country = ? LIMIT 1')) {
@@ -85,9 +89,9 @@ describe('ExploreCountryImporter', () => {
       language_id: 'eng',
       parent_id: 'explore-country-root-uuid',
       type: 'collection',
-      latitude: null,
-      longitude: null,
-      map_zoom: null,
+      latitude: 48.210033,
+      longitude: 16.363449,
+      map_zoom: 7,
       country_id: 'aut',
     });
     expect(writeCollectionTranslationMock).toHaveBeenCalledWith({
@@ -101,6 +105,36 @@ describe('ExploreCountryImporter', () => {
     expect(logger.warning).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
     expect(result.imported).toBe(1);
+  });
+
+  it('gives a country imported before its position was kept its position, on a re-run', async () => {
+    tracker.set('mwnf3_explore:country:at', 'existing-country-uuid', 'collection');
+    strategy.updateCollectionGeo = vi.fn().mockResolvedValue(undefined);
+
+    const result = await new ExploreCountryImporter(context).import();
+
+    expect(writeCollectionMock).not.toHaveBeenCalled();
+    expect(strategy.updateCollectionGeo).toHaveBeenCalledWith(
+      'existing-country-uuid',
+      48.210033,
+      16.363449,
+      7
+    );
+    expect(result.skipped).toBe(1);
+  });
+
+  // Legacy keeps a zoom for every country, coordinates only for some.
+  it('keeps no zoom for a country legacy has no coordinates for', () => {
+    expect(countryGeo({ geoCoordinates: '', zoom: 5 })).toEqual({
+      latitude: null,
+      longitude: null,
+      map_zoom: null,
+    });
+    expect(countryGeo({ geoCoordinates: ' 24.774265, 46.738586', zoom: 7 })).toEqual({
+      latitude: 24.774265,
+      longitude: 46.738586,
+      map_zoom: 7,
+    });
   });
 
   it('uses the resolved default language id instead of a hardcoded eng value', async () => {
