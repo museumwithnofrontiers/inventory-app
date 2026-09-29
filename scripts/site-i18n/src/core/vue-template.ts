@@ -73,6 +73,12 @@ export interface TextOptions {
   branches?: number[]
   /** Drops a leading step number ("1. Themes"): the site does not number its lists. */
   dropStepNumber?: boolean
+  /**
+   * Reads the static text beside a value the element interpolates ("Author:
+   * {{ … }}" gives "Author:"): the value is data, the text around it the
+   * label. Without it, an interpolation makes the element no label.
+   */
+  skipValues?: boolean
 }
 
 const collapse = (value: string): string => value.replace(/\s+/g, ' ').trim()
@@ -251,6 +257,7 @@ export function elementText(element: TemplateElement, options: TextOptions = {})
       } else if (child.type === COMMENT) {
         continue
       } else if (child.type === INTERPOLATION) {
+        if (options.skipValues) continue
         throw new Error(`<${node.tag}> interpolates a value: no label`)
       } else if (isElement(child)) {
         if (exclude.some((compound) => matches(child, compound))) continue
