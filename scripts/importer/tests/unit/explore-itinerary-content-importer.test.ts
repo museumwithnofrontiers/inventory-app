@@ -81,6 +81,7 @@ describe('ExploreItineraryContentImporter', () => {
           {
             itineraries_id: 7,
             monumentId: 150,
+            locationId: 2,
             mn_order: 6,
             desc_types: null,
             explore_mn_desc: null,
@@ -247,6 +248,45 @@ describe('ExploreItineraryContentImporter', () => {
         display_order: 6,
       })
     );
+  });
+
+  // The member is the Travels record; which Explore monument it stands for, and
+  // under which location legacy files it, only legacy's row says.
+  it('keeps the Explore monument and its location on the itinerary membership', async () => {
+    await new ExploreItineraryContentImporter(context).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        collection_id: 'itinerary-7-uuid',
+        extra: { explore_monument_id: 150, location_id: 2, mn_order: 6 },
+      })
+    );
+  });
+
+  it("keeps a sub-itinerary's locations in legacy's order, once each", async () => {
+    const rows = queryMock.getMockImplementation() as (sql: string) => Promise<unknown>;
+    queryMock.mockImplementation(async (sql: string) =>
+      sql.includes('FROM mwnf3_explore.explore_itineraries_rel_locations')
+        ? // As the query orders them: English rows by ln_order, then the others.
+          [
+            { itineraries_id: 7, locationId: 152 },
+            { itineraries_id: 7, locationId: 101 },
+            { itineraries_id: 7, locationId: 70 },
+            { itineraries_id: 7, locationId: 101 },
+          ]
+        : rows(sql)
+    );
+
+    await new ExploreItineraryContentImporter(context).import();
+
+    const [, , extra] = vi.mocked(strategy.setCollectionTranslationExtra).mock.calls.find(
+      ([id]) => id === 'itinerary-7-uuid'
+    )!;
+    expect(JSON.parse(extra).location_ids).toEqual([152, 101, 70]);
+    const sql = queryMock.mock.calls
+      .map(([s]) => s as string)
+      .find((s) => s.includes('explore_itineraries_rel_locations'))!;
+    expect(sql).toMatch(/ORDER BY itineraries_id, lang_id <> 'en', ln_order/);
   });
 
   it('queries project_id, institution_id from monuments_explore_itineraries', async () => {
