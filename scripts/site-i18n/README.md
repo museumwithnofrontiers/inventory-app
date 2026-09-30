@@ -255,7 +255,9 @@ data (Pascal, 2026-09-29), from the first of these that has it.
    language it has (English, Spanish, Italian): `EXPLORE_LABEL_WORDS` in
    `src/explore.ts`, each word the one the old PHP site
    (`.legacy-code/explore`) prints on the same element. Only group 12 is
-   read: other groups reuse word ids with other values.
+   read: other groups reuse word ids with other values. The site's identity
+   is there too: its name (`explore_mwnf`) and the organisation its footer
+   credits (`mwnf`), one word for both the organisation and the copyright.
 2. **The live client's templates**, in English, the only language that client
    is written in: `EXPLORE_CLIENT_LABELS`, each the static text of one element,
    located by a selector over the parsed template (`src/core/vue-template.ts`)
