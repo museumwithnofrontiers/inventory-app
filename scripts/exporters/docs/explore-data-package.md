@@ -159,6 +159,9 @@ shipped items, which a sheet names, and the museums the monuments are
 (`explore_museums`, G19, #2177), whose texts and pictures a sheet shows. The shape
 is the shared one (decision D4); `level`, `parent_id` and `project_uuids`
 come from the curated hierarchy of the items' projects, where it has them.
+A partner's translation also carries a museum's `also_known_as`,
+`how_to_reach` and `opening_hours` (legacy `museumnames`), which legacy
+shows when a monument is the museum.
 
 ## glossary.json, countries.json, languages.json
 

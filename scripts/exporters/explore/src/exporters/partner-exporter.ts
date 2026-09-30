@@ -47,6 +47,18 @@ interface PartnerExtraFields {
   portal_display?: string
 }
 
+// A museum's per-language texts the importer keeps in the same extra
+// (legacy `museumnames`): its other name, directions and opening hours.
+interface MuseumTextFields {
+  ex_name?: unknown
+  how_to_reach?: unknown
+  opening_hours?: unknown
+}
+
+function textOrNull(value: unknown): string | null {
+  return typeof value === 'string' && value.trim() !== '' ? value : null
+}
+
 interface PartnerImageRow {
   partner_id: string
   path: string
@@ -238,11 +250,17 @@ export class PartnerExporter extends BaseExporter {
       if (!translationMap.has(t.partner_id)) translationMap.set(t.partner_id, {})
       const code = langCodeMap.get(t.language_id)
       if (code) {
+        // A museum's other name, directions and opening hours: what legacy
+        // shows when a monument is the museum (G19).
+        const museum = t.extra ? parseJson<MuseumTextFields>(t.extra) : null
         translationMap.get(t.partner_id)![code] = {
           name: t.name,
+          also_known_as: textOrNull(museum?.ex_name),
           description: t.description,
           city: t.city_display,
           address: t.address_notes,
+          how_to_reach: textOrNull(museum?.how_to_reach),
+          opening_hours: textOrNull(museum?.opening_hours),
           website: t.contact_website,
           phone: t.contact_phone,
           fax: t.contact_fax,

@@ -235,6 +235,31 @@ describe('PartnerExporter — shared partner shape', () => {
     )
   })
 
+  // G19: legacy shows a museum's other name, directions and opening hours when
+  // a monument is the museum; the importer keeps them in the translation's extra.
+  it("ships a museum's other name, directions and opening hours, per language", async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 'A')],
+      translations: [
+        translationRow('partner-a', {
+          ex_name: 'Raqqada Museum',
+          how_to_reach: 'Bus from Kairouan',
+          opening_hours: '',
+        }),
+      ],
+    })
+    await new PartnerExporter(context(db)).export()
+
+    const en = JSON.parse(
+      readFileSync(join(outputDir, 'translations', 'partners.en.json'), 'utf-8')
+    ) as Record<string, Record<string, string>>
+    expect(en['partner-a']).toMatchObject({
+      also_known_as: 'Raqqada Museum',
+      how_to_reach: 'Bus from Kairouan',
+    })
+    expect(en['partner-a']).not.toHaveProperty('opening_hours')
+  })
+
   it('lists the contact persons in legacy order, leaving out the missing ones', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A'), partnerRow('partner-b', 'B')],
