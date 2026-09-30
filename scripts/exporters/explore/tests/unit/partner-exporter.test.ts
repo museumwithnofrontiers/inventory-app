@@ -110,6 +110,38 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(itemCountQuery?.sql).toContain('WHERE id IN')
   })
 
+  // G19: a monument legacy shows as a museum names it on its membership; the
+  // museum ships for its texts and pictures, holding a shipped item or not.
+  it('ships the museums the monuments are, by key, next to the holders of shipped items', async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 'A')],
+      translations: [translationRow('partner-a')],
+    })
+    await new PartnerExporter(
+      contextWith(
+        db,
+        outputDir,
+        scopeWith({ itemIds: ['item-1'], museumKeys: ['mwnf3:museums:Mus01:qa'] })
+      )
+    ).export()
+
+    const partnerQuery = queries.find(q => q.sql.includes('FROM partners p'))
+    expect(partnerQuery?.sql).toContain('SELECT partner_id FROM items WHERE id IN (?)')
+    expect(partnerQuery?.sql).toContain('OR p.backward_compatibility IN (?)')
+    expect(partnerQuery?.params).toEqual(['item-1', 'mwnf3:museums:Mus01:qa'])
+  })
+
+  it('reads the museums alone when no item is shipped', async () => {
+    const db = stubDb({ partners: [], translations: [] })
+    await new PartnerExporter(
+      contextWith(db, outputDir, scopeWith({ museumKeys: ['mwnf3:museums:Mus01:qa'] }))
+    ).export()
+
+    const partnerQuery = queries.find(q => q.sql.includes('FROM partners p'))
+    expect(partnerQuery?.sql).not.toContain('FROM items')
+    expect(partnerQuery?.params).toEqual(['mwnf3:museums:Mus01:qa'])
+  })
+
   it('defaults item_count to 0 for a partner holding no exported item', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A')],

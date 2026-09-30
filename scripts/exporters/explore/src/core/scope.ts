@@ -23,6 +23,11 @@ export interface ExploreScope {
   itemIds: string[]
   /** The projects those items belong to. */
   projectIds: string[]
+  /**
+   * The partners (by key) of the museums the tree's monuments are: a location
+   * membership names them in `explore_museums` (G19).
+   */
+  museumKeys: string[]
   /** The Explore context, then every other context the items are translated in. */
   contextIds: string[]
 }
@@ -271,12 +276,32 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
         )
   const itemContextIds = translated.map(c => c.context_id).filter(c => c !== exploreContextId)
 
+  // A monument legacy shows as a museum names the museum on its location
+  // membership: the museum's partner ships, for its texts and pictures.
+  const memberships = await db.query<{ extra: unknown }>(
+    `SELECT cm.extra FROM collection_item cm
+     WHERE cm.collection_id IN (${ph}) AND cm.extra LIKE ?
+     ORDER BY cm.collection_id, cm.item_id`,
+    [...treeIds, '%"explore_museums"%']
+  )
+  const museumKeys = [...new Set(memberships.flatMap(m => museumKeysOf(parse(m.extra))))].sort()
+
   return {
     exploreContextId,
     rootId,
     collectionIds,
     itemIds,
     projectIds,
+    museumKeys,
     contextIds: [exploreContextId, ...itemContextIds],
   }
+}
+
+/** The partner keys a location membership's `explore_museums` names. */
+export function museumKeysOf(extra: Record<string, unknown> | null): string[] {
+  const museums = objectAt(extra, 'explore_museums')
+  if (!museums) return []
+  return Object.values(museums)
+    .flatMap(keys => (Array.isArray(keys) ? keys : []))
+    .filter((key): key is string => typeof key === 'string')
 }

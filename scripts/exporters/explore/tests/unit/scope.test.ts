@@ -192,6 +192,52 @@ describe('resolveScope', () => {
 
     expect(scope.collectionIds).toEqual(['root', 'loc', 'travels-b', 'travels-a'])
   })
+
+  it("names the museums the monuments are, once each, from the tree's memberships", async () => {
+    const db = {
+      query: async (sql: string, params: unknown[] = []) => {
+        if (sql.includes('FROM contexts')) return [{ id: 'explore-context' }]
+        if (sql.includes('FROM collections c')) {
+          return [
+            {
+              id: 'root',
+              parent_id: null,
+              type: 'collection',
+              purpose: 'explore-root',
+              display_order: null,
+              internal_name: 'explore',
+              extra: null,
+              english_extra: null,
+            },
+          ]
+        }
+        if (sql.includes('FROM collection_item cm')) {
+          expect(params).toEqual(['root', '%"explore_museums"%'])
+          return [
+            {
+              extra: JSON.stringify({
+                explore_monument_ids: [1032, 136],
+                explore_museums: {
+                  '1032': ['mwnf3:museums:Mus01:qa'],
+                  '136': ['mwnf3:museums:Mus01_A:pt', 'mwnf3:museums:Mus13:pt'],
+                },
+              }),
+            },
+            { extra: { explore_museums: { '1032': ['mwnf3:museums:Mus01:qa'] } } },
+          ]
+        }
+        return []
+      },
+    } as unknown as Database
+
+    const scope = await resolveScope(db)
+
+    expect(scope.museumKeys).toEqual([
+      'mwnf3:museums:Mus01:qa',
+      'mwnf3:museums:Mus01_A:pt',
+      'mwnf3:museums:Mus13:pt',
+    ])
+  })
 })
 
 describe('backgroundKeys', () => {

@@ -105,21 +105,31 @@ export class PartnerExporter extends BaseExporter {
     const itemPh = this.placeholders(itemIds.length)
 
     // Explore has no partner directory: its partners are the holders of the
-    // shipped monuments, which a monument sheet names. Their tier and group
-    // still come from the curated hierarchy of the monuments' projects, where
-    // one has them.
+    // shipped monuments, which a monument sheet names, and the museums some
+    // monuments are, whose texts and pictures legacy shows as the monument's
+    // (G19). Their tier and group still come from the curated hierarchy of the
+    // monuments' projects, where one has them.
+    const museumKeys = this.scope.museumKeys
+    const reached = [
+      ...(itemIds.length > 0
+        ? [
+            `p.id IN (SELECT partner_id FROM items WHERE id IN (${itemPh}) AND partner_id IS NOT NULL)`,
+          ]
+        : []),
+      ...(museumKeys.length > 0
+        ? [`p.backward_compatibility IN (${this.placeholders(museumKeys.length)})`]
+        : []),
+    ]
     const partners =
-      itemIds.length === 0
+      reached.length === 0
         ? []
         : await this.db.query<PartnerRow>(
             `SELECT p.id, p.type, p.internal_name, p.backward_compatibility,
                     p.country_id, p.latitude, p.longitude, p.map_zoom, p.monument_item_id
              FROM partners p
-             WHERE p.id IN (
-               SELECT partner_id FROM items WHERE id IN (${itemPh}) AND partner_id IS NOT NULL
-             )
+             WHERE ${reached.join(' OR ')}
              ORDER BY p.type, p.internal_name, p.id`,
-            itemIds
+            [...itemIds, ...museumKeys]
           )
 
     if (partners.length === 0) {

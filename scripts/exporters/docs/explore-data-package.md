@@ -94,6 +94,7 @@ there.
 | an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link`, and `countries`: its own `country` list, by which legacy names a thematic itinerary's country (G17, #2171) |
 | a location's membership | `explore_monument_ids` | the Explore monument ids the member stands for |
 | a location's membership | `explore_geo` | each of those monuments' position, by id: `{ latitude, longitude, map_zoom }` (G12, #2161). The member's own `latitude`/`longitude` are its own database's, when it has any: a map reads this |
+| a location's membership | `explore_museums` | the museums those monuments are, by id: their partners' keys (`backward_compatibility`), in legacy's order (G19, #2177). Legacy shows a monument's first museum, its texts and pictures, as the monument's record unless Explore has a description of its own |
 | an itinerary's membership | `mn_order`, `desc_types`, `explore_mn_desc`, `tr_mn_desc`, `vm_mn_desc` | the monument's place and texts in the itinerary |
 | an itinerary's membership | `explore_monument_id`, `location_id` | the Explore monument the member (its Travels record) stands for, and the location legacy files it under in the itinerary (G17, #2171) |
 
@@ -154,9 +155,10 @@ record's own fields.
 ## partners.json
 
 Explore has no partner directory: its partners are the holders of the
-shipped items, which a sheet names. The shape is the shared one (decision
-D4); `level`, `parent_id` and `project_uuids` come from the curated hierarchy
-of the items' projects, where it has them.
+shipped items, which a sheet names, and the museums the monuments are
+(`explore_museums`, G19, #2177), whose texts and pictures a sheet shows. The shape
+is the shared one (decision D4); `level`, `parent_id` and `project_uuids`
+come from the curated hierarchy of the items' projects, where it has them.
 
 ## glossary.json, countries.json, languages.json
 
@@ -185,7 +187,8 @@ monument list (G18 brought the last two monuments).
 
 In all, 962 collections (the tree's 826, and 136 Travels locations for the
 historical backgrounds) and 3,192 items: 1,983 monuments, their 878 details
-and 331 linked objects. Also 82 partners and 404 glossary entries.
+and 331 linked objects. Also 104 partners (48 of them the museums 47
+monuments are) and 404 glossary entries.
 
 ## Verification
 
