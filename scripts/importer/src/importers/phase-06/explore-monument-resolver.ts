@@ -19,6 +19,9 @@ interface ExploreMonumentRow {
   REF_monuments_institution_id: string | null;
   REF_monuments_number: number | null;
   REF_monuments_lang: string | null;
+  /** Whether legacy has the record each direct reference names (MySQL: 1 or 0). */
+  REF_tr_monuments_exists: number;
+  REF_monuments_exists: number;
 }
 
 interface ExploreVmReferenceRow {
@@ -293,47 +296,83 @@ export class ExploreMonumentResolver {
     return new Map(entries);
   }
 
+  /**
+   * A reference counts only when legacy has the record it names. Legacy's API
+   * reads a referenced record's content through an inner join and the
+   * monument's name from its own rows, so a reference to a record legacy
+   * doesn't have simply drops out, and the monument is served as Explore's
+   * own. A reference to a record legacy has but the import lacks stays a
+   * candidate, and is reported as a missing target.
+   */
   private async buildResolutionMap(): Promise<Map<number, StoredResolutionEntry>> {
     const monuments = await this.legacyDb.query<ExploreMonumentRow>(
-      `SELECT monumentId,
-              REF_tr_monuments_project_id,
-              REF_tr_monuments_country,
-              REF_tr_monuments_itinerary_id,
-              REF_tr_monuments_location_id,
-              REF_tr_monuments_number,
-              REF_tr_monuments_lang,
-              REF_tr_monuments_trail_id,
-              REF_monuments_project_id,
-              REF_monuments_country,
-              REF_monuments_institution_id,
-              REF_monuments_number,
-              REF_monuments_lang
-       FROM mwnf3_explore.exploremonument`
+      `SELECT m.monumentId,
+              m.REF_tr_monuments_project_id,
+              m.REF_tr_monuments_country,
+              m.REF_tr_monuments_itinerary_id,
+              m.REF_tr_monuments_location_id,
+              m.REF_tr_monuments_number,
+              m.REF_tr_monuments_lang,
+              m.REF_tr_monuments_trail_id,
+              m.REF_monuments_project_id,
+              m.REF_monuments_country,
+              m.REF_monuments_institution_id,
+              m.REF_monuments_number,
+              m.REF_monuments_lang,
+              EXISTS (SELECT 1 FROM mwnf3_travels.tr_monuments t
+                      WHERE t.project_id = m.REF_tr_monuments_project_id
+                        AND t.country = m.REF_tr_monuments_country
+                        AND t.trail_id = m.REF_tr_monuments_trail_id
+                        AND t.itinerary_id = m.REF_tr_monuments_itinerary_id
+                        AND t.location_id = m.REF_tr_monuments_location_id
+                        AND t.number = m.REF_tr_monuments_number) AS REF_tr_monuments_exists,
+              EXISTS (SELECT 1 FROM mwnf3.monuments v
+                      WHERE v.project_id = m.REF_monuments_project_id
+                        AND v.country = m.REF_monuments_country
+                        AND v.institution_id = m.REF_monuments_institution_id
+                        AND v.number = m.REF_monuments_number) AS REF_monuments_exists
+       FROM mwnf3_explore.exploremonument m`
     );
 
     const vmReferences = await this.legacyDb.query<ExploreVmReferenceRow>(
-      `SELECT monumentId,
-              REF_monuments_project_id,
-              REF_monuments_country,
-              REF_monuments_institution_id,
-              REF_monuments_number
-       FROM mwnf3_explore.exploremonument_vm`
+      `SELECT r.monumentId,
+              r.REF_monuments_project_id,
+              r.REF_monuments_country,
+              r.REF_monuments_institution_id,
+              r.REF_monuments_number
+       FROM mwnf3_explore.exploremonument_vm r
+       WHERE EXISTS (SELECT 1 FROM mwnf3.monuments v
+                     WHERE v.project_id = r.REF_monuments_project_id
+                       AND v.country = r.REF_monuments_country
+                       AND v.institution_id = r.REF_monuments_institution_id
+                       AND v.number = r.REF_monuments_number)`
     );
 
     const travelsReferences = await this.legacyDb.query<ExploreTravelsReferenceRow>(
-      `SELECT monumentId,
-              REF_tr_monuments_project_id,
-              REF_tr_monuments_country,
-              REF_tr_monuments_itinerary_id,
-              REF_tr_monuments_location_id,
-              REF_tr_monuments_number,
-              REF_tr_monuments_trail_id
-       FROM mwnf3_explore.exploremonument_tr`
+      `SELECT r.monumentId,
+              r.REF_tr_monuments_project_id,
+              r.REF_tr_monuments_country,
+              r.REF_tr_monuments_itinerary_id,
+              r.REF_tr_monuments_location_id,
+              r.REF_tr_monuments_number,
+              r.REF_tr_monuments_trail_id
+       FROM mwnf3_explore.exploremonument_tr r
+       WHERE EXISTS (SELECT 1 FROM mwnf3_travels.tr_monuments t
+                     WHERE t.project_id = r.REF_tr_monuments_project_id
+                       AND t.country = r.REF_tr_monuments_country
+                       AND t.trail_id = r.REF_tr_monuments_trail_id
+                       AND t.itinerary_id = r.REF_tr_monuments_itinerary_id
+                       AND t.location_id = r.REF_tr_monuments_location_id
+                       AND t.number = r.REF_tr_monuments_number)`
     );
 
     const sharingHistoryReferences = await this.legacyDb.query<ExploreSharingHistoryReferenceRow>(
-      `SELECT monumentId, project_id, country, number
-       FROM mwnf3_explore.exploremonument_sh`
+      `SELECT r.monumentId, r.project_id, r.country, r.number
+       FROM mwnf3_explore.exploremonument_sh r
+       WHERE EXISTS (SELECT 1 FROM mwnf3_sharing_history.sh_monuments s
+                     WHERE s.project_id = r.project_id
+                       AND s.country = r.country
+                       AND s.number = r.number)`
     );
 
     const resolutionMap = new Map<number, StoredResolutionEntry>();
@@ -395,7 +434,8 @@ export class ExploreMonumentResolver {
       hasText(monument.REF_monuments_project_id) &&
       hasText(monument.REF_monuments_country) &&
       hasText(monument.REF_monuments_institution_id) &&
-      monument.REF_monuments_number !== null
+      monument.REF_monuments_number !== null &&
+      Number(monument.REF_monuments_exists) === 1
     ) {
       entry.candidates.push({
         source: 'vm',
@@ -414,7 +454,8 @@ export class ExploreMonumentResolver {
       hasText(monument.REF_tr_monuments_itinerary_id) &&
       hasText(monument.REF_tr_monuments_location_id) &&
       hasText(monument.REF_tr_monuments_number) &&
-      monument.REF_tr_monuments_trail_id !== null
+      monument.REF_tr_monuments_trail_id !== null &&
+      Number(monument.REF_tr_monuments_exists) === 1
     ) {
       entry.candidates.push({
         source: 'travels',

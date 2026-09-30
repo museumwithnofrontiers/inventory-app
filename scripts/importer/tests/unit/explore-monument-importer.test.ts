@@ -138,6 +138,27 @@ describe('ExploreMonumentImporter', () => {
     expect(result.imported).toBe(1);
   });
 
+  // Legacy lists a monument with no name rows of its own under the record it
+  // references (1682, a Sharing History monument): the record brings its name.
+  it('links a referenced monument that has no name of its own', async () => {
+    const rows = queryMock.getMockImplementation() as (sql: string) => Promise<unknown>;
+    queryMock.mockImplementation(async (sql: string) =>
+      sql.includes('FROM mwnf3_explore.exploremonumentext') ? [] : rows(sql)
+    );
+
+    const result = await new ExploreMonumentImporter(context).import();
+
+    expect(writeItemMock).not.toHaveBeenCalled();
+    expect(writeCollectionItemMock).toHaveBeenCalledWith({
+      collection_id: 'location-collection-uuid',
+      item_id: 'canonical-item-uuid',
+      display_order: null,
+      extra: { explore_monument_ids: [123] },
+    });
+    expect(result.success).toBe(true);
+    expect(result.imported).toBe(1);
+  });
+
   // The reused record's own key says nothing of Explore, so the location
   // membership is where legacy's monument id survives; the upsert replaces
   // `extra`, so what the membership already holds is merged, not lost.
