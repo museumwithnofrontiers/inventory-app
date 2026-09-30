@@ -60,7 +60,7 @@ _docs/
 ### For Local Development
 
 - Python 3.x
-- Ruby 3.4 (for Jekyll), matching `.docker/Dockerfile.docs` and `docs/Gemfile`
+- Ruby 4.0 (for Jekyll), matching `.docker/Dockerfile.docs` and `docs/Gemfile`
 - Bundler gem installed
 
 ### For GitHub Actions (handled automatically)

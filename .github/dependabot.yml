@@ -80,6 +80,12 @@ updates:
         dependency-type: "development"
       tools-prod-dependencies:
         dependency-type: "production"
+    # typescript-eslint's peer range stops short of TypeScript 7, so npm cannot
+    # install the two together and a TypeScript 7 bump fails every check. Lift
+    # this, here and on the exporters entry, once typescript-eslint accepts 7.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # Dataset exporters. Public npm registry only: exporters read the database and
   # write JSON, they do not consume any @metanull package. Keep this entry free
@@ -97,6 +103,10 @@ updates:
         dependency-type: "development"
       exporter-prod-dependencies:
         dependency-type: "production"
+    # TypeScript 7 held back for typescript-eslint, as on the tools entry.
+    ignore:
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
 
   # Dataset viewers. Public npm registry only: @museumwnf/<dataset>-data is a
   # public package on npmjs, not GitHub Packages, so — like the exporters
