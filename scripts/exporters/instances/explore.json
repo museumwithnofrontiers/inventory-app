@@ -1,7 +1,7 @@
 {
   "kind": "standalone",
   "slug": "explore",
-  "name": "Explore",
+  "name": "Explore with MWNF",
   "exporter": "explore",
   "package_name": "@museumwnf/explore-data"
 }
