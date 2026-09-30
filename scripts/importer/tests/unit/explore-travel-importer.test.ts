@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  bookCover,
+  booksId,
   ExploreTravelImporter,
   textFields,
   tourSubtitle,
@@ -28,6 +30,57 @@ describe('tourSubtitle', () => {
   it('names the country, and its first place where the language has one', () => {
     expect(tourSubtitle([{ country: 'Jordan', place: 'Amman' }])).toBe('Jordan - Amman');
     expect(tourSubtitle([{ country: 'Jordania', place: null }])).toBe('Jordania');
+  });
+});
+
+describe('booksId', () => {
+  it("reads the Books database's id from either form of a Travel Book's link", () => {
+    expect(booksId('https://books.museumwnf.org/book/3/en')).toBe(3);
+    expect(booksId('https://books.museumwnf.org/books_detail.php?booklngid=41;en')).toBe(41);
+    expect(booksId('')).toBeNull();
+    expect(booksId(null)).toBeNull();
+  });
+});
+
+describe('bookCover', () => {
+  const cover = (lang_id: string, booktype: string, image_number: number) => ({
+    lang_id,
+    booktype,
+    image_number,
+    path: `books/1/${lang_id}/31/${booktype}/${image_number}.jpg`,
+  });
+
+  it("takes the printed book's highest cover, the English one on a tie", () => {
+    // Books 8: legacy shows books/8/en/31/book/2.jpg.
+    expect(
+      bookCover([
+        cover('de', 'book', 2),
+        cover('de', 'ebook', 2),
+        cover('en', 'book', 1),
+        cover('en', 'book', 2),
+        cover('en', 'digp', 2),
+        cover('en', 'ebook', 2),
+      ])
+    ).toBe('books/1/en/31/book/2.jpg');
+  });
+
+  it('prefers the printed book to a higher eBook cover, whatever the language', () => {
+    // Books 17 shows its printed cover 1, Books 2 its Portuguese cover 3.
+    expect(bookCover([cover('it', 'book', 1), cover('it', 'ebook', 2)])).toBe(
+      'books/1/it/31/book/1.jpg'
+    );
+    expect(bookCover([cover('en', 'ebook', 2), cover('pt', 'book', 3)])).toBe(
+      'books/1/pt/31/book/3.jpg'
+    );
+  });
+
+  it("falls back to the eBook's cover, never a digp one", () => {
+    // Books 41 shows books/41/en/31/ebook/1.jpg.
+    expect(bookCover([cover('en', 'digp', 1), cover('en', 'ebook', 1)])).toBe(
+      'books/1/en/31/ebook/1.jpg'
+    );
+    expect(bookCover([cover('en', 'digp', 1)])).toBeNull();
+    expect(bookCover([])).toBeNull();
   });
 });
 
@@ -83,6 +136,31 @@ describe('ExploreTravelImporter', () => {
             title: 'The Umayyads',
             intro: 'Jordania',
             read_more: '',
+          },
+        ];
+      }
+      if (sql.includes('FROM mwnf3.books_pictures')) {
+        return [
+          {
+            book_id: 4,
+            lang_id: 'en',
+            booktype: 'book',
+            image_number: 1,
+            path: 'books/4/en/31/book/1.jpg',
+          },
+          {
+            book_id: 4,
+            lang_id: 'en',
+            booktype: 'book',
+            image_number: 2,
+            path: 'books/4/en/31/book/2.jpg',
+          },
+          {
+            book_id: 5,
+            lang_id: 'en',
+            booktype: 'book',
+            image_number: 3,
+            path: 'books/5/en/31/book/3.jpg',
           },
         ];
       }
@@ -251,6 +329,7 @@ describe('ExploreTravelImporter', () => {
     expect(travel.books).toEqual([
       {
         id: 10,
+        image: 'books/4/en/31/book/2.jpg',
         scope: { themes: [1], countries: ['jo'], locations: [10, 16] },
         texts: {
           eng: {

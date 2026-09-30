@@ -5,7 +5,8 @@
  * site's root collection (`mwnf3_explore:root`), in `extra.explore_travel`.
  * Each record is kept once, with the pages it is shown on as its `scope` (see
  * ./explore-scope.ts):
- * - `books`: MWNF Travel Books (featured_books_explore), linking to the Books site
+ * - `books`: MWNF Travel Books (featured_books_explore), linking to the Books site,
+ *   with the cover legacy shows from the Books database (see `bookCover`)
  * - `tours`: MWNF Tours (featured_tours_explore), with the tour's picture and
  *   its places from the Travels database
  * - `accommodations` (accommodation_hotels, _langs), in `accommodation_categories`
@@ -17,9 +18,6 @@
  * `explorecountry…` and `explorelocation…` link tables, `hotels`, `otherbooks`,
  * `othertravels`, `eating…`, `excursions…`, `guided_visits` (their
  * introductions) and `accommodation`.
- *
- * A Travel Book's cover is not carried: legacy's pick among the Books
- * database's covers follows no rule its data shows.
  *
  * Images stay paths on legacy's media server. Texts are keyed by the
  * inventory's language id, and a field legacy leaves empty is left out. The
@@ -82,6 +80,46 @@ const scopeColumns = (row: ScopedRow): ExploreScopeColumns => ({
  */
 export function tourSubtitle(places: Array<{ country: string; place: string | null }>): string {
   return places.map(({ country, place }) => (place ? `${country} - ${place}` : country)).join(', ');
+}
+
+/**
+ * The Books database's id of the book a Travel Book's link names:
+ * `https://books.museumwnf.org/book/{id}/{lang}` or the older
+ * `books_detail.php?booklngid={id};{lang}`.
+ */
+export function booksId(readMore: string | null | undefined): number | null {
+  const match = /\/book\/(\d+)\/|booklngid=(\d+);/.exec(readMore ?? '');
+  return match ? Number(match[1] ?? match[2]) : null;
+}
+
+export interface BookCoverRow {
+  lang_id: string;
+  booktype: string;
+  image_number: number;
+  path: string;
+}
+
+/** The editions whose covers legacy shows, in its order; a `digp` cover never is. */
+const COVER_BOOKTYPES = ['book', 'ebook'];
+
+/**
+ * The cover legacy shows for a Travel Book, among its book's `cover` pictures
+ * in the Books database: the printed book's, else the eBook's; of those, the
+ * highest number; on a tie, the English one. Checked against every book
+ * legacy's API showed.
+ */
+export function bookCover(covers: BookCoverRow[]): string | null {
+  const rank = (cover: BookCoverRow) => COVER_BOOKTYPES.indexOf(cover.booktype);
+  const [first] = covers
+    .filter((cover) => rank(cover) !== -1 && cover.path.trim())
+    .sort(
+      (a, b) =>
+        rank(a) - rank(b) ||
+        Number(b.image_number) - Number(a.image_number) ||
+        Number(b.lang_id === 'en') - Number(a.lang_id === 'en') ||
+        a.lang_id.localeCompare(b.lang_id)
+    );
+  return first ? first.path.trim() : null;
 }
 
 export class ExploreTravelImporter extends BaseImporter {
@@ -192,11 +230,31 @@ export class ExploreTravelImporter extends BaseImporter {
        FROM mwnf3_explore.featured_books_explore
        ORDER BY book_id, lang_id`
     );
-    return this.perLanguage(rows, 'book_id', 'lang_id', {
-      title: 'title',
-      intro: 'intro',
-      read_more: 'read_more',
-    });
+    // The book in the Books database is the one its link names, in any language.
+    const bookOf = new Map<number, number>();
+    for (const row of rows) {
+      const id = booksId(row.read_more);
+      if (id !== null && !bookOf.has(Number(row.book_id))) bookOf.set(Number(row.book_id), id);
+    }
+    const covers = await this.context.legacyDb.query<BookCoverRow & { book_id: number }>(
+      `SELECT book_id, lang_id, booktype, image_number, path
+       FROM mwnf3.books_pictures
+       WHERE type = 'cover'
+       ORDER BY book_id, image_number, lang_id`
+    );
+    const coverOf = (exploreId: number): string | null => {
+      const id = bookOf.get(exploreId);
+      return id === undefined
+        ? null
+        : bookCover(covers.filter((cover) => Number(cover.book_id) === id));
+    };
+    return this.perLanguage(
+      rows,
+      'book_id',
+      'lang_id',
+      { title: 'title', intro: 'intro', read_more: 'read_more' },
+      (first) => ({ image: coverOf(Number(first.book_id)) })
+    );
   }
 
   private async tours(): Promise<TravelRecord[]> {
