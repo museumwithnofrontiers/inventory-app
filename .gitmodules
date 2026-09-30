@@ -196,3 +196,6 @@
 [submodule ".new-architecture/galleries"]
 	path = .new-architecture/galleries
 	url = https://github.com/museumwithnofrontiers/galleries
+[submodule ".new-architecture/explore"]
+	path = .new-architecture/explore
+	url = https://github.com/museumwithnofrontiers/explore
