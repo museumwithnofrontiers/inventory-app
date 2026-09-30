@@ -96,24 +96,25 @@ The other tables are not served. The older link tables
 empty. `eating…`, `excursions…`, `accommodation` and the guided-visit
 introductions (`guided_visits`) appear in no response.
 
-A Travel Book's cover (G20, #2179) comes from the Books database. A featured
-book's id is Explore's own, so the book is the one its `read_more` link names
-(`books.museumwnf.org/book/{id}/{lang}`, or the older
-`books_detail.php?booklngid={id};{lang}`). Legacy shows one of that book's
-`books_pictures` rows of `type = 'cover'`, at the media server's `small` size:
+A Travel Book's cover (G20, #2179) comes from the Books database
+(explore-api `FeaturedBooksExplore::getCoverImage`, per language row). A
+featured book's id is Explore's own, so the book is the one the row's
+`read_more` link names: the older `books_detail.php?booklngid={id};{lang}`,
+else `book/{id}/`. A row without a link has no cover. Legacy shows one of that
+book's `books_pictures` rows of `type = 'cover'`, at the media server's
+`small` size, from the first of these that has one, its highest
+`image_number`:
 
-1. the printed book's (`booktype = 'book'`), else the eBook's; a `digp` cover
-   is never shown;
-2. of those, the highest `image_number`;
-3. on a tie, the English one.
+1. the English paperback (`booktype = 'book'`);
+2. any language's paperback;
+3. the English eBook;
+4. any language's eBook.
 
-Read from the data, not from the API's code: it gives the cover the live API
-showed for every one of the 42 crawled records (18 books). Books 17 shows its
-printed cover 1 over its eBook's 2, and Books 2 its Portuguese printed cover
-3. Books 41 and 40 have no printed cover and show an eBook's. Books 8 shows its
-English cover 2 over the German one. Two details stay open, and neither
-changes a book the site shows: whether a tie goes to English or to the link's
-language, and whether `digp` is left out or only ranked last. The 7 other
+A `digp` cover is never shown. Between two languages with the same number,
+legacy leaves the pick to the database; no book it shows has such a tie. The
+rule gives the cover the live API showed for all 42 crawled records (18
+books). Books 2 shows its Portuguese paperback cover 3, having no English
+paperback. Books 41 and 40 have no paperback and show an eBook's. The 7 other
 featured books have neither a link nor a scope, and legacy shows them nowhere.
 
 Books and Travels as products were ruled out of the migration on 2026-09-14
@@ -143,7 +144,7 @@ roots. Its `extra` holds every record once, with its scope:
   whether the home page shows it (`home`), its `scope`, and per language a
   title, a name and a link.
 - `explore_travel` (G4, #2130): the travel layer's records, the same way:
-  `books` (with the book's cover, G20), `tours` (with the tour's picture and,
+  `books` (with, per language, the book's cover, G20), `tours` (with the tour's picture and,
   per language, its subtitle),
   `accommodations` (with their `category`, named in `accommodation_categories`),
   `guided_visits` and `useful_websites`. Each has its legacy id, its order
@@ -321,8 +322,8 @@ blocks the exporter (story E.2):
   by monument id (`explore_museums`, the partners' keys, in legacy's order,
   Pascal 2026-09-30), and the museums ship as partners.
 - **G20** (#2179), after M11 (Pascal 2026-09-30): the Travel Book covers.
-  Legacy's pick follows a rule after all, read from `books_pictures` (see
-  the travel layer above). The travel step now keeps each book's cover.
+  Legacy's pick follows a rule after all (`getCoverImage`, see the travel
+  layer above). The travel step now keeps each language's cover in its texts.
 
 **Legacy's record for a monument** (`MonumentResource.php`, the API the live
 site reads). A monument can stand for several records; legacy shows one as

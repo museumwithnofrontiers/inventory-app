@@ -6,7 +6,8 @@
  * Each record is kept once, with the pages it is shown on as its `scope` (see
  * ./explore-scope.ts):
  * - `books`: MWNF Travel Books (featured_books_explore), linking to the Books site,
- *   with the cover legacy shows from the Books database (see `bookCover`)
+ *   each language with the cover legacy shows from the Books database (see
+ *   `bookCover`)
  * - `tours`: MWNF Tours (featured_tours_explore), with the tour's picture and
  *   its places from the Travels database
  * - `accommodations` (accommodation_hotels, _langs), in `accommodation_categories`
@@ -83,13 +84,14 @@ export function tourSubtitle(places: Array<{ country: string; place: string | nu
 }
 
 /**
- * The Books database's id of the book a Travel Book's link names:
- * `https://books.museumwnf.org/book/{id}/{lang}` or the older
- * `books_detail.php?booklngid={id};{lang}`.
+ * The Books database's id of the book a Travel Book's link names, read as
+ * legacy's API reads it (explore-api `FeaturedBooksExplore::getCoverImage`):
+ * the older `books_detail.php?booklngid={id};{lang}`, else `book/{id}/`.
  */
 export function booksId(readMore: string | null | undefined): number | null {
-  const match = /\/book\/(\d+)\/|booklngid=(\d+);/.exec(readMore ?? '');
-  return match ? Number(match[1] ?? match[2]) : null;
+  const link = readMore ?? '';
+  const match = /books_detail*.php\?booklngid=(\d*);/.exec(link) ?? /book\/(\d*)\//.exec(link);
+  return match?.[1] ? Number(match[1]) : null;
 }
 
 export interface BookCoverRow {
@@ -99,27 +101,35 @@ export interface BookCoverRow {
   path: string;
 }
 
-/** The editions whose covers legacy shows, in its order; a `digp` cover never is. */
-const COVER_BOOKTYPES = ['book', 'ebook'];
+/**
+ * Legacy's order (`getCoverImage`): the English paperback, any language's
+ * paperback, the English eBook, any language's eBook. A `digp` cover is never
+ * shown.
+ */
+const COVER_TIERS: Array<{ booktype: string; lang?: string }> = [
+  { booktype: 'book', lang: 'en' },
+  { booktype: 'book' },
+  { booktype: 'ebook', lang: 'en' },
+  { booktype: 'ebook' },
+];
 
 /**
  * The cover legacy shows for a Travel Book, among its book's `cover` pictures
- * in the Books database: the printed book's, else the eBook's; of those, the
- * highest number; on a tie, the English one. Checked against every book
- * legacy's API showed.
+ * in the Books database: the first tier that has one, its highest number.
+ * Legacy leaves a tie between languages to the database; here the language
+ * code decides (no book legacy shows has one).
  */
 export function bookCover(covers: BookCoverRow[]): string | null {
-  const rank = (cover: BookCoverRow) => COVER_BOOKTYPES.indexOf(cover.booktype);
-  const [first] = covers
-    .filter((cover) => rank(cover) !== -1 && cover.path.trim())
-    .sort(
-      (a, b) =>
-        rank(a) - rank(b) ||
-        Number(b.image_number) - Number(a.image_number) ||
-        Number(b.lang_id === 'en') - Number(a.lang_id === 'en') ||
-        a.lang_id.localeCompare(b.lang_id)
-    );
-  return first ? first.path.trim() : null;
+  for (const { booktype, lang } of COVER_TIERS) {
+    const [first] = covers
+      .filter((cover) => cover.booktype === booktype && (!lang || cover.lang_id === lang))
+      .sort(
+        (a, b) =>
+          Number(b.image_number) - Number(a.image_number) || a.lang_id.localeCompare(b.lang_id)
+      );
+    if (first?.path?.trim()) return first.path.trim();
+  }
+  return null;
 }
 
 export class ExploreTravelImporter extends BaseImporter {
@@ -230,31 +240,27 @@ export class ExploreTravelImporter extends BaseImporter {
        FROM mwnf3_explore.featured_books_explore
        ORDER BY book_id, lang_id`
     );
-    // The book in the Books database is the one its link names, in any language.
-    const bookOf = new Map<number, number>();
-    for (const row of rows) {
-      const id = booksId(row.read_more);
-      if (id !== null && !bookOf.has(Number(row.book_id))) bookOf.set(Number(row.book_id), id);
-    }
+    // Each language's row shows the cover of the book its own link names, as
+    // legacy's API computes it row by row: a row without a link has none.
     const covers = await this.context.legacyDb.query<BookCoverRow & { book_id: number }>(
       `SELECT book_id, lang_id, booktype, image_number, path
        FROM mwnf3.books_pictures
        WHERE type = 'cover'
        ORDER BY book_id, image_number, lang_id`
     );
-    const coverOf = (exploreId: number): string | null => {
-      const id = bookOf.get(exploreId);
-      return id === undefined
-        ? null
-        : bookCover(covers.filter((cover) => Number(cover.book_id) === id));
-    };
-    return this.perLanguage(
-      rows,
-      'book_id',
-      'lang_id',
-      { title: 'title', intro: 'intro', read_more: 'read_more' },
-      (first) => ({ image: coverOf(Number(first.book_id)) })
-    );
+    const withCovers = rows.map((row) => {
+      const id = booksId(row.read_more);
+      return {
+        ...row,
+        cover: id === null ? null : bookCover(covers.filter((c) => Number(c.book_id) === id)),
+      };
+    });
+    return this.perLanguage(withCovers, 'book_id', 'lang_id', {
+      title: 'title',
+      intro: 'intro',
+      read_more: 'read_more',
+      cover: 'cover',
+    });
   }
 
   private async tours(): Promise<TravelRecord[]> {
