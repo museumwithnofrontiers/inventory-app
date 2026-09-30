@@ -290,3 +290,11 @@ blocks the exporter (story E.2):
 - **G16** (#2168), found in E.5: the countries' positions. Legacy centres a
   country's map on `countries.geoCoordinates` at its `zoom`; the country step
   wrote none. Now it carries them, on a country already imported too.
+- **G18**, found comparing with legacy in E.6: two monuments legacy lists and
+  the import dropped. 1682 has no name rows of its own, and legacy lists it
+  under its Sharing History record; the monument step demanded a name before
+  looking at the reference. 1801 references a Virtual Museum record legacy
+  doesn't have; legacy's API reads a referenced record through an inner join
+  and the name from Explore's own rows, so it serves "Murales" as Explore's
+  own. Now only a monument created natively needs a name, and a reference
+  counts only when legacy has the record it names.
