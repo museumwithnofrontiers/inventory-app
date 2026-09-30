@@ -2,7 +2,7 @@
 # pins a Ruby patch level. Keep in step with `ruby` in docs/Gemfile and with
 # ruby-version in .github/workflows/continuous-deployment_github-pages.yml —
 # a docs build that only breaks on Pages is the failure mode to avoid.
-FROM ruby:3.4-alpine
+FROM ruby:4.0-alpine
 
 RUN apk add --no-cache python3 git build-base
 

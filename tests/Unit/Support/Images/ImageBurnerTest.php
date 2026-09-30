@@ -29,7 +29,7 @@ class ImageBurnerTest extends TestCase
         $burned = (new ImageBurner)->burn($original, '© Museum With No Frontiers');
 
         $manager = new ImageManager(new Driver);
-        $burnedImage = $manager->read($burned);
+        $burnedImage = $manager->decodeBinary($burned);
 
         $this->assertSame(640, $burnedImage->width());
         $this->assertSame(480, $burnedImage->height());
@@ -84,7 +84,7 @@ class ImageBurnerTest extends TestCase
     public function test_burn_preserves_the_original_image_format(EncoderInterface $encoder, string $mimeType): void
     {
         $manager = new ImageManager(new Driver);
-        $original = $manager->create(200, 150)->fill('336699')->encode($encoder)->toString();
+        $original = $manager->createImage(200, 150)->fill('336699')->encode($encoder)->toString();
 
         $burned = (new ImageBurner)->burn($original, 'Test');
 
@@ -94,14 +94,14 @@ class ImageBurnerTest extends TestCase
     public function test_burn_encodes_jpeg_at_the_burner_quality(): void
     {
         $manager = new ImageManager(new Driver);
-        $original = $manager->create(640, 480)->fill('cccccc')->encode(new JpegEncoder(quality: 100))->toString();
+        $original = $manager->createImage(640, 480)->fill('cccccc')->encode(new JpegEncoder(quality: 100))->toString();
 
         $burned = (new ImageBurner)->burn($original, 'Test');
 
         // A JPEG's quantization tables are set by the quality it was encoded
         // at, whatever the picture, so compare them with reference encodes.
         $reference = fn (int $quality): array => $this->firstQuantizationTable(
-            $manager->read($original)->encode(new JpegEncoder(quality: $quality))->toString()
+            $manager->decodeBinary($original)->encode(new JpegEncoder(quality: $quality))->toString()
         );
 
         $this->assertSame(90, ImageBurner::QUALITY);
@@ -187,7 +187,7 @@ class ImageBurnerTest extends TestCase
     {
         $manager = new ImageManager(new Driver);
 
-        return $manager->create($width, $height)->fill($colour)->encode(new PngEncoder)->toString();
+        return $manager->createImage($width, $height)->fill($colour)->encode(new PngEncoder)->toString();
     }
 
     /**

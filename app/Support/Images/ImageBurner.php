@@ -44,10 +44,11 @@ class ImageBurner
     public function burn(string $originalContents, string $copyrightText): string
     {
         $manager = new ImageManager(new Driver);
-        $image = $manager->read($originalContents);
+        $image = $manager->decodeBinary($originalContents);
         $layout = $this->layout($image->width(), $image->height(), $copyrightText);
 
-        $image->drawRectangle(0, $layout->barTop, function (RectangleFactory $rectangle) use ($image, $layout): void {
+        $image->drawRectangle(function (RectangleFactory $rectangle) use ($image, $layout): void {
+            $rectangle->at(0, $layout->barTop);
             $rectangle->size($image->width(), $layout->barHeight);
             $rectangle->background('000000b3');
         });
@@ -58,8 +59,7 @@ class ImageBurner
             $font->filename(resource_path(self::FONT_PATH));
             $font->size($layout->fontSize);
             $font->color('ffffff');
-            $font->align('left');
-            $font->valign('top');
+            $font->align('left', 'top');
         });
 
         // Encodes in the original's format; the quality only reaches the

@@ -80,7 +80,7 @@ class ImageUploadListener
         try {
             // Use Intervention Image Manager to read and validate the image
             $manager = new ImageManager(new Driver);
-            $image = $manager->read($fileContents);
+            $image = $manager->decodeBinary($fileContents);
 
             // If we get here, the image is valid
             $targetWidth = Config::integer('localstorage.available.images.max_width');

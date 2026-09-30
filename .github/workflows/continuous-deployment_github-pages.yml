@@ -53,7 +53,7 @@ jobs:
         with:
           # Float on the minor so patch-level security fixes land without a
           # PR here. Must match the base image in .docker/Dockerfile.docs.
-          ruby-version: "3.4"
+          ruby-version: "4.0"
           working-directory: docs
 
       - name: Install Ruby dependencies

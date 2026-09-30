@@ -542,7 +542,7 @@ class PictureControllerTest extends TestCase
     public function test_every_raster_format_is_served_burned_in_its_own_format(string $extension, EncoderInterface $encoder, string $mimeType): void
     {
         $filename = Str::uuid()->toString().'.'.$extension;
-        $original = (new ImageManager(new Driver))->create(160, 120)->fill('808080')->encode($encoder)->toString();
+        $original = (new ImageManager(new Driver))->createImage(160, 120)->fill('808080')->encode($encoder)->toString();
         ItemImage::factory()->forItem(Item::factory()->Object()->create())->create(['path' => $filename, 'mime_type' => $mimeType]);
         Storage::disk('image-originals')->put('images/'.$filename, $original);
 

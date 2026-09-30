@@ -57,7 +57,7 @@ trait TestsApiImageViewing
      */
     protected function createTestImageFile(string $path): string
     {
-        $jpeg = (new ImageManager(new Driver))->create(120, 90)->fill('336699')->encode(new JpegEncoder)->toString();
+        $jpeg = (new ImageManager(new Driver))->createImage(120, 90)->fill('336699')->encode(new JpegEncoder)->toString();
 
         Storage::disk('local')->put($path, $jpeg);
 
