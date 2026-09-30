@@ -36,6 +36,7 @@ interface LegacyItineraryLang {
 interface LegacyItineraryMonument {
   itineraries_id: number;
   monumentId: number;
+  locationId: number | null;
   mn_order: number | null;
   desc_types: string | null;
   explore_mn_desc: string | null;
@@ -284,7 +285,7 @@ export class ExploreItineraryContentImporter extends BaseImporter {
     // DDL columns: itineraries_id, country_id, territory_id, location_id, momument_id (typo in DDL),
     //   mn_order, desc_types, explore_mn_desc, tr_mn_desc, vm_mn_desc
     const links = await this.context.legacyDb.query<LegacyItineraryMonument>(
-      `SELECT itineraries_id, momument_id AS monumentId, mn_order, desc_types,
+      `SELECT itineraries_id, momument_id AS monumentId, location_id AS locationId, mn_order, desc_types,
               explore_mn_desc, tr_mn_desc, vm_mn_desc
        FROM mwnf3_explore.explore_itineraries_rel_monuments
        ORDER BY itineraries_id, mn_order`
@@ -302,10 +303,10 @@ export class ExploreItineraryContentImporter extends BaseImporter {
           continue;
         }
 
-        const monumentResolution = await this.monumentResolver.resolveForSource(link.monumentId, 'travels');
-        if (!monumentResolution.itemId || !monumentResolution.itemBackwardCompatibility) {
+        const memberId = await this.resolveItineraryMember(link.monumentId);
+        if (!memberId) {
           this.logWarning(
-            `${monumentResolution.message ?? `Explore monument mwnf3_explore:monument:${link.monumentId} did not resolve to a travels item`}, skipping`
+            `Explore monument mwnf3_explore:monument:${link.monumentId} did not resolve to any record, skipping`
           );
           result.skipped++;
           this.showSkipped();
@@ -318,8 +319,14 @@ export class ExploreItineraryContentImporter extends BaseImporter {
           continue;
         }
 
-        // Build extra with monument descriptions
-        const extra: Record<string, unknown> = {};
+        // Build extra with the monument's place and descriptions. The member is
+        // the monument's Travels record; the Explore monument it stands for and
+        // the location legacy files it under are kept with it, as on a
+        // location's membership.
+        const extra: Record<string, unknown> = {
+          explore_monument_id: link.monumentId,
+        };
+        if (link.locationId) extra.location_id = link.locationId;
         if (link.mn_order !== null) extra.mn_order = link.mn_order;
         if (link.desc_types) extra.desc_types = link.desc_types;
         if (link.explore_mn_desc) extra.explore_mn_desc = link.explore_mn_desc;
@@ -329,7 +336,7 @@ export class ExploreItineraryContentImporter extends BaseImporter {
         const linkBC = `mwnf3_explore:itinerary_monument:${link.itineraries_id}:${link.monumentId}`;
         await this.context.strategy.writeCollectionItem({
           collection_id: collectionId,
-          item_id: monumentResolution.itemId,
+          item_id: memberId,
           backward_compatibility: linkBC,
           display_order: link.mn_order,
           extra: Object.keys(extra).length > 0 ? extra : null,
@@ -353,17 +360,35 @@ export class ExploreItineraryContentImporter extends BaseImporter {
     }
   }
 
+  /**
+   * The record an itinerary membership points at: the monument's Travels
+   * record, legacy's itineraries being Travels trails; else the record it
+   * resolves to (a Virtual Museum one, for a monument Travels never
+   * described). The membership keeps the Explore monument it stands for
+   * either way.
+   */
+  private async resolveItineraryMember(monumentId: number): Promise<string | null> {
+    const travels = await this.monumentResolver.resolveForSource(monumentId, 'travels');
+    if (travels.itemId) return travels.itemId;
+    const any = await this.monumentResolver.resolve(monumentId);
+    if (any.itemId) return any.itemId;
+    return any.resolvedCandidates?.[0]?.itemId ?? null;
+  }
+
   private async importMetadata(_result: ImportResult): Promise<void> {
     this.logInfo('Importing itinerary metadata (locations, countries, territories)...');
 
-    // Locations
+    // Locations, in legacy's order: `ln_order` of the English rows, as its API
+    // reads them; a location only another language lists comes after.
     const locations = await this.context.legacyDb.query<LegacyItineraryLocation>(
-      `SELECT itineraries_id, location_id AS locationId FROM mwnf3_explore.explore_itineraries_rel_locations`
+      `SELECT itineraries_id, location_id AS locationId
+       FROM mwnf3_explore.explore_itineraries_rel_locations
+       ORDER BY itineraries_id, lang_id <> 'en', ln_order, location_id`
     );
     const locationsByItinerary = new Map<number, number[]>();
     for (const l of locations) {
       const list = locationsByItinerary.get(l.itineraries_id) ?? [];
-      list.push(l.locationId);
+      if (!list.includes(l.locationId)) list.push(l.locationId);
       locationsByItinerary.set(l.itineraries_id, list);
     }
 

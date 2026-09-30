@@ -86,16 +86,26 @@ interface LegacyItinerary {
  *   kinds 1–3 are routes a location links to, served only from there.
  * - `order`: `itinorder`, the order among its siblings.
  * - `location_home_link`: 'Y' where legacy shows the route on its location's home.
+ * - `countries`: the itinerary's own `country` list, the country legacy's API
+ *   names a thematic itinerary by (a sub-itinerary names its countries in
+ *   `explore_itineraries_rel_country` instead).
  */
-export function itineraryExtra(legacy: Pick<LegacyItinerary, 'type' | 'itinorder' | 'location_home_link'>): {
+export function itineraryExtra(
+  legacy: Pick<LegacyItinerary, 'type' | 'itinorder' | 'location_home_link' | 'country'>
+): {
   type: string | null;
   order: number | null;
   location_home_link: string | null;
+  countries: string[];
 } {
   return {
     type: legacy.type ?? null,
     order: legacy.itinorder ?? null,
     location_home_link: legacy.location_home_link ?? null,
+    countries: (legacy.country ?? '')
+      .split(',')
+      .map((code) => code.trim())
+      .filter(Boolean),
   };
 }
 

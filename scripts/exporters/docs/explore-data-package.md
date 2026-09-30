@@ -91,10 +91,11 @@ there.
 | the root | `explore_home` | the home banners and the featured partnerships ([Site records](explore-legacy-analysis.md#site-records)) |
 | the root | `explore_travel` | the travel layer: books, tours, accommodations and their categories, guided visits, useful websites |
 | a location | `historical_background` | the keys (`backward_compatibility`) of the Travels locations whose introduction it shows, in order ([Historical background](explore-legacy-analysis.md#historical-background)); each ships after the tree |
-| an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link` |
+| an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link`, and `countries`: its own `country` list, by which legacy names a thematic itinerary's country (G17, #2171) |
 | a location's membership | `explore_monument_ids` | the Explore monument ids the member stands for |
 | a location's membership | `explore_geo` | each of those monuments' position, by id: `{ latitude, longitude, map_zoom }` (G12, #2161). The member's own `latitude`/`longitude` are its own database's, when it has any: a map reads this |
 | an itinerary's membership | `mn_order`, `desc_types`, `explore_mn_desc`, `tr_mn_desc`, `vm_mn_desc` | the monument's place and texts in the itinerary |
+| an itinerary's membership | `explore_monument_id`, `location_id` | the Explore monument the member (its Travels record) stands for, and the location legacy files it under in the itinerary (G17, #2171) |
 
 A country, a territory and a location carry their position in `latitude`,
 `longitude` and `map_zoom`: where legacy centres their map (a country's since
@@ -107,7 +108,8 @@ location's first monument instead.
 The translations (`translations/collections.<lang>.json`) carry the title and
 description and their `extra`: a location's `how_to_reach`, `info`, `contact`,
 `prepared_by`; a Travels location's `author`, `about` and `prepared_by`; a
-theme's `country_ids` and `country_texts`; an itinerary's `location_ids`,
+theme's `country_ids` and `country_texts`; an itinerary's `location_ids` (in
+legacy's order, G17, #2171),
 `country_ids`, `territory_ids`, `duration`, `local_team`, `author`,
 `introd_type`, `et_title`, `et_introduction` (G11, #2160).
 

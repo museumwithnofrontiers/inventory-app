@@ -277,6 +277,16 @@ blocks the exporter (story E.2):
   titles and descriptions no legacy source has. Now dictionary or nothing: the
   root is titled by the dictionary word `explore_mwnf` and has no description;
   the sections have no translation, their texts being the site's labels.
+- **G17** (#2171), found in E.5: a sub-itinerary's locations and monuments. Legacy
+  lists its locations by `explore_itineraries_rel_locations.ln_order` (the
+  English rows) and files each monument under a location
+  (`explore_itineraries_rel_monuments.location_id`); `location_ids` came in
+  id order, and the itinerary membership, the monument's Travels record, did
+  not say which Explore monument or location it stands for; a thematic
+  itinerary's own country (`explore_itineraries.country`, which legacy's API
+  names it by) was not carried. Now `location_ids` keeps legacy's order, the
+  membership keeps `explore_monument_id` and `location_id`, and the itinerary
+  keeps `explore_itinerary.countries`.
 - **G16** (#2168), found in E.5: the countries' positions. Legacy centres a
   country's map on `countries.geoCoordinates` at its `zoom`; the country step
   wrote none. Now it carries them, on a country already imported too.
