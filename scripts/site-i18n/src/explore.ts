@@ -46,6 +46,11 @@ export const EXPLORE_HOME_WORDS: Record<string, string> = {
  * is the one the old PHP site prints on the same element.
  */
 export const EXPLORE_LABEL_WORDS: Record<string, string> = {
+  // The site's name, heading its pages (allcountry.php, country.php), and the
+  // organisation its footer credits, "© <mwnf>, 2004–<year>" (include.php):
+  // one word for both the organisation and the copyright holder.
+  explore_mwnf: 'identity.title',
+  mwnf: 'identity.organisation',
   // The selection's placeholders: index.php's country select, right.php's
   // territory select, location list and monument select.
   sel_country: 'select.pickCountry',
