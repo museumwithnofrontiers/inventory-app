@@ -40,6 +40,12 @@ describe('booksId', () => {
     expect(booksId('')).toBeNull();
     expect(booksId(null)).toBeNull();
   });
+
+  it('reads the older form first, as legacy does', () => {
+    expect(
+      booksId('https://books.museumwnf.org/books_detail.php?booklngid=2;en&back=book/9/')
+    ).toBe(2);
+  });
 });
 
 describe('bookCover', () => {
@@ -50,7 +56,7 @@ describe('bookCover', () => {
     path: `books/1/${lang_id}/31/${booktype}/${image_number}.jpg`,
   });
 
-  it("takes the printed book's highest cover, the English one on a tie", () => {
+  it("takes the English paperback's highest cover", () => {
     // Books 8: legacy shows books/8/en/31/book/2.jpg.
     expect(
       bookCover([
@@ -64,7 +70,13 @@ describe('bookCover', () => {
     ).toBe('books/1/en/31/book/2.jpg');
   });
 
-  it('prefers the printed book to a higher eBook cover, whatever the language', () => {
+  it('prefers the English paperback to a higher cover in another language', () => {
+    expect(bookCover([cover('de', 'book', 3), cover('en', 'book', 1)])).toBe(
+      'books/1/en/31/book/1.jpg'
+    );
+  });
+
+  it('prefers any paperback to a higher eBook cover, whatever the language', () => {
     // Books 17 shows its printed cover 1, Books 2 its Portuguese cover 3.
     expect(bookCover([cover('it', 'book', 1), cover('it', 'ebook', 2)])).toBe(
       'books/1/it/31/book/1.jpg'
@@ -329,13 +341,14 @@ describe('ExploreTravelImporter', () => {
     expect(travel.books).toEqual([
       {
         id: 10,
-        image: 'books/4/en/31/book/2.jpg',
         scope: { themes: [1], countries: ['jo'], locations: [10, 16] },
+        // The Spanish row has no link, so legacy shows it no cover.
         texts: {
           eng: {
             title: 'The Umayyads',
             intro: 'Jordan, a MWNF Travel Book',
             read_more: 'https://books.museumwnf.org/book/4/en',
+            cover: 'books/4/en/31/book/2.jpg',
           },
           spa: { title: 'The Umayyads', intro: 'Jordania' },
         },
