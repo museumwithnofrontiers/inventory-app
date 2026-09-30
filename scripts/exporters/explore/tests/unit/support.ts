@@ -17,6 +17,7 @@ export function scopeWith(overrides: Partial<ExploreScope> = {}): ExploreScope {
     collectionIds: ['root'],
     itemIds: [],
     projectIds: [],
+    museumKeys: [],
     contextIds: ['explore-context'],
     ...overrides,
   }

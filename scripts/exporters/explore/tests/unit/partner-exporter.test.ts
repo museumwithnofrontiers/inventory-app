@@ -110,6 +110,38 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(itemCountQuery?.sql).toContain('WHERE id IN')
   })
 
+  // G19: a monument legacy shows as a museum names it on its membership; the
+  // museum ships for its texts and pictures, holding a shipped item or not.
+  it('ships the museums the monuments are, by key, next to the holders of shipped items', async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 'A')],
+      translations: [translationRow('partner-a')],
+    })
+    await new PartnerExporter(
+      contextWith(
+        db,
+        outputDir,
+        scopeWith({ itemIds: ['item-1'], museumKeys: ['mwnf3:museums:Mus01:qa'] })
+      )
+    ).export()
+
+    const partnerQuery = queries.find(q => q.sql.includes('FROM partners p'))
+    expect(partnerQuery?.sql).toContain('SELECT partner_id FROM items WHERE id IN (?)')
+    expect(partnerQuery?.sql).toContain('OR p.backward_compatibility IN (?)')
+    expect(partnerQuery?.params).toEqual(['item-1', 'mwnf3:museums:Mus01:qa'])
+  })
+
+  it('reads the museums alone when no item is shipped', async () => {
+    const db = stubDb({ partners: [], translations: [] })
+    await new PartnerExporter(
+      contextWith(db, outputDir, scopeWith({ museumKeys: ['mwnf3:museums:Mus01:qa'] }))
+    ).export()
+
+    const partnerQuery = queries.find(q => q.sql.includes('FROM partners p'))
+    expect(partnerQuery?.sql).not.toContain('FROM items')
+    expect(partnerQuery?.params).toEqual(['mwnf3:museums:Mus01:qa'])
+  })
+
   it('defaults item_count to 0 for a partner holding no exported item', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A')],
@@ -201,6 +233,31 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(queries.find(q => q.sql.includes('FROM partner_translations'))?.sql).toContain(
       'contact_fax'
     )
+  })
+
+  // G19: legacy shows a museum's other name, directions and opening hours when
+  // a monument is the museum; the importer keeps them in the translation's extra.
+  it("ships a museum's other name, directions and opening hours, per language", async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 'A')],
+      translations: [
+        translationRow('partner-a', {
+          ex_name: 'Raqqada Museum',
+          how_to_reach: 'Bus from Kairouan',
+          opening_hours: '',
+        }),
+      ],
+    })
+    await new PartnerExporter(context(db)).export()
+
+    const en = JSON.parse(
+      readFileSync(join(outputDir, 'translations', 'partners.en.json'), 'utf-8')
+    ) as Record<string, Record<string, string>>
+    expect(en['partner-a']).toMatchObject({
+      also_known_as: 'Raqqada Museum',
+      how_to_reach: 'Bus from Kairouan',
+    })
+    expect(en['partner-a']).not.toHaveProperty('opening_hours')
   })
 
   it('lists the contact persons in legacy order, leaving out the missing ones', async () => {

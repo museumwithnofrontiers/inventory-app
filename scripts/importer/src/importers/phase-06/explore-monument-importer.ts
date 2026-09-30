@@ -17,7 +17,8 @@
  * - geoCoordinates → latitude, longitude
  * - zoom → map_zoom
  * - locationId → collection link (via collection_item pivot), which keeps the
- *   monument's id and position whichever record it resolves to (writeLocationLink)
+ *   monument's id, position and museums whichever record it resolves to
+ *   (writeLocationLink)
  * - locations.countryId → country_id (natively created monuments only — the
  *   `referenced` and `resolvedCandidates` paths reuse an existing BAR/Travels/
  *   Sharing-History item whose country is authoritative, #1593)
@@ -35,12 +36,14 @@ import {
   type ExploreLegacyMonument,
   type ExploreMonumentNameTranslation,
 } from '../../domain/transformers/explore-monument-transformer.js';
+import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { ExploreMonumentResolver } from './explore-monument-resolver.js';
 
 export class ExploreMonumentImporter extends BaseImporter {
   private exploreContextId: string | null = null;
   private locationCollectionCache: Map<number, string | null> = new Map();
   private monumentResolver!: ExploreMonumentResolver;
+  private museumsByMonument: Map<number, string[]> = new Map();
 
   getName(): string {
     return 'ExploreMonumentImporter';
@@ -115,6 +118,8 @@ export class ExploreMonumentImporter extends BaseImporter {
           },
         ]);
       }
+
+      this.museumsByMonument = await this.loadMuseums();
 
       this.logInfo(`Found ${monuments.length} monuments to import`);
 
@@ -254,7 +259,9 @@ export class ExploreMonumentImporter extends BaseImporter {
    * Links an item into its Explore location, keeping on the membership what
    * legacy knows of the Explore monument it stands for:
    * - `extra.explore_monument_ids`: its id;
-   * - `extra.explore_geo`: its position, by id — `{ latitude, longitude, map_zoom }`.
+   * - `extra.explore_geo`: its position, by id — `{ latitude, longitude, map_zoom }`;
+   * - `extra.explore_museums`: the museums it is, by id — their partner keys,
+   *   in legacy's order (G19).
    *
    * Most Explore monuments resolve onto an existing record of another
    * database, whose own key and position say nothing of Explore, so the
@@ -292,11 +299,25 @@ export class ExploreMonumentImporter extends BaseImporter {
       )
     );
 
-    const { explore_geo: _previous, ...rest } = current;
+    // This monument's museums are legacy's current ones, or none.
+    const knownMuseums =
+      current['explore_museums'] !== null && typeof current['explore_museums'] === 'object'
+        ? (current['explore_museums'] as Record<string, unknown>)
+        : {};
+    const ownMuseums = this.museumsByMonument.get(legacy.monumentId) ?? [];
+    const museums = Object.fromEntries(
+      Object.entries({
+        ...knownMuseums,
+        [String(legacy.monumentId)]: ownMuseums.length > 0 ? ownMuseums : null,
+      }).filter(([, value]) => value !== null)
+    );
+
+    const { explore_geo: _previous, explore_museums: _previousMuseums, ...rest } = current;
     const extra: Record<string, unknown> = {
       ...rest,
       explore_monument_ids: ids,
       ...(Object.keys(geo).length > 0 ? { explore_geo: geo } : {}),
+      ...(Object.keys(museums).length > 0 ? { explore_museums: museums } : {}),
     };
 
     await this.context.strategy.writeCollectionItem({
@@ -305,6 +326,42 @@ export class ExploreMonumentImporter extends BaseImporter {
       display_order: null,
       extra,
     });
+  }
+
+  /**
+   * The museums each Explore monument is (`exploremonument_museums`), as the
+   * keys of their partners, in the order legacy's API picks them: ISL, then
+   * BAR, then DGA (MonumentResource.php). Legacy shows a monument's first
+   * museum as its record when Explore has no description of its own. A museum
+   * the import doesn't have as a partner is left out, with a warning.
+   */
+  private async loadMuseums(): Promise<Map<number, string[]>> {
+    const rows = await this.context.legacyDb.query<{
+      monumentId: number;
+      museum_id: string;
+      country: string;
+    }>(
+      `SELECT monumentId, museum_id, country
+       FROM mwnf3_explore.exploremonument_museums
+       ORDER BY monumentId, FIELD(project_id, 'ISL', 'BAR', 'DGA'), museum_id, country`
+    );
+    const museums = new Map<number, string[]>();
+    for (const row of rows) {
+      const key = formatBackwardCompatibility({
+        schema: 'mwnf3',
+        table: 'museums',
+        pkValues: [row.museum_id, row.country],
+      });
+      const keys = museums.get(row.monumentId) ?? [];
+      if (keys.includes(key)) continue;
+      if (!(await this.getEntityUuidAsync(key, 'partner'))) {
+        this.logWarning(`Explore monument ${row.monumentId}: museum ${key} is not imported as a partner`);
+        continue;
+      }
+      keys.push(key);
+      museums.set(row.monumentId, keys);
+    }
+    return museums;
   }
 
   /**

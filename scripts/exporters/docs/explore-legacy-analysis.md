@@ -298,3 +298,24 @@ blocks the exporter (story E.2):
   and the name from Explore's own rows, so it serves "Murales" as Explore's
   own. Now only a monument created natively needs a name, and a reference
   counts only when legacy has the record it names.
+- **G19** (#2177), found comparing with legacy in E.6: the museums. 47 monuments are
+  museums (`exploremonument_museums`, 48 ISL and BAR museums), and legacy's
+  API shows the museum's texts and pictures as the monument's record. The
+  import didn't read the link. Now the location membership keeps the museums
+  by monument id (`explore_museums`, the partners' keys, in legacy's order,
+  Pascal 2026-09-30), and the museums ship as partners.
+
+**Legacy's record for a monument** (`MonumentResource.php`, the API the live
+site reads). A monument can stand for several records; legacy shows one as
+the monument and the others as related content. It takes the first of:
+
+1. Explore's own row, when its first text row has a description ("Explore");
+2. the monument's first museum, ISL before BAR before DGA ("Virtual Museum");
+3. its first Travels record by title ("Exhibition Trails");
+4. its first Virtual Museum record by name ("Virtual Museum");
+5. its first Sharing History record by title, also labelled "Virtual Museum";
+6. Explore's own row, without a description.
+
+The related content is then the records not shown as the monument: one
+museum at most, every other Travels, Virtual Museum and Sharing History
+record, and the Virtual Museum records' special features.

@@ -13,6 +13,7 @@ describe('ExploreMonumentImporter', () => {
   let queryMock: ReturnType<typeof vi.fn>;
   let writeItemMock: ReturnType<typeof vi.fn>;
   let writeCollectionItemMock: ReturnType<typeof vi.fn>;
+  let museumRows: Array<{ monumentId: number; museum_id: string; country: string }>;
 
   const logger: ILogger = {
     info: vi.fn(),
@@ -34,8 +35,13 @@ describe('ExploreMonumentImporter', () => {
     tracker.set('mwnf3_explore:location:2', 'location-collection-uuid', 'collection');
     tracker.set('mwnf3:monuments:IAM:eg:Mus01:5', 'canonical-item-uuid', 'item');
     tracker.setMetadata('default_language_id', 'eng');
+    museumRows = [];
 
     queryMock = vi.fn(async (sql: string) => {
+      if (sql.includes('FROM mwnf3_explore.exploremonument_museums')) {
+        return museumRows;
+      }
+
       if (sql.includes('FROM mwnf3_explore.exploremonument_vm')) {
         return [
           {
@@ -219,6 +225,55 @@ describe('ExploreMonumentImporter', () => {
     );
   });
 
+  // Legacy shows a monument that is a museum by the museum's own texts and
+  // pictures: the membership keeps which museums, as their partner keys, in
+  // the order legacy's query gives them.
+  it('keeps the museums the monument is, by partner key, leaving out one not imported', async () => {
+    tracker.set('mwnf3:museums:Mus01_A:pt', 'isl-museum-uuid', 'partner');
+    tracker.set('mwnf3:museums:Mus13:pt', 'bar-museum-uuid', 'partner');
+    museumRows = [
+      { monumentId: 123, museum_id: 'Mus01_A', country: 'pt' },
+      { monumentId: 123, museum_id: 'Mus13', country: 'pt' },
+      { monumentId: 123, museum_id: 'Mus99', country: 'pt' },
+    ];
+    vi.mocked(strategy.getCollectionItemExtra).mockResolvedValue({
+      explore_monument_ids: [456],
+      explore_museums: { '456': ['mwnf3:museums:Mus02:pt'] },
+    });
+
+    await new ExploreMonumentImporter(context).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledWith({
+      collection_id: 'location-collection-uuid',
+      item_id: 'canonical-item-uuid',
+      display_order: null,
+      extra: {
+        explore_monument_ids: [123, 456],
+        explore_museums: {
+          '123': ['mwnf3:museums:Mus01_A:pt', 'mwnf3:museums:Mus13:pt'],
+          '456': ['mwnf3:museums:Mus02:pt'],
+        },
+      },
+    });
+    const museumQuery = queryMock.mock.calls
+      .map(([sql]) => String(sql))
+      .find((sql) => sql.includes('FROM mwnf3_explore.exploremonument_museums'));
+    expect(museumQuery).toContain("FIELD(project_id, 'ISL', 'BAR', 'DGA')");
+  });
+
+  it('drops the museums legacy no longer has', async () => {
+    vi.mocked(strategy.getCollectionItemExtra).mockResolvedValue({
+      explore_monument_ids: [123],
+      explore_museums: { '123': ['mwnf3:museums:Mus01_A:pt'] },
+    });
+
+    await new ExploreMonumentImporter(context).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({ extra: { explore_monument_ids: [123] } })
+    );
+  });
+
   /**
    * The dedup guard for #1593. A referenced monument reuses an existing
    * BAR/Travels/Sharing-History item whose `country_id` is authoritative —
@@ -238,6 +293,7 @@ describe('ExploreMonumentImporter', () => {
   // Monument 777 matches no cross-reference table → native creation path.
   const nativeMonumentQuery = async (sql: string) => {
     if (
+      sql.includes('FROM mwnf3_explore.exploremonument_museums') ||
       sql.includes('FROM mwnf3_explore.exploremonument_vm') ||
       sql.includes('FROM mwnf3_explore.exploremonument_tr') ||
       sql.includes('FROM mwnf3_explore.exploremonument_sh')
@@ -342,6 +398,7 @@ describe('ExploreMonumentImporter', () => {
     tracker.set('mwnf3_travels:monument:IAM:pt:1:I:1:c', 'travels-candidate-uuid', 'item');
 
     queryMock = vi.fn(async (sql: string) => {
+      if (sql.includes('FROM mwnf3_explore.exploremonument_museums')) return [];
       if (sql.includes('FROM mwnf3_explore.exploremonument_vm')) {
         return [
           {
