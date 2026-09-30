@@ -175,17 +175,17 @@ Against the live API, per the analysis doc's parity map:
 | Locations | 649 | 649 |
 | Itineraries | 12 | 12 |
 | Sub-itineraries | 114 (109 exhibition trails, 5 location routes) | 114 |
-| Monument ids on location memberships | 1,691 | 1,693 |
-| Monument positions on location memberships | 1,679 | 1,681 |
+| Monument ids on location memberships | 1,693 | 1,693 |
+| Monument positions on location memberships | 1,681 | 1,681 |
 | Itinerary pictures | 12 | 12 |
 
-The two monuments missing are legacy's data defects (1682 has no name, 1801
-points at a record never imported), left for the comparison story (E.6).
-Twelve monuments have no position in legacy either.
+Twelve monuments have no position in legacy either. The comparison story
+(E.6) checked every record legacy serves by its key, and each location's
+monument list (G18 brought the last two monuments).
 
 In all, 962 collections (the tree's 826, and 136 Travels locations for the
-historical backgrounds) and 3,191 items: 1,982 monuments, their 878 details
-and 331 linked objects. Also 82 partners and 379 glossary entries.
+historical backgrounds) and 3,192 items: 1,983 monuments, their 878 details
+and 331 linked objects. Also 82 partners and 404 glossary entries.
 
 ## Verification
 

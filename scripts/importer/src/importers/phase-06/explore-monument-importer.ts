@@ -140,18 +140,6 @@ export class ExploreMonumentImporter extends BaseImporter {
             continue;
           }
 
-          const translations = translationsByMonumentId.get(legacy.monumentId);
-          if (!translations) {
-            throw new Error(
-              `Explore monument ${backwardCompat} missing translation rows required for internal_name selection`
-            );
-          }
-
-          const transformed = transformExploreMonument(legacy, translations, defaultLanguageId);
-          for (const w of transformed.warnings) {
-            this.logWarning(w);
-          }
-
           // Collect sample
           this.collectSample(
             'explore_monument',
@@ -159,10 +147,14 @@ export class ExploreMonumentImporter extends BaseImporter {
             'success'
           );
 
-          const collectionId = transformed.locationId
-            ? await this.getLocationCollectionId(transformed.locationId)
+          const collectionId = legacy.locationId
+            ? await this.getLocationCollectionId(legacy.locationId)
             : null;
 
+          // A monument that resolves onto another record takes that record's
+          // name: legacy lists one with no name rows of its own (1682) under
+          // its Sharing History record's pictures. Only a monument created
+          // here needs a name of its own (below).
           if (resolution.mode === 'resolvedCandidates') {
             this.logInfo(
               resolution.message ??
@@ -198,6 +190,18 @@ export class ExploreMonumentImporter extends BaseImporter {
             result.imported++;
             this.showProgress();
             continue;
+          }
+
+          const translations = translationsByMonumentId.get(legacy.monumentId);
+          if (!translations) {
+            throw new Error(
+              `Explore monument ${backwardCompat} missing translation rows required for internal_name selection`
+            );
+          }
+
+          const transformed = transformExploreMonument(legacy, translations, defaultLanguageId);
+          for (const w of transformed.warnings) {
+            this.logWarning(w);
           }
 
           if (this.isDryRun || this.isSampleOnlyMode) {

@@ -157,6 +157,26 @@ describe('ExploreMonumentResolver', () => {
             REF_monuments_institution_id: 'Mus01',
             REF_monuments_number: 8,
             REF_monuments_lang: 'en',
+            REF_tr_monuments_exists: 0,
+            REF_monuments_exists: 1,
+          },
+          {
+            // A direct reference to a record legacy doesn't have.
+            monumentId: 800,
+            REF_tr_monuments_project_id: null,
+            REF_tr_monuments_country: null,
+            REF_tr_monuments_itinerary_id: null,
+            REF_tr_monuments_location_id: null,
+            REF_tr_monuments_number: null,
+            REF_tr_monuments_lang: null,
+            REF_tr_monuments_trail_id: null,
+            REF_monuments_project_id: 'EXHCOLOUR',
+            REF_monuments_country: 'at',
+            REF_monuments_institution_id: 'Mon11',
+            REF_monuments_number: 2,
+            REF_monuments_lang: 'en',
+            REF_tr_monuments_exists: 0,
+            REF_monuments_exists: 0,
           },
         ];
       }
@@ -228,6 +248,29 @@ describe('ExploreMonumentResolver', () => {
       itemBackwardCompatibility: 'mwnf3:monuments:IAM:eg:Mus01:8',
       itemId: 'vm-direct-item-uuid',
     });
+  });
+
+  it("serves a monument as Explore's own when its reference names a record legacy doesn't have", async () => {
+    tracker.set('mwnf3_explore:monument:800', 'native-800-uuid', 'item');
+    const resolver = new ExploreMonumentResolver({
+      legacyDb,
+      tracker,
+      getEntityUuid: async (backwardCompatibility, entityType) =>
+        tracker.getUuid(backwardCompatibility, entityType),
+    });
+
+    await expect(resolver.resolve(800)).resolves.toMatchObject({
+      mode: 'native',
+      itemBackwardCompatibility: 'mwnf3_explore:monument:800',
+      itemId: 'native-800-uuid',
+    });
+    // The link tables are read the same way: only rows whose record legacy has.
+    for (const table of ['exploremonument_vm', 'exploremonument_tr', 'exploremonument_sh']) {
+      const sql = queryMock.mock.calls
+        .map(([statement]) => String(statement))
+        .find((statement) => statement.includes(`FROM mwnf3_explore.${table}`));
+      expect(sql).toContain('WHERE EXISTS');
+    }
   });
 
   it('reports missing targets explicitly when reference rows do not resolve to a source item', async () => {
