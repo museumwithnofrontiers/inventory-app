@@ -83,7 +83,7 @@ pages (see [Site records](#site-records)):
 
 | Block | Legacy table | Also from |
 |---|---|---|
-| `mwnfTravelBook` | `featured_books_explore` | — |
+| `mwnfTravelBook` | `featured_books_explore` | the book's cover (`books_pictures` in `mwnf3`) |
 | `mwnfTour` | `featured_tours_explore` | the tour's picture (`tr_images`) and places (`travels_countries`, `travels_clocations_texts`) in `mwnf3_travels` |
 | `accommodations` | `accommodation_hotels`, `_langs` | the categories (`accommodation_types`) |
 | `guidedVisits` | `guided_visits_contacts`, `_langs` | — |
@@ -96,10 +96,25 @@ The other tables are not served. The older link tables
 empty. `eating…`, `excursions…`, `accommodation` and the guided-visit
 introductions (`guided_visits`) appear in no response.
 
-A Travel Book's cover is the one field not carried. Legacy's API picks one
-among the Books database's covers, and no rule in the data explains the pick:
-neither the language, the edition, the date nor the image number. The book
-keeps its link to the Books site.
+A Travel Book's cover (G20, #2179) comes from the Books database. A featured
+book's id is Explore's own, so the book is the one its `read_more` link names
+(`books.museumwnf.org/book/{id}/{lang}`, or the older
+`books_detail.php?booklngid={id};{lang}`). Legacy shows one of that book's
+`books_pictures` rows of `type = 'cover'`, at the media server's `small` size:
+
+1. the printed book's (`booktype = 'book'`), else the eBook's; a `digp` cover
+   is never shown;
+2. of those, the highest `image_number`;
+3. on a tie, the English one.
+
+Read from the data, not from the API's code: it gives the cover the live API
+showed for every one of the 42 crawled records (18 books). Books 17 shows its
+printed cover 1 over its eBook's 2, and Books 2 its Portuguese printed cover
+3. Books 41 and 40 have no printed cover and show an eBook's. Books 8 shows its
+English cover 2 over the German one. Two details stay open, and neither
+changes a book the site shows: whether a tie goes to English or to the link's
+language, and whether `digp` is left out or only ranked last. The 7 other
+featured books have neither a link nor a scope, and legacy shows them nowhere.
 
 Books and Travels as products were ruled out of the migration on 2026-09-14
 ("Travels, LAS, Books, Virtual Office OUT"). The travel layer is their
@@ -128,7 +143,8 @@ roots. Its `extra` holds every record once, with its scope:
   whether the home page shows it (`home`), its `scope`, and per language a
   title, a name and a link.
 - `explore_travel` (G4, #2130): the travel layer's records, the same way:
-  `books`, `tours` (with the tour's picture and, per language, its subtitle),
+  `books` (with the book's cover, G20), `tours` (with the tour's picture and,
+  per language, its subtitle),
   `accommodations` (with their `category`, named in `accommodation_categories`),
   `guided_visits` and `useful_websites`. Each has its legacy id, its order
   where legacy has one, its scope, and per language the fields legacy fills.
@@ -304,6 +320,9 @@ blocks the exporter (story E.2):
   import didn't read the link. Now the location membership keeps the museums
   by monument id (`explore_museums`, the partners' keys, in legacy's order,
   Pascal 2026-09-30), and the museums ship as partners.
+- **G20** (#2179), after M11 (Pascal 2026-09-30): the Travel Book covers.
+  Legacy's pick follows a rule after all, read from `books_pictures` (see
+  the travel layer above). The travel step now keeps each book's cover.
 
 **Legacy's record for a monument** (`MonumentResource.php`, the API the live
 site reads). A monument can stand for several records; legacy shows one as
@@ -313,9 +332,13 @@ the monument and the others as related content. It takes the first of:
 2. the monument's first museum, ISL before BAR before DGA ("Virtual Museum");
 3. its first Travels record by title ("Exhibition Trails");
 4. its first Virtual Museum record by name ("Virtual Museum");
-5. its first Sharing History record by title, also labelled "Virtual Museum";
+5. its first Sharing History record, also labelled "Virtual Museum" (its sort
+   by title reads a field that model lacks, so the records keep their numbers'
+   order);
 6. Explore's own row, without a description.
 
 The related content is then the records not shown as the monument: one
 museum at most, every other Travels, Virtual Museum and Sharing History
-record, and the Virtual Museum records' special features.
+record, and the Virtual Museum records' special features. There legacy
+labels a Sharing History record "Sharing History", a word its dictionary
+lacks, so the site names it by its project alone.
