@@ -523,6 +523,113 @@ class PictureControllerTest extends TestCase
         $response->assertStatus(400);
     }
 
+    // ── Throttle: burns and errors count, cache hits don't ───────────────────
+
+    private function limitTo(int $perMinute): void
+    {
+        config(['app.pub_pictures_throttle' => $perMinute]);
+    }
+
+    /**
+     * A page full of pictures is made of 304s and cache hits: none of them
+     * may use up the budget (#2158, where a partner list lost its logos).
+     */
+    public function test_cache_hits_and_304s_do_not_count_against_the_limit(): void
+    {
+        $this->limitTo(2);
+        $filename = $this->uuidJpgFilename();
+        $this->makeItemImage($filename, 'Original Owner');
+        $etag = $this->get(route('pub.picture', ['filename' => $filename]))->assertOk()->headers->get('ETag');
+
+        foreach (range(1, 5) as $ignored) {
+            $this->get(route('pub.picture', ['filename' => $filename]))->assertOk();
+            $last = $this->get(route('pub.picture', ['filename' => $filename]), ['If-None-Match' => $etag]);
+            $last->assertStatus(304);
+        }
+
+        // Only the burn was counted
+        $last->assertHeader('X-RateLimit-Remaining', '1');
+    }
+
+    public function test_a_partner_logo_never_counts_against_the_limit(): void
+    {
+        $this->limitTo(1);
+        $filename = $this->uuidJpgFilename();
+        $this->makeRegisteredImage(PartnerLogo::class, $filename);
+
+        foreach (range(1, 5) as $ignored) {
+            $last = $this->get(route('pub.picture', ['filename' => $filename]))->assertOk();
+        }
+
+        $last->assertHeader('X-RateLimit-Remaining', '1');
+    }
+
+    public function test_each_burn_counts_against_the_limit(): void
+    {
+        $this->limitTo(2);
+        $filenames = [$this->uuidJpgFilename(), $this->uuidJpgFilename(), $this->uuidJpgFilename()];
+        foreach ($filenames as $filename) {
+            $this->makeItemImage($filename, 'Original Owner');
+        }
+
+        $this->get(route('pub.picture', ['filename' => $filenames[0]]))->assertOk();
+        $this->get(route('pub.picture', ['filename' => $filenames[1]]))->assertOk();
+        $this->get(route('pub.picture', ['filename' => $filenames[2]]))->assertStatus(429);
+    }
+
+    public function test_each_error_counts_against_the_limit(): void
+    {
+        $this->limitTo(2);
+
+        $this->get('/pub/00000000-0000-0000-0000-000000000001.jpg')->assertNotFound();
+        $this->get('/pub/00000000-0000-0000-0000-000000000002.jpg')->assertNotFound();
+        $this->get('/pub/00000000-0000-0000-0000-000000000003.jpg')->assertStatus(429);
+    }
+
+    /**
+     * The trade-off of counting after the response: the check comes before
+     * it, so an address that has used its budget waits for the minute to end
+     * whatever it asks for.
+     */
+    public function test_once_the_limit_is_reached_even_a_cache_hit_waits(): void
+    {
+        $this->limitTo(1);
+        $filename = $this->uuidJpgFilename();
+        $this->makeItemImage($filename, 'Original Owner');
+
+        $this->get(route('pub.picture', ['filename' => $filename]))->assertOk();
+
+        $this->get(route('pub.picture', ['filename' => $filename]))->assertStatus(429);
+    }
+
+    // ── Stateless: no session, no cookie ──────────────────────────────────────
+
+    /**
+     * Pictures are loaded from other sites, which send no cookie with them:
+     * a session would be a new one per picture, and a cookie on a response
+     * marked public is one a shared cache could hand to someone else.
+     */
+    public function test_no_response_starts_a_session_or_sets_a_cookie(): void
+    {
+        $filename = $this->uuidJpgFilename();
+        $this->makeItemImage($filename, 'Original Owner');
+        $logo = $this->uuidJpgFilename();
+        $this->makeRegisteredImage(PartnerLogo::class, $logo);
+
+        $burned = $this->get(route('pub.picture', ['filename' => $filename]))->assertOk();
+        $responses = [
+            'burned' => $burned,
+            'cache hit' => $this->get(route('pub.picture', ['filename' => $filename]))->assertOk(),
+            '304' => $this->get(route('pub.picture', ['filename' => $filename]), ['If-None-Match' => $burned->headers->get('ETag')])->assertStatus(304),
+            'partner logo' => $this->get(route('pub.picture', ['filename' => $logo]))->assertOk(),
+            '404' => $this->get('/pub/00000000-0000-0000-0000-000000000000.jpg')->assertNotFound(),
+        ];
+
+        foreach ($responses as $kind => $response) {
+            $this->assertSame([], $response->headers->getCookies(), "A {$kind} response sets no cookie");
+        }
+    }
+
     // ── Formats and filenames the route accepts ──────────────────────────────
 
     /**

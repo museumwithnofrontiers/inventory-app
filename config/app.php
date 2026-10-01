@@ -172,6 +172,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public Picture Throttle
+    |--------------------------------------------------------------------------
+    |
+    | How many burns and errors one IP address may cause per minute on
+    | /pub/{filename}, the public picture URL the data packages link to. A 304
+    | or a picture served from the cache doesn't count.
+    |
+    */
+
+    'pub_pictures_throttle' => (int) env('PUB_PICTURES_THROTTLE', 60),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Version
     |--------------------------------------------------------------------------
     |

@@ -127,7 +127,7 @@ class PublicRenditions
         }
 
         // The bytes are right either way
-        return new PublicRendition($burned, $etag);
+        return new PublicRendition($burned, $etag, burned: true);
     }
 
     /**

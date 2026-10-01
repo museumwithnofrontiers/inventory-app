@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\Permission;
-use App\Http\Controllers\Pub\PictureController;
 use App\Http\Controllers\RoleManagementController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\UserManagementController;
@@ -229,19 +228,8 @@ Route::prefix('web')->group(function () {
 // Note: Registration routes are handled by Fortify with self_registration middleware
 // See app/Providers/FortifyServiceProvider.php for middleware configuration
 
-// Public picture viewer — no authentication, rate-limited
-// Serves any attached image by its bare stored filename: a UUID for synced
-// legacy images, a ULID (admin uploads) or a 40-character hash name (API
-// uploads), in any raster format the image pipeline produces. The extension
-// keeps the case the upload came with; anything else is a 404.
-Route::middleware(['throttle:pub-pictures'])
-    ->prefix('pub')
-    ->name('pub.')
-    ->group(function () {
-        Route::get('/{filename}', [PictureController::class, 'show'])
-            ->where('filename', '[0-9A-Za-z-]+\.(?:[jJ][pP][eE]?[gG]|[pP][nN][gG]|[gG][iI][fF]|[wW][eE][bB][pP])')
-            ->name('picture');
-    });
+// The public picture URL, /pub/{filename}, is in routes/pub.php: outside the
+// web middleware group, it starts no session and sets no cookie
 
 // Expose our OpenApi/Swagger documentation as JSON with caching
 Route::get('/api.json', function (Generator $generator) {
