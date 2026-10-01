@@ -172,6 +172,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Public Picture Throttle
+    |--------------------------------------------------------------------------
+    |
+    | How many requests one IP address may make to /pub/{filename}, the public
+    | picture URL the data packages link to, per minute.
+    |
+    */
+
+    'pub_pictures_throttle' => (int) env('PUB_PICTURES_THROTTLE', 60),
+
+    /*
+    |--------------------------------------------------------------------------
     | Application Version
     |--------------------------------------------------------------------------
     |

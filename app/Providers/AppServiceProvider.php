@@ -56,7 +56,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Public picture endpoint throttle — configurable via PUB_PICTURES_THROTTLE env var
         RateLimiter::for('pub-pictures', function (Request $request) {
-            return Limit::perMinute(Config::integer('app.pub_pictures_throttle', 60))
+            return Limit::perMinute(Config::integer('app.pub_pictures_throttle'))
                 ->by($request->ip());
         });
 
