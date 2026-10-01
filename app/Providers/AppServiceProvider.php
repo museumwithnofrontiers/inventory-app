@@ -6,6 +6,7 @@ use App\Events\CollectionTranslationSaved;
 use App\Events\ItemTranslationSaved;
 use App\Events\SpellingSaved;
 use App\Events\TimelineEventTranslationSaved;
+use App\Http\Controllers\Pub\PictureController;
 use App\Listeners\DispatchSyncCollectionTranslationSpellings;
 use App\Listeners\DispatchSyncItemTranslationSpellings;
 use App\Listeners\DispatchSyncSpellingToCollectionTranslations;
@@ -38,6 +39,7 @@ use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Permission\Models\Role;
+use Symfony\Component\HttpFoundation\Response;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -54,10 +56,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // Public picture endpoint throttle — configurable via PUB_PICTURES_THROTTLE env var
+        // Public picture endpoint throttle — configurable via PUB_PICTURES_THROTTLE env var.
+        // Counts the requests that cost something: a burn, or an error such as
+        // an unknown filename. A 304 or a cache hit is the cheap path a page full
+        // of pictures is made of, and costs nothing here; a partner logo is
+        // never burned, so it never counts either. Once an address has used its
+        // budget, every request it makes waits for the minute to end
         RateLimiter::for('pub-pictures', function (Request $request) {
             return Limit::perMinute(Config::integer('app.pub_pictures_throttle'))
-                ->by($request->ip());
+                ->by($request->ip())
+                ->after(fn (Response $response): bool => $response->getStatusCode() >= 400
+                    || $request->attributes->getBoolean(PictureController::BURNED));
         });
 
         // Register glossary link maintenance event listeners

@@ -22,6 +22,13 @@ class PictureController extends Controller
      */
     private const string CACHE_CONTROL = 'public, no-cache';
 
+    /**
+     * Set on a request that burned its rendition: the pub-pictures limiter
+     * counts those, and errors, but not the 304s and cache hits that make up
+     * nearly all of the traffic (see AppServiceProvider).
+     */
+    public const string BURNED = 'pub.burned';
+
     public function __construct(private readonly PublicRenditions $renditions) {}
 
     /**
@@ -65,6 +72,10 @@ class PictureController extends Controller
         }
 
         $rendition = $this->renditions->get($record);
+
+        if ($rendition?->burned) {
+            $request->attributes->set(self::BURNED, true);
+        }
 
         if ($rendition === null) {
             return response('', 503, ['Retry-After' => '5']);

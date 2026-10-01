@@ -175,8 +175,9 @@ return [
     | Public Picture Throttle
     |--------------------------------------------------------------------------
     |
-    | How many requests one IP address may make to /pub/{filename}, the public
-    | picture URL the data packages link to, per minute.
+    | How many burns and errors one IP address may cause per minute on
+    | /pub/{filename}, the public picture URL the data packages link to. A 304
+    | or a picture served from the cache doesn't count.
     |
     */
 
