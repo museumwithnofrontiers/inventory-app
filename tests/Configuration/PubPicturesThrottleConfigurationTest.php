@@ -6,9 +6,9 @@ use Tests\TestCase;
 
 class PubPicturesThrottleConfigurationTest extends TestCase
 {
-    public function test_the_throttle_defaults_to_sixty(): void
+    public function test_the_throttle_defaults_to_a_hundred(): void
     {
-        $this->assertSame(60, $this->appConfigWith(null)['pub_pictures_throttle']);
+        $this->assertSame(100, $this->appConfigWith(null)['pub_pictures_throttle']);
     }
 
     /**

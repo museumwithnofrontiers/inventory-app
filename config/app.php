@@ -181,7 +181,7 @@ return [
     |
     */
 
-    'pub_pictures_throttle' => (int) env('PUB_PICTURES_THROTTLE', 60),
+    'pub_pictures_throttle' => (int) env('PUB_PICTURES_THROTTLE', 100),
 
     /*
     |--------------------------------------------------------------------------
