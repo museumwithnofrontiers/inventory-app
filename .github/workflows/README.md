@@ -253,6 +253,7 @@ Deploys the tarball produced by `Build` to the OVH VPS over SSH, by running [`sc
 - Verifies `release.tar.gz` is present
 - Sets up the SSH key, checks TCP reachability of port 22, and verifies SSH authentication (up to 3 attempts with backoff, failing fast on an auth rejection)
 - Uploads `release.tar.gz` and `scripts/deploy.sh` to the VPS, then runs the deploy script
+- The script ends with a smoke check, over HTTPS on the server itself: `/` must redirect to `/admin` and `/admin/login` must answer 200, or the job fails
 - Cleans up the uploaded files on the VPS (`if: always()`)
 
 **Permissions**

@@ -211,6 +211,39 @@ try {
     Write-Warning "Could not restart Apache service automatically. Please restart manually."
 }
 
+# Smoke check: the admin panel is the application. `/` redirects to /admin,
+# and the panel's login page answers. Only warns: this script doesn't run the
+# migrations, and the login page needs the sessions table they create.
+function Get-HttpAnswer([string]$Url) {
+    $request = [System.Net.HttpWebRequest]::Create($Url)
+    $request.AllowAutoRedirect = $false
+    try {
+        $response = $request.GetResponse()
+    } catch [System.Net.WebException] {
+        $response = $_.Exception.Response
+    }
+    if (-not $response) {
+        return @{ Status = 0; Location = '' }
+    }
+    $answer = @{ Status = [int]$response.StatusCode; Location = [string]$response.Headers['Location'] }
+    $response.Close()
+    return $answer
+}
+
+Write-Host "Running smoke check..." -ForegroundColor Yellow
+$root = Get-HttpAnswer "http://$Domain/"
+$login = Get-HttpAnswer "http://$Domain/admin/login"
+if ($root.Status -eq 302 -and $root.Location -match '/admin$') {
+    Write-Host "/ redirects to /admin" -ForegroundColor Green
+} else {
+    Write-Warning "/ answered $($root.Status) $($root.Location) (expected a 302 to /admin)"
+}
+if ($login.Status -eq 200) {
+    Write-Host "/admin/login answers 200" -ForegroundColor Green
+} else {
+    Write-Warning "/admin/login answered $($login.Status) (expected 200 once the migrations have run)"
+}
+
 Write-Host ""
 Write-Host "Deployment completed successfully!" -ForegroundColor Green
 Write-Host "Application URL: http://$Domain" -ForegroundColor Cyan
