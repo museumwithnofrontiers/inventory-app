@@ -33,10 +33,11 @@ composer dev
 # Test API health endpoint
 curl http://localhost:8000/api/health
 
-# Test frontend
-curl http://localhost:8000
+# Test the admin panel: / redirects to /admin, then to its login
+curl -I http://localhost:8000
+curl -I http://localhost:8000/admin/login
 
-# Test Vite development server
+# Test Vite development server (the admin panel's theme)
 curl http://localhost:5173/@vite/client
 ```
 
@@ -54,20 +55,14 @@ php artisan migrate:status
 php artisan db:seed --class=CountrySeeder
 ```
 
-#### Frontend Testing
+#### Admin Panel Testing
 
 ```bash
-# Test Vue.js compilation
+# Build the panel's theme, the only front-end asset
 npm run build
 
-# Run frontend unit tests
-npm run test
-
-# Run integration tests
-npm run test:integration
-
-# Check TypeScript compilation
-npm run type-check
+# Run the panel's tests (Filament suite)
+php artisan test --testsuite=Filament
 ```
 
 ### Production Environment Testing
@@ -573,10 +568,10 @@ grep -E "GET|POST" /var/log/apache2/access.log | tail -100
 
 ### Pre-deployment Checklist
 
-- [ ] All tests pass (`php artisan test --parallel`, `npm run test`)
-- [ ] Code style is correct (`.\vendor\bin\pint`, `npm run lint`)
+- [ ] All tests pass (`php artisan test --parallel`)
+- [ ] Code style is correct (`.\vendor\bin\pint`)
 - [ ] No security vulnerabilities (`composer audit`, `npm audit`)
-- [ ] Frontend builds successfully (`npm run build`)
+- [ ] The admin panel's theme builds (`npm run build`)
 - [ ] Database migrations run without errors (`php artisan migrate`)
 - [ ] Environment configuration is correct
 - [ ] SSL certificate is valid and installed
@@ -585,7 +580,7 @@ grep -E "GET|POST" /var/log/apache2/access.log | tail -100
 
 ### Post-deployment Checklist
 
-- [ ] Application loads successfully
+- [ ] `/` redirects to `/admin`, and `/admin/login` loads (the OVH deploy checks both)
 - [ ] API endpoints respond correctly
 - [ ] Database operations work
 - [ ] File uploads function properly
@@ -615,7 +610,7 @@ grep -E "GET|POST" /var/log/apache2/access.log | tail -100
 ### Community Resources
 
 - **Laravel Documentation**: [https://laravel.com/docs](https://laravel.com/docs)
-- **Vue.js Documentation**: [https://vuejs.org/guide/](https://vuejs.org/guide/)
+- **Filament Documentation**: [https://filamentphp.com/docs/3.x](https://filamentphp.com/docs/3.x)
 - **Vite Documentation**: [https://vitejs.dev/guide/](https://vitejs.dev/guide/)
 
 ### Project-Specific Help

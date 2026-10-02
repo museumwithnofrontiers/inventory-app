@@ -6,27 +6,20 @@
     "scripts": {
         "build": "vite build",
         "dev": "vite --host 127.0.0.1",
-        "lint": "eslint . --fix",
-        "lint:check": "eslint .",
         "preview": "vite preview",
         "quality-check:report": "powershell -ExecutionPolicy Bypass -File ./scripts/Check-Issues.ps1",
-        "scan:tailwind-colors": "node ./scripts/scan-tailwind-colors.js",
         "test:yml": "node ./scripts/validate-workflows.cjs"
     },
     "dependencies": {
         "glob": "^13.0.6"
     },
     "devDependencies": {
-        "@eslint/js": "^10.0.1",
         "@tailwindcss/postcss": "^4.3.3",
         "@tailwindcss/upgrade": "^4.3.3",
         "@types/node": "^26.6.3",
         "autoprefixer": "^10.6.1",
         "baseline-browser-mapping": "^2.11.26",
         "concurrently": "^10.0.5",
-        "eslint": "^10.11.0",
-        "eslint-config-prettier": "^10.1.8",
-        "eslint-plugin-prettier": "^5.5.6",
         "form-data": "^4.0.6",
         "laravel-vite-plugin": "^3.2.0",
         "postcss": "^8.5.28",

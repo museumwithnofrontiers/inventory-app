@@ -14,7 +14,7 @@ Use this map to find the part of the repository that owns a task.
 | `app/Models/` | Laravel models for Inventory entities. |
 | `app/Filament/` | Filament `/admin` resources, pages, widgets, and auth pages. |
 | `app/Policies/` | Record-level authorization policies. |
-| `app/Http/Controllers/` | Management API and remaining web controllers. |
+| `app/Http/Controllers/` | Management API controllers, plus the panel's file and e-mail verification controllers (`Filament/`) and `/pub` (`Pub/`). |
 | `app/Http/Resources/` | API response resource classes. |
 | `app/Http/Requests/` | Validation request classes. |
 | `database/migrations/` | Schema changes. Create new migrations instead of editing existing migrations. |
@@ -79,8 +79,8 @@ local snapshot, read its `main` branch on GitHub rather than the clone here.
 
 ## Main boundaries
 
-- Use Filament resources and pages for new back-office features.
-- Keep `/admin` authentication isolated from `/web` authentication.
+- Use Filament resources and pages for new back-office features: the panel is the only UI.
+- Build authentication pages as Filament pages under `app/Filament/Auth/`; Fortify provides actions, not routes.
 - Keep importer transformation logic in `scripts/importer/src/domain/transformers/` when the logic maps source data to Inventory data.
 - Keep importer persistence in the write strategy instead of scattering SQL across helpers.
 - Keep generated documentation and generated clients out of manual edits.

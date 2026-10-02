@@ -107,8 +107,9 @@ docker compose logs -f app
 docker compose restart app
 ```
 
-Front-end asset work (Vite) runs through the `tools` profile, so the dev image
-stays free of a running Vite process:
+The only front-end asset is the admin panel's Tailwind theme
+(`resources/css/filament/admin/theme.css`). Work on it (Vite) runs through the
+`tools` profile, so the dev image stays free of a running Vite process:
 
 ```bash
 docker compose run --rm tools npm ci
@@ -125,7 +126,6 @@ Install recommended extensions:
 {
   "recommendations": [
     "bmewburn.vscode-intelephense-client",
-    "Vue.volar",
     "bradlc.vscode-tailwindcss",
     "ryannaddy.laravel-artisan",
     "onecentlin.laravel-blade",
@@ -239,16 +239,13 @@ On Windows, `scripts/Reset-Database.ps1` wraps the snapshot/wipe/migrate/seed/
 restore sequence above in one command, already routed through
 `docker compose run --rm app`.
 
-### 5.4 Frontend Development
+### 5.4 Admin Panel Theme
 
 ```bash
-# Install new frontend dependency
+# Install a front-end dependency
 docker compose run --rm tools npm install package-name
 
-# Run frontend tests
-docker compose run --rm tools npm run test
-
-# Build for production
+# Build the theme for production
 docker compose run --rm tools npm run build
 ```
 
@@ -266,11 +263,12 @@ docker compose exec app php artisan test --testsuite=Api         # one suite
 docker compose exec app php artisan test --filter ExampleTest    # one test
 ```
 
-### 6.2 Frontend Testing
+### 6.2 Admin Panel Testing
+
+The admin panel is tested from PHP, in the Filament suite (`tests/Filament/`):
 
 ```bash
-docker compose run --rm tools npm run test
-docker compose run --rm tools npm run test:watch
+docker compose exec app php artisan test --testsuite=Filament
 ```
 
 ### 6.3 API Testing
@@ -324,13 +322,19 @@ docker compose exec app php artisan make:seeder FeatureSeeder
 docker compose exec app php artisan db:seed --class=FeatureSeeder
 ```
 
-### 7.3 Frontend Components
+### 7.3 Admin Panel Pages
 
 ```bash
-# Create new Vue component in resources/js/components/
-# Add to router in resources/js/router/index.ts
-# Create tests in resources/js/components/__tests__/
+# Create a Filament resource (list, create and edit pages) for a model
+docker compose exec app php artisan make:filament-resource Feature
+
+# Create a standalone Filament page
+docker compose exec app php artisan make:filament-page FeatureReport
 ```
+
+Resources and pages live in `app/Filament/`, their tests in `tests/Filament/`.
+The [Filament Back-Office]({{ '/collaborators/filament-admin' | relative_url }})
+guide covers the authorization rules every resource follows.
 
 ## Step 8: Troubleshooting
 

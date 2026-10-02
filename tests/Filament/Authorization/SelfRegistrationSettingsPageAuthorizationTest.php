@@ -11,6 +11,18 @@ class SelfRegistrationSettingsPageAuthorizationTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_users_with_manage_settings_permission_can_access_self_registration_settings(): void
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+        $user->givePermissionTo([
+            Permission::ACCESS_ADMIN_PANEL->value,
+            Permission::MANAGE_SETTINGS->value,
+        ]);
+
+        $this->actingAs($user)->get('/admin/self-registration-settings-page')
+            ->assertOk();
+    }
+
     public function test_users_without_manage_users_permission_cannot_access_self_registration_settings(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);

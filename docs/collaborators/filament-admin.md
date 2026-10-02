@@ -7,7 +7,7 @@ nav_order: 2
 
 # Filament Back-Office
 
-Filament `/admin` is the main integrated back-office. Treat it as the primary user interface for content managers and administrators.
+Filament `/admin` is the application's only user interface, for content managers and administrators alike. `/` redirects to it.
 
 ## Where to work
 
@@ -27,13 +27,24 @@ Filament uses three authorization tiers:
 2. Navigation and resource visibility use feature permissions such as `view-data`, `manage-users`, `manage-roles`, `manage-settings`, and `manage-reference-data`.
 3. Record and action authorization uses existing policies in `app/Policies/`.
 
-## Auth isolation
+## Authentication
 
-Keep `/admin` and `/web` authentication flows isolated. Filament login, MFA challenge, and MFA setup stay in Filament pages. Do not route `/admin` through Fortify web routes, Blade auth views, or shared session markers from `/web`.
+Every authentication page is a Filament page under `app/Filament/Auth/`:
+- login;
+- the two-factor challenge and setup;
+- password reset and its two-factor step;
+- registration.
+
+They are built on Laravel Fortify: they and the profile page call its actions (`CreateNewUser`, `UpdateUserPassword`, `UpdateUserProfileInformation`, the two-factor actions) and its two-factor provider directly. Fortify itself serves no route (`Fortify::ignoreRoutes()`), so don't add one; add a Filament page instead.
+
+- **Registration** is open only while the `self_registration_enabled` setting is on.
+- **E-mail verification:** every verification message links to `/admin/email-verification/verify/{id}/{hash}`. The route sits outside the panel's authentication, because a self-registered user verifies before an administrator approves them.
+- **The login page** tells the owner of an unverified or unapproved account what is missing.
+- **API tokens:** personal access tokens for the API are created and revoked on the API Tokens page, reached from the profile.
 
 ## Test placement
 
-Put new Filament tests under `tests/Filament/`. Do not add new back-office tests under `tests/Web/`.
+Put new Filament tests under `tests/Filament/`.
 
 ## Business references
 

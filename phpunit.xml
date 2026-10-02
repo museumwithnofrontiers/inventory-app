@@ -14,9 +14,6 @@
             <!-- /pub, the public picture URL the data packages link to -->
             <directory>tests/Pub</directory>
         </testsuite>
-        <testsuite name="Web">
-            <directory>tests/Web</directory>
-        </testsuite>
         <testsuite name="Filament">
             <directory>tests/Filament</directory>
         </testsuite>

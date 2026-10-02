@@ -75,7 +75,6 @@ class PasswordResetTest extends TestCase
         ]);
 
         $this->assertSame($expectedUrl, $mailMessage->actionUrl);
-        $this->assertStringNotContainsString('/web/', $mailMessage->actionUrl);
     }
 
     public function test_reset_link_submission_shows_success_notification_even_for_unknown_email(): void
@@ -342,19 +341,6 @@ class PasswordResetTest extends TestCase
             ->assertHasErrors(['data.code'])
             ->assertHasNoErrors(['data.recovery_code'])
             ->assertHasNoErrors(['data.email_code']);
-    }
-
-    // ─── Route isolation ──────────────────────────────────────────────────────
-
-    public function test_admin_reset_flow_does_not_touch_web_routes(): void
-    {
-        $user = User::factory()->create(['email' => 'user@example.com']);
-        $token = Password::broker(config('fortify.passwords'))->createToken($user);
-
-        $adminResponse = $this->get(route('filament.admin.auth.password.reset', ['token' => $token]));
-        $adminResponse->assertOk();
-
-        $this->assertFalse($this->app['router']->current()?->getPrefix() === '/web');
     }
 
     // ─── Password-reset email code (Story 1) ──────────────────────────────────
@@ -652,7 +638,7 @@ class PasswordResetTest extends TestCase
             ->assertHasNoErrors(['data.email_code']);
     }
 
-    public function test_password_reset_mfa_reset_flow_never_resolves_web_routes(): void
+    public function test_password_reset_mfa_reset_flow_returns_to_the_panel_login(): void
     {
         $this->mockTotpProvider(true);
 
@@ -663,12 +649,9 @@ class PasswordResetTest extends TestCase
         session()->put('filament.admin.password_reset.password_hash', Hash::make('NewPassword1!'));
         session()->put('filament.admin.password_reset.token', $token);
 
-        $component = Livewire::test(PasswordResetMfaChallenge::class)
+        Livewire::test(PasswordResetMfaChallenge::class)
             ->set('data.code', '123456')
-            ->call('submit');
-
-        // Redirect must be to the Filament login URL, never to /web/*
-        $redirectUrl = $component->instance()->redirectTo ?? Filament::getLoginUrl();
-        $this->assertStringNotContainsString('/web/', $redirectUrl);
+            ->call('submit')
+            ->assertRedirect(Filament::getLoginUrl());
     }
 }

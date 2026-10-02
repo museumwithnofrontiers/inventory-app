@@ -14,7 +14,7 @@ MWNF Inventory is the content layer that replaces direct dependency on legacy da
 | Part | Role |
 |---|---|
 | Laravel application | Owns the Inventory model, authentication, authorization, Filament back-office, management API, queues, and generated API documentation. |
-| Filament `/admin` | Main integrated back-office for authenticated content management. |
+| Filament `/admin` | The application's only user interface: the back-office for authenticated content and account management. `/` redirects to it. |
 | Management API | Authenticated read/write API for programmatic management access. |
 | Importer | Node.js tool that reads legacy databases, transforms content, and writes Inventory records. |
 | Documentation site | Jekyll site that explains the model, import, collaborator orientation, generated OpenAPI reference, and generated model reference. |

@@ -20120,9 +20120,6 @@
                             "null"
                         ],
                         "format": "date-time"
-                    },
-                    "profile_photo_url": {
-                        "type": "string"
                     }
                 },
                 "required": [
@@ -20134,8 +20131,7 @@
                     "current_team_id",
                     "profile_photo_path",
                     "created_at",
-                    "updated_at",
-                    "profile_photo_url"
+                    "updated_at"
                 ],
                 "title": "User"
             },

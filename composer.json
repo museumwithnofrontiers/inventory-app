@@ -7,17 +7,15 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
-        "blade-ui-kit/blade-heroicons": "^2.6",
         "dedoc/scramble": "^0.13.6",
         "filament/filament": "^3.3",
         "intervention/image": "^4.3.3",
+        "laravel/fortify": "^1.39.0",
         "laravel/framework": "^12.40.2",
-        "laravel/jetstream": "^5.4.0",
         "laravel/sanctum": "^4.2.1",
         "laravel/tinker": "^3.0.0",
         "league/commonmark": "^2.8.0",
         "league/html-to-markdown": "^5.1",
-        "livewire/livewire": "^3.6",
         "propaganistas/laravel-phone": "^6.0",
         "spatie/laravel-permission": "^8.3",
         "symfony/process": "^7.4.0"
@@ -88,8 +86,7 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan test --testsuite=Unit --compact --parallel --ansi",
             "@php artisan test --testsuite=Api --compact --parallel --ansi",
-            "@php artisan test --testsuite=Web --compact --parallel --ansi",
-            "@php artisan test --testsuite=Filament --compact --parallel --ansi",
+                "@php artisan test --testsuite=Filament --compact --parallel --ansi",
             "@php artisan test --testsuite=Configuration --compact --parallel --ansi",
             "@php artisan test --testsuite=Console --compact --parallel --ansi",
             "@php artisan test --testsuite=Event --compact --parallel --ansi",
@@ -131,8 +128,7 @@
         "ci-test": [
             "@php artisan test --testsuite=Unit --compact --parallel --ansi",
             "@php artisan test --testsuite=Api --compact --parallel --ansi",
-            "@php artisan test --testsuite=Web --compact --parallel --ansi",
-            "@php artisan test --testsuite=Filament --compact --parallel --ansi"
+                "@php artisan test --testsuite=Filament --compact --parallel --ansi"
         ],
         "ci-test:integration": [
             "@php artisan test --testsuite=Integration --compact --ansi"

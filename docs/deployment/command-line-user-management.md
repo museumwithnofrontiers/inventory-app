@@ -328,13 +328,12 @@ php artisan help permissions:rebuild
 php artisan list
 ```
 
-## Integration with Web Interface
+## Integration with the Admin Panel
 
-Once you have created admin users via command line, they can:
+The admin panel at `/admin` is the application's only user interface. Once you have created admin users via the command line, they can sign in there and:
 
-- Access the web-based User Management interface at `/admin/users`
-- Manage users through the graphical interface
-- Assign roles and permissions via the web UI
-- View user activity and system logs
+- Manage users at `/admin/users`
+- Assign roles and permissions to users, and edit roles at `/admin/roles`
+- Approve or reject self-registered accounts on the Pending Registrations page
 
-The command-line tools complement the web interface and are essential for initial setup, automation, and emergency access when the web interface is unavailable.
+The command-line tools complement the panel and are essential for initial setup, automation, and emergency access when the panel is unavailable.

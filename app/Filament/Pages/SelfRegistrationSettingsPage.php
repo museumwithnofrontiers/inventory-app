@@ -25,9 +25,15 @@ class SelfRegistrationSettingsPage extends Page
 
     public bool $self_registration_enabled = false;
 
+    // The only setting the application reads. Either permission covers it:
+    // `manage settings` is the one meant for settings, `manage users` the one
+    // this page has always required
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::MANAGE_USERS->value) ?? false;
+        return auth()->user()?->hasAnyPermission([
+            Permission::MANAGE_USERS->value,
+            Permission::MANAGE_SETTINGS->value,
+        ]) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

@@ -37,7 +37,6 @@ On Windows, use WSL or Docker if Ruby is not available on the host.
 - Put new Filament tests in `tests/Filament/`.
 - Put management API tests in `tests/Api/`.
 - Put pure PHP business logic tests in `tests/Unit/`.
-- Do not add new back-office coverage to `tests/Web/` during the Filament migration.
 
 ## Safe change habits
 
@@ -45,4 +44,4 @@ On Windows, use WSL or Docker if Ruby is not available on the host.
 - Keep generated files out of manual edits.
 - Keep importer transformation logic close to transformer files.
 - Use existing model methods for image attach and detach workflows.
-- Keep `/admin` auth isolated from `/web` auth.
+- Build authentication pages as Filament pages; Fortify serves no route.

@@ -248,64 +248,6 @@ class MfaRegressionTest extends TestCase
     }
 
     /**
-     * T-9: Isolation B — a successful /web/login for a user with confirmed 2FA,
-     * with no prior /admin interaction in the session, redirects to route('two-factor.login')
-     * and serves view('auth.two-factor-challenge') — never filament.admin.auth.two-factor-challenge.
-     */
-    public function test_web_login_with_mfa_without_admin_session_redirects_to_web_challenge(): void
-    {
-        $user = $this->createUserWithTotp();
-
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
-
-        $this->assertNull(session('filament.auth.panel'));
-        $this->assertNull(session('filament.admin.2fa.user_id'));
-
-        $this->get(route('two-factor.login'))
-            ->assertOk()
-            ->assertViewIs('auth.two-factor-challenge');
-    }
-
-    /**
-     * T-10: Isolation C — a wrong /admin/login attempt followed by a /web/login for a 2FA user
-     * in the same browser session still serves the /web Blade challenge view.
-     * No filament.admin.2fa.* leak; the /web flow is independent of any /admin state.
-     */
-    public function test_isolation_c_wrong_admin_login_then_web_login_serves_web_challenge(): void
-    {
-        $user = $this->createUserWithTotp();
-        $user->givePermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
-
-        // First: wrong /admin/login attempt
-        Livewire::test(AdminLogin::class)
-            ->set('data.email', $user->email)
-            ->set('data.password', 'wrong-password')
-            ->call('authenticate')
-            ->assertHasErrors(['data.email']);
-
-        $this->assertGuest();
-        $this->assertNull(session('filament.admin.2fa.user_id'));
-
-        // Then: correct /web/login attempt for the same 2FA user
-        $this->post(route('login.store'), [
-            'email' => $user->email,
-            'password' => 'password',
-        ]);
-
-        // Web flow is independent — no filament.admin.2fa.* keys, no filament.auth.panel
-        $this->assertNull(session('filament.admin.2fa.user_id'));
-        $this->assertNull(session('filament.auth.panel'));
-
-        // Web challenge is the Blade view, not the Filament challenge
-        $this->get(route('two-factor.login'))
-            ->assertOk()
-            ->assertViewIs('auth.two-factor-challenge');
-    }
-
-    /**
      * T-11: Default MFA method is 'totp' on the login challenge page.
      */
     public function test_default_mfa_method_is_totp_on_login_challenge_page(): void
@@ -344,7 +286,7 @@ class MfaRegressionTest extends TestCase
 
     /**
      * T-13: /admin logout uses the Filament logout route, leaves no pending /admin auth keys,
-     * and does NOT redirect to /web.
+     * and returns to the panel's login.
      */
     public function test_admin_logout_uses_filament_route_and_clears_admin_session_keys(): void
     {
@@ -364,7 +306,7 @@ class MfaRegressionTest extends TestCase
         $this->assertNull(session('filament.admin.2fa.user_id'));
         $this->assertNull(session('filament.admin.2fa.remember'));
         $this->assertNull(session('filament.admin.2fa.email_challenge_id'));
-        $this->assertStringNotContainsString('/web/', $response->getTargetUrl() ?? '');
+        $response->assertRedirect(Filament::getLoginUrl());
     }
 
     /**
@@ -383,7 +325,7 @@ class MfaRegressionTest extends TestCase
         $this->post(route('filament.admin.auth.logout'));
 
         $this->assertGuest(config('fortify.guard'));
-        // login.id belongs to the /web Fortify flow; /admin logout must not interact with it
-        // (it may or may not be cleared, but it must not cause /admin to redirect to /web)
+        // login.id is the key of Fortify's own two-factor challenge, which the panel
+        // doesn't use; a stale one may or may not be cleared, but must not get in the way
     }
 }

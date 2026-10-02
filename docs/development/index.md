@@ -32,10 +32,6 @@ GitHub Actions workflows for continuous integration, deployment, and automation.
 
 Jekyll-powered static site generation, plugins, and deployment configuration.
 
-### [Request-Driven List Extensions](request-driven-lists-extensions)
-
-Audit of remaining web list pages against the shared request-driven list primitives and the minimal Epic 8 extensions.
-
 ### [Development Archive](archive)
 
 Historical record of development changes and project evolution.

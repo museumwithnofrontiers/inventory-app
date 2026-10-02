@@ -281,9 +281,7 @@ class AvailableImageResourceTest extends TestCase
 
         $this->assertStringContainsString('/admin/', $viewUrl);
         $this->assertStringContainsString('/admin/', $downloadUrl);
-        $this->assertStringNotContainsString('/web/', $viewUrl);
         $this->assertStringNotContainsString('/api/', $viewUrl);
-        $this->assertStringNotContainsString('/web/', $downloadUrl);
         $this->assertStringNotContainsString('/api/', $downloadUrl);
     }
 }

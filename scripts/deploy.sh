@@ -28,6 +28,7 @@ set -euo pipefail
 # script only unpacks a release tarball and never selects a PHP version.
 APP_DIR="/opt/inventory"
 CURRENT="${APP_DIR}/current"
+DOMAIN="inventory.metanull.eu"
 
 # --- Arguments ---------------------------------------------------------------
 ARCHIVE="${1:-}"
@@ -156,7 +157,7 @@ configure_laravel() {
         # Production defaults
         sed -i 's/^APP_ENV=.*/APP_ENV=production/' "${APP_DIR}/shared/.env"
         sed -i 's/^APP_DEBUG=.*/APP_DEBUG=false/' "${APP_DIR}/shared/.env"
-        sed -i 's|^APP_URL=.*|APP_URL=https://inventory.metanull.eu|' "${APP_DIR}/shared/.env"
+        sed -i "s|^APP_URL=.*|APP_URL=https://${DOMAIN}|" "${APP_DIR}/shared/.env"
 
         # MySQL (if credentials file exists, written by provision.sh)
         DEPLOY_CRED_FILE="/home/deploy/.inventory-db-credentials"
@@ -238,19 +239,31 @@ prune_releases() {
     fi
 }
 
-# --- 7. Health check ----------------------------------------------------------
-health_check() {
-    info "Running health check..."
-    sleep 2
-    local HTTP_STATUS
-    HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
-        "http://localhost/" -H "Host: inventory.metanull.eu" || echo "000")
+# --- 7. Smoke check -----------------------------------------------------------
+# The admin panel is the application: `/` redirects to /admin, and the panel's
+# login page answers. Asked of this server over HTTPS under the site's own
+# name (plain HTTP only gets nginx's redirect to HTTPS). A few tries, because
+# PHP-FPM may still be picking up the new release.
+smoke_check() {
+    info "Running smoke check..."
+    local BASE="https://${DOMAIN}"
+    local RESOLVE="${DOMAIN}:443:127.0.0.1"
+    local ROOT="" LOGIN="" ATTEMPT
 
-    if [[ "$HTTP_STATUS" == "200" ]]; then
-        info "Health check PASSED (HTTP ${HTTP_STATUS})"
-    else
-        warn "Health check returned HTTP ${HTTP_STATUS} (may be OK on first deploy without routes)."
-    fi
+    for ATTEMPT in 1 2 3; do
+        sleep 2
+        ROOT=$(curl -s -o /dev/null -w "%{http_code} %{redirect_url}" --max-time 10 \
+            --resolve "$RESOLVE" "${BASE}/" || true)
+        LOGIN=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 \
+            --resolve "$RESOLVE" "${BASE}/admin/login" || true)
+
+        if [[ "$ROOT" == "302 ${BASE}/admin" && "$LOGIN" == "200" ]]; then
+            info "Smoke check PASSED: / redirects to /admin, /admin/login answers 200"
+            return 0
+        fi
+    done
+
+    error "Smoke check FAILED: / answered '${ROOT}' (expected '302 ${BASE}/admin'), /admin/login answered '${LOGIN}' (expected 200)."
 }
 
 # =============================================================================
@@ -264,5 +277,5 @@ run_migrations
 warm_caches
 restart_queue_worker
 prune_releases
-health_check
+smoke_check
 info "Deployment complete! $(date)"
