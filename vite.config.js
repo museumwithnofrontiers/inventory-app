@@ -2,11 +2,8 @@ import { defineConfig } from 'vite'
 import laravel from 'laravel-vite-plugin'
 import { fileURLToPath, URL } from 'node:url'
 
-const input = [
-  'resources/css/app.css',
-  'resources/css/filament/admin/theme.css',
-  'resources/js/app.js',
-]
+// The Filament panel's theme is the only front-end asset
+const input = ['resources/css/filament/admin/theme.css']
 
 export default defineConfig({
   plugins: [

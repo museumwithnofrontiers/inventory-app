@@ -6,9 +6,6 @@
     "eslint.workingDirectories": [
         { "mode": "auto" }
     ],
-    "eslint.options": {
-        "configFile": "./eslint.config.js"
-    },
     "tailwindCSS.includeLanguages": {
         "html": "html",
         "vue": "html",
