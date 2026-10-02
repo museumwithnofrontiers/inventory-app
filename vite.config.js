@@ -16,9 +16,16 @@ export default defineConfig({
       name: 'normalize-manifest-paths',
       async writeBundle() {
         const manifestPath = 'public/build/manifest.json'
-        const { readFileSync, writeFileSync, existsSync } = await import('fs')
+        const { readFileSync, writeFileSync } = await import('fs')
 
-        if (!existsSync(manifestPath)) return
+        // Read without checking first: a check followed by a write is a file-system race
+        let manifestSource
+        try {
+          manifestSource = readFileSync(manifestPath, 'utf8')
+        } catch (error) {
+          if (error.code === 'ENOENT') return
+          throw error
+        }
 
         const normalizePath = path => {
           const resourcesIndex = Math.max(
@@ -30,7 +37,7 @@ export default defineConfig({
 
         // eslint-disable-next-line no-undef
         console.log('🔧 Normalizing manifest paths...')
-        const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
+        const manifest = JSON.parse(manifestSource)
         let hasChanges = false
 
         const normalizedManifest = Object.fromEntries(
