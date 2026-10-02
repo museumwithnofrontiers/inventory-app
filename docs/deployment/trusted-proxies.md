@@ -83,7 +83,7 @@ After deployment, verify that:
 1. CSS and JS assets load via HTTPS
 2. All generated URLs use the correct protocol
 3. Redirects work properly
-4. The Vue.js frontend loads correctly
+4. The admin panel at `/admin` loads correctly, and `/` redirects to it
 
 ### Common Proxy IPs to Trust
 

@@ -49,6 +49,6 @@ Use this value during validation. It is the clean bridge between the new model a
 
 ## The back-office is Filament
 
-The integrated back-office is `/admin`, built with Filament. The older Blade/Livewire `/web` interface is no longer the target back-office. Documentation and future back-office work should treat Filament as the main UI.
+The back-office is `/admin`, built with Filament, and it is the application's only user interface: `/` redirects to it. The earlier Blade/Livewire interface under `/web` was retired in milestone M8; see [ADR 003](../adr/003-filament-only-admin).
 
 The management API remains maintained, but it is not the primary human interface.

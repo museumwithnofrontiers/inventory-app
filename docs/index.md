@@ -29,7 +29,7 @@ The documentation starts with the business model and the import process because 
 
 - It stores reusable MWNF content only: objects, monuments, partners, collections, images, translations, glossary entries, timelines, links, tags, contributors, and related media.
 - It keeps application-specific configuration outside the Inventory model.
-- It uses `/admin` as the main back-office through Filament.
+- Its only user interface is the `/admin` back-office, built with Filament; `/` redirects to it.
 - It keeps the management API as a maintained programmatic interface.
 - It prepares the ground for a dedicated read-only API optimized for lightweight public clients.
 

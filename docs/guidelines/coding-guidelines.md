@@ -26,7 +26,7 @@ This page covers conventions specific to this project. For general Laravel or PH
 - **Database tables**: plural snake_case (`items`, `collection_translations`)
 - **Database columns**: snake_case (`internal_name`, `partner_id`)
 - **API routes**: singular nouns (`/api/item`, `/api/context`)
-- **Web routes**: plural nouns (`/web/items`, `/web/contexts`)
+- **Admin panel routes**: Filament derives them from each resource (`/admin/items`, `/admin/contexts`)
 
 ## Model Conventions
 

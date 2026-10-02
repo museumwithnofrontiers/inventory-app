@@ -33,7 +33,7 @@ Generated references remain available for detailed lookup:
 | `deployment/` | Operational deployment reference. |
 | `development/` | Technical archive and generated copies of script/workflow documentation. |
 | `guidelines/` | Detailed backend and generator guidelines. |
-| `frontend-blade/` | Legacy `/web` frontend archive. |
+| `frontend-filament/` | Design notes for the admin panel (`/admin`), the application's only UI. |
 
 ## Generated content
 

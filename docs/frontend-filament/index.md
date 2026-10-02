@@ -8,7 +8,7 @@ permalink: /frontend-filament/
 
 # Filament Admin Frontend
 
-Filament `/admin` is the only active back-office UI (see [Filament Back-Office]({{ '/collaborators/filament-admin' | relative_url }}) for the authorization model and where to work in the codebase). This section holds deeper, feature-level design notes for the Filament frontend — the kind of document that records *why* a pipeline is shaped the way it is, not just how to use it.
+Filament `/admin` is the application's only UI, and `/` redirects to it (see [Filament Back-Office]({{ '/collaborators/filament-admin' | relative_url }}) for the authorization model and where to work in the codebase). This section holds deeper, feature-level design notes for the Filament frontend — the kind of document that records *why* a pipeline is shaped the way it is, not just how to use it.
 
 ## Pages
 

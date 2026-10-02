@@ -7,25 +7,22 @@ Follow these rules strictly when generating code, explanations, refactors, or re
 
 This monorepo contains the backend and frontend for the Museum With No Frontiers — Inventory Management System.
 
-### Primary components (in-scope):
+### Components (in-scope):
 - Laravel 12 backend + API
-- Filament 3 admin panel (/admin)
+- Filament 3 admin panel (/admin), the application's only UI
 - Data importer scripts (scripts/importer/)
 - Documentation site (docs/, Jekyll)
 
-### Secondary components (out-of-scope unless explicitly asked):
-- /web (legacy Jetstream/Blade/Livewire UI)
+If unsure whether something is in-scope you must ask the question to the user.
 
-If unsure whether something is in-scope you must ask the quesiton to the user.
+## Filament‑Only Architecture (Critical)
 
-## Filament‑First Architecture (Critical)
-
-The Filament admin panel under /admin is the ONLY active UI. It is accessible to all authenticated users
+The Filament admin panel under /admin is the application's ONLY UI, and `/` redirects to it. Entry requires the `access-admin-panel` permission (see the Authorization Model).
 
 You must:
 1. Always use Filament patterns: Resources, Info Lists, Relation Managers, Pages, Forms & Tables, Actions
-2. Never use or reference legacy UI (it is exposed under /web route, and uses Jetstream,Blade and Livewire): Jetstream profile pages, Blade auth views, Livewire list components, SearchableSelect, SearchAndPaginate, IndexListRequest, {Entity}IndexQuery, Any /web/* route or component
-3. Respect authentication flow isolation: /admin uses Filament-native login + MFA. Never redirect or share session with /web. Never use references to Blade auth templates
+2. Never add a UI outside the panel: no Blade pages, Livewire components or routes of their own for back-office features
+3. Build authentication pages (login, MFA, password reset, registration, e-mail verification) as Filament pages under `app/Filament/Auth/`. They call Laravel Fortify's actions directly; Fortify serves no route (`Fortify::ignoreRoutes()`), and none may be added. See docs/adr/003-filament-only-admin.md
 
 ## Authorization Model
 
@@ -149,8 +146,8 @@ You must:
 - Always Follow Laravel & Filament best practices
 - Always Respect all constraints in this document
 - Always Ask for clarification if a change risks violating architecture
-- Never Introduce legacy UI patterns
+- Never Add a UI outside the Filament panel
 - Never Bypass image pipeline
-- Never USer of modify out-of-scope components unless explicitly asked
+- Never Use or modify out-of-scope components unless explicitly asked
 - Never Suggest raw SQL
 - Never Break CI/CD assumptions

@@ -29,7 +29,7 @@ This **monorepo** contains:
 
 | Component | Description |
 | --------- | ----------- |
-| **Web Interface** | The main production UI — server-rendered pages for managing all inventory data (Blade/Livewire) |
+| **Admin Panel** | The application's only UI, at `/admin` (Filament): managing all inventory data, users and roles. `/` redirects to it |
 | **REST API** | Authenticated endpoints for programmatic access, with OpenAPI documentation |
 | **Documentation Site** | Jekyll-based docs deployed to GitHub Pages |
 
@@ -65,7 +65,7 @@ migrations, and brings up php-fpm, nginx, and a queue worker.
 
 | | |
 |---|---|
-| Admin panel (the active UI) | http://localhost:8010/admin |
+| Admin panel (the application) | http://localhost:8010/admin |
 | API docs | http://localhost:8010/docs/api |
 | Mailpit (captures all outbound mail) | http://localhost:8026 |
 | MySQL | `127.0.0.1:3337`, database/user `inventory`, password `secret` |
