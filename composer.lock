@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "7d2a4610d617a27581083b2883962418",
+    "content-hash": "82f14296fd08cb0f6d1db9b9b6ce9bb9",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2724,72 +2724,6 @@
             "time": "2026-09-29T12:53:25+00:00"
         },
         {
-            "name": "laravel/jetstream",
-            "version": "v5.5.3",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/laravel/jetstream.git",
-                "reference": "61cac5cde455311890f6981fb2da47acd298e4e2"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/laravel/jetstream/zipball/61cac5cde455311890f6981fb2da47acd298e4e2",
-                "reference": "61cac5cde455311890f6981fb2da47acd298e4e2",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "illuminate/console": "^11.0|^12.0|^13.0",
-                "illuminate/support": "^11.0|^12.0|^13.0",
-                "laravel/fortify": "^1.20",
-                "mobiledetect/mobiledetectlib": "^4.8.08",
-                "php": "^8.2.0",
-                "symfony/console": "^7.0|^8.0"
-            },
-            "require-dev": {
-                "inertiajs/inertia-laravel": "^2.0",
-                "laravel/sanctum": "^4.0",
-                "livewire/livewire": "^3.3",
-                "mockery/mockery": "^1.0",
-                "orchestra/testbench": "^9.15|^10.8|^11.0",
-                "phpstan/phpstan": "^1.10"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Laravel\\Jetstream\\JetstreamServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Laravel\\Jetstream\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Taylor Otwell",
-                    "email": "taylor@laravel.com"
-                }
-            ],
-            "description": "Tailwind scaffolding for the Laravel framework.",
-            "keywords": [
-                "auth",
-                "laravel",
-                "tailwind"
-            ],
-            "support": {
-                "issues": "https://github.com/laravel/jetstream/issues",
-                "source": "https://github.com/laravel/jetstream"
-            },
-            "time": "2026-05-19T01:30:03+00:00"
-        },
-        {
             "name": "laravel/passkeys",
             "version": "v0.2.1",
             "source": {
@@ -3990,70 +3924,6 @@
                 "source": "https://github.com/Masterminds/html5-php/tree/2.11.0"
             },
             "time": "2026-08-18T06:18:41+00:00"
-        },
-        {
-            "name": "mobiledetect/mobiledetectlib",
-            "version": "4.11.0",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/serbanghita/Mobile-Detect.git",
-                "reference": "ab39168b7556f44c11c80be1222b44b239f5c2e4"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/serbanghita/Mobile-Detect/zipball/ab39168b7556f44c11c80be1222b44b239f5c2e4",
-                "reference": "ab39168b7556f44c11c80be1222b44b239f5c2e4",
-                "shasum": ""
-            },
-            "require": {
-                "php": ">=8.2",
-                "psr/simple-cache": "^1.0 || ^2.0 || ^3.0"
-            },
-            "require-dev": {
-                "friendsofphp/php-cs-fixer": "3.95.1",
-                "phpbench/phpbench": "1.6.1",
-                "phpstan/phpstan": "2.1.47",
-                "phpunit/phpunit": "9.6.34",
-                "squizlabs/php_codesniffer": "3.13.5"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Detection\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Serban Ghita",
-                    "email": "serbanghita@gmail.com",
-                    "homepage": "http://mobiledetect.net",
-                    "role": "Developer"
-                }
-            ],
-            "description": "Mobile_Detect is a lightweight PHP class for detecting mobile devices. It uses the User-Agent string combined with specific HTTP headers to detect the mobile environment.",
-            "homepage": "https://github.com/serbanghita/Mobile-Detect",
-            "keywords": [
-                "detect mobile devices",
-                "mobile",
-                "mobile detect",
-                "mobile detector",
-                "php mobile detect"
-            ],
-            "support": {
-                "issues": "https://github.com/serbanghita/Mobile-Detect/issues",
-                "source": "https://github.com/serbanghita/Mobile-Detect/tree/4.11.0"
-            },
-            "funding": [
-                {
-                    "url": "https://github.com/serbanghita",
-                    "type": "github"
-                }
-            ],
-            "time": "2026-05-24T12:32:40+00:00"
         },
         {
             "name": "monolog/monolog",
