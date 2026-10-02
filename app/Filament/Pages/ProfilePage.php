@@ -78,9 +78,19 @@ class ProfilePage extends EditProfile
         return [
             $this->getChangePasswordAction(),
             ...$twoFactorActions,
+            $this->getApiTokensAction(),
             $this->getLogoutOtherBrowserSessionsAction(),
             $this->getDeleteAccountAction(),
         ];
+    }
+
+    protected function getApiTokensAction(): Action
+    {
+        return Action::make('apiTokens')
+            ->label('API Tokens')
+            ->icon('heroicon-o-command-line')
+            ->color('gray')
+            ->url(ApiTokensPage::getUrl());
     }
 
     protected function getChangePasswordAction(): Action

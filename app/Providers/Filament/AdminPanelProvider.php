@@ -9,6 +9,7 @@ use App\Filament\Auth\RequestPasswordReset;
 use App\Filament\Auth\ResetPassword;
 use App\Filament\Auth\TwoFactorChallenge;
 use App\Filament\Auth\TwoFactorSetup;
+use App\Filament\Pages\ApiTokensPage;
 use App\Filament\Pages\Dashboard;
 use App\Filament\Pages\ProfilePage;
 use App\Filament\Pages\ViewCollectionItemAppearance;
@@ -87,6 +88,10 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Profile')
                     ->icon('heroicon-o-user-circle')
                     ->url(fn () => ProfilePage::getUrl()),
+                MenuItem::make()
+                    ->label('API Tokens')
+                    ->icon('heroicon-o-command-line')
+                    ->url(fn () => ApiTokensPage::getUrl()),
             ])
             ->authGuard(Config::string('fortify.guard'))
             ->authPasswordBroker(Config::string('fortify.passwords'))
