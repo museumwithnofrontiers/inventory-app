@@ -35,15 +35,10 @@ Route::redirect('/', '/admin')->name('root');
 
 // Jetstream/Blade web application routes - all under /web prefix
 Route::prefix('web')->group(function () {
-    // Unified root: guest sees marketing welcome, authenticated sees portal tiles
-    Route::get('/', function () {
-        return view('home');
-    })->name('web.welcome');
-
-    // Maintain legacy dashboard route name (Jetstream expectation) -> redirect to unified root
-    Route::get('/dashboard', function () {
-        return redirect()->route('web.welcome');
-    })->name('dashboard');
+    // The portal is gone: the Filament dashboard is the landing page. The
+    // names stay until the rest of /web, which links to them, is removed
+    Route::redirect('/', '/admin')->name('web.welcome');
+    Route::redirect('/dashboard', '/admin')->name('dashboard');
 
     // Authenticated resource management (requires data permissions)
     Route::middleware(['auth', 'permission:'.Permission::VIEW_DATA->value])->group(function () {

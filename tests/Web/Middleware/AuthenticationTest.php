@@ -78,7 +78,6 @@ class AuthenticationTest extends TestCase
         return [
             ['GET', 'login'],
             ['GET', 'password.request'],
-            ['GET', 'web.welcome'],
         ];
     }
 

@@ -79,7 +79,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Inject settings (e.g. self_registration_enabled) into shared layouts
         View::composer(
-            ['components.app-nav', 'auth.login', 'navigation-menu', 'welcome'],
+            ['components.app-nav', 'auth.login', 'navigation-menu'],
             SettingsComposer::class
         );
 
