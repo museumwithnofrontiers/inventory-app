@@ -328,6 +328,19 @@ chmod 2775 public/pictures
 
 If a `find` line reports `Operation not permitted`, the file was created by `www-data`, and only its owner or root can change its mode. Run that line as root.
 
+### 4.5 Secrets Permissions (Linux)
+
+Two places on the Linux server hold the database password and the app key: the `.env` and the cached configuration. `scripts/deploy.sh` closes both to everyone but `deploy` and the `www-data` group (PHP-FPM, the queue worker):
+
+| Path | Owner | Mode | Why |
+|---|---|---|---|
+| `/opt/inventory/shared/.env` | `deploy:www-data` | `640` | Applied on every deploy, so a `.env` copied or restored by hand is closed again at the next one. |
+| `bootstrap/cache/` of each release | `deploy:www-data` | `2770` | `php artisan optimize` writes `config.php` there with every value of the `.env`. Closing the directory keeps a later `optimize` or `config:cache` run by hand closed too, and setgid keeps the files in `www-data`. |
+
+A backup of the `.env` made with `cp` is readable by everyone: `chmod 640` it.
+
+The deploy fails, before the new release goes live, if `deploy` can't give either one to `www-data`. That happens when `deploy` isn't in the `www-data` group, which `provision.sh` sets up, or when the `.env` isn't owned by `deploy`.
+
 ## Step 5: Automated Deployment
 
 ### 5.1 Using Deployment Script

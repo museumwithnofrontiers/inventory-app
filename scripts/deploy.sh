@@ -12,6 +12,7 @@
 # Prerequisites (handled by provision.sh, run once as root):
 #   - PHP-FPM, Nginx, MySQL, Valkey installed (via motivya provision.sh)
 #   - /opt/inventory/ owned by deploy:www-data
+#   - deploy a member of the www-data group
 #   - /opt/inventory/shared/storage/ directory tree exists
 #   - Nginx vhost pointing to /opt/inventory/current/public
 #   - MySQL credentials in /home/deploy/.inventory-db-credentials
@@ -61,6 +62,19 @@ preflight() {
     [[ -d "${APP_DIR}/shared/storage" ]] || error "${APP_DIR}/shared/storage missing. Run provision.sh first."
 }
 
+# --- .env permissions --------------------------------------------------------
+# The .env holds the database password and the app key. Only its owner and
+# the www-data group (PHP-FPM, the queue worker) may read it. Applied on every
+# deploy, so a .env copied or restored by hand is closed again.
+lock_env() {
+    # First deploy: configure_laravel creates the .env, then calls this again
+    [[ -f "${APP_DIR}/shared/.env" ]] || return 0
+
+    chgrp www-data "${APP_DIR}/shared/.env" \
+        || error "Could not give ${APP_DIR}/shared/.env to the www-data group. It must be owned by $(whoami)."
+    chmod 640 "${APP_DIR}/shared/.env"
+}
+
 # --- Image storage guard -----------------------------------------------------
 # The available-images disk holds the pristine originals, which must never
 # be web-reachable. An .env pinning AVAILABLE_IMAGES_DISK=public (as
@@ -105,13 +119,19 @@ deploy_release() {
     rm -rf "${RELEASE_DIR}/storage"
     ln -sfn "${APP_DIR}/shared/storage" "${RELEASE_DIR}/storage"
 
-    # Ensure bootstrap/cache exists and is writable by www-data (PHP-FPM)
+    # bootstrap/cache is writable by www-data (PHP-FPM) and closed to everyone
+    # else: the config cache written there holds every secret of the .env.
+    # Closing the directory, not the files, keeps a later `optimize` or
+    # `config:cache` run by hand just as closed. Setgid keeps the files those
+    # commands write in the www-data group.
     mkdir -p "${RELEASE_DIR}/bootstrap/cache"
-    chgrp www-data "${RELEASE_DIR}/bootstrap/cache" 2>/dev/null || true
-    chmod g+w "${RELEASE_DIR}/bootstrap/cache"
+    chgrp -R www-data "${RELEASE_DIR}/bootstrap/cache" \
+        || error "Could not give ${RELEASE_DIR}/bootstrap/cache to the www-data group. Is $(whoami) a member of it?"
+    chmod 2770 "${RELEASE_DIR}/bootstrap/cache"
 
     # Before the release goes live, not after: a failed check must leave the
     # previous release serving
+    lock_env
     check_image_storage "$RELEASE_DIR"
 
     # If provisioning created CURRENT as a real directory, replace it.
@@ -168,6 +188,7 @@ configure_laravel() {
             echo 'REDIS_CACHE_DB=3' >> "${APP_DIR}/shared/.env"
         fi
 
+        lock_env
         warn "First deploy .env created — review ${APP_DIR}/shared/.env before going live."
     fi
 
