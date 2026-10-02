@@ -9,12 +9,6 @@ class HealthTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_the_application_redirects_to_web_route_by_default(): void
-    {
-        $response = $this->get(route('root'));
-        $response->assertRedirect(route('web.welcome'));
-    }
-
     public function test_the_application_web_route_is_accessible(): void
     {
         $response = $this->get(route('web.welcome'));

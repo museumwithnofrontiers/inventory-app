@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Auth\Login;
 use App\Filament\Auth\PasswordResetMfaChallenge;
+use App\Filament\Auth\Register;
 use App\Filament\Auth\RequestPasswordReset;
 use App\Filament\Auth\ResetPassword;
 use App\Filament\Auth\TwoFactorChallenge;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Filament\ItemImageController as FilamentItemImageContro
 use App\Http\Controllers\Filament\PartnerImageController as FilamentPartnerImageController;
 use App\Http\Controllers\Filament\PartnerTranslationImageController as FilamentPartnerTranslationImageController;
 use App\Http\Controllers\Filament\TimelineEventImageController as FilamentTimelineEventImageController;
+use App\Http\Controllers\Filament\VerifyEmailController;
 use App\Http\Middleware\Filament\EnsureTwoFactorEnrolled;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
@@ -29,13 +31,17 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Illuminate\Auth\Notifications\VerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Livewire\Livewire;
@@ -49,6 +55,18 @@ class AdminPanelProvider extends PanelProvider
         Livewire::component('app.filament.auth.request-password-reset', RequestPasswordReset::class);
         Livewire::component('app.filament.auth.reset-password', ResetPassword::class);
         Livewire::component('app.filament.auth.password-reset-mfa-challenge', PasswordResetMfaChallenge::class);
+
+        // Every verification message links to the panel's own route: the one
+        // Laravel sends on registration, the one an administrator resends from
+        // the user list, and the one a changed address triggers on the profile
+        VerifyEmail::createUrlUsing(fn (MustVerifyEmail&Model $notifiable): string => URL::temporarySignedRoute(
+            'filament.admin.auth.verify-email',
+            now()->addMinutes(Config::integer('auth.verification.expire', 60)),
+            [
+                'id' => $notifiable->getKey(),
+                'hash' => sha1($notifiable->getEmailForVerification()),
+            ],
+        ));
     }
 
     private const LIGHT_LOGO_CLASSES = 'h-full w-auto text-blue-900';
@@ -62,6 +80,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(Login::class)
+            ->registration(Register::class)
             ->profile(ProfilePage::class, isSimple: false)
             ->userMenuItems([
                 MenuItem::make()
@@ -119,6 +138,9 @@ class AdminPanelProvider extends PanelProvider
                     ->name('auth.password.reset');
                 Route::get('/reset-password-mfa', PasswordResetMfaChallenge::class)
                     ->name('auth.password.reset.mfa');
+                Route::get('/email-verification/verify/{id}/{hash}', VerifyEmailController::class)
+                    ->middleware(['signed', 'throttle:6,1'])
+                    ->name('auth.verify-email');
             })
             ->authenticatedRoutes(function (): void {
                 Route::get('/two-factor-setup', TwoFactorSetup::class)

@@ -30,10 +30,8 @@ use Dedoc\Scramble\Generator;
 use Dedoc\Scramble\Scramble;
 use Illuminate\Support\Facades\Route;
 
-// Root redirect to web application
-Route::get('/', function () {
-    return redirect('/web');
-})->name('root');
+// The application is the Filament panel
+Route::redirect('/', '/admin')->name('root');
 
 // Jetstream/Blade web application routes - all under /web prefix
 Route::prefix('web')->group(function () {
