@@ -182,17 +182,4 @@ return [
     */
 
     'pub_pictures_throttle' => (int) env('PUB_PICTURES_THROTTLE', 100),
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Version
-    |--------------------------------------------------------------------------
-    |
-    | This value may be set by the deployment pipeline (APP_VERSION) or
-    | derived from a VERSION file included in the build artifacts. It is
-    | optionally displayed in the web UI and returned by the /api/version
-    | endpoint.
-    |
-    */
-    'version' => env('APP_VERSION', null),
 ];

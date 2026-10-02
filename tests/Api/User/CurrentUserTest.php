@@ -23,7 +23,7 @@ class CurrentUserTest extends TestCase
 
     public function test_it_no_longer_carries_a_profile_photo_url(): void
     {
-        // Jetstream's generated avatar link went with Jetstream (M8)
+        // A generated avatar link, dropped with the package that appended it (M8)
         $this->actingAs(User::factory()->create())
             ->getJson('/api/user')
             ->assertOk()
