@@ -105,22 +105,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Rate Limiting
-    |--------------------------------------------------------------------------
-    |
-    | By default, Fortify will throttle logins to five requests per minute for
-    | every email and IP address combination. However, if you would like to
-    | specify a custom rate limiter to call then you may specify it here.
-    |
-    */
-
-    'limiters' => [
-        'login' => 'login',
-        'two-factor' => 'two-factor',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Register View Routes
     |--------------------------------------------------------------------------
     |
@@ -137,22 +121,17 @@ return [
     | Features
     |--------------------------------------------------------------------------
     |
-    | Some of the Fortify features are optional. You may disable the features
-    | by removing them from this array. You're free to only remove some of
-    | these features or you can even remove all of these if you need to.
+    | Fortify serves no route here (FortifyServiceProvider::register()), so a
+    | feature matters only where the application asks for it. The Filament
+    | login reads two-factor authentication, and the profile page reads its
+    | `confirm` option: enabling two-factor takes a code from the
+    | authenticator app.
     |
     */
 
     'features' => [
-        Features::registration(),
-        Features::resetPasswords(),
-        Features::emailVerification(),
-        Features::updateProfileInformation(),
-        Features::updatePasswords(),
         Features::twoFactorAuthentication([
             'confirm' => true,
-            'confirmPassword' => true,
-            // 'window' => 0,
         ]),
     ],
 

@@ -1,6 +1,5 @@
 <?php
 
-use App\Http\Middleware\CheckSelfRegistrationEnabled;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\RequireRole;
 use Illuminate\Foundation\Application;
@@ -52,7 +51,6 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.spatie' => RoleMiddleware::class,
             'permission.spatie' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
-            'self_registration' => CheckSelfRegistrationEnabled::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
