@@ -24,9 +24,7 @@ use App\Policies\RolePolicy;
 use App\Policies\TimelineEventPolicy;
 use App\Policies\TimelinePolicy;
 use App\Policies\UserPolicy;
-use App\Services\Settings;
 use App\Support\Documentation\RuleTransformers\IncludeRuleTransformer;
-use App\View\Composers\SettingsComposer;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
@@ -48,7 +46,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->singleton(Settings::class);
+        //
     }
 
     /**
@@ -76,35 +74,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(SpellingSaved::class, DispatchSyncSpellingToItemTranslations::class);
         Event::listen(SpellingSaved::class, DispatchSyncSpellingToCollectionTranslations::class);
         Event::listen(SpellingSaved::class, DispatchSyncSpellingToTimelineEventTranslations::class);
-
-        // Inject settings (e.g. self_registration_enabled) into shared layouts
-        View::composer(
-            ['components.app-nav', 'auth.login', 'navigation-menu'],
-            SettingsComposer::class
-        );
-
-        // Share entity color config helper across views
-        View::share('entityColor', function (string $entity): array {
-            $map = Config::array('app_entities.colors', []);
-            $fragments = Config::array('app_entities.fragments', []);
-            $colorRaw = $map[$entity] ?? null;
-            $color = is_string($colorRaw) ? $colorRaw : 'gray';
-            $fragmentDefault = [
-                'button' => 'bg-gray-600 hover:bg-gray-700 text-white',
-                'focus' => 'focus:border-gray-500 focus:ring-gray-500',
-                'badge' => 'bg-gray-100 text-gray-700',
-                'accentText' => 'text-gray-700',
-                'accentLink' => 'text-gray-600 hover:text-gray-800',
-                'pill' => 'bg-gray-100 text-gray-600',
-                'base' => 'gray-500',
-                'bg' => 'bg-gray-50',
-                'text' => 'text-gray-600',
-            ];
-            $fragmentRaw = $fragments[$color] ?? null;
-            $fragment = is_array($fragmentRaw) ? $fragmentRaw : $fragmentDefault;
-
-            return array_merge(['name' => $color], $fragment);
-        });
 
         // Share version information to all views. This will be resolved from
         // config('app.version') or the VERSION file included by the CI pipeline.

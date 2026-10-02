@@ -2,11 +2,9 @@
 
 namespace App\Providers;
 
-use App\Livewire\Profile\TwoFactorAuthenticationForm;
 use Illuminate\Support\Facades\Vite;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Jetstream\Jetstream;
-use Livewire\Livewire;
 
 class JetstreamServiceProvider extends ServiceProvider
 {
@@ -25,9 +23,6 @@ class JetstreamServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configurePermissions();
-
-        // Override Jetstream's TwoFactorAuthenticationForm with our custom implementation
-        Livewire::component('profile.two-factor-authentication-form', TwoFactorAuthenticationForm::class);
 
         Vite::prefetch(concurrency: 3);
     }
