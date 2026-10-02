@@ -49,7 +49,8 @@ jobs:
             echo "backend=false" >> $GITHUB_OUTPUT
           fi
 
-          if echo "$CHANGED" | grep -qE '^(resources/css|resources/js|resources/views)/|^(vite\.config\.js|tailwind\.config\.js|postcss\.config\.js|package\.json|package-lock\.json|tsconfig\.json|eslint\.config\.js)$'; then
+          # The Filament theme: its stylesheet, and the views Tailwind scans for classes
+          if echo "$CHANGED" | grep -qE '^(resources/css|resources/views)/|^(vite\.config\.js|postcss\.config\.js|package\.json|package-lock\.json|tsconfig\.json)$'; then
             echo "root-frontend=true" >> $GITHUB_OUTPUT
           else
             echo "root-frontend=false" >> $GITHUB_OUTPUT
@@ -227,7 +228,6 @@ jobs:
         suite:
           - Unit
           - Api
-          - Web
           - Filament
           - Configuration
           - Console
@@ -248,7 +248,7 @@ jobs:
           php artisan test --testsuite=${{ matrix.suite }} --coverage --parallel --no-ansi --stop-on-failure
 
   backend-rendered-frontend-validation:
-    name: Backend Rendered Frontend Validation (Blade/Tailwind)
+    name: Filament Theme Build
     runs-on: ubuntu-latest
     needs: detect-changes
     if: needs.detect-changes.outputs.root-frontend == 'true'
@@ -259,7 +259,7 @@ jobs:
       - name: "Setup > Node Project"
         uses: ./.github/actions/setup-node-project
 
-      - name: "Check > npm > Build Backend Assets"
+      - name: "Check > npm > Build the Filament Theme"
         run: |
           npm run build
 

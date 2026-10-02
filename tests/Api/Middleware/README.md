@@ -6,6 +6,9 @@ These tests verify that **ALL** API routes are properly protected by authenticat
 
 ## Test Files
 
+### AuthorizationMiddlewareTest.php
+**Verifies:** the `permission` and `role` middleware themselves (`RequirePermission`, `RequireRole`), on routes the test registers: a guest is turned away, a user without the permission or role is refused, a user with it gets through.
+
 ### AuthenticationTest.php
 **Verifies:** Every API route rejects unauthenticated requests with 401 Unauthorized
 

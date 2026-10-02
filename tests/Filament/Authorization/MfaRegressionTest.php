@@ -286,7 +286,7 @@ class MfaRegressionTest extends TestCase
 
     /**
      * T-13: /admin logout uses the Filament logout route, leaves no pending /admin auth keys,
-     * and does NOT redirect to /web.
+     * and returns to the panel's login.
      */
     public function test_admin_logout_uses_filament_route_and_clears_admin_session_keys(): void
     {
@@ -306,7 +306,7 @@ class MfaRegressionTest extends TestCase
         $this->assertNull(session('filament.admin.2fa.user_id'));
         $this->assertNull(session('filament.admin.2fa.remember'));
         $this->assertNull(session('filament.admin.2fa.email_challenge_id'));
-        $this->assertStringNotContainsString('/web/', $response->getTargetUrl() ?? '');
+        $response->assertRedirect(Filament::getLoginUrl());
     }
 
     /**
@@ -325,7 +325,7 @@ class MfaRegressionTest extends TestCase
         $this->post(route('filament.admin.auth.logout'));
 
         $this->assertGuest(config('fortify.guard'));
-        // login.id belongs to the /web Fortify flow; /admin logout must not interact with it
-        // (it may or may not be cleared, but it must not cause /admin to redirect to /web)
+        // login.id is the key of Fortify's own two-factor challenge, which the panel
+        // doesn't use; a stale one may or may not be cleared, but must not get in the way
     }
 }

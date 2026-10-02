@@ -53,7 +53,7 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 | Changed paths | `detect-changes` output | Jobs triggered |
 | --- | --- | --- |
 | `app/**`, `routes/**`, `config/**`, `database/**`, `tests/**`, `bootstrap/**`, `composer.json`, `composer.lock`, `phpunit.xml`, `artisan` | `backend` | `backend-lint`, `backend-tests` |
-| `resources/css/**`, `resources/js/**`, `resources/views/**`, `vite.config.js`, `tailwind.config.js`, `postcss.config.js`, `package.json`, `package-lock.json`, `tsconfig.json`, `eslint.config.js` | `root-frontend` | `backend-rendered-frontend-validation` |
+| `resources/css/**`, `resources/views/**`, `vite.config.js`, `postcss.config.js`, `package.json`, `package-lock.json`, `tsconfig.json` | `root-frontend` | `backend-rendered-frontend-validation` |
 | `scripts/importer/**` | `importer` | `importer-validation` |
 | `scripts/site-i18n/**` | `site-i18n` | `site-i18n-validation` |
 | `scripts/exporters/**` | `exporters` | `exporter-validation` |
@@ -77,11 +77,11 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 
 4. **backend-tests** *(when `backend=true`)* (*Backend Tests (`<suite>`)*) - Laravel test matrix
    - Uses the `setup-backend` composite action with `tools: phpunit, pest` and `coverage: xdebug`
-   - Matrix: `Unit`, `Api`, `Web`, `Filament`, `Configuration`, `Console`, `Event`, `Integration`
+   - Matrix: `Unit`, `Api`, `Filament`, `Configuration`, `Console`, `Event`, `Integration`
    - `fail-fast: true` — stops remaining suites on first failure
    - Runs each suite with `php artisan test --testsuite=<suite> --coverage --parallel --no-ansi --stop-on-failure`
 
-5. **backend-rendered-frontend-validation** *(when `root-frontend=true`)* (*Backend Rendered Frontend Validation (Blade/Tailwind)*) - Blade/Tailwind build
+5. **backend-rendered-frontend-validation** *(when `root-frontend=true`)* (*Filament Theme Build*) - Builds the admin panel's Tailwind theme, the only front-end asset
    - Uses the `setup-node-project` composite action at the repository root
    - Runs `npm run build`
 

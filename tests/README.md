@@ -1,6 +1,6 @@
 # New Test Structure
 
-This directory contains the reorganized test suite following Laravel best practices for applications with separate API and Web frontends.
+This directory contains the test suite of the two interfaces, the REST API and the Filament admin panel (/admin), and of the code behind them.
 
 ## Directory Structure
 
@@ -17,35 +17,17 @@ tests/
 │   │   ├── TestsApiImageResource.php # Image resource operations
 │   │   ├── TestsApiImageViewing.php # Image download/view operations
 │   │   └── TestsApiTagManagement.php # Tag management operations
+│   ├── Authentication/               # Mobile token endpoints, their two-factor flow
 │   └── Middleware/                   # API middleware & security tests
 │       ├── AuthenticationTest.php   # Sanctum token validation, unauthenticated rejection
+│       ├── AuthorizationMiddlewareTest.php # The permission and role middleware themselves
 │       └── PermissionsTest.php      # Permission-based authorization (VIEW_DATA, CREATE_DATA, etc.)
 │
-├── Web/                              # Blade frontend and remaining Livewire component tests
-│   ├── Pages/                        # Page rendering & form submission tests
-│   │   ├── ItemTest.php             # All Item web pages (index, show, create, edit, store, update, destroy)
-│   │   ├── PartnerTest.php          # All Partner web pages
-│   │   └── ...                      # One test file per web resource
-│   ├── Components/                   # Reusable Livewire component tests
-│   │   ├── TagsTableTest.php        # Livewire Tags table component
-│   │   ├── ProjectsTableTest.php    # Livewire Projects table component
-│   │   └── ...                      # One test file per remaining Livewire component
-│   ├── Traits/                       # Reusable test traits
-│   │   ├── AuthenticatesWebRequests.php  # Web authentication setup
-│   │   ├── TestsWebCrud.php         # Standard CRUD operations
-│   │   └── TestsWebLivewire.php     # Reusable Livewire component testing
-│   ├── Middleware/                   # Web middleware & security tests
-│   │   ├── AuthenticationTest.php   # Session-based auth, guest redirection
-│   │   └── PermissionsTest.php      # Permission-based authorization (same permissions as API)
-│   ├── Auth/                         # Web authentication flows
-│   │   ├── LoginTest.php            # Login, logout, session management
-│   │   ├── RegistrationTest.php     # User registration
-│   │   ├── TwoFactorTest.php        # 2FA challenges, recovery codes
-│   │   ├── PasswordResetTest.php    # Password reset flows
-│   │   └── ProfileTest.php          # Profile management
-│   └── Admin/                        # Admin interface tests
-│       ├── UserManagementTest.php   # User CRUD, role assignment
-│       └── RoleManagementTest.php   # Role & permission management
+├── Pub/                              # /pub/{filename}, the public picture URL (Api suite)
+│
+├── Filament/                         # The admin panel: resources, relation managers, pages, widgets
+│   ├── Authorization/               # Panel access, per-resource authorization, MFA
+│   └── Pages/                       # Login, registration, verification, two-factor, profile, API tokens
 │
 ├── Unit/                             # Pure unit tests (business logic)
 │   ├── Models/                       # Model method tests
@@ -76,10 +58,10 @@ tests/
 - NOT by HTTP method (Index, Store, Update, etc.)
 - One file contains ALL tests for a resource's feature area
 
-### 2. Clear API/Web Separation
+### 2. Clear API/Panel Separation
 - `Api/` - REST API backend (JSON responses, authentication tokens)
-- `Web/` - Blade frontend plus remaining reusable Livewire components (HTML, sessions, redirects)
-- Never mixed - these are independent applications
+- `Filament/` - the admin panel (Livewire pages, sessions, redirects)
+- Never mixed - these are independent interfaces
 
 ### 3. Single Responsibility Per File
 - Each test file has ONE feature responsibility
@@ -87,7 +69,7 @@ tests/
 - Each test method still tests ONE thing
 
 ### 4. Middleware Tests - Centralized Security Validation
-- **Api/Middleware/** and **Web/Middleware/** contain cross-cutting security tests
+- **Api/Middleware/** contains cross-cutting security tests; the panel's live under **Filament/Authorization/**
 - Tests ALL routes systematically to ensure proper protection
 - **AuthenticationTest.php** - Verifies ALL routes reject unauthenticated requests
 - **PermissionsTest.php** - Verifies ALL routes enforce correct permissions (VIEW_DATA, CREATE_DATA, UPDATE_DATA, DELETE_DATA)

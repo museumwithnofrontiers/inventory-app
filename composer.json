@@ -86,8 +86,7 @@
             "Composer\\Config::disableProcessTimeout",
             "@php artisan test --testsuite=Unit --compact --parallel --ansi",
             "@php artisan test --testsuite=Api --compact --parallel --ansi",
-            "@php artisan test --testsuite=Web --compact --parallel --ansi",
-            "@php artisan test --testsuite=Filament --compact --parallel --ansi",
+                "@php artisan test --testsuite=Filament --compact --parallel --ansi",
             "@php artisan test --testsuite=Configuration --compact --parallel --ansi",
             "@php artisan test --testsuite=Console --compact --parallel --ansi",
             "@php artisan test --testsuite=Event --compact --parallel --ansi",
@@ -129,8 +128,7 @@
         "ci-test": [
             "@php artisan test --testsuite=Unit --compact --parallel --ansi",
             "@php artisan test --testsuite=Api --compact --parallel --ansi",
-            "@php artisan test --testsuite=Web --compact --parallel --ansi",
-            "@php artisan test --testsuite=Filament --compact --parallel --ansi"
+                "@php artisan test --testsuite=Filament --compact --parallel --ansi"
         ],
         "ci-test:integration": [
             "@php artisan test --testsuite=Integration --compact --ansi"

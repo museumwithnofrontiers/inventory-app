@@ -283,9 +283,7 @@ class PartnerTranslationImageResourceTest extends TestCase
 
         $this->assertStringContainsString('/admin/', $viewRoute);
         $this->assertStringContainsString('/admin/', $downloadRoute);
-        $this->assertStringNotContainsString('/web/', $viewRoute);
         $this->assertStringNotContainsString('/api/', $viewRoute);
-        $this->assertStringNotContainsString('/web/', $downloadRoute);
         $this->assertStringNotContainsString('/api/', $downloadRoute);
     }
 
