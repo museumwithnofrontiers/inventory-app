@@ -10,7 +10,6 @@ use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Http\Responses\CustomLogoutResponse;
 use App\Http\Responses\CustomPasswordResetResponse;
 use App\Http\Responses\CustomRegisterResponse;
-use App\Models\Setting;
 use App\Models\User;
 use App\Services\SafeTwoFactorAuthenticationProvider;
 use Illuminate\Auth\Events\Logout;
@@ -34,7 +33,10 @@ class FortifyServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        // The Filament panel has its own login, two-factor, password-reset,
+        // registration and profile pages, which call Fortify's actions
+        // directly. None of Fortify's routes is needed.
+        Fortify::ignoreRoutes();
     }
 
     /**
@@ -104,17 +106,6 @@ class FortifyServiceProvider extends ServiceProvider
 
             // Clear 2FA challenge session
             session()->forget('login.id');
-        });
-
-        // Configure registration view with self-registration check
-        Fortify::registerView(function () {
-            // Check if self-registration is enabled
-            if (! Setting::get('self_registration_enabled', false)) {
-                return redirect()->route('login')
-                    ->with('error', 'Self-registration is currently disabled. Please contact an administrator.');
-            }
-
-            return view('auth.register');
         });
     }
 }

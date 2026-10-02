@@ -42,65 +42,6 @@ class TotpAuthenticationIntegrationTest extends TestCase
         return '000000'; // Obviously invalid code
     }
 
-    public function test_web_login_with_valid_totp_code_succeeds(): void
-    {
-        // First step: Login with email/password
-        $response = $this->post(route('login.store'), [
-            'email' => $this->user->email,
-            'password' => 'test-password',
-        ]);
-
-        // Should redirect to 2FA challenge
-        $response->assertRedirect(route('two-factor.login'));
-
-        // Second step: Submit valid TOTP code
-        $response = $this->post(route('two-factor.login.store'), [
-            'code' => $this->getCurrentTotpCode(),
-        ]);
-
-        // Should redirect to dashboard and be authenticated
-        $response->assertRedirect(route('dashboard'));
-        $this->assertAuthenticatedAs($this->user);
-    }
-
-    public function test_web_login_with_invalid_totp_code_fails(): void
-    {
-        // First step: Login with email/password
-        $this->post(route('login.store'), [
-            'email' => $this->user->email,
-            'password' => 'test-password',
-        ]);
-
-        // Second step: Submit invalid TOTP code
-        $response = $this->post(route('two-factor.login.store'), [
-            'code' => $this->getInvalidTotpCode(),
-        ]);
-
-        // Should stay on 2FA challenge page with error
-        $response->assertRedirect();
-        $response->assertSessionHasErrors(['code']);
-        $this->assertGuest();
-    }
-
-    public function test_web_login_with_malformed_totp_code_fails(): void
-    {
-        // First step: Login with email/password
-        $this->post(route('login.store'), [
-            'email' => $this->user->email,
-            'password' => 'test-password',
-        ]);
-
-        // Second step: Submit malformed TOTP code
-        $response = $this->post(route('two-factor.login.store'), [
-            'code' => 'abc123', // Non-numeric code
-        ]);
-
-        // Should stay on 2FA challenge page with error
-        $response->assertRedirect();
-        $response->assertSessionHasErrors(['code']);
-        $this->assertGuest();
-    }
-
     public function test_api_mobile_authentication_with_valid_totp_succeeds(): void
     {
         $response = $this->postJson('/api/mobile/verify-two-factor', [

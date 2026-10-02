@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Actions\Jetstream;
+namespace App\Actions;
 
 use App\Models\User;
-use Laravel\Jetstream\Contracts\DeletesUsers;
 
-class DeleteUser implements DeletesUsers
+/**
+ * Deletes an account and the API tokens issued to it. Used by the profile
+ * page's "Delete Account" action.
+ */
+class DeleteUser
 {
-    /**
-     * Delete the given user.
-     */
     public function delete(User $user): void
     {
         $user->deleteProfilePhoto();

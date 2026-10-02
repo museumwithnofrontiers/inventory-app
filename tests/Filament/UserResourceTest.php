@@ -59,7 +59,7 @@ class UserResourceTest extends TestCase
             ->assertDontSee('Delete');
     }
 
-    public function test_logging_out_from_filament_invalidates_the_shared_web_session(): void
+    public function test_logging_out_from_filament_ends_the_session(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
@@ -73,6 +73,6 @@ class UserResourceTest extends TestCase
 
         $response->assertRedirect('/admin/login');
         $this->assertGuest();
-        $this->get(route('items.index'))->assertRedirect(route('login'));
+        $this->get('/admin')->assertRedirect('/admin/login');
     }
 }

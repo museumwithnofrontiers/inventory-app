@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
+use App\Actions\DeleteUser;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
-use App\Actions\Jetstream\DeleteUser;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
