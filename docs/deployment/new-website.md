@@ -170,13 +170,14 @@ holding admin rights on the `museumwithnofrontiers` org (this tool never
 stores a token). `--class` picks the template: `gallery-template` or
 `exhibition-template`. A gallery or an exhibition also needs its own colours,
 in a small JSON file, one entry per `__PALETTE_<NAME>__` placeholder of the
-template's `src/styles/site.css` — a gallery's five from
-`.legacy-code/dxa-client/src/sites/<code>/_variables.scss` plus `$theme-dark`
-as three numbers, an exhibition's six from its legacy compiled stylesheet
-(the comment above the placeholders says how):
+template's `theme/tokens.css` — a gallery's five from
+`.legacy-code/dxa-client/src/sites/<code>/_variables.scss`, an exhibition's
+six from its legacy compiled stylesheet (the comment above the placeholders
+says how). The family's theme (`@museumwnf/viewer-layout/dxa/gallery.css` or
+`exhibition.css`) reads them for every surface, text and border:
 
 ```json
-{ "THEME_DARK": "#504819", "THEME_DARK_RGB": "80, 72, 25", "THEME_MEDIUM_DARK": "#6b612b",
+{ "THEME_DARK": "#504819", "THEME_MEDIUM_DARK": "#6b612b",
   "THEME_MEDIUM": "#7e743e", "THEME_LIGHT": "#91864d", "BACKGROUND_COLOR": "#fffff0" }
 ```
 
