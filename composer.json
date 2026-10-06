@@ -8,7 +8,7 @@
     "require": {
         "php": "^8.5",
         "dedoc/scramble": "^0.13.6",
-        "filament/filament": "^3.3",
+        "filament/filament": "^5.9",
         "intervention/image": "^4.3.3",
         "laravel/fortify": "^1.39.0",
         "laravel/framework": "^12.40.2",
