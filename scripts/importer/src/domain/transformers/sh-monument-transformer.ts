@@ -12,6 +12,7 @@ import type { ShLegacyMonument, ShLegacyMonumentText, ShMonumentGroup } from '..
 import type { ItemData, ItemTranslationData } from '../../core/types.js';
 import { mapCountryCode, mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { gallerySheetFields } from './sh-gallery-sheet.js';
 import { formatShBackwardCompatibility } from './sh-project-transformer.js';
 import { selectItemInternalName } from './item-internal-name-transformer.js';
 
@@ -178,6 +179,18 @@ export function transformShMonumentTranslation(
 
   // Build extra JSON for translation-specific fields
   const extra: Record<string, unknown> = {};
+  // The fields as the galleries and exhibitions sheet shows a Sharing History
+  // record (dxa-api): description and short description apart, the second name
+  // alone, keywords. The Sharing History site itself shows them merged, as
+  // above; its exporter leaves this block out.
+  const gallerySheet = gallerySheetFields({
+    description: text.description,
+    short_description: text.description2,
+    history: text.history,
+    also_known_as: text.name2,
+    keywords: text.keywords,
+  });
+  if (gallerySheet) extra.gallery_sheet = gallerySheet;
   // The free-text Period / Dynasty line legacy prints on the sheet (its own
   // line, not part of the dates). The linked dynasties are a separate index.
   if (text.dynasty) extra.dynasty = convertHtmlToMarkdown(text.dynasty);
