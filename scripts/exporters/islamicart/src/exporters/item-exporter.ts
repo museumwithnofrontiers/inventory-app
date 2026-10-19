@@ -1,6 +1,26 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
+// Legacy prints Location as its parts — a monument's address first, then
+// location and province — joined with ", ", each without its trailing period
+// (removeEndingPoint, which spares "C." as in "B.C."), the address keeping its
+// line breaks. The importer stores location and province already joined, and
+// the address in extra.monument_contact.
+export function legacyLocation(location: string | null, address?: string | null): string | null {
+  const stripEnding = (part: string): string => part.replace(/([^C])\.+(?=\s*(?:,|$))/g, '$1').trim()
+  const parts: string[] = []
+  if (address?.trim()) parts.push(stripEnding(address.trim()).split(/\r?\n/).map(l => l.trim()).join('  \n'))
+  if (location?.trim()) parts.push(stripEnding(location))
+  return parts.length > 0 ? parts.join(', ') : null
+}
+
+// The monument's address, which the importer files with its visitor contact
+// details (extra.monument_contact.address).
+function monumentAddress(extra: unknown): string | null {
+  const parsed = parseJson(extra) as { monument_contact?: { address?: unknown } } | null
+  const address = parsed?.monument_contact?.address
+  return typeof address === 'string' ? address : null
+}
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ", each in Arabic script on an Arabic row when
 // the author has that spelling. Falls back to the role's FK column for a
@@ -89,6 +109,8 @@ interface ItemItemLinkRow {
 interface ItemTagRow {
   item_id: string
   tag: string
+  category: string | null
+  language_id: string | null
 }
 
 interface ItemGlossaryRow {
@@ -257,7 +279,7 @@ export class ItemExporter extends BaseExporter {
       ),
       this.db.query<ItemTagRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
-        `SELECT it2.item_id, t.description AS tag
+        `SELECT it2.item_id, t.description AS tag, t.category, t.language_id
          FROM item_tag it2
          JOIN tags t ON t.id = it2.tag_id
          WHERE it2.item_id IN (${itemPh})
@@ -351,6 +373,21 @@ export class ItemExporter extends BaseExporter {
       translationsByItemLang.get(key)!.push(t)
     }
 
+    // item_id -> lang_code -> { material | keyword -> labels[] }: the sheet's
+    // Material(s) / Technique(s) and keyword lines, in the page's language.
+    // These tags are language-scoped, one row per language.
+    const sheetTags = new Map<string, Map<string, Map<string, string[]>>>()
+    for (const row of tagLinks) {
+      if (row.category !== 'material' && row.category !== 'keyword') continue
+      const code = row.language_id ? langCodeMap.get(row.language_id) : undefined
+      if (!code) continue
+      const byLang = sheetTags.get(row.item_id) ?? new Map<string, Map<string, string[]>>()
+      sheetTags.set(row.item_id, byLang)
+      const byCategory = byLang.get(code) ?? new Map<string, string[]>()
+      byLang.set(code, byCategory)
+      byCategory.set(row.category, [...(byCategory.get(row.category) ?? []), row.tag])
+    }
+
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const [key, rows] of translationsByItemLang) {
       const sep = key.indexOf(' ')
@@ -379,7 +416,7 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        location: ownRow.location,
+        location: legacyLocation(ownRow.location, monumentAddress(ownRow.extra)),
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
@@ -393,10 +430,21 @@ export class ItemExporter extends BaseExporter {
         workshop: extra?.workshop ?? null,
         // The free-text Period / Dynasty line legacy prints on the sheet.
         dynasty: extra?.dynasty ?? null,
+        // The artist's life data, per language, as this sheet prints it after the artist line.
+        artist_birthdate: extra?.artist_birthdate ?? null,
+        artist_birthplace: extra?.artist_birthplace ?? null,
+        artist_deathdate: extra?.artist_deathdate ?? null,
+        artist_deathplace: extra?.artist_deathplace ?? null,
         scriber: extra?.scriber ?? null,
         binding_desc: extra?.binding_desc ?? null,
+        // The item's rights statement ("Copyright image: <institution>"), which
+        // legacy shows below the sheet. Not to be confused with the picture
+        // `copyright` read further down — different record, per-image credit.
+        copyright: extra?.copyright ?? null,
         catalogue_holding_link: extra?.catalogue_holding_link ?? null,
         linkcatalogs: extra?.linkcatalogs ?? null,
+        materials: sheetTags.get(itemId)?.get(code)?.get('material') ?? [],
+        keywords: sheetTags.get(itemId)?.get(code)?.get('keyword') ?? [],
         author: ownRow.author_name,
         copy_editor: ownRow.copy_editor_name,
         translator: ownRow.translator_name,

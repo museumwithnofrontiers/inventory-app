@@ -32,3 +32,26 @@ describe('convertHtmlToMarkdown — character references in tag-free text', () =
     expect(convertHtmlToMarkdown('Wool & silk, *knotted*')).toBe('Wool & silk, *knotted*');
   });
 });
+
+// The exhibition popup (Water in Islam) reached the sites as `\*\*\*\*Welcome…`
+// with an empty `[email]()`: its Markdown went through the conversion a second
+// time when a later import step wrote its `extra` back.
+describe('convertHtmlToMarkdown — the exhibition popup', () => {
+  const popup =
+    '<p style="text-align: center;"><span style="font-size: 14pt;"><strong><strong>Welcome to the MWNF online exhibition platform!</strong></strong></span></p>\r\n' +
+    '<p style="text-align: center;"> </p>\r\n' +
+    '<p class="MsoNormal"><span><strong>If you believe that what we do is important, please consider making a donation.</strong> Contact us at this <a href="mailto: management@museumwnf.net">email</a> for further details.</span></p>';
+
+  it('writes bold inside bold as plain bold', () => {
+    expect(convertHtmlToMarkdown(popup)).toMatch(/^\*\*Welcome to the MWNF online exhibition platform!\*\*$/m);
+  });
+
+  it('keeps the e-mail link', () => {
+    expect(convertHtmlToMarkdown(popup)).toContain('[email](<mailto: management@museumwnf.net>)');
+  });
+
+  it('leaves its own Markdown unchanged when converted again', () => {
+    const once = convertHtmlToMarkdown(popup);
+    expect(convertHtmlToMarkdown(once)).toBe(once);
+  });
+});

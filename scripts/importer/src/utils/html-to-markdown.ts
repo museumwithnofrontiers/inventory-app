@@ -17,6 +17,16 @@ const turndownService = new TurndownService({
   strongDelimiter: '**',
 });
 
+// Bold inside bold (`<strong><strong>x</strong></strong>`, as legacy's editor
+// wrote it) is still just bold. Each level would otherwise add its own `**`,
+// and `****x****` is not bold in Markdown.
+turndownService.addRule('nestedStrong', {
+  filter: (node) =>
+    (node.nodeName === 'STRONG' || node.nodeName === 'B') &&
+    (node.parentNode?.nodeName === 'STRONG' || node.parentNode?.nodeName === 'B'),
+  replacement: (content) => content,
+});
+
 /**
  * Convert HTML string to Markdown using Turndown
  * Robust parser that handles malformed HTML gracefully
@@ -28,7 +38,11 @@ export function convertHtmlToMarkdown(html: string | null | undefined): string {
 
   const trimmed = html.trim();
 
-  if (!trimmed.includes('<')) {
+  // Only text that holds HTML goes through the HTML conversion. A `<` alone
+  // doesn't make it HTML: Markdown this converter wrote, e.g. a link to
+  // `<mailto: x>`, would otherwise be converted a second time when a later
+  // step writes it back, its tag-like target dropped and its Markdown escaped.
+  if (!containsHtml(trimmed)) {
     // Plain text is stored as written, except for its character references:
     // legacy prints the page as HTML, so `&eacute;` reads "é" there and must
     // be decoded here as the HTML path decodes it.

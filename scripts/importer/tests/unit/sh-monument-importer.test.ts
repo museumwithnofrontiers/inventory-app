@@ -154,6 +154,7 @@ describe('ShMonumentImporter', () => {
         notice: 'This is an unedited Database entry  \nand may contain errors.',
         architects: 'Francisco Silva Rocha',
         monument_contact: { address: 'Aveiro' },
+        gallery_sheet: { description: 'A description' },
       });
 
       const importer = new ShMonumentImporter(context);

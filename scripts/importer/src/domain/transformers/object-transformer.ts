@@ -297,6 +297,15 @@ export function transformObjectTranslation(
   // The free-text Period / Dynasty line legacy prints on the sheet. The linked
   // dynasties (item_dynasty, DynastyImporter) are a separate, partial index.
   if (obj.dynasty) extraData.dynasty = convertHtmlToMarkdown(obj.dynasty);
+  // The artist's life data as this language's sheet prints it after the
+  // artist line. Legacy keeps it per object and per language (one language
+  // may hold it all in the birth date), so the shared Artist record, which
+  // keeps the first object's values, can't stand in for it. Same keys as the
+  // Sharing History transformer.
+  if (obj.birthdate?.trim()) extraData.artist_birthdate = obj.birthdate.trim();
+  if (obj.birthplace?.trim()) extraData.artist_birthplace = convertHtmlToMarkdown(obj.birthplace);
+  if (obj.deathdate?.trim()) extraData.artist_deathdate = obj.deathdate.trim();
+  if (obj.deathplace?.trim()) extraData.artist_deathplace = convertHtmlToMarkdown(obj.deathplace);
   const extraField = Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null;
 
   // backward_compatibility matches parent item
