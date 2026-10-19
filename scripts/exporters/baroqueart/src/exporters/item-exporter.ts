@@ -1,6 +1,15 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
+// Legacy prints Location as its parts (location, province) joined with ", ",
+// each without its trailing period (removeEndingPoint, which spares "C." as in
+// "B.C."). The importer stores the parts already joined, so strip a period
+// that ends a part.
+export function legacyLocation(location: string | null): string | null {
+  if (!location) return location
+  return location.replace(/([^C])\.+(?=\s*(?:,|$))/g, '$1').trim()
+}
+
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ", each in Arabic script on an Arabic row when
 // the author has that spelling. Falls back to the role's FK column for a
@@ -155,7 +164,6 @@ export class ItemExporter extends BaseExporter {
     const langCodeMap = await this.buildLangCodeMap()
 
     const contextIds = this.context.contextIds
-    const contextPh = this.placeholders(contextIds.length)
 
     // Each item's "own" context — resolved via its project's context_id.
     // An item can have item_translations rows in more than one context (e.g. a
@@ -268,7 +276,11 @@ export class ItemExporter extends BaseExporter {
 
     // ── 1. Content translations (name, description, …) ──────────────────────
     // Filter by context_id so that explore-context translations (which may have
-    // extra=null) do not overwrite the canonical project translations.
+    // extra=null) do not overwrite the canonical project translations. The EPM
+    // context is read too: it holds the records' short descriptions.
+    const epmContextId = await this.resolveEpmContextId()
+    const translationContextIds =
+      epmContextId && !contextIds.includes(epmContextId) ? [...contextIds, epmContextId] : contextIds
     const translations = await this.db.query<ItemTranslationRow>(
       // Row order is unspecified; sorted so two exports of one database are
       // byte-identical (also fixes which row `rows[0]` picks below when an
@@ -289,9 +301,9 @@ export class ItemExporter extends BaseExporter {
        LEFT JOIN authors a3 ON a3.id = it.translator_id
        LEFT JOIN authors a4 ON a4.id = it.translation_copy_editor_id
        WHERE it.item_id IN (${itemPh})
-         AND it.context_id IN (${contextPh})
+         AND it.context_id IN (${this.placeholders(translationContextIds.length)})
        ORDER BY it.item_id, it.context_id`,
-      [...itemIds, ...contextIds]
+      [...itemIds, ...translationContextIds]
     )
 
     // ── 2. Images via picture child items ────────────────────────────────────
@@ -452,7 +464,12 @@ export class ItemExporter extends BaseExporter {
       const ownContext = itemOwnContext.get(itemId)
       const ownRow =
         (ownContext ? rows.find(r => r.context_id === ownContext) : undefined) ?? rows[0]!
-      const otherRow = rows.find(r => r !== ownRow)
+      // The importer files a Baroque Art record's short description
+      // (description2) under the EPM context. When that row is all a language
+      // has, its text is still the short description: legacy shows no long one.
+      const epmRow = epmContextId ? rows.find(r => r.context_id === epmContextId) : undefined
+      const ownIsEpm = epmRow !== undefined && epmRow === ownRow
+      const otherRow = epmRow ?? rows.find(r => r !== ownRow)
 
       // Fields without a dedicated column live in item_translations.extra JSON.
       // Most keys are only ever set by the importer for the item type they
@@ -466,14 +483,14 @@ export class ItemExporter extends BaseExporter {
       translationMap.get(itemId)![code] = {
         name: ownRow.name,
         alternate_name: ownRow.alternate_name,
-        description: ownRow.description,
+        description: ownIsEpm ? null : ownRow.description,
         short_description: otherRow?.description ?? null,
         type: ownRow.type,
         holder: ownRow.holder,
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        location: ownRow.location,
+        location: legacyLocation(ownRow.location),
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
@@ -487,6 +504,11 @@ export class ItemExporter extends BaseExporter {
         workshop: extra?.workshop ?? null,
         // The free-text Period / Dynasty line legacy prints on the sheet.
         dynasty: extra?.dynasty ?? null,
+        // The artist's life data, per language, as this sheet prints it after the artist line.
+        artist_birthdate: extra?.artist_birthdate ?? null,
+        artist_birthplace: extra?.artist_birthplace ?? null,
+        artist_deathdate: extra?.artist_deathdate ?? null,
+        artist_deathplace: extra?.artist_deathplace ?? null,
         scriber: extra?.scriber ?? null,
         binding_desc: extra?.binding_desc ?? null,
         // The item's rights statement ("Copyright image: <institution>"), which
@@ -689,6 +711,14 @@ export class ItemExporter extends BaseExporter {
     this.logger.success(`items.json (${output.length} items)`)
 
     return { file: 'items.json', count: output.length }
+  }
+
+  private async resolveEpmContextId(): Promise<string | null> {
+    const rows = await this.db.query<{ id: string }>(
+      `SELECT id FROM contexts WHERE backward_compatibility = ?`,
+      ['mwnf3:projects:EPM']
+    )
+    return rows[0]?.id ?? null
   }
 }
 

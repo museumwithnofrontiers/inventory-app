@@ -1,6 +1,28 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { isHidden } from './gallery-exporter.js'
 
+// A Sharing History record shown in a gallery or exhibition: its fields as the
+// galleries' sheet (dxa-api) shows them, which the importer keeps apart in
+// extra.gallery_sheet. The record's own translation holds the Sharing History
+// site's merged form, and its dimensions and materials sit in extra.
+function sharingHistorySheet(
+  sheet: Record<string, string>,
+  extra: Record<string, string> | null
+): Record<string, unknown> {
+  return {
+    description: sheet['description'] ?? null,
+    short_description: sheet['short_description'] ?? null,
+    alternate_name: sheet['also_known_as'] ?? null,
+    history: sheet['history'] ?? null,
+    dimensions: extra?.['dimensions'] ?? null,
+    materials: extra?.['materials'] ? [extra['materials']] : [],
+    keywords: (sheet['keywords'] ?? '')
+      .split(/[;\u061B]/)
+      .map(k => k.trim())
+      .filter(Boolean),
+  }
+}
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ", each in Arabic script on an Arabic row when
 // the author has that spelling. Falls back to the role's FK column for a
@@ -384,6 +406,11 @@ export class ItemExporter extends BaseExporter {
         workshop: extra?.['workshop'] ?? null,
         // The free-text Period / Dynasty line legacy prints on the sheet.
         dynasty: extra?.['dynasty'] ?? null,
+        // The artist's life data, per language, as this sheet prints it after the artist line.
+        artist_birthdate: extra?.['artist_birthdate'] ?? null,
+        artist_birthplace: extra?.['artist_birthplace'] ?? null,
+        artist_deathdate: extra?.['artist_deathdate'] ?? null,
+        artist_deathplace: extra?.['artist_deathplace'] ?? null,
         scriber: extra?.['scriber'] ?? null,
         binding_desc: extra?.['binding_desc'] ?? null,
         // The item's rights statement ("Copyright image: <institution>"), which
@@ -399,6 +426,8 @@ export class ItemExporter extends BaseExporter {
         keywords: perCategory?.get('keyword') ?? [],
         materials: perCategory?.get('material') ?? [],
       }
+      const gallerySheet = parseJson<{ gallery_sheet?: Record<string, string> }>(ownRow.extra)?.gallery_sheet
+      if (gallerySheet) Object.assign(byLang[code]!, sharingHistorySheet(gallerySheet, extra))
       translationMap.set(itemId, byLang)
     }
 
@@ -588,6 +617,10 @@ export class ItemExporter extends BaseExporter {
       if (row.collection_id === this.gallery.id) continue
       const anchor =
         parseJson<{ thg_gallery?: Record<string, unknown> }>(row.extra)?.thg_gallery ?? {}
+      // Legacy lists another gallery or exhibition only while it is live:
+      // status 'A'. A hidden one (e.g. Carpets' "Doubts") shows on its own site only.
+      const status = anchor['status'] as string | undefined
+      if (status !== undefined && isHidden(status)) continue
       const entry = {
         id: row.collection_id,
         backward_compatibility: row.backward_compatibility,

@@ -408,6 +408,9 @@ export class ItemExporter extends BaseExporter {
       if (extra) {
         for (const [k, v] of Object.entries(extra)) {
           if (k === 'legacy_display_status') continue
+          // How the galleries' sheet shows this record; this site shows the
+          // merged fields above.
+          if (k === 'gallery_sheet') continue
           if (fields[k] == null) fields[k] = v
         }
       }
