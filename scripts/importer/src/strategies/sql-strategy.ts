@@ -97,6 +97,15 @@ function mapTableToEntityType(table: string): EntityType | null {
   return tableEntityMap[table] ?? null;
 }
 
+// item_translation_author roles, keyed by the item_translations FK column
+// each role also fills with its first person (inventory-app CreditRole).
+const CREDIT_ROLE_BY_FK_COLUMN: Record<string, string> = {
+  author_id: 'author',
+  text_copy_editor_id: 'text_copy_editor',
+  translator_id: 'translator',
+  translation_copy_editor_id: 'translation_copy_editor',
+};
+
 /**
  * True if `error` is a MySQL duplicate-key error (ER_DUP_ENTRY / errno 1062).
  *
@@ -599,6 +608,18 @@ export class SqlWriteStrategy implements IWriteStrategy {
         this.now,
       ]
     );
+
+    // The free-text credit is the role's whole list until a junction step
+    // replaces it (replaceItemTranslationCredits).
+    for (const [fkColumn, role] of Object.entries(CREDIT_ROLE_BY_FK_COLUMN)) {
+      const authorId = sanitized[fkColumn as keyof ItemTranslationData];
+      if (typeof authorId !== 'string' || authorId === '') continue;
+      await this.db.execute(
+        `INSERT IGNORE INTO item_translation_author (item_translation_id, role, author_id, display_order, created_at, updated_at)
+         VALUES (?, ?, ?, 0, ?, ?)`,
+        [id, role, authorId, this.now, this.now]
+      );
+    }
   }
 
   async attachTagsToItem(itemId: string, tagIds: string[]): Promise<void> {
@@ -1434,6 +1455,30 @@ export class SqlWriteStrategy implements IWriteStrategy {
       `UPDATE item_translations SET ${fkColumn} = ? WHERE item_id = ? AND language_id = ?${guard}`,
       [authorId, itemId, languageId]
     );
+  }
+
+  async replaceItemTranslationCredits(
+    itemId: string,
+    languageId: string,
+    fkColumn: string,
+    authorIds: string[]
+  ): Promise<void> {
+    const role = CREDIT_ROLE_BY_FK_COLUMN[fkColumn];
+    if (!role) {
+      throw new Error(`Invalid FK column: ${fkColumn}`);
+    }
+    await this.db.execute(
+      `DELETE FROM item_translation_author WHERE role = ? AND item_translation_id IN
+         (SELECT id FROM item_translations WHERE item_id = ? AND language_id = ?)`,
+      [role, itemId, languageId]
+    );
+    for (const [displayOrder, authorId] of authorIds.entries()) {
+      await this.db.execute(
+        `INSERT IGNORE INTO item_translation_author (item_translation_id, role, author_id, display_order, created_at, updated_at)
+         SELECT id, ?, ?, ?, ?, ? FROM item_translations WHERE item_id = ? AND language_id = ?`,
+        [role, authorId, displayOrder, this.now, this.now, itemId, languageId]
+      );
+    }
   }
 
   // Same all-context and overwrite semantics as updateItemTranslationAuthorFk.
