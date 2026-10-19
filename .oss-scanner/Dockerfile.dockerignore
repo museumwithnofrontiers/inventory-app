@@ -1,0 +1,7 @@
+# Build context for .oss-scanner/Dockerfile only. BuildKit reads <Dockerfile>.dockerignore beside the Dockerfile
+# instead of the root .dockerignore, which is written for production images and drops what this build needs:
+# .env.local.example, tests/, phpunit.xml and .git.
+
+# Dependencies: the build installs its own.
+**/node_modules
+vendor
