@@ -13,6 +13,9 @@
 #   user@example.com  / password   role "Regular User"     (data operations, panel access)
 #   admin@example.com / password   role "Manager of Users"  (user and role management only)
 #
+# The build context is filtered by .oss-scanner/Dockerfile.dockerignore, not the root .dockerignore (which is for
+# production images and leaves out .env.local.example, tests/ and phpunit.xml).
+#
 # Kept in step with .docker/Dockerfile: same PHP minor (CI's php-version-drift job pins it), same extension list.
 FROM php:8.5-cli-trixie
 
@@ -62,16 +65,20 @@ RUN mkdir -p bootstrap/cache storage/app/public storage/framework/views storage/
     && (cd scripts/importer && npm ci --no-fund --no-audit)
 
 # A runnable local site on a sqlite file, with a fresh key (the one in .env.local.example is a shared example).
+# MinimalDatabaseSeeder runs UserSeeder, which runs LocalUserSeeder when APP_ENV=local.
 RUN sed -i 's#^DB_DATABASE=.*#DB_DATABASE=/src/database/scan.sqlite#' .env \
     && touch database/scan.sqlite \
     && php artisan key:generate --force \
     && php artisan migrate --force --seed --seeder='Database\Seeders\MinimalDatabaseSeeder' \
-    && php artisan db:seed --force --class='Database\Seeders\LocalUserSeeder' \
     && php artisan storage:link
 
+# "[a]rtisan serve" matches the server but not a shell whose own command line contains the pattern.
 RUN printf '%s\n' '#!/bin/sh' 'cd /src' \
-      'pgrep -f "artisan serve" >/dev/null || (php artisan serve --host=127.0.0.1 --port=8000 >/tmp/inventory-serve.log 2>&1 &)' \
-      'until curl -sS -o /dev/null http://127.0.0.1:8000/admin/login 2>/dev/null; do sleep 0.5; done' \
+      'pgrep -f "[a]rtisan serve" >/dev/null || (php artisan serve --host=127.0.0.1 --port=8000 >/tmp/inventory-serve.log 2>&1 &)' \
+      'i=0; until curl -sS -o /dev/null http://127.0.0.1:8000/admin/login 2>/dev/null; do' \
+      '  i=$((i+1)); [ "$i" -le 120 ] || { echo "inventory-start: no answer on :8000 after 60s, see /tmp/inventory-serve.log" >&2; exit 1; }' \
+      '  sleep 0.5' \
+      'done' \
       > /usr/local/bin/inventory-start \
     && chmod +x /usr/local/bin/inventory-start
 
@@ -80,7 +87,7 @@ RUN set -e; inventory-start; \
     curl -fsS -o /dev/null http://127.0.0.1:8000/admin/login; \
     php artisan test --testsuite=Unit --no-ansi || echo "WARNING: Unit tests reported failures"; \
     php artisan test --testsuite=Api --no-ansi --parallel || echo "WARNING: Api tests reported failures"; \
-    pkill -f "artisan serve" || true
+    pkill -f "[a]rtisan serve" || true
 
 # Keep build products out of the checkout's `git status`.
 RUN printf '.env\ndatabase/scan.sqlite\n' >> /src/.git/info/exclude 2>/dev/null || true
