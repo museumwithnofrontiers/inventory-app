@@ -8,7 +8,11 @@ use App\Filament\Resources\ItemTranslationResource\Pages\CreateItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\Pages\ListItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\Pages\ViewItemTranslation;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\AuthorCreditsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTranslationsRelationManager;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\TextCopyEditorCreditsRelationManager;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslationCopyEditorCreditsRelationManager;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslatorCreditsRelationManager;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\ItemTranslation;
@@ -21,6 +25,7 @@ use Filament\Forms\Get;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
@@ -397,6 +402,12 @@ class ItemTranslationResource extends Resource
     {
         return [
             SiblingTranslationsRelationManager::class,
+            RelationGroup::make('Credits', [
+                AuthorCreditsRelationManager::class,
+                TextCopyEditorCreditsRelationManager::class,
+                TranslatorCreditsRelationManager::class,
+                TranslationCopyEditorCreditsRelationManager::class,
+            ]),
         ];
     }
 
