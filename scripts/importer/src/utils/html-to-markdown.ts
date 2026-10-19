@@ -28,9 +28,14 @@ export function convertHtmlToMarkdown(html: string | null | undefined): string {
 
   const trimmed = html.trim();
 
-  // Return early if no HTML tags detected
   if (!trimmed.includes('<')) {
-    return trimmed;
+    // Plain text is stored as written, except for its character references:
+    // legacy prints the page as HTML, so `&eacute;` reads "é" there and must
+    // be decoded here as the HTML path decodes it.
+    if (!CHARACTER_REFERENCE.test(trimmed)) {
+      return trimmed;
+    }
+    return decodeCharacterReferences(trimmed);
   }
 
   try {
@@ -45,6 +50,24 @@ export function convertHtmlToMarkdown(html: string | null | undefined): string {
       { cause: error }
     );
   }
+}
+
+const CHARACTER_REFERENCE = /&(?:#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i;
+
+/**
+ * Decode the character references in tag-free text through the same HTML
+ * conversion, a line at a time so the text keeps its line breaks. A `<` that
+ * decoding produces is written back as `&lt;`: it was text, never a tag.
+ */
+function decodeCharacterReferences(text: string): string {
+  const markdown = text
+    .split(/\r?\n/)
+    .map((line) =>
+      line.trim() === '' ? '' : turndownService.turndown(line).trim().replace(/</g, '&lt;')
+    )
+    .join('\n');
+  assertMarkdownOnly(markdown);
+  return markdown;
 }
 
 /**

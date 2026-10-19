@@ -35,7 +35,11 @@ use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationM
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\AuthorCreditsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTranslationsRelationManager as ItemTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\TextCopyEditorCreditsRelationManager;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslationCopyEditorCreditsRelationManager;
+use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslatorCreditsRelationManager;
 use App\Filament\Resources\LanguageResource\Pages\EditLanguage;
 use App\Filament\Resources\LanguageResource\RelationManagers\TranslationsRelationManager as LanguageTranslationsRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\EditPartner;
@@ -198,6 +202,10 @@ class RelationManagerConventionTest extends TestCase
         CollectionParticipationsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'partner', 'edit' => true],
         TimelineEventItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'timelineevent', 'edit' => true, 'bcColumn' => true],
         GlossarySynonymsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'glossary', 'edit' => false],
+        AuthorCreditsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'itemtranslation', 'edit' => true],
+        TextCopyEditorCreditsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'itemtranslation', 'edit' => true],
+        TranslatorCreditsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'itemtranslation', 'edit' => true],
+        TranslationCopyEditorCreditsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'itemtranslation', 'edit' => true],
 
         // ── translations ──────────────────────────────────────────────
         CollectionTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'collection', 'viewParent' => 'viewParentCollection'],
@@ -499,13 +507,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 7 has-many + 11 pivot + 3 translations + 2 inline + 19 pinned = 42.
+        // 7 has-many + 15 pivot + 3 translations + 2 inline + 19 pinned = 46.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(42, self::allManagers());
+        $this->assertCount(46, self::allManagers());
     }
 
     private function classify(string $class): array

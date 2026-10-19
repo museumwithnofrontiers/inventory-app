@@ -1,6 +1,18 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
+// Every person credited in one role on a translation row, in order, as legacy
+// prints them: joined with ", ", each in Arabic script on an Arabic row when
+// the author has that spelling. Falls back to the role's FK column for a
+// database imported before item_translation_author existed.
+function creditList(role: string, fallback: string): string {
+  return `COALESCE((SELECT GROUP_CONCAT(
+              IF(it.language_id = 'ara' AND a.originalname <> '', a.originalname, a.name)
+              ORDER BY ita.display_order, a.name SEPARATOR ', ')
+            FROM item_translation_author ita
+            JOIN authors a ON a.id = ita.author_id
+            WHERE ita.item_translation_id = it.id AND ita.role = '${role}'), ${fallback}.name)`
+}
 interface ItemRow {
   id: string
   type: string
@@ -181,10 +193,10 @@ export class ItemExporter extends BaseExporter {
                 it.location, it.dimensions, it.place_of_production,
                 it.method_for_datation, it.method_for_provenance,
                 it.provenance, it.obtention, it.bibliography, it.extra,
-                a1.name AS author_name,
-                a2.name AS copy_editor_name,
-                a3.name AS translator_name,
-                a4.name AS translation_copy_editor_name
+                ${creditList('author', 'a1')} AS author_name,
+                ${creditList('text_copy_editor', 'a2')} AS copy_editor_name,
+                ${creditList('translator', 'a3')} AS translator_name,
+                ${creditList('translation_copy_editor', 'a4')} AS translation_copy_editor_name
          FROM item_translations it
          LEFT JOIN authors a1 ON a1.id = it.author_id
          LEFT JOIN authors a2 ON a2.id = it.text_copy_editor_id
@@ -370,6 +382,8 @@ export class ItemExporter extends BaseExporter {
         patrons: extra?.['patrons'] ?? null,
         architects: extra?.['architects'] ?? null,
         workshop: extra?.['workshop'] ?? null,
+        // The free-text Period / Dynasty line legacy prints on the sheet.
+        dynasty: extra?.['dynasty'] ?? null,
         scriber: extra?.['scriber'] ?? null,
         binding_desc: extra?.['binding_desc'] ?? null,
         // The item's rights statement ("Copyright image: <institution>"), which

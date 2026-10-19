@@ -34,6 +34,7 @@ class AllowList
             ],
             'item_translation' => [
                 'item', 'language', 'context', 'author', 'textCopyEditor', 'translator', 'translationCopyEditor',
+                'credits',
             ],
             'collection' => [
                 'language', 'context', 'translations', 'partners', 'items', 'attachedItems', 'collectionImages',

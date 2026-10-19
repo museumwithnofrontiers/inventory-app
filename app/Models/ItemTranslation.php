@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CreditRole;
 use App\Events\ItemTranslationSaved;
 use App\Traits\HasJsonFields;
 use Database\Factories\ItemTranslationFactory;
@@ -210,6 +211,61 @@ class ItemTranslation extends Model
     public function translationCopyEditor(): BelongsTo
     {
         return $this->belongsTo(Author::class, 'translation_copy_editor_id');
+    }
+
+    /**
+     * Get every person credited on this translation, in each role, in order.
+     *
+     * @return BelongsToMany<Author, $this, ItemTranslationAuthor>
+     */
+    public function credits(): BelongsToMany
+    {
+        return $this->belongsToMany(Author::class, 'item_translation_author')
+            ->using(ItemTranslationAuthor::class)
+            ->withPivot('role', 'display_order')
+            ->withTimestamps()
+            ->orderByPivot('role')
+            ->orderByPivot('display_order');
+    }
+
+    /**
+     * Get the people credited in one role, in order. Attaching through it
+     * sets the role.
+     *
+     * @return BelongsToMany<Author, $this, ItemTranslationAuthor>
+     */
+    public function creditsAs(CreditRole $role): BelongsToMany
+    {
+        return $this->belongsToMany(Author::class, 'item_translation_author')
+            ->using(ItemTranslationAuthor::class)
+            ->withPivot('role', 'display_order')
+            ->withPivotValue('role', $role->value)
+            ->withTimestamps()
+            ->orderByPivot('display_order');
+    }
+
+    /** @return BelongsToMany<Author, $this, ItemTranslationAuthor> */
+    public function authorCredits(): BelongsToMany
+    {
+        return $this->creditsAs(CreditRole::AUTHOR);
+    }
+
+    /** @return BelongsToMany<Author, $this, ItemTranslationAuthor> */
+    public function textCopyEditorCredits(): BelongsToMany
+    {
+        return $this->creditsAs(CreditRole::TEXT_COPY_EDITOR);
+    }
+
+    /** @return BelongsToMany<Author, $this, ItemTranslationAuthor> */
+    public function translatorCredits(): BelongsToMany
+    {
+        return $this->creditsAs(CreditRole::TRANSLATOR);
+    }
+
+    /** @return BelongsToMany<Author, $this, ItemTranslationAuthor> */
+    public function translationCopyEditorCredits(): BelongsToMany
+    {
+        return $this->creditsAs(CreditRole::TRANSLATION_COPY_EDITOR);
     }
 
     /**

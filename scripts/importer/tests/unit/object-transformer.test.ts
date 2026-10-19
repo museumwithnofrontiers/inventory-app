@@ -228,6 +228,23 @@ describe('transformObjectTranslation', () => {
     expect(result).not.toBeNull();
     expect(result?.data.provenance === null || result?.data.provenance === undefined).toBe(true);
   });
+
+  it('keeps the free-text Period / Dynasty line in extra.dynasty', () => {
+    const obj: LegacyObject = {
+      project_id: 'DCA',
+      country: 'uk',
+      museum_id: 'Mus31',
+      number: '19',
+      lang: 'en',
+      name: 'Carpet',
+      description: 'A carpet',
+      dynasty: 'Qajar',
+    };
+
+    const result = transformObjectTranslation(obj, 'description');
+
+    expect(JSON.parse(result?.data.extra ?? '{}').dynasty).toBe('Qajar');
+  });
 });
 
 describe('extractObjectTags', () => {
@@ -240,7 +257,7 @@ describe('extractObjectTags', () => {
       lang: 'en',
       materials: 'gold; silver',
       dynasty: '18th Dynasty',
-      keywords: 'pharaoh, egypt',
+      keywords: 'pharaoh; egypt',
     };
 
     const result = extractObjectTags(obj);
@@ -361,9 +378,9 @@ describe('parseTagString', () => {
     expect(result).toEqual(['tag1', 'tag2', 'tag3']);
   });
 
-  it('should parse comma-separated tags', () => {
-    const result = parseTagString('tag1, tag2, tag3');
-    expect(result).toEqual(['tag1', 'tag2', 'tag3']);
+  it('keeps a comma inside its entry, as legacy prints it', () => {
+    const result = parseTagString('Wool warp and weft, wool pile');
+    expect(result).toEqual(['Wool warp and weft, wool pile']);
   });
 
   it('should split semicolon-separated data even with colons in values', () => {
@@ -371,22 +388,16 @@ describe('parseTagString', () => {
     expect(result).toEqual(['Warp: wool', 'Weft: cotton']);
   });
 
-  it('should split mixed comma-and-semicolon tags', () => {
+  it('splits mixed comma-and-semicolon strings at the semicolons only', () => {
     const result = parseTagString(
       'Church, Jesuit order, Mathäus Nepauer; Johann Michael Hamon, Buda'
     );
-    expect(result).toEqual([
-      'Church',
-      'Jesuit order',
-      'Mathäus Nepauer',
-      'Johann Michael Hamon',
-      'Buda',
-    ]);
+    expect(result).toEqual(['Church, Jesuit order, Mathäus Nepauer', 'Johann Michael Hamon, Buda']);
   });
 
-  it('should split Arabic comma (U+060C) separated tags', () => {
+  it('keeps an Arabic comma (U+060C) inside its entry', () => {
     const result = parseTagString('زجاج\u060C زخرفة كتابية\u060C سنان');
-    expect(result).toEqual(['زجاج', 'زخرفة كتابية', 'سنان']);
+    expect(result).toEqual(['زجاج\u060C زخرفة كتابية\u060C سنان']);
   });
 
   it('should split Arabic semicolon (U+061B) separated tags', () => {
@@ -402,6 +413,33 @@ describe('parseTagString', () => {
 });
 
 describe('planTranslations', () => {
+  it('still plans an EPM translation without description2', () => {
+    const group: ObjectGroup = {
+      project_id: 'EPM',
+      country: 'gr',
+      museum_id: 'Mus21',
+      number: '30',
+      translations: [
+        {
+          project_id: 'EPM',
+          country: 'gr',
+          museum_id: 'Mus21',
+          number: '30',
+          lang: 'el',
+          name: 'Door panel',
+        },
+      ],
+    };
+
+    const plans = planTranslations(group, false);
+
+    expect(plans).toHaveLength(1);
+    expect(plans[0]?.descriptionField).toBe('description2');
+    expect(
+      transformObjectTranslation(plans[0]!.translation, 'description2')?.data.description
+    ).toBeNull();
+  });
+
   it('should plan EPM translations using description2', () => {
     const group: ObjectGroup = {
       project_id: 'EPM',

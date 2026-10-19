@@ -44,12 +44,21 @@ export class AuthorImporter extends BaseImporter {
    *
    * The junction now overwrites whatever a translation row already holds, so
    * the database can no longer act as the first-wins guard the way the old
-   * `IS NULL` clause did. Legacy lists several authors for one
-   * (item, language, role) about 5% of the time and shows the lowest-priority
-   * one first; the queries are ordered to match, and this set drops every
-   * later row for a triple so that first author is the one that sticks.
+   * `IS NULL` clause did. Legacy can credit several people for one
+   * (item, language, role) and lists them by priority; the queries are
+   * ordered to match, and this set keeps the role's FK column on the first.
    */
   private readonly creditedTargets = new Set<string>();
+
+  /**
+   * Every person credited per (item, language, role), in legacy's priority
+   * order, keyed like {@link creditedTargets}. Legacy prints them all, so the
+   * whole list goes to item_translation_author once the junctions are read.
+   */
+  private readonly creditLists = new Map<
+    string,
+    { itemId: string; languageId: string; fkColumn: string; authorIds: string[] }
+  >();
 
   getName(): string {
     return 'AuthorImporter';
@@ -478,13 +487,15 @@ export class AuthorImporter extends BaseImporter {
   private async importAuthorItemAssignments(): Promise<ImportResult> {
     const result = this.createResult();
     this.creditedTargets.clear();
+    this.creditLists.clear();
 
     // Legacy resolves credits per (item, language, role) ordered by priority
     // (see .legacy-code/dxa-api/app/MWNF/SQL/mwnf3/ObjectsAuthors.blade.php:
-    // ORDER BY NVL(priority, 0) ASC). item_translations carries a single FK per
-    // role, so the lowest-priority author wins; ties break on author_id, which
-    // matches the junction PK order legacy falls back to.
-    const ORDER_BY_PRIORITY = "ORDER BY IFNULL(priority, 0) ASC, author_id ASC";
+    // ORDER BY NVL(priority, 0) ASC) and prints every one of them. The role's
+    // FK column on item_translations takes the lowest-priority author; ties
+    // break on author_id, which matches the junction PK order legacy falls
+    // back to.
+    const ORDER_BY_PRIORITY = 'ORDER BY IFNULL(priority, 0) ASC, author_id ASC';
 
     // 3a. mwnf3.authors_objects
     const authorObjects = await this.context.legacyDb.query<LegacyAuthorObject>(
@@ -580,9 +591,35 @@ export class AuthorImporter extends BaseImporter {
       }
     }
 
+    await this.writeCreditLists(result);
+
     return result;
   }
 
+  /**
+   * Write every (item, language, role) credit list collected from the
+   * junctions, replacing the single free-text credit the item importers left.
+   */
+  private async writeCreditLists(result: ImportResult): Promise<void> {
+    if (this.isDryRun || this.isSampleOnlyMode) return;
+
+    for (const credit of this.creditLists.values()) {
+      try {
+        await this.context.strategy.replaceItemTranslationCredits(
+          credit.itemId,
+          credit.languageId,
+          credit.fkColumn,
+          credit.authorIds
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        result.errors.push(
+          `credits ${credit.fkColumn} for item ${credit.itemId} (${credit.languageId}): ${message}`
+        );
+        this.showError();
+      }
+    }
+  }
 
   /**
    * Resolve a single author-item assignment by updating the appropriate FK
@@ -625,12 +662,19 @@ export class AuthorImporter extends BaseImporter {
       return;
     }
 
-    // Legacy shows the lowest-priority author for a role and ignores the rest;
-    // item_translations has one FK per role, so later rows are dropped here.
     const target = `${itemId}|${languageId}|${fkColumn}`;
+    const credit = this.creditLists.get(target);
+    if (!credit) {
+      this.creditLists.set(target, { itemId, languageId, fkColumn, authorIds: [authorId] });
+    } else if (!credit.authorIds.includes(authorId)) {
+      credit.authorIds.push(authorId);
+    }
+
+    // The role's FK column holds the first person only; later rows are
+    // credited through the list above.
     if (this.creditedTargets.has(target)) {
-      result.skipped++;
-      this.showSkipped();
+      result.imported++;
+      this.showProgress();
       return;
     }
 
