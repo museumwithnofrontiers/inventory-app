@@ -267,7 +267,9 @@ export function transformMonumentTranslation(
   // the monument path.
   const rights = [monument.copyright, monument.notice_b].find((value) => value?.trim());
   if (rights) extraData.copyright = convertHtmlToMarkdown(rights);
-  // Dynasty no longer stored in extra — structured item_dynasty links are created by DynastyImporter
+  // The free-text Period / Dynasty line legacy prints on the sheet. The linked
+  // dynasties (item_dynasty, DynastyImporter) are a separate, partial index.
+  if (monument.dynasty) extraData.dynasty = convertHtmlToMarkdown(monument.dynasty);
 
   const extraField = Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null;
 
@@ -350,14 +352,14 @@ export function planMonumentTranslations(
 
   for (const translation of group.translations) {
     if (translation.project_id === 'EPM') {
-      // EPM project: only use description2
-      if (translation.description2 && translation.description2.trim()) {
-        plans.push({
-          translation,
-          contextType: 'own',
-          descriptionField: 'description2',
-        });
-      }
+      // EPM project: only use description2. A row without one still gets its
+      // translation — see the matching comment in `planTranslations`
+      // (object-transformer.ts).
+      plans.push({
+        translation,
+        contextType: 'own',
+        descriptionField: 'description2',
+      });
     } else {
       const hasDescription = Boolean(translation.description && translation.description.trim());
       const hasDescription2 = Boolean(translation.description2 && translation.description2.trim());

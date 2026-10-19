@@ -2,8 +2,10 @@
 
 namespace App\Http\Resources;
 
+use App\Models\Author;
 use App\Models\Item;
 use App\Models\ItemTranslation;
+use App\Models\ItemTranslationAuthor;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -91,6 +93,20 @@ class ItemTranslationResource extends JsonResource
             'translator' => new AuthorResource($this->whenLoaded('translator')),
             // The translation copy-editor relationship (AuthorResource)
             'translation_copy_editor' => new AuthorResource($this->whenLoaded('translationCopyEditor')),
+            // Every person credited, per role and in order (role, display_order, AuthorResource)
+            'credits' => $this->whenLoaded('credits', fn (): array => $this->resource->credits
+                ->map(function (Author $author): array {
+                    /** @var ItemTranslationAuthor $credit */
+                    $credit = $author->getRelationValue('pivot');
+
+                    return [
+                        'role' => $credit->role,
+                        'display_order' => $credit->display_order,
+                        'author' => new AuthorResource($author),
+                    ];
+                })
+                ->values()
+                ->all()),
         ];
     }
 }

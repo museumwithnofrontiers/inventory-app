@@ -17,6 +17,7 @@ describe('AuthorImporter — SH author-item assignments', () => {
   let strategy: IWriteStrategy;
   let context: ImportContext;
   let updateFkMock: ReturnType<typeof vi.fn>;
+  let replaceCreditsMock: ReturnType<typeof vi.fn>;
 
   const logger: ILogger = {
     info: vi.fn(),
@@ -68,10 +69,12 @@ describe('AuthorImporter — SH author-item assignments', () => {
     };
 
     updateFkMock = vi.fn().mockResolvedValue(undefined);
+    replaceCreditsMock = vi.fn().mockResolvedValue(undefined);
 
     strategy = {
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       updateItemTranslationAuthorFk: updateFkMock,
+      replaceItemTranslationCredits: replaceCreditsMock,
     } as unknown as IWriteStrategy;
 
     context = {
@@ -125,6 +128,7 @@ describe('AuthorImporter — mwnf3 author-item assignments', () => {
   let strategy: IWriteStrategy;
   let context: ImportContext;
   let updateFkMock: ReturnType<typeof vi.fn>;
+  let replaceCreditsMock: ReturnType<typeof vi.fn>;
   let updateDynastyFkMock: ReturnType<typeof vi.fn>;
   let queryMock: ReturnType<typeof vi.fn>;
 
@@ -185,11 +189,13 @@ describe('AuthorImporter — mwnf3 author-item assignments', () => {
     };
 
     updateFkMock = vi.fn().mockResolvedValue(undefined);
+    replaceCreditsMock = vi.fn().mockResolvedValue(undefined);
     updateDynastyFkMock = vi.fn().mockResolvedValue(undefined);
 
     strategy = {
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       updateItemTranslationAuthorFk: updateFkMock,
+      replaceItemTranslationCredits: replaceCreditsMock,
       updateDynastyTranslationAuthorFk: updateDynastyFkMock,
     } as unknown as IWriteStrategy;
 
@@ -300,6 +306,7 @@ describe('AuthorImporter — dynasty assignments and step failure reporting', ()
     strategy = {
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       updateItemTranslationAuthorFk: vi.fn().mockResolvedValue(undefined),
+      replaceItemTranslationCredits: vi.fn().mockResolvedValue(undefined),
       updateDynastyTranslationAuthorFk: updateDynastyFkMock,
     } as unknown as IWriteStrategy;
 
@@ -384,6 +391,7 @@ describe('AuthorImporter — junction is authoritative over free text', () => {
   let strategy: IWriteStrategy;
   let context: ImportContext;
   let updateFkMock: ReturnType<typeof vi.fn>;
+  let replaceCreditsMock: ReturnType<typeof vi.fn>;
   let updateDynastyFkMock: ReturnType<typeof vi.fn>;
 
   const logger: ILogger = {
@@ -422,11 +430,13 @@ describe('AuthorImporter — junction is authoritative over free text', () => {
     tracker.set('mwnf3:dynasties:3', 'dynasty-3', 'dynasty');
 
     updateFkMock = vi.fn().mockResolvedValue(undefined);
+    replaceCreditsMock = vi.fn().mockResolvedValue(undefined);
     updateDynastyFkMock = vi.fn().mockResolvedValue(undefined);
 
     strategy = {
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       updateItemTranslationAuthorFk: updateFkMock,
+      replaceItemTranslationCredits: replaceCreditsMock,
       updateDynastyTranslationAuthorFk: updateDynastyFkMock,
     } as unknown as IWriteStrategy;
 
@@ -460,13 +470,12 @@ describe('AuthorImporter — junction is authoritative over free text', () => {
     );
   });
 
-  it('keeps the first author for a role and drops later ones', async () => {
-    const result = await new AuthorImporter(context).import();
+  it('keeps the first author in the role FK column', async () => {
+    await new AuthorImporter(context).import();
 
     const authorIdWrites = updateFkMock.mock.calls.filter(([, , column]) => column === 'author_id');
     expect(authorIdWrites).toHaveLength(1);
     expect(authorIdWrites[0][3]).toBe('author-536');
-    // The priority-2 author was dropped, not written.
     expect(updateFkMock).not.toHaveBeenCalledWith(
       'item-epm-51',
       'deu',
@@ -474,7 +483,16 @@ describe('AuthorImporter — junction is authoritative over free text', () => {
       'author-535',
       expect.anything()
     );
-    expect(result.skipped).toBeGreaterThan(0);
+  });
+
+  it('credits every author for a role, in priority order', async () => {
+    await new AuthorImporter(context).import();
+
+    expect(replaceCreditsMock).toHaveBeenCalledTimes(1);
+    expect(replaceCreditsMock).toHaveBeenCalledWith('item-epm-51', 'deu', 'author_id', [
+      'author-536',
+      'author-535',
+    ]);
   });
 
   it('applies the same first-wins rule to dynasty credits', async () => {
@@ -507,6 +525,7 @@ describe('AuthorImporter — junction is authoritative over free text', () => {
     const result = await new AuthorImporter(context).import();
 
     expect(updateFkMock).not.toHaveBeenCalled();
+    expect(replaceCreditsMock).not.toHaveBeenCalled();
     expect(updateDynastyFkMock).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
   });

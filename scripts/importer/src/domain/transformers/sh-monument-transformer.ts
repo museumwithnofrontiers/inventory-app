@@ -155,7 +155,7 @@ export function transformShMonumentTranslation(
   if (text.date_description) {
     datesParts.push(convertHtmlToMarkdown(text.date_description));
   }
-  // Dynasty no longer appended to dates — structured item_dynasty links are created by DynastyImporter
+  // The dynasty is its own line on the sheet (extra.dynasty), not part of the dates.
   const dates = datesParts.length > 0 ? datesParts.join('; ') : null;
 
   // Build holder info from institution
@@ -178,6 +178,9 @@ export function transformShMonumentTranslation(
 
   // Build extra JSON for translation-specific fields
   const extra: Record<string, unknown> = {};
+  // The free-text Period / Dynasty line legacy prints on the sheet (its own
+  // line, not part of the dates). The linked dynasties are a separate index.
+  if (text.dynasty) extra.dynasty = convertHtmlToMarkdown(text.dynasty);
 
   // Monument contact information (language-specific visitor info)
   const monumentContact: Record<string, string> = {};

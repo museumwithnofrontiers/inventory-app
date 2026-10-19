@@ -482,6 +482,22 @@ export interface IWriteStrategy {
   ): Promise<void>;
 
   /**
+   * Replace the people credited in one role on every item_translations row
+   * for an (item, language) pair, in the given order. Legacy credits several
+   * people per role; the FK column keeps only the first.
+   * @param itemId The item UUID
+   * @param languageId The language ID
+   * @param fkColumn The role, named by its FK column (author_id, text_copy_editor_id, translator_id, translation_copy_editor_id)
+   * @param authorIds The author UUIDs, first credited first
+   */
+  replaceItemTranslationCredits(
+    itemId: string,
+    languageId: string,
+    fkColumn: string,
+    authorIds: string[]
+  ): Promise<void>;
+
+  /**
    * Set an author FK on a dynasty_translations row.
    * @param dynastyId The dynasty UUID
    * @param languageId The language ID

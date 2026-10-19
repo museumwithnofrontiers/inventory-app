@@ -294,6 +294,9 @@ export function transformObjectTranslation(
   if (obj.linkcatalogs) extraData.linkcatalogs = obj.linkcatalogs;
   if (obj.catalogue_holding_link) extraData.catalogue_holding_link = obj.catalogue_holding_link;
   if (obj.scriber) extraData.scriber = convertHtmlToMarkdown(obj.scriber);
+  // The free-text Period / Dynasty line legacy prints on the sheet. The linked
+  // dynasties (item_dynasty, DynastyImporter) are a separate, partial index.
+  if (obj.dynasty) extraData.dynasty = convertHtmlToMarkdown(obj.dynasty);
   const extraField = Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null;
 
   // backward_compatibility matches parent item
@@ -406,10 +409,11 @@ export function extractObjectArtists(obj: LegacyObject): ExtractedArtist[] {
 }
 
 /**
- * Parse tag string — split on all common delimiters with Unicode support.
+ * Parse a materials or keywords string into its entries.
  *
- * Splits on comma (U+002C), Arabic comma (U+060C),
- * semicolon (U+003B), and Arabic semicolon (U+061B).
+ * Splits on semicolon (U+003B) and Arabic semicolon (U+061B) only. Legacy
+ * prints the column as written, and a comma belongs to an entry ("Wool warp
+ * and weft, wool pile"), so splitting there would print one entry as two.
  */
 export function parseTagString(tagString: string | undefined | null): string[] {
   if (!tagString || tagString.trim() === '') {
@@ -417,7 +421,7 @@ export function parseTagString(tagString: string | undefined | null): string[] {
   }
 
   return tagString
-    .split(/[,;\u060C\u061B]/)
+    .split(/[;\u061B]/)
     .map((t) => t.trim())
     .filter((t) => t !== '');
 }
@@ -442,14 +446,14 @@ export function planTranslations(group: ObjectGroup, hasEpmContext: boolean): Tr
 
   for (const translation of group.translations) {
     if (translation.project_id === 'EPM') {
-      // EPM project: only use description2
-      if (translation.description2 && translation.description2.trim()) {
-        plans.push({
-          translation,
-          contextType: 'own',
-          descriptionField: 'description2',
-        });
-      }
+      // EPM project: only use description2. A row without one still gets its
+      // translation, with a null description, for the same reason as the
+      // other projects below: legacy publishes it from its other fields.
+      plans.push({
+        translation,
+        contextType: 'own',
+        descriptionField: 'description2',
+      });
     } else {
       const hasDescription = Boolean(translation.description && translation.description.trim());
       const hasDescription2 = Boolean(translation.description2 && translation.description2.trim());

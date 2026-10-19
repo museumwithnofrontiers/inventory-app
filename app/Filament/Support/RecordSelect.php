@@ -3,6 +3,7 @@
 namespace App\Filament\Support;
 
 use App\Models\Artist;
+use App\Models\Author;
 use App\Models\Collection;
 use App\Models\Dynasty;
 use App\Models\Glossary;
@@ -31,13 +32,16 @@ use Spatie\Permission\Models\Permission;
  * exists, ordered, capped at {@see self::RESULT_LIMIT} results, and never
  * preloaded.
  *
- * Tag, Artist, Workshop, Glossary and Timeline have no `*DisplayLabel`
+ * Tag, Artist, Author, Workshop, Glossary and Timeline have no `*DisplayLabel`
  * helper. Their label is the model's own natural name column:
  * Tag::description (TagResource's own `$recordTitleAttribute`),
- * Artist::name, Workshop::name, Glossary::internal_name,
+ * Artist::name, Author::name, Workshop::name, Glossary::internal_name,
  * Timeline::internal_name — suffixed with the legacy `backward_compatibility`
  * code the same way the display-label entities are, via
  * {@see self::legacyLabel()}.
+ *
+ * Author also searches `name`: most authors have no `internal_name`, and
+ * people are looked up by the name they are credited with.
  *
  * Permission (Spatie) has an auto-increment integer id with no natural
  * meaning to search on, and no `internal_name`/`backward_compatibility`
@@ -73,6 +77,8 @@ class RecordSelect
 
     public const ARTISTS = 'artists';
 
+    public const AUTHORS = 'authors';
+
     public const WORKSHOPS = 'workshops';
 
     public const DYNASTIES = 'dynasties';
@@ -88,6 +94,9 @@ class RecordSelect
 
     /** @var array<int, string> */
     private const ID_BC = ['id', 'backward_compatibility'];
+
+    /** @var array<int, string> */
+    private const ID_NAME_INTERNAL_NAME_BC = ['id', 'name', 'internal_name', 'backward_compatibility'];
 
     /** @var array<int, string> */
     private const NAME_GUARD = ['name', 'guard_name'];
@@ -415,6 +424,11 @@ class RecordSelect
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
                 ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('name'), $scope))
                 ->recordTitle(fn (Artist $record): string => self::legacyLabel($record->name, $record->backward_compatibility)),
+
+            self::AUTHORS => $action
+                ->recordSelectSearchColumns(self::ID_NAME_INTERNAL_NAME_BC)
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('name'), $scope))
+                ->recordTitle(fn (Author $record): string => self::legacyLabel($record->name, $record->backward_compatibility)),
 
             self::WORKSHOPS => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)

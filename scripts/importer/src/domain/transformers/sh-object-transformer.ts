@@ -156,7 +156,7 @@ export function transformShObjectTranslation(
   if (text.date_description) {
     datesParts.push(convertHtmlToMarkdown(text.date_description));
   }
-  // Dynasty no longer appended to dates — structured item_dynasty links are created by DynastyImporter
+  // The dynasty is its own line on the sheet (extra.dynasty), not part of the dates.
   const dates = datesParts.length > 0 ? datesParts.join('; ') : null;
 
   // Build owner info
@@ -182,6 +182,9 @@ export function transformShObjectTranslation(
   // Build extra JSON for translation-specific fields
   const extra: Record<string, unknown> = {};
   if (text.archival) extra.archival = convertHtmlToMarkdown(text.archival);
+  // The free-text Period / Dynasty line legacy prints on the sheet (its own
+  // line, not part of the dates). The linked dynasties are a separate index.
+  if (text.dynasty) extra.dynasty = convertHtmlToMarkdown(text.dynasty);
   if (text.dimensions) extra.dimensions = convertHtmlToMarkdown(text.dimensions);
   if (text.materials) extra.materials = convertHtmlToMarkdown(text.materials);
   if (text.artist) extra.artist = convertHtmlToMarkdown(text.artist);
