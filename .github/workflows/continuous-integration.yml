@@ -24,6 +24,7 @@ jobs:
       importer: ${{ steps.detect.outputs.importer }}
       import-tool-image: ${{ steps.detect.outputs.import-tool-image }}
       site-i18n: ${{ steps.detect.outputs.site-i18n }}
+      parity: ${{ steps.detect.outputs.parity }}
       exporters: ${{ steps.detect.outputs.exporters }}
       exporter-datasets: ${{ steps.exporter-datasets.outputs.datasets }}
       viewers: ${{ steps.detect.outputs.viewers }}
@@ -79,6 +80,12 @@ jobs:
             echo "site-i18n=true" >> $GITHUB_OUTPUT
           else
             echo "site-i18n=false" >> $GITHUB_OUTPUT
+          fi
+
+          if echo "$CHANGED" | grep -qE '^scripts/parity/'; then
+            echo "parity=true" >> $GITHUB_OUTPUT
+          else
+            echo "parity=false" >> $GITHUB_OUTPUT
           fi
 
           if echo "$CHANGED" | grep -qE '^scripts/exporters/'; then
@@ -348,6 +355,32 @@ jobs:
         run: |
           npm test
 
+  # Lint and the gate tests only. The comparison itself never runs here: it
+  # reads the live legacy sites and a local cache of their answers.
+  parity-validation:
+    name: Parity Tool Validation
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.parity == 'true'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: "Setup > Node Project (Parity)"
+        uses: ./.github/actions/setup-node-project
+        with:
+          working-directory: scripts/parity
+
+      - name: "Check > npm > Linting (Parity)"
+        working-directory: scripts/parity
+        run: |
+          npm run lint:check
+
+      - name: "Check > npm > Run Tests (Parity)"
+        working-directory: scripts/parity
+        run: |
+          npm test
+
   exporter-validation:
     name: Exporter Validation (${{ matrix.dataset }})
     runs-on: ubuntu-latest
@@ -441,6 +474,7 @@ jobs:
       - importer-validation
       - import-tool-image
       - site-i18n-validation
+      - parity-validation
       - exporter-validation
       - viewer-validation
     if: always()
@@ -456,6 +490,7 @@ jobs:
           importerChanged="${{ needs.detect-changes.outputs.importer }}"
           importToolImageChanged="${{ needs.detect-changes.outputs.import-tool-image }}"
           siteI18nChanged="${{ needs.detect-changes.outputs.site-i18n }}"
+          parityChanged="${{ needs.detect-changes.outputs.parity }}"
           exportersChanged="${{ needs.detect-changes.outputs.exporters }}"
           viewersChanged="${{ needs.detect-changes.outputs.viewers }}"
 
@@ -465,6 +500,7 @@ jobs:
           importerResult="${{ needs.importer-validation.result }}"
           importToolImageResult="${{ needs.import-tool-image.result }}"
           siteI18nResult="${{ needs.site-i18n-validation.result }}"
+          parityResult="${{ needs.parity-validation.result }}"
           exportersResult="${{ needs.exporter-validation.result }}"
           viewersResult="${{ needs.viewer-validation.result }}"
 
@@ -508,6 +544,11 @@ jobs:
 
           if [ "$siteI18nChanged" = "true" ] && [ "$siteI18nResult" != "success" ]; then
             echo "Site i18n validation failed or was not run (result: $siteI18nResult)"
+            fail=1
+          fi
+
+          if [ "$parityChanged" = "true" ] && [ "$parityResult" != "success" ]; then
+            echo "Parity tool validation failed or was not run (result: $parityResult)"
             fail=1
           fi
 
