@@ -6,7 +6,7 @@
 // in the page language, so labels are mapped back to their term key (db_name_object,
 // sh_db_name_object, …) through the same table.
 import { readTable } from './lib/sqldump.mjs';
-import { decodeEntities, htmlToText, untilStable } from './lib/text.mjs';
+import { decodeEntities, htmlToText } from './lib/text.mjs';
 
 export const PHP_SITES = {
   islamicart: { host: 'https://islamicart.museumwnf.org', projects: ['ISL', 'EPM'] },
@@ -111,7 +111,12 @@ export function parsePage(html, lang, labels) {
     // Drop "About <museum>" links, the contact-details tooltip, the Special-features wrapper, the
     // picture strip and anything after the record (side columns, scripts).
     content = content.replace(/<p>(?:<img[^>]*>(?:&nbsp;|\s)*)?<a [^>]*(class="arrow"|pm_partner\.php)[\s\S]*?<\/a><\/p>/g, '');
-    content = untilStable(content, (c) => c.replace(/<!--[\s\S]*?-->/g, ''));
+    // Until it stops changing: one pass over "<!-<!-- x -->- y -->" leaves a comment behind.
+    let previous;
+    do {
+      previous = content;
+      content = content.replace(/<!--[\s\S]*?-->/g, '');
+    } while (content !== previous);
     content = content.split(/<div class="(?:specials|su_tooltip|page)/)[0].split(/<\/div>/)[0];
     sections.push({ label, term, html: content, brokenGlossary });
     if (tc) shortBroken = brokenGlossary;

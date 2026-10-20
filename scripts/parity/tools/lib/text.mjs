@@ -11,17 +11,17 @@ export function decodeEntities(s) {
     .replace(/&([a-z]+);/gi, (m, n) => ENTITIES[n.toLowerCase()] ?? m);
 }
 
-// Applies a replacement until the text stops changing: one pass over "<<b>i>" leaves "<i>".
-export function untilStable(s, step) {
-  for (let prev = null; prev !== s; ) [prev, s] = [s, step(s)];
-  return s;
-}
-
 export function htmlToText(s) {
-  const text = String(s)
+  let text = String(s)
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|li|h\d)>/gi, '\n');
-  return decodeEntities(untilStable(text, (t) => t.replace(/<[^>]+>/g, '')));
+  // Until the text stops changing: one pass over "<<b>i>" leaves "<i>".
+  let previous;
+  do {
+    previous = text;
+    text = text.replace(/<[^>]+>/g, '');
+  } while (text !== previous);
+  return decodeEntities(text);
 }
 
 export function markdownToText(s) {
