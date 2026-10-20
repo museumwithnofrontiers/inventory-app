@@ -69,6 +69,7 @@ describe('ItemExporter — deterministic list order (#1916)', () => {
     themes: [],
     memberItemIds: ['item-a'],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
@@ -173,6 +174,7 @@ describe('ExhibitionExporter — deterministic list order (#1916)', () => {
     themes: [],
     memberItemIds: [],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
@@ -269,6 +271,7 @@ describe('ThemeExporter — deterministic list order (#1916)', () => {
     themes: [theme],
     memberItemIds: [],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

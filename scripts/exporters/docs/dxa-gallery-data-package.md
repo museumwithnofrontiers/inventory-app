@@ -202,7 +202,15 @@ gallery deltas:
 - **`gallery_references`** replaces the legacy `galleries` array of
   constructed URLs: the other thematic galleries and exhibitions featuring
   this item, as `{id, backward_compatibility, kind, slug, legacy_host, name}`,
-  with the exporting gallery itself omitted.
+  with the exporting gallery itself omitted. Only galleries and exhibitions
+  that have a website are listed, i.e. whose collection an instance file in
+  `scripts/exporters/instances/` names: a reference to one with none (e.g.
+  "Doubts") would lead nowhere. Legacy's live/hidden `status` is not read
+  here; it is the old sites' runtime state (Pascal, 2026-10-20, #2233 C15).
+- **`artist_names`** comes from the artist entities. A Sharing History record
+  has none, so it carries the artist from its English translation (else the
+  first language), and each translation carries that language's own spelling
+  as **`artist`** (#2233 C22).
 - Translations (`translations/items.<lang>.json`): name, description,
   short_description, object_date, location, provenance, holder line fields —
   context selection = the item's own project context first (the rule

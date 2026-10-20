@@ -1,6 +1,5 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
-import { isHidden } from './exhibition-exporter.js'
 
 // A Sharing History record shown in a gallery or exhibition: its fields as the
 // galleries' sheet (dxa-api) shows them, which the importer keeps apart in
@@ -15,6 +14,9 @@ function sharingHistorySheet(
     short_description: sheet['short_description'] ?? null,
     alternate_name: sheet['also_known_as'] ?? null,
     history: sheet['history'] ?? null,
+    // The artist as this language writes it ("Unknown", "Inconnu"). The
+    // record has no artist entity, so the name lives on the translation.
+    artist: extra?.['artist'] ?? null,
     dimensions: extra?.['dimensions'] ?? null,
     materials: extra?.['materials'] ? [extra['materials']] : [],
     keywords: (sheet['keywords'] ?? '')
@@ -366,6 +368,8 @@ export class ItemExporter extends BaseExporter {
     }
 
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
+    // item_id -> lang_code -> artist, for the Sharing History records.
+    const sharingHistoryArtists = new Map<string, Map<string, string>>()
     for (const [key, rows] of translationsByItemLang) {
       const separator = key.indexOf(' ')
       const itemId = key.slice(0, separator)
@@ -430,7 +434,15 @@ export class ItemExporter extends BaseExporter {
         materials: perCategory?.get('material') ?? [],
       }
       const gallerySheet = parseJson<{ gallery_sheet?: Record<string, string> }>(ownRow.extra)?.gallery_sheet
-      if (gallerySheet) Object.assign(byLang[code]!, sharingHistorySheet(gallerySheet, extra))
+      if (gallerySheet) {
+        Object.assign(byLang[code]!, sharingHistorySheet(gallerySheet, extra))
+        const artist = extra?.['artist']
+        if (artist) {
+          const byCode = sharingHistoryArtists.get(itemId) ?? new Map<string, string>()
+          byCode.set(code, artist)
+          sharingHistoryArtists.set(itemId, byCode)
+        }
+      }
       translationMap.set(itemId, byLang)
     }
 
@@ -485,7 +497,7 @@ export class ItemExporter extends BaseExporter {
       tag_ids: facetTagIds.get(item.id) ?? [],
       dynasty_ids: dynastyMap.get(item.id) ?? [],
       glossary_ids: glossaryMap.get(item.id) ?? [],
-      artist_names: artistMap.get(item.id) ?? [],
+      artist_names: artistMap.get(item.id) ?? sharingHistoryArtistNames(sharingHistoryArtists.get(item.id)),
       media: mediaMap.get(item.id) ?? [],
       related_items: relatedMap.get(item.id) ?? [],
       gallery_references: galleryMap.get(item.id) ?? [],
@@ -620,10 +632,11 @@ export class ItemExporter extends BaseExporter {
       if (row.collection_id === this.exhibition.id) continue
       const anchor =
         parseJson<{ thg_gallery?: Record<string, unknown> }>(row.extra)?.thg_gallery ?? {}
-      // Legacy lists another gallery or exhibition only while it is live:
-      // status 'A'. A hidden one (e.g. Carpets' "Doubts") shows on its own site only.
-      const status = anchor['status'] as string | undefined
-      if (status !== undefined && isHidden(status)) continue
+      // Only a gallery or exhibition that has a website of its own is listed:
+      // a link to one that has none (e.g. Carpets' "Doubts") leads nowhere.
+      // Legacy's live/hidden status is the old sites' runtime state, which the
+      // inventory doesn't keep for this.
+      if (!this.context.siteCollectionIds.has(row.collection_id)) continue
       const entry = {
         id: row.collection_id,
         backward_compatibility: row.backward_compatibility,
@@ -646,6 +659,18 @@ interface RelatedEntry {
   project_id: string | null
   in_package: boolean
   justifications: Record<string, string>
+}
+
+/**
+ * The item-level artist of a Sharing History record, which the sheets print
+ * from `artist_names`. Taken from one translation, English when there is one,
+ * as the importer takes an mwnf3 object's artist entity from one translation;
+ * each language's own spelling stays on its translation as `artist`.
+ */
+export function sharingHistoryArtistNames(byCode: Map<string, string> | undefined): string[] {
+  if (!byCode || byCode.size === 0) return []
+  const code = byCode.has('en') ? 'en' : [...byCode.keys()].sort()[0]!
+  return [byCode.get(code)!]
 }
 
 function groupBy<T, V>(rows: T[], key: (row: T) => string, value: (row: T) => V): Map<string, V[]> {

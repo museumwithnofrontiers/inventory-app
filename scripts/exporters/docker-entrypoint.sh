@@ -98,6 +98,16 @@ if [ "$MODE" = "all" ]; then
     # session should stop the batch before the first export rather than
     # surfacing seven times at the end (see #1867).
     if [ "$ALL_PUBLISH" = "1" ]; then
+        # Each exporter refuses a relative image base URL on --publish too;
+        # checked here so the batch stops once, before any export.
+        case "${ALL_BASE_URL:-${BASE_URL:-}}" in
+            https://?*) ;;
+            *)
+                echo "error: --publish needs an absolute https image base URL (--base-url or BASE_URL)," >&2
+                echo "       e.g. --base-url https://inventory.metanull.eu. Without one, every package ships" >&2
+                echo "       relative image URLs that no website can load." >&2
+                exit 64 ;;
+        esac
         echo ""
         echo "==> npm whoami (publish preflight for the whole batch)"
         WHOAMI_USER="$(npm whoami 2>/dev/null || true)"

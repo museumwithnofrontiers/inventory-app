@@ -43,6 +43,7 @@ describe('ExhibitionExporter — project_id', () => {
     themes: [],
     memberItemIds: [],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
@@ -123,6 +124,7 @@ describe('ExhibitionExporter — languages_enabled override', () => {
     themes: [],
     memberItemIds: [],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

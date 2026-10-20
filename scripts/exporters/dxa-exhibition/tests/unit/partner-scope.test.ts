@@ -94,6 +94,7 @@ describe('PartnerExporter — MWNF-384 scope and legacy exclusions', () => {
     themes: [],
     memberItemIds: ['item-a', 'item-b'],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

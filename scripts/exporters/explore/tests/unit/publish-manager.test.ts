@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'child_process'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-import { PublishManager } from '../../src/core/publish-manager.js'
+import { PublishManager, assertPublishableBaseUrl } from '../../src/core/publish-manager.js'
 import { Logger } from '../../src/core/logger.js'
 
 vi.mock('child_process', () => ({ spawnSync: vi.fn() }))
@@ -255,5 +255,24 @@ describe('licence', () => {
     const template = readFileSync(templatePath, 'utf-8')
     expect(written).toBe(template)
     expect(written).toContain('https://www.museumwnf.org/about/legal-notice')
+  })
+})
+
+/**
+ * On 2026-10-19 a publish ran without --base-url, fell back to `./images` and
+ * shipped relative image URLs to every website at once. A publish refuses that.
+ */
+describe('assertPublishableBaseUrl', () => {
+  it('refuses the relative fallback and other non-https bases', () => {
+    expect(() => assertPublishableBaseUrl('./images')).toThrow('--base-url')
+    expect(() => assertPublishableBaseUrl('/images')).toThrow()
+    expect(() => assertPublishableBaseUrl('')).toThrow()
+    expect(() => assertPublishableBaseUrl('http://inventory.metanull.eu')).toThrow()
+    expect(() => assertPublishableBaseUrl('file:///var/www/images')).toThrow()
+  })
+
+  it('accepts an absolute https base', () => {
+    expect(() => assertPublishableBaseUrl('https://inventory.metanull.eu')).not.toThrow()
+    expect(() => assertPublishableBaseUrl('https://inventory.metanull.eu/')).not.toThrow()
   })
 })

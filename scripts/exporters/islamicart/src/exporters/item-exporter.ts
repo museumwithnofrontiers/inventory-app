@@ -373,12 +373,12 @@ export class ItemExporter extends BaseExporter {
       translationsByItemLang.get(key)!.push(t)
     }
 
-    // item_id -> lang_code -> { material | keyword -> labels[] }: the sheet's
-    // Material(s) / Technique(s) and keyword lines, in the page's language.
-    // These tags are language-scoped, one row per language.
+    // item_id -> lang_code -> { keyword -> labels[] }: the sheet's keyword
+    // line, in the page's language. These tags are language-scoped, one row
+    // per language.
     const sheetTags = new Map<string, Map<string, Map<string, string[]>>>()
     for (const row of tagLinks) {
-      if (row.category !== 'material' && row.category !== 'keyword') continue
+      if (row.category !== 'keyword') continue
       const code = row.language_id ? langCodeMap.get(row.language_id) : undefined
       if (!code) continue
       const byLang = sheetTags.get(row.item_id) ?? new Map<string, Map<string, string[]>>()
@@ -443,7 +443,10 @@ export class ItemExporter extends BaseExporter {
         copyright: extra?.copyright ?? null,
         catalogue_holding_link: extra?.catalogue_holding_link ?? null,
         linkcatalogs: extra?.linkcatalogs ?? null,
-        materials: sheetTags.get(itemId)?.get(code)?.get('material') ?? [],
+        // The Material(s) / Technique(s) line as the record writes it, which
+        // legacy prints. The material tags are shared across records and gather
+        // every material tag on the item, so they print terms the record doesn't have.
+        materials: extra?.materials ? [extra.materials] : [],
         keywords: sheetTags.get(itemId)?.get(code)?.get('keyword') ?? [],
         author: ownRow.author_name,
         copy_editor: ownRow.copy_editor_name,

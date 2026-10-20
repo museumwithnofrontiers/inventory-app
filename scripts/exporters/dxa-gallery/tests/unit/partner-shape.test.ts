@@ -96,6 +96,7 @@ describe('PartnerExporter — shared partner shape', () => {
     gallery: gallery(projectId),
     memberItemIds: ['item-a', 'item-b'],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
