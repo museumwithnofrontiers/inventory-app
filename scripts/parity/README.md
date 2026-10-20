@@ -106,6 +106,7 @@ What `curatorial` compares, per family:
 | `--refresh` | read the legacy home pages again, not just npm |
 | `--warm` | read the PHP sites' pages in parallel before comparing them (only worth it with a cold cache) |
 | `--concurrency N` | parallel requests, 1 to 5 (default 3) |
+| `--new-url slug=url` | measure the new site at `url` instead of its published address, e.g. a local preview build. Repeatable, one site each |
 
 Exit code: `0` when everything ran and the gate passed, `1` when the gate failed, `2` when a step
 failed to run (`out/run.log` names it).
@@ -159,6 +160,27 @@ The sitemap re-reads npm on every run, so the comparison always covers what `lat
 at that moment. Before 2026-10-20 it did not: a cached registry answer once made a whole run
 compare the previous release without saying so. If a publish happened minutes ago and the
 sitemap still shows the old version, that is npm's lag: wait, and run again.
+
+## Before a site or platform PR is merged: a preview build
+
+The browser passes (`style`, `assets`, `static`) can measure a site before its PR is merged.
+Serve the site's build from its repository (its `docker compose` preview, or `vite preview`),
+then point the passes at it with `--new-url`. The container reaches the host as
+`host.docker.internal`:
+
+```powershell
+docker compose run --rm parity style assets static --only islamicart --new-url islamicart=http://host.docker.internal:4173/
+```
+
+The address must be the build's root, where the site's own routes start (`#/…` follows it). A
+capture is reused only for the address it was taken from, so the preview's captures and the
+published site's never stand in for each other: the next run without `--new-url` takes the
+published site's again.
+
+The `static` pass pairs each standalone site's rebuilt pages with legacy's
+(`STANDALONE_PAGES` in `tools/jobs-static.mjs`: Islamic Art's Mission Statement and Recommended
+Links, Baroque Art's Sponsors, Sharing History's About, Team and Sponsors pages). A route a site
+names differently goes in that table.
 
 ## Reading the reports
 

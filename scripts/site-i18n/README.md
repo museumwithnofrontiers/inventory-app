@@ -270,6 +270,35 @@ A label found in neither is not the site's to have. A client label that can't
 be read fails the run: the client's code does not change, so a failure is a
 wrong selector.
 
+### The standalone sites
+
+```powershell
+docker run --rm --network host -v "${PWD}:/app" -v site-i18n-node-modules:/app/node_modules -v "${PWD}/../../.legacy-code:/legacy:ro" -w /app node:22-alpine npm run extract:standalone -- islamicart --namespace islamicart --legacy-code /legacy --force
+```
+
+`--legacy-code` is the repository's `.legacy-code` directory, which holds the
+legacy PHP checkouts (ignored by git).
+
+Discover Islamic Art, Discover Baroque Art and Sharing History are legacy PHP
+sites, not DXA sites: no registry row names them. Their pages print two kinds
+of text, and `extract:standalone` reads both, as the site lists them in
+`STANDALONE_SITES` (`src/standalone.ts`):
+
+| Legacy | What it is | How it is read |
+| --- | --- | --- |
+| `mwnf3.translation`, through `getTerm()` | the labels, the footer, and pages kept as one word (Islamic Art's mission statement) | each word in the groups the page loads (2, 3 and the page's own, 4 on the museum sites); where a word is in several, the highest group wins, as `mod.dictionary.inc.php` does. Only the languages legacy's switcher offers are written |
+| the PHP source | text written into the page itself (Islamic Art's Recommended Links) | the region between two markers, its echoed constants replaced by the value the live page prints; any other PHP in it fails the run. Written in the one language legacy prints it in |
+
+Each word or region becomes `<namespace>.<entry>`. The output is the website
+layout's: `output/<site>/locales/<lang>.json`, Markdown values, never padded
+with English, ready to copy into the site repo. An entry with no English text
+is named in a warning, not written.
+
+Islamic Art's set covers its header, menu, section banners, home page (the
+side links, today's highlight, the sponsor band), footer, item sheet and the
+Mission Statement and Recommended Links pages, in Arabic, English, Spanish
+and French. Another site is one more entry in `STANDALONE_SITES`.
+
 ## Values are Markdown, not HTML
 
 The legacy strings are HTML fragments — the legacy client renders them straight
