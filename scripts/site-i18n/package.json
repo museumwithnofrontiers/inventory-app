@@ -17,11 +17,11 @@
   },
   "dependencies": {
     "@types/turndown": "^5.0.6",
-    "@vue/compiler-sfc": "^3.5.43",
+    "@vue/compiler-sfc": "^3.5.44",
     "chalk": "^6.0.1",
     "commander": "^15.0.0",
-    "dotenv": "^18.0.5",
-    "mysql2": "^3.24.5",
+    "dotenv": "^18.0.8",
+    "mysql2": "^3.24.6",
     "turndown": "^7.2.4"
   },
   "devDependencies": {
