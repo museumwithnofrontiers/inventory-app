@@ -110,7 +110,7 @@ program
       await db.connect()
       logger.info('Connected to the legacy database (read-only)')
 
-      const words = [...new Set(Object.values(siteWords(site)).map((w) => w.word))]
+      const words = [...new Set(Object.values(siteWords(site, options.namespace)).map((w) => w.word))]
       const rows = await db.loadDictionaryWords(words, siteGroups(site))
       const { locales, missingEnglish } = buildStandaloneCatalogue(site, rows, options.namespace, regions)
 
@@ -125,7 +125,7 @@ program
         logger.success(`${locale}.json: ${Object.keys(locales[locale]!).length} entries`)
       }
       for (const entry of missingEnglish) {
-        logger.warning(`${options.namespace}.${entry}: legacy has no English text; not written`)
+        logger.warning(`${entry}: legacy has no English text; not written`)
       }
       logger.info(`Copy ${siteName}/locales/ into the site repo as-is.`)
     } catch (error) {

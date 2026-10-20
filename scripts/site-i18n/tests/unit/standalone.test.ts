@@ -98,7 +98,7 @@ describe('buildStandaloneCatalogue', () => {
       'islamicart'
     )
     expect(locales.en).toEqual({ 'islamicart.nav.portal': 'MWNF Portal' })
-    expect(missingEnglish).toEqual(['nav.home'])
+    expect(missingEnglish).toEqual(['islamicart.nav.home'])
   })
 
   it('writes a PHP region in its own language, as Markdown', () => {
@@ -111,6 +111,16 @@ describe('buildStandaloneCatalogue', () => {
     expect(locales.en).toEqual({
       'islamicart.links.body': '### Media Partnerships\n\n#### ISLAM.DE\n\n[http://islam.de/](http://islam.de/)',
     })
+  })
+
+  it('writes an override under the shared entry it overrides', () => {
+    const withOverride = { ...site({}), overrides: { 'record.action.viewShortDescription': 'pc_view_sdesc' } }
+    const { locales } = buildStandaloneCatalogue(
+      withOverride,
+      [row('pc_view_sdesc', 4, 'en', 'View Short Description')],
+      'islamicart'
+    )
+    expect(locales.en).toEqual({ 'record.action.viewShortDescription': 'View Short Description' })
   })
 
   it('refuses a text with braces', () => {
@@ -152,7 +162,7 @@ describe('phpRegionHtml', () => {
 describe('STANDALONE_SITES', () => {
   it('reads Islamic Art from the groups its pages load', () => {
     expect(siteGroups(STANDALONE_SITES.islamicart!)).toEqual([2, 3, 4])
-    expect(siteWords(STANDALONE_SITES.islamicart!)['missionStatement.body']).toEqual({
+    expect(siteWords(STANDALONE_SITES.islamicart!, 'islamicart')['islamicart.missionStatement.body']).toEqual({
       word: 'mission_statement_text',
       groups: [3],
     })

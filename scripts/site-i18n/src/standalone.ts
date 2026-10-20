@@ -55,7 +55,14 @@ export interface StandaloneSite {
   root: string
   /** The languages legacy's switcher offers. */
   languages: string[]
+  /** Words written under the site's namespace: entry → word. */
   words: Record<string, string | StandaloneWord>
+  /**
+   * Words written under a shared viewer-i18n entry's own name, which the
+   * site's locale overrides (local wins): a label a shared component prints,
+   * in legacy's wording. Full entry name → word.
+   */
+  overrides?: Record<string, string | StandaloneWord>
   regions?: Record<string, PhpRegion>
 }
 
@@ -113,8 +120,6 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'item.back': 'back',
       'item.collectionStart': 'pc_start_page',
       'item.addToCollection': 'add_to_collection',
-      'item.viewShortDescription': 'pc_view_sdesc',
-      'item.hideShortDescription': 'pc_hide_sdesc',
       'item.relatedContent': 'gn_related_context',
       'item.relatedObjects': 'item_relatedobjects',
       'item.relatedMonuments': 'item_linkedmonuments',
@@ -131,6 +136,11 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'missionStatement.title': 'missionstatement',
       'missionStatement.body': { word: 'mission_statement_text', groups: [3] },
       'page.print': 'print',
+    },
+    overrides: {
+      // The sheet's toggle (database_item.php's `.tag`), printed by viewer-layout's RecordSheet.
+      'record.action.viewShortDescription': 'pc_view_sdesc',
+      'record.action.hideShortDescription': 'pc_hide_sdesc',
     },
     regions: {
       // recommendedlinks.php: every group heading and link, from the first
@@ -155,19 +165,24 @@ export interface StandaloneWordRow {
   value: string | null
 }
 
-/** A site's word list, normalised: entry → word and groups. */
-export function siteWords(site: StandaloneSite): Record<string, Required<StandaloneWord>> {
+/**
+ * A site's words, normalised: the entry each is written under (its own under
+ * the namespace, an override under its shared name) → word and groups.
+ */
+export function siteWords(site: StandaloneSite, namespace: string): Record<string, Required<StandaloneWord>> {
   const words: Record<string, Required<StandaloneWord>> = {}
-  for (const [entry, spec] of Object.entries(site.words)) {
+  const add = (key: string, spec: string | StandaloneWord) => {
     const word = typeof spec === 'string' ? { word: spec } : spec
-    words[entry] = { word: word.word, groups: word.groups ?? STANDALONE_DEFAULT_GROUPS }
+    words[key] = { word: word.word, groups: word.groups ?? STANDALONE_DEFAULT_GROUPS }
   }
+  for (const [entry, spec] of Object.entries(site.words)) add(`${namespace}.${entry}`, spec)
+  for (const [key, spec] of Object.entries(site.overrides ?? {})) add(key, spec)
   return words
 }
 
 /** Every group any of the site's words is read from. */
 export function siteGroups(site: StandaloneSite): number[] {
-  return [...new Set(Object.values(siteWords(site)).flatMap((w) => w.groups))].sort((a, b) => a - b)
+  return [...new Set(Object.values(siteWords(site, 'site')).flatMap((w) => w.groups))].sort((a, b) => a - b)
 }
 
 // An entity in a string with no tag: legacy stores some labels that way, and
@@ -229,7 +244,8 @@ export function buildStandaloneCatalogue(
   const offered = new Set(site.languages)
   const locales: MessageCatalogue = { en: {} }
 
-  for (const [entry, { word, groups }] of Object.entries(siteWords(site))) {
+  const words = siteWords(site, namespace)
+  for (const [key, { word, groups }] of Object.entries(words)) {
     const best = new Map<string, StandaloneWordRow>()
     for (const row of rows) {
       if (row.wordId !== word || !groups.includes(row.groupId) || !offered.has(row.langId)) continue
@@ -238,7 +254,7 @@ export function buildStandaloneCatalogue(
     }
     for (const [langId, row] of best) {
       const text = entryValue(row.value)
-      if (text !== '') (locales[langId] ??= {})[`${namespace}.${entry}`] = text
+      if (text !== '') (locales[langId] ??= {})[key] = text
     }
   }
 
@@ -254,8 +270,8 @@ export function buildStandaloneCatalogue(
     }
   }
 
-  const entries = [...Object.keys(site.words), ...Object.keys(site.regions ?? {})]
-  const missingEnglish = entries.filter((entry) => locales.en![`${namespace}.${entry}`] === undefined).sort()
+  const keys = [...Object.keys(words), ...Object.keys(site.regions ?? {}).map((entry) => `${namespace}.${entry}`)]
+  const missingEnglish = keys.filter((key) => locales.en![key] === undefined).sort()
 
   const sorted: MessageCatalogue = {}
   for (const locale of Object.keys(locales).sort()) {
