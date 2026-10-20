@@ -1,0 +1,26 @@
+{
+  "name": "mwnf-parity",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Legacy-vs-new parity comparison of the MWNF websites: curatorial data, style, assets and static pages, with a gate for publishing",
+  "scripts": {
+    "parity": "node run.mjs",
+    "test": "node --test",
+    "lint": "eslint . --fix",
+    "lint:check": "eslint ."
+  },
+  "dependencies": {
+    "playwright": "1.63.0",
+    "sharp": "^0.35.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.13.0",
+    "globals": "^17.13.0"
+  },
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
