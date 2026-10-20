@@ -116,10 +116,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'footer.languagePolicy': 'language_policy',
       'footer.cookies': 'cookie_policy',
       'footer.copyright': 'footer5',
-      // The item sheet (database_item.php, modules/database_item.php).
+      // The item sheet (database_item.php, modules/database_item.php). Its
+      // first row's label is a `db_` word of group 4, the module's own.
+      'item.nameOfObject': { word: 'db_name_object', groups: [4] },
+      'item.nameOfMonument': { word: 'db_name_monument', groups: [4] },
       'item.back': 'back',
       'item.collectionStart': 'pc_start_page',
-      'item.addToCollection': 'add_to_collection',
       'item.relatedContent': 'gn_related_context',
       'item.relatedObjects': 'item_relatedobjects',
       'item.relatedMonuments': 'item_linkedmonuments',
