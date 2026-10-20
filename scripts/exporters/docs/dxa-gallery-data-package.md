@@ -233,14 +233,15 @@ gallery deltas:
     spelling, its separators ("؛" in Arabic) and its final period; the viewer
     joins entries with "; ".
   - The material tags are shared across records, so they are not read.
-- And **`keywords[]`**:
-  - for a Sharing History record, its column (`extra.gallery_sheet.keywords`)
-    as one entry;
-  - for an mwnf3 record, its keyword tags (`mwnf3:tags:keyword:{lang}:…`),
-    language-scoped.
+- And **`keywords[]`**, the same way:
+  - the record's own column, as one entry: `extra.keywords` for an mwnf3
+    object or monument, `extra.gallery_sheet.keywords` for a Sharing History
+    record.
   - Legacy prints no keyword line; the viewers search the keywords.
-  - Keyword tags must never be mixed into `tags.json`: on amulets alone that
-    would add 441 keyword links to the search dropdowns.
+  - The mwnf3 keyword and material tags (`mwnf3:tags:{keyword,material}:…`)
+    are not read, and must never be mixed into `tags.json`: on amulets alone
+    that would add 441 keyword and 188 unfaceted material links to the search
+    dropdowns.
 
 ## tags.json (new)
 

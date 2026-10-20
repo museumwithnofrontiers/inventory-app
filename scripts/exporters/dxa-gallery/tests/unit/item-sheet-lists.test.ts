@@ -151,6 +151,24 @@ describe('ItemExporter — materials and keywords as the record writes them', ()
     expect(readText('ar', 'item-a').materials).toEqual(['نحاس أصفر؛ زخرفة بتقنية النيلو.'])
   })
 
+  it("prints an mwnf3 record's own keywords column in each language, not the keyword tags", async () => {
+    const db = stubDb({
+      items: [itemRow('item-d', 'mwnf3:objects:isl:es:mus01:7')],
+      translations: [
+        translationRow('item-d', 'eng', { keywords: 'Marble; capital; Caliphate.' }),
+        translationRow('item-d', 'ara', { keywords: 'رخام؛ تاج عمود؛ الخلافة.' }),
+      ],
+      tags: [
+        { ...materialTag('item-d', 'eng', 'Marmól'), category: 'keyword' },
+        { ...materialTag('item-d', 'ara', 'رخام'), category: 'keyword' },
+      ],
+    })
+    await new ItemExporter(context(db, ['item-d'])).export()
+
+    expect(readText('en', 'item-d').keywords).toEqual(['Marble; capital; Caliphate.'])
+    expect(readText('ar', 'item-d').keywords).toEqual(['رخام؛ تاج عمود؛ الخلافة.'])
+  })
+
   it('prints no materials line when the record has no materials column, whatever its tags', async () => {
     const db = stubDb({
       items: [itemRow('item-b', 'mwnf3:objects:dca:tr:mus01:5')],

@@ -521,6 +521,8 @@ export class ItemExporter extends BaseExporter {
         // legacy prints: one entry, in the language's own spelling. Same shape
         // as Islamic Art's.
         materials: extra?.materials ? [extra.materials] : [],
+        // The keywords column as the record writes it, same shape.
+        keywords: extra?.keywords ? [extra.keywords] : [],
         author: ownRow.author_name,
         copy_editor: ownRow.copy_editor_name,
         translator: ownRow.translator_name,

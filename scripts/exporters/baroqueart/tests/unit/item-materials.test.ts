@@ -125,5 +125,17 @@ describe('ItemExporter — materials', () => {
     await new ItemExporter(context(db)).export()
 
     expect(readText('en').materials).toEqual([])
+    expect(readText('en').keywords).toEqual([])
+  })
+
+  it("carries the record's own keywords column in each language, as one entry", async () => {
+    const db = stubDb([
+      translationRow('eng', { keywords: 'Monstrance; goldsmith; Prague.' }),
+      translationRow('ces', { keywords: 'Monstrance; zlatnictví; Praha' }),
+    ])
+    await new ItemExporter(context(db)).export()
+
+    expect(readText('en').keywords).toEqual(['Monstrance; goldsmith; Prague.'])
+    expect(readText('cs').keywords).toEqual(['Monstrance; zlatnictví; Praha'])
   })
 })

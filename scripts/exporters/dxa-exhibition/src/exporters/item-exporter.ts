@@ -148,13 +148,6 @@ interface ItemGalleryRow {
 }
 
 /**
- * The mwnf3 tag family that is free text on the item sheet, not a facet. The
- * material tags are not read: the sheet prints the record's own materials
- * column (`extra.materials`), as legacy does.
- */
-const SHEET_TAG_CATEGORIES = ['keyword']
-
-/**
  * `items.json` + `translations/items.<lang>.json`.
  *
  * Unlike the single-project exporters, the item universe here is the
@@ -334,39 +327,18 @@ export class ItemExporter extends BaseExporter {
       else translationsByItemLang.set(key, [row])
     }
 
-    // item_id -> lang_code -> { category -> labels[] }, for the sheet's free-text
-    // keyword line. These tags ARE language-scoped (one row per
-    // language), unlike the English-only THG facet tags.
-    const sheetTags = new Map<string, Map<string, Map<string, string[]>>>()
+    // Only the THG tags are facets. The mwnf3 keyword and material tags are not
+    // read: the sheet prints the record's own columns (extra.keywords,
+    // extra.materials), which the shared tags can't stand in for.
     const facetTagIds = new Map<string, string[]>()
     for (const row of tagLinks) {
-      if (row.backward_compatibility.includes('thg:tags:')) {
-        const bucket = facetTagIds.get(row.item_id)
-        if (bucket) {
-          if (!bucket.includes(row.tag_id)) bucket.push(row.tag_id)
-        } else {
-          facetTagIds.set(row.item_id, [row.tag_id])
-        }
-        continue
+      if (!row.backward_compatibility.includes('thg:tags:')) continue
+      const bucket = facetTagIds.get(row.item_id)
+      if (bucket) {
+        if (!bucket.includes(row.tag_id)) bucket.push(row.tag_id)
+      } else {
+        facetTagIds.set(row.item_id, [row.tag_id])
       }
-      if (!SHEET_TAG_CATEGORIES.includes(row.category)) continue
-      const code = langCodeMap.get(row.language_id)
-      const label = row.description
-      if (!code || !label) continue
-
-      let byLang = sheetTags.get(row.item_id)
-      if (!byLang) {
-        byLang = new Map()
-        sheetTags.set(row.item_id, byLang)
-      }
-      let byCategory = byLang.get(code)
-      if (!byCategory) {
-        byCategory = new Map()
-        byLang.set(code, byCategory)
-      }
-      const labels = byCategory.get(row.category)
-      if (labels) labels.push(label)
-      else byCategory.set(row.category, [label])
     }
 
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
@@ -388,7 +360,6 @@ export class ItemExporter extends BaseExporter {
       const shortDescription = epmRow ? epmRow.description : null
 
       const extra = ownRow.extra ? (parseJson<Record<string, string>>(ownRow.extra) ?? null) : null
-      const perCategory = sheetTags.get(itemId)?.get(code)
 
       const byLang = translationMap.get(itemId) ?? {}
       byLang[code] = {
@@ -432,10 +403,11 @@ export class ItemExporter extends BaseExporter {
         copy_editor: ownRow.copy_editor_name,
         translator: ownRow.translator_name,
         translation_copy_editor: ownRow.translation_copy_editor_name,
-        keywords: perCategory?.get('keyword') ?? [],
-        // The Material(s) / Technique(s) line as the record writes it, which
-        // legacy prints: one entry, so the language's own spelling and separators
-        // ("؛" in Arabic) survive. The material tags are shared across records.
+        // The Material(s) / Technique(s) line and the keywords as the record
+        // writes them, which legacy prints: one entry each, so the language's
+        // own spelling and separators ("؛" in Arabic) survive. The material and
+        // keyword tags are shared across records.
+        keywords: extra?.['keywords'] ? [extra['keywords']] : [],
         materials: extra?.['materials'] ? [extra['materials']] : [],
       }
       const gallerySheet = parseJson<{ gallery_sheet?: Record<string, string> }>(ownRow.extra)?.gallery_sheet
