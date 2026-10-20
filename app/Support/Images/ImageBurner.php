@@ -26,7 +26,7 @@ class ImageBurner
      * different bytes for the same input, or clients keep the old rendition
      * and the pictures cache is never refreshed.
      */
-    public const int VERSION = 3;
+    public const int VERSION = 4;
 
     /** Output quality of lossy formats (JPEG, WebP); lossless ones ignore it. */
     public const int QUALITY = 90;
@@ -36,6 +36,18 @@ class ImageBurner
 
     /** ...unless even one line at this size doesn't fit in it. */
     public const int MIN_FONT_SIZE = 8;
+
+    /** The starting font size, as a share of the image height... */
+    public const int HEIGHT_PER_FONT_SIZE = 40;
+
+    /**
+     * ...but never more than a 4:3 picture of the same width gets: the
+     * caption is sized from the width, so a tall narrow picture (a carpet
+     * runner) gets the caption of a landscape one, not an oversized one
+     * wrapped on two lines. A picture 4:3 or wider keeps the height-based
+     * size.
+     */
+    public const float WIDTH_PER_FONT_SIZE = self::HEIGHT_PER_FONT_SIZE * 4 / 3;
 
     private const string FONT_PATH = 'fonts/Roboto-Regular.ttf';
 
@@ -69,7 +81,8 @@ class ImageBurner
 
     /**
      * Where the bar and the text go on an image of this size. The font
-     * starts at a size proportional to the image height and shrinks until
+     * starts at a size proportional to the image height, capped by the image
+     * width (WIDTH_PER_FONT_SIZE), and shrinks until
      * the wrapped text fits the image width and a bar of at most
      * MAX_BAR_SHARE of the height. If it still doesn't fit at MIN_FONT_SIZE,
      * the text is cut, and the cut shown by an ellipsis: lines that don't fit
@@ -80,7 +93,10 @@ class ImageBurner
     {
         $metrics = new FontProcessor;
         $maxBarHeight = (int) floor($height * self::MAX_BAR_SHARE);
-        $fontSize = max(self::MIN_FONT_SIZE, (int) round($height / 40));
+        $fontSize = max(self::MIN_FONT_SIZE, (int) round(min(
+            $height / self::HEIGHT_PER_FONT_SIZE,
+            $width / self::WIDTH_PER_FONT_SIZE,
+        )));
 
         while (true) {
             $padding = max(2, (int) round($fontSize * 0.5));
