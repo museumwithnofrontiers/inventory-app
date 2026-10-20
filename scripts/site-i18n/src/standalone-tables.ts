@@ -203,10 +203,10 @@ export function localTeamLine(person: TeamRow): string {
   return line
 }
 
-/** A country's name as an entry segment: "United Kingdom" → unitedKingdom, "Türkiye" → turkiye. */
+/** A country's name inside an entry name: "United Kingdom" → UnitedKingdom, "Türkiye" → Turkiye. */
 export function countryKey(name: string): string {
   const words = name.normalize('NFD').replace(/[̀-ͯ]/g, '').split(/[^A-Za-z0-9]+/).filter(Boolean)
-  return words.map((word, index) => (index === 0 ? word.toLowerCase() : word[0]!.toUpperCase() + word.slice(1).toLowerCase())).join('')
+  return words.map((word) => word[0]!.toUpperCase() + word.slice(1).toLowerCase()).join('')
 }
 
 /** A Markdown body: one paragraph per line. */
@@ -234,7 +234,7 @@ const sharinghistoryTeam: Builder = async ({ db, namespace, warn }) => {
     const name = category?.cat_name ?? ''
     const key = TEAM_CATEGORY_KEYS[catId] ?? `category${catId}`
     if (!(catId in TEAM_CATEGORY_KEYS)) warn(`team category ${catId} ("${name}") has no entry name: written as ${key}`)
-    entries[`${namespace}.team.${key}.title`] = text(name)
+    entries[`${namespace}.team.${key}Title`] = text(name)
     const local = name === 'Local Project Teams (other collaborations)'
     const people = await db.select<TeamRow>(
       `SELECT c.country, cn.given_name, cn.family_name, cn.position, cn.Institution, cn.city
@@ -244,7 +244,7 @@ const sharinghistoryTeam: Builder = async ({ db, namespace, warn }) => {
       [catId]
     )
     if (!local) {
-      entries[`${namespace}.team.${key}.body`] = paragraphs(people.map((person) => teamLine(name, person, countries)))
+      entries[`${namespace}.team.${key}Body`] = paragraphs(people.map((person) => teamLine(name, person, countries)))
       continue
     }
     // The local teams: one accordion section per country, in the order the
@@ -253,8 +253,8 @@ const sharinghistoryTeam: Builder = async ({ db, namespace, warn }) => {
     for (const person of people) byCountry.set(person.country, [...(byCountry.get(person.country) ?? []), person])
     for (const [code, members] of byCountry) {
       const country = countries[code] ?? code
-      entries[`${namespace}.team.local.${countryKey(country)}.title`] = text(country)
-      entries[`${namespace}.team.local.${countryKey(country)}.body`] = paragraphs(members.map(localTeamLine))
+      entries[`${namespace}.team.local${countryKey(country)}Title`] = text(country)
+      entries[`${namespace}.team.local${countryKey(country)}Body`] = paragraphs(members.map(localTeamLine))
     }
   }
   return { entries: { en: entries } }
@@ -268,9 +268,9 @@ const sharinghistorySponsors: Builder = async ({ db, site, namespace }) => {
   )
   const entries: Record<string, string> = {}
   for (const row of rows) {
-    entries[`${namespace}.sponsors.s${row.sponsors_id}.name`] = text(row.name, site)
+    entries[`${namespace}.sponsors.name${row.sponsors_id}`] = text(row.name, site)
     const remarks = text(row.remarks, site)
-    if (remarks) entries[`${namespace}.sponsors.s${row.sponsors_id}.remarks`] = remarks
+    if (remarks) entries[`${namespace}.sponsors.remarks${row.sponsors_id}`] = remarks
   }
   return { entries: { en: entries } }
 }

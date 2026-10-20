@@ -271,9 +271,12 @@ export function buildStandaloneCatalogue(
     }
   }
 
+  // What viewer-i18n's check accepts: no braces in a text, and an entry name
+  // of three parts (namespace, group, entry).
   for (const [locale, messages] of Object.entries(locales)) {
     for (const [key, value] of Object.entries(messages)) {
       if (/[{}]/.test(value)) throw new Error(`${locale} ${key}: a text may not contain braces`)
+      if (key.split('.').length !== 3) throw new Error(`${locale} ${key}: an entry name has three parts`)
     }
   }
 

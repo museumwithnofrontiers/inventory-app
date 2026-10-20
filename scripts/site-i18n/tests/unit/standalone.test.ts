@@ -133,6 +133,12 @@ describe('buildStandaloneCatalogue', () => {
     expect(locales.en).toEqual({ 'record.action.viewShortDescription': 'View Short Description' })
   })
 
+  it('refuses an entry name of other than three parts, as viewer-i18n does', () => {
+    expect(() =>
+      buildStandaloneCatalogue(site({ 'team.idea.body': 'x' }), [row('x', 3, 'en', 'Idea')], 'sharinghistory')
+    ).toThrow(/three parts/)
+  })
+
   it('refuses a text with braces', () => {
     expect(() =>
       buildStandaloneCatalogue(site({ 'nav.portal': 'portal_link' }), [row('portal_link', 3, 'en', '{x}')], 'islamicart')
@@ -289,10 +295,10 @@ describe('the tables', () => {
     expect(localTeamLine(person({ position: 'coordinator' }))).toBe(' Mourad Bouteflika, Ministry of Culture, Algiers coordinator')
   })
 
-  it("names a local team's entry after its country", () => {
-    expect(countryKey('United Kingdom')).toBe('unitedKingdom')
-    expect(countryKey('Türkiye')).toBe('turkiye')
-    expect(countryKey('Germany')).toBe('germany')
+  it("names a local team's entries after its country", () => {
+    expect(countryKey('United Kingdom')).toBe('UnitedKingdom')
+    expect(countryKey('Türkiye')).toBe('Turkiye')
+    expect(countryKey('Germany')).toBe('Germany')
   })
 })
 
