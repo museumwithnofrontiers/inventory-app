@@ -1,6 +1,7 @@
 // node tools/jobs-static.mjs — the static pages of every site, legacy and new.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { OUT } from './lib/paths.mjs';
+import { loadPackage } from './lib/pkg.mjs';
 const sites = JSON.parse(readFileSync(`${OUT}/sitemap.json`, 'utf8')).sites;
 const jobs = [];
 // The standalone sites' static pages that a new page rebuilds: legacy's page → the new route. The
@@ -40,6 +41,14 @@ for (const s of sites) {
     for (const [legacyPath, newPath] of Object.entries(STANDALONE_PAGES[s.slug] ?? {})) {
       const legacyUrl = `${L}/${legacyPath}`;
       pair(s, pageKey(legacyUrl), legacyUrl, `${N}${newPath}`);
+    }
+    if (s.slug === 'islamicart') {
+      // Islamic Dynasties (legacy's /dynasties/ client): its start page with the introduction, and
+      // one dynasty's profile, matched to the package by its English name.
+      pair(s, 'dynasties', `${L}/dynasties/`, `${N}/dynasties`);
+      const names = s.packageVersion ? loadPackage(s.package, s.packageVersion).read('translations/dynasties.en.json') : null;
+      const id = Object.entries(names ?? {}).find(([, t]) => t.name === 'Umayyads of al-Andalus')?.[0];
+      if (id) pair(s, 'dynasty', `${L}/dynasties/dynasty/31/en`, `${N}/dynasties/${id}`);
     }
   } else {
     // Home pages carry the footer links.

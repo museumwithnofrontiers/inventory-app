@@ -12,6 +12,9 @@ const pair = (slug, page, legacy, nu) => {
 };
 const pkg = (slug) => { const s = sites.get(slug); return loadPackage(s.package, s.packageVersion); };
 const byKey = (list, key) => list.find((x) => x.backward_compatibility.toLowerCase() === key.toLowerCase());
+// The dynasty compared on both sides: legacy's client numbers it, the package names it.
+const ISLAMIC_DYNASTY = { legacyId: 31, name: 'Umayyads of al-Andalus' };
+const islamicDynasty = (P) => Object.entries(P.read('translations/dynasties.en.json') ?? {}).find(([, t]) => t.name === ISLAMIC_DYNASTY.name)?.[0] ?? null;
 
 // ---- galleries: carpets (dark olive palette), calligraphy (light shades, white text)
 for (const [slug, itemKey] of [['carpets', 'mwnf3:objects:DCA:uk:Mus31:19'], ['calligraphy', null]]) {
@@ -70,6 +73,15 @@ for (const [slug, itemKey, monKey] of [['islamicart', 'mwnf3:objects:ISL:it:Mus0
   pair(slug, 'timeline', `${L}/hcr_home.php`, `${N}/timeline`);
   pair(slug, 'exhibitions', `${L}/exhibitions/${slug === 'islamicart' ? 'ISL' : 'BAR'}/index.php`, `${N}/exhibitions`);
   if (exh) pair(slug, 'exhibition', `${L}/exhibitions/${slug === 'islamicart' ? 'ISL' : 'BAR'}/index.php`, `${N}/exhibitions/${exh.id}`);
+  if (slug === 'islamicart') {
+    // Islamic Dynasties: legacy's /dynasties/ client; the new section rebuilds it from the package.
+    const dynasty = islamicDynasty(P);
+    pair(slug, 'dynasties', `${L}/dynasties/`, `${N}/dynasties`);
+    if (dynasty) {
+      pair(slug, 'dynasty', `${L}/dynasties/dynasty/${ISLAMIC_DYNASTY.legacyId}/en`, `${N}/dynasties/${dynasty}`);
+      pair(slug, 'dynasty-objects', `${L}/dynasties/related/${ISLAMIC_DYNASTY.legacyId}/objects`, `${N}/dynasties/${dynasty}/objects`);
+    }
+  }
 }
 
 // ---- Sharing History

@@ -187,7 +187,10 @@ files of `shots/`, `assets/` and `static/` whose name holds `--new`.
 The `static` pass pairs each standalone site's rebuilt pages with legacy's
 (`STANDALONE_PAGES` in `tools/jobs-static.mjs`: Islamic Art's Mission Statement and Recommended
 Links, Baroque Art's Sponsors, Sharing History's About, Team and Sponsors pages). A route a site
-names differently goes in that table.
+names differently goes in that table. Islamic Art's Dynasties section (legacy's `/dynasties/`
+client) is paired in both the static and the style pass: the start page, and the profile and
+related objects of one dynasty (Umayyads of al-Andalus, legacy's 31, matched to the package by
+its English name).
 
 ## Reading the reports
 
