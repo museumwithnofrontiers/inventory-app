@@ -785,11 +785,26 @@ export class SqlWriteStrategy implements IWriteStrategy {
         // (e.g., by AuthorHelper from free-text fields). Find by name and adopt.
         const byName = await this.findAuthorByName(sanitized.name);
         if (byName) {
-          // Update the existing record with the proper BC so future lookups work
-          await this.db.execute('UPDATE authors SET backward_compatibility = ? WHERE id = ?', [
-            bc,
-            byName,
-          ]);
+          // Update the existing record with the proper BC so future lookups work.
+          // A record made from a free-text credit holds only the name, so the
+          // legacy author's own spellings fill what it lacks: the sites print
+          // `originalname` on Arabic pages. What the record already holds stays.
+          await this.db.execute(
+            `UPDATE authors SET backward_compatibility = ?,
+               firstname = COALESCE(NULLIF(firstname, ''), ?),
+               lastname = COALESCE(NULLIF(lastname, ''), ?),
+               givenname = COALESCE(NULLIF(givenname, ''), ?),
+               originalname = COALESCE(NULLIF(originalname, ''), ?)
+             WHERE id = ?`,
+            [
+              bc,
+              sanitized.firstname || null,
+              sanitized.lastname || null,
+              sanitized.givenname || null,
+              sanitized.originalname || null,
+              byName,
+            ]
+          );
           this.tracker.set(bc, byName, 'author');
           return byName;
         }

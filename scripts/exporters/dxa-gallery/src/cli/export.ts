@@ -38,8 +38,8 @@ import chalk from 'chalk'
 
 import { Database } from '../core/database.js'
 import { Logger } from '../core/logger.js'
-import { PublishManager } from '../core/publish-manager.js'
-import { loadInstance } from '../core/instance.js'
+import { PublishManager, assertPublishableBaseUrl } from '../core/publish-manager.js'
+import { loadInstance, loadSiteCollectionIds } from '../core/instance.js'
 import type { ExportContext } from '../core/types.js'
 import {
   ManifestExporter,
@@ -130,6 +130,7 @@ program
           registry,
         })
         try {
+          assertPublishableBaseUrl(options.baseUrl)
           preflight.assertLoggedIn()
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
@@ -185,6 +186,7 @@ program
           siteKey: instance.slug,
           memberItemIds: members.map(m => m.item_id),
           itemOwnContextIds: ownContextIds,
+          siteCollectionIds: loadSiteCollectionIds(),
           baseUrl: options.baseUrl,
           logger,
         }

@@ -20,7 +20,7 @@ import chalk from 'chalk'
 
 import { Database } from '../core/database.js'
 import { Logger } from '../core/logger.js'
-import { PublishManager } from '../core/publish-manager.js'
+import { PublishManager, assertPublishableBaseUrl } from '../core/publish-manager.js'
 import type { ExportContext } from '../core/types.js'
 import {
   ManifestExporter,
@@ -115,6 +115,7 @@ program
       // spending time on the export, rather than finding out at the end.
       if (options.publish) {
         try {
+          assertPublishableBaseUrl(options.baseUrl)
           publishManager.assertLoggedIn()
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)

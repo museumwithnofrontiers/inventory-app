@@ -68,6 +68,7 @@ describe('ItemExporter — project_id', () => {
     gallery,
     memberItemIds: ['item-a'],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

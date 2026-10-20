@@ -5,7 +5,7 @@
  * This is shared business logic used by all importers.
  */
 import TurndownService from 'turndown';
-import { Marked, type Token } from 'marked';
+import { Marked, type Token, type Tokens } from 'marked';
 
 // Create a singleton instance of TurndownService
 const turndownService = new TurndownService({
@@ -103,6 +103,21 @@ export function containsHtml(text: string | null | undefined): boolean {
 function tokensContainHtml(tokens: Token[] | undefined): boolean {
   for (const token of tokens ?? []) {
     if (token.type === 'html') return true;
+    // Legacy prints its texts as HTML, where a line indented by a tab or four
+    // spaces is just a line. Markdown reads it as a code block and keeps its
+    // tags as text, so the tags would pass unseen and reach the sites raw.
+    // The block's text is read again as the paragraph it is. A fenced block is
+    // left alone: nobody writes one by accident.
+    if (token.type === 'code' && (token as Tokens.Code).codeBlockStyle === 'indented') {
+      if (tokensContainHtml(markdown.lexer((token as Tokens.Code).text))) return true;
+      continue;
+    }
+    if (token.type === 'table') {
+      const table = token as Tokens.Table;
+      const cells = [...table.header, ...table.rows.flat()];
+      if (cells.some((cell) => tokensContainHtml(cell.tokens))) return true;
+      continue;
+    }
     const children = (token as { tokens?: Token[] }).tokens;
     const items = (token as { items?: Token[] }).items;
     if (tokensContainHtml(children) || tokensContainHtml(items)) return true;

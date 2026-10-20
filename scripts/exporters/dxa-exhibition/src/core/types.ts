@@ -111,6 +111,12 @@ export interface ExportContext {
   memberItemIds: string[]
   /** Item UUID → context UUID of the item's OWN project, for translation selection. */
   itemOwnContextIds: Map<string, string>
+  /**
+   * Collection UUIDs of the galleries and exhibitions that have a website,
+   * from the instance files. An item's other galleries are listed only when
+   * they are among them.
+   */
+  siteCollectionIds: ReadonlySet<string>
   baseUrl: string
   logger: Logger
   /** The instance's site slug — `manifest.site.key`. Not always `exhibition.slug`. */

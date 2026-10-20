@@ -245,6 +245,43 @@ describe('transformObjectTranslation', () => {
 
     expect(JSON.parse(result?.data.extra ?? '{}').dynasty).toBe('Qajar');
   });
+
+  it('keeps the free-text Material(s) / Technique(s) line in extra.materials', () => {
+    const obj: LegacyObject = {
+      project_id: 'EPM',
+      country: 'at',
+      museum_id: 'Mus21',
+      number: '2',
+      lang: 'en',
+      name: 'Bowl',
+      description2: 'A bowl',
+      materials: 'Brass with decoration in <i>niello</i>-technique; silver',
+    };
+
+    const result = transformObjectTranslation(obj, 'description2');
+
+    const materials = JSON.parse(result?.data.extra ?? '{}').materials as string;
+    expect(materials).toMatch(/^Brass with decoration in \*niello\*.*technique; silver$/);
+    expect(materials).not.toContain('<i>');
+  });
+
+  it('stores no materials key when the column is empty', () => {
+    const obj: LegacyObject = {
+      project_id: 'EPM',
+      country: 'at',
+      museum_id: 'Mus21',
+      number: '3',
+      lang: 'en',
+      name: 'Bowl',
+      description2: 'A bowl',
+      materials: '  ',
+      dynasty: 'Mamluk',
+    };
+
+    const result = transformObjectTranslation(obj, 'description2');
+
+    expect(JSON.parse(result?.data.extra ?? '{}')).not.toHaveProperty('materials');
+  });
 });
 
 describe('extractObjectTags', () => {
@@ -331,27 +368,59 @@ describe('extractObjectArtists', () => {
 
     const result = extractObjectArtists(obj);
 
-    // Comma-split first → one part (no commas) → colon detected → kept as-is
-    // The <br/>\n is stripped to space; result is a single structured record
+    // The <br/>\n is stripped to a space, and with no semicolon the column is
+    // one record
     expect(result.length).toBe(1);
     expect(result[0]?.name).toBe('Calligraphers: Kasim Painters: Osman');
   });
 
-  it('should keep structured (colon) comma-parts as-is', () => {
+  it('keeps the commas inside one artist, as legacy prints them', () => {
     const obj: LegacyObject = {
-      project_id: 'ISL',
-      country: 'tr',
+      project_id: 'DGA',
+      country: 'ch',
       museum_id: 'Mus01',
       number: '1',
       lang: 'en',
-      artist: 'Architecture: Herkomer, Stuccowork: Asam',
+      artist: 'Albin Schweri, design, (1885 Ramsen, Switzerland - 1946 Bern, Switzerland)',
     };
 
     const result = extractObjectArtists(obj);
 
-    expect(result.length).toBe(2);
-    expect(result[0]?.name).toBe('Architecture: Herkomer');
-    expect(result[1]?.name).toBe('Stuccowork: Asam');
+    expect(result.map((a) => a.name)).toEqual([
+      'Albin Schweri, design, (1885 Ramsen, Switzerland - 1946 Bern, Switzerland)',
+    ]);
+  });
+
+  it('keeps an Arabic comma inside its artist', () => {
+    const obj: LegacyObject = {
+      project_id: 'EPM',
+      country: 'ir',
+      museum_id: 'Mus01',
+      number: '1',
+      lang: 'ar',
+      artist: 'أبو زيد ، فارسي ، نشط في أواخر القرن الثاني عشر',
+    };
+
+    expect(extractObjectArtists(obj)).toHaveLength(1);
+  });
+
+  it('splits roles at their semicolons, each with its commas', () => {
+    const obj: LegacyObject = {
+      project_id: 'BAR',
+      country: 'it',
+      museum_id: 'Mus01',
+      number: '1',
+      lang: 'en',
+      artist:
+        'Etching: Giacomo Maria Giovannini (1667, Bologna – 1717, Parma); designer: Marco Antonio Chiarini (1652, Bologna – 1730, Bologna)',
+    };
+
+    const result = extractObjectArtists(obj);
+
+    expect(result.map((a) => a.name)).toEqual([
+      'Etching: Giacomo Maria Giovannini (1667, Bologna – 1717, Parma)',
+      'designer: Marco Antonio Chiarini (1652, Bologna – 1730, Bologna)',
+    ]);
   });
 
   it('should split on Arabic semicolon (U+061B)', () => {

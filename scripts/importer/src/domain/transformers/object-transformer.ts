@@ -297,6 +297,11 @@ export function transformObjectTranslation(
   // The free-text Period / Dynasty line legacy prints on the sheet. The linked
   // dynasties (item_dynasty, DynastyImporter) are a separate, partial index.
   if (obj.dynasty) extraData.dynasty = convertHtmlToMarkdown(obj.dynasty);
+  // The Material(s) / Technique(s) line as this row writes it, which legacy
+  // prints. The material tags made from it are shared across records and
+  // merged with other tags on the item, so they can't stand in for it. Same
+  // key as the Sharing History transformer.
+  if (obj.materials?.trim()) extraData.materials = convertHtmlToMarkdown(obj.materials);
   // The artist's life data as this language's sheet prints it after the
   // artist line. Legacy keeps it per object and per language (one language
   // may hold it all in the birth date), so the shared Artist record, which
@@ -371,8 +376,9 @@ export function extractObjectTags(obj: LegacyObject): ExtractedTags {
 /**
  * Extract artists from object data.
  *
- * Uses the same two-pass split as parseTagString:
- * comma/Arabic comma first, then semicolon/Arabic semicolon for non-structured parts.
+ * Splits where legacy separates people, as parseTagString does: at semicolons
+ * only. A comma belongs to one person's entry, holding their life data, role
+ * or other name ("Albin Schweri, design, (1885 Ramsen, Switzerland \u2013 \u2026)").
  * HTML tags (e.g. <br/>) are stripped before splitting.
  */
 export function extractObjectArtists(obj: LegacyObject): ExtractedArtist[] {
@@ -387,25 +393,7 @@ export function extractObjectArtists(obj: LegacyObject): ExtractedArtist[] {
     .trim();
   if (!cleaned) return [];
 
-  // Pass 1: split on comma (ASCII) and Arabic comma (U+060C)
-  const commaParts = cleaned
-    .split(/[,\u060C]/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-
-  // Pass 2: structured (colon) parts kept as-is; others sub-split on semicolons
-  const artistNames: string[] = [];
-  for (const part of commaParts) {
-    if (part.includes(':')) {
-      artistNames.push(part);
-    } else {
-      const semiParts = part
-        .split(/[;\u061B]/)
-        .map((s) => s.trim())
-        .filter(Boolean);
-      artistNames.push(...semiParts);
-    }
-  }
+  const artistNames = parseTagString(cleaned);
 
   return artistNames.map((name) => ({
     name,

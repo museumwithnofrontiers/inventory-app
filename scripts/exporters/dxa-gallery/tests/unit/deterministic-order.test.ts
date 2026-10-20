@@ -66,6 +66,7 @@ describe('ItemExporter — deterministic list order (#1916)', () => {
     gallery,
     memberItemIds: ['item-a'],
     itemOwnContextIds: new Map(),
+    siteCollectionIds: new Set(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

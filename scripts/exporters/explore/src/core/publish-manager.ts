@@ -314,3 +314,25 @@ full terms). The notice text also ships in this package as \`LICENSE.md\`.
     }
   }
 }
+
+/**
+ * A published package's image URLs must be absolute. `--base-url` falls back
+ * to `./images` when BASE_URL is unset, which suits a local export but no
+ * website: every site that installs the package would request its pictures
+ * from its own host, where they don't exist. Only https is accepted, since the
+ * sites are served over https.
+ */
+export function assertPublishableBaseUrl(baseUrl: string): void {
+  let url: URL | null
+  try {
+    url = new URL(baseUrl)
+  } catch {
+    url = null
+  }
+  if (url?.protocol !== 'https:') {
+    throw new Error(
+      `--publish needs an absolute https image base URL, got ${JSON.stringify(baseUrl)}. ` +
+        'Pass --base-url (e.g. https://inventory.metanull.eu) or set BASE_URL.'
+    )
+  }
+}
