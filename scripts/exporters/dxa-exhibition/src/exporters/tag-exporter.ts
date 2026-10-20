@@ -23,8 +23,9 @@ const FACET_CATEGORIES = ['artist', 'dynasty', 'material', 'subject', 'type']
  * `keyword` and `material` tags parsed out of the object records, which are
  * per-language free text shown on the item sheet, NOT facets — mixing them in
  * would bury the 103 real Material facets of this gallery under thousands of
- * free-text lines. Those ship as `keywords`/`materials` in the item
- * translations instead.
+ * free-text lines. The keyword tags ship as `keywords` in the item
+ * translations instead; the sheet's materials line is the record's own column
+ * (`extra.materials`), so the material tags are not read at all.
  *
  * THG tags are English-only (accepted gap G5): legacy renders the same English
  * label in every UI language.

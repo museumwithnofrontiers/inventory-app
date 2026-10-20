@@ -101,12 +101,12 @@ describe('Database.resolveExhibition', () => {
       .mockResolvedValueOnce([
         {
           language_id: 'deu',
-          extra: { thg_gallery: { status: 'A' }, exhibition_i18n: { enabled: 'N' } },
+          extra: { thg_gallery: { featured: 'A' }, exhibition_i18n: { enabled: 'N' } },
         },
         {
           language_id: 'eng',
           extra: {
-            thg_gallery: { status: 'A' },
+            thg_gallery: { featured: 'A' },
             exhibition_i18n: { enabled: 'Y', subtitle: 'About Techniques' },
           },
         },
@@ -118,7 +118,7 @@ describe('Database.resolveExhibition', () => {
     expect(exhibition.i18n.get('deu')?.enabled).toBe('N')
     expect(exhibition.i18n.get('eng')?.enabled).toBe('Y')
     expect(exhibition.i18n.get('eng')?.subtitle).toBe('About Techniques')
-    expect(exhibition.chrome.status).toBe('A')
+    expect(exhibition.chrome.featured).toBe('A')
   })
 
   it('leaves projectId null when the project was never imported', async () => {

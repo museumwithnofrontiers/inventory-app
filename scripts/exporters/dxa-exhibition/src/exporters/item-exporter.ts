@@ -19,10 +19,8 @@ function sharingHistorySheet(
     artist: extra?.['artist'] ?? null,
     dimensions: extra?.['dimensions'] ?? null,
     materials: extra?.['materials'] ? [extra['materials']] : [],
-    keywords: (sheet['keywords'] ?? '')
-      .split(/[;\u061B]/)
-      .map(k => k.trim())
-      .filter(Boolean),
+    // The column as the record writes it, in one entry, as dxa-api returned it.
+    keywords: sheet['keywords'] ? [sheet['keywords']] : [],
   }
 }
 // Every person credited in one role on a translation row, in order, as legacy
@@ -149,8 +147,12 @@ interface ItemGalleryRow {
   extra: unknown
 }
 
-/** The two mwnf3 tag families that are free text on the item sheet, not facets. */
-const SHEET_TAG_CATEGORIES = ['keyword', 'material']
+/**
+ * The mwnf3 tag family that is free text on the item sheet, not a facet. The
+ * material tags are not read: the sheet prints the record's own materials
+ * column (`extra.materials`), as legacy does.
+ */
+const SHEET_TAG_CATEGORIES = ['keyword']
 
 /**
  * `items.json` + `translations/items.<lang>.json`.
@@ -333,7 +335,7 @@ export class ItemExporter extends BaseExporter {
     }
 
     // item_id -> lang_code -> { category -> labels[] }, for the sheet's free-text
-    // keyword and material lines. These tags ARE language-scoped (one row per
+    // keyword line. These tags ARE language-scoped (one row per
     // language), unlike the English-only THG facet tags.
     const sheetTags = new Map<string, Map<string, Map<string, string[]>>>()
     const facetTagIds = new Map<string, string[]>()
@@ -431,7 +433,10 @@ export class ItemExporter extends BaseExporter {
         translator: ownRow.translator_name,
         translation_copy_editor: ownRow.translation_copy_editor_name,
         keywords: perCategory?.get('keyword') ?? [],
-        materials: perCategory?.get('material') ?? [],
+        // The Material(s) / Technique(s) line as the record writes it, which
+        // legacy prints: one entry, so the language's own spelling and separators
+        // ("؛" in Arabic) survive. The material tags are shared across records.
+        materials: extra?.['materials'] ? [extra['materials']] : [],
       }
       const gallerySheet = parseJson<{ gallery_sheet?: Record<string, string> }>(ownRow.extra)?.gallery_sheet
       if (gallerySheet) {
