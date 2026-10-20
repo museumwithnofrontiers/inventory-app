@@ -9,7 +9,7 @@
 #
 # One-shot — you `run --rm` these, and never `up` them:
 #
-#   tools       node container for npm/vite work
+#   tools       node container for npm/vite work; parity (scripts/parity)
 #   jobs        staging-glossary-sync, staging-seed-auth, exporter
 #   import      the legacy importer (needs scripts/import-tool/.env)
 #
@@ -240,6 +240,34 @@ services:
     ports:
       - "127.0.0.1:5173:5173"   # vite dev server, when you run one
     networks: [inventory]
+
+  # ---------------------------------------------------------------------------
+  # parity — the legacy-vs-new comparison and its publish gate. One-shot:
+  #   docker compose run --rm parity                              # curatorial, npm latest
+  #   docker compose run --rm parity --only carpets --packages local
+  # It reads only the live legacy sites and the npm registry, never a database.
+  # See scripts/parity/README.md.
+  #
+  # The Playwright image (its browsers match the pinned playwright package)
+  # serves every mode, the curatorial one included. The working area holds
+  # the legacy answer cache, so it lives outside the container; from a
+  # worktree, point the three paths at the main checkout's copies.
+  # ---------------------------------------------------------------------------
+  parity:
+    image: mcr.microsoft.com/playwright:v1.47.2-jammy
+    profiles: [tools]
+    entrypoint: ["/bin/sh", "/var/www/app/scripts/parity/docker-entrypoint.sh"]
+    volumes:
+      - .:/var/www/app
+      # sharp's binary is platform-specific, as in the exporters' volumes below.
+      - parity-modules:/var/www/app/scripts/parity/node_modules
+      - ${PARITY_WORK_PATH:-./tmp/parity}:/parity
+      - ${LEGACY_DATABASE_PATH:-./.legacy-database}:/legacy/database:ro
+      - ${LEGACY_CODE_PATH:-./.legacy-code}:/legacy/code:ro
+    environment:
+      PARITY_WORK: /parity
+      LEGACY_DB: /legacy/database
+      LEGACY_CODE: /legacy/code
 
   # ---------------------------------------------------------------------------
   # docs — Jekyll site on http://localhost:4000
@@ -601,6 +629,7 @@ volumes:
   exporter-dxa-exhibition-modules:
   exporter-galleries-modules:
   exporter-explore-modules:
+  parity-modules:
 
   # NOT disposable, and deliberately external so that `down -v` cannot destroy
   # them: a full stage is hours of importing and several gigabytes of images.

@@ -163,6 +163,25 @@ publish step with
 that error as a permissions problem if you ever do see it past the
 preflight).
 
+**Gate the export before you publish it.** Export without `--publish` (always
+with `--base-url https://inventory.metanull.eu`), then compare the export on
+disk with the live legacy sites:
+
+```powershell
+docker compose --profile jobs run --rm --no-deps exporter all --force --base-url https://inventory.metanull.eu
+docker compose run --rm parity packages --packages local
+docker compose run --rm parity --packages local --only <slug>[,<slug>…]
+```
+
+Publish only when the parity run exits 0. It fails when a field or a record
+set compares worse with legacy than in the stored baseline, when an image URL
+is not `https://inventory.metanull.eu/pub/<uuid>.<ext>`, or when a text holds
+raw HTML. The last two are the regressions that reached all 48 sites on
+2026-10-19. After the publish and the propagation (§5.2), run
+`docker compose run --rm parity` again, on what the sites now install. The
+runbook, its verdicts and its baselines are in
+[`scripts/parity/README.md`](../../scripts/parity/README.md#before-a-publish-the-gate).
+
 One command re-exports and republishes all seven
 ([#1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922)):
 it iterates every `scripts/exporters/instances/*.json` — the three

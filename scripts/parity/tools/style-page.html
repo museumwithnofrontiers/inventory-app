@@ -1,0 +1,248 @@
+<title>MWNF Legacy Style Parity</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;600;700&family=Source+Sans+3:wght@400;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: a comparison console — summary, then one table of all sites, then legacy|new pairs in two equal columns. */
+:root {
+  --bg: #f6f5f0; --panel: #ffffff; --ink: #24231d; --muted: #6b6857; --rule: #dedbcd;
+  --accent: #504819; --accent-ink: #ffffff; --good: #2f7d4b; --warn: #a86a00; --bad: #b3261e; --bar: #e9e6d8;
+  --display: "Roboto Condensed", "Arial Narrow", system-ui, sans-serif;
+  --body: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
+  --mono: "JetBrains Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #191813; --panel: #22211b; --ink: #ecead9; --muted: #a8a48c; --rule: #3a382d;
+  --accent: #c9bb6a; --accent-ink: #191813; --good: #6fc48d; --warn: #e2a945; --bad: #f08a7f; --bar: #2f2d24; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #191813; --panel: #22211b; --ink: #ecead9; --muted: #a8a48c; --rule: #3a382d;
+  --accent: #c9bb6a; --accent-ink: #191813; --good: #6fc48d; --warn: #e2a945; --bad: #f08a7f; --bar: #2f2d24; color-scheme: dark }
+body { background: var(--bg); color: var(--ink); font: 16px/1.5 var(--body); }
+.wrap { max-width: 1360px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 28px 64px; display: grid; gap: 40px; }
+h1, h2, h3 { font-family: var(--display); text-wrap: balance; margin: 0; line-height: 1.15; }
+h1 { font-size: clamp(1.8rem, 3vw, 2.6rem); font-weight: 700; }
+h2 { font-size: 1.5rem; font-weight: 600; }
+h3 { font-size: 1.1rem; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+p { margin: 0; max-width: 72ch; }
+a { color: inherit; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.lede { color: var(--muted); }
+header { display: grid; gap: 12px; }
+.stats { display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: var(--display); }
+.stats b { font-size: 1.6rem; font-variant-numeric: tabular-nums; display: block; }
+.stats span { color: var(--muted); font-size: .9rem; }
+section { display: grid; gap: 16px; }
+.notes { display: grid; gap: 18px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.note { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 16px 18px; display: grid; gap: 8px; align-content: start; min-width: 0; }
+.note ul { margin: 0; padding-left: 1.1em; display: grid; gap: 6px; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { font: 600 .85rem var(--display); letter-spacing: .03em; text-transform: uppercase; border: 1px solid var(--rule); background: var(--panel); color: var(--ink); border-radius: 999px; padding: 4px 12px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.tablebox { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 1080px; font-size: .92rem; }
+th, td { padding: 10px 12px; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: middle; }
+th { font: 600 .78rem var(--display); text-transform: uppercase; letter-spacing: .05em; color: var(--muted); cursor: pointer; white-space: nowrap; position: sticky; top: 0; background: var(--panel); }
+td.num { font-variant-numeric: tabular-nums; }
+.site b { font-family: var(--display); font-size: 1rem; display: block; }
+.site small { color: var(--muted); }
+.thumb { width: 150px; aspect-ratio: 320 / 211; object-fit: cover; object-position: top; border: 1px solid var(--rule); border-radius: 3px; cursor: zoom-in; display: block; max-width: 100%; background: var(--bar); }
+.thumbs { display: flex; gap: 8px; width: 308px; }
+.thumbs .thumb { flex: 0 0 150px; max-width: none; }
+.meter { display: grid; gap: 4px; min-width: 110px; }
+.meter i { display: block; height: 6px; background: var(--bar); border-radius: 3px; overflow: hidden; }
+.meter i::after { content: ""; display: block; height: 100%; width: var(--v); background: var(--c); }
+.sw { display: inline-flex; align-items: center; gap: 4px; margin: 2px 6px 2px 0; font: .78rem var(--mono); white-space: nowrap; }
+.sw::before { content: ""; width: 14px; height: 14px; border-radius: 3px; background: var(--h); border: 1px solid var(--rule); }
+.font-diff { color: var(--warn); font-weight: 600; }
+.err { color: var(--bad); }
+.picker { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+select { font: 1rem var(--body); padding: 6px 10px; border: 1px solid var(--rule); border-radius: 4px; background: var(--panel); color: var(--ink); }
+.pair { display: grid; gap: 10px; border-top: 1px solid var(--rule); padding-top: 18px; }
+.pair-head { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: baseline; }
+.pair-head .facts { color: var(--muted); font-size: .9rem; }
+.cols { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.col { display: grid; gap: 6px; min-width: 0; align-content: start; }
+.col h4 { margin: 0; font: 600 .8rem var(--display); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); display: flex; justify-content: space-between; gap: 8px; }
+.shot { width: 100%; max-height: 900px; object-fit: cover; object-position: top; border: 1px solid var(--rule); border-radius: 3px; cursor: zoom-in; background: var(--bar); }
+.missing { border: 1px dashed var(--rule); border-radius: 3px; padding: 24px; color: var(--muted); }
+.assets { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.asset { background: var(--panel); border: 1px solid var(--rule); border-radius: 6px; padding: 10px; display: grid; gap: 6px; align-content: start; min-width: 0; }
+.asset .pic { height: 96px; display: grid; place-items: center; background: repeating-conic-gradient(var(--bar) 0 25%, var(--panel) 0 50%) 0 0 / 12px 12px; border-radius: 3px; overflow: hidden; }
+.asset .pic img { max-height: 92px; max-width: 100%; object-fit: contain; }
+.asset b { font: 600 .82rem var(--display); text-transform: uppercase; letter-spacing: .04em; }
+.asset small { color: var(--muted); overflow-wrap: anywhere; font-size: .8rem; }
+.asset .count { font: 600 .9rem var(--display); }
+table.narrow { min-width: 720px; }
+dialog { width: min(1400px, 96vw); max-height: 92vh; border: 1px solid var(--rule); border-radius: 8px; background: var(--panel); color: var(--ink); padding: 0; }
+dialog::backdrop { background: rgba(10, 10, 8, .7); }
+.dlg-bar { position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 14px; background: var(--panel); border-bottom: 1px solid var(--rule); }
+.dlg-body { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; }
+.dlg-body img { width: 100%; border: 1px solid var(--rule); }
+button.close { font: 600 .9rem var(--display); border: 1px solid var(--rule); background: var(--bg); color: var(--ink); border-radius: 4px; padding: 4px 12px; cursor: pointer; }
+@media (max-width: 720px) { .cols, .dlg-body { grid-template-columns: 1fr; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <h1>Legacy and new sites, side by side</h1>
+    <p class="lede" id="lede"></p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <section id="notes-section">
+    <h2>What the screenshots show</h2>
+    <div class="notes" id="notes"></div>
+  </section>
+
+  <section>
+    <h2>Home pages, every site</h2>
+    <p class="lede">Background kept: the share of legacy's painted area (first screen, sampled on a 48×32 grid) whose colour the new page reproduces within ΔE 10. Gone and added list colours covering at least 2% of the area. Text colour kept is the same measure over visible text. Click a thumbnail to compare full pages.</p>
+    <div class="chips" id="filters"></div>
+    <div class="tablebox"><table id="sites"><thead><tr>
+      <th data-k="title">Site</th><th>Legacy · New</th><th data-k="bg">Background kept</th><th>Colours gone</th><th>Colours added</th><th data-k="text">Text colour kept</th><th data-k="font">Font</th>
+    </tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="assets-section" hidden>
+    <h2>Logos, banners and other assets</h2>
+    <p class="lede">Every non-curatorial image the pages load (logos, banners, gallery tiles, backgrounds, sponsor marks, favicons), matched by perceptual hash so a re-encoded or resized copy still counts as kept. Gallery tiles are a random selection on both sides and are not matched one for one. "From legacy host" counts new-site images still served by a museumwnf.org server.</p>
+    <div class="notes" id="asset-notes"></div>
+    <h3>Missing on the new sites</h3>
+    <div class="assets" id="asset-missing"></div>
+    <div class="tablebox"><table id="asset-sites" class="narrow"><thead><tr><th>Site</th><th>Legacy assets</th><th>Kept</th><th>Random tiles</th><th>Missing</th><th>Added</th><th>From legacy host</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section id="static-section" hidden>
+    <h2>About, credits and other static pages</h2>
+    <p class="lede">Each legacy static page's paragraphs (menus removed), matched sentence by sentence: kept on the matching new page, moved elsewhere on the new site, partly found, or missing. English pages.</p>
+    <div class="notes" id="static-notes"></div>
+    <div class="chips" id="static-filter"></div>
+    <div class="tablebox"><table id="static-pages" class="narrow"><thead><tr><th>Site</th><th>Legacy page</th><th>New page</th><th>Paragraphs</th><th>Kept</th><th>Moved</th><th>Partial</th><th>Missing</th><th>Missing, for example</th></tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <section>
+    <h2>Page by page</h2>
+    <p class="lede">Every page type of one gallery and one exhibition per palette family, and of each standalone site. Legacy on the left, new on the right; the same record on both sides.</p>
+    <div class="picker"><label for="site-pick">Site</label><select id="site-pick"></select></div>
+    <div id="pairs"></div>
+  </section>
+</div>
+
+<dialog id="dlg"><div class="dlg-bar"><strong id="dlg-title"></strong><button class="close" id="dlg-close">Close</button></div><div class="dlg-body" id="dlg-body"></div></dialog>
+
+<script>
+let DATA = null;
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const pct = (x) => `${Math.round(100 * x)}%`;
+const tone = (x) => (x >= 0.8 ? 'var(--good)' : x >= 0.5 ? 'var(--warn)' : 'var(--bad)');
+const kindLabel = { standalone: 'Standalone', gallery: 'Gallery', exhibition: 'Exhibition' };
+const sw = (c) => `<span class="sw" style="--h:${esc(c.hex)}">${esc(c.hex)} ${pct(c.share)}</span>`;
+
+function header() {
+  const ok = DATA.rows.filter((r) => !r.error);
+  const med = (a) => { const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; };
+  const fontDiff = ok.filter((r) => r.font.legacy !== r.font.new).length;
+  $('#lede').textContent = `Captured ${DATA.generated} with a real browser at 1366×900, from the live legacy sites and the published new ones. Numbers compare rendered colours and fonts, whatever the markup.`;
+  $('#stats').innerHTML = [
+    [ok.length, 'sites compared'],
+    [pct(med(ok.map((r) => r.bg.overlap))), 'median background kept'],
+    [pct(med(ok.map((r) => r.text.overlap))), 'median text colour kept'],
+    [fontDiff, 'sites with another main font'],
+    [DATA.pairs.length, 'page pairs'],
+  ].map(([b, s]) => `<div><b>${b}</b><span>${s}</span></div>`).join('');
+}
+
+function notes() {
+  const n = DATA.notes ?? {};
+  const cards = Object.entries(n);
+  if (!cards.length) { $('#notes-section').hidden = true; return; }
+  $('#notes').innerHTML = cards.map(([h, items]) => `<div class="note"><h3>${esc(h)}</h3><ul>${items.map((i) => `<li>${esc(i)}</li>`).join('')}</ul></div>`).join('');
+}
+
+let filter = 'all';
+let sortKey = null;
+function table() {
+  let rows = DATA.rows.filter((r) => filter === 'all' || r.kind === filter);
+  if (sortKey) rows = [...rows].sort((a, b) => {
+    const v = (r) => (sortKey === 'title' ? r.title : sortKey === 'font' ? r.font?.new : r[sortKey]?.overlap ?? -1);
+    return sortKey === 'title' || sortKey === 'font' ? String(v(a)).localeCompare(String(v(b))) : v(a) - v(b);
+  });
+  $('#sites tbody').innerHTML = rows.map((r) => {
+    const site = `<td class="site"><b>${esc(r.title)}</b><small>${kindLabel[r.kind] ?? r.kind} · <a href="${esc(r.legacyUrl)}" target="_blank" rel="noopener">legacy</a> · <a href="${esc(r.newUrl)}" target="_blank" rel="noopener">new</a></small></td>`;
+    if (r.error) return `<tr>${site}<td colspan="6" class="err">Not captured: ${esc(r.error)}</td></tr>`;
+    const th = (k) => (r.thumbs[k] ? `<img class="thumb" loading="lazy" src="${r.thumbs[k]}" alt="${esc(r.title)} home, ${k}" data-slug="${esc(r.slug)}">` : '<span class="missing">none</span>');
+    const meter = (x) => `<div class="meter" style="--v:${pct(x)};--c:${tone(x)}"><span class="num">${pct(x)}</span><i></i></div>`;
+    return `<tr>${site}<td><div class="thumbs">${th('legacy')}${th('new')}</div></td><td class="num">${meter(r.bg.overlap)}</td><td>${r.bg.missing.map(sw).join('') || '—'}</td><td>${r.bg.added.map(sw).join('') || '—'}</td><td class="num">${meter(r.text.overlap)}</td><td>${esc(r.font.legacy)}${r.font.legacy === r.font.new ? '' : ` → <span class="font-diff">${esc(r.font.new)}</span>`}</td></tr>`;
+  }).join('');
+}
+function filters() {
+  const kinds = ['all', 'standalone', 'gallery', 'exhibition'];
+  const plural = { all: 'All', standalone: 'Standalone sites', gallery: 'Galleries', exhibition: 'Exhibitions' };
+  $('#filters').innerHTML = kinds.map((k) => `<button class="chip" data-f="${k}" aria-pressed="${k === filter}">${plural[k]}</button>`).join('');
+}
+
+function pairs() {
+  const slugs = [...new Set(DATA.pairs.map((p) => p.slug))];
+  const titles = Object.fromEntries(DATA.rows.map((r) => [r.slug, r.title]));
+  $('#site-pick').innerHTML = slugs.map((s) => `<option value="${esc(s)}">${esc(titles[s] ?? s)}</option>`).join('');
+  let saved = null;
+  try { saved = localStorage.getItem('pick'); } catch {}
+  if (saved && slugs.includes(saved)) $('#site-pick').value = saved;
+  renderPairs();
+}
+function renderPairs() {
+  const slug = $('#site-pick').value;
+  try { localStorage.setItem('pick', slug); } catch {}
+  const home = DATA.rows.find((r) => r.slug === slug);
+  const list = [...(home ? [{ ...home, page: 'home' }] : []), ...DATA.pairs.filter((p) => p.slug === slug)];
+  $('#pairs').innerHTML = list.map((p) => {
+    const facts = p.error ? `<span class="err">${esc(p.error)}</span>` : `background kept ${pct(p.bg.overlap)} · text colour kept ${pct(p.text.overlap)} · font ${esc(p.font.legacy)}${p.font.legacy === p.font.new ? '' : ' → ' + esc(p.font.new)} · height ${p.height.legacy} / ${p.height.new}px`;
+    const col = (k, label, url) => `<div class="col"><h4><span>${label}</span><a href="${esc(url)}" target="_blank" rel="noopener">open</a></h4>${p.full?.[k] ? `<img class="shot" loading="lazy" src="${p.full[k]}" alt="${esc(p.page)} ${label}" data-pair="${esc(p.page)}">` : '<div class="missing">Not captured</div>'}</div>`;
+    return `<div class="pair"><div class="pair-head"><h3>${esc(p.page.replace(/-/g, ' '))}</h3><span class="facts">${facts}</span></div><div class="cols">${col('legacy', 'Legacy', p.legacyUrl)}${col('new', 'New', p.newUrl)}</div></div>`;
+  }).join('');
+}
+
+function assetsSection() {
+  const A = DATA.assets;
+  if (!A) return;
+  $('#assets-section').hidden = false;
+  $('#asset-notes').innerHTML = A.notes.length ? `<div class="note"><h3>What stands out</h3><ul>${A.notes.map((n) => `<li>${esc(n)}</li>`).join('')}</ul></div>` : '';
+  const titles = Object.fromEntries(DATA.rows.map((r) => [r.slug, r.title]));
+  $('#asset-missing').innerHTML = A.missing.map((m) => `<div class="asset"><div class="pic">${m.thumb ? `<img loading="lazy" src="${esc(m.thumb)}" alt="${esc(m.alt || m.role)}">` : ''}</div><b>${esc(m.role)}</b><span class="count">${m.sites.length} site${m.sites.length > 1 ? 's' : ''}</span><small>${esc(m.sites.slice(0, 6).map((s) => titles[s] ?? s).join(', '))}${m.sites.length > 6 ? ' …' : ''}</small><small>${esc(m.url.replace(/^https?:\/\//, ''))}${m.size ? ' · ' + esc(m.size) : ''}</small></div>`).join('');
+  $('#asset-sites tbody').innerHTML = A.sites.map((s) => `<tr><td class="site"><b>${esc(s.title ?? s.slug)}</b><small>${kindLabel[s.kind] ?? s.kind}</small></td><td class="num">${s.legacy}</td><td class="num">${s.kept}</td><td class="num">${s.random}</td><td class="num" style="color:${s.missing ? 'var(--bad)' : 'inherit'}">${s.missing}</td><td class="num">${s.added}</td><td class="num" style="color:${s.legacyHost ? 'var(--warn)' : 'inherit'}">${s.legacyHost}</td></tr>`).join('');
+}
+
+let staticOnlyGaps = true;
+function staticSection() {
+  const S = DATA.statics;
+  if (!S) return;
+  $('#static-section').hidden = false;
+  const footer = S.footer.length ? `<li>Footer links legacy has and the new site lacks: ${esc(S.footer.length)} sites. ${esc([...new Set(S.footer.flatMap((f) => f.missing.map((h) => h.split('/')[0])))].join(', '))}.</li>` : '';
+  $('#static-notes').innerHTML = `<div class="note"><h3>What stands out</h3><ul>${S.notes.map((n) => `<li>${esc(n)}</li>`).join('')}${footer}</ul></div>`;
+  $('#static-filter').innerHTML = `<button class="chip" data-sf="gaps" aria-pressed="${staticOnlyGaps}">Pages with gaps</button><button class="chip" data-sf="all" aria-pressed="${!staticOnlyGaps}">All pages</button>`;
+  const rows = S.pages.filter((p) => !staticOnlyGaps || p.missing || p.partial || !p.newPage);
+  $('#static-pages tbody').innerHTML = rows.map((p) => `<tr><td class="site"><b>${esc(p.title ?? p.slug)}</b><small>${kindLabel[p.kind] ?? p.kind}</small></td><td><a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.page.replace(/[-_]/g, ' '))}</a></td><td>${p.newPage ? `<a href="${esc(p.newUrl)}" target="_blank" rel="noopener">yes</a>` : '<span class="err">none</span>'}</td><td class="num">${p.total}</td><td class="num">${p.kept}</td><td class="num">${p.moved}</td><td class="num">${p.partial}</td><td class="num" style="color:${p.missing ? 'var(--bad)' : 'inherit'}">${p.missing}</td><td><small>${p.samples.map(esc).join(' · ')}</small></td></tr>`).join('');
+}
+
+function open(title, a, b) {
+  $('#dlg-title').textContent = title;
+  $('#dlg-body').innerHTML = [a, b].map((src, i) => (src ? `<img src="${src}" alt="${i ? 'New' : 'Legacy'}">` : '<div class="missing">Not captured</div>')).join('');
+  $('#dlg').showModal();
+}
+
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if (t.matches('.chip[data-sf]')) { staticOnlyGaps = t.dataset.sf === 'gaps'; staticSection(); }
+  else if (t.matches('.chip')) { filter = t.dataset.f; filters(); table(); }
+  else if (t.matches('th[data-k]')) { sortKey = t.dataset.k; table(); }
+  else if (t.matches('.thumb')) { const r = DATA.rows.find((x) => x.slug === t.dataset.slug); open(`${r.title}: home`, r.full.legacy, r.full.new); }
+  else if (t.matches('.shot')) { const slug = $('#site-pick').value; const p = t.dataset.pair === 'home' ? DATA.rows.find((r) => r.slug === slug) : DATA.pairs.find((x) => x.slug === slug && x.page === t.dataset.pair); open(`${slug}: ${t.dataset.pair}`, p.full.legacy, p.full.new); }
+});
+$('#dlg-close').addEventListener('click', () => $('#dlg').close());
+$('#site-pick').addEventListener('change', renderPairs);
+// The comparison data ships beside the page.
+fetch('data.json').then((r) => r.json()).then((d) => { DATA = d; header(); notes(); filters(); table(); assetsSection(); staticSection(); pairs(); })
+  .catch(() => { $('#lede').textContent = 'The comparison data could not be loaded. Reload the page to try again.'; });
+</script>
