@@ -164,18 +164,25 @@ sitemap still shows the old version, that is npm's lag: wait, and run again.
 ## Before a site or platform PR is merged: a preview build
 
 The browser passes (`style`, `assets`, `static`) can measure a site before its PR is merged.
-Serve the site's build from its repository (its `docker compose` preview, or `vite preview`),
+Build the site with the base path it is published under, serve `dist/` from a plain web server,
 then point the passes at it with `--new-url`. The container reaches the host as
-`host.docker.internal`:
+`host.docker.internal`. `vite preview` won't do: it refuses that host name and answers every
+page with "Blocked request", which the passes would record as the page.
 
 ```powershell
-docker compose run --rm parity style assets static --only islamicart --new-url islamicart=http://host.docker.internal:4173/
+# in the site's repository, after building with BASE_PATH=/islamicart/
+docker run -d --name islamicart-preview -p 4173:80 -v "${PWD}/dist:/usr/share/nginx/html/islamicart:ro" nginx:1.26-alpine
+```
+
+```powershell
+docker compose run --rm parity style assets static --only islamicart --new-url islamicart=http://host.docker.internal:4173/islamicart/
 ```
 
 The address must be the build's root, where the site's own routes start (`#/…` follows it). A
 capture is reused only for the address it was taken from, so the preview's captures and the
 published site's never stand in for each other: the next run without `--new-url` takes the
-published site's again.
+published site's again. To capture the same address again (a new build), first delete the
+files of `shots/`, `assets/` and `static/` whose name holds `--new`.
 
 The `static` pass pairs each standalone site's rebuilt pages with legacy's
 (`STANDALONE_PAGES` in `tools/jobs-static.mjs`: Islamic Art's Mission Statement and Recommended
