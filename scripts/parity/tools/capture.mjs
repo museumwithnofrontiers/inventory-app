@@ -7,8 +7,9 @@
 //   fonts    first font family weighted by visible text length
 //   marks    computed styles of landmarks (body, header, nav, h1–h3, links, buttons, footer)
 import { chromium } from 'playwright';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { SHOTS } from './lib/paths.mjs';
+import { reusable } from './lib/captures.mjs';
 
 const [jobsFile] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const force = process.argv.includes('--force');
@@ -23,7 +24,7 @@ const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 }, d
 let done = 0;
 for (const job of jobs) {
   const out = `${SHOTS}/${job.id}`;
-  if (!force && existsSync(`${out}.json`)) { done++; continue; }
+  if (!force && reusable(`${out}.json`, job)) { done++; continue; }
   const page = await ctx.newPage();
   if (job.width) await page.setViewportSize({ width: job.width, height: 900 });
   const t = Date.now();

@@ -8,6 +8,7 @@
 import mysql from 'mysql2/promise'
 
 import type { ExplorePageRow } from '../explore.js'
+import type { StandaloneWordRow } from '../standalone.js'
 import type { SiteRegistryEntry, SiteKind, TranslationRow } from './types.js'
 
 interface LegacyGalleryRow {
@@ -100,6 +101,48 @@ export class LegacyDatabase {
       [groupId]
     )
     return rows.map((row) => ({ wordId: row.word_id, langId: row.lang_id, value: row.value }))
+  }
+
+  /**
+   * A read for one of the standalone sites' tables (src/standalone-tables.ts),
+   * written as legacy's PHP writes it. Only a SELECT is accepted: the tool has
+   * no write path, and this keeps it so.
+   */
+  async select<T>(sql: string, params: (string | number)[] = []): Promise<T[]> {
+    if (!/^\s*SELECT\b/i.test(sql) || sql.includes(';')) {
+      throw new Error('Only a single SELECT statement may be issued against the legacy database')
+    }
+    return this.query<T>(sql, params)
+  }
+
+  /**
+   * Load the named words of `mwnf3.translation` in the given groups, with the
+   * group each row comes from: a standalone page reads several groups at once
+   * and the highest one wins (see ../standalone.ts).
+   */
+  async loadDictionaryWords(wordIds: string[], groupIds: number[]): Promise<StandaloneWordRow[]> {
+    if (wordIds.length === 0 || groupIds.length === 0) {
+      return []
+    }
+    const rows = await this.query<{
+      word_id: string
+      group_id: number
+      lang_id: string
+      value: string | null
+    }>(
+      `SELECT word_id, group_id, lang_id, \`value\`
+         FROM mwnf3.translation
+        WHERE group_id IN (${groupIds.map(() => '?').join(', ')})
+          AND word_id IN (${wordIds.map(() => '?').join(', ')})
+        ORDER BY word_id, group_id, lang_id`,
+      [...groupIds, ...wordIds]
+    )
+    return rows.map((row) => ({
+      wordId: row.word_id,
+      groupId: row.group_id,
+      langId: row.lang_id,
+      value: row.value,
+    }))
   }
 
   /** Load every language of every Explore page (`explore_pages` + `explore_pages_langs`). */

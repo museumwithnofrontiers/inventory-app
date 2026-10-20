@@ -6,6 +6,7 @@
 import { chromium } from 'playwright';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { STATIC } from './lib/paths.mjs';
+import { reusable } from './lib/captures.mjs';
 
 const [jobsFile] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const force = process.argv.includes('--force');
@@ -22,7 +23,7 @@ for (let i = 0; i < jobs.length; i++) {
   const out = `${STATIC}/${job.id}.json`;
   if (seen.has(job.url)) continue;
   seen.add(job.url);
-  if (!force && existsSync(out) && !job.crawl) continue;
+  if (!force && reusable(out, job) && !job.crawl) continue;
   const page = await ctx.newPage();
   const scripts = [];
   if (job.side === 'new') page.on('response', async (r) => { if (/\.m?js(\?|$)/.test(r.url()) && r.url().startsWith(new URL(job.url).origin)) { try { scripts.push(await r.text()); } catch { /* body already gone */ } } });

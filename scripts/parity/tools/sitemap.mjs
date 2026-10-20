@@ -60,6 +60,7 @@ const standaloneLegacy = {
 // previous release without saying so. Legacy home pages are re-read only with --refresh.
 const live = await getJson('https://raw.githubusercontent.com/museumwithnofrontiers/museumwithnofrontiers.github.io/main/sites.json', { refresh: true });
 const siteBySlug = new Map((live.json?.sites ?? []).map((s) => [s.slug, s]));
+const NEW_URLS = JSON.parse(process.env.PARITY_NEW_URLS ?? '{}');
 
 const rows = await mapAll(instances(), async (inst) => {
   const pkg = inst.package_name;
@@ -74,7 +75,8 @@ const rows = await mapAll(instances(), async (inst) => {
     else if (latest) galleryKey = (await getJson(`https://cdn.jsdelivr.net/npm/${pkg}@${latest}/${inst.kind}.json`)).json?.backward_compatibility ?? null;
   }
   const site = siteBySlug.get(inst.slug);
-  const newUrl = site?.url ?? `https://museumwithnofrontiers.github.io/${inst.slug}/`;
+  // run.mjs --new-url: a local preview in place of the published site.
+  const newUrl = NEW_URLS[inst.slug] ?? site?.url ?? `https://museumwithnofrontiers.github.io/${inst.slug}/`;
   const newStatus = (await get(newUrl, { refresh: true })).status;
   const leg = galleryKey ? legacy.find((l) => l.legacyKey === galleryKey) : null;
   const legacyUrl = leg?.legacyUrl ?? standaloneLegacy[inst.slug] ?? null;

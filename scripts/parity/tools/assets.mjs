@@ -6,6 +6,7 @@ import { chromium } from 'playwright';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { ASSETS } from './lib/paths.mjs';
+import { reusable } from './lib/captures.mjs';
 
 const [jobsFile] = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const force = process.argv.includes('--force');
@@ -20,7 +21,7 @@ const ctx = await browser.newContext({ viewport: { width: 1366, height: 900 }, l
 let n = 0;
 for (const job of jobs) {
   const out = `${ASSETS}/${job.id}.json`;
-  if (!force && existsSync(out)) { n++; continue; }
+  if (!force && reusable(out, job)) { n++; continue; }
   const page = await ctx.newPage();
   const files = new Map(); // url → { sha, bytes, type }
   page.on('response', async (res) => {

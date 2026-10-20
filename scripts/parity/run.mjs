@@ -2,6 +2,7 @@
 //
 //   node run.mjs [mode…] [--only slug,slug] [--packages latest|local|local:<dir>]
 //                [--baseline <path>] [--no-gate] [--refresh] [--warm] [--concurrency N]
+//                [--new-url slug=url]…
 //
 // Modes (default: curatorial):
 //   curatorial  sitemap, every site's records and fields vs live legacy, the package gates,
@@ -20,14 +21,14 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const MODES = ['curatorial', 'packages', 'style', 'assets', 'static'];
-const USAGE = `usage: node run.mjs [${MODES.join('|')}…] [--only slug,slug] [--packages latest|local|local:<dir>] [--baseline <path>] [--no-gate] [--refresh] [--warm] [--concurrency N]`;
+const USAGE = `usage: node run.mjs [${MODES.join('|')}…] [--only slug,slug] [--packages latest|local|local:<dir>] [--baseline <path>] [--no-gate] [--refresh] [--warm] [--concurrency N] [--new-url slug=url]…`;
 
 const argv = process.argv.slice(2);
 if (argv.includes('--help') || argv.includes('-h')) {
   console.log(USAGE);
   process.exit(0);
 }
-const opts = { modes: [], only: null, packages: 'latest', baseline: null, gate: true, refresh: false, warm: false, concurrency: null };
+const opts = { modes: [], only: null, packages: 'latest', baseline: null, gate: true, refresh: false, warm: false, concurrency: null, newUrls: {} };
 for (let i = 0; i < argv.length; i++) {
   const a = argv[i];
   const next = () => {
@@ -41,6 +42,14 @@ for (let i = 0; i < argv.length; i++) {
   else if (a === '--no-gate') opts.gate = false;
   else if (a === '--refresh') opts.refresh = true;
   else if (a === '--warm') opts.warm = true;
+  else if (a === '--new-url') {
+    const value = next();
+    const at = value.indexOf('=');
+    const slug = value.slice(0, at);
+    const url = value.slice(at + 1);
+    if (at < 1 || !/^https?:\/\//.test(url)) fail('--new-url takes slug=http(s)://address');
+    opts.newUrls[slug] = url.endsWith('/') ? url : `${url}/`;
+  }
   else if (MODES.includes(a)) opts.modes.push(a);
   else fail(`unknown argument ${a}`);
 }
@@ -55,6 +64,9 @@ function fail(message) {
 
 // The child processes read every setting from the environment (tools/lib/paths.mjs, pkg.mjs, http.mjs).
 const env = { ...process.env, PARITY_PACKAGES: opts.packages };
+// A new site at another address than its published one: a local preview build, measured before it
+// is merged. The sitemap puts it in place of the published address, so every pass reads it.
+if (Object.keys(opts.newUrls).length) env.PARITY_NEW_URLS = JSON.stringify(opts.newUrls);
 if (opts.concurrency) env.PARITY_CONCURRENCY = opts.concurrency;
 const { OUT } = await import('./tools/lib/paths.mjs');
 mkdirSync(OUT, { recursive: true });
