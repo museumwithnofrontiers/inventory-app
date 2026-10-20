@@ -48,7 +48,6 @@ interface LegacyThgGallery {
   name: string;
   link: string | null;
   sort_order: number;
-  status: 'A' | 'H';
   mwnf3_project_id: string | null;
   i18n_group_id: number | null;
   i18n_common_group_id: number | null;
@@ -134,7 +133,7 @@ export class ThgGalleryImporter extends BaseImporter {
 
       // Query galleries from legacy database
       const galleries = await this.context.legacyDb.query<LegacyThgGallery>(
-        `SELECT gallery_id, project_id, name, link, sort_order, status,
+        `SELECT gallery_id, project_id, name, link, sort_order,
                 mwnf3_project_id, i18n_group_id, i18n_common_group_id
          FROM mwnf3_thematic_gallery.thg_gallery
          ORDER BY sort_order, gallery_id`

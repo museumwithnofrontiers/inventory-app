@@ -270,6 +270,10 @@ export function transformMonumentTranslation(
   // The free-text Period / Dynasty line legacy prints on the sheet. The linked
   // dynasties (item_dynasty, DynastyImporter) are a separate, partial index.
   if (monument.dynasty) extraData.dynasty = convertHtmlToMarkdown(monument.dynasty);
+  // The keywords column as this row writes it. The keyword tags made from it
+  // are shared across records: they give every record one spelling and lose
+  // the Arabic list separator. Same key as the object transformer.
+  if (monument.keywords?.trim()) extraData.keywords = convertHtmlToMarkdown(monument.keywords);
 
   const extraField = Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null;
 

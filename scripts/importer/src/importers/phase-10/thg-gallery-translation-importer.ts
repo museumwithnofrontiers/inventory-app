@@ -28,6 +28,9 @@
  * ThgGalleryLangImporter, which merges into an existing translation row with
  * existing-wins semantics: whatever shape is written here is the shape that
  * survives, so the normalisation has to happen on both paths.
+ *
+ * `thg_gallery.status` (live/hidden) is not imported: it is the old sites'
+ * runtime state, not curatorial data. A gallery with no website is hidden.
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
@@ -74,7 +77,6 @@ interface LegacyThgGalleryExtra {
   has_timeline: unknown;
   has_country_timeline: unknown;
   featured: number | null;
-  status: string | null;
   mwnf3_project_id: number | null;
 }
 
@@ -256,7 +258,7 @@ export class ThgGalleryTranslationImporter extends BaseImporter {
       const rows = await this.context.legacyDb.query<LegacyThgGalleryExtra>(
         `SELECT gallery_id, link, image, banner_image, banner_item, new_expire_date,
                 landing_url, portal_image, live_date, homepage_image, homepage_item,
-                has_timeline, has_country_timeline, featured, status, mwnf3_project_id
+                has_timeline, has_country_timeline, featured, mwnf3_project_id
          FROM mwnf3_thematic_gallery.thg_gallery`
       );
       for (const row of rows) {
@@ -283,7 +285,7 @@ export class ThgGalleryTranslationImporter extends BaseImporter {
       const galleryFields: Array<keyof LegacyThgGalleryExtra> = [
         'link', 'image', 'banner_image', 'banner_item', 'new_expire_date',
         'landing_url', 'portal_image', 'live_date', 'homepage_image', 'homepage_item',
-        'has_timeline', 'has_country_timeline', 'featured', 'status', 'mwnf3_project_id',
+        'has_timeline', 'has_country_timeline', 'featured', 'mwnf3_project_id',
       ];
       for (const field of galleryFields) {
         const isBitField = (GALLERY_BIT_FIELDS as readonly string[]).includes(field);

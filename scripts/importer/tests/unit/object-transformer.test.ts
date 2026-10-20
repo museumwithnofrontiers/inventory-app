@@ -282,6 +282,45 @@ describe('transformObjectTranslation', () => {
 
     expect(JSON.parse(result?.data.extra ?? '{}')).not.toHaveProperty('materials');
   });
+
+  it('keeps the keywords column as this row writes it in extra.keywords', () => {
+    const obj: LegacyObject = {
+      project_id: 'ISL',
+      country: 'eg',
+      museum_id: 'Mus01',
+      number: '12',
+      lang: 'ar',
+      name: 'صحن',
+      description: 'صحن',
+      keywords: 'خزف؛ فاطمي؛ بريق معدني.',
+    };
+
+    const result = transformObjectTranslation(obj, 'description');
+
+    // The Arabic separator and the final period stay: legacy prints the column as written.
+    expect(JSON.parse(result?.data.extra ?? '{}').keywords).toBe('خزف؛ فاطمي؛ بريق معدني.');
+  });
+
+  it('converts HTML in the keywords column and stores no key when it is empty', () => {
+    const withHtml: LegacyObject = {
+      project_id: 'ISL',
+      country: 'eg',
+      museum_id: 'Mus01',
+      number: '13',
+      lang: 'en',
+      name: 'Dish',
+      description: 'A dish',
+      keywords: 'Ceramics; <i>lustre</i>',
+    };
+    const empty: LegacyObject = { ...withHtml, number: '14', keywords: ' ' };
+
+    expect(JSON.parse(transformObjectTranslation(withHtml, 'description')?.data.extra ?? '{}').keywords).toBe(
+      'Ceramics; *lustre*'
+    );
+    expect(JSON.parse(transformObjectTranslation(empty, 'description')?.data.extra ?? '{}')).not.toHaveProperty(
+      'keywords'
+    );
+  });
 });
 
 describe('extractObjectTags', () => {

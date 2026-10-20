@@ -74,6 +74,43 @@ describe('ExhibitionExporter — project_id', () => {
     expect(output.project_id).toBe('exhcolour-project-uuid')
   })
 
+  it('shows every sibling site that exists, Arts in Dialogue (legacy status H) included', async () => {
+    const sibling = (id: string, legacyId: number, type: string) => ({
+      id,
+      backward_compatibility: `mwnf3_thematic_gallery:thg_gallery:${legacyId}`,
+      type,
+      extra: { thg_gallery: { slug: id } },
+    })
+    const db = {
+      query: async (sql: string) => {
+        if (sql.includes('FROM collections')) {
+          return [
+            sibling('doubts-uuid', 43, 'gallery'),
+            sibling('arts-in-dialogue-uuid', 54, 'exhibition'),
+          ]
+        }
+        if (sql.includes('extra IS NOT NULL')) {
+          // A database imported before status was dropped still holds it: not read.
+          return [
+            { collection_id: 'doubts-uuid', extra: { thg_gallery: { status: 'A' } } },
+            { collection_id: 'arts-in-dialogue-uuid', extra: { thg_gallery: { status: 'H', featured: 'A' } } },
+          ]
+        }
+        return []
+      },
+    } as unknown as Database
+    await new ExhibitionExporter({
+      ...context(db),
+      siteCollectionIds: new Set(['exhibition-uuid', 'arts-in-dialogue-uuid']),
+    }).export()
+
+    const output = readOutput()
+    expect(output.hidden).toBe(false)
+    const siblings = output.sibling_sites as Array<Record<string, unknown>>
+    expect(siblings.map(s => s.id)).toEqual(['arts-in-dialogue-uuid'])
+    expect(siblings[0]).toMatchObject({ kind: 'exhibition', hidden: false, featured: true })
+  })
+
   it('reports null project_id for an exhibition with no mwnf3 project', async () => {
     const noProjectExhibition: Exhibition = { ...exhibition, mwnf3ProjectId: null, projectId: null }
     const db = stubDb()

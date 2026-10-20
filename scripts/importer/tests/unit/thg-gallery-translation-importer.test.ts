@@ -171,7 +171,7 @@ describe('ThgGalleryTranslationImporter', () => {
     expect(galleryExtra).not.toHaveProperty('has_country_timeline');
   });
 
-  it('leaves non-bit thg_gallery fields untouched', async () => {
+  it('leaves non-bit thg_gallery fields untouched, and drops the runtime status', async () => {
     context = {
       ...context,
       legacyDb: makeLegacyDb(
@@ -192,10 +192,10 @@ describe('ThgGalleryTranslationImporter', () => {
 
     expect(writtenExtra().parsed.thg_gallery).toMatchObject({
       link: 'the_use_of_colours_in_art',
-      status: 'A',
       featured: 'A',
       has_timeline: true,
     });
+    expect(writtenExtra().parsed.thg_gallery).not.toHaveProperty('status');
   });
 
   it('writes the exhibition_i18n extras alongside the normalised gallery extras', async () => {

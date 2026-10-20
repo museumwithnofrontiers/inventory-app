@@ -118,7 +118,7 @@ The per-site identity legacy spread across `.env`, `thg_gallery`,
   "has_timeline": false,                   // THG-local timeline (galleries: false)
   "has_country_timeline": false,
   "featured": false,                       // thg_gallery.featured = 'H'; see below
-  "hidden": false,
+  "hidden": false,                         // false: an instance file names it
   "live_date": "2022-12-01T00:00:00Z",
   "sibling_galleries": [                   // the featured-galleries strip
     { "id": "<collection uuid>",
@@ -139,15 +139,20 @@ API while building the amulets exporter:
   `thg_gallery.link` is `amulets_and_talismans`, while the site, its package
   and its exporter directory are all `amulets` (decision Q4, the public
   subdomain). Only gallery 9 happens to have both the same (`carpets`).
-- **`featured` and `status` are two independent flags sharing one enum.** Both
-  are `enum('A','H')`, which invites conflating them, but the `thg_gallery`
-  column comments are explicit: `status` is *A: Active; H: Hidden* — visibility
-  of the gallery on every site — while `featured` is *A: should appear in
-  "featured Galleries"; H: hidden from the featured galleries*, defaulting to
-  `H`. The data agrees: `featured = 'A'` is a hand-picked set of ten
-  (`carpets`, `glass`, `textiles`, `toys`, `precious_stones`,
-  `the_use_of_colours_in_art`, …), and gallery 54 is `status = 'H'` with
-  `featured = 'A'`, which only makes sense if the two are orthogonal.
+- **`hidden` means "has no website"; `featured` is legacy's portal flag.**
+  - A gallery or exhibition is hidden when no instance file in
+    `scripts/exporters/instances/` names its collection.
+  - That holds for the package's own `hidden`, which is always `false` because
+    the package is built from its instance, and for every `sibling_galleries`
+    entry. Hidden siblings are dropped.
+  - Legacy's `thg_gallery.status` (*A: Active; H: Hidden*) is not imported: it
+    is the old sites' runtime state, not curatorial data (Pascal, 2026-10-20,
+    #2233). The exhibitions legacy kept at `H` that have a site (Arts in
+    Dialogue, Hijaz, Water) are therefore shown.
+  - `featured` is *A: should appear in "featured Galleries"; H: hidden from
+    the featured galleries*, defaulting to `H`. It marks a hand-picked set
+    (`carpets`, `glass`, `textiles`, `toys`, `precious_stones`,
+    `the_use_of_colours_in_art`, …).
 
   **dxa-api gets this wrong**: `WithTHGTemporaryTables.php` builds `featured`
   by copying the `hidden` projection — `CASE WHEN featured = 'A' THEN 0 ELSE 1
@@ -159,8 +164,7 @@ API while building the amulets exporter:
   casts that to `0`, inverting a second time and accidentally working), and
   dxa-client never reads the field. **Packages ship the documented meaning**
   (`featured = 'A'`), so this is the one place a live-API parity check is
-  expected to disagree. `hidden` is the ordinary direction (`status = 'A'`
-  shows).
+  expected to disagree.
 - **Chrome images are legacy-hosted.** `image` / `banner_image` /
   `homepage_image` point into the legacy media server
   (`https://images.museumwnf.org/{size}/…`, a per-deployment env constant) and
@@ -220,12 +224,24 @@ gallery deltas:
   EPM-context translation, so the EPM row is the short description for every
   item — including EPM-native items, whose long description is then correctly
   empty (`planTranslations` in the importer's `object-transformer.ts`).
-- Translations also carry **`keywords[]` and `materials[]`**, the per-language
-  free-text lines on the legacy sheet. They come from the same `item_tag`
-  pivot as the facets but from the mwnf3 tag families
-  (`mwnf3:tags:{keyword,material}:{lang}:…`), are language-scoped, and must
-  never be mixed into `tags.json` — on amulets alone that would add 441
-  keyword and 188 unfaceted material links to the search dropdowns.
+- Translations also carry **`materials[]`**, the sheet's Material(s) /
+  Technique(s) line (#2233 C23).
+  - It is the record's own column in that language
+    (`item_translations.extra.materials`, mwnf3 and Sharing History records
+    alike), as one entry.
+  - Legacy prints the column as written. One entry keeps the language's own
+    spelling, its separators ("؛" in Arabic) and its final period; the viewer
+    joins entries with "; ".
+  - The material tags are shared across records, so they are not read.
+- And **`keywords[]`**, the same way:
+  - the record's own column, as one entry: `extra.keywords` for an mwnf3
+    object or monument, `extra.gallery_sheet.keywords` for a Sharing History
+    record.
+  - Legacy prints no keyword line; the viewers search the keywords.
+  - The mwnf3 keyword and material tags (`mwnf3:tags:{keyword,material}:…`)
+    are not read, and must never be mixed into `tags.json`: on amulets alone
+    that would add 441 keyword and 188 unfaceted material links to the search
+    dropdowns.
 
 ## tags.json (new)
 

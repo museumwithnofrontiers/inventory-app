@@ -92,8 +92,8 @@ interface SiblingChromeRow {
  *   roster language even when it is not enabled, so that build becomes
  *   possible the day someone flips `enabled`.
  *
- * - **`featured`** and `hidden` are two independent legacy flags sharing one
- *   enum — see isFeatured/isHidden below.
+ * - **`featured`** is the legacy portal-strip flag (isFeatured); `hidden` is
+ *   whether the site exists at all (isHidden). They are independent.
  *
  * An instance's `languagesEnabled` override (see `core/instance.ts`) is
  * authoritative over `exhibition_i18n.enabled` when set: legacy may enable no
@@ -228,7 +228,7 @@ export class ExhibitionExporter extends BaseExporter {
       has_timeline: bitToBoolean(chrome.has_timeline),
       has_country_timeline: bitToBoolean(chrome.has_country_timeline),
       featured: isFeatured(chrome.featured),
-      hidden: isHidden(chrome.status),
+      hidden: isHidden(this.exhibition.id, this.context.siteCollectionIds),
       live_date: chrome.live_date ?? null,
       logos,
       partners,
@@ -482,7 +482,7 @@ export class ExhibitionExporter extends BaseExporter {
           names: namesById.get(sibling.id) ?? {},
           image_path: (chrome['image'] as string | undefined) ?? null,
           featured: isFeatured(chrome['featured'] as string | undefined),
-          hidden: isHidden(chrome['status'] as string | undefined),
+          hidden: isHidden(sibling.id, this.context.siteCollectionIds),
           live_date: (chrome['live_date'] as string | undefined) ?? null,
         }
       })
@@ -491,12 +491,9 @@ export class ExhibitionExporter extends BaseExporter {
 }
 
 /**
- * `featured` and `status` are two INDEPENDENT flags that happen to share the
- * enum('A','H'), which is why they are easy to conflate:
- *
- *   status:   A = Active, H = Hidden — visibility of the site everywhere.
- *   featured: A = highlighted in the portal's "featured galleries" strip,
- *             H = not highlighted. Default 'H'.
+ * `featured`: A = highlighted in the portal's "featured galleries" strip,
+ * H = not highlighted. Default 'H'. It shares the enum('A','H') with legacy's
+ * `status`, which is a different flag (see isHidden) and is not imported.
  *
  * Both meanings are spelled out in the column comments of
  * `.legacy-database/ddl/creation/mwnf3_thematic_gallery_thg_gallery.sql`.
@@ -514,9 +511,13 @@ export function isFeatured(flag: string | undefined | null): boolean {
   return flag === 'A'
 }
 
-/** `status = 'A'` is the visible state; anything else hides the site. */
-export function isHidden(status: string | undefined | null): boolean {
-  return status !== 'A'
+/**
+ * A gallery or exhibition is hidden when it has no website: no instance file
+ * names its collection. Legacy's live/hidden `status` was the old sites'
+ * runtime state, not curatorial data, and is not imported.
+ */
+export function isHidden(collectionId: string, siteCollectionIds: ReadonlySet<string>): boolean {
+  return !siteCollectionIds.has(collectionId)
 }
 
 /**
