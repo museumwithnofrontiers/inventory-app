@@ -7,7 +7,8 @@ import type { ExportContext } from '../../src/core/types.js'
  * `manifest.site` is the one thing a website reads before it mounts: the
  * languages it offers, in switcher order with their native labels, and its
  * name per language. For a project website the offered languages are the
- * ones at least one exported item is translated in — the manifest's
+ * ones of legacy's switcher that at least one exported item is translated
+ * in — the manifest's
  * `languages` list is every language in the database, and most of them have
  * no content here.
  */
@@ -80,6 +81,31 @@ describe('ManifestExporter', () => {
       { code: 'fr', label: 'Français' },
     ])
     expect(manifest.site.names).toEqual({ en: 'Discover Islamic Art', fr: 'Découvrir l’art islamique' })
+  })
+
+  it('never offers a language outside legacy’s switcher, even where an item carries it', async () => {
+    const context = contextWith({
+      languages: [{ backward_compatibility: 'en' }, { backward_compatibility: 'he' }],
+      itemLanguages: [
+        { language_id: 'eng', code: 'en', name: 'English' },
+        { language_id: 'heb', code: 'he', name: null },
+        { language_id: 'swe', code: 'se', name: 'Svenska' },
+      ],
+      names: [],
+    })
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { site: { languages: { code: string }[] }; languages: string[] }
+    expect(manifest.site.languages.map(l => l.code)).toEqual(['en', 'se'])
+    expect(manifest.languages).toEqual(['en', 'he'])
   })
 
   // Epic #1727 phase 2: the manifest carries one `projects` entry per
