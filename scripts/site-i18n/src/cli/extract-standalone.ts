@@ -15,10 +15,11 @@
  *
  * Output, under --output-dir (default ./output):
  *   <site>/locales/<lang>.json   the site's own viewer-i18n entries, Markdown values
+ *   <site>/data/<name>.json      rows a site lists itself (Baroque Art's sponsors)
  */
 
 import dotenv from 'dotenv'
-import { resolve, join } from 'path'
+import { dirname, resolve, join } from 'path'
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'fs'
 import { Command } from 'commander'
 import chalk from 'chalk'
@@ -29,9 +30,10 @@ import {
   buildStandaloneCatalogue,
   phpRegionHtml,
   siteGroups,
-  siteWords,
+  siteWordIds,
   STANDALONE_SITES,
 } from '../standalone.js'
+import { runTables } from '../standalone-tables.js'
 import { NAMESPACE_PATTERN } from '../website.js'
 
 interface ExtractStandaloneOptions {
@@ -110,9 +112,27 @@ program
       await db.connect()
       logger.info('Connected to the legacy database (read-only)')
 
-      const words = [...new Set(Object.values(siteWords(site, options.namespace)).map((w) => w.word))]
-      const rows = await db.loadDictionaryWords(words, siteGroups(site))
-      const { locales, missingEnglish } = buildStandaloneCatalogue(site, rows, options.namespace, regions)
+      const rows = await db.loadDictionaryWords(siteWordIds(site), siteGroups(site))
+      const tables = await runTables({
+        db,
+        site,
+        namespace: options.namespace,
+        warn: (message) => logger.warning(message),
+      })
+      const { locales, missingEnglish } = buildStandaloneCatalogue(
+        site,
+        rows,
+        options.namespace,
+        regions,
+        tables.entries
+      )
+
+      for (const [path, data] of Object.entries(tables.files)) {
+        const file = join(outputRoot, siteName, path)
+        mkdirSync(dirname(file), { recursive: true })
+        writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, 'utf8')
+        logger.success(`${path}: ${Array.isArray(data) ? `${data.length} rows` : 'written'}`)
+      }
 
       const localesDir = join(outputRoot, siteName, 'locales')
       mkdirSync(localesDir, { recursive: true })

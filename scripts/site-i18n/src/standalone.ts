@@ -3,35 +3,48 @@
  * Sharing History — as their websites' own locales.
  *
  * These are not DXA sites: no `thg_gallery` row names them, so none of
- * `extract`'s selectors reaches them. Their legacy PHP pages print two kinds
- * of text, and this module reads both:
+ * `extract`'s selectors reaches them. Their legacy PHP pages print three kinds
+ * of text, and this tool reads all three:
  * - words of legacy's dictionary, `mwnf3.translation`, through `getTerm()`:
  *   the labels, the footer, and whole pages kept as one word (Islamic Art's
  *   mission statement). `mod.dictionary.inc.php` loads groups 2 and 3 plus
- *   the page's own (`$TRSL_GROUP`, 4 on the museum sites) into one array, row
- *   by row in primary-key order, so where a word is in several of them the
- *   highest group wins. `wordRows` below does the same.
- * - text written into the PHP source itself (Islamic Art's Recommended Links):
- *   a region of the page, cut out between two markers and converted the way
- *   every other legacy fragment is.
+ *   the page's own (`$TRSL_GROUP`: 4 on the museum sites, 13 on Sharing
+ *   History) into one array, row by row in primary-key order, so where a word
+ *   is in several of them the highest group wins. `buildStandaloneCatalogue`
+ *   does the same.
+ * - text written into the PHP source itself (Islamic Art's Recommended Links,
+ *   Baroque Art's credits): a region of the page, cut out between two markers
+ *   and converted the way every other legacy fragment is.
+ * - rows of legacy's own tables that a page composes into text (the sponsors,
+ *   Sharing History's team and its About page): src/standalone-tables.ts, each
+ *   composed by the same rules as the PHP that prints it.
  *
- * Each site lists its words and regions in STANDALONE_SITES, with the entry
- * each one becomes under the site's namespace and the languages legacy's
- * switcher offers (`$INTERFACELNGLIST` / `$LNGLIST`). A word in another
- * language is a row legacy never prints, so it is not written. They are the
- * site's copy, not inventory data, and travel the way a gallery's credits do:
- * converted to Markdown, into the site's `locales/<lang>.json`.
+ * Each site lists what it reads in STANDALONE_SITES (src/standalone-sites.ts),
+ * with the entry each text becomes and the languages legacy's switcher offers
+ * (`$INTERFACELNGLIST` / `$LNGLIST`). A word in another language is a row
+ * legacy never prints, so it is not written. They are the site's copy, not
+ * inventory data (sponsors, team and contributors included: Pascal,
+ * 2026-10-20), and travel the way a gallery's credits do: converted to
+ * Markdown, into the site's `locales/<lang>.json`.
  */
 import { convertHtmlToMarkdown } from './core/html-to-markdown.js'
 import type { MessageCatalogue } from './core/types.js'
 import { dropVueI18nLiterals } from './website.js'
 
+export { STANDALONE_SITES } from './standalone-sites.js'
+
 /** The groups `getTerm()` reads on a museum site's pages, lowest first. */
 export const STANDALONE_DEFAULT_GROUPS = [2, 3, 4]
 
-/** One dictionary word: its id, and the groups the page reads it from (lowest first). */
+/**
+ * One dictionary word: its id, and the groups the page reads it from (lowest
+ * first). `words` names several, which the page prints one after the other
+ * (`<?= getTerm("a") ?><?= getTerm("b") ?>`): the entry is their texts joined
+ * as printed, in every language that has them all.
+ */
 export interface StandaloneWord {
   word: string
+  words?: string[]
   groups?: number[]
 }
 
@@ -39,8 +52,9 @@ export interface StandaloneWord {
  * A region of a legacy PHP page: the text from the first `start` (included)
  * to the first `end` after it (excluded). `constants` gives the value the
  * live page prints for each PHP constant the region echoes; any other PHP in
- * the region fails the run. Written in one language only, which `language`
- * names: legacy prints it whatever the interface language.
+ * the region fails the run. HTML comments are dropped: the page never shows
+ * them. Written in one language only, which `language` names: legacy prints
+ * it whatever the interface language.
  */
 export interface PhpRegion {
   file: string
@@ -53,8 +67,12 @@ export interface PhpRegion {
 export interface StandaloneSite {
   /** The legacy site's checkout, relative to `.legacy-code`. */
   root: string
+  /** The legacy site's address, which its own relative links resolve against. */
+  host: string
   /** The languages legacy's switcher offers. */
   languages: string[]
+  /** The groups a word is read from when it names none. */
+  groups?: number[]
   /** Words written under the site's namespace: entry → word. */
   words: Record<string, string | StandaloneWord>
   /**
@@ -64,99 +82,17 @@ export interface StandaloneSite {
    */
   overrides?: Record<string, string | StandaloneWord>
   regions?: Record<string, PhpRegion>
-}
-
-export const STANDALONE_SITES: Record<string, StandaloneSite> = {
-  islamicart: {
-    root: 'islamicart/www.discoverislamicart.org',
-    // includes/header_bottom.php's switcher: $INTERFACELNGLIST.
-    languages: ['ar', 'en', 'es', 'fr'],
-    words: {
-      // The page title, and the heading over every inner page (header_bottom.php).
-      'identity.title': 'dia_gn_title',
-      'identity.heading': 'db_partner_ISL',
-      // The header's links (header.php, header_bottom.php).
-      'nav.portal': 'portal_link',
-      'nav.home': 'back_to_section',
-      // The menu (header_bottom.php), in its order.
-      'nav.permanentCollection': 'PermanentCollection',
-      'nav.database': 'home_database',
-      'nav.exhibitions': 'home_exhibitions',
-      'nav.artisticIntroduction': 'home_artistic_intro',
-      'nav.partners': 'home_partnermuseums',
-      'nav.timeline': 'timeline_header',
-      'nav.myCollection': 'my_museum',
-      // The banner over each section (SectionTitle() on each page).
-      'section.permanentCollection': 'museum_home_pc',
-      'section.database': 'museum_home_db',
-      'section.partners': 'museum_home_pm_partners',
-      // The home page's left column (diaTemplates/leftLink.php).
-      'home.recommendedLinks': 'home_recommendedlinks',
-      'home.credits': 'footer4',
-      'home.missionStatement': 'mission_statement',
-      'home.visit': 'dia_home_visit',
-      'home.explore': 'dia_home_EIAC',
-      'home.exploreTooltip': 'pm_EIAC_subtitle',
-      // Today's highlight (diaTemplates/randomText.php).
-      'home.highlight': 'index_today',
-      'home.alsoKnownAs': 'db_alsoknowas',
-      'home.viewDescription': 'view_description',
-      // The sponsor band (diaTemplates/bottomSection1.php, bottomSection2.php),
-      // and the European Union's text its logo opens (explenation_text_home.php).
-      'sponsors.supportHead': 'dia_supporttexthead',
-      'sponsors.supportText': 'dia_supporttext',
-      'sponsors.exploreHead': 'dia_supporttexthead2',
-      'sponsors.exploreText': 'dia_supporttext2',
-      'sponsors.europeanUnion': 'DatabaseEuOver',
-      // The footer (includes/footer.php), in its order; the year follows the copyright.
-      'footer.aboutMwnf': 'footer1',
-      'footer.contact': 'footer2',
-      'footer.legalNotice': 'footer3',
-      'footer.credits': 'footer4',
-      'footer.languagePolicy': 'language_policy',
-      'footer.cookies': 'cookie_policy',
-      'footer.copyright': 'footer5',
-      // The item sheet (database_item.php, modules/database_item.php). Its
-      // first row's label is a `db_` word of group 4, the module's own.
-      'item.nameOfObject': { word: 'db_name_object', groups: [4] },
-      'item.nameOfMonument': { word: 'db_name_monument', groups: [4] },
-      'item.back': 'back',
-      'item.collectionStart': 'pc_start_page',
-      'item.relatedContent': 'gn_related_context',
-      'item.relatedObjects': 'item_relatedobjects',
-      'item.relatedMonuments': 'item_linkedmonuments',
-      'item.timeline': 'pc_view_hcr_item',
-      'item.dynasties': 'pc_linkeddynasties',
-      'item.relatedVideos': 'related_video',
-      'item.onDisplayIn': 'on_display_in',
-      'item.exhibitions': 'gn_exhibitions',
-      'item.galleries': 'gn_galleries',
-      'item.download': 'gn_download',
-      'item.asPdf': 'gn_aspdf_img',
-      // The Mission Statement page (isl_missionstatement.php): its banner, its
-      // text (read from group 3 alone) and the print link.
-      'missionStatement.title': 'missionstatement',
-      'missionStatement.body': { word: 'mission_statement_text', groups: [3] },
-      'page.print': 'print',
-    },
-    overrides: {
-      // The sheet's toggle (database_item.php's `.tag`), printed by viewer-layout's RecordSheet.
-      'record.action.viewShortDescription': 'pc_view_sdesc',
-      'record.action.hideShortDescription': 'pc_hide_sdesc',
-    },
-    regions: {
-      // recommendedlinks.php: every group heading and link, from the first
-      // heading to the end of the page's content.
-      'recommendedLinks.body': {
-        file: 'recommendedlinks.php',
-        start: '<div class="short_heading">',
-        end: '</section>',
-        language: 'en',
-        // The one constant the region echoes, as the live page prints it.
-        constants: { EXPLORE_WEBSITE_URL: 'https://explore.museumwnf.org' },
-      },
-    },
-  },
+  /**
+   * Legacy pages the new site rebuilds, and the route each became: a link
+   * inside a text to one of them points at the route. A link to any other
+   * legacy page stays a link to legacy, made absolute. A key is the page as
+   * the text names it, relative to `host`, query included when it matters
+   * (`pm_partner_list.php?type=museum`); a key without a query matches the
+   * page whatever its query.
+   */
+  links?: Record<string, string>
+  /** The site's table builders (src/standalone-tables.ts), by name. */
+  tables?: string[]
 }
 
 /** A dictionary row, with the group it was read from. */
@@ -167,19 +103,34 @@ export interface StandaloneWordRow {
   value: string | null
 }
 
+/** A site's word, normalised. */
+export interface NormalisedWord {
+  words: string[]
+  groups: number[]
+}
+
 /**
  * A site's words, normalised: the entry each is written under (its own under
- * the namespace, an override under its shared name) → word and groups.
+ * the namespace, an override under its shared name) → the words it joins and
+ * the groups they are read from.
  */
-export function siteWords(site: StandaloneSite, namespace: string): Record<string, Required<StandaloneWord>> {
-  const words: Record<string, Required<StandaloneWord>> = {}
+export function siteWords(site: StandaloneSite, namespace: string): Record<string, NormalisedWord> {
+  const words: Record<string, NormalisedWord> = {}
   const add = (key: string, spec: string | StandaloneWord) => {
     const word = typeof spec === 'string' ? { word: spec } : spec
-    words[key] = { word: word.word, groups: word.groups ?? STANDALONE_DEFAULT_GROUPS }
+    words[key] = {
+      words: word.words ?? [word.word],
+      groups: word.groups ?? site.groups ?? STANDALONE_DEFAULT_GROUPS,
+    }
   }
   for (const [entry, spec] of Object.entries(site.words)) add(`${namespace}.${entry}`, spec)
   for (const [key, spec] of Object.entries(site.overrides ?? {})) add(key, spec)
   return words
+}
+
+/** Every word id the site reads. */
+export function siteWordIds(site: StandaloneSite): string[] {
+  return [...new Set(Object.values(siteWords(site, 'site')).flatMap((w) => w.words))]
 }
 
 /** Every group any of the site's words is read from. */
@@ -191,24 +142,47 @@ export function siteGroups(site: StandaloneSite): number[] {
 // the converter only rewrites strings that carry a tag.
 const ENTITY = /&(#\d+|#x[0-9a-f]+|[a-z][a-z0-9]*);/i
 
-/** A legacy text as a site's entry: Markdown, entities decoded, vue-i18n literals unwrapped. */
-function entryValue(value: string | null): string {
+/**
+ * A legacy text as a site's entry: its links pointed at the new site or made
+ * absolute, then Markdown, entities decoded, vue-i18n literals unwrapped.
+ */
+export function entryValue(value: string | null, site?: StandaloneSite): string {
   if (value === null) return ''
-  const html = !value.includes('<') && ENTITY.test(value) ? `<span>${value}</span>` : value
+  const linked = site ? rewriteLinks(value, site) : value
+  const html = !linked.includes('<') && ENTITY.test(linked) ? `<span>${linked}</span>` : linked
   return dropVueI18nLiterals(convertHtmlToMarkdown(html))
 }
 
 /**
- * The PHP region as HTML: cut out, its constants replaced, and line breaks
- * dropped where they only lay the page out — at the start of a heading
- * (spacing above it) and inside a link's text (a long address wrapped).
+ * Every `href` of a legacy text, as the new site needs it: a page the site
+ * rebuilt (`site.links`) becomes its route; any other page of the legacy site
+ * becomes an absolute link to it; anything else (another site, `mailto:`, an
+ * anchor) is left alone.
+ */
+export function rewriteLinks(html: string, site: StandaloneSite): string {
+  const host = site.host.replace(/\/$/, '')
+  return html.replace(/href=(["'])([^"']*)\1/gi, (whole, quote: string, href: string) => {
+    let page: string | null = null
+    if (href.startsWith(`${host}/`)) page = href.slice(host.length + 1)
+    else if (!/^([a-z][a-z0-9+.-]*:|#|\/\/)/i.test(href)) page = href.replace(/^\.?\//, '')
+    if (page === null) return whole
+    const route = site.links?.[page] ?? site.links?.[page.split('?')[0]!]
+    return `href=${quote}${route ?? `${host}/${page}`}${quote}`
+  })
+}
+
+/**
+ * The PHP region as HTML: cut out, its constants replaced, its comments
+ * dropped, and line breaks dropped where they only lay the page out — at the
+ * start of a heading (spacing above it) and inside a link's text (a long
+ * address wrapped).
  */
 export function phpRegionHtml(source: string, region: PhpRegion): string {
   const start = source.indexOf(region.start)
   if (start < 0) throw new Error(`${region.file}: "${region.start}" not found`)
   const end = source.indexOf(region.end, start)
   if (end < 0) throw new Error(`${region.file}: no "${region.end}" after "${region.start}"`)
-  let html = source.slice(start, end)
+  let html = source.slice(start, end).replace(/<!--[\s\S]*?-->/g, '')
 
   for (const [name, value] of Object.entries(region.constants ?? {})) {
     html = html.replaceAll(new RegExp(`<\\?=\\s*${name}\\s*\\?>`, 'g'), value)
@@ -222,6 +196,12 @@ export function phpRegionHtml(source: string, region: PhpRegion): string {
     .replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, (link) => link.replace(/<br\s*\/?>/gi, ''))
 }
 
+/** What a site's table builders produce: entries per language, and data files. */
+export interface TableOutput {
+  entries?: MessageCatalogue
+  files?: Record<string, unknown>
+}
+
 export interface StandaloneCatalogue {
   /** Per-locale entries, one file per language legacy has a text in; English always. */
   locales: MessageCatalogue
@@ -230,40 +210,58 @@ export interface StandaloneCatalogue {
 }
 
 /**
- * Builds a standalone site's locales from its dictionary rows and its PHP
- * regions (entry → HTML). For each entry and language the highest group the
- * page reads wins, as in `mod.dictionary.inc.php`. An empty text is left out
- * rather than written blank, a language legacy's switcher does not offer is
- * left out, and no language is padded with English: the site falls back on its
- * English file, like every other.
+ * Builds a standalone site's locales from its dictionary rows, its PHP
+ * regions (entry → HTML) and its tables' entries. For each entry and language
+ * the highest group the page reads wins, as in `mod.dictionary.inc.php`. An
+ * empty text is left out rather than written blank, a language legacy's
+ * switcher does not offer is left out, and no language is padded with
+ * English: the site falls back on its English file, like every other.
  */
 export function buildStandaloneCatalogue(
   site: StandaloneSite,
   rows: StandaloneWordRow[],
   namespace: string,
-  regions: Record<string, string> = {}
+  regions: Record<string, string> = {},
+  tables: MessageCatalogue = {}
 ): StandaloneCatalogue {
   const offered = new Set(site.languages)
   const locales: MessageCatalogue = { en: {} }
 
-  const words = siteWords(site, namespace)
-  for (const [key, { word, groups }] of Object.entries(words)) {
-    const best = new Map<string, StandaloneWordRow>()
-    for (const row of rows) {
-      if (row.wordId !== word || !groups.includes(row.groupId) || !offered.has(row.langId)) continue
-      const current = best.get(row.langId)
-      if (current === undefined || row.groupId > current.groupId) best.set(row.langId, row)
+  // The text of one word in one language: its row in the highest group read.
+  const best = new Map<string, StandaloneWordRow>()
+  const pick = (word: string, groups: number[], langId: string) => {
+    const key = `${word}\u0000${groups.join(',')}\u0000${langId}`
+    if (!best.has(key)) {
+      let found: StandaloneWordRow | undefined
+      for (const row of rows) {
+        if (row.wordId !== word || row.langId !== langId || !groups.includes(row.groupId)) continue
+        if (found === undefined || row.groupId > found.groupId) found = row
+      }
+      if (found) best.set(key, found)
     }
-    for (const [langId, row] of best) {
-      const text = entryValue(row.value)
+    return best.get(key)
+  }
+
+  const words = siteWords(site, namespace)
+  for (const [key, { words: ids, groups }] of Object.entries(words)) {
+    for (const langId of offered) {
+      const parts = ids.map((id) => pick(id, groups, langId))
+      if (parts.some((part) => part === undefined)) continue
+      const text = entryValue(parts.map((part) => part!.value ?? '').join(''), site)
       if (text !== '') (locales[langId] ??= {})[key] = text
     }
   }
 
   for (const [entry, html] of Object.entries(regions)) {
     const language = site.regions?.[entry]?.language ?? 'en'
-    const text = entryValue(html)
+    const text = entryValue(html, site)
     if (text !== '') (locales[language] ??= {})[`${namespace}.${entry}`] = text
+  }
+
+  for (const [language, messages] of Object.entries(tables)) {
+    for (const [key, text] of Object.entries(messages)) {
+      if (text !== '') (locales[language] ??= {})[key] = text
+    }
   }
 
   for (const [locale, messages] of Object.entries(locales)) {

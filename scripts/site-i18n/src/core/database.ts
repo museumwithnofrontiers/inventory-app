@@ -104,6 +104,18 @@ export class LegacyDatabase {
   }
 
   /**
+   * A read for one of the standalone sites' tables (src/standalone-tables.ts),
+   * written as legacy's PHP writes it. Only a SELECT is accepted: the tool has
+   * no write path, and this keeps it so.
+   */
+  async select<T>(sql: string, params: (string | number)[] = []): Promise<T[]> {
+    if (!/^\s*SELECT\b/i.test(sql) || sql.includes(';')) {
+      throw new Error('Only a single SELECT statement may be issued against the legacy database')
+    }
+    return this.query<T>(sql, params)
+  }
+
+  /**
    * Load the named words of `mwnf3.translation` in the given groups, with the
    * group each row comes from: a standalone page reads several groups at once
    * and the highest one wins (see ../standalone.ts).
