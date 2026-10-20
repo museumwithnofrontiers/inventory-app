@@ -182,7 +182,14 @@ export function phpRegionHtml(source: string, region: PhpRegion): string {
   if (start < 0) throw new Error(`${region.file}: "${region.start}" not found`)
   const end = source.indexOf(region.end, start)
   if (end < 0) throw new Error(`${region.file}: no "${region.end}" after "${region.start}"`)
-  let html = source.slice(start, end).replace(/<!--[\s\S]*?-->/g, '')
+  // The comments, until none is left: dropping one may join the halves of
+  // another (`<!-<!---->-`).
+  let html = source.slice(start, end)
+  let previous: string
+  do {
+    previous = html
+    html = html.replace(/<!--[\s\S]*?-->/g, '')
+  } while (html !== previous)
 
   for (const [name, value] of Object.entries(region.constants ?? {})) {
     html = html.replaceAll(new RegExp(`<\\?=\\s*${name}\\s*\\?>`, 'g'), value)

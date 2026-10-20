@@ -157,6 +157,11 @@ describe('phpRegionHtml', () => {
     expect(() => phpRegionHtml('<div class="h"><?= getTerm("x") ?></section>', region)).toThrow(/PHP/)
   })
 
+  it('drops every comment, a nested one included', () => {
+    const source = '<div class="h">A<!--x-->B<!-<!---->-C--></section>'
+    expect(phpRegionHtml(source, region)).toBe('<div class="h">AB')
+  })
+
   it('drops a line break inside a link text', () => {
     const source = '<div class="h"><a href="u">http://europa.eu/a/<br/>b.htm</a></section>'
     expect(phpRegionHtml(source, region)).toBe('<div class="h"><a href="u">http://europa.eu/a/b.htm</a>')
