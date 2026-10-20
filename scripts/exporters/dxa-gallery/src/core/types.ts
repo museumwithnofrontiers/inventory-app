@@ -27,9 +27,8 @@ export interface GalleryChrome {
   homepage_item?: string
   has_timeline?: unknown
   has_country_timeline?: unknown
-  /** Legacy 'A'/'H' flags — see Gallery.isFeatured / isHidden for the mapping. */
+  /** Legacy 'A'/'H' flag — see Gallery.isFeatured for the mapping. */
   featured?: string
-  status?: string
   live_date?: string
 }
 

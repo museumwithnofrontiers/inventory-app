@@ -153,6 +153,48 @@ class ImageBurnerTest extends TestCase
         $this->assertSame(1200 - $layout->barHeight, $layout->barTop);
     }
 
+    /**
+     * A carpet runner: sized from its height, the © was as large as on a
+     * picture four times as wide and wrapped on two lines.
+     */
+    public function test_a_tall_narrow_picture_gets_the_caption_of_a_landscape_picture_of_its_width(): void
+    {
+        $burner = new ImageBurner;
+        $runner = $burner->layout(600, 2400, ItemImage::GLOBAL_FALLBACK);
+        $landscape = $burner->layout(600, 450, ItemImage::GLOBAL_FALLBACK);
+
+        $this->assertSame($landscape->fontSize, $runner->fontSize);
+        $this->assertSame((int) round(600 / ImageBurner::WIDTH_PER_FONT_SIZE), $runner->fontSize);
+        $this->assertSame([ItemImage::GLOBAL_FALLBACK], $runner->lines);
+        $this->assertSame($landscape->barHeight, $runner->barHeight);
+
+        $text = $this->burnedPixels($burner->burn($this->makeTestImage(600, 2400, self::GREY), ItemImage::GLOBAL_FALLBACK), $runner);
+
+        $this->assertSame(0, $text['changedAboveBar']);
+        $this->assertGreaterThanOrEqual($runner->barTop, $text['top']);
+    }
+
+    /**
+     * @return array<string, array{int, int}>
+     */
+    public static function wideProvider(): array
+    {
+        return [
+            '4:3' => [1600, 1200],
+            '3:2' => [1500, 1000],
+            '16:9' => [1920, 1080],
+            'panorama' => [2400, 800],
+        ];
+    }
+
+    #[DataProvider('wideProvider')]
+    public function test_a_picture_4_3_or_wider_keeps_the_height_based_caption(int $width, int $height): void
+    {
+        $layout = (new ImageBurner)->layout($width, $height, ItemImage::GLOBAL_FALLBACK);
+
+        $this->assertSame((int) round($height / ImageBurner::HEIGHT_PER_FONT_SIZE), $layout->fontSize);
+    }
+
     public function test_text_that_does_not_fit_at_the_smallest_size_is_cut_with_an_ellipsis(): void
     {
         $burner = new ImageBurner;

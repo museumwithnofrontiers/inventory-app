@@ -3,11 +3,12 @@ import { describe, expect, it } from 'vitest'
 import { bitToBoolean, isFeatured, isHidden } from '../../src/exporters/gallery-exporter.js'
 
 /**
- * `featured` and `status` share the enum('A','H') but mean different things —
- * `status` is site-wide visibility, `featured` is membership of the portal's
- * highlight strip (thg_gallery DDL column comments). dxa-api reports `featured`
- * inverted because it copied the `hidden` projection without flipping it; the
- * exporter ships the documented meaning instead. These tests pin that choice so
+ * `featured` is membership of the portal's highlight strip (thg_gallery DDL
+ * column comments). Legacy's `status` shares its enum('A','H') but is not
+ * imported: visibility is whether the gallery has a website (isHidden).
+ * dxa-api reports `featured` inverted because it copied the `hidden`
+ * projection without flipping it; the exporter ships the documented meaning
+ * instead. These tests pin that choice so
  * a later parity check against the live API does not "correct" it back.
  *
  * Carpets is the useful case to keep pinned, because it disagrees with the live
@@ -30,14 +31,15 @@ describe('isFeatured', () => {
 })
 
 describe('isHidden', () => {
-  it("shows a gallery only when status is 'A'", () => {
-    expect(isHidden('A')).toBe(false)
-    expect(isHidden('H')).toBe(true)
-    expect(isHidden(undefined)).toBe(true)
+  const sites = new Set(['glass-uuid', 'arts-in-dialogue-uuid'])
+
+  it('shows a gallery or exhibition only when it has a website', () => {
+    expect(isHidden('glass-uuid', sites)).toBe(false)
+    expect(isHidden('doubts-uuid', sites)).toBe(true)
   })
 
-  it('is independent of featured — gallery 54 is hidden yet featured', () => {
-    expect(isHidden('H')).toBe(true)
+  it("ignores legacy's status: Arts in Dialogue (54, status H) has a site", () => {
+    expect(isHidden('arts-in-dialogue-uuid', sites)).toBe(false)
     expect(isFeatured('A')).toBe(true)
   })
 })

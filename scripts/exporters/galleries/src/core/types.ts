@@ -20,6 +20,11 @@ export interface ExportContext {
   siteKey: string
   /** UUID of the project whose museums make up the partner directory. */
   partnerProjectId: string
+  /**
+   * Collection UUIDs of the galleries and exhibitions that have a website,
+   * from the instance files. The hub lists only those.
+   */
+  siteCollectionIds: ReadonlySet<string>
   baseUrl: string
   logger: Logger
 }
@@ -36,9 +41,8 @@ export interface ExportResult {
  */
 export interface GalleryChrome {
   image?: string
-  /** Legacy 'A'/'H' flags — see `isFeatured` / `isHidden` for the mapping. */
+  /** Legacy 'A'/'H' flag — see `isFeatured` for the mapping. */
   featured?: string
-  status?: string
   live_date?: string
 }
 

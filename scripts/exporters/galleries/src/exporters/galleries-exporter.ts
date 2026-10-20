@@ -33,8 +33,9 @@ export interface HubGallery {
 /**
  * `galleries.json` — every gallery the hub lists.
  *
- * The children of the galleries root, of type `gallery`, that legacy shows:
- * status `A`. Exhibitions hang under their own root and legacy's hub never
+ * The children of the galleries root, of type `gallery`, that have a website:
+ * an instance file names their collection. Legacy's live/hidden `status` is
+ * not imported. Exhibitions hang under their own root and legacy's hub never
  * listed them. Each entry carries the same fields as a gallery package's
  * `sibling_galleries`, from the same sources: the anchor on
  * `collections.extra.thg_gallery` and the chrome on
@@ -111,7 +112,7 @@ export class GalleriesExporter extends BaseExporter {
             featured: isFeatured(chrome.featured),
             live_date: chrome.live_date ?? null,
           },
-          hidden: isHidden(chrome.status),
+          hidden: isHidden(gallery.id, this.context.siteCollectionIds),
         }
       })
     )
@@ -155,16 +156,19 @@ export function listedGalleries(
 }
 
 /**
- * `featured` and `status` are two INDEPENDENT legacy flags sharing the enum
- * ('A','H'): featured = highlighted in the portal strip, status = visible at
- * all. dxa-api reports `featured` inverted; this ships the documented meaning
+ * `featured`: highlighted in the portal strip ('A') or not ('H'). dxa-api
+ * reports it inverted; this ships the documented meaning
  * (see `isFeatured` in dxa-gallery's gallery-exporter.ts for the whole story).
  */
 export function isFeatured(flag: string | undefined | null): boolean {
   return flag === 'A'
 }
 
-/** `status = 'A'` is the visible state; anything else hides the gallery. */
-export function isHidden(status: string | undefined | null): boolean {
-  return status !== 'A'
+/**
+ * A gallery is hidden when it has no website: no instance file names its
+ * collection. Legacy's live/hidden `status` was the old sites' runtime state,
+ * not curatorial data, and is not imported.
+ */
+export function isHidden(collectionId: string, siteCollectionIds: ReadonlySet<string>): boolean {
+  return !siteCollectionIds.has(collectionId)
 }

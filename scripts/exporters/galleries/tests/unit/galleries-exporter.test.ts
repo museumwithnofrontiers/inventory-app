@@ -59,14 +59,17 @@ describe('listedGalleries', () => {
   })
 })
 
-describe('legacy flags', () => {
-  it("reads featured and status as the two independent 'A'/'H' flags they are", () => {
+describe('flags', () => {
+  it("reads featured as the legacy 'A'/'H' portal-strip flag", () => {
     expect(isFeatured('A')).toBe(true)
     expect(isFeatured('H')).toBe(false)
     expect(isFeatured(undefined)).toBe(false)
-    expect(isHidden('A')).toBe(false)
-    expect(isHidden('H')).toBe(true)
-    expect(isHidden(undefined)).toBe(true)
+  })
+
+  it('hides a gallery only when it has no website', () => {
+    const sites = new Set(['carpets'])
+    expect(isHidden('carpets', sites)).toBe(false)
+    expect(isHidden('doubts', sites)).toBe(true)
   })
 })
 
@@ -138,6 +141,15 @@ describe('GalleriesExporter', () => {
         live_date: '2022-12-01',
       },
     ])
+  })
+
+  it("lists a gallery by whether it has a website, not by legacy's status", async () => {
+    const db = fakeDb(routes(galleryRows))
+    // A database imported before status was dropped still holds it: not read.
+    // Carpets (status A) has no site here; the hub (status H) has one.
+    await new GalleriesExporter({ ...context(db, out.dir), siteCollectionIds: new Set(['amulets', 'hub']) }).export()
+
+    expect((out.read('galleries.json') as HubGallery[]).map(g => g.id)).toEqual(['amulets', 'hub'])
   })
 
   it('scopes the galleries by the root purpose, never by a legacy id', async () => {

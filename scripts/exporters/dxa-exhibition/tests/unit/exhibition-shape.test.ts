@@ -14,8 +14,9 @@ import {
 } from '../../src/exporters/related-content-exporter.js'
 
 /**
- * `featured` and `status` share the enum('A','H') and mean different things.
- * dxa-api conflates them — `WithTHGTemporaryTables.php` builds `featured` from
+ * `featured` is legacy's portal-strip flag; visibility is whether the site
+ * exists (isHidden), not legacy's `status`, which is not imported.
+ * dxa-api inverts `featured` — `WithTHGTemporaryTables.php` builds it from
  * the `hidden` projection without flipping the polarity — so the live API
  * reports `featured: false` for this exhibition even though its record says
  * 'A'. The package ships the documented meaning; these cases pin which one.
@@ -26,25 +27,24 @@ describe('isFeatured / isHidden', () => {
     expect(isFeatured('H')).toBe(false)
   })
 
-  it('reads status as "is it visible at all", with A meaning visible', () => {
-    expect(isHidden('A')).toBe(false)
-    expect(isHidden('H')).toBe(true)
+  it('hides a gallery or exhibition only when it has no website', () => {
+    const sites = new Set(['water-uuid'])
+    expect(isHidden('water-uuid', sites)).toBe(false)
+    expect(isHidden('doubts-uuid', sites)).toBe(true)
   })
 
   /**
-   * Gallery 54 is status='H' + featured='A' in the legacy data, which is only
-   * possible because the two flags are orthogonal. Reading either through the
-   * other would make that row impossible to represent.
+   * Arts in Dialogue (54) is status='H' + featured='A' in the legacy data. It
+   * has a site, so it is shown, and its featured flag is read on its own.
    */
-  it('keeps the two flags independent', () => {
+  it('keeps featured independent of visibility', () => {
     expect(isFeatured('A')).toBe(true)
-    expect(isHidden('H')).toBe(true)
+    expect(isHidden('arts-in-dialogue-uuid', new Set(['arts-in-dialogue-uuid']))).toBe(false)
   })
 
-  it('treats an absent flag as not-featured and hidden', () => {
+  it('treats an absent featured flag as not featured', () => {
     expect(isFeatured(null)).toBe(false)
     expect(isFeatured(undefined)).toBe(false)
-    expect(isHidden(null)).toBe(true)
   })
 })
 
