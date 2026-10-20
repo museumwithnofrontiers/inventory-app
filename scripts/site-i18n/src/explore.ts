@@ -253,6 +253,19 @@ export const EXPLORE_CLIENT_LABELS: Record<string, ClientLabel> = {
   },
   'route.inside': { file: SUB, selector: '#sub-itinerary-list-label', options: { branches: [1] } },
   'route.back': { file: PAGE, selector: '#return-route-link > a' },
+  // The banner over every page, and the corner ribbon on a theme legacy flags as new.
+  'banner.title': { file: 'src/components/BannerComponent.vue', selector: '#banner-title' },
+  'theme.new': { file: 'src/components/ExploreTheme.vue', selector: 'div.theme-new' },
+  // The footer: the links whose wording no shared entry has, the language
+  // policy, the copyright line (its year is data) and the social links' heading.
+  'footer.mwnfHome': { file: APP, selector: '#footer-links > a:nth(0)' },
+  'footer.getInvolved': {
+    file: APP,
+    selector: `#footer-links > router-link[:to="{ name: 'get-involved' }"]`,
+  },
+  'footer.languagePolicy': { file: APP, selector: '#language-policy' },
+  'footer.copyright': { file: APP, selector: '#copyright', options: { ...icons, skipValues: true } },
+  'footer.followUs': { file: APP, selector: '#follow-us' },
 }
 
 /**
