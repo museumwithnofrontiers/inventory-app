@@ -1,6 +1,7 @@
 {
  "baseline": "/parity/runs/2026-10-18",
  "only": null,
+ "packagesOnly": false,
  "failures": [
   { "slug": "architectural-elements", "what": "field item.bibliography", "before": 13, "after": 15 },
   { "slug": "calligraphy", "what": "field item.bibliography", "before": 52, "after": 66 },
@@ -36,6 +37,68 @@
   { "slug": "water-in-islam", "what": "field item.bibliography", "before": 11, "after": 13 },
   { "slug": "weights-measures", "what": "field item.bibliography", "before": 0, "after": 2 },
   { "slug": "woodwork", "what": "field item.bibliography", "before": 11, "after": 14 }
+ ],
+ "open": [
+  { "slug": "amulets", "check": "image URLs not /pub/<uuid>", "before": null, "after": 5 },
+  { "slug": "archaeology", "check": "image URLs not /pub/<uuid>", "before": null, "after": 6 },
+  { "slug": "architectural-elements", "check": "image URLs not /pub/<uuid>", "before": null, "after": 8 },
+  { "slug": "architectural-elements", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "arms-armoury", "check": "image URLs not /pub/<uuid>", "before": null, "after": 1 },
+  { "slug": "arts-in-dialogue", "check": "image URLs not /pub/<uuid>", "before": null, "after": 2 },
+  { "slug": "baroqueart", "check": "image URLs not /pub/<uuid>", "before": null, "after": 280 },
+  { "slug": "calligraphy", "check": "image URLs not /pub/<uuid>", "before": null, "after": 19 },
+  { "slug": "calligraphy", "check": "texts with raw HTML", "before": null, "after": 15 },
+  { "slug": "carpets", "check": "image URLs not /pub/<uuid>", "before": null, "after": 2 },
+  { "slug": "ceramics", "check": "image URLs not /pub/<uuid>", "before": null, "after": 6 },
+  { "slug": "ceramics", "check": "texts with raw HTML", "before": null, "after": 18 },
+  { "slug": "clothing", "check": "image URLs not /pub/<uuid>", "before": null, "after": 17 },
+  { "slug": "coins-medals", "check": "image URLs not /pub/<uuid>", "before": null, "after": 28 },
+  { "slug": "coins-medals", "check": "texts with raw HTML", "before": null, "after": 1 },
+  { "slug": "communication", "check": "image URLs not /pub/<uuid>", "before": null, "after": 27 },
+  { "slug": "explore", "check": "image URLs not /pub/<uuid>", "before": null, "after": 45 },
+  { "slug": "explore", "check": "texts with raw HTML", "before": null, "after": 14 },
+  { "slug": "funerary-objects", "check": "image URLs not /pub/<uuid>", "before": null, "after": 1 },
+  { "slug": "funerary-objects", "check": "texts with raw HTML", "before": null, "after": 5 },
+  { "slug": "glass", "check": "image URLs not /pub/<uuid>", "before": null, "after": 1 },
+  { "slug": "glass", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "gold-silver", "check": "image URLs not /pub/<uuid>", "before": null, "after": 20 },
+  { "slug": "islamicart", "check": "image URLs not /pub/<uuid>", "before": null, "after": 28 },
+  { "slug": "islamicart", "check": "texts with raw HTML", "before": null, "after": 34 },
+  { "slug": "ivory", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "jewellery", "check": "image URLs not /pub/<uuid>", "before": null, "after": 7 },
+  { "slug": "landscapes", "check": "image URLs not /pub/<uuid>", "before": null, "after": 70 },
+  { "slug": "leatherworks", "check": "image URLs not /pub/<uuid>", "before": null, "after": 7 },
+  { "slug": "manuscripts", "check": "image URLs not /pub/<uuid>", "before": null, "after": 59 },
+  { "slug": "manuscripts", "check": "texts with raw HTML", "before": null, "after": 1 },
+  { "slug": "metalwork", "check": "image URLs not /pub/<uuid>", "before": null, "after": 5 },
+  { "slug": "metalwork", "check": "texts with raw HTML", "before": null, "after": 1 },
+  { "slug": "paintings", "check": "image URLs not /pub/<uuid>", "before": null, "after": 29 },
+  { "slug": "photographs", "check": "image URLs not /pub/<uuid>", "before": null, "after": 163 },
+  { "slug": "photographs", "check": "texts with raw HTML", "before": null, "after": 1 },
+  { "slug": "porcelain", "check": "image URLs not /pub/<uuid>", "before": null, "after": 2 },
+  { "slug": "portraits", "check": "image URLs not /pub/<uuid>", "before": null, "after": 4 },
+  { "slug": "precious-stones", "check": "image URLs not /pub/<uuid>", "before": null, "after": 1 },
+  { "slug": "prints-drawings", "check": "image URLs not /pub/<uuid>", "before": null, "after": 42 },
+  { "slug": "religious-life", "check": "image URLs not /pub/<uuid>", "before": null, "after": 16 },
+  { "slug": "religious-life", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "scientific-objects", "check": "image URLs not /pub/<uuid>", "before": null, "after": 8 },
+  { "slug": "sculptures", "check": "image URLs not /pub/<uuid>", "before": null, "after": 11 },
+  { "slug": "sharinghistory", "check": "image URLs not /pub/<uuid>", "before": null, "after": 4 },
+  { "slug": "sharinghistory", "check": "texts with raw HTML", "before": null, "after": 10 },
+  { "slug": "textiles", "check": "image URLs not /pub/<uuid>", "before": null, "after": 17 },
+  { "slug": "textiles", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "the-hijaz-railway", "check": "image URLs not /pub/<uuid>", "before": null, "after": 461 },
+  { "slug": "the-table-is-set", "check": "image URLs not /pub/<uuid>", "before": null, "after": 2 },
+  { "slug": "the-table-is-set", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "the-use-of-colours-in-art", "check": "image URLs not /pub/<uuid>", "before": null, "after": 2 },
+  { "slug": "theatre", "check": "image URLs not /pub/<uuid>", "before": null, "after": 1 },
+  { "slug": "toys-games", "check": "image URLs not /pub/<uuid>", "before": null, "after": 1 },
+  { "slug": "wallpaintings", "check": "image URLs not /pub/<uuid>", "before": null, "after": 1 },
+  { "slug": "water-in-islam", "check": "image URLs not /pub/<uuid>", "before": null, "after": 32 },
+  { "slug": "water-in-islam", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "weights-measures", "check": "texts with raw HTML", "before": null, "after": 2 },
+  { "slug": "woodwork", "check": "image URLs not /pub/<uuid>", "before": null, "after": 12 },
+  { "slug": "woodwork", "check": "texts with raw HTML", "before": null, "after": 3 }
  ],
  "unknown": [],
  "rows": [
@@ -305,6 +368,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 5, "html": 0 },
    "real": 20,
    "unexp": 12,
    "setsOff": [
@@ -392,6 +456,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 6, "html": 0 },
    "real": 90,
    "unexp": 58,
    "setsOff": [
@@ -479,6 +544,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 8, "html": 2 },
    "real": 90,
    "unexp": 66,
    "setsOff": [
@@ -566,6 +632,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 1, "html": 0 },
    "real": 28,
    "unexp": 19,
    "setsOff": []
@@ -667,6 +734,7 @@
     "report: themes (top level)": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: sub-themes": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 2, "html": 0 },
    "real": 25,
    "unexp": 24,
    "setsOff": [
@@ -731,6 +799,7 @@
     "collections: exhibition_pages": { "onlyLegacy": 0, "onlyPkg": 0 },
     "partners: partners referenced by records": { "onlyLegacy": 4, "onlyPkg": 12 }
    },
+   "packages": { "images": 280, "html": 0 },
    "real": 816,
    "unexp": 599,
    "setsOff": [
@@ -818,6 +887,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 19, "html": 15 },
    "real": 471,
    "unexp": 313,
    "setsOff": [
@@ -905,6 +975,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 2, "html": 0 },
    "real": 49,
    "unexp": 27,
    "setsOff": []
@@ -988,6 +1059,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 6, "html": 18 },
    "real": 343,
    "unexp": 181,
    "setsOff": [
@@ -1075,6 +1147,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 17, "html": 0 },
    "real": 71,
    "unexp": 56,
    "setsOff": [
@@ -1162,6 +1235,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 28, "html": 1 },
    "real": 74,
    "unexp": 68,
    "setsOff": [
@@ -1249,6 +1323,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 27, "html": 0 },
    "real": 55,
    "unexp": 55,
    "setsOff": [
@@ -1284,6 +1359,7 @@
     "report: itineraries (top level) + location routes": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: sub-itineraries": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 45, "html": 14 },
    "real": 64,
    "unexp": 64,
    "setsOff": []
@@ -1367,6 +1443,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 1, "html": 5 },
    "real": 64,
    "unexp": 47,
    "setsOff": []
@@ -1390,6 +1467,7 @@
     "report: galleries": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: partners": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 0, "html": 0 },
    "real": 0,
    "unexp": 0,
    "setsOff": []
@@ -1473,6 +1551,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 1, "html": 2 },
    "real": 96,
    "unexp": 55,
    "setsOff": [
@@ -1560,6 +1639,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 20, "html": 0 },
    "real": 47,
    "unexp": 39,
    "setsOff": [
@@ -1645,6 +1725,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 0, "html": 0 },
    "real": 8,
    "unexp": 8,
    "setsOff": []
@@ -1706,6 +1787,7 @@
     "collections: artintro_pages": { "onlyLegacy": 0, "onlyPkg": 0 },
     "partners: partners referenced by records": { "onlyLegacy": 10, "onlyPkg": 1 }
    },
+   "packages": { "images": 28, "html": 34 },
    "real": 3837,
    "unexp": 3184,
    "setsOff": [
@@ -1792,6 +1874,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 0, "html": 2 },
    "real": 39,
    "unexp": 20,
    "setsOff": []
@@ -1875,6 +1958,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 7, "html": 0 },
    "real": 65,
    "unexp": 48,
    "setsOff": [
@@ -1962,6 +2046,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 70, "html": 0 },
    "real": 116,
    "unexp": 112,
    "setsOff": [
@@ -2049,6 +2134,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 7, "html": 0 },
    "real": 19,
    "unexp": 14,
    "setsOff": [
@@ -2136,6 +2222,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 59, "html": 1 },
    "real": 173,
    "unexp": 149,
    "setsOff": [
@@ -2223,6 +2310,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 5, "html": 1 },
    "real": 162,
    "unexp": 113,
    "setsOff": [
@@ -2310,6 +2398,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 0, "html": 0 },
    "real": 11,
    "unexp": 8,
    "setsOff": []
@@ -2392,6 +2481,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 0, "html": 0 },
    "real": 3,
    "unexp": 3,
    "setsOff": []
@@ -2475,6 +2565,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 29, "html": 0 },
    "real": 242,
    "unexp": 210,
    "setsOff": [
@@ -2562,6 +2653,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 163, "html": 1 },
    "real": 371,
    "unexp": 371,
    "setsOff": [
@@ -2648,6 +2740,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 2, "html": 0 },
    "real": 5,
    "unexp": 5,
    "setsOff": []
@@ -2731,6 +2824,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 4, "html": 0 },
    "real": 111,
    "unexp": 105,
    "setsOff": [
@@ -2818,6 +2912,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 1, "html": 0 },
    "real": 22,
    "unexp": 21,
    "setsOff": []
@@ -2901,6 +2996,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 42, "html": 0 },
    "real": 387,
    "unexp": 377,
    "setsOff": [
@@ -2988,6 +3084,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 16, "html": 2 },
    "real": 105,
    "unexp": 74,
    "setsOff": [
@@ -3074,6 +3171,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 8, "html": 0 },
    "real": 40,
    "unexp": 30,
    "setsOff": [
@@ -3161,6 +3259,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 11, "html": 0 },
    "real": 66,
    "unexp": 45,
    "setsOff": [
@@ -3228,6 +3327,7 @@
     "collections: sh_exhibition_subthemes (assigned ∪ slideshow items)": { "onlyLegacy": 0, "onlyPkg": 0 },
     "partners: partners referenced by records": { "onlyLegacy": 0, "onlyPkg": 15 }
    },
+   "packages": { "images": 4, "html": 10 },
    "real": 312,
    "unexp": 311,
    "setsOff": [
@@ -3314,6 +3414,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 17, "html": 2 },
    "real": 78,
    "unexp": 53,
    "setsOff": [
@@ -3335,7 +3436,8 @@
     "dump: items (dump membership, Travels excluded)": { "onlyLegacy": 0, "onlyPkg": 259 },
     "dump: themes (top level)": { "onlyLegacy": 0, "onlyPkg": 0 },
     "dump: sub-themes": { "onlyLegacy": 7, "onlyPkg": 11 }
-   }
+   },
+   "packages": { "images": 461, "html": 0 }
   },
   "the-table-is-set": {
    "fields": {
@@ -3433,6 +3535,7 @@
     "report: themes (top level)": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: sub-themes": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 2, "html": 2 },
    "real": 126,
    "unexp": 90,
    "setsOff": [
@@ -3538,6 +3641,7 @@
     "report: themes (top level)": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: sub-themes": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 2, "html": 0 },
    "real": 97,
    "unexp": 85,
    "setsOff": [
@@ -3624,6 +3728,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 1, "html": 0 },
    "real": 13,
    "unexp": 13,
    "setsOff": []
@@ -3706,6 +3811,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 1, "html": 0 },
    "real": 4,
    "unexp": 2,
    "setsOff": []
@@ -3789,6 +3895,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 1, "html": 0 },
    "real": 11,
    "unexp": 10,
    "setsOff": []
@@ -3894,6 +4001,7 @@
     "dump: themes (top level)": { "onlyLegacy": 0, "onlyPkg": 0 },
     "dump: sub-themes": { "onlyLegacy": 3, "onlyPkg": 6 }
    },
+   "packages": { "images": 32, "html": 2 },
    "real": 149,
    "unexp": 111,
    "setsOff": [
@@ -3981,6 +4089,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 0, "html": 2 },
    "real": 19,
    "unexp": 13,
    "setsOff": []
@@ -4075,6 +4184,7 @@
     "report: themes (top level)": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: sub-themes": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 0, "html": 0 },
    "real": 1,
    "unexp": 1,
    "setsOff": []
@@ -4158,6 +4268,7 @@
     "report: facet tags": { "onlyLegacy": 0, "onlyPkg": 0 },
     "report: timeline events (country|year|text, en)": { "onlyLegacy": 0, "onlyPkg": 0 }
    },
+   "packages": { "images": 12, "html": 3 },
    "real": 149,
    "unexp": 112,
    "setsOff": [

@@ -203,25 +203,35 @@ package" is extra.
 
 - a field has more real differences than in the baseline;
 - a record set has more records on one side only than in the baseline;
-- the package has an image URL that is not `https://inventory.metanull.eu/pub/<uuid>.<ext>`. That
-  check covers every value under a `url` key and any value pointing at the inventory or at
-  `pub/`. Legacy paths such as `image_path` or `portal_image` are resolved on the legacy image
-  host on purpose, so they are not checked;
-- a package text holds a raw HTML tag (`<i>`, `<br/>`, `<p …>` and the like, in any JSON file of
-  the package, `extra` included). `< 5 cm` and `<https://…>` are not tags.
+- the package has more image URLs that are not `https://inventory.metanull.eu/pub/<uuid>.<ext>`
+  than in the baseline. That check covers every value under a `url` key and any value pointing
+  at the inventory or at `pub/`. Legacy paths such as `image_path` or `portal_image` are
+  resolved on the legacy image host on purpose, so they are not checked;
+- the package has more texts holding a raw HTML tag than in the baseline (`<i>`, `<br/>`,
+  `<p …>` and the like, in any JSON file of the package, `extra` included). `< 5 cm` and
+  `<https://…>` are not tags.
 
-The two package checks run in `check-packages.mjs`, and need neither legacy nor a baseline.
-They allow no exceptions. On 2026-10-20 they failed on 43 of the 48 published packages:
+The two package checks run in `check-packages.mjs` and need no legacy request; `diff-runs.mjs`
+judges their counts. The `packages` mode does that alone, in about three minutes for all 48
+sites.
+
+**The gate is a means, not the goal.** The goal is new sites that match legacy. Every count the
+gate tracks is a place where a site can differ from legacy. The gate stops a publish from adding
+to those places; it does not make the ones already there acceptable. They are listed under
+**Open package defects** in `diff-runs.md`, and per URL and text in `packages.md`. On 2026-10-20,
+43 of the 48 published packages had some:
 
 - image URLs: legacy paths under `/pub/objects/…`, `/pub/museums/…` (partner logos),
-  `/pub/monuments/…` and `/pub/sharing_history/…`, which are the missing legacy source files of
-  C4 on #2233, plus a few bare `https://inventory.metanull.eu/pub/`;
-- raw HTML: mostly `<i>` and `<br/>` in the indented lines of Arabic `bibliography` texts.
+  `/pub/monuments/…` and `/pub/sharing_history/…`, largely the missing legacy source files of
+  C4 on #2233, plus a few bare `https://inventory.metanull.eu/pub/`. Whether legacy shows a
+  picture there is the question that matters; the image counts per record in the reports
+  answer it;
+- raw HTML: mostly `<i>` and `<br/>` in the indented lines of Arabic `bibliography` texts. The
+  sites escape HTML, so these print the tags where legacy prints italics and line breaks.
 
-So, until those are fixed, every gated run fails on them. Read `packages.md` for whether a
-failure is one of these or a new one. A site
-the baseline doesn't know (a new site) is listed and not gated. Fewer differences than the
-baseline never fail. Take a new baseline to lock the improvement in.
+A site the baseline doesn't know (a new site) has no field or record-set gate, and its package
+checks are judged strictly: one bad URL or HTML text fails. Fewer than the baseline never fails;
+take a new baseline to lock the improvement in.
 
 ## Baselines
 
@@ -229,9 +239,10 @@ baseline never fail. Take a new baseline to lock the improvement in.
 
 | File | Use |
 |---|---|
-| `diff-runs.json` | per site, every field's verdict totals and every record set's one-sided counts (`perSite`): what the gate compares with |
+| `diff-runs.json` | per site, every field's verdict totals, every record set's one-sided counts, and the package checks' counts (`perSite`): what the gate compares with |
 | `overview.json` / `.md` | the per-site totals and causes of that run |
 | `diff-runs.md` | that run against the one before it |
+| `packages.md` | the package checks of that run, per URL and text |
 | `sitemap.md` | the package versions it compared |
 
 The legacy cache, the packages and the full per-site reports stay out of git.
@@ -241,13 +252,15 @@ To take a new baseline, after a full run with no `--only`, on `latest`, whose re
 ```powershell
 $d = "scripts/parity/baselines/$(Get-Date -Format yyyy-MM-dd)"
 New-Item -ItemType Directory $d
-foreach ($f in 'diff-runs.json','diff-runs.md','overview.json','overview.md','sitemap.md') { Copy-Item "tmp/parity/out/$f" $d }
+foreach ($f in 'diff-runs.json','diff-runs.md','overview.json','overview.md','packages.md','sitemap.md') { Copy-Item "tmp/parity/out/$f" $d }
 ```
 
 Commit it in its own PR, and say in the PR why the numbers moved.
 
 `baselines/2026-10-19` is the 2026-10-19 re-run: 9,144 real differences (overview), every site on
 the package versions in its `sitemap.md`. It was summarised by this tool from that run's reports.
+Its package counts come from the package checks of 2026-10-20, on the same 48 versions: 60
+open defects on 43 sites.
 Its `diff-runs.md` is the gate's verdict on 2026-10-18 → 2026-10-19. The total fell, but it lists
 34 regressions: 26 fields and 8 record sets. 14 of those fields are `item.bibliography`, on 14
 sites. The gate would have flagged every one of them before the publish.

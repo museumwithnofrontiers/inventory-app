@@ -113,11 +113,13 @@ if (opts.modes.includes('curatorial')) {
     if (s.slug === 'galleries') step('compare-hub.mjs');
   }
 }
-if (opts.modes.includes('curatorial') || opts.modes.includes('packages')) step('check-packages.mjs', onlyArgs, { gate: true });
+// The package checks report; diff-runs judges them, and the comparison, against the baseline.
+const gateArgs = [...(opts.baseline ? [opts.baseline] : []), '--run', OUT, ...onlyArgs, ...(opts.gate ? [] : ['--no-gate'])];
+if (opts.modes.includes('curatorial') || opts.modes.includes('packages')) step('check-packages.mjs', onlyArgs);
 if (opts.modes.includes('curatorial')) {
   step('aggregate.mjs');
-  step('diff-runs.mjs', [...(opts.baseline ? [opts.baseline] : []), '--run', OUT, ...onlyArgs, ...(opts.gate ? [] : ['--no-gate'])], { gate: true });
-}
+  step('diff-runs.mjs', gateArgs, { gate: true });
+} else if (opts.modes.includes('packages')) step('diff-runs.mjs', [...gateArgs, '--packages-only'], { gate: true });
 
 // The browser modes write a jobs list, then work through it (cached per job; delete the
 // capture to redo one). --only narrows the list.

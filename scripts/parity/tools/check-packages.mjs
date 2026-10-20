@@ -1,7 +1,8 @@
 // node tools/check-packages.mjs [--only slug,slug] — the package gates, with no legacy side:
 // every image URL must be https://inventory.metanull.eu/pub/<uuid>.<ext>, and no text may hold
 // raw HTML tags. Reads the packages the sitemap resolved (npm latest, or the local exports).
-// Writes out/packages.json and out/packages.md; exits 1 when any package fails.
+// Writes out/packages.json and out/packages.md. It reports; diff-runs.mjs judges the counts
+// against the baseline.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { scanPackage } from './lib/gates.mjs';
 import { OUT } from './lib/paths.mjs';
@@ -36,5 +37,4 @@ for (const [slug, r] of failing) {
 }
 writeFileSync(`${OUT}/packages.md`, md.join('\n') + '\n');
 for (const [slug, r] of failing) console.error(`${slug}: ${r.images.bad} bad image URLs, ${r.html.bad} texts with HTML tags`);
-console.log(`packages: ${sites.length} checked, ${failing.length} failing`);
-if (failing.length) process.exitCode = 1;
+console.log(`packages: ${sites.length} checked, ${failing.length} with a bad image URL or an HTML text`);

@@ -45,6 +45,73 @@
 | weights-measures | field item.bibliography | 0 | 2 |
 | woodwork | field item.bibliography | 11 | 14 |
 
+## Open package defects
+
+Known in the baseline, so not regressions, but each one is still a place where the site can differ from legacy. Details per URL and text are in `packages.md`. When a count falls, take a new baseline to lock it in.
+
+| Site | Check | Baseline | Run |
+|---|---|---|---|
+| amulets | image URLs not /pub/<uuid> | not measured | 5 |
+| archaeology | image URLs not /pub/<uuid> | not measured | 6 |
+| architectural-elements | image URLs not /pub/<uuid> | not measured | 8 |
+| architectural-elements | texts with raw HTML | not measured | 2 |
+| arms-armoury | image URLs not /pub/<uuid> | not measured | 1 |
+| arts-in-dialogue | image URLs not /pub/<uuid> | not measured | 2 |
+| baroqueart | image URLs not /pub/<uuid> | not measured | 280 |
+| calligraphy | image URLs not /pub/<uuid> | not measured | 19 |
+| calligraphy | texts with raw HTML | not measured | 15 |
+| carpets | image URLs not /pub/<uuid> | not measured | 2 |
+| ceramics | image URLs not /pub/<uuid> | not measured | 6 |
+| ceramics | texts with raw HTML | not measured | 18 |
+| clothing | image URLs not /pub/<uuid> | not measured | 17 |
+| coins-medals | image URLs not /pub/<uuid> | not measured | 28 |
+| coins-medals | texts with raw HTML | not measured | 1 |
+| communication | image URLs not /pub/<uuid> | not measured | 27 |
+| explore | image URLs not /pub/<uuid> | not measured | 45 |
+| explore | texts with raw HTML | not measured | 14 |
+| funerary-objects | image URLs not /pub/<uuid> | not measured | 1 |
+| funerary-objects | texts with raw HTML | not measured | 5 |
+| glass | image URLs not /pub/<uuid> | not measured | 1 |
+| glass | texts with raw HTML | not measured | 2 |
+| gold-silver | image URLs not /pub/<uuid> | not measured | 20 |
+| islamicart | image URLs not /pub/<uuid> | not measured | 28 |
+| islamicart | texts with raw HTML | not measured | 34 |
+| ivory | texts with raw HTML | not measured | 2 |
+| jewellery | image URLs not /pub/<uuid> | not measured | 7 |
+| landscapes | image URLs not /pub/<uuid> | not measured | 70 |
+| leatherworks | image URLs not /pub/<uuid> | not measured | 7 |
+| manuscripts | image URLs not /pub/<uuid> | not measured | 59 |
+| manuscripts | texts with raw HTML | not measured | 1 |
+| metalwork | image URLs not /pub/<uuid> | not measured | 5 |
+| metalwork | texts with raw HTML | not measured | 1 |
+| paintings | image URLs not /pub/<uuid> | not measured | 29 |
+| photographs | image URLs not /pub/<uuid> | not measured | 163 |
+| photographs | texts with raw HTML | not measured | 1 |
+| porcelain | image URLs not /pub/<uuid> | not measured | 2 |
+| portraits | image URLs not /pub/<uuid> | not measured | 4 |
+| precious-stones | image URLs not /pub/<uuid> | not measured | 1 |
+| prints-drawings | image URLs not /pub/<uuid> | not measured | 42 |
+| religious-life | image URLs not /pub/<uuid> | not measured | 16 |
+| religious-life | texts with raw HTML | not measured | 2 |
+| scientific-objects | image URLs not /pub/<uuid> | not measured | 8 |
+| sculptures | image URLs not /pub/<uuid> | not measured | 11 |
+| sharinghistory | image URLs not /pub/<uuid> | not measured | 4 |
+| sharinghistory | texts with raw HTML | not measured | 10 |
+| textiles | image URLs not /pub/<uuid> | not measured | 17 |
+| textiles | texts with raw HTML | not measured | 2 |
+| the-hijaz-railway | image URLs not /pub/<uuid> | not measured | 461 |
+| the-table-is-set | image URLs not /pub/<uuid> | not measured | 2 |
+| the-table-is-set | texts with raw HTML | not measured | 2 |
+| the-use-of-colours-in-art | image URLs not /pub/<uuid> | not measured | 2 |
+| theatre | image URLs not /pub/<uuid> | not measured | 1 |
+| toys-games | image URLs not /pub/<uuid> | not measured | 1 |
+| wallpaintings | image URLs not /pub/<uuid> | not measured | 1 |
+| water-in-islam | image URLs not /pub/<uuid> | not measured | 32 |
+| water-in-islam | texts with raw HTML | not measured | 2 |
+| weights-measures | texts with raw HTML | not measured | 2 |
+| woodwork | image URLs not /pub/<uuid> | not measured | 12 |
+| woodwork | texts with raw HTML | not measured | 3 |
+
 ## Fields (real differences = different / missing / extra, summed over the sites of this run)
 
 | Field | Before | After | Δ | Format-only before → after | Compared after | Sites still off |

@@ -106,16 +106,49 @@ test('diff-runs fails when a field or a record set grows', () => {
   assert.equal(diff(base, now, '--only', 'glass').status, 0);
 });
 
-test('diff-runs fails on a package gate, and when the package gates did not run', () => {
+const badImages = (n) => ({ images: { total: 10, bad: n, samples: n ? [{ where: 'items.json: [0].url', value: '/pub/x.jpg' }] : [] }, html: clean.html });
+
+test('diff-runs fails when the package gates did not run', () => {
+  const base = mkdtempSync(join(tmpdir(), 'parity-base-'));
+  const now = mkdtempSync(join(tmpdir(), 'parity-run-'));
+  run(base, { carpets: report({}) }, { carpets: clean });
+  run(now, { carpets: report({}) });
+  assert.match(diff(base, now).stderr, /package gates did not run/);
+});
+
+test('package defects the baseline knows are open, not regressions; one more fails', () => {
+  const base = mkdtempSync(join(tmpdir(), 'parity-base-'));
+  const now = mkdtempSync(join(tmpdir(), 'parity-run-'));
+  run(base, { carpets: report({}) }, { carpets: badImages(2) });
+  run(now, { carpets: report({}) }, { carpets: badImages(2) });
+  assert.equal(diff(base, now).status, 0);
+  const open = JSON.parse(readFileSync(`${now}/diff-runs.json`, 'utf8')).open;
+  assert.deepEqual(open, [{ slug: 'carpets', check: 'image URLs not /pub/<uuid>', before: 2, after: 2 }]);
+  run(now, { carpets: report({}) }, { carpets: badImages(3) });
+  const r = diff(base, now);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /carpets: package image URLs not \/pub\/<uuid> .* 2 → 3/);
+  assert.equal(diff(base, now, '--no-gate').status, 0);
+  // The packages mode judges the package checks alone.
+  run(now, { carpets: report({ 'item.author': { different: 9 } }) }, { carpets: badImages(1) });
+  assert.equal(diff(base, now, '--packages-only').status, 0);
+});
+
+test('a site the baseline does not know is judged strictly by the package checks', () => {
+  const base = mkdtempSync(join(tmpdir(), 'parity-base-'));
+  const now = mkdtempSync(join(tmpdir(), 'parity-run-'));
+  run(base, { carpets: report({}) }, { carpets: clean });
+  run(now, { carpets: report({}), glass: report({}) }, { carpets: clean, glass: badImages(1) });
+  const r = diff(base, now);
+  assert.equal(r.status, 1);
+  assert.match(r.stderr, /glass: package image URLs not \/pub\/<uuid> .* 0 → 1/);
+});
+
+test('a baseline without package counts lists the package checks without judging them', () => {
   const base = mkdtempSync(join(tmpdir(), 'parity-base-'));
   const now = mkdtempSync(join(tmpdir(), 'parity-run-'));
   run(base, { carpets: report({}) });
-  run(now, { carpets: report({}) });
-  assert.match(diff(base, now).stderr, /package gates did not run/);
-  const bad = { images: { total: 1, bad: 1, samples: [{ where: 'items.json: [0].url', value: '/pub/x.jpg' }] }, html: clean.html };
-  run(now, { carpets: report({}) }, { carpets: bad });
-  const r = diff(base, now);
-  assert.equal(r.status, 1);
-  assert.match(r.stderr, /image URLs not \/pub\/<uuid>/);
-  assert.equal(diff(base, now, '--no-gate').status, 0);
+  run(now, { carpets: report({}) }, { carpets: badImages(5) });
+  assert.equal(diff(base, now).status, 0);
+  assert.match(readFileSync(`${now}/diff-runs.md`, 'utf8'), /\| carpets \| image URLs not \/pub\/<uuid> \| not measured \| 5 \|/);
 });

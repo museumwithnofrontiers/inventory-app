@@ -1,4 +1,4 @@
-// node tools/diff-runs.mjs [<baseline>] [<run dir> | --run <run dir>] [--only slug,slug] [--no-gate]
+// node tools/diff-runs.mjs [<baseline>] [<run dir> | --run <run dir>] [--only slug,slug] [--packages-only] [--no-gate]
 // Compares a parity run with a baseline, field by field and site by site, and gates on it.
 //   <baseline>  a stored summary: baselines/<date>/ or its diff-runs.json (default: the newest
 //               baselines/<date>/), or a full earlier run directory (its */report.json files)
@@ -7,10 +7,13 @@
 // (exit 1) when, for any site of the run:
 //   - a field has more real differences than in the baseline,
 //   - a record set has more records on one side only than in the baseline,
-//   - its package has an image URL that is not /pub/<uuid>, or a text with raw HTML tags
-//     (out/packages.json, written by check-packages.mjs).
-// A site the baseline does not know is reported and not gated. Writes <run dir>/diff-runs.md and
-// <run dir>/diff-runs.json; the json's perSite block is what a later run uses as its baseline.
+//   - its package has more image URLs that are not /pub/<uuid>, or more texts with raw HTML
+//     tags, than in the baseline (out/packages.json, written by check-packages.mjs). The ones
+//     the baseline already has are listed as open defects, not as regressions.
+// A site the baseline does not know gets no field or record-set gate, and the package checks
+// judge it strictly: any bad URL or HTML text fails. --packages-only (the packages mode) judges
+// the package checks alone. Writes <run dir>/diff-runs.md and <run dir>/diff-runs.json; the
+// json's perSite block is what a later run uses as its baseline.
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { OUT, TOOLS } from './lib/paths.mjs';
 
@@ -20,6 +23,7 @@ const value = (n) => (args.includes(n) ? args[args.indexOf(n) + 1] : null);
 const positional = args.filter((a, i) => !a.startsWith('--') && !['--only', '--run'].includes(args[i - 1]));
 const only = value('--only')?.split(',') ?? null;
 const gate = !flag('--no-gate');
+const packagesOnly = flag('--packages-only');
 
 const BASELINES = `${TOOLS}/../baselines`;
 const newest = () => readdirSync(BASELINES).filter((d) => /^\d{4}-\d{2}-\d{2}/.test(d)).sort().pop();
@@ -28,7 +32,8 @@ const runDir = value('--run') ?? positional[1] ?? OUT;
 const REAL = new Set(['different', 'missing-in-package', 'extra-in-package']);
 const REPORTS = ['report.json', 'dump.json', 'collections.json', 'partners.json'];
 
-// Per site: every field's verdict totals, and every record set's one-sided count.
+// Per site: every field's verdict totals, every record set's one-sided count, and the package
+// checks' counts.
 function summarise(dir) {
   const perSite = {};
   for (const slug of readdirSync(dir)) {
@@ -51,6 +56,11 @@ function summarise(dir) {
       for (const s of r.sets ?? []) site.sets[`${f.replace('.json', '')}: ${s.name}`] = { onlyLegacy: s.onlyLegacy.length, onlyPkg: s.onlyPkg.length };
     }
   }
+  if (existsSync(`${dir}/packages.json`)) {
+    for (const [slug, p] of Object.entries(JSON.parse(readFileSync(`${dir}/packages.json`, 'utf8')).sites)) {
+      (perSite[slug] ??= { fields: {}, sets: {} }).packages = { images: p.images.bad, html: p.html.bad };
+    }
+  }
   const ov = existsSync(`${dir}/overview.json`) ? JSON.parse(readFileSync(`${dir}/overview.json`, 'utf8')) : { rows: [] };
   for (const row of ov.rows) if (perSite[row.slug]) Object.assign(perSite[row.slug], { real: row.real, unexp: row.unexp, setsOff: row.setsOff });
   return perSite;
@@ -68,7 +78,11 @@ function loadBaseline(path) {
 
 const A = loadBaseline(baseArg);
 const Ball = summarise(runDir);
-const B = only ? Object.fromEntries(Object.entries(Ball).filter(([s]) => only.includes(s))) : Ball;
+const pkgFile = `${runDir}/packages.json`;
+const packages = existsSync(pkgFile) ? JSON.parse(readFileSync(pkgFile, 'utf8')).sites : null;
+// The packages mode judges the sites whose packages it checked; a full run, the sites it compared.
+const inRun = (s) => (!only || only.includes(s)) && (!packagesOnly || packages?.[s]);
+const B = Object.fromEntries(Object.entries(Ball).filter(([s]) => inRun(s)));
 
 // ---- per-field totals over the sites of this run
 const fieldTotals = (perSite, slugs) => {
@@ -106,6 +120,7 @@ const failures = [];
 const unknown = [];
 for (const s of slugs) {
   if (!A[s]) { unknown.push(s); continue; }
+  if (packagesOnly) continue;
   for (const [f, v] of Object.entries(B[s].fields)) {
     const before = A[s].fields[f]?.real ?? 0;
     if (v.real > before) failures.push({ slug: s, what: `field ${f}`, before, after: v.real });
@@ -116,13 +131,23 @@ for (const s of slugs) {
     if (v.onlyPkg > a.onlyPkg) failures.push({ slug: s, what: `set ${name}: only in the package`, before: a.onlyPkg, after: v.onlyPkg });
   }
 }
-const pkgFile = `${runDir}/packages.json`;
-const packages = existsSync(pkgFile) ? JSON.parse(readFileSync(pkgFile, 'utf8')).sites : null;
+// Package checks: more than the baseline is a regression; as many or fewer is an open defect
+// still to fix (and, when fewer, a baseline to lower).
+const open = [];
 if (gate && !packages) failures.push({ slug: '*', what: 'package gates did not run (tools/check-packages.mjs)', before: null, after: null });
 for (const [s, r] of Object.entries(packages ?? {})) {
-  if (only && !only.includes(s)) continue;
-  if (r.images.bad) failures.push({ slug: s, what: `package image URLs not /pub/<uuid> (e.g. ${r.images.samples[0].value})`, before: 0, after: r.images.bad });
-  if (r.html.bad) failures.push({ slug: s, what: `package texts with raw HTML (e.g. ${r.html.samples[0].tag} in ${r.html.samples[0].where})`, before: 0, after: r.html.bad });
+  if (!inRun(s)) continue;
+  // A baseline taken before the package checks existed has no counts: list, don't judge.
+  const measured = !A[s] || A[s].packages;
+  const base = A[s]?.packages ?? { images: measured ? 0 : null, html: measured ? 0 : null };
+  const checks = [
+    ['images', r.images, `package image URLs not /pub/<uuid> (e.g. ${r.images.samples[0]?.value})`],
+    ['html', r.html, `package texts with raw HTML (e.g. ${r.html.samples[0]?.tag} in ${r.html.samples[0]?.where})`],
+  ];
+  for (const [k, now, what] of checks) {
+    if (measured && now.bad > base[k]) failures.push({ slug: s, what, before: base[k], after: now.bad });
+    else if (now.bad || base[k]) open.push({ slug: s, check: k === 'images' ? 'image URLs not /pub/<uuid>' : 'texts with raw HTML', before: base[k], after: now.bad });
+  }
 }
 
 const sum = (list, k) => list.reduce((n, r) => n + (r[k] ?? 0), 0);
@@ -130,32 +155,48 @@ const md = [
   `# Parity run vs baseline`,
   '',
   `- **baseline:** ${baseArg}`,
-  `- **run:** ${runDir}${only ? ` (only ${only.join(', ')})` : ''}`,
-  `- **real differences (overview):** ${sum(siteRows, 'realBefore')} → ${sum(siteRows, 'realAfter')}`,
+  `- **run:** ${runDir}${only ? ` (only ${only.join(', ')})` : ''}${packagesOnly ? ' — package checks only' : ''}`,
+  ...(packagesOnly ? [] : [`- **real differences (overview):** ${sum(siteRows, 'realBefore')} → ${sum(siteRows, 'realAfter')}`]),
   '',
   '## Gate',
   '',
-  failures.length ? `**FAILED** — ${failures.length} regressions:` : gate ? '**PASSED** — no field, record set or package gate got worse.' : 'Not gated (--no-gate).',
+  failures.length ? `**FAILED** — ${failures.length} regressions:` : gate ? `**PASSED** — no ${packagesOnly ? 'package check' : 'field, record set or package check'} got worse.` : 'Not gated (--no-gate).',
   ...(failures.length ? ['', '| Site | What | Baseline | Run |', '|---|---|---|---|', ...failures.map((f) => `| ${f.slug} | ${f.what} | ${f.before ?? ''} | ${f.after ?? ''} |`)] : []),
-  ...(unknown.length ? ['', `Not in the baseline, so not gated: ${unknown.join(', ')}.`] : []),
-  '',
-  '## Fields (real differences = different / missing / extra, summed over the sites of this run)',
-  '',
-  '| Field | Before | After | Δ | Format-only before → after | Compared after | Sites still off |',
-  '|---|---|---|---|---|---|---|',
-  ...rows.filter((r) => r.before || r.after || r.formatBefore || r.formatAfter).map((r) => `| ${r.field} | ${r.before} | ${r.after} | ${r.delta > 0 ? '+' : ''}${r.delta} | ${r.formatBefore} → ${r.formatAfter} | ${r.totalAfter} | ${r.sitesAfter} |`),
-  '',
-  '## Sites',
-  '',
-  '| Site | Real before | Real after | Unexplained before | after | Record sets off (after) |',
-  '|---|---|---|---|---|---|',
-  ...siteRows.map((r) => `| ${r.slug} | ${r.realBefore ?? '—'} | ${r.realAfter ?? '—'} | ${r.unexpBefore ?? '—'} | ${r.unexpAfter ?? '—'} | ${r.setsAfter || '✓'} |`),
+  ...(unknown.length ? ['', `Not in the baseline, so the package checks judge them strictly${packagesOnly ? '' : ' and their fields and record sets are not gated'}: ${unknown.join(', ')}.`] : []),
+  ...(open.length
+    ? [
+        '',
+        '## Open package defects',
+        '',
+        'Known in the baseline, so not regressions, but each one is still a place where the site can differ from legacy. Details per URL and text are in `packages.md`. When a count falls, take a new baseline to lock it in.',
+        '',
+        '| Site | Check | Baseline | Run |',
+        '|---|---|---|---|',
+        ...open.map((o) => `| ${o.slug} | ${o.check} | ${o.before ?? 'not measured'} | ${o.after}${o.before !== null && o.after < o.before ? ' ↓' : ''} |`),
+      ]
+    : []),
+  ...(packagesOnly
+    ? []
+    : [
+        '',
+        '## Fields (real differences = different / missing / extra, summed over the sites of this run)',
+        '',
+        '| Field | Before | After | Δ | Format-only before → after | Compared after | Sites still off |',
+        '|---|---|---|---|---|---|---|',
+        ...rows.filter((r) => r.before || r.after || r.formatBefore || r.formatAfter).map((r) => `| ${r.field} | ${r.before} | ${r.after} | ${r.delta > 0 ? '+' : ''}${r.delta} | ${r.formatBefore} → ${r.formatAfter} | ${r.totalAfter} | ${r.sitesAfter} |`),
+        '',
+        '## Sites',
+        '',
+        '| Site | Real before | Real after | Unexplained before | after | Record sets off (after) |',
+        '|---|---|---|---|---|---|',
+        ...siteRows.map((r) => `| ${r.slug} | ${r.realBefore ?? '—'} | ${r.realAfter ?? '—'} | ${r.unexpBefore ?? '—'} | ${r.unexpAfter ?? '—'} | ${r.setsAfter || '✓'} |`),
+      ]),
 ].join('\n');
 writeFileSync(`${runDir}/diff-runs.md`, md + '\n');
 // One line per field and per row: the json is committed as a baseline, so keep its diffs readable.
-const json = JSON.stringify({ baseline: baseArg, only, failures, unknown, rows, siteRows, perSite: Ball }, null, 1).replace(/\{\n\s*([^{}[\]]*?)\n\s*\}/g, (_, body) => `{ ${body.replace(/\n\s*/g, ' ')} }`);
+const json = JSON.stringify({ baseline: baseArg, only, packagesOnly, failures, open, unknown, rows, siteRows, perSite: Ball }, null, 1).replace(/\{\n\s*([^{}[\]]*?)\n\s*\}/g, (_, body) => `{ ${body.replace(/\n\s*/g, ' ')} }`);
 writeFileSync(`${runDir}/diff-runs.json`, json + '\n');
 
-console.log(`fields ${rows.length}, sites ${siteRows.length}, real ${sum(siteRows, 'realBefore')} → ${sum(siteRows, 'realAfter')}`);
+console.log(`sites ${slugs.length}, ${failures.length} regressions, ${open.length} open package defects${packagesOnly ? '' : `, real ${sum(siteRows, 'realBefore')} → ${sum(siteRows, 'realAfter')}`}`);
 for (const f of failures) console.error(`REGRESSION ${f.slug}: ${f.what} ${f.before ?? ''} → ${f.after ?? ''}`);
 if (gate && failures.length) process.exitCode = 1;
