@@ -10,8 +10,7 @@ cd /var/www/app/scripts/parity
 stamp=node_modules/.lock-sha1
 want=$(sha1sum package-lock.json | cut -d' ' -f1)
 if [ "$(cat "$stamp" 2>/dev/null)" != "$want" ]; then
-  # Production only: the linter needs a newer Node than this image's (lint on node:24).
-  npm ci --omit=dev --no-fund --no-audit
+  npm ci --no-fund --no-audit
   echo "$want" > "$stamp"
 fi
 

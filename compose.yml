@@ -254,7 +254,7 @@ services:
   # worktree, point the three paths at the main checkout's copies.
   # ---------------------------------------------------------------------------
   parity:
-    image: mcr.microsoft.com/playwright:v1.47.2-jammy
+    image: mcr.microsoft.com/playwright:v1.63.0-jammy
     profiles: [tools]
     entrypoint: ["/bin/sh", "/var/www/app/scripts/parity/docker-entrypoint.sh"]
     volumes:

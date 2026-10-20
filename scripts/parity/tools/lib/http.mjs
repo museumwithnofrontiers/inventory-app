@@ -1,7 +1,7 @@
 // Cached, throttled GET. Every legacy URL is fetched once: the answer (status + body)
 // is kept under cache/, so reruns cost the legacy servers nothing.
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { CACHE } from './paths.mjs';
@@ -23,24 +23,64 @@ async function slot(fn) {
   }
 }
 
-export const stats = { hit: 0, fetched: 0, failed: 0 };
+// The only hosts the tool reads: the legacy sites, the inventory's public images, the npm
+// registry and jsDelivr, the org site's sites.json and the new sites. Most URLs come out of
+// packages and legacy pages, so one pointing anywhere else is refused, never fetched; so is
+// a redirect that leaves these hosts.
+const HOSTS = /^(?:[a-z0-9-]+\.)*museumwnf\.org$|^(?:inventory\.metanull\.eu|registry\.npmjs\.org|cdn\.jsdelivr\.net|museumwithnofrontiers\.github\.io|raw\.githubusercontent\.com)$/;
+export function allowedUrl(url) {
+  let u;
+  try {
+    u = new URL(url);
+  } catch {
+    return null;
+  }
+  return u.protocol === 'https:' && HOSTS.test(u.hostname) ? u : null;
+}
+
+export const stats = { hit: 0, fetched: 0, failed: 0, refused: 0 };
+const HEADERS = { 'user-agent': 'mwnf-parity-check/0.1 (read-only)' };
+
+// Follows redirects by hand, so that every hop is checked against the allowed hosts.
+async function fetchAllowed(start) {
+  let target = start;
+  for (let hop = 0; hop < 6; hop++) {
+    const res = await fetch(target.href, { headers: HEADERS, redirect: 'manual' });
+    const location = res.status >= 300 && res.status < 400 ? res.headers.get('location') : null;
+    if (!location) return { res, finalUrl: target.href };
+    await res.body?.cancel();
+    target = allowedUrl(new URL(location, target).href);
+    if (!target) throw Object.assign(new Error(`redirect to a host the tool does not read: ${location}`), { refused: true });
+  }
+  throw new Error('too many redirects');
+}
 
 export async function get(url, { refresh = false } = {}) {
+  const safe = allowedUrl(url);
+  if (!safe) {
+    stats.refused++;
+    return { url, status: 'refused', error: 'not a host the tool reads', body: '' };
+  }
   const key = createHash('sha1').update(url).digest('hex');
   const file = join(CACHE, key.slice(0, 2), key + '.json');
-  if (!refresh && existsSync(file)) {
-    stats.hit++;
-    return JSON.parse(readFileSync(file, 'utf8'));
+  if (!refresh) {
+    try {
+      const entry = JSON.parse(readFileSync(file, 'utf8'));
+      stats.hit++;
+      return entry;
+    } catch (e) {
+      if (e.code !== 'ENOENT') throw e;
+    }
   }
   return slot(async () => {
     let last;
     for (let attempt = 1; attempt <= 4; attempt++) {
       try {
-        const res = await fetch(url, { headers: { 'user-agent': 'mwnf-parity-check/0.1 (read-only)' }, redirect: 'follow' });
+        const { res, finalUrl } = await fetchAllowed(safe);
         const body = await res.text();
         // Server errors are retried; a 404 is an answer and is cached like any other.
         if (res.status >= 500) throw new Error(`HTTP ${res.status}`);
-        const entry = { url, status: res.status, finalUrl: res.url, fetchedAt: new Date().toISOString(), body };
+        const entry = { url, status: res.status, finalUrl, fetchedAt: new Date().toISOString(), body };
         mkdirSync(join(CACHE, key.slice(0, 2)), { recursive: true });
         writeFileSync(file, JSON.stringify(entry));
         stats.fetched++;
@@ -48,6 +88,7 @@ export async function get(url, { refresh = false } = {}) {
         return entry;
       } catch (e) {
         last = e;
+        if (e.refused) break;
         await pause(1500 * attempt);
       }
     }

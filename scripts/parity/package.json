@@ -11,8 +11,8 @@
     "lint:check": "eslint ."
   },
   "dependencies": {
-    "playwright": "1.47.2",
-    "sharp": "^0.33.5"
+    "playwright": "1.63.0",
+    "sharp": "^0.35.5"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",

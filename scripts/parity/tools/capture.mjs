@@ -1,4 +1,4 @@
-// Runs in the parity service (mcr.microsoft.com/playwright:v1.47.2-jammy):
+// Runs in the parity service (mcr.microsoft.com/playwright:v1.63.0-jammy):
 //   node tools/capture.mjs <jobs.json> [--force]
 // jobs.json: [{ id, url, width? }]. For each: shots/<id>.jpg (viewport + up to 3,000px of the page)
 // and shots/<id>.json, a style signature independent of the DOM:

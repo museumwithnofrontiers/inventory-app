@@ -8,7 +8,13 @@ import { ASSETS, OUT, SITE } from './lib/paths.mjs';
 
 const sites = JSON.parse(readFileSync(`${OUT}/sitemap.json`, 'utf8')).sites;
 const HASHES = `${ASSETS}/hashes.json`;
-const hashes = existsSync(HASHES) ? JSON.parse(readFileSync(HASHES, 'utf8')) : {};
+// Read it outright, with no existence check first: a missing file is an empty cache.
+let hashes = {};
+try {
+  hashes = JSON.parse(readFileSync(HASHES, 'utf8'));
+} catch (e) {
+  if (e.code !== 'ENOENT') throw e;
+}
 mkdirSync(`${SITE}/img/a`, { recursive: true });
 
 async function hashOf(file) {

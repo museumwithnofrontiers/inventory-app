@@ -36,7 +36,7 @@ legacy servers for nothing they already answered.
 ## Running it
 
 Docker only, through the `parity` compose service. It runs the Playwright image
-`mcr.microsoft.com/playwright:v1.47.2-jammy` for every mode; the curatorial mode simply doesn't
+`mcr.microsoft.com/playwright:v1.63.0-jammy` for every mode; the curatorial mode simply doesn't
 start a browser.
 
 ```powershell
@@ -65,7 +65,7 @@ $env:LEGACY_DATABASE_PATH = "E:\inventory\inventory-app\.legacy-database"
 $env:LEGACY_CODE_PATH = "E:\inventory\inventory-app\.legacy-code"
 ```
 
-`node_modules` lives in the `parity-modules` volume. The entry point runs `npm ci --omit=dev`
+`node_modules` lives in the `parity-modules` volume. The entry point runs `npm ci`
 whenever `package-lock.json` changes.
 
 With a warm cache, the time goes into reading the cache from the host disk. Measured on
@@ -358,15 +358,16 @@ count moves, and a new baseline is due.
 
 ## Development
 
-`playwright` is pinned to the image's version, 1.47.2. Its browsers come from the image, so the
-two only ever move together: change the `image:` line in `compose.yml` and the pin in
-`package.json` in the same PR. Dependabot leaves `playwright` alone for that reason.
+`playwright` is pinned to the image's version, 1.63.0; 1.55.1 and later fix GHSA-7mvr-c777-76hp.
+Its browsers come from the image, so the two only ever move together: change the `image:` line
+in `compose.yml` and the pin in `package.json` in the same PR. Dependabot leaves `playwright`
+alone for that reason. The image ships Node 24.
 
-Lint and tests run on Node 24. ESLint 10 needs a newer Node than the Playwright image ships, so
-they don't run in the parity service. CI runs both (`parity-validation`). Locally:
+CI runs lint and the tests (`parity-validation`). Locally:
 
 ```powershell
-docker run --rm -v "${PWD}/scripts/parity:/p" -v /p/node_modules -w /p node:24-alpine sh -c "npm ci && npm run lint:check && npm test"
+docker compose run --rm parity npm run lint:check
+docker compose run --rm parity npm test
 ```
 
 The tests cover the package gates and the baseline gate, with no network. The comparison
