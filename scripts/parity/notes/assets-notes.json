@@ -1,0 +1,9 @@
+[
+  "No new site has a favicon: none is declared, and /favicon.ico answers 404, so every tab shows the browser's default icon (legacy: the MWNF 'M').",
+  "The MWNF logo image is on no new site (every gallery, exhibition and standalone site had it); the header shows a 'MWNF' text box instead.",
+  "Galleries: the three 'Other Virtual Museums' picture banners (Discover Islamic Art, Discover Baroque Art, Sharing History) are replaced by flat colour blocks on all 37 sites.",
+  "Exhibitions: the home page shows the gallery banner (banner.jpg) instead of legacy's composed home image (home_image.jpg), although exhibition.json ships homepage_image_path.",
+  "Islamic Art, Baroque Art and Sharing History keep none of their chrome: logos, picture banners, sponsor marks (EU / Euromed, Gulbenkian, Barakat, League of Arab States), Sharing History's exhibition home images and its historical-background slider.",
+  "Glass loses its 'United Nations International Year of Glass' logo; Explore loses its two logos, home banners and theme/itinerary background pictures.",
+  "Still served by legacy: every gallery's banner and tiles, the hub's tiles and the exhibition banners come from images.museumwnf.org; they break when that server is retired."
+]

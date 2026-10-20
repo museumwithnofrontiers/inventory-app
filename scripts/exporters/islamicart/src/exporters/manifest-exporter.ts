@@ -34,13 +34,23 @@ export interface ProjectEntry {
 }
 
 /**
+ * The languages legacy's Discover Islamic Art switcher offers. The site never
+ * offers a language outside it: legacy holds stray translation rows in other
+ * languages (an EPM row carrying nothing but a placeholder name), and a single
+ * such row would otherwise put a language in the switcher that has neither the
+ * site's texts nor its records.
+ */
+export const LEGACY_SITE_LANGUAGES: readonly string[] = ['ar', 'de', 'el', 'en', 'es', 'fr', 'it', 'pt', 'se', 'tr']
+
+/**
  * `manifest.json` — what this package is and when it was made, and the one
  * thing a website reads before it mounts.
  *
  * `languages` lists every language in the database, as it always has. `site`
- * is what the website's `dataset.config.js` needs at boot: the languages the
- * exported items actually carry a translation in, in switcher order, each
- * with its native label, and the name of the primary project per language.
+ * is what the website's `dataset.config.js` needs at boot: the languages of
+ * legacy's switcher that the exported items actually carry a translation in,
+ * in switcher order, each with its native label, and the name of the primary
+ * project per language.
  */
 export class ManifestExporter extends BaseExporter {
   getName(): string {
@@ -87,8 +97,8 @@ export class ManifestExporter extends BaseExporter {
   }
 
   /**
-   * The languages at least one exported item is translated in, as the
-   * switcher shows them: the code and the language's own name for itself
+   * The languages of legacy's switcher that at least one exported item is
+   * translated in, as the switcher shows them: the code and the language's own name for itself
    * (`language_translations` where the display language is the language), the
    * code in capitals where the table has none. Alphabetical by code, which is
    * the order these websites have always used.
@@ -106,6 +116,7 @@ export class ManifestExporter extends BaseExporter {
       this.projectIds
     )
     return rows
+      .filter(row => LEGACY_SITE_LANGUAGES.includes(row.code))
       .map(row => ({ code: row.code, label: row.name || row.code.toUpperCase() }))
       .sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0))
   }

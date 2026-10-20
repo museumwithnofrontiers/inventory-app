@@ -50,7 +50,8 @@ updates:
       node-prod-dependencies:
         dependency-type: "production"
 
-  # Node tooling directly under scripts/ — currently importer and site-i18n.
+  # Node tooling directly under scripts/ — currently importer, site-i18n and
+  # parity.
   #
   # Listed rather than globbed, and this is the one place the glob scheme does
   # not reach. `/scripts/*` here made the WHOLE FILE invalid: Dependabot
@@ -70,6 +71,7 @@ updates:
     directories:
       - "/scripts/importer"
       - "/scripts/site-i18n"
+      - "/scripts/parity"
     schedule:
       interval: "weekly"
     labels:
@@ -86,6 +88,11 @@ updates:
     ignore:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
+      # scripts/parity pins playwright to the browsers of its image
+      # (mcr.microsoft.com/playwright:v1.63.0-jammy in compose.yml). A bump on
+      # its own would launch browsers the image doesn't have, so the two move
+      # together, by hand.
+      - dependency-name: "playwright"
 
   # Dataset exporters. Public npm registry only: exporters read the database and
   # write JSON, they do not consume any @metanull package. Keep this entry free

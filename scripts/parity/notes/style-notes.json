@@ -1,0 +1,41 @@
+{
+  "Galleries (all 37 share it)": [
+    "Logo: legacy shows the MWNF logo image; the new header shows a boxed 'MWNF' text.",
+    "Home banner: legacy reads 'Discover MWNF Galleries' over 'Discover Carpet Art'; the new one reads 'Carpets' with no line above.",
+    "Featured Partners: legacy paints the band in the gallery's second colour (olive on Carpets, light blue on Precious Stones) with white text; the new band takes the page background.",
+    "Gallery tiles: legacy overlays the name in capitals on the picture; the new tiles put it below in bold.",
+    "Other Virtual Museums: legacy uses picture banners; the new page uses flat colour blocks (DIA / DBA / SH).",
+    "Footer: the social-network icons are gone.",
+    "Inner pages: the menu sits below the banner instead of above it, and the banner's 'Detail from …' caption is gone.",
+    "Item sheet: legacy is three columns with the coloured Related Content sidebar; the new sheet puts a large image left and related content below, on white.",
+    "Item sheet: labels change from 'Name of Object:' in black bold to 'Name' in the accent colour; the internal key (mwnf3:objects:…) is shown to visitors; the burned © caption is oversized.",
+    "Partner page: content touches the left edge (no gutter), the language bar appears twice, and the map was blank when captured."
+  ],
+  "Exhibitions": [
+    "The welcome popup prints raw Markdown ('****Welcome…**', an empty '[email]()' link) and opens on every page.",
+    "Logo: the boxed 'MWNF' text replaces the logo image, as in the galleries; the title 'A MWNF Online Exhibition' loses legacy's outlined style.",
+    "Legacy's Water in Islam home is still the pre-launch teaser with a countdown that has gone negative.",
+    "The Hijaz Railway can't be compared: legacy answers 403."
+  ],
+  "Islamic Art, Baroque Art, Sharing History": [
+    "The home pages are a different design: legacy opens with a full-width picture banner (calligraphy for Islamic Art, the 1815–1918 print for Sharing History); the new homes have no picture banner and use a grid of cards with blurbs.",
+    "Those blurbs ('Welcome to Islamic Art', 'Search the full inventory by name…') appear nowhere on legacy; they come from viewer-i18n's standalone dictionary and each site's locales file.",
+    "The MWNF logo is gone; the title becomes 'ISLAMIC ART' instead of 'Discover Islamic Art'.",
+    "Sharing History's ten exhibition tiles are gone from the home page.",
+    "Sponsor bands are gone: EU / Euromed, Gulbenkian, Barakat on Islamic Art; cooperation partners and strategic sponsors on Sharing History.",
+    "Item sheets: legacy is three columns with a coloured Related Content sidebar and a picture banner; the new sheets are one column with a field table and no banner.",
+    "Islamic Art's side links (Recommended Links, Credits, Mission Statement) and the Islamic Dynasties menu entry are gone."
+  ],
+  "Galleries hub": [
+    "The 'Welcome to MWNF Galleries' picture banner and the logo are gone; the header is text only.",
+    "Section order changes: legacy opens with Featured Partners on a slate band; the new page puts the galleries first and Featured Partners last, on the page grey.",
+    "An introduction sentence ('Discover MWNF Galleries: artefacts gathered by medium…') appears that legacy's home does not show.",
+    "Gallery tiles and Other Virtual Museums change as on the gallery sites; the footer's social icons are gone."
+  ],
+  "Explore": [
+    "Same sections in the same order, so this is the closest standalone match.",
+    "The 'Explore with MWNF' logo badge is gone; the hero shows another picture under the title 'EXPLORE with MWNF' instead of 'Explore'.",
+    "Theme cards: legacy uses full-picture cards with a 'NEW' ribbon and the text over the picture; the new cards are white with the picture above.",
+    "The country map is OpenStreetMap instead of Google satellite, and a grid of country flags follows it."
+  ]
+}

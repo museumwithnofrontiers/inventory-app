@@ -1,0 +1,29 @@
+// node tools/jobs-static.mjs — the static pages of every site, legacy and new.
+import { readFileSync, writeFileSync } from 'node:fs';
+import { OUT } from './lib/paths.mjs';
+const sites = JSON.parse(readFileSync(`${OUT}/sitemap.json`, 'utf8')).sites;
+const jobs = [];
+const pair = (s, page, legacyPath, newPath) => {
+  if (legacyPath !== null && s.legacyUrl) jobs.push({ id: `${s.slug}--${page}--legacy`, url: legacyPath, slug: s.slug, page, side: 'legacy' });
+  if (newPath !== null) jobs.push({ id: `${s.slug}--${page}--new`, url: newPath, slug: s.slug, page, side: 'new' });
+};
+for (const s of sites) {
+  const L = (s.legacyUrl ?? '').replace(/\/$/, '');
+  const N = `${s.newUrl}#`;
+  if (s.kind === 'gallery') for (const p of ['about', 'credits', 'how-to-search']) pair(s, p, `${L}/${p}`, `${N}/${p}`);
+  if (s.kind === 'exhibition') for (const p of ['about', 'credits', 'related']) pair(s, p, s.slug === 'the-hijaz-railway' ? null : `${L}/${p}`, `${N}/${p}`);
+  if (s.slug === 'galleries') for (const p of ['about', 'credits']) pair(s, p, `${L}/${p}`, `${N}/${p}`);
+  if (s.slug === 'explore') for (const p of ['about', 'credits', 'get-involved', 'important-information', 'new']) pair(s, p, `${L}/${p}`, `${N}/${p}`);
+  if (['islamicart', 'baroqueart', 'sharinghistory'].includes(s.slug)) {
+    // Legacy: the home page and the static pages it links to (crawled); new: the home page.
+    jobs.push({ id: `${s.slug}--home--legacy`, url: `${L}/index.php`, slug: s.slug, page: 'home', side: 'legacy', crawl: true });
+    jobs.push({ id: `${s.slug}--home--new`, url: `${N}/`, slug: s.slug, page: 'home', side: 'new' });
+  } else {
+    // Home pages carry the footer links.
+    pair(s, 'home', s.legacyUrl, `${N}/`);
+  }
+}
+writeFileSync(`${OUT}/jobs-static.json`, JSON.stringify(jobs, null, 1));
+writeFileSync(`${OUT}/jobs-static-a.json`, JSON.stringify(jobs.filter((_, i) => i % 2 === 0)));
+writeFileSync(`${OUT}/jobs-static-b.json`, JSON.stringify(jobs.filter((_, i) => i % 2 === 1)));
+console.log(`${jobs.length} static jobs`);
