@@ -517,6 +517,12 @@ export class ItemExporter extends BaseExporter {
         copyright: extra?.copyright ?? null,
         catalogue_holding_link: extra?.catalogue_holding_link ?? null,
         linkcatalogs: extra?.linkcatalogs ?? null,
+        // The Material(s) / Technique(s) line as the record writes it, which
+        // legacy prints: one entry, in the language's own spelling. Same shape
+        // as Islamic Art's.
+        materials: extra?.materials ? [extra.materials] : [],
+        // The keywords column as the record writes it, same shape.
+        keywords: extra?.keywords ? [extra.keywords] : [],
         author: ownRow.author_name,
         copy_editor: ownRow.copy_editor_name,
         translator: ownRow.translator_name,

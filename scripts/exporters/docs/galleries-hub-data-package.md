@@ -113,16 +113,19 @@ Every gallery under the galleries root that legacy shows, as an array:
 ```
 
 **Which galleries:** the children of the collection whose `purpose` is
-`galleries-root`, of type `gallery`, whose `thg_gallery.status` is `A`.
+`galleries-root`, of type `gallery`, that have a website: an instance file in
+`scripts/exporters/instances/` names the collection. Legacy's
+`thg_gallery.status` is not imported: it is runtime state, not curatorial data
+(Pascal, 2026-10-20, #2233).
 - On staging that's 37 of 42.
-- The 5 hidden ones are legacy's `excluded`, `galleries` (the hub itself),
-  `curiosities`, `unclear` and `doubts`.
+- The 5 left out have no site: legacy's `excluded`, `galleries` (the hub
+  itself), `curiosities`, `unclear` and `doubts`.
 - Exhibitions sit under their own root and are not listed, as on legacy.
 
 **Fields:** they are exactly those of a gallery package's `sibling_galleries`
 (`GalleryExporter.exportSiblings`), with the same sources:
 - the anchor `collections.extra.thg_gallery`: `slug`, `host`;
-- the chrome `collection_translations.extra.thg_gallery`: `image`, `featured`, `status`, `live_date`;
+- the chrome `collection_translations.extra.thg_gallery`: `image`, `featured`, `live_date`;
 - names from `collection_translations.title`.
 
 `languages` is the key set of `names`, the same derivation as a gallery

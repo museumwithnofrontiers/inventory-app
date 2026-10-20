@@ -127,4 +127,19 @@ describe('ItemExporter — materials', () => {
 
     expect(readEnglish().materials).toEqual([])
   })
+
+  // #2233 C23: the keywords follow the same rule as the materials.
+  it("carries the record's own keywords column, as one entry", async () => {
+    const db = stubDb([translationRow('eng', { keywords: 'Metalwork; niello; Mamluk.' })])
+    await new ItemExporter(context(db)).export()
+
+    expect(readEnglish().keywords).toEqual(['Metalwork; niello; Mamluk.'])
+  })
+
+  it('carries no keywords when the record has none', async () => {
+    const db = stubDb([translationRow('eng', null)])
+    await new ItemExporter(context(db)).export()
+
+    expect(readEnglish().keywords).toEqual([])
+  })
 })

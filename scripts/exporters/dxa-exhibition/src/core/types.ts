@@ -32,9 +32,8 @@ export interface ExhibitionChrome {
   homepage_item?: string
   has_timeline?: unknown
   has_country_timeline?: unknown
-  /** Legacy 'A'/'H' flags — see Exhibition.isFeatured / isHidden for the mapping. */
+  /** Legacy 'A'/'H' flag — see Exhibition.isFeatured for the mapping. */
   featured?: string
-  status?: string
   live_date?: string
 }
 

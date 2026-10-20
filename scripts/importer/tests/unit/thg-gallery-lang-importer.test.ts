@@ -214,7 +214,9 @@ describe('ThgGalleryLangImporter', () => {
     const call = writeCollectionTranslationMock.mock.calls[0][0] as Record<string, unknown>;
     expect(call.extra).toBeDefined();
     const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-    expect(extra.thg_gallery).toMatchObject({ image: 'header.jpg', has_timeline: true, status: 'A' });
+    expect(extra.thg_gallery).toMatchObject({ image: 'header.jpg', has_timeline: true });
+    // Legacy's live/hidden status is the old sites' runtime state: not imported.
+    expect(extra.thg_gallery).not.toHaveProperty('status');
     expect((extra.thg_gallery as Record<string, unknown>).banner_image).toBeUndefined();
   });
 

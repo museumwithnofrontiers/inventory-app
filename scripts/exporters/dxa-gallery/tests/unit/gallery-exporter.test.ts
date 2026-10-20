@@ -72,6 +72,39 @@ describe('GalleryExporter — project_id', () => {
     expect(output.project_id).toBe('dca-project-uuid')
   })
 
+  it('hides a sibling gallery with no website, whatever legacy status it had', async () => {
+    const sibling = (id: string, legacyId: number) => ({
+      id,
+      backward_compatibility: `mwnf3_thematic_gallery:thg_gallery:${legacyId}`,
+      extra: { thg_gallery: { slug: id } },
+    })
+    const db = {
+      query: async (sql: string) => {
+        if (sql.includes('FROM collections')) {
+          return [sibling('glass-uuid', 18), sibling('doubts-uuid', 43)]
+        }
+        if (sql.includes('extra IS NOT NULL')) {
+          // A database imported before status was dropped still holds it: not read.
+          return [
+            { collection_id: 'glass-uuid', extra: { thg_gallery: { status: 'H', featured: 'A' } } },
+            { collection_id: 'doubts-uuid', extra: { thg_gallery: { status: 'A' } } },
+          ]
+        }
+        return []
+      },
+    } as unknown as Database
+    await new GalleryExporter({
+      ...context(db),
+      siteCollectionIds: new Set(['gallery-uuid', 'glass-uuid']),
+    }).export()
+
+    const output = readOutput()
+    expect(output.hidden).toBe(false)
+    const siblings = output.sibling_galleries as Array<Record<string, unknown>>
+    expect(siblings.map(s => s.id)).toEqual(['glass-uuid'])
+    expect(siblings[0]).toMatchObject({ hidden: false, featured: true })
+  })
+
   it('reports null project_id for a gallery with no mwnf3 project', async () => {
     const noProjectGallery: Gallery = { ...gallery, mwnf3ProjectId: null, projectId: null }
     const db = stubDb()

@@ -373,21 +373,6 @@ export class ItemExporter extends BaseExporter {
       translationsByItemLang.get(key)!.push(t)
     }
 
-    // item_id -> lang_code -> { keyword -> labels[] }: the sheet's keyword
-    // line, in the page's language. These tags are language-scoped, one row
-    // per language.
-    const sheetTags = new Map<string, Map<string, Map<string, string[]>>>()
-    for (const row of tagLinks) {
-      if (row.category !== 'keyword') continue
-      const code = row.language_id ? langCodeMap.get(row.language_id) : undefined
-      if (!code) continue
-      const byLang = sheetTags.get(row.item_id) ?? new Map<string, Map<string, string[]>>()
-      sheetTags.set(row.item_id, byLang)
-      const byCategory = byLang.get(code) ?? new Map<string, string[]>()
-      byLang.set(code, byCategory)
-      byCategory.set(row.category, [...(byCategory.get(row.category) ?? []), row.tag])
-    }
-
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const [key, rows] of translationsByItemLang) {
       const sep = key.indexOf(' ')
@@ -447,7 +432,10 @@ export class ItemExporter extends BaseExporter {
         // legacy prints. The material tags are shared across records and gather
         // every material tag on the item, so they print terms the record doesn't have.
         materials: extra?.materials ? [extra.materials] : [],
-        keywords: sheetTags.get(itemId)?.get(code)?.get('keyword') ?? [],
+        // The keywords column as the record writes it, in the page's language:
+        // the shared keyword tags give every record one spelling ("Marmól" for
+        // "Mármol") and lose the Arabic list separator.
+        keywords: extra?.keywords ? [extra.keywords] : [],
         author: ownRow.author_name,
         copy_editor: ownRow.copy_editor_name,
         translator: ownRow.translator_name,

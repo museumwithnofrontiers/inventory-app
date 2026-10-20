@@ -55,6 +55,7 @@ export function context(db: Database, outputDir: string): ExportContext {
     hub: { id: 'hub-uuid', backwardCompatibility: 'mwnf3_thematic_gallery:thg_gallery:45' },
     siteKey: 'galleries',
     partnerProjectId: 'galleries-project-uuid',
+    siteCollectionIds: new Set(['carpets', 'amulets']),
     baseUrl: 'https://example.test',
     logger: silentLogger,
   }

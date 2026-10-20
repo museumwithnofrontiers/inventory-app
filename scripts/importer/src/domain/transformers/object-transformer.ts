@@ -302,6 +302,10 @@ export function transformObjectTranslation(
   // merged with other tags on the item, so they can't stand in for it. Same
   // key as the Sharing History transformer.
   if (obj.materials?.trim()) extraData.materials = convertHtmlToMarkdown(obj.materials);
+  // The keywords column as this row writes it, for the same reason: the
+  // keyword tags give every record one spelling and lose the Arabic list
+  // separator.
+  if (obj.keywords?.trim()) extraData.keywords = convertHtmlToMarkdown(obj.keywords);
   // The artist's life data as this language's sheet prints it after the
   // artist line. Legacy keeps it per object and per language (one language
   // may hold it all in the birth date), so the shared Artist record, which
