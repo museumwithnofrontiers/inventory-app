@@ -7,7 +7,7 @@ import { transformShMonumentTranslation } from '../../src/domain/transformers/sh
 // a line of its own, beside the English one: "Holding Institution (original
 // language)" on an object, "Responsible Institution (original language)" on a
 // monument. The import keeps both names (Pascal, 2026-10-21).
-const extraOf = (result: { data: { extra: string | null } } | null) =>
+const extraOf = (result: { data: { extra?: string | null } } | null) =>
   JSON.parse(result?.data.extra ?? '{}') as Record<string, unknown>;
 
 describe('SH institution names in their own language', () => {
