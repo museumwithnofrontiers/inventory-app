@@ -212,6 +212,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'section.partners': 'sh_pm_partners',
       'section.historicalBackground': 'sh_historical_background',
       'section.bibliography': 'sh_menu_bibliography',
+      // The item sheet's institution lines (modules/database_item.php): an
+      // object's holding institution in its own language, a monument's
+      // institution and its responsible institution in its own language.
+      'sheet.holdingInstitutionOriginal': 'sh_db_holdinginstitutionorg',
+      'sheet.institution': 'sh_db_institution',
+      'sheet.responsibleInstitutionOriginal': 'sh_db_responsibleinstitutionorg',
       // The footer (includes/footer.php); the year follows the copyright.
       'footer.aboutMwnf': 'footer1',
       'footer.contact': 'footer2',

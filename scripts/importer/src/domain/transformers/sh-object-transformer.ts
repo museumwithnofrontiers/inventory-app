@@ -210,6 +210,12 @@ export function transformShObjectTranslation(
   if (text.datationmethod) extra.datation_method = convertHtmlToMarkdown(text.datationmethod);
   if (text.provenancemethod) extra.provenance_method = convertHtmlToMarkdown(text.provenancemethod);
   if (text.obtentionmethod) extra.obtention_method = convertHtmlToMarkdown(text.obtentionmethod);
+  // Legacy prints the holding institution's name in its own language as a
+  // line of its own ("Holding Institution (original language)"), beside the
+  // English name `holder` carries; kept whole, as legacy stores it.
+  if (text.holding_institution_org) {
+    extra.holding_institution_org = convertHtmlToMarkdown(text.holding_institution_org);
+  }
   if (text.notice) extra.notice = convertHtmlToMarkdown(text.notice);
   if (text.notice_c) extra.notice_c = convertHtmlToMarkdown(text.notice_c);
   // `notice_b` is the rights statement here too — every one of its values is a
