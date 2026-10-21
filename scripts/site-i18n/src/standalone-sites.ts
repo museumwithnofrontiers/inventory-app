@@ -118,6 +118,29 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     // of its words are never printed.
     languages: ['en'],
     words: {
+      // The page title, and the heading over every inner page (header_bottom.php).
+      'identity.title': 'dba_gn_meta_title',
+      'identity.heading': 'db_partner_BAR',
+      // The header's links (dbaTemplates/header.php, includes/header_bottom.php).
+      'nav.portal': 'portal_link',
+      'nav.home': 'back_to_section',
+      // The menu (index.php, includes/header_bottom.php), in its order.
+      'nav.permanentCollection': 'home_permanentcollection',
+      'nav.database': 'home_database',
+      'nav.exhibitions': 'home_exhibitions',
+      'nav.partners': 'home_partnermuseums',
+      'nav.timeline': 'timeline_header',
+      'nav.myCollection': 'my_museum',
+      // The banner over each section (SectionTitle() on each page).
+      'section.permanentCollection': 'museum_home_pc',
+      'section.database': 'museum_home_db',
+      'section.partners': 'museum_home_pm_partners',
+      // The home page's left column (dbaTemplates/leftLink.php): one link.
+      'home.credits': 'footer4',
+      // Today's highlight (dbaTemplates/randomText.php).
+      'home.highlight': 'index_today',
+      'home.alsoKnownAs': 'db_alsoknowas',
+      'home.viewDescription': 'view_description',
       // The footer's copyright line (includes/footer.php); the year follows it.
       'footer.copyright': 'footer5',
       // The home page's band (dbaTemplates/bottomSection1.php): the two words
