@@ -529,12 +529,18 @@ export class ItemExporter extends BaseExporter {
 
     for (const picture of pictureItems) {
       const perLanguage = byPicture.get(picture.picture_id) ?? {}
-      // photographer/copyright are not language-specific; take the first present.
+      // Legacy keeps a picture's credits per language, like its caption, and prints only the
+      // page language's. The flat photographer/copyright (first language found) stay for the
+      // viewers that don't read the per-language maps yet.
       const first = Object.values(perLanguage)[0]
 
       const captions: Record<string, string> = {}
+      const photographers: Record<string, string> = {}
+      const copyrights: Record<string, string> = {}
       for (const [language, fields] of Object.entries(perLanguage)) {
         if (fields.caption) captions[language] = fields.caption
+        if (fields.photographer) photographers[language] = fields.photographer
+        if (fields.copyright) copyrights[language] = fields.copyright
       }
 
       const entry = {
@@ -542,6 +548,8 @@ export class ItemExporter extends BaseExporter {
         display_order: picture.display_order,
         alt_text: picture.alt_text,
         captions,
+        photographers,
+        copyrights,
         photographer: first?.photographer ?? null,
         copyright: first?.copyright ?? null,
       }

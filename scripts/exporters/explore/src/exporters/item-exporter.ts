@@ -470,19 +470,27 @@ export class ItemExporter extends BaseExporter {
       if (!imageMap.has(pic.item_id)) imageMap.set(pic.item_id, [])
       const perLang = picTransMap.get(pic.picture_id) ?? {}
 
-      // photographer/copyright are not language-specific; pick from first available lang
+      // Legacy keeps a picture's credits per language, like its caption, and prints only the
+      // page language's. The flat photographer/copyright (first language found) stay for the
+      // viewers that don't read the per-language maps yet.
       const firstLang = Object.values(perLang)[0]
 
-      // Captions keyed by lang code — skip langs with no caption text
+      // Captions and credits keyed by lang code — skip langs with no text
       const captions: Record<string, string> = {}
+      const photographers: Record<string, string> = {}
+      const copyrights: Record<string, string> = {}
       for (const [lang, t] of Object.entries(perLang)) {
         if (t.caption) captions[lang] = t.caption
+        if (t.photographer) photographers[lang] = t.photographer
+        if (t.copyright) copyrights[lang] = t.copyright
       }
 
       imageMap.get(pic.item_id)!.push({
         url: this.imageUrl(pic.path),
         display_order: pic.display_order,
         captions,
+        photographers,
+        copyrights,
         photographer: firstLang?.photographer ?? null,
         copyright: firstLang?.copyright ?? null,
       })
@@ -603,6 +611,8 @@ interface ImageEntry {
   url: string
   display_order: number | null
   captions: Record<string, string>
+  photographers: Record<string, string>
+  copyrights: Record<string, string>
   photographer: string | null
   copyright: string | null
 }
