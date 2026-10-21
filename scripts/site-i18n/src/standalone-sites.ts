@@ -187,7 +187,7 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       // The page title; the heading and its line over every inner page, and
       // over the home page's picture (includes/header_bottom.php,
       // shTemplates/bannerText.php).
-      'identity.title': 'sh_gn_meta_title',
+      'identity.pageTitle': 'sh_gn_meta_title',
       'identity.heading': 'sh_home_heading1',
       'identity.subheading': 'sh_home_heading2',
       // The header's links (shTemplates/header.php, includes/header_bottom.php).
@@ -196,12 +196,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       // The menu (shTemplates/menuSH.php), in its order, with its drop-downs.
       'nav.introduction': 'sh_menu_introduction',
       'nav.aboutProject': 'sh_about_project',
-      'nav.aboutHistoricalBackground': 'sh_about_hb',
+      'nav.historicalBackground': 'sh_about_hb',
       'nav.exhibitions': 'home_exhibitions',
       'nav.permanentCollection': 'sh_home_pc',
       'nav.database': 'home_database',
       'nav.timeline': 'sh_menu_timeline',
-      'nav.historicalBackground': 'sh_menu_hb',
+      'nav.historicalProfiles': 'sh_menu_hb',
       'nav.partners': 'sh_home_partners',
       'nav.myCollection': 'my_museum',
       // The home page's exhibitions (shTemplates/exhibitionListImg.php).
