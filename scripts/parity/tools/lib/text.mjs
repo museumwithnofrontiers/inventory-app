@@ -74,6 +74,12 @@ export function compare(legacyRaw, pkgRaw, { legacyFrom = 'html', pkgFrom = 'mar
   return { verdict: 'different', legacy: a, pkg: b, similarity: similarity(flatten(a), flatten(b)) };
 }
 
+// Legacy's PHP sheets print a list of names on one line, joined with ", ", and a name can hold a
+// comma itself ("Jenig, clockmaker"). The package keeps each name whole, so compare the joined line.
+export function compareJoined(legacyRaw, names) {
+  return compare(legacyRaw, (names ?? []).join(', '));
+}
+
 // Token-set overlap (Dice on words); good enough to rank how different two texts are.
 export function similarity(a, b) {
   const ta = a.split(/\W+/u).filter(Boolean);

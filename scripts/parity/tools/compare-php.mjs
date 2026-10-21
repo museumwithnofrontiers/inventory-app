@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { get, stats } from './lib/http.mjs';
 import { loadPackage } from './lib/pkg.mjs';
 import { Report } from './lib/report.mjs';
-import { compare, flatten, normalise, splitList } from './lib/text.mjs';
+import { compare, compareJoined, flatten, normalise, splitList } from './lib/text.mjs';
 import { PHP_SITES, idFromKey, imageNumbers, labelIndex, legacyRecords, pageUrl as pageUrlOn, parsePage } from './legacy-php.mjs';
 import { checkImageUrls } from './lib/images.mjs';
 import { OUT } from './lib/paths.mjs';
@@ -171,11 +171,13 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         if (tr.artist !== undefined || cfg.sh) R.field('item', 'artist', artistWithLife(s.html, tr), where);
         else if (first) {
           // The page prints the artist's life data after the name: "Georg Petel (1601/2, Weilheim-1634/5, Augsburg)".
-          let r3 = listCompare(s.html.replace(/,/g, ';'), it.artist_names, true);
+          // The whole line first: a name can hold a comma ("Jenig, clockmaker"). Then entry by entry, for another order.
+          const byLine = compareJoined(s.html, it.artist_names);
+          let r3 = byLine.verdict === 'different' ? listCompare(s.html.replace(/,/g, ';'), it.artist_names, true) : byLine;
           let bare = normalise(s.html);
           // Drop the parenthesised groups that hold dates ("(1698 Unter Peissenberg – 1780(?) Baden)"), keep "(painter)".
           bare = bare.replace(/\s*\((?:[^()]|\([^()]*\))*\d(?:[^()]|\([^()]*\))*\)/g, '');
-          if (r3.verdict === 'different' && listCompare(bare.replace(/,/g, ';'), it.artist_names, true).verdict.match(/same|format/)) r3 = { ...r3, why: 'artist life data (birth/death) not in the package' };
+          if (r3.verdict === 'different' && [compareJoined(bare, it.artist_names), listCompare(bare.replace(/,/g, ';'), it.artist_names, true)].some((r) => /same|format/.test(r.verdict))) r3 = { ...r3, why: 'artist life data (birth/death) not in the package' };
           R.field('item', 'artist', r3, key);
         }
       } else if (s.term === 'db_museumnumberforobject' || s.term === 'db_invnumberforobject') {
