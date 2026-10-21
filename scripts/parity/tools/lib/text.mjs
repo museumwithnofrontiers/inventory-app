@@ -76,8 +76,19 @@ export function compare(legacyRaw, pkgRaw, { legacyFrom = 'html', pkgFrom = 'mar
 
 // Legacy's PHP sheets print a list of names on one line, joined with ", ", and a name can hold a
 // comma itself ("Jenig, clockmaker"). The package keeps each name whole, so compare the joined line.
+// Legacy has no explicit order for the names (they print as typed) and the package sorts them, so
+// the same names in another order are a format difference only.
 export function compareJoined(legacyRaw, names) {
-  return compare(legacyRaw, (names ?? []).join(', '));
+  const r = compare(legacyRaw, (names ?? []).join(', '));
+  if (r.verdict !== 'different' || (names ?? []).length < 2) return r;
+  let rest = flatten(normalise(legacyRaw));
+  const flat = names.map((n) => flatten(normalise(n, { from: 'markdown' }))).sort((a, b) => b.length - a.length);
+  for (const n of flat) {
+    const i = rest.indexOf(n);
+    if (!n || i < 0) return r;
+    rest = `${rest.slice(0, i)} ${rest.slice(i + n.length)}`;
+  }
+  return /^[\s,;]*$/.test(rest) ? { verdict: 'format', legacy: r.legacy, pkg: r.pkg, why: 'same entries, other order' } : r;
 }
 
 // Token-set overlap (Dice on words); good enough to rank how different two texts are.
