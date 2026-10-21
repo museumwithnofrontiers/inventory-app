@@ -297,6 +297,14 @@ Its `diff-runs.md` is the gate's verdict on 2026-10-18 → 2026-10-19. The total
 34 regressions: 26 fields and 8 record sets. 14 of those fields are `item.bibliography`, on 14
 sites. The gate would have flagged every one of them before the publish.
 
+`baselines/2026-10-21` is the run after reimport 2 (#2240, #2250), on the package versions in its
+`sitemap.md`: 4,128 real differences. Its `diff-runs.md` lists two regressions against 2026-10-19,
+both accepted:
+- **arts-in-dialogue `site.hidden`:** legacy hides the site through `status`, which is no longer
+  imported. A gallery with a site is visible (decision of 2026-10-20).
+- **baroqueart `item.artist`:** most are artist life data the tool doesn't read from the package.
+  The rest are the same names joined with "," where legacy uses ";", an exporter follow-up.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
