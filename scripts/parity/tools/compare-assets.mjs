@@ -45,6 +45,9 @@ function role(u) {
   if (u.how === 'icon') return 'favicon';
   if (/logo/.test(url) || /logo|mwnf/i.test(u.alt) || (u.region === 'header' && u.w <= 260 && u.h <= 120)) return 'logo';
   if (/thg_galleries\/\d+\/1\.jpg/.test(url)) return 'gallery tile';
+  // The new sites bundle the same tile from their own assets (theme/assets/chrome/…/thg_galleries/<n>/1.jpg),
+  // fingerprinted by the build to assets/1-<hash>.jpg, the gallery's name as its alt text.
+  if (/\/assets\/1-[\w-]+\.jpe?g$/.test(url) && u.alt) return 'gallery tile';
   if (/banner|home_image|hero/.test(url) || ((u.region === 'header' || u.region === 'banner') && u.w >= 700)) return 'banner';
   if (u.how === 'css') return 'background';
   if (u.region === 'footer' || /sponsor|partner|logos?\//.test(url)) return 'sponsor / partner mark';
@@ -92,7 +95,9 @@ for (const s of sites) {
     if (!best && a.role === 'gallery tile' && N.some((b) => b.role === 'gallery tile')) return { role: a.role, legacy: a, match: null, random: true };
     return { role: a.role, legacy: a, match: best ? { file: best.b.file, url: best.b.url, identical: best.same, distance: best.d, thumb: best.b.thumb, w: best.b.w, h: best.b.h, size: best.b.hash ? `${best.b.hash.w}×${best.b.hash.h}` : '' } : null };
   });
-  const added = N.filter((b) => !used.has(b.file) && !/inventory\.metanull\.eu\/pub\//.test(b.url));
+  // A random tile on the new side is not an addition when legacy shows random tiles too.
+  const randomTiles = rows.some((r) => r.random);
+  const added = N.filter((b) => !used.has(b.file) && !/inventory\.metanull\.eu\/pub\//.test(b.url) && !(randomTiles && b.role === 'gallery tile'));
   result.push({
     slug: s.slug, kind: s.kind, title: s.title,
     rows, added,
