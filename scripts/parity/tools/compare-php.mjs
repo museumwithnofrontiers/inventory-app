@@ -211,8 +211,12 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       if (term === 'db_workingnumber' && first) R.field('item', 'mwnf_reference', compare(names[0], it.mwnf_reference, { pkgFrom: 'html' }), key);
     }
     for (const role of ['author', 'copy_editor', 'translator', 'translation_copy_editor']) {
-      const r2 = compare(credits[role], tr[role]);
+      let r2 = compare(credits[role], tr[role]);
       const names = (credits[role] ?? '').split(', ');
+      // Legacy's credit query joins every CV the author has in the page's language, whatever its
+      // project, so an author with two such CVs is printed twice ("António Pacheco, António Pacheco").
+      const once = [...new Set(names.map((n) => n.replace(/\.$/, '')))];
+      if (r2.verdict === 'different' && once.length < names.length && ['same', 'format'].includes(compare(once.join(', '), tr[role]).verdict)) r2 = { ...r2, verdict: 'expected:legacy prints an author once per CV row' };
       if (r2.verdict === 'different' && lang === 'ar') r2.why = 'Arabic page prints the original spelling';
       else if (r2.verdict === 'extra-in-package' && lang === 'ar') r2.why = 'Arabic page omits a credit that has no Arabic spelling';
       else if (r2.verdict === 'different' && names.length > 1 && flatten(normalise(tr[role] ?? '', { from: 'markdown' })) === flatten(names[0])) r2.why = 'package keeps only the first of several names';

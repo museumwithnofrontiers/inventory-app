@@ -347,6 +347,9 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
 - dxa-api's credit query keeps an author only when they have no CV in the project or one in the
   page's language. An author with CVs in other languages only drops out of that page's credits,
   although `authors_objects` credits them there. `lib/credits-cv.mjs` finds these in the dump.
+- The PHP sheets' credit query joins every CV the author has in the page's language, whatever
+  its project, so an author with two such CVs is printed twice ("António Pacheco, António
+  Pacheco"). The package names them once.
 - dxa-api answers some partners in English whatever language is asked.
 - Some related-record links point at records that don't exist.
 - The PHP pages print the Location line with the country name at the end (`format`: "page adds
