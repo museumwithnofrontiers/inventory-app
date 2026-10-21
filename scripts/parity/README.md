@@ -311,6 +311,13 @@ differences, no regressions. Baroque Art `item.artist` is down to 212, of which 
 data. A name that holds a comma is compared whole, and the same names in another order count as a
 format difference: legacy prints them as typed, with no explicit order.
 
+`baselines/2026-10-22` is the run on the packages published after #2294 (per-language picture
+credits; Arabic-only credits on the PHP sites), measured with the tool as of #2299: 3,503 real
+differences, no regressions. The fall comes from the rule of 2026-10-21 (display only what legacy
+displays) and the tool fixes behind it: artist life data composed as legacy prints it, dxa-api's
+dropped credits and the PHP sheets' doubled authors recognised as legacy defects, picture credits
+and dynasty names compared language by language, Sharing History's notices found in the page.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
