@@ -184,6 +184,34 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     // The site's pages read group 13, its own, with 2 and 3.
     groups: [2, 3, 13],
     words: {
+      // The page title; the heading and its line over every inner page, and
+      // over the home page's picture (includes/header_bottom.php,
+      // shTemplates/bannerText.php).
+      'identity.title': 'sh_gn_meta_title',
+      'identity.heading': 'sh_home_heading1',
+      'identity.subheading': 'sh_home_heading2',
+      // The header's links (shTemplates/header.php, includes/header_bottom.php).
+      'nav.portal': 'portal_link',
+      'nav.home': 'back_to_section',
+      // The menu (shTemplates/menuSH.php), in its order, with its drop-downs.
+      'nav.introduction': 'sh_menu_introduction',
+      'nav.aboutProject': 'sh_about_project',
+      'nav.aboutHistoricalBackground': 'sh_about_hb',
+      'nav.exhibitions': 'home_exhibitions',
+      'nav.permanentCollection': 'sh_home_pc',
+      'nav.database': 'home_database',
+      'nav.timeline': 'sh_menu_timeline',
+      'nav.historicalBackground': 'sh_menu_hb',
+      'nav.partners': 'sh_home_partners',
+      'nav.myCollection': 'my_museum',
+      // The home page's exhibitions (shTemplates/exhibitionListImg.php).
+      'home.exhibitionsCaption': 'sh_home_exh_img_text',
+      // The banner over each section (each page's <h2><span>).
+      'section.permanentCollection': 'sh_museum_home_pc',
+      'section.database': 'sh_home_db',
+      'section.partners': 'sh_pm_partners',
+      'section.historicalBackground': 'sh_historical_background',
+      'section.bibliography': 'sh_menu_bibliography',
       // The footer (includes/footer.php); the year follows the copyright.
       'footer.aboutMwnf': 'footer1',
       'footer.contact': 'footer2',
