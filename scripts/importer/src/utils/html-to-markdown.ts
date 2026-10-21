@@ -27,6 +27,21 @@ turndownService.addRule('nestedStrong', {
   replacement: (content) => content,
 });
 
+// Italic inside italic is still italic. Legacy's editor left unclosed tags
+// (`<i>In situ<i> à Qousayr Amra.`), which a browser reads as one italic run
+// inside another and prints in italics; a second pair of `*` would leave
+// stray asterisks on the page instead.
+turndownService.addRule('nestedEmphasis', {
+  filter: (node) => {
+    if (node.nodeName !== 'EM' && node.nodeName !== 'I') return false;
+    for (let up = node.parentNode; up; up = up.parentNode) {
+      if (up.nodeName === 'EM' || up.nodeName === 'I') return true;
+    }
+    return false;
+  },
+  replacement: (content) => content,
+});
+
 /**
  * Convert HTML string to Markdown using Turndown
  * Robust parser that handles malformed HTML gracefully
