@@ -195,8 +195,9 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
     }
     // Fields the package has for this language and the page does not show. Kept data the site
     // does not display either is not a difference: Sharing History's contact block is commented
-    // out in legacy's template, and the site prints none.
-    const keptNotShown = cfg.sh ? new Set(['monument_contact']) : new Set();
+    // out in legacy's template, and the structured references of its bibliography module are not
+    // on the item sheet; the site prints neither.
+    const keptNotShown = cfg.sh ? new Set(['monument_contact', 'structured_bibliography']) : new Set();
     for (const [k, v] of Object.entries(tr)) {
       if (seen.has(k) || ['short_description', 'author', 'copy_editor', 'translator', 'translation_copy_editor', 'keywords', 'linkcatalogs', 'type'].includes(k)) continue;
       if (v && !(Array.isArray(v) && !v.length)) R.field('item', k, keptNotShown.has(k) ? { verdict: 'expected:kept in the data, displayed by neither site' } : { verdict: 'extra-in-package', pkg: Array.isArray(v) ? v.join('; ') : v }, where);
