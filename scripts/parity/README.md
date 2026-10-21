@@ -303,7 +303,13 @@ both accepted:
 - **arts-in-dialogue `site.hidden`:** legacy hides the site through `status`, which is no longer
   imported. A gallery with a site is visible (decision of 2026-10-20).
 - **baroqueart `item.artist`:** most are artist life data the tool doesn't read from the package.
-  The rest are the same names joined with "," where legacy uses ";", an exporter follow-up.
+  The rest came from the tool itself, which split legacy's line at its commas (#2272) and counted
+  another order as a difference (#2290).
+
+`baselines/2026-10-21b` is the same packages compared with the fixed tool: 4,111 real
+differences, no regressions. Baroque Art `item.artist` is down to 212, of which 202 are artist life
+data. A name that holds a comma is compared whole, and the same names in another order count as a
+format difference: legacy prints them as typed, with no explicit order.
 
 ## Known legacy quirks and decided differences
 
