@@ -183,10 +183,24 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
     }
     for (const d of details) if (!detailsSeen.has(d.id) && (d.languages ?? []).includes(lang)) R.field('detail', 'heading', { verdict: 'extra-in-package', pkg: P.tr('items', lang, d.id)?.name ?? d.internal_name }, where);
     if (page.short !== null && page.short !== undefined) R.field('item', 'short_description', glossaryNote({ brokenGlossary: page.shortBroken }, compare(page.short, tr.short_description)), where);
-    // Fields the package has for this language and the page does not show.
+    // Sharing History prints `notice` (in italics, before the sheet) and `notice_c` (after the
+    // credits) as paragraphs without a heading: look for the package's text in the page itself.
+    if (cfg.sh) {
+      const pageText = flatten(normalise(r.body));
+      for (const f of ['notice', 'notice_c']) {
+        if (!tr[f]) continue;
+        seen.add(f);
+        R.field('item', f, pageText.includes(flatten(normalise(tr[f], { from: 'markdown' }))) ? { verdict: 'same' } : { verdict: 'extra-in-package', pkg: tr[f] }, where);
+      }
+    }
+    // Fields the package has for this language and the page does not show. Kept data the site
+    // does not display either is not a difference: Sharing History's contact block is commented
+    // out in legacy's template, and the structured references of its bibliography module are not
+    // on the item sheet; the site prints neither.
+    const keptNotShown = cfg.sh ? new Set(['monument_contact', 'structured_bibliography']) : new Set();
     for (const [k, v] of Object.entries(tr)) {
       if (seen.has(k) || ['short_description', 'author', 'copy_editor', 'translator', 'translation_copy_editor', 'keywords', 'linkcatalogs', 'type'].includes(k)) continue;
-      if (v && !(Array.isArray(v) && !v.length)) R.field('item', k, { verdict: 'extra-in-package', pkg: Array.isArray(v) ? v.join('; ') : v }, where);
+      if (v && !(Array.isArray(v) && !v.length)) R.field('item', k, keptNotShown.has(k) ? { verdict: 'expected:kept in the data, displayed by neither site' } : { verdict: 'extra-in-package', pkg: Array.isArray(v) ? v.join('; ') : v }, where);
       pkgOnly[k] = (pkgOnly[k] ?? 0) + 1;
     }
     // Credits (names in the page's script; Arabic pages print the original spelling).

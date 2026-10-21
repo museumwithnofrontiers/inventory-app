@@ -29,7 +29,13 @@ const itemByKey = new Map(items.map((i) => [lc(i.backward_compatibility), i]));
 const itemById = new Map(items.map((i) => [i.id, i]));
 const tags = new Map((P.read('tags.json') ?? []).map((t) => [t.id, t]));
 const glossaryWord = (id, lang) => P.tr('glossary', lang, id)?.name ?? P.tr('glossary', lang, id)?.word ?? P.read('glossary.json').find((g) => g.id === id)?.word;
-const dynastyName = (id, lang) => P.tr('dynasties', lang, id)?.name ?? P.tr('dynasties', 'en', id)?.name;
+// The sites show a dynasty's name in the sheet language only, as dxa-api did.
+const dynastyName = (id, lang) => P.tr('dynasties', lang, id)?.name;
+// A picture's credits in one language, as the sites read them (viewer-core pictureCredits): the
+// per-language maps, or the flat fields of a package exported before them.
+const pictureCredits = (img, lang) => (img?.photographers || img?.copyrights
+  ? { photographer: img.photographers?.[lang] ?? '', copyright: img.copyrights?.[lang] ?? '' }
+  : { photographer: img?.photographer ?? '', copyright: img?.copyright ?? '' });
 const countries = P.read('countries.json');
 const countryCode = new Map(countries.map((c) => [c.id, c.code]));
 
@@ -110,9 +116,12 @@ for (const s of L.sheets) {
     for (const [k, v] of Object.entries(sh)) if (!IGNORE.has(k) && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) R.unmapped('item', k, where);
     for (const k of Object.keys(tr)) if (!pkgFieldsSeen.has(k)) pkgOnly[k] = (pkgOnly[k] ?? 0) + 1;
 
-    // Picture captions are per language.
+    // Picture captions and credits are per language: dxa-api returned the page language's row only.
     (sh.pictures ?? []).forEach((pic, i) => {
       if (pic.caption || it.images[i]?.captions?.[lang]) R.field('item', 'image.caption', compare(pic.caption, it.images[i]?.captions?.[lang]), `${where}#${i + 1}`);
+      const credits = pictureCredits(it.images[i], lang);
+      R.field('item', 'image.copyright', compare(pic.copyright, credits.copyright, { pkgFrom: 'html' }), `${where}#${i + 1}`);
+      R.field('item', 'image.photographer', compare(pic.photographer, credits.photographer, { pkgFrom: 'html' }), `${where}#${i + 1}`);
     });
     // Related records + their justification text.
     const rel = [...(sh.relatedObjects ?? []), ...(sh.relatedMonuments ?? [])];
@@ -138,7 +147,7 @@ for (const s of L.sheets) {
     // Dynasties (names in the sheet language).
     const dL = new Set((sh.dynasties ?? []).map((d) => flatten(normalise(d.name))));
     const dP = new Set((it.dynasty_ids ?? []).map((id) => flatten(normalise(dynastyName(id, lang) ?? ''))).filter(Boolean));
-    R.field('item', 'dynasties', dL.size === dP.size && [...dL].every((x) => dP.has(x)) ? { verdict: dL.size ? 'same' : 'both-empty' } : { verdict: !dP.size ? 'missing-in-package' : !dL.size ? 'extra-in-package' : 'different', legacy: [...dL].join('; '), pkg: [...dP].join('; '), why: !dL.size ? 'legacy shows no dynasty in this language; the package falls back to English' : undefined }, where);
+    R.field('item', 'dynasties', dL.size === dP.size && [...dL].every((x) => dP.has(x)) ? { verdict: dL.size ? 'same' : 'both-empty' } : { verdict: !dP.size ? 'missing-in-package' : !dL.size ? 'extra-in-package' : 'different', legacy: [...dL].join('; '), pkg: [...dP].join('; ') }, where);
 
     if (!first) continue;
     // ---- language-independent, once per record
@@ -152,10 +161,6 @@ for (const s of L.sheets) {
     R.field('item', 'tags', tL.length === tP.length && tL.every((t) => tP.includes(t)) ? { verdict: tL.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: tL.sort().join(' '), pkg: tP.sort().join(' ') }, key);
     const pics = sh.pictures ?? [];
     R.field('item', 'image.count', pics.length === it.images.length ? { verdict: pics.length ? 'same' : 'both-empty' } : { verdict: pics.length > it.images.length ? 'missing-in-package' : 'extra-in-package', legacy: String(pics.length), pkg: String(it.images.length) }, key);
-    pics.forEach((pic, i) => {
-      R.field('item', 'image.copyright', compare(pic.copyright, it.images[i]?.copyright, { pkgFrom: 'html' }), `${key}#${i + 1}`);
-      R.field('item', 'image.photographer', compare(pic.photographer, it.images[i]?.photographer, { pkgFrom: 'html' }), `${key}#${i + 1}`);
-    });
     const media = [...(sh.videos ?? []), ...(sh.audios ?? [])];
     R.field('item', 'media', media.length === (it.media ?? []).length ? { verdict: media.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: media.map((m) => m.url).join(' '), pkg: (it.media ?? []).map((m) => m.url).join(' ') }, key);
     const gl = (sh.galleries ?? []).map((g) => g.name).filter((n) => n !== selfName).sort();
