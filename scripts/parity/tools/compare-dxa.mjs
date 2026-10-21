@@ -116,13 +116,20 @@ for (const s of L.sheets) {
     for (const [k, v] of Object.entries(sh)) if (!IGNORE.has(k) && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) R.unmapped('item', k, where);
     for (const k of Object.keys(tr)) if (!pkgFieldsSeen.has(k)) pkgOnly[k] = (pkgOnly[k] ?? 0) + 1;
 
-    // Picture captions and credits are per language: dxa-api returned the page language's row only.
+    // Picture captions are per language: dxa-api returned the page language's row only.
     (sh.pictures ?? []).forEach((pic, i) => {
       if (pic.caption || it.images[i]?.captions?.[lang]) R.field('item', 'image.caption', compare(pic.caption, it.images[i]?.captions?.[lang]), `${where}#${i + 1}`);
-      const credits = pictureCredits(it.images[i], lang);
-      R.field('item', 'image.copyright', compare(pic.copyright, credits.copyright, { pkgFrom: 'html' }), `${where}#${i + 1}`);
-      R.field('item', 'image.photographer', compare(pic.photographer, credits.photographer, { pkgFrom: 'html' }), `${where}#${i + 1}`);
     });
+    // So are their credits. Legacy lists only the pictures that have a row in the language, so a
+    // picture's position differs between the two sides: compare the credits the sheet shows, as a
+    // set per record and language, rather than picture by picture.
+    for (const f of ['photographer', 'copyright']) {
+      const L = (sh.pictures ?? []).map((p) => flatten(normalise(p[f]))).filter(Boolean).sort();
+      const P = (it.images ?? []).map((img) => flatten(normalise(pictureCredits(img, lang)[f], { from: 'html' }))).filter(Boolean).sort();
+      R.field('item', `image.${f}`, L.join('|') === P.join('|')
+        ? { verdict: L.length ? 'same' : 'both-empty' }
+        : { verdict: !P.length ? 'missing-in-package' : !L.length ? 'extra-in-package' : 'different', legacy: L.join('; '), pkg: P.join('; ') }, where);
+    }
     // Related records + their justification text.
     const rel = [...(sh.relatedObjects ?? []), ...(sh.relatedMonuments ?? [])];
     const relPkg = it.related_items ?? [];
