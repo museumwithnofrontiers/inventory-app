@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { get, stats } from './lib/http.mjs';
 import { loadPackage } from './lib/pkg.mjs';
 import { Report } from './lib/report.mjs';
-import { compare, compareJoined, flatten, normalise, splitList } from './lib/text.mjs';
+import { compare, compareArtistLine, compareJoined, flatten, normalise, splitList } from './lib/text.mjs';
 import { PHP_SITES, idFromKey, imageNumbers, labelIndex, legacyRecords, pageUrl as pageUrlOn, parsePage } from './legacy-php.mjs';
 import { checkImageUrls } from './lib/images.mjs';
 import { OUT } from './lib/paths.mjs';
@@ -22,7 +22,6 @@ const R = new Report(slug, {
 const lc = (s) => String(s).toLowerCase();
 const items = P.read('items.json').filter((i) => i.type === 'object' || i.type === 'monument');
 const byKey = new Map(items.map((i) => [lc(i.backward_compatibility), i]));
-const dynastyName = (id, lang) => P.tr('dynasties', lang, id)?.name ?? P.tr('dynasties', 'en', id)?.name ?? '';
 const legacy = legacyRecords(cfg);
 const labels = labelIndex(cfg);
 
@@ -164,15 +163,13 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       } else if (s.term === 'db_dynasty') {
         R.field('item', 'dynasty (free text)', compare(s.html, tr.dynasty ?? tr.period), where);
         seen.add('dynasty');
-        const names = (it.dynasty_ids ?? []).map((d) => dynastyName(d, lang)).filter(Boolean);
-        R.field('item', 'dynasty line → a linked dynasty exists', names.length ? { verdict: 'format', why: 'free text replaced by linked dynasty' } : { verdict: 'missing-in-package', legacy: normalise(s.html) }, where);
       } else if (s.term === 'db_artist' || s.term === 'db_author') {
         for (const f of ['artist', 'artist_birthdate', 'artist_birthplace', 'artist_deathdate', 'artist_deathplace']) seen.add(f);
         if (tr.artist !== undefined || cfg.sh) R.field('item', 'artist', artistWithLife(s.html, tr), where);
         else if (first) {
           // The page prints the artist's life data after the name: "Georg Petel (1601/2, Weilheim-1634/5, Augsburg)".
           // The whole line first: a name can hold a comma ("Jenig, clockmaker"). Then entry by entry, for another order.
-          const byLine = compareJoined(s.html, it.artist_names);
+          const byLine = compareArtistLine(s.html, it.artist_names, tr);
           let r3 = byLine.verdict === 'different' ? listCompare(s.html.replace(/,/g, ';'), it.artist_names, true) : byLine;
           let bare = normalise(s.html);
           // Drop the parenthesised groups that hold dates ("(1698 Unter Peissenberg – 1780(?) Baden)"), keep "(painter)".

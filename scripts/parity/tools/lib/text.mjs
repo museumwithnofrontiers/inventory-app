@@ -91,6 +91,27 @@ export function compareJoined(legacyRaw, names) {
   return /^[\s,;]*$/.test(rest) ? { verdict: 'format', legacy: r.legacy, pkg: r.pkg, why: 'same entries, other order' } : r;
 }
 
+// Legacy Baroque Art prints the record's life data after the artist line, from its own columns:
+// "artist (birthdate, birthplace-deathdate, deathplace)", "Unknown" included when that is the value.
+// The package keeps the names in `artist_names` and the life data in the translation's `artist_*`.
+export function artistLife(tr) {
+  const [born, bornAt, died, diedAt] = ['artist_birthdate', 'artist_birthplace', 'artist_deathdate', 'artist_deathplace'].map((f) => normalise(tr?.[f], { from: 'markdown' }));
+  if (!(born || bornAt || died || diedAt)) return '';
+  return `(${born}${bornAt ? `, ${bornAt}` : ''}${died ? `-${died}` : ''}${diedAt ? `, ${diedAt}` : ''})`;
+}
+
+export function compareArtistLine(legacyRaw, names, tr) {
+  const r = compareJoined(legacyRaw, names);
+  const life = artistLife(tr);
+  if (!life || r.verdict !== 'different' || !(names ?? []).length) return r;
+  const line = normalise(legacyRaw);
+  if (!flatten(line).endsWith(flatten(life))) return r;
+  const exact = line.endsWith(life);
+  const r2 = compareJoined(exact ? line.slice(0, -life.length) : line.slice(0, line.lastIndexOf('(')), names);
+  if (r2.verdict !== 'same' && r2.verdict !== 'format') return r;
+  return { verdict: exact ? r2.verdict : 'format', legacy: line, pkg: `${names.join(', ')} ${life}`, why: 'name + life data from separate fields' };
+}
+
 // Token-set overlap (Dice on words); good enough to rank how different two texts are.
 export function similarity(a, b) {
   const ta = a.split(/\W+/u).filter(Boolean);
