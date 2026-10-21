@@ -219,6 +219,12 @@ export function transformShMonumentTranslation(
   if (text.linkcatalogs) extra.linkcatalogs = text.linkcatalogs;
 
   // Notice fields
+  // Legacy prints the responsible institution's name in its own language as
+  // a line of its own ("Responsible Institution (original language)"); kept
+  // whole, as legacy stores it, whatever `holder` and the contact keep.
+  if (text.responsible_institution_org) {
+    extra.responsible_institution_org = convertHtmlToMarkdown(text.responsible_institution_org);
+  }
   if (text.notice) extra.notice = convertHtmlToMarkdown(text.notice);
   if (text.notice_c) extra.notice_c = convertHtmlToMarkdown(text.notice_c);
   // Same normalisation as the object path. Both columns are empty on
