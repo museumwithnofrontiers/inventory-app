@@ -9,6 +9,7 @@ import { compareExhibition } from './exhibition-themes.mjs';
 import { compare, flatten, normalise, splitList } from './lib/text.mjs';
 import { asList, dbUidToKey, link, paged, readLegacyDxa } from './legacy-dxa.mjs';
 import { OUT } from './lib/paths.mjs';
+import { droppedByCvJoin } from './lib/credits-cv.mjs';
 
 const slug = process.argv[2];
 const site = JSON.parse(readFileSync(`${OUT}/sitemap.json`, 'utf8')).sites.find((s) => s.slug === slug);
@@ -98,6 +99,7 @@ for (const s of L.sheets) {
       const names = (sh.authors?.[role] ?? []).map((a) => a[lang] || a.en).filter(Boolean);
       const legacy = names.length ? names.join(', ') : sh[col];
       const r = compare(legacy, tr[pf]);
+      if (r.verdict === 'extra-in-package' && droppedByCvJoin(key, lang, role)) r.verdict = 'expected:dxa-api drops a credit whose author has a CV in other languages only';
       // Legacy prints the credit in the page's script when authors_objects has it (e.g. Arabic).
       const latin = (sh.authors?.[role] ?? []).map((a) => a.en).filter(Boolean).join(', ');
       if (r.verdict === 'different' && latin && lang !== 'en' && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(latin)) r.why = `legacy prints the ${lang} spelling; the package keeps the Latin one`;

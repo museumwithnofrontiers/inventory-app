@@ -323,12 +323,15 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
   and the dump is stale for exhibitions (on water-in-islam it lists 167 members where live
   legacy shows 492). Its record-set numbers are not a verdict. The 228 Hijaz Railway
   (`GalEx5`) objects shown in the galleries, which legacy hides, are kept.
-- **D6: the English fallback is kept.** Where legacy shows nothing in a language (dynasty lines,
-  some credits), the package falls back to English. Those counts stay `extra-in-package`, with
-  the reason "the package falls back to English".
+- **Keep all data, display only what legacy displays** (2026-10-21, replacing D6). The import is
+  exhaustive; a site shows a value only where legacy shows it, never more. So no fallback to
+  English where legacy shows nothing in a language (dynasty names, captions, credits), and data
+  legacy never prints stays in the inventory. An `extra-in-package` count is therefore a defect,
+  unless the site does not display that field.
 - **D4: credits in the page's script.** Legacy prints a credit in the script of the page where
-  `authors_objects` has it (Arabic and others). The packages do the same since #2232; what is
-  left carries the reason "legacy prints the <lang> spelling".
+  `authors_objects` has it (Arabic and others). On an Arabic page, the PHP sheets print only the
+  Arabic spelling and nothing for a person who has none; the galleries (dxa-api) print the Latin
+  name instead. Picture credits are per language too, like captions.
 - **Keywords and materials sorted** by the package: `format`, accepted.
 - **Layouts and text.** The style and static passes measure the new sites against legacy, and
   legacy is the target. Text that legacy doesn't have is dropped, never added.
@@ -341,6 +344,9 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
   disappears from the page.
 - Some texts are stored double-encoded, and print `&Aacute;` literally.
 - dxa-api inverts `featured`.
+- dxa-api's credit query keeps an author only when they have no CV in the project or one in the
+  page's language. An author with CVs in other languages only drops out of that page's credits,
+  although `authors_objects` credits them there. `lib/credits-cv.mjs` finds these in the dump.
 - dxa-api answers some partners in English whatever language is asked.
 - Some related-record links point at records that don't exist.
 - The PHP pages print the Location line with the country name at the end (`format`: "page adds
