@@ -530,3 +530,97 @@ describe('AuthorImporter — junction is authoritative over free text', () => {
     expect(result.success).toBe(true);
   });
 });
+
+// Legacy Sharing History prints its own spelling of an author (sh_authors). The all_authors
+// bridge says which mwnf3 author is the same person; merging into that author made the SH
+// pages print the mwnf3 spelling.
+describe('AuthorImporter — SH authors bridged to an mwnf3 author', () => {
+  const logger: ILogger = {
+    info: vi.fn(),
+    warning: vi.fn(),
+    skip: vi.fn(),
+    error: vi.fn(),
+    exception: vi.fn(),
+    showProgress: vi.fn(),
+    showSkipped: vi.fn(),
+    showError: vi.fn(),
+    showSummary: vi.fn(),
+  };
+
+  let tracker: UnifiedTracker;
+  let writeAuthor: ReturnType<typeof vi.fn>;
+  let context: ImportContext;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    tracker = new UnifiedTracker();
+    const tables: Record<string, unknown[]> = {
+      'mwnf3.authors_mwnf3_authors': [
+        { author_id: 65, all_author_id: 165 },
+        { author_id: 3, all_author_id: 103 },
+      ],
+      'mwnf3.authors_sh_authors': [
+        { author_id: 58, all_author_id: 165 },
+        { author_id: 22, all_author_id: 103 },
+      ],
+      'FROM mwnf3.authors ORDER': [
+        { author_id: 65, firstname: 'Saloua', lastname: 'Zangar', givenname: '', originalname: '' },
+        { author_id: 3, firstname: 'Aida', lastname: 'Naghawi', givenname: '', originalname: '' },
+      ],
+      'sh_authors ORDER': [
+        {
+          author_id: 58,
+          firstname: 'Saloua',
+          lastname: 'Khadhar Zangar',
+          givenname: '',
+          originalname: '',
+        },
+        { author_id: 22, firstname: 'Aida', lastname: 'NAGHAWI', givenname: '', originalname: '' },
+      ],
+    };
+    const legacyDb: ILegacyDatabase = {
+      query: vi.fn(
+        async (sql: string) => Object.entries(tables).find(([k]) => sql.includes(k))?.[1] ?? []
+      ) as ILegacyDatabase['query'],
+      execute: vi.fn(),
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    writeAuthor = vi.fn(
+      async (data: { backward_compatibility: string }) => `uuid:${data.backward_compatibility}`
+    );
+    const strategy = {
+      findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
+      exists: vi.fn().mockResolvedValue(false),
+      writeAuthor,
+      writeAuthorTranslation: vi.fn(),
+      updateItemTranslationAuthorFk: vi.fn(),
+    } as unknown as IWriteStrategy;
+    context = { legacyDb, strategy, tracker, logger, dryRun: false };
+  });
+
+  it('gives an SH author its own row when legacy SH spells the name differently', async () => {
+    await new AuthorImporter(context).import();
+
+    expect(writeAuthor).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Saloua Khadhar Zangar',
+        backward_compatibility: 'mwnf3_sharing_history:sh_authors:58',
+      })
+    );
+    expect(tracker.getUuid('mwnf3_sharing_history:sh_authors:58', 'author')).toBe(
+      'uuid:mwnf3_sharing_history:sh_authors:58'
+    );
+  });
+
+  it('keeps the merge when the spellings differ only in case or accents', async () => {
+    await new AuthorImporter(context).import();
+
+    expect(writeAuthor).not.toHaveBeenCalledWith(
+      expect.objectContaining({ backward_compatibility: 'mwnf3_sharing_history:sh_authors:22' })
+    );
+    expect(tracker.getUuid('mwnf3_sharing_history:sh_authors:22', 'author')).toBe(
+      'uuid:mwnf3:authors:3'
+    );
+  });
+});
