@@ -23,6 +23,7 @@ Mcp::web('/mcp/inventory', InventoryServer::class)
         'auth:api',
         'scopes:'.OAuthScope::MCP->value,
         'permission:'.Permission::ACCESS_MCP->value,
-    ]);
+    ])
+    ->name('mcp.inventory');
 
 Mcp::local('inventory', InventoryServer::class);
