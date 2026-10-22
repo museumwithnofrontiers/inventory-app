@@ -40,6 +40,15 @@ class AuthorizeApplicationPage extends Page
     /** @var array<int, array{id: string, description: string}> */
     public array $scopes = [];
 
+    /**
+     * Any signed-in panel user may be asked; whether they may approve this
+     * app for these scopes is decided in mount(), where the scopes are known.
+     */
+    public static function canAccess(): bool
+    {
+        return auth()->check();
+    }
+
     public function mount(): void
     {
         $consent = session(self::SESSION_KEY);
