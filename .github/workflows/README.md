@@ -55,62 +55,89 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 | `app/**`, `routes/**`, `config/**`, `database/**`, `tests/**`, `bootstrap/**`, `composer.json`, `composer.lock`, `phpunit.xml`, `artisan` | `backend` | `backend-lint`, `backend-tests` |
 | `resources/css/**`, `resources/views/**`, `vite.config.js`, `postcss.config.js`, `package.json`, `package-lock.json`, `tsconfig.json` | `root-frontend` | `backend-rendered-frontend-validation` |
 | `scripts/importer/**` | `importer` | `importer-validation` |
+| `scripts/importer/package.json`, `scripts/importer/package-lock.json`, `scripts/import-tool/Dockerfile`, `scripts/import-tool/entrypoint.sh` | `import-tool-image` | `import-tool-image` |
 | `scripts/site-i18n/**` | `site-i18n` | `site-i18n-validation` |
+| `scripts/parity/**` | `parity` | `parity-validation` |
 | `scripts/data-packages-mcp/**` | `data-packages-mcp` | `data-packages-mcp-validation` |
 | `scripts/exporters/**` | `exporters` | `exporter-validation` |
+| `scripts/viewers/**` | `viewers` | `viewer-validation` |
+
+`dependency-review` and `php-version-drift` have no path gate: they run on every pull request.
 
 **Jobs**
 
 1. **detect-changes** (*Detect Changed Paths*) - Classifies changed files using `git diff` against the PR base SHA
    - Checks out the repository with full Git history (`fetch-depth: 0`)
-   - Emits outputs: `backend`, `root-frontend`, `importer`, `site-i18n`, `data-packages-mcp`, `exporters` (true/false)
-   - Also emits `exporter-datasets`, a JSON array of every directory under `scripts/exporters/` holding a `package.json`, used as the `exporter-validation` matrix
+   - Emits outputs: `backend`, `root-frontend`, `importer`, `import-tool-image`, `site-i18n`, `parity`, `data-packages-mcp`, `exporters`, `viewers` (true/false)
+   - Also emits `exporter-datasets` and `viewer-datasets`, JSON arrays of every directory under `scripts/exporters/` and `scripts/viewers/` holding a `package.json`, used as the `exporter-validation` and `viewer-validation` matrices
 
 2. **dependency-review** (*Dependency Review (PR)*) - Reviews dependency changes introduced by the pull request
    - Runs `actions/dependency-review-action` with `fail-on-severity: high`
    - Has no `needs` and no path gate — it always runs
 
-3. **backend-lint** *(when `backend=true`)* (*Backend Linting and Validation*) - Laravel backend linting
+3. **php-version-drift** (*PHP Version Drift Check*) - Checks that the three places naming the PHP version agree
+   - Compares the major.minor of `composer.json` `config.platform.php`, the `FROM php:` tag of `.docker/Dockerfile` and the `php-version` default of the `setup-backend` action
+   - Fails when one of them cannot be read, or when they differ
+   - Has no `needs` and no path gate — a version can drift through a Dockerfile-only or action-only edit that no path group watches
+
+4. **backend-lint** *(when `backend=true`)* (*Backend Linting and Validation*) - Laravel backend linting
    - Uses the `setup-backend` composite action with `tools: pint` (PHP 8.5, Composer install, `.env` from `.env.local.example`, `php artisan migrate`)
    - Runs against SQLite in memory (`DB_CONNECTION=sqlite`, `DB_DATABASE=:memory:`)
    - Runs `composer check-platform-reqs`
    - Runs `./vendor/bin/pint --bail`
 
-4. **backend-tests** *(when `backend=true`)* (*Backend Tests (`<suite>`)*) - Laravel test matrix
+5. **backend-tests** *(when `backend=true`)* (*Backend Tests (`<suite>`)*) - Laravel test matrix
    - Uses the `setup-backend` composite action with `tools: phpunit, pest` and `coverage: xdebug`
    - Matrix: `Unit`, `Api`, `Filament`, `Configuration`, `Console`, `Event`, `Integration`
    - `fail-fast: true` — stops remaining suites on first failure
    - Runs each suite with `php artisan test --testsuite=<suite> --coverage --parallel --no-ansi --stop-on-failure`
 
-5. **backend-rendered-frontend-validation** *(when `root-frontend=true`)* (*Filament Theme Build*) - Builds the admin panel's Tailwind theme, the only front-end asset
+6. **backend-rendered-frontend-validation** *(when `root-frontend=true`)* (*Filament Theme Build*) - Builds the admin panel's Tailwind theme, the only front-end asset
    - Uses the `setup-node-project` composite action at the repository root
    - Runs `npm run build`
 
-6. **importer-validation** *(when `importer=true`)* (*Importer Validation (TypeScript)*) - Importer TypeScript build and tests
+7. **importer-validation** *(when `importer=true`)* (*Importer Validation (TypeScript)*) - Importer TypeScript build and tests
    - Uses the `setup-node-project` composite action with `working-directory: scripts/importer`
    - Runs `npm run build` (TypeScript compilation)
    - Runs `npm test` (Vitest unit tests)
 
-7. **site-i18n-validation** *(when `site-i18n=true`)* (*Site i18n Validation (TypeScript)*) - Shared site i18n layer validation
+8. **import-tool-image** *(when `import-tool-image=true`)* (*Import Tool Image Build*) - Builds the Alpine import-tool image
+   - Narrower than the `importer` group on purpose: only a dependency change or an edit to the image's own files can break `docker build`, typically a native module with no musl prebuild
+   - Runs `docker build` of `scripts/import-tool/Dockerfile`, then smoke-tests the image with the importer CLI's `import --help`, which needs no database
+   - Builds only: nothing is tagged for a registry or pushed
+
+9. **site-i18n-validation** *(when `site-i18n=true`)* (*Site i18n Validation (TypeScript)*) - Shared site i18n layer validation
    - Uses the `setup-node-project` composite action with `working-directory: scripts/site-i18n`
    - Runs `npm run lint:check`, `npm run build` and `npm test`
    - Every test in this suite is a pure function over legacy row shapes, so no database, VPN or credentials are involved
 
-8. **data-packages-mcp-validation** *(when `data-packages-mcp=true`)* (*Data Packages MCP Validation*) - The read-only MCP server over the published data packages
+10. **parity-validation** *(when `parity=true`)* (*Parity Tool Validation*) - The legacy parity tool
+   - Uses the `setup-node-project` composite action with `working-directory: scripts/parity`
+   - Runs `npm run lint:check` and `npm test` (the gate tests)
+   - The comparison itself never runs here: it reads the live legacy sites and a local cache of their answers. See [`scripts/parity/README.md`](../../scripts/parity/README.md)
+
+11. **data-packages-mcp-validation** *(when `data-packages-mcp=true`)* (*Data Packages MCP Validation*) - The read-only MCP server over the published data packages
    - Uses the `setup-node-project` composite action with `working-directory: scripts/data-packages-mcp`
    - Runs `npm run type-check`, `npm run lint:check` and `npm test`, then builds the server image (`docker build --target server`)
    - Every test runs against fixture packages and a mocked registry, so no network, registry or credentials are involved
 
-9. **exporter-validation** *(when `exporters=true`)* (*Exporter Validation (`<dataset>`)*) - Dataset exporter validation
+12. **exporter-validation** *(when `exporters=true`)* (*Exporter Validation (`<dataset>`)*) - Dataset exporter validation
    - Matrix comes from `detect-changes`'s `exporter-datasets` output, not a hardcoded list — a forked exporter is covered from its first pull request
    - `fail-fast: false` — every dataset is reported, even when one fails
    - Uses the `setup-node-project` composite action with `working-directory: scripts/exporters/<dataset>`
    - Runs `npm run type-check`, `npm run lint:check` and `npm test` (Vitest unit tests)
    - Every test in these suites is a pure function over legacy row shapes, so no database, VPN or credentials are involved
 
-10. **ci-success** (*CI Success*) - Aggregates all check results
+13. **viewer-validation** *(when `viewers=true`)* (*Viewer Validation (`<viewer>`)*) - Dataset viewer build
+   - Matrix comes from `detect-changes`'s `viewer-datasets` output, not a hardcoded list
+   - `fail-fast: false` — every viewer is reported, even when one fails
+   - Uses the `setup-node-project` composite action with `working-directory: scripts/viewers/<viewer>`
+   - Runs `npm run build -- --base=/<viewer>/`, the base path the deploy workflow uses
+   - Installs the viewer's public `@museumwnf/<site>-data` package from npmjs, so a viewer whose package is not published fails here, as it could not be deployed either
+
+14. **ci-success** (*CI Success*) - Aggregates all check results
    - `needs` every other job and runs with `if: always()`
-   - Always requires `dependency-review` to have succeeded
+   - Always requires `dependency-review` and `php-version-drift` to have succeeded
    - For each path group that changed, requires the matching job(s) to have succeeded
    - When a path group did not change, its job may be skipped without failing the workflow
    - This job name satisfies the `CI Success` branch protection required check
@@ -121,7 +148,7 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 
 **Branch protection**
 
-The `CI Success` job in this workflow satisfies the `CI Success` required status check configured in branch protection rules for `main`. Dependency review and the Dependabot coverage check must always pass; the path-gated lint/build/test jobs must pass whenever their path group changed.
+The `CI Success` job in this workflow satisfies the `CI Success` required status check configured in branch protection rules for `main`. Dependency review and the PHP version drift check must always pass; the path-gated lint/build/test jobs must pass whenever their path group changed.
 
 **Usage**
 
