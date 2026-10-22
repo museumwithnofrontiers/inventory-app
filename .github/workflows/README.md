@@ -284,7 +284,8 @@ Deploys the tarball produced by `Build` to the OVH VPS over SSH, by running [`sc
 
 - Only runs when triggered manually, or when the upstream `Build` run concluded `success`
 - Resolves the `Build` run id and head SHA, then downloads the `release-<sha>` artifact from it
-- Verifies `release.tar.gz` is present
+- Checks out that same head SHA, not `main`'s HEAD, so `scripts/deploy.sh` always comes from the commit the artifact was built from. Two merges close together would otherwise pair a newer script with an older release
+- Verifies `release.tar.gz` is present, and that the checked-out commit and the `commit_sha` in the artifact's `VERSION` file both match the Build run's head SHA; on a mismatch it fails before anything reaches the VPS
 - Sets up the SSH key, checks TCP reachability of port 22, and verifies SSH authentication (up to 3 attempts with backoff, failing fast on an auth rejection)
 - Uploads `release.tar.gz` and `scripts/deploy.sh` to the VPS, then runs the deploy script
 - The script ends with a smoke check, over HTTPS on the server itself: `/` must redirect to `/admin` and `/admin/login` must answer 200, or the job fails
