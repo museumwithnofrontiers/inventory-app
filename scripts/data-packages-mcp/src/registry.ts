@@ -170,6 +170,9 @@ export class RegistryClient {
   }
 
   async packument(name: string): Promise<Packument> {
+    if (!this.isDataPackage(name)) {
+      throw new RegistryError(`"${name}" is not a @${this.options.scope}/<name>-data package`)
+    }
     const cached = this.packuments.get(name)
     if (cached && Date.now() - cached.at < this.ttl) return cached.value
     const value = this.fetchPackument(name)
@@ -179,7 +182,11 @@ export class RegistryClient {
   }
 
   private async fetchPackument(name: string): Promise<Packument> {
-    const body = await this.getJson(`${this.options.registryUrl}/${name.replace('/', '%2f')}`)
+    // The registry addresses a scoped package as one path segment,
+    // `@scope%2Fname`: everything after the `@` is encoded, every `/` included.
+    const body = await this.getJson(
+      `${this.options.registryUrl}/@${encodeURIComponent(name.slice(1))}`
+    )
     if (!isObject(body)) throw new RegistryError(`Unexpected packument for ${name}`)
     const distTags: Record<string, string> = {}
     if (isObject(body['dist-tags'])) {

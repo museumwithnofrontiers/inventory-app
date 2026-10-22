@@ -86,6 +86,20 @@ describe('RegistryClient', () => {
     )
   })
 
+  it('requests a packument as one path segment, and only for a data package', async () => {
+    const { registry, fake } = setup()
+    await registry.packument('@museumwnf/islamicart-data')
+    expect(fake.calls).toContain(`${fake.base}/@museumwnf%2Fislamicart-data`)
+    for (const name of [
+      '@museumwnf/islamicart-data/../../-/whoami',
+      '@museumwnf/a/b-data',
+      '@other/x-data',
+    ]) {
+      await expect(registry.packument(name)).rejects.toThrow(RegistryError)
+    }
+    expect(fake.calls.filter(c => !c.endsWith('%2Fislamicart-data'))).toEqual([])
+  })
+
   it('reports a registry error with its status', async () => {
     const { registry } = setup()
     await expect(registry.packument('@museumwnf/missing-data')).rejects.toThrow(/404/)
