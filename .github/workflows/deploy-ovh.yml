@@ -33,9 +33,9 @@ jobs:
       url: https://inventory.metanull.eu
 
     steps:
-      - name: Checkout code (for deploy script)
-        uses: actions/checkout@v7
-
+      # Resolved before the checkout: deploy.sh must come from the commit the
+      # artifact was built from, never from main's HEAD, which a later merge
+      # may already have moved on to a script the older release can't run.
       - name: Determine artifact source
         id: source
         run: |
@@ -60,6 +60,13 @@ jobs:
           fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # No checkout yet, so gh can't infer the repository from .git
+          GH_REPO: ${{ github.repository }}
+
+      - name: Checkout code (for deploy script)
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.source.outputs.head_sha }}
 
       - name: Download deployment artifact
         uses: actions/download-artifact@v8
@@ -76,6 +83,20 @@ jobs:
             exit 1
           fi
           echo "Artifact size: $(du -h release.tar.gz | cut -f1)"
+
+      - name: Verify deploy script and artifact share a commit
+        env:
+          HEAD_SHA: ${{ steps.source.outputs.head_sha }}
+        run: |
+          checkout_sha=$(git rev-parse HEAD)
+          artifact_sha=$(tar -xzOf release.tar.gz ./VERSION | jq -r '.commit_sha')
+          echo "Build run head: ${HEAD_SHA}"
+          echo "Checked out:    ${checkout_sha}"
+          echo "Artifact built: ${artifact_sha}"
+          if [[ -z "$HEAD_SHA" || "$checkout_sha" != "$HEAD_SHA" || "$artifact_sha" != "$HEAD_SHA" ]]; then
+            echo "::error::scripts/deploy.sh and release.tar.gz come from different commits — refusing to deploy"
+            exit 1
+          fi
 
       - name: Setup SSH
         run: |
