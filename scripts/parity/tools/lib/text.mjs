@@ -2,18 +2,30 @@
 // Two values are "same" when equal after normalise(); "format" when equal only after
 // flatten() (markup, punctuation-at-end and whitespace differences); else "different".
 
-const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', ndash: '–', mdash: '—', lsquo: '‘', rsquo: '’', ldquo: '“', rdquo: '”', hellip: '…', laquo: '«', raquo: '»', eacute: 'é', egrave: 'è', agrave: 'à', ccedil: 'ç', ouml: 'ö', uuml: 'ü', auml: 'ä', deg: '°', times: '×', copy: '©', middot: '·', shy: '' };
+// The HTML 4 named entities: legacy texts use the whole Latin-1 set (&acirc;, &Oacute; …), and a
+// name left undecoded reads as a difference. Names are case-sensitive (&Agrave; is not &agrave;).
+const LATIN1 = 'nbsp iexcl cent pound curren yen brvbar sect uml copy ordf laquo not shy reg macr deg plusmn sup2 sup3 acute micro para middot cedil sup1 ordm raquo frac14 frac12 frac34 iquest Agrave Aacute Acirc Atilde Auml Aring AElig Ccedil Egrave Eacute Ecirc Euml Igrave Iacute Icirc Iuml ETH Ntilde Ograve Oacute Ocirc Otilde Ouml times Oslash Ugrave Uacute Ucirc Uuml Yacute THORN szlig agrave aacute acirc atilde auml aring aelig ccedil egrave eacute ecirc euml igrave iacute icirc iuml eth ntilde ograve oacute ocirc otilde ouml divide oslash ugrave uacute ucirc uuml yacute thorn yuml';
+const ENTITIES = {
+  ...Object.fromEntries(LATIN1.split(' ').map((n, i) => [n, String.fromCodePoint(0xa0 + i)])),
+  amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ', shy: '',
+  OElig: 'Œ', oelig: 'œ', Scaron: 'Š', scaron: 'š', Yuml: 'Ÿ', fnof: 'ƒ', circ: 'ˆ', tilde: '˜',
+  ensp: ' ', emsp: ' ', thinsp: ' ', zwnj: '‌', zwj: '‍', lrm: '‎', rlm: '‏',
+  ndash: '–', mdash: '—', lsquo: '‘', rsquo: '’', sbquo: '‚', ldquo: '“', rdquo: '”', bdquo: '„',
+  dagger: '†', Dagger: '‡', bull: '•', hellip: '…', permil: '‰', prime: '′', Prime: '″',
+  lsaquo: '‹', rsaquo: '›', oline: '‾', euro: '€', trade: '™', minus: '−',
+};
 
 export function decodeEntities(s) {
   return s
     .replace(/&#x([0-9a-f]+);/gi, (_, h) => String.fromCodePoint(parseInt(h, 16)))
     .replace(/&#(\d+);/g, (_, d) => String.fromCodePoint(Number(d)))
-    .replace(/&([a-z]+);/gi, (m, n) => ENTITIES[n.toLowerCase()] ?? m);
+    .replace(/&([a-z][a-z0-9]*);/gi, (m, n) => ENTITIES[n] ?? ENTITIES[n.toLowerCase()] ?? m);
 }
 
 export function htmlToText(s) {
+  // Legacy also writes "</br>", which browsers break the line on too.
   let text = String(s)
-    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/?br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|li|h\d)>/gi, '\n');
   // Until the text stops changing: one pass over "<<b>i>" leaves "<i>".
   let previous;

@@ -1,7 +1,7 @@
 // A list line from a legacy PHP sheet is compared whole, so a name holding a comma stays one name (#2262).
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { compareArtistLine, compareJoined } from '../tools/lib/text.mjs';
+import { compare, compareArtistLine, compareJoined } from '../tools/lib/text.mjs';
 
 test('a single name holding a comma matches', () => {
   assert.equal(compareJoined('Jenig, clockmaker', ['Jenig, clockmaker']).verdict, 'same');
@@ -47,4 +47,17 @@ test('"Unknown" life data is a value like any other', () => {
 test('life data the package lacks is still different', () => {
   assert.equal(compareArtistLine('Paolo Pagani (1661 Castello Valsolda-1716 Milano)', ['Paolo Pagani'], {}).verdict, 'different');
   assert.equal(compareArtistLine('Paolo Pagani (1661 Castello Valsolda-1716 Milano)', ['Paolo Pagani'], { artist_birthdate: '1662' }).verdict, 'different');
+});
+
+test('legacy\'s named entities decode, the whole Latin-1 set and case-sensitively', () => {
+  assert.equal(compare('Portugal Isl&acirc;mico, Pal&aacute;cio Alm&oacute;ada', 'Portugal Islâmico, Palácio Almóada').verdict, 'same');
+  assert.equal(compare('&Agrave; &agrave; &AElig;', 'À à Æ').verdict, 'same');
+});
+
+test('a double-encoded entity legacy prints literally is still told apart', () => {
+  assert.equal(compare('Isl&amp;acirc;mico', 'Islâmico').verdict, 'expected:legacy prints double-encoded entities');
+});
+
+test('legacy\'s "</br>" breaks the line like "<br>"', () => {
+  assert.equal(compare('1662-1665 (Altaraufbau)</br>1671 (Altargemälde)', '1662-1665 (Altaraufbau)  \n1671 (Altargemälde)').verdict, 'same');
 });
