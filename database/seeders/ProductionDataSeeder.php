@@ -55,6 +55,7 @@ class ProductionDataSeeder extends Seeder
             PermissionEnum::MANAGE_SETTINGS->value => 'Manage system settings and configuration',
             PermissionEnum::MANAGE_REFERENCE_DATA->value => 'Manage reference-data resources in the Filament administration panel',
             PermissionEnum::ACCESS_ADMIN_PANEL->value => 'Access the Filament administration panel',
+            PermissionEnum::ACCESS_MCP->value => 'Browse the inventory through its read-only MCP server',
         ];
 
         foreach ($permissions as $name => $description) {
@@ -95,6 +96,7 @@ class ProductionDataSeeder extends Seeder
             PermissionEnum::UPDATE_DATA->value,
             PermissionEnum::DELETE_DATA->value,
             PermissionEnum::ACCESS_ADMIN_PANEL->value,
+            PermissionEnum::ACCESS_MCP->value,
             PermissionEnum::MANAGE_REFERENCE_DATA->value,
         ]);
 
@@ -117,6 +119,7 @@ class ProductionDataSeeder extends Seeder
             // System settings permissions
             PermissionEnum::MANAGE_SETTINGS->value,
             PermissionEnum::ACCESS_ADMIN_PANEL->value,
+            PermissionEnum::ACCESS_MCP->value,
         ]);
 
         $this->command->info('Roles and permissions setup completed!');
