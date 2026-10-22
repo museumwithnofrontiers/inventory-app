@@ -9,6 +9,8 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Laravel\Passport\Http\Middleware\CheckToken;
+use Laravel\Passport\Http\Middleware\CheckTokenForAnyScope;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
@@ -61,6 +63,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role.spatie' => RoleMiddleware::class,
             'permission.spatie' => PermissionMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
+            // OAuth scopes: the token must carry all of them / at least one
+            'scopes' => CheckToken::class,
+            'scope' => CheckTokenForAnyScope::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

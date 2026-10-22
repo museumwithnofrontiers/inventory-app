@@ -328,9 +328,19 @@ All attached image records carry a `display_order` field. Images associated with
 
 ## Authentication and Permissions
 
-The API uses **Laravel Sanctum** for token-based authentication. All endpoints require a valid bearer token, except for a small number of informational endpoints (`/api/info`, `/api/health`, `/api/version`).
+The REST API is **switched off** unless `API_ENABLED` is set (`config/api.php`); while it is off, every `/api` URL answers 404. The Filament panel at `/admin` is the only UI and does not use the API.
 
-Access to operations is controlled by the following permissions:
+When the API is on, it authenticates with **OAuth 2.1** through Laravel Passport, which is the only way to obtain a token for this app. The only grant is authorization code with PKCE: a client sends the user to sign in on the panel (with MFA) and approve it, then receives a short-lived access token and a refresh token. All endpoints require a valid bearer token, except for a small number of informational endpoints (`/api/info`, `/api/health`, `/api/version`).
+
+A token carries scopes, which limit what it can be used for:
+
+| Scope       | Grants                                            |
+| ----------- | ------------------------------------------------- |
+| `api:read`  | The API's read routes                             |
+| `api:write` | The API's create, update and delete routes        |
+| `mcp`       | The inventory MCP server (read-only)              |
+
+The scopes limit the token; the user's permissions and the policies still decide what the user may do, and a request needs both. Access to operations is controlled by the following permissions:
 
 | Permission        | Scope                                  |
 | ----------------- | -------------------------------------- |

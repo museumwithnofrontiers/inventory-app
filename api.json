@@ -6,12 +6,12 @@
     },
     "servers": [
         {
-            "url": "http://localhost:8010/api"
+            "url": "http://localhost/api"
         }
     ],
     "security": [
         {
-            "http": []
+            "oauth2": []
         }
     ],
     "paths": {
@@ -21020,9 +21020,20 @@
     },
     "components": {
         "securitySchemes": {
-            "http": {
-                "type": "http",
-                "scheme": "bearer"
+            "oauth2": {
+                "type": "oauth2",
+                "flows": {
+                    "authorizationCode": {
+                        "authorizationUrl": "http://localhost/oauth/authorize",
+                        "tokenUrl": "http://localhost/oauth/token",
+                        "refreshUrl": "http://localhost/oauth/token",
+                        "scopes": {
+                            "mcp": "Browse the inventory through its MCP server (read-only)",
+                            "api:read": "Read inventory data through the REST API",
+                            "api:write": "Create, change and delete inventory data through the REST API"
+                        }
+                    }
+                }
             }
         },
         "schemas": {

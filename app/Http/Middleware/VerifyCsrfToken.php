@@ -13,7 +13,7 @@ class VerifyCsrfToken extends Middleware
      */
     protected $except = [
         // Exclude all API routes from CSRF verification
-        // API authentication uses Bearer tokens (Sanctum), not session cookies
+        // API authentication uses OAuth bearer tokens (Passport), not session cookies
         'api/*',
     ];
 }

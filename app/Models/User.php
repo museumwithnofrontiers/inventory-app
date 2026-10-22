@@ -13,7 +13,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Laravel\Sanctum\HasApiTokens;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 /**
@@ -29,7 +30,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $approved_at
  * @property Carbon|null $suspended_at
  */
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, MustVerifyEmail, OAuthenticatable
 {
     use HasApiTokens;
 
@@ -40,6 +41,13 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     use MustVerifyEmailTrait;
     use Notifiable;
     use TwoFactorAuthenticatable;
+
+    /**
+     * The guard roles and permissions belong to, whichever guard signed the
+     * user in: one set of roles and permissions serves the panel (session)
+     * and OAuth tokens alike.
+     */
+    protected string $guard_name = 'web';
 
     /**
      * The attributes that are mass assignable.

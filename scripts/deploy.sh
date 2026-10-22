@@ -201,6 +201,21 @@ configure_laravel() {
         info "Generating application key..."
         php artisan key:generate --force
     fi
+
+    # OAuth signing keys (Passport). Made once, in shared storage, so every
+    # release signs and verifies tokens with the same pair; regenerating
+    # them would invalidate every issued token. php-fpm reads them through
+    # the www-data group.
+    local key
+    if [[ ! -f "${APP_DIR}/shared/storage/oauth-private.key" ]]; then
+        info "Generating OAuth signing keys..."
+        php artisan passport:keys
+    fi
+    for key in oauth-private.key oauth-public.key; do
+        chgrp www-data "${APP_DIR}/shared/storage/${key}" \
+            || error "Could not give ${APP_DIR}/shared/storage/${key} to the www-data group. It must be owned by $(whoami)."
+        chmod 640 "${APP_DIR}/shared/storage/${key}"
+    done
 }
 
 # --- 3. Run migrations -------------------------------------------------------
