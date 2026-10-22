@@ -50,8 +50,8 @@ updates:
       node-prod-dependencies:
         dependency-type: "production"
 
-  # Node tooling directly under scripts/ — currently importer, site-i18n and
-  # parity.
+  # Node tooling directly under scripts/ — currently importer, site-i18n,
+  # parity and data-packages-mcp.
   #
   # Listed rather than globbed, and this is the one place the glob scheme does
   # not reach. `/scripts/*` here made the WHOLE FILE invalid: Dependabot
@@ -72,6 +72,7 @@ updates:
       - "/scripts/importer"
       - "/scripts/site-i18n"
       - "/scripts/parity"
+      - "/scripts/data-packages-mcp"
     schedule:
       interval: "weekly"
     labels:
@@ -150,14 +151,16 @@ updates:
         patterns:
           - ".*"
 
-  # Base images across .docker/ and scripts/import-tool/. The Ruby base image
-  # of the docs container is the thing the scanner actually reported: a gem
-  # bump would not have moved it, because the interpreter comes from the FROM
-  # line rather than from the Gemfile.
+  # Base images across .docker/, scripts/import-tool/ and
+  # scripts/data-packages-mcp/. The Ruby base image of the docs container is
+  # the thing the scanner actually reported: a gem bump would not have moved
+  # it, because the interpreter comes from the FROM line rather than from the
+  # Gemfile.
   - package-ecosystem: "docker"
     directories:
       - "/.docker"
       - "/scripts/import-tool"
+      - "/scripts/data-packages-mcp"
     schedule:
       interval: "weekly"
     labels:
