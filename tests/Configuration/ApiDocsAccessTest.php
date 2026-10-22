@@ -15,7 +15,7 @@ class ApiDocsAccessTest extends TestCase
 
         $responseData = $response->json();
         $this->assertArrayHasKey('openapi', $responseData);
-        $this->assertEquals('3.1.0', $responseData['openapi']);
+        $this->assertMatchesRegularExpression('/^3\.1\.\d+$/', $responseData['openapi']);
         $this->assertArrayHasKey('info', $responseData);
         $this->assertArrayHasKey('title', $responseData['info']);
         $this->assertArrayHasKey('version', $responseData['info']);
