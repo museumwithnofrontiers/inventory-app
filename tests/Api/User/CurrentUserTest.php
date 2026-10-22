@@ -14,7 +14,7 @@ class CurrentUserTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $this->actingAs($user)
+        $this->actingAs($user, 'api')
             ->getJson('/api/user')
             ->assertOk()
             ->assertJsonPath('id', $user->id)
@@ -24,7 +24,7 @@ class CurrentUserTest extends TestCase
     public function test_it_no_longer_carries_a_profile_photo_url(): void
     {
         // A generated avatar link, dropped with the package that appended it (M8)
-        $this->actingAs(User::factory()->create())
+        $this->actingAs(User::factory()->create(), 'api')
             ->getJson('/api/user')
             ->assertOk()
             ->assertJsonMissingPath('profile_photo_url');

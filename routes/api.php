@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\OAuthScope;
 use App\Enums\Permission;
 use App\Http\Controllers\Api\MarkdownController;
 use App\Http\Controllers\AuthorController;
@@ -31,7 +32,6 @@ use App\Http\Controllers\ItemMediaController;
 use App\Http\Controllers\ItemTranslationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LanguageTranslationController;
-use App\Http\Controllers\MobileAppAuthenticationController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerImageController;
 use App\Http\Controllers\PartnerLogoController;
@@ -54,16 +54,16 @@ Route::get('/version', [InfoController::class, 'version'])->name('info.version')
 
 Route::get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:sanctum');
+})->middleware('auth:api');
 
 Route::get('/user/permissions', [UserPermissionsController::class, 'index'])
     ->name('user.permissions')
-    ->middleware('auth:sanctum');
+    ->middleware('auth:api');
 
 // Data operation routes - require appropriate permissions based on HTTP method
-Route::middleware(['auth:sanctum'])->group(function () {
+Route::middleware(['auth:api'])->group(function () {
     // READ operations - require VIEW_DATA permission
-    Route::middleware(['permission:'.Permission::VIEW_DATA->value])->group(function () {
+    Route::middleware(['scopes:'.OAuthScope::API_READ->value, 'permission:'.Permission::VIEW_DATA->value])->group(function () {
         // Context routes (read)
         Route::get('context/default', [ContextController::class, 'getDefault'])->name('context.getDefault');
         Route::get('context/{context}', [ContextController::class, 'show'])->name('context.show');
@@ -243,7 +243,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // CREATE operations - require CREATE_DATA permission
-    Route::middleware(['permission:'.Permission::CREATE_DATA->value])->group(function () {
+    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, 'permission:'.Permission::CREATE_DATA->value])->group(function () {
         Route::post('context', [ContextController::class, 'store'])->name('context.store');
         Route::post('language', [LanguageController::class, 'store'])->name('language.store');
         Route::post('language-translation', [LanguageTranslationController::class, 'store'])->name('language-translation.store');
@@ -294,7 +294,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // UPDATE operations - require UPDATE_DATA permission
-    Route::middleware(['permission:'.Permission::UPDATE_DATA->value])->group(function () {
+    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, 'permission:'.Permission::UPDATE_DATA->value])->group(function () {
         Route::patch('context/{context}/default', [ContextController::class, 'setDefault'])->name('context.setDefault');
         Route::delete('context/default', [ContextController::class, 'clearDefault'])->name('context.clearDefault');
         Route::patch('context/{context}', [ContextController::class, 'update'])->name('context.update');
@@ -441,7 +441,7 @@ Route::middleware(['auth:sanctum'])->group(function () {
     });
 
     // DELETE operations - require DELETE_DATA permission
-    Route::middleware(['permission:'.Permission::DELETE_DATA->value])->group(function () {
+    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, 'permission:'.Permission::DELETE_DATA->value])->group(function () {
         Route::delete('context/{context}', [ContextController::class, 'destroy'])->name('context.destroy');
         Route::delete('language/{language}', [LanguageController::class, 'destroy'])->name('language.destroy');
         Route::delete('language-translation/{languageTranslation}', [LanguageTranslationController::class, 'destroy'])->name('language-translation.destroy');
@@ -495,20 +495,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('contributor-image/{contributorImage}/detach', [ContributorImageController::class, 'detachToAvailable'])->name('contributor-image.detach');
     });
 });
-
-// Mobile authentication routes - public (no auth required for login flow)
-Route::post('mobile/acquire-token', [MobileAppAuthenticationController::class, 'acquire_token'])
-    ->name('token.acquire');
-
-Route::post('mobile/verify-two-factor', [MobileAppAuthenticationController::class, 'verify_two_factor'])
-    ->name('token.verify_two_factor');
-
-Route::post('mobile/two-factor-status', [MobileAppAuthenticationController::class, 'two_factor_status'])
-    ->name('token.two_factor_status');
-
-Route::get('mobile/wipe', [MobileAppAuthenticationController::class, 'wipe_tokens'])
-    ->name('token.wipe')
-    ->middleware('auth:sanctum');
 
 // Markdown conversion routes - utility endpoints (no auth required)
 // These are stateless utility functions that don't access user data

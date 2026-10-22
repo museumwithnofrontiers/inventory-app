@@ -10,6 +10,7 @@ This monorepo contains the backend and frontend for the Museum With No Frontiers
 ### Components (in-scope):
 - Laravel 12 backend + API
 - Filament 3 admin panel (/admin), the application's only UI
+- Read-only inventory MCP server (app/Mcp/, routes/ai.php): see docs/mcp.md
 - Data importer scripts (scripts/importer/)
 - Documentation site (docs/, Jekyll)
 
@@ -31,12 +32,26 @@ You must respect the 3-tier permission system:
 1. Tier 1 — Panel Access:
    1. access-admin-panel
    2. controls entry to `/admin`.
+   3. access-mcp controls entry to the inventory MCP server; every role holding access-admin-panel holds it.
 2. Tier 2 — Navigation & Resource Visibility
    1. Permissions like: view-data, manage-users, manage-roles, manage-settings, manage-reference-data
    2. These drive: canViewAny(), shouldRegisterNavigation()
 3. Tier 3 — Record-level Authorization
    1. Existing App\Policies\* must be used unchanged.
    2. Never bypass or duplicate authorization logic.
+
+## Tokens: OAuth 2.1 only
+
+- Laravel Passport is the only way to obtain a token. The only grant is authorization code with PKCE (`App\Support\OAuth\AuthorizationCodeClient` refuses the others). Never add personal access tokens, client credentials or a password grant.
+- Scopes (`App\Enums\OAuthScope`: `mcp`, `api:read`, `api:write`) limit a token; permissions and policies still apply to every request.
+- Users sign in and approve apps on panel pages (the Filament login with MFA, `AuthorizeApplicationPage`); never a Blade auth view.
+- The REST API is off unless `API_ENABLED` is set (`EnsureApiEnabled` answers 404).
+
+## Inventory MCP Server (read-only)
+
+- Every tool only reads: it carries `#[IsReadOnly]` and is listed in `InventoryServer::TOOLS` (a test enforces both). Never add a tool that creates, changes or deletes data, and never attach, detach or upload images through it.
+- Tools act as the signed-in user (OAuth over HTTP, `MCP_LOCAL_USER` over Artisan) and authorize through the existing policies and permissions.
+- Images: only burned renditions through `PublicRenditions`, never originals.
    
 ## Image Upload Pipeline (Extremely Strict)
 

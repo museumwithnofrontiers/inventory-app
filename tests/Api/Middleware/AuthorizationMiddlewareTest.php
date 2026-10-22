@@ -26,15 +26,15 @@ class AuthorizationMiddlewareTest extends TestCase
         // Create test routes with permission middleware
         Route::get('/test-permission', function () {
             return response()->json(['message' => 'success']);
-        })->middleware(['auth:sanctum', 'permission:'.PermissionEnum::VIEW_DATA->value]);
+        })->middleware(['auth:api', 'permission:'.PermissionEnum::VIEW_DATA->value]);
 
         Route::get('/test-role', function () {
             return response()->json(['message' => 'success']);
-        })->middleware(['auth:sanctum', 'role:Test Role']);
+        })->middleware(['auth:api', 'role:Test Role']);
 
         Route::get('/test-no-role', function () {
             return response()->json(['message' => 'success']);
-        })->middleware(['auth:sanctum', 'role:Manager Role']);
+        })->middleware(['auth:api', 'role:Manager Role']);
     }
 
     public function test_it_denies_access_to_unauthenticated_users(): void
@@ -51,7 +51,7 @@ class AuthorizationMiddlewareTest extends TestCase
 
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user, 'sanctum')
+        $response = $this->actingAs($user, 'api')
             ->getJson('/test-permission');
 
         $response->assertStatus(403);
@@ -70,7 +70,7 @@ class AuthorizationMiddlewareTest extends TestCase
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $response = $this->actingAs($user, 'sanctum')
+        $response = $this->actingAs($user, 'api')
             ->getJson('/test-permission');
 
         $response->assertStatus(200)
@@ -81,7 +81,7 @@ class AuthorizationMiddlewareTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user, 'sanctum')
+        $response = $this->actingAs($user, 'api')
             ->getJson('/test-no-role');
 
         $response->assertStatus(403);
@@ -96,7 +96,7 @@ class AuthorizationMiddlewareTest extends TestCase
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $response = $this->actingAs($user, 'sanctum')
+        $response = $this->actingAs($user, 'api')
             ->getJson('/test-no-role');
 
         $response->assertStatus(200)
@@ -114,7 +114,7 @@ class AuthorizationMiddlewareTest extends TestCase
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $response = $this->actingAs($user, 'sanctum')
+        $response = $this->actingAs($user, 'api')
             ->getJson('/test-permission');
 
         // Direct permissions should work even without roles
@@ -126,7 +126,7 @@ class AuthorizationMiddlewareTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user, 'sanctum')
+        $response = $this->actingAs($user, 'api')
             ->getJson('/test-role');
 
         $response->assertStatus(403);
@@ -142,7 +142,7 @@ class AuthorizationMiddlewareTest extends TestCase
 
         app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-        $response = $this->actingAs($user, 'sanctum')
+        $response = $this->actingAs($user, 'api')
             ->getJson('/test-role');
 
         $response->assertOk();

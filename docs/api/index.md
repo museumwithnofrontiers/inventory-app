@@ -8,7 +8,7 @@ permalink: /api/
 
 # Management API Reference
 
-The current REST API is the authenticated management API. It lets trusted clients read and manage Inventory data programmatically. All endpoints require authentication via a Sanctum bearer token, except for health and version checks.
+The current REST API is the authenticated management API. It lets trusted clients read and manage Inventory data programmatically. It is **switched off** unless `API_ENABLED` is set; while off, every `/api` URL answers 404. When on, all endpoints require an OAuth 2.1 bearer token (Laravel Passport, authorization code with PKCE, scope `api:read` or `api:write`), except for health and version checks. See [Authentication and Permissions]({{ '/concepts.html' | relative_url }}#authentication-and-permissions).
 
 The future read-only API is a separate design area. It should optimize public content delivery and should not be confused with this management API.
 

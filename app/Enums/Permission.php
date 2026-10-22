@@ -32,6 +32,9 @@ enum Permission: string
     // Filament admin panel access
     case ACCESS_ADMIN_PANEL = 'access-admin-panel';
 
+    // Read-only inventory MCP server (/mcp/inventory, php artisan mcp:start inventory)
+    case ACCESS_MCP = 'access-mcp';
+
     /**
      * Get all permission values as an array
      *

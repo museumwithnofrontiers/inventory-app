@@ -171,10 +171,9 @@ MAIL_PASSWORD=your-password
 MAIL_ENCRYPTION=tls
 
 # Security
-# IMPORTANT: SANCTUM_STATEFUL_DOMAINS must include all domains that will access the API
-# For example: inventory.museumwnf.org (without protocol, without trailing slash)
-# Multiple domains: inventory.museumwnf.org,app.museumwnf.org
-SANCTUM_STATEFUL_DOMAINS=your-frontend-domain.com
+# The REST API answers 404 unless switched on; OAuth signing keys are
+# created once by scripts/deploy.sh in shared storage
+API_ENABLED=false
 
 # SESSION_DOMAIN: Set to .yourdomain.com (with leading dot) for subdomain cookie sharing
 # Leave as null if you don't need subdomain support
@@ -471,9 +470,6 @@ LoadModule expires_module modules/mod_expires.so
 
    ```bash
    # In your production .env file:
-
-   # Add your production domain (without https://, without trailing slash)
-   SANCTUM_STATEFUL_DOMAINS=inventory.museumwnf.org
 
    # For subdomain support (e.g., api.domain.com + app.domain.com):
    SESSION_DOMAIN=.museumwnf.org  # Note the leading dot

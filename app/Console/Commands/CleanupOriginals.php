@@ -3,11 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\CleansOrphanedFiles;
-use App\Contracts\StreamableImageFile;
-use App\Models\AvailableImage;
-use App\Support\Images\AttachedImageRegistry;
+use App\Support\Images\ImageOrphans;
 use Illuminate\Console\Command;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Config;
 
 /**
@@ -39,37 +36,14 @@ class CleanupOriginals extends Command
 
     protected $description = 'Identify (and optionally delete) original image files under localstorage.available.images that no attached image and no available image references';
 
-    public function handle(): int
+    public function handle(ImageOrphans $orphans): int
     {
         return $this->sweepOrphans(
             Config::string('localstorage.available.images.disk'),
             trim(Config::string('localstorage.available.images.directory'), '/'),
-            $this->buildKeepSet(...),
+            $orphans->originalsKeepSet(...),
             'Orphaned Originals Cleanup',
             self::GRACE_PERIOD,
         );
-    }
-
-    /**
-     * Build the keep-set: the storage path of every registered attached
-     * image and of every AvailableImage. The directory holds both, and
-     * deleting an AvailableImage's file loses the upload.
-     *
-     * @return array<string, true>
-     */
-    private function buildKeepSet(): array
-    {
-        $keepSet = [];
-
-        foreach ([...AttachedImageRegistry::modelClasses(), AvailableImage::class] as $class) {
-            $class::query()->chunkById(500, function ($records) use (&$keepSet) {
-                foreach ($records as $record) {
-                    /** @var Model&StreamableImageFile $record */
-                    $keepSet[$record->imageStoragePath()] = true;
-                }
-            });
-        }
-
-        return $keepSet;
     }
 }

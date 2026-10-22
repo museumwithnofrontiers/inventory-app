@@ -29,7 +29,6 @@ class LocalUserSeeder extends Seeder
             'email' => config('app.default_user.email', 'user@example.com'),
             'password' => bcrypt($defaultUserPassword),
         ]);
-        $token = $defaultUser->createToken('api-token');
         $defaultUser->save();
         $defaultUser->markEmailAsVerified();
         $defaultUser->assignRole('Regular User');
@@ -39,7 +38,6 @@ class LocalUserSeeder extends Seeder
         $consoleOutput->getFormatter()->setStyle('green', new OutputFormatterStyle('green', null, ['bold']));
         $consoleOutput->writeln("\tThe application is running in LOCAL mode (<yellow>this is not suitable for production use</yellow>)!");
         $consoleOutput->writeln("\tTest user created: <yellow>'{$defaultUser->name}' (e-mail: '{$defaultUser->email}')</yellow>; password: <green>{$defaultUserPassword}</green>");
-        $consoleOutput->writeln("\t                 > API Token: <green>{$token->plainTextToken}</green>");
 
         // Create default admin user with "Administrator" role
         $defaultAdminPassword = config('app.default_admin.password', 'password');

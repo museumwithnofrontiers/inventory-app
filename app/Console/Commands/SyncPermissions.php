@@ -76,6 +76,7 @@ class SyncPermissions extends Command
             PermissionEnum::MANAGE_SETTINGS->value => 'Manage system settings and configuration',
             PermissionEnum::MANAGE_REFERENCE_DATA->value => 'Manage reference-data resources in the Filament administration panel',
             PermissionEnum::ACCESS_ADMIN_PANEL->value => 'Access the Filament administration panel',
+            PermissionEnum::ACCESS_MCP->value => 'Browse the inventory through its read-only MCP server',
         ];
 
         $created = 0;
@@ -174,6 +175,7 @@ class SyncPermissions extends Command
 
                     // Get access to the Filament "admin" panel and the reference data resources managed there.
                     PermissionEnum::ACCESS_ADMIN_PANEL->value,
+                    PermissionEnum::ACCESS_MCP->value,
                     PermissionEnum::MANAGE_REFERENCE_DATA->value,
                 ],
             ],
@@ -193,6 +195,7 @@ class SyncPermissions extends Command
                     // System settings permissions
                     PermissionEnum::MANAGE_SETTINGS->value,
                     PermissionEnum::ACCESS_ADMIN_PANEL->value,
+                    PermissionEnum::ACCESS_MCP->value,
                 ],
             ],
         ];
@@ -205,6 +208,7 @@ class SyncPermissions extends Command
                 'permissions' => [
                     PermissionEnum::VIEW_DATA->value,
                     PermissionEnum::ACCESS_ADMIN_PANEL->value,
+                    PermissionEnum::ACCESS_MCP->value,
                 ],
             ]]);
         }

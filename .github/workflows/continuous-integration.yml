@@ -25,6 +25,7 @@ jobs:
       import-tool-image: ${{ steps.detect.outputs.import-tool-image }}
       site-i18n: ${{ steps.detect.outputs.site-i18n }}
       parity: ${{ steps.detect.outputs.parity }}
+      data-packages-mcp: ${{ steps.detect.outputs.data-packages-mcp }}
       exporters: ${{ steps.detect.outputs.exporters }}
       exporter-datasets: ${{ steps.exporter-datasets.outputs.datasets }}
       viewers: ${{ steps.detect.outputs.viewers }}
@@ -86,6 +87,12 @@ jobs:
             echo "parity=true" >> $GITHUB_OUTPUT
           else
             echo "parity=false" >> $GITHUB_OUTPUT
+          fi
+
+          if echo "$CHANGED" | grep -qE '^scripts/data-packages-mcp/'; then
+            echo "data-packages-mcp=true" >> $GITHUB_OUTPUT
+          else
+            echo "data-packages-mcp=false" >> $GITHUB_OUTPUT
           fi
 
           if echo "$CHANGED" | grep -qE '^scripts/exporters/'; then
@@ -381,6 +388,43 @@ jobs:
         run: |
           npm test
 
+  # Every test runs against fixture packages and a mocked registry, so no
+  # network, no registry and no credentials are involved.
+  data-packages-mcp-validation:
+    name: Data Packages MCP Validation
+    runs-on: ubuntu-latest
+    needs: detect-changes
+    if: needs.detect-changes.outputs.data-packages-mcp == 'true'
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: "Setup > Node Project (Data Packages MCP)"
+        uses: ./.github/actions/setup-node-project
+        with:
+          working-directory: scripts/data-packages-mcp
+
+      - name: "Check > npm > Type Check (Data Packages MCP)"
+        working-directory: scripts/data-packages-mcp
+        run: |
+          npm run type-check
+
+      - name: "Check > npm > Linting (Data Packages MCP)"
+        working-directory: scripts/data-packages-mcp
+        run: |
+          npm run lint:check
+
+      - name: "Check > npm > Run Tests (Data Packages MCP)"
+        working-directory: scripts/data-packages-mcp
+        run: |
+          npm test
+
+      # The image .mcp.json starts. Proves the build stage compiles the server
+      # on its own, without the test files that the type check pulls in.
+      - name: "Check > docker > Build server image (Data Packages MCP)"
+        run: |
+          docker build --target server -t data-packages-mcp:ci scripts/data-packages-mcp
+
   exporter-validation:
     name: Exporter Validation (${{ matrix.dataset }})
     runs-on: ubuntu-latest
@@ -475,6 +519,7 @@ jobs:
       - import-tool-image
       - site-i18n-validation
       - parity-validation
+      - data-packages-mcp-validation
       - exporter-validation
       - viewer-validation
     if: always()
@@ -491,6 +536,7 @@ jobs:
           importToolImageChanged="${{ needs.detect-changes.outputs.import-tool-image }}"
           siteI18nChanged="${{ needs.detect-changes.outputs.site-i18n }}"
           parityChanged="${{ needs.detect-changes.outputs.parity }}"
+          dataPackagesMcpChanged="${{ needs.detect-changes.outputs.data-packages-mcp }}"
           exportersChanged="${{ needs.detect-changes.outputs.exporters }}"
           viewersChanged="${{ needs.detect-changes.outputs.viewers }}"
 
@@ -501,6 +547,7 @@ jobs:
           importToolImageResult="${{ needs.import-tool-image.result }}"
           siteI18nResult="${{ needs.site-i18n-validation.result }}"
           parityResult="${{ needs.parity-validation.result }}"
+          dataPackagesMcpResult="${{ needs.data-packages-mcp-validation.result }}"
           exportersResult="${{ needs.exporter-validation.result }}"
           viewersResult="${{ needs.viewer-validation.result }}"
 
@@ -549,6 +596,11 @@ jobs:
 
           if [ "$parityChanged" = "true" ] && [ "$parityResult" != "success" ]; then
             echo "Parity tool validation failed or was not run (result: $parityResult)"
+            fail=1
+          fi
+
+          if [ "$dataPackagesMcpChanged" = "true" ] && [ "$dataPackagesMcpResult" != "success" ]; then
+            echo "Data packages MCP validation failed or was not run (result: $dataPackagesMcpResult)"
             fail=1
           fi
 
