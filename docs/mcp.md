@@ -23,7 +23,7 @@ The server is protected by the app's own OAuth 2.1 server (Laravel Passport). A 
 
 1. It calls the server, gets `401` with a `WWW-Authenticate` header pointing at `/.well-known/oauth-protected-resource/mcp/inventory`, and discovers the authorization server from there.
 2. It registers itself at `/oauth/register` (public client, authorization code with PKCE). Redirect URIs are limited to localhost, `claude.ai` and `claude.com` (`MCP_REDIRECT_DOMAINS` overrides the list).
-3. It sends you to sign in on the panel, with MFA, then to a consent page that shows the app, the `mcp` scope and where your answer goes.
+3. It sends you to sign in on the panel, with MFA, then to a consent page that shows the app, the `mcp:use` scope and where your answer goes.
 4. Once you approve, it receives a short-lived access token and a refresh token.
 
 To add it to Claude Code:
