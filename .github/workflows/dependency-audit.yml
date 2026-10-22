@@ -69,6 +69,7 @@ jobs:
                   elif . == "scripts/importer"         then "Importer"
                   elif . == "scripts/site-i18n"        then "Site i18n"
                   elif . == "scripts/parity"           then "Parity"
+                  elif . == "scripts/data-packages-mcp" then "Data packages MCP"
                   elif startswith("scripts/exporters/") then "Exporter (\(split("/") | last))"
                   elif startswith("scripts/viewers/")   then "Viewer (\(split("/") | last))"
                   else (split("/") | last) end
