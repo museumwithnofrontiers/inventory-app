@@ -180,19 +180,23 @@ export function transformMonumentDetailTranslation(
   const languageId = mapLanguageCode(detail.lang_id);
   const warnings: string[] = [];
 
-  // Skip if description is empty
-  if (!detail.description || !detail.description.trim()) {
+  // Legacy prints a detail's heading, location, dates and artist even when it has no
+  // description; skip only a translation with neither a name nor a description.
+  const hasDescription = !!detail.description?.trim();
+  if (!detail.name?.trim() && !hasDescription) {
     return null;
   }
 
   // Convert HTML fields to Markdown
   // Name is required for ItemTranslationData
-  const nameMarkdown = detail.name
+  const nameMarkdown = detail.name?.trim()
     ? convertHtmlToMarkdown(detail.name)
     : convertHtmlToMarkdown(detail.description).slice(0, 100);
-  const descriptionMarkdown = convertHtmlToMarkdown(detail.description);
+  const descriptionMarkdown = hasDescription ? convertHtmlToMarkdown(detail.description) : null;
   const locationMarkdown = detail.location ? convertHtmlToMarkdown(detail.location) : null;
   const datesMarkdown = detail.date ? convertHtmlToMarkdown(detail.date) : null;
+  // The artist line as this language prints it; the artist entities are language-independent.
+  const artistMarkdown = detail.artist?.trim() ? convertHtmlToMarkdown(detail.artist) : null;
 
   // backward_compatibility matches parent item
   const backwardCompatibility = formatBackwardCompatibility({
@@ -233,7 +237,7 @@ export function transformMonumentDetailTranslation(
     method_for_provenance: null,
     obtention: null,
     bibliography: null,
-    extra: null,
+    extra: artistMarkdown ? JSON.stringify({ artist: artistMarkdown }) : null,
   };
 
   return {
@@ -254,9 +258,10 @@ export function extractMonumentDetailTags(
   // Parse artist field (similar to keywords but for artists)
   const artists: string[] = [];
   if (detail.artist && detail.artist.trim()) {
-    // Split by common delimiters including Arabic equivalents
+    // Split by common delimiters including Arabic equivalents, but not inside brackets:
+    // "Heinrich Reinhart (Erzgie\u00DFer, 1575-1629)" is one artist.
     const rawArtists = detail.artist
-      .split(/[;,\n\u060C\u061B]/)
+      .split(/[;,\n\u060C\u061B](?![^()]*\))/)
       .map((a) => a.trim())
       .filter((a) => a.length > 0);
     artists.push(...rawArtists);

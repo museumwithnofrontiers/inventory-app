@@ -195,13 +195,27 @@ export class AuthorImporter extends BaseImporter {
     );
     this.logInfo(`Found ${shAuthors.length} SH authors`);
 
+    // Legacy Sharing History prints its own spelling of a name (sh_authors), which can differ
+    // from the mwnf3 spelling of the same person ("Saloua Khadhar Zangar" / "Saloua Zangar").
+    // Merge only when the two spell the name alike: authors.name is unique under a case- and
+    // accent-insensitive collation, so an alike spelling could not have a row of its own anyway.
+    const mwnf3Names = new Map(
+      mwnf3Authors.map((a) => [a.author_id, transformAuthor(a, 'mwnf3', 'authors').data.name])
+    );
+
     for (const legacy of shAuthors) {
       try {
         // Check if this SH author maps to an existing mwnf3 author via bridge
         const allAuthorId = shToAll.get(legacy.author_id);
         if (allAuthorId !== undefined) {
           const mwnf3AuthorId = allToMwnf3.get(allAuthorId);
-          if (mwnf3AuthorId !== undefined) {
+          const mwnf3Name = mwnf3AuthorId !== undefined ? mwnf3Names.get(mwnf3AuthorId) : undefined;
+          const shName = transformAuthor(legacy, 'mwnf3_sharing_history', 'sh_authors').data.name;
+          if (
+            mwnf3AuthorId !== undefined &&
+            mwnf3Name !== undefined &&
+            mwnf3Name.localeCompare(shName, undefined, { sensitivity: 'base' }) === 0
+          ) {
             // This SH author is the same person as mwnf3 author — register alias
             const mwnf3BackwardCompat = `mwnf3:authors:${mwnf3AuthorId}`;
             const existingUuid = await this.getEntityUuidAsync(mwnf3BackwardCompat, 'author');

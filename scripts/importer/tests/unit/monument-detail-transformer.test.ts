@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  extractMonumentDetailTags,
   isBlankMonumentDetailGroup,
   transformMonumentDetail,
+  transformMonumentDetailTranslation,
 } from '../../src/domain/transformers/monument-detail-transformer.js';
 import type { LegacyMonumentDetail, MonumentDetailGroup } from '../../src/domain/types/index.js';
 
@@ -116,5 +118,52 @@ describe('transformMonumentDetail', () => {
 
     expect(result.data.internal_name).toBe('Chor und Vierung');
     expect(result.warning).toContain('using deu instead');
+  });
+});
+
+describe('transformMonumentDetailTranslation', () => {
+  it('keeps a detail legacy prints with no description: heading, dates, artist', () => {
+    const result = transformMonumentDetailTranslation(
+      translation({ name: 'Chapel of the Abbot', date: '1729–1730', artist: 'Jan Kryštof Handke' })
+    );
+
+    expect(result?.data.name).toBe('Chapel of the Abbot');
+    expect(result?.data.description).toBeNull();
+    expect(result?.data.dates).toBe('1729–1730');
+    expect(JSON.parse(result?.data.extra ?? '{}')).toEqual({ artist: 'Jan Kryštof Handke' });
+  });
+
+  it('still skips a translation with neither a name nor a description', () => {
+    expect(transformMonumentDetailTranslation(translation({ date: '1729' }))).toBeNull();
+  });
+
+  it('keeps the artist line this language prints', () => {
+    const result = transformMonumentDetailTranslation(
+      translation({
+        lang_id: 'de',
+        name: 'Grabmal',
+        description: 'Das Bronzegrabmal …',
+        artist: 'Hubert Gerhard (um 1545-1623); Heinrich Reinhart (Erzgießer, 1575-1629)',
+      })
+    );
+
+    expect(JSON.parse(result?.data.extra ?? '{}').artist).toBe(
+      'Hubert Gerhard (um 1545-1623); Heinrich Reinhart (Erzgießer, 1575-1629)'
+    );
+  });
+});
+
+describe('extractMonumentDetailTags', () => {
+  it('does not split an artist at a comma inside brackets', () => {
+    const { artists } = extractMonumentDetailTags(
+      translation({
+        artist: 'Hubert Gerhard (um 1545-1623); Heinrich Reinhart (Erzgießer, 1575-1629)',
+      })
+    );
+
+    expect(artists).toEqual([
+      'Hubert Gerhard (um 1545-1623)',
+      'Heinrich Reinhart (Erzgießer, 1575-1629)',
+    ]);
   });
 });

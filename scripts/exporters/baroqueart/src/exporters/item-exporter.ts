@@ -250,7 +250,7 @@ export class ItemExporter extends BaseExporter {
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also fixes which row `rows[0]` picks when neither
         // context wins during the merge below).
-        `SELECT item_id, language_id, context_id, name, description, dates, location
+        `SELECT item_id, language_id, context_id, name, description, dates, location, extra
          FROM item_translations
          WHERE item_id IN (${this.placeholders(detailIds.length)})
            AND context_id IN (${this.placeholders(detailContextIds.length)})
@@ -270,11 +270,14 @@ export class ItemExporter extends BaseExporter {
       if (detailLangFromProjectContext.has(key) && !isProjectContext) continue
       if (isProjectContext) detailLangFromProjectContext.add(key)
       if (!detailTransMap.has(t.item_id)) detailTransMap.set(t.item_id, {})
+      const extra = t.extra ? (parseJson(t.extra) as Record<string, string> | null) : null
       detailTransMap.get(t.item_id)![code] = {
         name: t.name,
         description: t.description,
         dates: t.dates,
         location: t.location,
+        // The artist line as this language prints it (artist_names merges every language's).
+        artist: extra?.artist ?? null,
       }
     }
 
@@ -767,6 +770,7 @@ interface DetailTranslationRow {
   description: string | null
   dates: string | null
   location: string | null
+  extra: unknown
 }
 
 /** One embedded details[] entry on a parent item. */
