@@ -53,6 +53,16 @@ claude mcp add mwnf-inventory-local -- docker compose exec -T -e MCP_LOCAL_USER=
 | Tool | What it returns |
 | --- | --- |
 | `whoami` | The user the session acts as, their roles and permissions, the connection (HTTP client and scopes, or local), and the tools they may use |
+| `list_entity_types` | The entity types (items, collections, partners, their translations and images, reference data…) and whether you may read each |
+| `describe_entity` | A type's fields (usable as filters), searched fields, includes, and whether it has translations, `extra` or a legacy key |
+| `search` | Records of one type: free text over id, internal name, legacy key and name; exact-match filters; paginated like the API |
+| `get` | One record by id, shaped like the API's, with the includes asked for |
+| `get_item` | An item sheet: translations per language and context, images (public URL and copyright), partner, project, collections, tags, artists, workshops, dynasties, parent, children, links |
+| `get_collection` | A collection with translations, parent, children and partners, and a page of its members (native and attached items, as the websites list them) |
+| `find_by_legacy_key` | What a legacy record was imported as, across every type you may read (exact or prefix match on `backward_compatibility`) |
+| `view_image` | An attached image's burned rendition, as the public sees it. Only a cached rendition unless `allow_burn` is set; never an original |
+
+Everything is read through the existing permissions and policies: a type is readable through its model's policy where it has one, otherwise with `view data`, as on the API's read routes. Users, roles, permissions and settings are not offered.
 
 ## For developers
 
