@@ -21,6 +21,7 @@ Then use these pages by task:
 - [Importer Orientation](importer) for legacy migration work.
 - [APIs and Documentation](apis-and-docs) for management API, OpenAPI, generated client, and Jekyll documentation work.
 - [Development Workflow](development-workflow) for setup and validation commands.
+- [Data Packages MCP](data-packages-mcp) for assessing what the published data packages contain, and how versions differ.
 
 ## Current development posture
 
