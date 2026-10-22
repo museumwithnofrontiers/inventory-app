@@ -41,7 +41,7 @@ the site's database or files.
   2. Permissions such as `view-data`, `manage-users`, `manage-roles`, `manage-settings` and `manage-reference-data` gate the resources and navigation.
   3. `App\Policies\*` decide record-level access.
 
-  The API gates each route group by permission middleware (`App\Http\Middleware\RequirePermission`) behind `auth:sanctum`.
+  The API gates each route group by permission middleware (`App\Http\Middleware\RequirePermission`) behind `auth:api` (OAuth bearer tokens issued by Passport) and an OAuth scope check (`api:read` for reads, `api:write` for writes).
 - **Uploaded files.** Images enter through `POST /api/image-upload` and the panel. The pipeline is `ImageUpload` (private `local` disk), then `ImageUploadEvent`, then `ImageUploadListener` (validates and re-encodes with GD, creates the `AvailableImage`), then `AvailableImageListener` (moves the file to the private originals disk). Documents (PDF) follow `DocumentUploadListener`. The client-supplied filename, extension and MIME type are untrusted.
 - **Stored content shown to other users.** This includes item and collection texts, translations, Markdown fields, glossary entries, partner data, tags and copyright strings. Copyright strings are also drawn into public images.
 
@@ -59,7 +59,7 @@ the site's database or files.
    - Self-registration granting access before verification.
    - MFA bypass on the panel.
    - Reaching any `/api` route while the API is switched off.
-   - Sanctum token misuse.
+   - OAuth token misuse: a grant other than authorization code (`App\Support\OAuth\AuthorizationCodeClient`), a token used beyond its scopes, a revoked token still accepted.
    - Mass assignment in Form Requests.
    - IDOR on UUID-keyed records.
 3. **The JSON API** (`routes/api.php`, `app/Http/Controllers`, `app/Http/Requests/Api`). In scope: injection, broken validation, and leaking data through `include=` relations or pagination.

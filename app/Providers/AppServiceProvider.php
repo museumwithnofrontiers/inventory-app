@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Enums\OAuthScope;
 use App\Events\CollectionTranslationSaved;
 use App\Events\ItemTranslationSaved;
 use App\Events\SpellingSaved;
@@ -28,6 +29,7 @@ use App\Support\Documentation\RuleTransformers\IncludeRuleTransformer;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Dedoc\Scramble\Support\Generator\SecuritySchemes\OAuthFlow;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
@@ -93,9 +95,17 @@ class AppServiceProvider extends ServiceProvider
                 IncludeRuleTransformer::class,
             ]);
 
+        // The API accepts only OAuth tokens from the authorization-code flow
         Scramble::afterOpenApiGenerated(function (OpenApi $openApi) {
-            /** @var SecurityScheme $scheme */
-            $scheme = SecurityScheme::http('bearer');
+            $scheme = SecurityScheme::oauth2()->flow('authorizationCode', function (OAuthFlow $flow): void {
+                $flow->authorizationUrl(route('passport.authorizations.authorize'))
+                    ->tokenUrl(route('passport.token'))
+                    ->refreshUrl(route('passport.token'));
+
+                foreach (OAuthScope::descriptions() as $scope => $description) {
+                    $flow->addScope($scope, $description);
+                }
+            });
             $openApi->secure($scheme);
         });
     }

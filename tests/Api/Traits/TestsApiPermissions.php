@@ -2,9 +2,10 @@
 
 namespace Tests\Api\Traits;
 
+use App\Enums\OAuthScope;
 use App\Enums\Permission;
 use App\Models\User;
-use Laravel\Sanctum\Sanctum;
+use Laravel\Passport\Passport;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
@@ -70,14 +71,14 @@ trait TestsApiPermissions
 
         // Test 1: User without permission gets 403
         $userWithoutPermission = $this->createUserWithoutPermissions();
-        Sanctum::actingAs($userWithoutPermission);
+        Passport::actingAs($userWithoutPermission, [OAuthScope::API_READ->value, OAuthScope::API_WRITE->value]);
 
         $response = $this->{strtolower($method).'Json'}(route($route, $routeParams), $data);
         $response->assertForbidden();
 
         // Test 2: User with permission is allowed (may fail for other reasons, but not 403)
         $userWithPermission = $this->createUserWithPermission($requiredPermission);
-        Sanctum::actingAs($userWithPermission);
+        Passport::actingAs($userWithPermission, [OAuthScope::API_READ->value, OAuthScope::API_WRITE->value]);
 
         $response = $this->{strtolower($method).'Json'}(route($route, $routeParams), $data);
 

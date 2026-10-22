@@ -7,7 +7,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
-use Laravel\Sanctum\PersonalAccessToken;
+use Laravel\Passport\Database\Factories\ClientFactory;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\PermissionRegistrar;
@@ -62,7 +62,7 @@ class AuthSnapshotCommandTest extends TestCase
         $this->assertNotSame('', $contents);
     }
 
-    public function test_restore_recreates_users_mfa_roles_direct_permissions_and_tokens(): void
+    public function test_restore_recreates_users_mfa_roles_and_direct_permissions(): void
     {
         $role = Role::firstOrCreate(['name' => 'Snapshot Role', 'guard_name' => 'web']);
         $permission = Permission::firstOrCreate(['name' => PermissionEnum::ACCESS_ADMIN_PANEL->value, 'guard_name' => 'web']);
@@ -75,7 +75,6 @@ class AuthSnapshotCommandTest extends TestCase
 
         $user->assignRole($role);
         $user->givePermissionTo($permission);
-        $token = $user->createToken('Snapshot token', ['view-data'])->accessToken;
         $path = $this->snapshotPath('test.json.enc');
 
         $this->artisan('auth:snapshot', [
@@ -84,7 +83,6 @@ class AuthSnapshotCommandTest extends TestCase
 
         DB::table('model_has_roles')->where('model_type', User::class)->delete();
         DB::table('model_has_permissions')->where('model_type', User::class)->delete();
-        PersonalAccessToken::query()->delete();
         User::query()->delete();
 
         $this->assertDatabaseMissing('users', ['email' => 'restore-user@example.com']);
@@ -100,12 +98,51 @@ class AuthSnapshotCommandTest extends TestCase
         $this->assertSame('JBSWY3DPEHPK3PXP', decrypt($restoredUser->two_factor_secret));
         $this->assertTrue($restoredUser->hasRole('Snapshot Role'));
         $this->assertTrue($restoredUser->hasDirectPermission(PermissionEnum::ACCESS_ADMIN_PANEL->value));
-        $this->assertDatabaseHas('personal_access_tokens', [
-            'id' => $token->id,
-            'tokenable_type' => User::class,
-            'tokenable_id' => $restoredUser->id,
-            'name' => 'Snapshot token',
+    }
+
+    public function test_restore_revokes_every_oauth_grant(): void
+    {
+        $user = User::factory()->create(['email' => 'snapshot-user@example.com']);
+        $path = $this->snapshotPath('test.json.enc');
+
+        $this->artisan('auth:snapshot', [
+            'path' => $path,
+        ])->assertExitCode(0);
+
+        $client = ClientFactory::new()->create();
+        DB::table('oauth_access_tokens')->insert([
+            'id' => 'access-token-id',
+            'user_id' => $user->id,
+            'client_id' => $client->getKey(),
+            'scopes' => '["mcp"]',
+            'revoked' => false,
+            'created_at' => now(),
+            'updated_at' => now(),
+            'expires_at' => now()->addHour(),
         ]);
+        DB::table('oauth_refresh_tokens')->insert([
+            'id' => 'refresh-token-id',
+            'access_token_id' => 'access-token-id',
+            'revoked' => false,
+            'expires_at' => now()->addDay(),
+        ]);
+        DB::table('oauth_auth_codes')->insert([
+            'id' => 'auth-code-id',
+            'user_id' => $user->id,
+            'client_id' => $client->getKey(),
+            'scopes' => '["mcp"]',
+            'revoked' => false,
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        $this->artisan('auth:restore', [
+            'path' => $path,
+            '--force' => true,
+        ])->assertExitCode(0);
+
+        $this->assertDatabaseCount('oauth_access_tokens', 0);
+        $this->assertDatabaseCount('oauth_refresh_tokens', 0);
+        $this->assertDatabaseCount('oauth_auth_codes', 0);
     }
 
     public function test_restore_requires_force_when_users_already_exist(): void

@@ -18,7 +18,7 @@ tests/
 │   │   ├── TestsApiImageViewing.php # Image download/view operations
 │   │   └── TestsApiTagManagement.php # Tag management operations
 │   └── Middleware/                   # API middleware & security tests
-│       ├── AuthenticationTest.php   # Sanctum token validation, unauthenticated rejection
+│       ├── AuthenticationTest.php   # OAuth (Passport) token validation, unauthenticated rejection
 │       ├── AuthorizationMiddlewareTest.php # The permission and role middleware themselves
 │       └── PermissionsTest.php      # Permission-based authorization (VIEW_DATA, CREATE_DATA, etc.)
 │

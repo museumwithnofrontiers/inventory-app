@@ -29,7 +29,7 @@ class CreateAuthSnapshot extends Command
      *
      * @var string
      */
-    protected $description = 'Create an encrypted snapshot of user accounts, MFA setup, role assignments, direct permissions, and API tokens.';
+    protected $description = 'Create an encrypted snapshot of user accounts, MFA setup, role assignments and direct permissions.';
 
     /**
      * Execute the console command.
@@ -113,7 +113,6 @@ class CreateAuthSnapshot extends Command
                 'users' => $this->rows('users'),
                 'role_assignments' => $this->roleAssignments(),
                 'permission_assignments' => $this->permissionAssignments(),
-                'personal_access_tokens' => $this->personalAccessTokens(),
             ],
         ];
     }
@@ -203,26 +202,6 @@ class CreateAuthSnapshot extends Command
                 'assignment.model_type as model_type',
                 'assignment.'.$modelKey.' as model_id',
             ])
-            ->map(fn (object $row): array => (array) $row)
-            ->all();
-
-        return $result;
-    }
-
-    /**
-     * @return array<int, array<string, mixed>>
-     */
-    protected function personalAccessTokens(): array
-    {
-        if (! Schema::hasTable('personal_access_tokens')) {
-            return [];
-        }
-
-        /** @var array<int, array<string, mixed>> $result */
-        $result = DB::table('personal_access_tokens')
-            ->where('tokenable_type', User::class)
-            ->orderBy('id')
-            ->get()
             ->map(fn (object $row): array => (array) $row)
             ->all();
 

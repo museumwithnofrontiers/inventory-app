@@ -51,7 +51,7 @@ public function test_route_enforces_correct_permission(
     $user = User::factory()->create();
     // Explicitly NOT giving the required permission
     
-    Sanctum::actingAs($user);
+    Passport::actingAs($user, [OAuthScope::API_READ->value, OAuthScope::API_WRITE->value]);
     
     $response = $this->{strtolower($method)}Json(route($route, $this->getRouteParams($model)));
     

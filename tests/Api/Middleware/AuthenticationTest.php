@@ -29,7 +29,7 @@ use Tests\TestCase;
 /**
  * Test that ALL API routes reject unauthenticated requests
  *
- * This test ensures proper Sanctum middleware protection across all API endpoints
+ * This test ensures every API endpoint requires an OAuth (Passport) token
  */
 class AuthenticationTest extends TestCase
 {
