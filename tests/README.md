@@ -17,7 +17,6 @@ tests/
 │   │   ├── TestsApiImageResource.php # Image resource operations
 │   │   ├── TestsApiImageViewing.php # Image download/view operations
 │   │   └── TestsApiTagManagement.php # Tag management operations
-│   ├── Authentication/               # Mobile token endpoints, their two-factor flow
 │   └── Middleware/                   # API middleware & security tests
 │       ├── AuthenticationTest.php   # Sanctum token validation, unauthenticated rejection
 │       ├── AuthorizationMiddlewareTest.php # The permission and role middleware themselves

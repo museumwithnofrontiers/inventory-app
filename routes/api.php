@@ -31,7 +31,6 @@ use App\Http\Controllers\ItemMediaController;
 use App\Http\Controllers\ItemTranslationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LanguageTranslationController;
-use App\Http\Controllers\MobileAppAuthenticationController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerImageController;
 use App\Http\Controllers\PartnerLogoController;
@@ -495,20 +494,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
         Route::post('contributor-image/{contributorImage}/detach', [ContributorImageController::class, 'detachToAvailable'])->name('contributor-image.detach');
     });
 });
-
-// Mobile authentication routes - public (no auth required for login flow)
-Route::post('mobile/acquire-token', [MobileAppAuthenticationController::class, 'acquire_token'])
-    ->name('token.acquire');
-
-Route::post('mobile/verify-two-factor', [MobileAppAuthenticationController::class, 'verify_two_factor'])
-    ->name('token.verify_two_factor');
-
-Route::post('mobile/two-factor-status', [MobileAppAuthenticationController::class, 'two_factor_status'])
-    ->name('token.two_factor_status');
-
-Route::get('mobile/wipe', [MobileAppAuthenticationController::class, 'wipe_tokens'])
-    ->name('token.wipe')
-    ->middleware('auth:sanctum');
 
 // Markdown conversion routes - utility endpoints (no auth required)
 // These are stateless utility functions that don't access user data
