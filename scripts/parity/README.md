@@ -318,6 +318,13 @@ displays) and the tool fixes behind it: artist life data composed as legacy prin
 dropped credits and the PHP sheets' doubled authors recognised as legacy defects, picture credits
 and dynasty names compared language by language, Sharing History's notices found in the page.
 
+`baselines/2026-10-22b` is the run after reimport 3, on the packages published from it: 3,348 real
+differences. The fall comes from #2296 (an italic inside an italic is one italic run) and #2301
+(Sharing History keeps each institution's name in its own language), with the tool reading
+Sharing History's original-language institution headings. Its `diff-runs.md` lists two regressions
+against 2026-10-22, both on the-hijaz-railway and both accepted: the three items legacy added since
+the dump was taken are now imported, and their pictures bring four more image URLs outside `/pub`.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
