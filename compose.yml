@@ -9,7 +9,8 @@
 #
 # One-shot — you `run --rm` these, and never `up` them:
 #
-#   tools       node container for npm/vite work; parity (scripts/parity)
+#   tools       node container for npm/vite work; parity (scripts/parity);
+#               data-packages-mcp (scripts/data-packages-mcp, started by .mcp.json)
 #   jobs        staging-glossary-sync, staging-seed-auth, exporter
 #   import      the legacy importer (needs scripts/import-tool/.env)
 #
@@ -268,6 +269,24 @@ services:
       PARITY_WORK: /parity
       LEGACY_DB: /legacy/database
       LEGACY_CODE: /legacy/code
+
+  # ---------------------------------------------------------------------------
+  # data-packages-mcp — read-only MCP server over the PUBLISHED
+  # @museumwnf/*-data packages, for import-quality assessment. stdio, so it is
+  # started by an MCP client (.mcp.json), never `up`:
+  #   docker compose run --rm -T --build data-packages-mcp
+  # It reads the npm registry and the /pub images the packages reference, never
+  # a database. See scripts/data-packages-mcp/README.md.
+  # ---------------------------------------------------------------------------
+  data-packages-mcp:
+    build:
+      context: scripts/data-packages-mcp
+      target: server
+    image: mwnf/data-packages-mcp
+    profiles: [tools]
+    stdin_open: true
+    volumes:
+      - data-packages-cache:/cache
 
   # ---------------------------------------------------------------------------
   # docs — Jekyll site on http://localhost:4000
@@ -630,6 +649,11 @@ volumes:
   exporter-galleries-modules:
   exporter-explore-modules:
   parity-modules:
+  # Extracted package versions. Published versions never change, so this only
+  # grows; deleting it costs a re-download. Named outside the `inventory_`
+  # prefix so a plain `docker run -v mwnf-pkg-cache:/cache` shares it.
+  data-packages-cache:
+    name: mwnf-pkg-cache
 
   # NOT disposable, and deliberately external so that `down -v` cannot destroy
   # them: a full stage is hours of importing and several gigabytes of images.
