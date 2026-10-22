@@ -56,13 +56,14 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 | `resources/css/**`, `resources/views/**`, `vite.config.js`, `postcss.config.js`, `package.json`, `package-lock.json`, `tsconfig.json` | `root-frontend` | `backend-rendered-frontend-validation` |
 | `scripts/importer/**` | `importer` | `importer-validation` |
 | `scripts/site-i18n/**` | `site-i18n` | `site-i18n-validation` |
+| `scripts/data-packages-mcp/**` | `data-packages-mcp` | `data-packages-mcp-validation` |
 | `scripts/exporters/**` | `exporters` | `exporter-validation` |
 
 **Jobs**
 
 1. **detect-changes** (*Detect Changed Paths*) - Classifies changed files using `git diff` against the PR base SHA
    - Checks out the repository with full Git history (`fetch-depth: 0`)
-   - Emits outputs: `backend`, `root-frontend`, `importer`, `site-i18n`, `exporters` (true/false)
+   - Emits outputs: `backend`, `root-frontend`, `importer`, `site-i18n`, `data-packages-mcp`, `exporters` (true/false)
    - Also emits `exporter-datasets`, a JSON array of every directory under `scripts/exporters/` holding a `package.json`, used as the `exporter-validation` matrix
 
 2. **dependency-review** (*Dependency Review (PR)*) - Reviews dependency changes introduced by the pull request
@@ -95,14 +96,19 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
    - Runs `npm run lint:check`, `npm run build` and `npm test`
    - Every test in this suite is a pure function over legacy row shapes, so no database, VPN or credentials are involved
 
-8. **exporter-validation** *(when `exporters=true`)* (*Exporter Validation (`<dataset>`)*) - Dataset exporter validation
+8. **data-packages-mcp-validation** *(when `data-packages-mcp=true`)* (*Data Packages MCP Validation*) - The read-only MCP server over the published data packages
+   - Uses the `setup-node-project` composite action with `working-directory: scripts/data-packages-mcp`
+   - Runs `npm run type-check`, `npm run lint:check` and `npm test`, then builds the server image (`docker build --target server`)
+   - Every test runs against fixture packages and a mocked registry, so no network, registry or credentials are involved
+
+9. **exporter-validation** *(when `exporters=true`)* (*Exporter Validation (`<dataset>`)*) - Dataset exporter validation
    - Matrix comes from `detect-changes`'s `exporter-datasets` output, not a hardcoded list — a forked exporter is covered from its first pull request
    - `fail-fast: false` — every dataset is reported, even when one fails
    - Uses the `setup-node-project` composite action with `working-directory: scripts/exporters/<dataset>`
    - Runs `npm run type-check`, `npm run lint:check` and `npm test` (Vitest unit tests)
    - Every test in these suites is a pure function over legacy row shapes, so no database, VPN or credentials are involved
 
-9. **ci-success** (*CI Success*) - Aggregates all check results
+10. **ci-success** (*CI Success*) - Aggregates all check results
    - `needs` every other job and runs with `if: always()`
    - Always requires `dependency-review` to have succeeded
    - For each path group that changed, requires the matching job(s) to have succeeded
@@ -156,6 +162,7 @@ Audits the full dependency tree of every PHP and npm project in the repository o
    | `Root` (`.`) |
    | `Importer` (`scripts/importer`) |
    | `Site i18n` (`scripts/site-i18n`) |
+   | `Data packages MCP` (`scripts/data-packages-mcp`) |
    | `Exporter (<dataset>)`, per `package.json` under `scripts/exporters/*/` |
    | `Viewer (<dataset>)`, per `package.json` under `scripts/viewers/*/` |
    | any other `package.json` under `scripts/` |

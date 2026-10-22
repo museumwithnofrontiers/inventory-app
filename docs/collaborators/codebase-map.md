@@ -21,6 +21,7 @@ Use this map to find the part of the repository that owns a task.
 | `database/factories/` | Test data factories. |
 | `database/seeders/` | Reference and development seed data. |
 | `scripts/importer/` | Node.js legacy data importer. |
+| `scripts/data-packages-mcp/` | Read-only MCP server over the published `@museumwnf/*-data` packages, for import-quality assessment. |
 | `.legacy-database/` | Legacy DDL and data exports used for migration analysis. |
 | `.legacy-code/` | Legacy application sources kept for behavioural reference. |
 | `.new-architecture/` | The website platform repositories, checked out for reference. |
