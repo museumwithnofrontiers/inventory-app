@@ -6,7 +6,7 @@
 # The repo-root compose.yml builds the server stage as the `data-packages-mcp`
 # service, which is what .mcp.json starts.
 
-FROM node:24-alpine AS deps
+FROM node:25-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci --no-audit --no-fund
@@ -21,7 +21,7 @@ COPY tsconfig.json tsconfig.build.json ./
 COPY src ./src
 RUN npm run build
 
-FROM node:24-alpine AS server
+FROM node:25-alpine AS server
 WORKDIR /app
 ENV NODE_ENV=production \
     DATA_PACKAGES_CACHE=/cache
