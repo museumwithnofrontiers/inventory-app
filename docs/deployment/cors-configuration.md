@@ -46,7 +46,7 @@ The CORS configuration in `config/cors.php`:
 
 1. Reads `CORS_ALLOWED_ORIGINS` environment variable
 2. Parses comma-separated origin URLs
-3. Applies CORS headers to API routes (`api/*`) and authentication endpoints (`sanctum/csrf-cookie`)
+3. Applies CORS headers to API routes (`api/*`)
 4. Enables credential support for cookie-based authentication
 
 CORS headers applied:
@@ -169,7 +169,7 @@ CORS_ALLOWED_ORIGINS=https://username.github.io,https://staging.example.com,http
    ```typescript
    axios.get("/api/endpoint", { withCredentials: true });
    ```
-3. Check Sanctum configuration for stateful domains
+3. Remember the API authenticates with OAuth bearer tokens, not cookies: send `Authorization: Bearer <token>`
 
 ### Preflight Request Fails
 

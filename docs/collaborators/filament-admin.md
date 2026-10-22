@@ -40,7 +40,7 @@ They are built on Laravel Fortify: they and the profile page call its actions (`
 - **Registration** is open only while the `self_registration_enabled` setting is on.
 - **E-mail verification:** every verification message links to `/admin/email-verification/verify/{id}/{hash}`. The route sits outside the panel's authentication, because a self-registered user verifies before an administrator approves them.
 - **The login page** tells the owner of an unverified or unapproved account what is missing.
-- **API tokens:** personal access tokens for the API are created and revoked on the API Tokens page, reached from the profile.
+- **Connected apps:** apps you authorized through OAuth, such as an AI assistant connected to the MCP server, are listed on the Connected apps page, reached from the profile or the user menu. Revoke ends an app's access at once.
 
 ## Test placement
 
