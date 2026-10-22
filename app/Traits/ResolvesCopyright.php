@@ -37,6 +37,21 @@ trait ResolvesCopyright
     }
 
     /**
+     * Which tier resolveCopyright() takes the text from: the image's own
+     * `copyright`, its Project's, or the global fallback.
+     *
+     * @return 'image'|'project'|'fallback'
+     */
+    public function copyrightSource(): string
+    {
+        if ($this->copyright !== null) {
+            return 'image';
+        }
+
+        return $this->copyrightProject()?->copyright !== null ? 'project' : 'fallback';
+    }
+
+    /**
      * The Project this image's copyright should fall back to, if any.
      */
     protected function copyrightProject(): ?Project

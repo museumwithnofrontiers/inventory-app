@@ -85,6 +85,32 @@ class PublicRenditions
     }
 
     /**
+     * Where the pictures cache stands for this image, without reading the
+     * file or burning anything:
+     * - fresh: cached, burned for the current copyright and burner version;
+     * - stale: cached, but burned for an older one (re-burned on next use);
+     * - unmarked: a file with no marker saying what it was burned for;
+     * - missing: nothing cached (burned on first use).
+     *
+     * @param  Model&StreamableImageFile&BurnsCopyright  $record
+     * @return 'fresh'|'stale'|'unmarked'|'missing'
+     */
+    public function cacheState(Model $record): string
+    {
+        if (! $this->pictures()->exists($this->cachePath($record))) {
+            return 'missing';
+        }
+
+        $marker = Cache::get($this->markerKey($record));
+
+        return match (true) {
+            ! is_string($marker) => 'unmarked',
+            $marker === $this->etag($record) => 'fresh',
+            default => 'stale',
+        };
+    }
+
+    /**
      * Whatever the cache holds, labelled with the ETag its marker recorded
      * - which may be older than the current one. Never with the current
      * ETag: a client would keep the bytes under it and get 304s for them

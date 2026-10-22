@@ -9,6 +9,14 @@ use App\Mcp\Tools\Get;
 use App\Mcp\Tools\GetCollection;
 use App\Mcp\Tools\GetItem;
 use App\Mcp\Tools\ListEntityTypes;
+use App\Mcp\Tools\Pipeline\AuditAttachedImages;
+use App\Mcp\Tools\Pipeline\FindOrphans;
+use App\Mcp\Tools\Pipeline\ImagePipelineStatus;
+use App\Mcp\Tools\Pipeline\ListAvailableImages;
+use App\Mcp\Tools\Pipeline\ListPendingUploads;
+use App\Mcp\Tools\Pipeline\ListStaleRenditions;
+use App\Mcp\Tools\Pipeline\QueueStatus;
+use App\Mcp\Tools\Pipeline\TraceImage;
 use App\Mcp\Tools\Search;
 use App\Mcp\Tools\ViewImage;
 use App\Mcp\Tools\WhoAmI;
@@ -56,6 +64,14 @@ class InventoryServer extends Server
         GetCollection::class,
         FindByLegacyKey::class,
         ViewImage::class,
+        ImagePipelineStatus::class,
+        TraceImage::class,
+        ListPendingUploads::class,
+        ListAvailableImages::class,
+        AuditAttachedImages::class,
+        FindOrphans::class,
+        ListStaleRenditions::class,
+        QueueStatus::class,
     ];
 
     protected array $tools = self::TOOLS;
