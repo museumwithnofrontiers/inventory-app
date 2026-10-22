@@ -227,7 +227,7 @@ class TwoFactorChallenge extends SimplePage
         session()->regenerate();
         session()->forget(['filament.admin.2fa.user_id', 'filament.admin.2fa.email_challenge_id']);
 
-        $this->redirect(Filament::getUrl());
+        $this->redirectIntended(Filament::getUrl());
     }
 
     private function fieldForMethod(string $method): string

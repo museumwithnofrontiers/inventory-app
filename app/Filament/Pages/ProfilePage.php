@@ -78,9 +78,19 @@ class ProfilePage extends EditProfile
         return [
             $this->getChangePasswordAction(),
             ...$twoFactorActions,
+            $this->getConnectedAppsAction(),
             $this->getLogoutOtherBrowserSessionsAction(),
             $this->getDeleteAccountAction(),
         ];
+    }
+
+    protected function getConnectedAppsAction(): Action
+    {
+        return Action::make('connectedApps')
+            ->label('Connected apps')
+            ->icon('heroicon-o-link')
+            ->color('gray')
+            ->url(ConnectedAppsPage::getUrl());
     }
 
     protected function getChangePasswordAction(): Action

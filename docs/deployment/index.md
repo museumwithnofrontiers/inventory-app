@@ -62,7 +62,7 @@ The Filament `/admin` panel is the primary production UI.
 
 ## Security
 
-- Token-based API authentication (Laravel Sanctum)
+- OAuth 2.1 token authentication (Laravel Passport); the REST API is off unless `API_ENABLED` is set
 - Role-based access control (Spatie Permissions)
 - HTTPS, CSRF protection, and security headers
 - Input validation on all endpoints

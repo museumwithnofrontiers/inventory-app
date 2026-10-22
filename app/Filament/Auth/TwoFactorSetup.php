@@ -43,7 +43,7 @@ class TwoFactorSetup extends SimplePage
         $user = Auth::guard(Filament::getAuthGuard())->user();
 
         if (! is_null($user->two_factor_confirmed_at)) {
-            $this->redirect(Filament::getUrl());
+            $this->redirectIntended(Filament::getUrl());
 
             return;
         }
@@ -109,7 +109,7 @@ class TwoFactorSetup extends SimplePage
 
     public function complete(): void
     {
-        $this->redirect(Filament::getUrl());
+        $this->redirectIntended(Filament::getUrl());
     }
 
     /**
