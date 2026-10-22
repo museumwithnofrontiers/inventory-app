@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "mwnf-data-packages": {
+      "type": "stdio",
+      "command": "docker",
+      "args": ["compose", "--progress", "quiet", "run", "--rm", "-T", "--build", "--quiet-pull", "data-packages-mcp"]
+    }
+  }
+}
