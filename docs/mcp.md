@@ -62,6 +62,21 @@ claude mcp add mwnf-inventory-local -- docker compose exec -T -e MCP_LOCAL_USER=
 | `find_by_legacy_key` | What a legacy record was imported as, across every type you may read (exact or prefix match on `backward_compatibility`) |
 | `view_image` | An attached image's burned rendition, as the public sees it. Only a cached rendition unless `allow_burn` is set; never an original |
 
+### Observing the image pipeline
+
+These need `view data`. None writes to a disk or a table, burns a rendition or returns an original's bytes.
+
+| Tool | What it returns |
+| --- | --- |
+| `image_pipeline_status` | One overview, stage by stage: uploads waiting (and stuck), the available pool, attached images per model with missing originals, orphaned files on the originals disk and in the pictures cache, the queue |
+| `trace_image` | One image by id, filename or `/pub` URL: its stage, owner, original (present, size, checksum), copyright and its source (image, project or fallback), cached rendition (fresh, stale, unmarked or missing) and public URL |
+| `list_pending_uploads` | Uploads not yet processed, with their age and whether their file is still there |
+| `list_available_images` | The pool of processed images waiting to be attached, with their age and original |
+| `audit_attached_images` | The same audit as `images:attached-registry-audit`: registry contract, rows, missing originals, duplicate and empty paths |
+| `find_orphans` | Unreferenced files on the originals disk or in the pictures cache (report only; the cleanup commands remove them) |
+| `list_stale_renditions` | Cached renditions burned for an older copyright or burner version; each is re-burned on its next request |
+| `queue_status` | The queue connection, waiting jobs and recent failed jobs |
+
 Everything is read through the existing permissions and policies: a type is readable through its model's policy where it has one, otherwise with `view data`, as on the API's read routes. Users, roles, permissions and settings are not offered.
 
 ## For developers
