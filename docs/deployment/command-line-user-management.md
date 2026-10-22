@@ -187,7 +187,7 @@ php artisan permissions:sync --production
 php artisan auth:restore auth-snapshots/pre-reset.json.enc --force
 ```
 
-Auth snapshots preserve user accounts, MFA setup, role assignments, direct permissions, and API tokens. The snapshot is encrypted with Laravel's current `APP_KEY`, but the `APP_KEY` is not stored in the file. Restore the snapshot only into an application that uses the same `APP_KEY`.
+Auth snapshots preserve user accounts, MFA setup, role assignments and direct permissions. OAuth grants are not kept: a restore revokes every OAuth token, so connected apps sign in again. The snapshot is encrypted with Laravel's current `APP_KEY`, but the `APP_KEY` is not stored in the file. Restore the snapshot only into an application that uses the same `APP_KEY`.
 
 ## Common Use Cases
 

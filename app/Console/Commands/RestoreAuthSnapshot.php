@@ -31,7 +31,7 @@ class RestoreAuthSnapshot extends Command
      *
      * @var string
      */
-    protected $description = 'Restore user accounts, MFA setup, role assignments, direct permissions, and API tokens from an encrypted auth snapshot.';
+    protected $description = 'Restore user accounts, MFA setup, role assignments and direct permissions from an encrypted auth snapshot. Every OAuth token is revoked: connected apps sign in again.';
 
     /**
      * Execute the console command.
@@ -73,11 +73,9 @@ class RestoreAuthSnapshot extends Command
         $roleAssignments = is_array($tables['role_assignments'] ?? null) ? $tables['role_assignments'] : [];
         /** @var array<int, array<string, mixed>> $permissionAssignments */
         $permissionAssignments = is_array($tables['permission_assignments'] ?? null) ? $tables['permission_assignments'] : [];
-        /** @var array<int, array<string, mixed>> $tokenRows */
-        $tokenRows = is_array($tables['personal_access_tokens'] ?? null) ? $tables['personal_access_tokens'] : [];
 
         try {
-            DB::transaction(function () use ($usersRows, $roleAssignments, $permissionAssignments, $tokenRows): void {
+            DB::transaction(function () use ($usersRows, $roleAssignments, $permissionAssignments): void {
                 Schema::disableForeignKeyConstraints();
 
                 try {
@@ -85,7 +83,6 @@ class RestoreAuthSnapshot extends Command
                     $this->restoreRows('users', $usersRows);
                     $this->restoreRoleAssignments($roleAssignments);
                     $this->restorePermissionAssignments($permissionAssignments);
-                    $this->restoreRows('personal_access_tokens', $tokenRows);
                 } finally {
                     Schema::enableForeignKeyConstraints();
                 }
@@ -102,7 +99,7 @@ class RestoreAuthSnapshot extends Command
         $this->line('Restored users: '.count($usersRows));
         $this->line('Restored role assignments: '.count($roleAssignments));
         $this->line('Restored direct permission assignments: '.count($permissionAssignments));
-        $this->line('Restored personal access tokens: '.count($tokenRows));
+        $this->line('OAuth tokens revoked: connected apps must sign in again.');
 
         return Command::SUCCESS;
     }
@@ -143,10 +140,13 @@ class RestoreAuthSnapshot extends Command
         $this->deleteUserModelRows($modelHasRolesTable);
         $this->deleteUserModelRows($modelHasPermissionsTable);
 
-        if (Schema::hasTable('personal_access_tokens')) {
-            DB::table('personal_access_tokens')
-                ->where('tokenable_type', User::class)
-                ->delete();
+        // Tokens and codes point at user ids. The restored users take ids
+        // from the snapshot, so a grant made to a user being replaced could
+        // otherwise resolve to whoever now holds that id.
+        foreach (['oauth_refresh_tokens', 'oauth_access_tokens', 'oauth_auth_codes'] as $table) {
+            if (Schema::hasTable($table)) {
+                DB::table($table)->delete();
+            }
         }
 
         User::query()->delete();

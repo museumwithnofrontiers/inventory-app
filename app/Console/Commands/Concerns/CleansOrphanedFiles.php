@@ -4,6 +4,7 @@ namespace App\Console\Commands\Concerns;
 
 use App\Support\FileSize;
 use App\Support\Images\AttachedImageRegistry;
+use App\Support\Images\ImageOrphans;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
@@ -48,37 +49,12 @@ trait CleansOrphanedFiles
             return Command::FAILURE;
         }
 
-        $keepSet = $buildKeepSet();
+        $found = app(ImageOrphans::class)->find($disk, $directory, $buildKeepSet(), $olderThan);
+        $orphans = $found['orphans'];
+        $referenced = $found['referenced'];
+        $skipped = $found['skipped'];
 
-        /** @var list<string> $allFiles */
-        $allFiles = Storage::disk($disk)->allFiles($directory);
-
-        /** @var list<string> $orphans */
-        $orphans = [];
-        $referenced = 0;
-        $skipped = 0;
-
-        foreach ($allFiles as $file) {
-            if (isset($keepSet[$file])) {
-                $referenced++;
-
-                continue;
-            }
-
-            // Apply --older-than filter
-            if ($olderThan !== null) {
-                $lastModified = Storage::disk($disk)->lastModified($file);
-                if ($lastModified > $olderThan->timestamp) {
-                    $skipped++;
-
-                    continue;
-                }
-            }
-
-            $orphans[] = $file;
-        }
-
-        $totalScanned = count($allFiles);
+        $totalScanned = $found['scanned'];
         $totalOrphans = count($orphans);
 
         if ($doDelete) {

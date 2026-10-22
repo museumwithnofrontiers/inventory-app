@@ -181,10 +181,16 @@ MAIL_MAILER=log
 ### Authentication Configuration
 
 ```env
-# Sanctum (API Authentication)
-SANCTUM_STATEFUL_DOMAINS=localhost,127.0.0.1,your-frontend-domain.com
-SANCTUM_GUARD=web
-SANCTUM_MIDDLEWARE=web
+# REST API switch: every /api URL answers 404 unless this is true
+API_ENABLED=false
+
+# OAuth 2.1 (Passport). The signing keys are storage/oauth-private.key and
+# storage/oauth-public.key; scripts/deploy.sh creates them once in shared
+# storage. Set these only to supply the keys some other way.
+#PASSPORT_PRIVATE_KEY=
+#PASSPORT_PUBLIC_KEY=
+PASSPORT_ACCESS_TOKEN_MINUTES=60
+PASSPORT_REFRESH_TOKEN_DAYS=30
 
 # JWT Configuration (if using JWT)
 JWT_SECRET=your-jwt-secret
@@ -343,27 +349,19 @@ return [
 ];
 ```
 
-### config/sanctum.php
+### config/passport.php
 
-API authentication configuration:
+OAuth 2.1 authorization server (Laravel Passport). The only grant is authorization code with PKCE (`App\Support\OAuth\AuthorizationCodeClient` refuses the others); the scopes are defined in `App\Enums\OAuthScope`.
 
 ```php
 <?php
 
 return [
-    'stateful' => explode(',', env('SANCTUM_STATEFUL_DOMAINS', sprintf(
-        '%s%s',
-        'localhost,localhost:3000,127.0.0.1,127.0.0.1:8000,::1',
-        Sanctum::currentApplicationUrlWithPort()
-    ))),
-
-    'guard' => env('SANCTUM_GUARD', 'web'),
-    'expiration' => null,
-    'token_prefix' => env('SANCTUM_TOKEN_PREFIX', ''),
-    'middleware' => [
-        'encrypt_cookies' => App\Http\Middleware\EncryptCookies::class,
-        'validate_csrf_token' => App\Http\Middleware\VerifyCsrfToken::class,
-    ],
+    'guard' => 'web',                                     // users sign in on the panel
+    'private_key' => env('PASSPORT_PRIVATE_KEY'),         // null: storage/oauth-private.key
+    'public_key' => env('PASSPORT_PUBLIC_KEY'),           // null: storage/oauth-public.key
+    'access_token_minutes' => (int) env('PASSPORT_ACCESS_TOKEN_MINUTES', 60),
+    'refresh_token_days' => (int) env('PASSPORT_REFRESH_TOKEN_DAYS', 30),
 ];
 ```
 
@@ -564,7 +562,7 @@ Configuration file:
 <?php
 
 return [
-    'paths' => ['api/*', 'sanctum/csrf-cookie'],
+    'paths' => ['api/*'],
     'allowed_methods' => ['*'],
     'allowed_origins' => array_filter(
         array_map(

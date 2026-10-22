@@ -7,11 +7,11 @@ Reusable test traits that provide standard test methods for common API patterns.
 ## Available Traits
 
 ### AuthenticatesApiRequests.php
-**Purpose:** Sets up authenticated API requests with Sanctum tokens
+**Purpose:** Sets up authenticated API requests with an OAuth (Passport) token carrying the `api:read` and `api:write` scopes
 
 **Provides:**
 - Authenticated user with ALL permissions (VIEW_DATA, CREATE_DATA, UPDATE_DATA, DELETE_DATA)
-- Sanctum acting-as authentication
+- `Passport::actingAs()` authentication
 - Automatic permission cache clearing
 
 **Usage:**

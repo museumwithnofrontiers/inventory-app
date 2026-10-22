@@ -2,10 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Support\Images\AttachedImageRegistry;
+use App\Support\Images\AttachedImageAudit;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\Storage;
 
 class AttachedRegistryAudit extends Command
 {
@@ -13,90 +11,29 @@ class AttachedRegistryAudit extends Command
                             {--json : Output results as JSON}
                             {--fail-on-issues : Return a non-zero exit code when any issue is detected}';
 
-    protected $description = 'Audit the attached-image registry: report row counts, missing files, duplicate paths, and empty paths per registered model';
+    protected $description = 'Audit the attached-image registry: report row counts, missing originals, duplicate paths, and empty paths per registered model';
 
-    public function handle(): int
+    public function handle(AttachedImageAudit $audit): int
     {
-        try {
-            AttachedImageRegistry::validate();
-        } catch (\RuntimeException $e) {
-            $this->error('Registry validation failed: '.$e->getMessage());
+        $report = $audit->run();
+
+        if (! $report['registry_valid']) {
+            $this->error('Registry validation failed: '.$report['registry_error']);
 
             return Command::FAILURE;
-        }
-
-        $disk = Config::string('localstorage.pictures.disk');
-        $directory = trim(Config::string('localstorage.pictures.directory'), '/');
-
-        $results = [];
-        $hasIssues = false;
-
-        foreach (AttachedImageRegistry::modelClasses() as $class) {
-            $instance = new $class;
-            $table = $instance->getTable();
-            $rowCount = 0;
-            $paths = [];
-            $missingFiles = [];
-            $emptyPaths = [];
-
-            $class::query()->chunkById(500, function ($records) use (
-                $disk,
-                $directory,
-                &$rowCount,
-                &$paths,
-                &$missingFiles,
-                &$emptyPaths,
-            ) {
-                foreach ($records as $record) {
-                    $rowCount++;
-                    $path = $record->getAttribute('path');
-
-                    if (! is_string($path) || $path === '') {
-                        $keyRaw = $record->getKey();
-                        $emptyPaths[] = is_scalar($keyRaw) ? (string) $keyRaw : '';
-
-                        continue;
-                    }
-
-                    $storagePath = trim($directory, '/').'/'.$path;
-                    $paths[] = $storagePath;
-
-                    if (! Storage::disk($disk)->exists($storagePath)) {
-                        $missingFiles[] = $storagePath;
-                    }
-                }
-            });
-
-            $allPaths = array_count_values($paths);
-            $duplicatePaths = array_keys(array_filter($allPaths, fn ($count) => $count > 1));
-            $distinctPaths = array_keys($allPaths);
-
-            if ($missingFiles || $duplicatePaths || $emptyPaths) {
-                $hasIssues = true;
-            }
-
-            $results[] = [
-                'class' => $class,
-                'table' => $table,
-                'row_count' => $rowCount,
-                'distinct_paths' => count($distinctPaths),
-                'missing_files' => $missingFiles,
-                'duplicate_paths' => $duplicatePaths,
-                'empty_path_ids' => $emptyPaths,
-            ];
         }
 
         if ($this->option('json')) {
             $this->line((string) json_encode([
                 'registry_valid' => true,
-                'has_issues' => $hasIssues,
-                'models' => $results,
+                'has_issues' => $report['has_issues'],
+                'models' => $report['models'],
             ], JSON_PRETTY_PRINT));
         } else {
-            $this->outputTable($results, $hasIssues);
+            $this->outputTable($report['models'], $report['has_issues']);
         }
 
-        if ($this->option('fail-on-issues') && $hasIssues) {
+        if ($this->option('fail-on-issues') && $report['has_issues']) {
             return Command::FAILURE;
         }
 
@@ -104,7 +41,7 @@ class AttachedRegistryAudit extends Command
     }
 
     /**
-     * @param  list<array{class: class-string, table: string, row_count: int, distinct_paths: int, missing_files: list<string>, duplicate_paths: list<string>, empty_path_ids: list<string>}>  $results
+     * @param  list<array{class: class-string, table: string, row_count: int, distinct_paths: int, missing_originals: list<string>, duplicate_paths: list<string>, empty_path_ids: list<string>}>  $results
      */
     private function outputTable(array $results, bool $hasIssues): void
     {
@@ -118,9 +55,9 @@ class AttachedRegistryAudit extends Command
             $this->line("  Rows:            {$result['row_count']}");
             $this->line("  Distinct paths:  {$result['distinct_paths']}");
 
-            if (! empty($result['missing_files'])) {
-                $this->warn('  Missing files ('.count($result['missing_files']).')');
-                foreach ($result['missing_files'] as $path) {
+            if (! empty($result['missing_originals'])) {
+                $this->warn('  Missing originals ('.count($result['missing_originals']).')');
+                foreach ($result['missing_originals'] as $path) {
                     $this->line("    - {$path}");
                 }
             }
@@ -139,7 +76,7 @@ class AttachedRegistryAudit extends Command
                 }
             }
 
-            if (empty($result['missing_files']) && empty($result['duplicate_paths']) && empty($result['empty_path_ids'])) {
+            if (empty($result['missing_originals']) && empty($result['duplicate_paths']) && empty($result['empty_path_ids'])) {
                 $this->line('  <fg=green>No issues found.</>');
             }
         }

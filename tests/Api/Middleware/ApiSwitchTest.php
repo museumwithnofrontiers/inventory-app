@@ -2,6 +2,7 @@
 
 namespace Tests\Api\Middleware;
 
+use App\Enums\OAuthScope;
 use App\Enums\Permission;
 use App\Http\Middleware\EnsureApiEnabled;
 use App\Models\Item;
@@ -9,7 +10,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Route;
 use Illuminate\Routing\Router;
-use Laravel\Sanctum\Sanctum;
+use Laravel\Passport\Passport;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
@@ -54,7 +55,7 @@ class ApiSwitchTest extends TestCase
     public function test_a_switched_off_api_answers_404_to_authenticated_requests(string $method, string $routeName): void
     {
         config(['api.enabled' => false]);
-        Sanctum::actingAs($this->userWithAllDataPermissions());
+        Passport::actingAs($this->userWithAllDataPermissions(), [OAuthScope::API_READ->value, OAuthScope::API_WRITE->value]);
 
         $this->json($method, route($routeName))->assertNotFound();
     }
@@ -63,7 +64,7 @@ class ApiSwitchTest extends TestCase
     public function test_a_switched_on_api_routes_requests_normally(string $method, string $routeName): void
     {
         config(['api.enabled' => true]);
-        Sanctum::actingAs($this->userWithAllDataPermissions());
+        Passport::actingAs($this->userWithAllDataPermissions(), [OAuthScope::API_READ->value, OAuthScope::API_WRITE->value]);
 
         $this->assertNotSame(404, $this->json($method, route($routeName))->getStatusCode());
     }
@@ -71,7 +72,7 @@ class ApiSwitchTest extends TestCase
     public function test_a_switched_off_api_neither_reads_nor_deletes_a_record(): void
     {
         config(['api.enabled' => false]);
-        Sanctum::actingAs($this->userWithAllDataPermissions());
+        Passport::actingAs($this->userWithAllDataPermissions(), [OAuthScope::API_READ->value, OAuthScope::API_WRITE->value]);
         $item = Item::factory()->create();
 
         $this->getJson(route('item.show', $item))->assertNotFound();

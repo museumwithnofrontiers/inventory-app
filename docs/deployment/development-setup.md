@@ -222,7 +222,7 @@ docker compose exec app php artisan migrate --force
 docker compose exec app php artisan db:seed --class=MinimalDatabaseSeeder --force
 docker compose exec app php artisan permissions:sync
 
-# Restore users, MFA setup, role assignments, direct permissions, and API tokens
+# Restore users, MFA setup, role assignments and direct permissions
 docker compose exec app php artisan auth:restore auth-snapshots/pre-reset.json.enc --force
 
 # Create new migration

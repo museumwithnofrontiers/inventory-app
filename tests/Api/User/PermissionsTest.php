@@ -31,7 +31,7 @@ class PermissionsTest extends TestCase
             Permission::CREATE_DATA->value,
         ]);
 
-        $response = $this->actingAs($user)->getJson(route('user.permissions'));
+        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonStructure(['data' => ['permissions']])
@@ -52,7 +52,7 @@ class PermissionsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->getJson(route('user.permissions'));
+        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJson(['data' => []]);
@@ -73,7 +73,7 @@ class PermissionsTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole($role);
 
-        $response = $this->actingAs($user)->getJson(route('user.permissions'));
+        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonCount(2, 'data.permissions')
@@ -98,7 +98,7 @@ class PermissionsTest extends TestCase
         $user->assignRole($role);
         $user->givePermissionTo(Permission::CREATE_DATA->value);
 
-        $response = $this->actingAs($user)->getJson(route('user.permissions'));
+        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonCount(2, 'data.permissions');
@@ -134,7 +134,7 @@ class PermissionsTest extends TestCase
         $user->assignRole([$role1, $role2]);
         $user->givePermissionTo(Permission::VIEW_DATA->value); // Direct assignment too
 
-        $response = $this->actingAs($user)->getJson(route('user.permissions'));
+        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
 
         $response->assertOk();
         $permissions = $response->json('data.permissions');
@@ -152,7 +152,7 @@ class PermissionsTest extends TestCase
         $user = User::factory()->create();
         $user->givePermissionTo(Permission::VIEW_DATA->value);
 
-        $response = $this->actingAs($user)->getJson(route('user.permissions'));
+        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
 
         $response->assertOk();
         $permissions = $response->json('data.permissions');
@@ -171,7 +171,7 @@ class PermissionsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user)->getJson(route('user.permissions'));
+        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonStructure(['data']);
