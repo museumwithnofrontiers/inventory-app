@@ -48,11 +48,16 @@ export function legacyRecords(cfg) {
 // sh_db_ word.
 export function labelIndex(cfg = {}) {
   const idx = new Map();
+  // Several terms can print the same label: French prints "Édition" for the copy editor and the
+  // translation copy editor alike. `terms` keeps every term a label stands for.
+  idx.terms = new Map();
   const prefix = cfg.termPrefix ?? 'db_';
   for (const r of readTable('mwnf3', 'translation')) {
     if (!r.value || !String(r.word_id).startsWith(prefix)) continue;
     if (prefix === 'db_' && Number(r.group_id) !== 4) continue;
-    idx.set(`${r.lang_id}|${norm(r.value)}`, r.word_id);
+    const key = `${r.lang_id}|${norm(r.value)}`;
+    idx.set(key, r.word_id);
+    idx.terms.set(key, new Set([...(idx.terms.get(key) ?? []), r.word_id]));
   }
   return idx;
 }
@@ -80,6 +85,7 @@ export function parsePage(html, lang, labels) {
   let short = null;
   let shortBroken = false;
   let credits = {};
+  let creditsShared = [];
   for (const part of parts) {
     const close = part.indexOf('</h3>');
     if (close < 0) continue;
@@ -99,7 +105,7 @@ export function parsePage(html, lang, labels) {
     // "Type of Object" is hard-coded in the Sharing History template, not in the dictionary.
     const term = (labels.get(`${lang}|${norm(label)}`) ?? labels.get(`en|${norm(label)}`) ?? label.match(/^\[((?:sh_)?db_\w+)\]$/)?.[1] ?? (norm(label) === 'type of object' ? 'db_typeof_object' : null))?.replace(/^sh_/, '') ?? null;
     if (term === 'db_citation') {
-      credits = parseCredits(content, lang, labels);
+      ({ credits, shared: creditsShared } = parseCredits(content, lang, labels));
       continue;
     }
     // The short description sits behind a "View Short Description" toggle in the same section.
@@ -121,25 +127,33 @@ export function parsePage(html, lang, labels) {
     sections.push({ label, term, html: content, brokenGlossary });
     if (tc) shortBroken = brokenGlossary;
   }
-  return { sections, short, shortBroken, credits, empty: sections.length === 0 };
+  return { sections, short, shortBroken, credits, creditsShared, empty: sections.length === 0 };
 }
 
 // "<p>Prepared by: Name<br/>Copyedited by: <a class="su_tooltip_1">Name<span …>bio</span></a>, …</p>"
 // and "MWNF Working Number: IT 09". Keyed by term (db_writer, db_workingnumber, …) when known.
-function parseCredits(html, lang, labels) {
-  const out = {};
+// A line whose label several terms print goes to `shared` with all of them, for the comparison
+// to resolve.
+export function parseCredits(html, lang, labels) {
+  const credits = {};
+  const shared = [];
   const clean = html.replace(/<span class="su_tooltip_1-content">[\s\S]*?<\/span><\/span><\/span><\/span>/g, '');
   for (const p of clean.matchAll(/<p>([\s\S]*?)<\/p>/g)) {
-    for (const line of p[1].split(/<br\s*\/?>/)) {
+    for (const line of p[1].split(/<\/?br\s*\/?>/)) {
       const m = line.match(/^\s*([^<:]{2,60}):\s*([\s\S]*)$/);
       if (!m) continue;
       const label = decodeEntities(m[1]).trim();
-      const term = (labels.get(`${lang}|${norm(label)}`) ?? labels.get(`en|${norm(label)}`) ?? label).replace(/^sh_/, '');
+      const key = labels.has(`${lang}|${norm(label)}`) ? `${lang}|${norm(label)}` : `en|${norm(label)}`;
+      const term = (labels.get(key) ?? label).replace(/^sh_/, '');
+      const terms = [...(labels.terms?.get(key) ?? [])].map((t) => t.replace(/^sh_/, ''));
       const text = htmlToText(m[2]).trim();
-      if (text) out[term] = text.split(/\s*[,،]\s*/).filter(Boolean);
+      if (!text) continue;
+      const names = text.split(/\s*[,،]\s*/).filter(Boolean);
+      if (terms.length > 1) shared.push({ terms, names });
+      else credits[term] = names;
     }
   }
-  return out;
+  return { credits, shared };
 }
 
 // The record's own pictures: images.museumwnf.org/<size>/<objects|monuments>/<project>/<country>/<museum no.>/<number>/<n>.jpg
