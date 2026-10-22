@@ -2,6 +2,8 @@
 
 namespace App\Enums;
 
+use Laravel\Mcp\Server\Registrar;
+
 /**
  * What an OAuth token may be used for. A scope limits the token; the user's
  * permissions and the policies still decide what the user may do, and a
@@ -9,7 +11,9 @@ namespace App\Enums;
  */
 enum OAuthScope: string
 {
-    case MCP = 'mcp';
+    // The scope laravel/mcp advertises in its discovery metadata and grants
+    // to the clients it registers, so the one MCP clients ask for
+    case MCP = Registrar::OAUTH_SCOPE;
     case API_READ = 'api:read';
     case API_WRITE = 'api:write';
 

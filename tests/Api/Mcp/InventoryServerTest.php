@@ -106,6 +106,28 @@ class InventoryServerTest extends TestCase
         $this->assertSame([OAuthScope::MCP->value], $whoami['connection']['scopes']);
     }
 
+    public function test_a_client_that_registers_itself_and_follows_discovery_calls_whoami(): void
+    {
+        $user = $this->mcpUser();
+        $user->givePermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
+        $this->oauthRedirectUri = 'https://claude.ai/api/mcp/auth_callback';
+        config(['mcp.redirect_domains' => ['https://claude.ai']]);
+
+        // What an MCP client reads before asking for a token
+        $metadata = $this->getJson(route('mcp.oauth.protected-resource.nested', ['path' => 'mcp/inventory']))->assertOk();
+        $scope = implode(' ', (array) $metadata->json('scopes_supported'));
+        $clientId = $this->postJson(route('mcp.oauth.register'), [
+            'client_name' => 'Claude',
+            'redirect_uris' => [$this->oauthRedirectUri],
+        ])->assertCreated()->json('client_id');
+
+        $client = Passport::client()->newQuery()->findOrFail($clientId);
+        $token = $this->issueOAuthToken($user, $client, $scope);
+        $this->forgetBearerGuards();
+
+        $this->withToken($token)->mcpCall('tools/call', ['name' => 'whoami', 'arguments' => []])->assertOk();
+    }
+
     public function test_approving_the_mcp_scope_needs_access_mcp(): void
     {
         Filament::setCurrentPanel(Filament::getPanel('admin'));
