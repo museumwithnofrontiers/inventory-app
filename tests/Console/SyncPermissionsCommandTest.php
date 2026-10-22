@@ -67,15 +67,17 @@ class SyncPermissionsCommandTest extends TestCase
         $nonVerifiedRole = Role::findByName('Non-verified users');
         $this->assertCount(0, $nonVerifiedRole->permissions);
 
-        // Verify Visitor has VIEW_DATA and ACCESS_ADMIN_PANEL
+        // Verify Visitor has VIEW_DATA, ACCESS_ADMIN_PANEL and ACCESS_MCP
         $visitorRole = Role::findByName('Visitor');
-        $this->assertCount(2, $visitorRole->permissions);
+        $this->assertCount(3, $visitorRole->permissions);
+        $this->assertTrue($visitorRole->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
         $this->assertTrue($visitorRole->hasPermissionTo(PermissionEnum::VIEW_DATA->value));
         $this->assertTrue($visitorRole->hasPermissionTo(PermissionEnum::ACCESS_ADMIN_PANEL->value));
 
         // Verify Regular User has data operation permissions and Filament reference-data access
         $regularRole = Role::findByName('Regular User');
-        $this->assertCount(6, $regularRole->permissions);
+        $this->assertCount(7, $regularRole->permissions);
+        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
         $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::VIEW_DATA->value));
         $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::CREATE_DATA->value));
         $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::UPDATE_DATA->value));
@@ -85,7 +87,8 @@ class SyncPermissionsCommandTest extends TestCase
 
         // Verify Manager has user/role management permissions
         $managerRole = Role::findByName('Manager of Users');
-        $this->assertCount(7, $managerRole->permissions);
+        $this->assertCount(8, $managerRole->permissions);
+        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
         $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::MANAGE_USERS->value));
         $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::ASSIGN_ROLES->value));
         $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::VIEW_USER_MANAGEMENT->value));
@@ -166,7 +169,8 @@ class SyncPermissionsCommandTest extends TestCase
 
         // Verify all expected permissions are now assigned
         $role->refresh();
-        $this->assertCount(6, $role->permissions);
+        $this->assertCount(7, $role->permissions);
+        $this->assertTrue($role->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
         $this->assertTrue($role->hasPermissionTo(PermissionEnum::VIEW_DATA->value));
         $this->assertTrue($role->hasPermissionTo(PermissionEnum::CREATE_DATA->value));
         $this->assertTrue($role->hasPermissionTo(PermissionEnum::UPDATE_DATA->value));

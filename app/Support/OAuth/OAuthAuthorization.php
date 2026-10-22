@@ -2,6 +2,7 @@
 
 namespace App\Support\OAuth;
 
+use App\Enums\OAuthScope;
 use App\Enums\Permission;
 use App\Models\User;
 
@@ -18,6 +19,12 @@ final class OAuthAuthorization
      */
     public static function mayAuthorize(User $user, array $scopes): bool
     {
-        return $user->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
+        if (! $user->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value)) {
+            return false;
+        }
+
+        // A token for the MCP server is useless without the permission to use it
+        return ! in_array(OAuthScope::MCP->value, $scopes, true)
+            || $user->hasPermissionTo(Permission::ACCESS_MCP->value);
     }
 }

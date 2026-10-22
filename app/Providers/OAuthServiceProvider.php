@@ -6,9 +6,11 @@ use App\Enums\OAuthScope;
 use App\Filament\Pages\AuthorizeApplicationPage;
 use App\Support\OAuth\AuthorizationCodeClient;
 use Carbon\CarbonInterval;
+use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Client;
 use Laravel\Passport\Passport;
@@ -40,6 +42,9 @@ class OAuthServiceProvider extends ServiceProvider
         // Passport has validated the request and the user is signed in on the
         // panel: the consent screen is a panel page, handed what to show
         Passport::authorizationView(fn (array $parameters): RedirectResponse => $this->toConsentPage($parameters));
+
+        // Client registration (routes/ai.php) is open to anyone
+        RateLimiter::for('oauth-register', fn (Request $request): Limit => Limit::perHour(20)->by((string) $request->ip()));
     }
 
     /**
