@@ -31,9 +31,9 @@ the site's database or files.
 
 - **Anonymous HTTP.** The unauthenticated surface:
   - `/pub/{filename}` (`routes/pub.php`, `App\Http\Controllers\Pub\PictureController`) serves every attached image. The copyright is burned in on demand and the rendition is cached on the public disk.
-  - `/api/info`, `/api/health`, `/api/version`.
-  - `/api/mobile/acquire-token`, `/api/mobile/verify-two-factor`, `/api/mobile/two-factor-status` (password and TOTP login for the mobile app).
-  - `/api/markdown/*`: Markdown to and from HTML conversion and validation.
+  - The REST API under `/api` is switched off unless `API_ENABLED` is set (`config/api.php`). While it is off, `App\Http\Middleware\EnsureApiEnabled` answers 404 for every `/api` route, ahead of authentication. When it is on, its unauthenticated routes are:
+    - `/api/info`, `/api/health`, `/api/version`.
+    - `/api/markdown/*`: Markdown to and from HTML conversion and validation.
   - `/api.json`: the OpenAPI document.
   - The Filament login, registration, password-reset, e-mail-verification and MFA pages under `/admin` (`app/Filament/Auth/`, which call Fortify's actions directly; Fortify serves no route of its own).
 - **Authenticated users with low privilege.** A `Visitor` or a `Non-verified users` account must not reach data or actions beyond its permissions. The authorization model has three tiers:
@@ -57,7 +57,8 @@ the site's database or files.
    - Bypassing a permission tier or a policy.
    - Privilege escalation between roles.
    - Self-registration granting access before verification.
-   - MFA bypass on the panel or the mobile token endpoints.
+   - MFA bypass on the panel.
+   - Reaching any `/api` route while the API is switched off.
    - Sanctum token misuse.
    - Mass assignment in Form Requests.
    - IDOR on UUID-keyed records.

@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Middleware\EnsureApiEnabled;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\RequireRole;
+use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -38,6 +40,14 @@ return Application::configure(basePath: dirname(__DIR__))
                     Request::HEADER_X_FORWARDED_PROTO
             );
         }
+
+        // The API switch runs before anything else in the api group, and
+        // ahead of authentication when the router sorts by priority.
+        $middleware->api(prepend: [EnsureApiEnabled::class]);
+        $middleware->prependToPriorityList(
+            before: AuthenticatesRequests::class,
+            prepend: EnsureApiEnabled::class,
+        );
 
         // Use custom CSRF verification middleware that excludes API routes
         $middleware->validateCsrfTokens(

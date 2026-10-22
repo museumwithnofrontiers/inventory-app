@@ -42,6 +42,7 @@
              which PHPUnit's <env> will silently skip unless force is set. -->
         <env name="APP_ENV" value="testing" force="true"/>
         <env name="APP_URL" value="http://localhost" force="true"/>
+        <env name="API_ENABLED" value="true" force="true"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file" force="true"/>
         <env name="BCRYPT_ROUNDS" value="4" force="true"/>
         <env name="CACHE_STORE" value="array" force="true"/>
