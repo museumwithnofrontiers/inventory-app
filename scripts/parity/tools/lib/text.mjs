@@ -36,15 +36,20 @@ export function htmlToText(s) {
   return decodeEntities(text);
 }
 
+// An escaped character ("\_", "\*") is text, never an emphasis marker: it is set aside in the
+// Private Use Area while the markup is removed, then restored.
+const ESCAPED = /\\([\\`*_{}[\]()#+\-.!>])/g;
+const PUA = 0xe000;
 export function markdownToText(s) {
   return String(s)
+    .replace(ESCAPED, (_, c) => String.fromCharCode(PUA + c.charCodeAt(0)))
     .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
     .replace(/(\*\*|__)(.+?)\1/gs, '$2')
-    .replace(/(^|[^\\*])\*(?!\s)([^*]+?)\*/g, '$1$2')
+    .replace(/(^|[^*])\*(?!\s)([^*]+?)\*/g, '$1$2')
     .replace(/(^|\W)_(?!\s)([^_]+?)_(?=\W|$)/g, '$1$2')
     .replace(/^#{1,6}\s+/gm, '')
-    .replace(/\\([\\`*_{}[\]()#+\-.!>])/g, '$1');
+    .replace(/[-]/g, (c) => String.fromCharCode(c.charCodeAt(0) - PUA));
 }
 
 const ws = (s) => s.replace(/\r\n?/g, '\n').replace(/[\u00a0\u2007\u202f\t ]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();

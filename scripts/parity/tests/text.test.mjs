@@ -61,3 +61,9 @@ test('a double-encoded entity legacy prints literally is still told apart', () =
 test('legacy\'s "</br>" breaks the line like "<br>"', () => {
   assert.equal(compare('1662-1665 (Altaraufbau)</br>1671 (Altargemälde)', '1662-1665 (Altaraufbau)  \n1671 (Altargemälde)').verdict, 'same');
 });
+
+test('escaped underscores and asterisks are text, not emphasis', () => {
+  assert.equal(compare('- ______. "حفريات مدينة الرقة."', '\\- \\_\\_\\_\\_\\_\\_. "حفريات مدينة الرقة."').verdict, 'same');
+  assert.equal(compare('a * b * c', 'a \\* b \\* c').verdict, 'same');
+  assert.equal(compare('Kitab al-Aghani', '*Kitab al-Aghani*').verdict, 'same');
+});
