@@ -38,6 +38,8 @@ const TERM = {
   db_bibliography: 'bibliography', db_architects: 'architects', db_artistsm: 'architects',
   db_type_of_object: 'type', db_denominationsdb: 'type', db_typeof_object: 'type', db_archival: 'archival', db_institution: 'holder', db_Patrons: 'patrons', db_production_db_place: 'place_of_production', db_history: 'history', db_patrons: 'patrons', db_notice_b_title: 'copyright',
   db_thirdname_object: 'alternate_name', db_thirdname_monument: 'alternate_name', db_secondname_object: 'second_name', db_secondname_monument: 'second_name',
+  // Sharing History: the institution's name in its own language, under a heading of its own.
+  db_holdinginstitutionorg: 'holding_institution_org', db_responsibleinstitutionorg: 'responsible_institution_org',
 };
 const CREDIT = (term) => (/translation_?copy|transcopy/.test(term) ? 'translation_copy_editor' : /copy/.test(term) ? 'copy_editor' : /transl/.test(term) ? 'translator' : /writer|prepar|author/.test(term) ? 'author' : null);
 const pkgOnly = {};
