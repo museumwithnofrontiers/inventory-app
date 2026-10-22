@@ -94,7 +94,12 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
           const known = new Set((d.artist_names ?? []).map((a) => flatten(normalise(a))));
           const ai = paras.findIndex((p) => { const parts = p.split(/\s*[;,]\s*(?![^(]*\))/).map(flatten).filter(Boolean); return parts.length && parts.every((x) => known.has(x)); });
           const artistHit = ai >= 0 ? (paras.splice(ai, 1), true) : (d.artist_names ?? []).some((a) => take(a, 'html'));
-          if ((d.artist_names ?? []).length) R.field('detail', 'artist', artistHit ? { verdict: 'same' } : { verdict: 'different', pkg: d.artist_names.join('; '), legacy: paras.join(' ⏎ ') }, dw);
+          // An artist line the names don't match is still the paragraph before the description:
+          // compare it as the artist, not as the start of the description.
+          let artistLine = null;
+          if (!artistHit && paras.length > 1 && ['same', 'format'].includes(compare(paras.slice(1).join('\n'), dtr.description, { legacyFrom: 'text' }).verdict)) artistLine = paras.shift();
+          if (artistLine !== null) R.field('detail', 'artist', (d.artist_names ?? []).length ? { verdict: 'different', pkg: d.artist_names.join('; '), legacy: artistLine } : { verdict: 'missing-in-package', legacy: artistLine }, dw);
+          else if ((d.artist_names ?? []).length) R.field('detail', 'artist', artistHit ? { verdict: 'same' } : { verdict: 'different', pkg: d.artist_names.join('; '), legacy: paras.join(' ⏎ ') }, dw);
           R.field('detail', 'description', glossaryNote(s, compare(paras.join('\n'), dtr.description, { legacyFrom: 'text' })), dw);
         } else if (it.type === 'monument') R.field('detail', 'heading', { verdict: 'missing-in-package', legacy: s.label }, where);
         else R.unmapped('page', `label "${s.label}"`, where);
@@ -211,6 +216,14 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       const role = CREDIT(term);
       if (role) credits[role] = names.join(', ');
       if (term === 'db_workingnumber' && first) R.field('item', 'mwnf_reference', compare(names[0], it.mwnf_reference, { pkgFrom: 'html' }), key);
+    }
+    // A label several roles print ("Édition" in French) belongs to the role the package has those
+    // names for, else to the first of its roles still free.
+    for (const { terms, names } of page.creditsShared ?? []) {
+      if (terms.includes('db_workingnumber') && first) R.field('item', 'mwnf_reference', compare(names[0], it.mwnf_reference, { pkgFrom: 'html' }), key);
+      const roles = [...new Set(terms.map(CREDIT).filter(Boolean))].filter((x) => !credits[x]);
+      const role = roles.find((x) => ['same', 'format'].includes(compare(names.join(', '), tr[x]).verdict)) ?? roles[0];
+      if (role) credits[role] = names.join(', ');
     }
     for (const role of ['author', 'copy_editor', 'translator', 'translation_copy_editor']) {
       let r2 = compare(credits[role], tr[role]);
