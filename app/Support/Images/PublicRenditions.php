@@ -67,6 +67,24 @@ class PublicRenditions
     }
 
     /**
+     * The current rendition if it is already cached, never burning one:
+     * null when nothing current is cached. For readers that must not write
+     * the pictures cache, such as the read-only MCP server.
+     *
+     * @param  Model&StreamableImageFile&BurnsCopyright  $record
+     */
+    public function cached(Model $record): ?PublicRendition
+    {
+        $etag = $this->etag($record);
+
+        if (! $this->isCached($record, $etag)) {
+            return null;
+        }
+
+        return new PublicRendition($this->pictures()->get($this->cachePath($record)) ?? '', $etag);
+    }
+
+    /**
      * Whatever the cache holds, labelled with the ETag its marker recorded
      * - which may be older than the current one. Never with the current
      * ETag: a client would keep the bytes under it and get 304s for them
