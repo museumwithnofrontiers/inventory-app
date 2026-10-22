@@ -21028,7 +21028,7 @@
                         "tokenUrl": "http://localhost/oauth/token",
                         "refreshUrl": "http://localhost/oauth/token",
                         "scopes": {
-                            "mcp": "Browse the inventory through its MCP server (read-only)",
+                            "mcp:use": "Browse the inventory through its MCP server (read-only)",
                             "api:read": "Read inventory data through the REST API",
                             "api:write": "Create, change and delete inventory data through the REST API"
                         }

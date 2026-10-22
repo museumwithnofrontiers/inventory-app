@@ -338,7 +338,7 @@ A token carries scopes, which limit what it can be used for:
 | ----------- | ------------------------------------------------- |
 | `api:read`  | The API's read routes                             |
 | `api:write` | The API's create, update and delete routes        |
-| `mcp`       | The inventory MCP server (read-only)              |
+| `mcp:use`   | The inventory MCP server (read-only)              |
 
 The scopes limit the token; the user's permissions and the policies still decide what the user may do, and a request needs both. Access to operations is controlled by the following permissions:
 
