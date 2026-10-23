@@ -32,7 +32,7 @@ To add it to Claude Code:
 claude mcp add --transport http mwnf-inventory https://inventory.metanull.eu/mcp/inventory
 ```
 
-The apps you approved are listed on **Connected apps**, reached from your profile or the user menu. **Revoke** ends an app's access at once.
+The apps you approved are listed on **Connected apps**, reached from your profile or the user menu. **Revoke** ends an app's access at once. When you may use the MCP server, the page also shows its URL, with a copy button.
 
 ### Artisan, for local development
 
@@ -57,9 +57,11 @@ claude mcp add mwnf-inventory-local -- docker compose exec -T -e MCP_LOCAL_USER=
 | `describe_entity` | A type's fields (usable as filters), searched fields, includes, and whether it has translations, `extra` or a legacy key |
 | `search` | Records of one type: free text over id, internal name, legacy key and name; exact-match filters; paginated like the API |
 | `get` | One record by id, shaped like the API's, with the includes asked for |
-| `get_item` | An item sheet: translations per language and context, images (public URL and copyright), partner, project, collections, tags, artists, workshops, dynasties, parent, children, links |
+| `get_item` | An item sheet: translations per language and context, images (public URL and copyright), partner, project, collections, tags, artists, workshops, dynasties, parent, children, links, and the legacy links the panel shows (public pages and back office, in the `language` asked for) |
 | `get_collection` | A collection with translations, parent, children and partners, and a page of its members (native and attached items, as the websites list them) |
 | `find_by_legacy_key` | What a legacy record was imported as, across every type you may read (exact or prefix match on `backward_compatibility`) |
+| `list_tags` | Tags with the number of items carrying each, most used first: free text over internal name, description and legacy key; by category and language |
+| `find_items_by_tags` | The items carrying all (or any) of the tags named by id, legacy key, internal name or description; by project and type; paginated, with each item's tags |
 | `view_image` | An attached image's burned rendition, as the public sees it. Only a cached rendition unless `allow_burn` is set; never an original |
 
 ### Observing the image pipeline

@@ -40,6 +40,15 @@ class ConnectedAppsPageTest extends TestCase
         $this->get(ConnectedAppsPage::getUrl())->assertOk();
     }
 
+    public function test_it_shows_the_mcp_server_address_to_a_user_who_may_connect_one(): void
+    {
+        $this->actingAs($this->user, 'web');
+        $this->get(ConnectedAppsPage::getUrl())->assertOk()->assertDontSee(route('mcp.inventory'));
+
+        $this->user->givePermissionTo(Permission::ACCESS_MCP->value);
+        $this->get(ConnectedAppsPage::getUrl())->assertOk()->assertSee(route('mcp.inventory'));
+    }
+
     public function test_a_guest_is_sent_to_the_login(): void
     {
         $this->get(ConnectedAppsPage::getUrl())->assertRedirect(Filament::getLoginUrl());

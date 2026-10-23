@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Enums\Permission;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
@@ -47,6 +48,17 @@ class ConnectedAppsPage extends Page implements HasTable
         $user = Filament::auth()->user();
 
         return $user;
+    }
+
+    /**
+     * The address to give an AI assistant, for a user allowed to connect one
+     * to the MCP server.
+     */
+    public function mcpServerUrl(): ?string
+    {
+        return $this->getUser()->hasPermissionTo(Permission::ACCESS_MCP->value)
+            ? route('mcp.inventory')
+            : null;
     }
 
     public function table(Table $table): Table

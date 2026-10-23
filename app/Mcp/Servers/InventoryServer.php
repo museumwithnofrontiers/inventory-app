@@ -5,10 +5,12 @@ namespace App\Mcp\Servers;
 use App\Mcp\LocalUser;
 use App\Mcp\Tools\DescribeEntity;
 use App\Mcp\Tools\FindByLegacyKey;
+use App\Mcp\Tools\FindItemsByTags;
 use App\Mcp\Tools\Get;
 use App\Mcp\Tools\GetCollection;
 use App\Mcp\Tools\GetItem;
 use App\Mcp\Tools\ListEntityTypes;
+use App\Mcp\Tools\ListTags;
 use App\Mcp\Tools\Pipeline\AuditAttachedImages;
 use App\Mcp\Tools\Pipeline\FindOrphans;
 use App\Mcp\Tools\Pipeline\ImagePipelineStatus;
@@ -29,7 +31,7 @@ use Laravel\Mcp\Server\Transport\StdioTransport;
 
 /**
  * The read-only inventory MCP server, over HTTP (/mcp/inventory, OAuth scope
- * `mcp`) and through Artisan (`php artisan mcp:start inventory`).
+ * `mcp:use`) and through Artisan (`php artisan mcp:start inventory`).
  *
  * Every tool only reads, and acts as the signed-in user: the permissions and
  * App\Policies\* decide what it may see.
@@ -44,7 +46,8 @@ use Laravel\Mcp\Server\Transport\StdioTransport;
     Start with `whoami` to see who you act as and which tools you may use,
     and `list_entity_types` for what can be browsed. `get_item` and
     `get_collection` give the views the websites show; `find_by_legacy_key`
-    goes from a legacy record to what it was imported as.
+    goes from a legacy record to what it was imported as. `list_tags` and
+    `find_items_by_tags` find items by their keywords and materials.
     MARKDOWN)]
 class InventoryServer extends Server
 {
@@ -63,6 +66,8 @@ class InventoryServer extends Server
         GetItem::class,
         GetCollection::class,
         FindByLegacyKey::class,
+        ListTags::class,
+        FindItemsByTags::class,
         ViewImage::class,
         ImagePipelineStatus::class,
         TraceImage::class,

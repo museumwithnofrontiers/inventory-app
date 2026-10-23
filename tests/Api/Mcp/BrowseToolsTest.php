@@ -2,14 +2,18 @@
 
 namespace Tests\Api\Mcp;
 
+use App\Enums\LegacyLinkConfidence;
+use App\Enums\LegacyLinkType;
 use App\Enums\Permission;
 use App\Mcp\Servers\InventoryServer;
 use App\Mcp\Tools\DescribeEntity;
 use App\Mcp\Tools\FindByLegacyKey;
+use App\Mcp\Tools\FindItemsByTags;
 use App\Mcp\Tools\Get;
 use App\Mcp\Tools\GetCollection;
 use App\Mcp\Tools\GetItem;
 use App\Mcp\Tools\ListEntityTypes;
+use App\Mcp\Tools\ListTags;
 use App\Mcp\Tools\Search;
 use App\Mcp\Tools\ViewImage;
 use App\Models\Collection;
@@ -17,6 +21,7 @@ use App\Models\Item;
 use App\Models\ItemImage;
 use App\Models\ItemTranslation;
 use App\Models\Project;
+use App\Models\Tag;
 use App\Models\User;
 use App\Support\Images\PublicRenditions;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -152,6 +157,136 @@ class BrowseToolsTest extends TestCase
                 ->where('images.0.public_url', route('pub.picture', ['filename' => 'ewer.jpg']))
                 ->where('images.0.copyright', '© Somebody')
                 ->etc());
+    }
+
+    public function test_get_item_gives_the_tags_and_the_legacy_links_the_panel_shows(): void
+    {
+        $item = Item::factory()->Object()->create(['backward_compatibility' => 'mwnf3:objects:ISL:eg:Mus01:1']);
+        $tag = Tag::factory()->create(['internal_name' => 'gold', 'category' => 'material']);
+        $item->tags()->attach($tag);
+
+        InventoryServer::actingAs($this->reader)->tool(GetItem::class, ['id' => $item->id, 'language' => 'fr'])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('item.tags.0.internal_name', 'gold')
+                ->where('legacy_links.0.url', 'https://islamicart.museumwnf.org/database_item.php?id=object;ISL;eg;Mus01;1;fr')
+                ->where('legacy_links.0.type', LegacyLinkType::PUBLIC->value)
+                ->where('legacy_links.0.confidence', LegacyLinkConfidence::EXACT->value)
+                ->where('legacy_links', fn (SupportCollection $links): bool => $links->contains('type', LegacyLinkType::BACKOFFICE->value))
+                ->etc());
+    }
+
+    public function test_get_item_says_when_an_item_has_no_legacy_link(): void
+    {
+        $item = Item::factory()->Object()->create(['backward_compatibility' => null]);
+
+        InventoryServer::actingAs($this->reader)->tool(GetItem::class, ['id' => $item->id])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('legacy_links.0.url', null)
+                ->where('legacy_links.0.type', LegacyLinkType::DIAGNOSTIC->value)
+                ->etc());
+    }
+
+    public function test_list_tags_counts_items_and_filters(): void
+    {
+        $gold = Tag::factory()->create(['internal_name' => 'gold', 'description' => 'Gold', 'category' => 'material']);
+        $goldKeyword = Tag::factory()->create(['internal_name' => 'gold leaf', 'description' => 'Gold leaf', 'category' => 'keyword']);
+        Tag::factory()->create(['internal_name' => 'silver', 'category' => 'material']);
+        $gold->items()->attach(Item::factory()->Object()->count(2)->create());
+        $goldKeyword->items()->attach(Item::factory()->Object()->create());
+
+        InventoryServer::actingAs($this->reader)->tool(ListTags::class, ['q' => 'gold'])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('meta.total', 2)
+                ->where('data.0.id', $gold->id)
+                ->where('data.0.items_count', 2)
+                ->where('data.1.items_count', 1)
+                ->where('categories', fn (SupportCollection $categories): bool => $categories->contains('material') && $categories->contains('keyword'))
+                ->etc());
+
+        InventoryServer::actingAs($this->reader)->tool(ListTags::class, ['q' => 'gold', 'category' => 'keyword'])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('meta.total', 1)
+                ->where('data.0.id', $goldKeyword->id)
+                ->etc());
+    }
+
+    public function test_find_items_by_tags_matches_all_or_any(): void
+    {
+        $gold = Tag::factory()->create(['internal_name' => 'gold', 'description' => 'Gold', 'category' => 'material']);
+        $ewer = Tag::factory()->create(['internal_name' => 'ewer', 'description' => 'Ewer', 'category' => 'keyword']);
+        $both = Item::factory()->Object()->create(['internal_name' => 'Golden ewer']);
+        $goldOnly = Item::factory()->Object()->create(['internal_name' => 'Gold coin']);
+        Item::factory()->Object()->create(['internal_name' => 'Untagged']);
+        $both->tags()->attach([$gold->id, $ewer->id]);
+        $goldOnly->tags()->attach($gold);
+
+        // By description, internal name and id alike
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['Gold', $ewer->id]])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('meta.total', 1)
+                ->where('data.0.id', $both->id)
+                ->has('data.0.tags', 2)
+                ->etc());
+
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['gold', 'ewer'], 'match' => 'any'])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('meta.total', 2)
+                ->where('data', fn (SupportCollection $items): bool => $items->pluck('id')->sort()->values()->all() === collect([$both->id, $goldOnly->id])->sort()->values()->all())
+                ->etc());
+    }
+
+    public function test_find_items_by_tags_takes_every_tag_a_name_stands_for(): void
+    {
+        $material = Tag::factory()->create(['internal_name' => 'gold', 'category' => 'material']);
+        $keyword = Tag::factory()->create(['internal_name' => 'gold', 'category' => 'keyword']);
+        Item::factory()->Object()->create()->tags()->attach($material);
+        Item::factory()->Object()->create()->tags()->attach($keyword);
+
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['gold']])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('meta.total', 2)
+                ->has('tags.gold', 2)
+                ->etc());
+    }
+
+    public function test_find_items_by_tags_says_which_names_match_nothing(): void
+    {
+        $gold = Tag::factory()->create(['internal_name' => 'gold']);
+        Item::factory()->Object()->create()->tags()->attach($gold);
+
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['gold', 'unobtainium']])
+            ->assertHasErrors(['unobtainium']);
+
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['gold', 'unobtainium'], 'match' => 'any'])
+            ->assertOk()
+            ->assertStructuredContent(fn (AssertableJson $json): AssertableJson => $json
+                ->where('meta.total', 1)
+                ->where('unmatched', ['unobtainium'])
+                ->etc());
+
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => []])->assertHasErrors();
+    }
+
+    public function test_the_tag_tools_need_view_data_not_manage_reference_data(): void
+    {
+        Item::factory()->Object()->create()->tags()->attach(Tag::factory()->create(['internal_name' => 'gold']));
+        $this->assertFalse($this->reader->hasPermissionTo(Permission::MANAGE_REFERENCE_DATA->value));
+
+        InventoryServer::actingAs($this->reader)->tool(ListTags::class)->assertOk();
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['gold']])->assertOk();
+
+        $outsider = User::factory()->create();
+        $outsider->givePermissionTo(Permission::ACCESS_MCP->value);
+
+        InventoryServer::actingAs($outsider)->tool(ListTags::class)->assertHasErrors();
+        InventoryServer::actingAs($outsider)->tool(FindItemsByTags::class, ['tags' => ['gold']])->assertHasErrors();
     }
 
     public function test_get_collection_lists_native_and_attached_members(): void

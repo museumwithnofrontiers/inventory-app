@@ -16,6 +16,21 @@ final readonly class LegacyLink
         public ?string $note = null,
     ) {}
 
+    /**
+     * @return array{label: string, url: ?string, type: string, confidence: string, source: string, note: ?string}
+     */
+    public function toArray(): array
+    {
+        return [
+            'label' => $this->label,
+            'url' => $this->url,
+            'type' => $this->type->value,
+            'confidence' => $this->confidence->value,
+            'source' => $this->source,
+            'note' => $this->note,
+        ];
+    }
+
     public static function public(
         string $label,
         string $url,
