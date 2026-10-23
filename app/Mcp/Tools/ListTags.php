@@ -23,10 +23,10 @@ class ListTags extends InventoryTool
 
     public function handle(Request $request): Response|ResponseFactory
     {
-        $user = $this->user($request);
-
-        if (! ReadAuthorization::mayViewAny($user, Tag::class) || ! ReadAuthorization::mayViewAny($user, Item::class)) {
-            return Response::error('You may not read tags and items.');
+        // Tags are read here as what items carry, which anyone who may read
+        // items sees on them; managing tags (TagPolicy) is not needed
+        if (! ReadAuthorization::mayViewAny($this->user($request), Item::class)) {
+            return Response::error('You may not read items.');
         }
 
         $order = (string) $request->get('order', 'items');

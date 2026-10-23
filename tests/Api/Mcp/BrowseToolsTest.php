@@ -190,7 +190,6 @@ class BrowseToolsTest extends TestCase
 
     public function test_list_tags_counts_items_and_filters(): void
     {
-        $this->reader->givePermissionTo(Permission::MANAGE_REFERENCE_DATA->value);
         $gold = Tag::factory()->create(['internal_name' => 'gold', 'description' => 'Gold', 'category' => 'material']);
         $goldKeyword = Tag::factory()->create(['internal_name' => 'gold leaf', 'description' => 'Gold leaf', 'category' => 'keyword']);
         Tag::factory()->create(['internal_name' => 'silver', 'category' => 'material']);
@@ -217,7 +216,6 @@ class BrowseToolsTest extends TestCase
 
     public function test_find_items_by_tags_matches_all_or_any(): void
     {
-        $this->reader->givePermissionTo(Permission::MANAGE_REFERENCE_DATA->value);
         $gold = Tag::factory()->create(['internal_name' => 'gold', 'description' => 'Gold', 'category' => 'material']);
         $ewer = Tag::factory()->create(['internal_name' => 'ewer', 'description' => 'Ewer', 'category' => 'keyword']);
         $both = Item::factory()->Object()->create(['internal_name' => 'Golden ewer']);
@@ -245,7 +243,6 @@ class BrowseToolsTest extends TestCase
 
     public function test_find_items_by_tags_takes_every_tag_a_name_stands_for(): void
     {
-        $this->reader->givePermissionTo(Permission::MANAGE_REFERENCE_DATA->value);
         $material = Tag::factory()->create(['internal_name' => 'gold', 'category' => 'material']);
         $keyword = Tag::factory()->create(['internal_name' => 'gold', 'category' => 'keyword']);
         Item::factory()->Object()->create()->tags()->attach($material);
@@ -261,7 +258,6 @@ class BrowseToolsTest extends TestCase
 
     public function test_find_items_by_tags_says_which_names_match_nothing(): void
     {
-        $this->reader->givePermissionTo(Permission::MANAGE_REFERENCE_DATA->value);
         $gold = Tag::factory()->create(['internal_name' => 'gold']);
         Item::factory()->Object()->create()->tags()->attach($gold);
 
@@ -278,12 +274,16 @@ class BrowseToolsTest extends TestCase
         InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => []])->assertHasErrors();
     }
 
-    public function test_the_tag_tools_follow_the_tag_policy(): void
+    public function test_the_tag_tools_need_view_data_not_manage_reference_data(): void
     {
-        // Reads items, and sees their tags, but may not browse the tags
+        Item::factory()->Object()->create()->tags()->attach(Tag::factory()->create(['internal_name' => 'gold']));
+        $this->assertFalse($this->reader->hasPermissionTo(Permission::MANAGE_REFERENCE_DATA->value));
+
+        InventoryServer::actingAs($this->reader)->tool(ListTags::class)->assertOk();
+        InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['gold']])->assertOk();
+
         $outsider = User::factory()->create();
-        $outsider->givePermissionTo([Permission::ACCESS_MCP->value, Permission::VIEW_DATA->value]);
-        Tag::factory()->create(['internal_name' => 'gold']);
+        $outsider->givePermissionTo(Permission::ACCESS_MCP->value);
 
         InventoryServer::actingAs($outsider)->tool(ListTags::class)->assertHasErrors();
         InventoryServer::actingAs($outsider)->tool(FindItemsByTags::class, ['tags' => ['gold']])->assertHasErrors();

@@ -29,10 +29,10 @@ class FindItemsByTags extends InventoryTool
 
     public function handle(Request $request): Response|ResponseFactory
     {
-        $user = $this->user($request);
-
-        if (! ReadAuthorization::mayViewAny($user, Tag::class) || ! ReadAuthorization::mayViewAny($user, Item::class)) {
-            return Response::error('You may not read tags and items.');
+        // A search over items: reading items is what it takes, as it is to
+        // see their tags; managing tags (TagPolicy) is not needed
+        if (! ReadAuthorization::mayViewAny($this->user($request), Item::class)) {
+            return Response::error('You may not read items.');
         }
 
         $names = $request->get('tags', []);
