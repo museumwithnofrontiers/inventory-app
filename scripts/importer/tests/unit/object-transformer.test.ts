@@ -118,6 +118,40 @@ describe('transformObjectTranslation', () => {
     expect(result?.data.language_id).toBe('eng');
   });
 
+  it('keeps the location and the province apart', () => {
+    const obj: LegacyObject = {
+      project_id: 'ISL',
+      country: 'uk',
+      museum_id: 'Mus04',
+      number: '38',
+      lang: 'es',
+      name: 'Amuleto',
+      location: 'Edimburgo',
+      province: 'Escocia.',
+    };
+
+    const result = transformObjectTranslation(obj, 'description');
+
+    expect(result?.data.location).toBe('Edimburgo');
+    expect(JSON.parse(result?.data.extra ?? '{}')).toMatchObject({ province: 'Escocia.' });
+  });
+
+  it("keeps this language's artist line", () => {
+    const obj: LegacyObject = {
+      project_id: 'EPM',
+      country: 'ca',
+      museum_id: 'Mus21',
+      number: '2',
+      lang: 'en',
+      name: 'Folio',
+      artist: 'Attributed to Dust Muhammad',
+    };
+
+    const result = transformObjectTranslation(obj, 'description');
+
+    expect(JSON.parse(result?.data.extra ?? '{}')).toMatchObject({ artist: 'Attributed to Dust Muhammad' });
+  });
+
   it('should keep the record and null the description when the description is empty', () => {
     const obj: LegacyObject = {
       project_id: 'EPM',
@@ -662,8 +696,18 @@ describe('parseItemYear', () => {
     expect(parseItemYear('-500')).toMatchObject({ value: -500, warning: null });
   });
 
-  it('returns null with warning for non-integer string', () => {
-    const result = parseItemYear('12th century');
+  it('reads the leading integer, as legacy casts the column', () => {
+    expect(parseItemYear('1070s')).toMatchObject({ value: 1070, warning: null });
+    expect(parseItemYear(' 1950a')).toMatchObject({ value: 1950, warning: null });
+    expect(parseItemYear('2o11')).toMatchObject({ value: 2, warning: null });
+  });
+
+  it('reads 0 as no year, as legacy does', () => {
+    expect(parseItemYear('0')).toMatchObject({ value: null, warning: null });
+  });
+
+  it('returns null with warning when the value starts with no integer', () => {
+    const result = parseItemYear('c. 1070');
     expect(result.value).toBeNull();
     expect(result.warning).not.toBeNull();
   });

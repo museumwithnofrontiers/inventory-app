@@ -21,7 +21,8 @@
  * - mwnf3.monuments (project_id, country, institution_id, number) — one row per language
  *
  * New schema:
- * - collection_item pivot (collection_id, item_id) via attachItemsToCollection
+ * - collection_item pivot (collection_id, item_id) via attachItemsToCollection;
+ *   `extra` = {"membership":"project"} on a pair no link table made
  *
  * Item backward_compatibility formats:
  * - mwnf3:objects:{project}:{country}:{museum}:{number}
@@ -97,6 +98,12 @@ export class ThgGalleryNativeProjectImporter extends BaseImporter {
             `Gallery ${gallery.gallery_id} (${project}): ${itemBackwardCompats.length} native items`
           );
 
+          const linkedItemIds = new Set<string>();
+          for (const linkedKey of await this.loadLinkedItemKeys(gallery.gallery_id)) {
+            const linkedId = await this.getEntityUuidAsync(linkedKey, 'item');
+            if (linkedId) linkedItemIds.add(linkedId);
+          }
+
           const itemIds: string[] = [];
           const seen = new Set<string>();
 
@@ -135,6 +142,17 @@ export class ThgGalleryNativeProjectImporter extends BaseImporter {
 
           if (itemIds.length > 0 && !this.isDryRun && !this.isSampleOnlyMode) {
             await this.context.strategy.attachItemsToCollection(collectionId, itemIds);
+            // An item no link table puts in the gallery belongs to it through its
+            // project only. Legacy lists a record's other galleries from the link
+            // tables alone, so the pivot says how the item got there.
+            const projectOnly = itemIds.filter((itemId) => !linkedItemIds.has(itemId));
+            for (const itemId of projectOnly) {
+              await this.context.strategy.setCollectionItemExtra(
+                collectionId,
+                itemId,
+                JSON.stringify({ membership: 'project' })
+              );
+            }
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
@@ -189,6 +207,40 @@ export class ThgGalleryNativeProjectImporter extends BaseImporter {
        WHERE project_id = ?
        ORDER BY country, institution_id, number`,
       [project]
+    );
+
+    return [
+      ...objects.map(
+        (row) => `mwnf3:objects:${row.project_id}:${row.country}:${row.museum_id}:${row.number}`
+      ),
+      ...monuments.map(
+        (row) =>
+          `mwnf3:monuments:${row.project_id}:${row.country}:${row.institution_id}:${row.number}`
+      ),
+    ];
+  }
+
+  /**
+   * Backward-compatibility keys of the mwnf3 objects and monuments a gallery's
+   * link tables list, the only memberships legacy names among a record's other
+   * galleries (dxa-api ObjectsGalleries / MonumentsGalleries). Read from legacy,
+   * because the importers of those tables run after this one.
+   */
+  private async loadLinkedItemKeys(galleryId: number): Promise<string[]> {
+    const objects = await this.context.legacyDb.query<LegacyNativeObject>(
+      `SELECT DISTINCT objects_project_id AS project_id, objects_country AS country,
+              objects_museum_id AS museum_id, objects_number AS number
+       FROM mwnf3_thematic_gallery.thg_gallery_mwnf3_objects
+       WHERE gallery_id = ?`,
+      [galleryId]
+    );
+
+    const monuments = await this.context.legacyDb.query<LegacyNativeMonument>(
+      `SELECT DISTINCT monuments_project_id AS project_id, monuments_country AS country,
+              monuments_institution_id AS institution_id, monuments_number AS number
+       FROM mwnf3_thematic_gallery.thg_gallery_mwnf3_monuments
+       WHERE gallery_id = ?`,
+      [galleryId]
     );
 
     return [

@@ -81,8 +81,10 @@ export interface ExtractedArtist {
 }
 
 /**
- * Parse a year value from a legacy varchar column.
- * Only accepts integer strings in the SMALLINT range (-32768 to 32767).
+ * Parse a year value from a legacy varchar column, as legacy itself reads it:
+ * dxa-api takes `NULLIF(CAST(start_date AS SIGNED), 0)`, so the leading
+ * integer counts ("1070s" is 1070) and 0 means no year. The value must fit
+ * the SMALLINT range (-32768 to 32767).
  * Returns a warning when the value is non-null but cannot be stored.
  */
 export function parseItemYear(raw: string | null | undefined): {
@@ -92,10 +94,12 @@ export function parseItemYear(raw: string | null | undefined): {
   if (!raw) return { value: null, warning: null };
   const trimmed = raw.trim();
   if (!trimmed) return { value: null, warning: null };
-  if (!/^-?\d+$/.test(trimmed)) {
+  const leading = trimmed.match(/^[+-]?\d+/);
+  if (!leading) {
     return { value: null, warning: `Non-integer year value ignored: '${raw}'` };
   }
-  const n = parseInt(raw, 10);
+  const n = parseInt(leading[0], 10);
+  if (n === 0) return { value: null, warning: null };
   if (n < -32768 || n > 32767) {
     return { value: null, warning: `Year value ${n} out of SMALLINT range, ignored` };
   }
@@ -273,14 +277,19 @@ export function transformObjectTranslation(
   const provenanceMarkdown = obj.provenance ? convertHtmlToMarkdown(obj.provenance) : null;
   const obtentionMarkdown = obj.obtentionmethod ? convertHtmlToMarkdown(obj.obtentionmethod) : null;
 
-  // Convert location (composed from multiple fields)
-  const locationParts = [obj.location, obj.province]
-    .filter(Boolean)
-    .map((part) => convertHtmlToMarkdown(part));
-  const locationMarkdown = locationParts.length > 0 ? locationParts.join(', ') : null;
+  // The location and the province are two columns, each kept on its own: the
+  // PHP sites print both on one line, the galleries and exhibitions the
+  // location alone, and each site composes the line it printed.
+  const locationMarkdown = obj.location?.trim() ? convertHtmlToMarkdown(obj.location) : null;
 
   // Build extra field for fields without dedicated columns
   const extraData: Record<string, unknown> = {};
+  if (obj.province?.trim()) extraData.province = convertHtmlToMarkdown(obj.province);
+  // The artist line as this language's sheet prints it. The Artist records
+  // are shared across languages and made from one row, so they can't stand
+  // in for another language's line. Same key as the Sharing History
+  // transformer.
+  if (obj.artist?.trim()) extraData.artist = convertHtmlToMarkdown(obj.artist);
   if (obj.workshop) extraData.workshop = obj.workshop;
   // Rights statement. `copyright` is the column this used to read on its own,
   // and it has never held a value; the text legacy's editors actually entered
