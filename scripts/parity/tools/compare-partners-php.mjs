@@ -49,10 +49,14 @@ for (const [k, texts] of legacy) {
     for (const f of ['name', 'city', 'description']) if (t[f] !== undefined) R.field('partner', f, compare(t[f], tr[f]), `${k}|${lang}`);
   }
 }
-// Items whose partner_id names a partner the package does not ship.
+// Items whose partner_id names a partner the package does not ship. The package ships the
+// partners legacy lists, and the set above reports any it lists and the package lacks; an item
+// may still point to an institution legacy lists nowhere and links from no page (checked on
+// 2026-10-22 for Islamic Art and Baroque Art), which legacy does not show either.
+const DANGLING = 'expected:partner legacy lists nowhere';
 const ids = new Set(partners.map((p) => p.id));
 const dangling = P.read('items.json').filter((i) => i.partner_id && !ids.has(i.partner_id));
-R.fields['package.item partner_id resolves'] = { same: P.read('items.json').filter((i) => i.partner_id).length - dangling.length, 'missing-in-package': dangling.length };
-if (dangling.length) R.samples['package.item partner_id resolves|missing-in-package'] = dangling.slice(0, 10).map((i) => ({ where: i.backward_compatibility, pkg: `partner_id ${i.partner_id} not in partners.json` }));
+R.fields['package.item partner_id resolves'] = { same: P.read('items.json').filter((i) => i.partner_id).length - dangling.length, ...(dangling.length ? { [DANGLING]: dangling.length } : {}) };
+if (dangling.length) R.samples[`package.item partner_id resolves|${DANGLING}`] = dangling.slice(0, 10).map((i) => ({ where: i.backward_compatibility, pkg: `partner_id ${i.partner_id} not in partners.json` }));
 R.write(`${OUT}/${slug}`, 'partners');
 console.log(`partners: legacy ${legacy.size}, missing in package ${onlyLegacy.length}`);
