@@ -60,7 +60,7 @@ const TR = {
 const CREDITS = { writer: ['preparedBy', 'author'], copyEditor: ['copyEditedBy', 'copy_editor'], translator: ['translationBy', 'translator'], translationCopyEditor: ['translationCopyEditedBy', 'translation_copy_editor'] };
 // Legacy fields that are list chrome, ids, links or derived names, not curatorial content.
 const IGNORE = new Set(['databaseItemProperties', 'rank', 'projectId', 'countryId', 'partnerId', 'objectId', 'monumentId', 'institutionId', 'languageId', 'partnerName', 'projectName', 'countryName', 'imagePath', 'imageCopyright', 'i18n', 'dbUid', 'links', 'i18nLinks', 'theme_item_ref_list', 'projectSourceIsGallery', 'projectSourceIsExhibition', 'relatedObjectsMainLanguage', 'relatedMonumentsMainLanguage', 'x_galleries', 'x_exhibitions', 'x_all_exhibitions', 'startDate', 'endDate', 'inventoryId', 'workingNumber', 'artist', 'dynasties', 'authors', 'tags', 'pictures', 'glossary', 'relatedObjects', 'relatedMonuments', 'galleries', 'videos', 'audios', 'location', ...Object.keys(TR), ...Object.values(CREDITS).map((c) => c[0])]);
-const pkgFieldsSeen = new Set(Object.values(TR).concat(Object.values(CREDITS).map((c) => c[1]), ['location']));
+const pkgFieldsSeen = new Set(Object.values(TR).concat(Object.values(CREDITS).map((c) => c[1]), ['location', 'artist']));
 const pkgOnly = {};
 
 // Keywords and materials: legacy keeps one "; "-joined string in its own order; the package
@@ -86,7 +86,9 @@ for (const s of L.sheets) {
   const it = itemByKey.get(key);
   if (!it) continue;
   let first = true;
-  for (const [lang, sh] of Object.entries(s.byLang)) {
+  // The record's language-independent fields are compared once, on the English sheet when there
+  // is one: the import takes them from the English row, and legacy's rows can disagree.
+  for (const [lang, sh] of Object.entries(s.byLang).sort(([a], [b]) => (b === 'en') - (a === 'en'))) {
     if (sh.__status) { R.field('item', 'sheet', { verdict: 'missing-in-package', legacy: `legacy sheet HTTP ${sh.__status}` }, `${key}|${lang}`); continue; }
     const tr = P.tr('items', lang, it.id) ?? {};
     const where = `${key}|${lang}`;
@@ -100,6 +102,15 @@ for (const s of L.sheets) {
     const loc = compare(sh.location, tr.location);
     if (loc.verdict === 'different' && flatten(normalise(tr.location, { from: 'markdown' })).startsWith(flatten(normalise(sh.location)))) loc.verdict = 'expected:location+province';
     R.field('item', 'location', loc, where);
+    // The artist line is per language on legacy. The sheet prints the language's own line when
+    // the package has one, else the record's names (viewer-core's recordArtist).
+    R.field('item', 'artist', tr.artist !== undefined ? compare(sh.artist, tr.artist) : compareList(sh.artist, it.artist_names), where);
+    // Audio and video are rows per language on legacy, and the package keeps each with its language.
+    // Sharing History keeps a YouTube video as its bare id; the package as the watch URL.
+    const mediaKey = (url) => String(url ?? '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/)?.[1] ?? String(url ?? '');
+    const media = [...(sh.videos ?? []), ...(sh.audios ?? [])].map((m) => mediaKey(m.url)).sort();
+    const pkgMedia = (it.media ?? []).filter((m) => !m.language || m.language === lang).map((m) => mediaKey(m.url)).sort();
+    R.field('item', 'media', media.join(' ') === pkgMedia.join(' ') ? { verdict: media.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: media.join(' '), pkg: pkgMedia.join(' ') }, where);
     // Credits: authors_objects per language, else the objects column.
     for (const [role, [col, pf]] of Object.entries(CREDITS)) {
       const names = (sh.authors?.[role] ?? []).map((a) => a[lang] || a.en).filter(Boolean);
@@ -162,14 +173,11 @@ for (const s of L.sheets) {
     R.field('item', 'owner_reference', compare(sh.inventoryId, it.owner_reference, { pkgFrom: 'html' }), key);
     R.field('item', 'mwnf_reference', compare(sh.workingNumber, it.mwnf_reference, { pkgFrom: 'html' }), key);
     R.field('item', 'start/end', String(sh.startDate) === String(it.start_date) && String(sh.endDate) === String(it.end_date) ? { verdict: 'same' } : { verdict: 'different', legacy: `${sh.startDate}–${sh.endDate}`, pkg: `${it.start_date}–${it.end_date}` }, key);
-    R.field('item', 'artist', compareList(sh.artist, it.artist_names), key);
     const tL = Object.values(sh.tags ?? {}).flatMap((o) => Object.keys(o));
     const tP = (it.tag_ids ?? []).map((id) => tags.get(id)?.legacy_tag_id);
     R.field('item', 'tags', tL.length === tP.length && tL.every((t) => tP.includes(t)) ? { verdict: tL.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: tL.sort().join(' '), pkg: tP.sort().join(' ') }, key);
     const pics = sh.pictures ?? [];
     R.field('item', 'image.count', pics.length === it.images.length ? { verdict: pics.length ? 'same' : 'both-empty' } : { verdict: pics.length > it.images.length ? 'missing-in-package' : 'extra-in-package', legacy: String(pics.length), pkg: String(it.images.length) }, key);
-    const media = [...(sh.videos ?? []), ...(sh.audios ?? [])];
-    R.field('item', 'media', media.length === (it.media ?? []).length ? { verdict: media.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: media.map((m) => m.url).join(' '), pkg: (it.media ?? []).map((m) => m.url).join(' ') }, key);
     const gl = (sh.galleries ?? []).map((g) => g.name).filter((n) => n !== selfName).sort();
     const gp = (it.gallery_references ?? []).filter((g) => g.kind === 'gallery').map((g) => g.name).sort();
     R.field('item', 'other galleries', gl.join('|') === gp.join('|') ? { verdict: gl.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: gl.join('; '), pkg: gp.join('; ') }, key);
@@ -262,11 +270,14 @@ L.events.rows.forEach((e, i) => {
   R.field('event', 'date text.en', d, where);
 });
 
-// Items whose partner_id names a partner the package does not ship.
+// Items whose partner_id names a partner the package does not ship. The package ships the
+// partners legacy lists, and the partners set above reports any it lists and the package lacks;
+// an item may still point to one legacy lists nowhere, which legacy does not show either.
+const DANGLING = 'expected:partner legacy lists nowhere';
 const partnerIds = new Set(pkgPartners.map((p) => p.id));
 const dangling = items.filter((i) => i.partner_id && !partnerIds.has(i.partner_id));
-R.fields['package.item partner_id resolves'] = { same: items.filter((i) => i.partner_id).length - dangling.length, 'missing-in-package': dangling.length };
-if (dangling.length) R.samples['package.item partner_id resolves|missing-in-package'] = dangling.slice(0, 10).map((i) => ({ where: i.backward_compatibility, pkg: `partner_id ${i.partner_id} not in partners.json` }));
+R.fields['package.item partner_id resolves'] = { same: items.filter((i) => i.partner_id).length - dangling.length, ...(dangling.length ? { [DANGLING]: dangling.length } : {}) };
+if (dangling.length) R.samples[`package.item partner_id resolves|${DANGLING}`] = dangling.slice(0, 10).map((i) => ({ where: i.backward_compatibility, pkg: `partner_id ${i.partner_id} not in partners.json` }));
 if (site.kind === 'exhibition') await compareExhibition({ apiBase, self: L.self, P, R });
 await checkImageUrls(P.root, R);
 R.write(`${OUT}/${slug}`);
