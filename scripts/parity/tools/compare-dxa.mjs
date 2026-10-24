@@ -80,6 +80,7 @@ function compareList(legacy, pkg) {
 }
 const relKey = (href) => lc(dbUidToKey(new URL(href).pathname.replace(/^.*\/api\/v2/, '').replace(/\/[a-z]{2}$/, '')));
 const selfName = L.self?.galleryName;
+const hasArtistLines = Object.values(P.translations.items ?? {}).some((rows) => Object.values(rows ?? {}).some((row) => row?.artist));
 
 for (const s of L.sheets) {
   const key = lc(dbUidToKey(s.row.dbUid));
@@ -98,13 +99,12 @@ for (const s of L.sheets) {
     }
     // The free-text period/dynasty line (objects.dynasty), distinct from the linked dynasties.
     if ('dynastyDescription' in sh) R.field('item', 'dynasty (free text)', compare(sh.dynastyDescription, tr.dynasty ?? tr.period), where);
-    // Location: the import merges location + province, so the package may say more.
-    const loc = compare(sh.location, tr.location);
-    if (loc.verdict === 'different' && flatten(normalise(tr.location, { from: 'markdown' })).startsWith(flatten(normalise(sh.location)))) loc.verdict = 'expected:location+province';
-    R.field('item', 'location', loc, where);
-    // The artist line is per language on legacy. The sheet prints the language's own line when
-    // the package has one, else the record's names (viewer-core's recordArtist).
-    R.field('item', 'artist', tr.artist !== undefined ? compare(sh.artist, tr.artist) : compareList(sh.artist, it.artist_names), where);
+    // Location: the galleries print legacy's location alone, never joined with the province.
+    R.field('item', 'location', compare(sh.location, tr.location), where);
+    // The artist line is per language on legacy. A package that carries the lines leaves the key
+    // out of a language without one, and the sheet then prints nothing (viewer-core 2.9's
+    // recordArtist); an older package has none, and its sheet printed the record's names.
+    R.field('item', 'artist', hasArtistLines ? compare(sh.artist, tr.artist) : compareList(sh.artist, it.artist_names), where);
     // Audio and video are rows per language on legacy, and the package keeps each with its language.
     // Sharing History keeps a YouTube video as its bare id; the package as the watch URL.
     const mediaKey = (url) => String(url ?? '').match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([\w-]{11})/)?.[1] ?? String(url ?? '');

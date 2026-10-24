@@ -14,6 +14,10 @@ const site = JSON.parse(readFileSync(`${OUT}/sitemap.json`, 'utf8')).sites.find(
 const cfg = PHP_SITES[slug];
 const pageUrl = (id, lang) => pageUrlOn(cfg.host, id, lang);
 const P = loadPackage(site.package, site.packageVersion);
+// A package that carries each language's artist line leaves the key out of a language without
+// one, and the site prints nothing there; an older package has none, and its sites printed the
+// record's names.
+const hasArtistLines = Object.values(P.translations.items ?? {}).some((rows) => Object.values(rows ?? {}).some((row) => row?.artist));
 const R = new Report(slug, {
   legacy: `record list from the mwnf3 dump; content from the live pages ${cfg.host}/database_item.php`,
   package: `${site.package}@${site.packageVersion} (published ${site.packagePublished?.slice(0, 10)})`,
@@ -100,12 +104,12 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
           const known = new Set((d.artist_names ?? []).map((a) => flatten(normalise(a))));
           const ai = paras.findIndex((p) => { const parts = p.split(/\s*[;,]\s*(?![^(]*\))/).map(flatten).filter(Boolean); return parts.length && parts.every((x) => known.has(x)); });
           // The detail's translation keeps the artist line as this language prints it (#2332).
-          const artistHit = (dtr.artist && take(dtr.artist)) || (ai >= 0 ? (paras.splice(ai, 1), true) : (d.artist_names ?? []).some((a) => take(a, 'html')));
+          const artistHit = (dtr.artist && take(dtr.artist)) || (!hasArtistLines && (ai >= 0 ? (paras.splice(ai, 1), true) : (d.artist_names ?? []).some((a) => take(a, 'html'))));
           // An artist line the names don't match is still the paragraph before the description:
           // compare it as the artist, not as the start of the description.
           let artistLine = null;
           if (!artistHit && paras.length > 1 && ['same', 'format'].includes(compare(paras.slice(1).join('\n'), dtr.description, { legacyFrom: 'text' }).verdict)) artistLine = paras.shift();
-          const pkgArtist = dtr.artist ?? ((d.artist_names ?? []).length ? d.artist_names.join('; ') : null);
+          const pkgArtist = hasArtistLines ? (dtr.artist ?? null) : ((d.artist_names ?? []).length ? d.artist_names.join('; ') : null);
           if (artistLine !== null) R.field('detail', 'artist', pkgArtist ? compare(artistLine, pkgArtist, { legacyFrom: 'text' }) : { verdict: 'missing-in-package', legacy: artistLine }, dw);
           else if (pkgArtist) R.field('detail', 'artist', artistHit ? { verdict: 'same' } : { verdict: 'different', pkg: pkgArtist, legacy: paras.join(' ⏎ ') }, dw);
           R.field('detail', 'description', glossaryNote(s, compare(paras.join('\n'), dtr.description, { legacyFrom: 'text' })), dw);
@@ -180,7 +184,8 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         seen.add('dynasty');
       } else if (s.term === 'db_artist' || s.term === 'db_author') {
         for (const f of ['artist', 'artist_birthdate', 'artist_birthplace', 'artist_deathdate', 'artist_deathplace']) seen.add(f);
-        if (tr.artist !== undefined || cfg.sh) R.field('item', 'artist', artistWithLife(s.html, tr), where);
+        if (hasArtistLines && cfg.artistAlone) R.field('item', 'artist', compare(s.html, tr.artist), where);
+        else if (hasArtistLines || cfg.sh) R.field('item', 'artist', artistWithLife(s.html, tr), where);
         else {
           // Every language's page, since each prints its own artist line and the package's names
           // stand for all of them.
