@@ -12,6 +12,14 @@ describe('legacyLocation', () => {
     expect(legacyLocation('Site of 100 B.C.')).toBe('Site of 100 B.C.')
   })
 
+  it('adds the province after the location, each without its period', () => {
+    expect(legacyLocation('Viseu.', 'Viseu.')).toBe('Viseu, Viseu')
+  })
+
+  it('prints the province alone when there is no location', () => {
+    expect(legacyLocation(null, 'Moravia')).toBe('Moravia')
+  })
+
   it('keeps an empty location empty', () => {
     expect(legacyLocation(null)).toBeNull()
   })

@@ -42,6 +42,53 @@ turndownService.addRule('nestedEmphasis', {
   replacement: (content) => content,
 });
 
+// Two runs of one style that touch are one run on the page: legacy's editor
+// wrote `<i>Brno</i><i>, stavební …</i>`, which a browser prints as one italic
+// phrase. Each run would otherwise close and reopen its delimiter, and
+// `*Brno**, stavební …*` reads in Markdown as a stray bold marker. Turndown
+// tries the rule added last first, so this one leaves the runs nested inside
+// another of their style to the two rules above.
+const EMPHASIS = new Set(['EM', 'I']);
+const STRONG = new Set(['STRONG', 'B']);
+
+// The few DOM properties the rule reads (the importer has no DOM library types).
+interface DomNode {
+  nodeName: string;
+  parentNode: DomNode | null;
+  previousSibling: DomNode | null;
+  nextSibling: DomNode | null;
+  textContent: string | null;
+}
+
+function insideStyle(node: DomNode, names: Set<string>): boolean {
+  for (let up = node.parentNode; up; up = up.parentNode) {
+    if (names.has(up.nodeName)) return true;
+  }
+  return false;
+}
+
+function touchingRun(sibling: DomNode | null, names: Set<string>): boolean {
+  return !!sibling && names.has(sibling.nodeName) && (sibling.textContent ?? '').trim() !== '';
+}
+
+for (const [name, names, delimiter] of [
+  ['touchingEmphasis', EMPHASIS, '*'],
+  ['touchingStrong', STRONG, '**'],
+] as const) {
+  turndownService.addRule(name, {
+    filter: (node) =>
+      names.has(node.nodeName) &&
+      !insideStyle(node, names) &&
+      (touchingRun(node.previousSibling, names) || touchingRun(node.nextSibling, names)),
+    replacement: (content, node) => {
+      if (!content.trim()) return content;
+      const open = touchingRun(node.previousSibling, names) ? '' : delimiter;
+      const close = touchingRun(node.nextSibling, names) ? '' : delimiter;
+      return `${open}${content}${close}`;
+    },
+  });
+}
+
 /**
  * Convert HTML string to Markdown using Turndown
  * Robust parser that handles malformed HTML gracefully

@@ -151,6 +151,7 @@ describe('ExploreLocationTranslationImporter', () => {
         );
       }),
       setCollectionTranslationDescriptionByKey: vi.fn().mockResolvedValue(undefined),
+      setCollectionTranslationTitleByKey: vi.fn().mockResolvedValue(undefined),
       writeCollectionTranslation: vi.fn().mockResolvedValue(undefined),
       getCollectionExtra: vi.fn(async (id: string) =>
         id === 'location-16-uuid' ? { additional_regions: ['r1'] } : null
@@ -182,6 +183,17 @@ describe('ExploreLocationTranslationImporter', () => {
       'The city was important in distant times.'
     );
     expect(translationExtra).toMatchObject({ prepared_by: 'Pedro Dias' });
+  });
+
+  it("names the English row with its spelling, as legacy's English pages print it", async () => {
+    await new ExploreLocationTranslationImporter(context).import();
+
+    expect(strategy.setCollectionTranslationTitleByKey).toHaveBeenCalledWith(
+      'location-108-uuid',
+      'eng',
+      'explore-context-uuid',
+      'Lamego'
+    );
   });
 
   it('records the historical background on the location, keeping its other extra', async () => {

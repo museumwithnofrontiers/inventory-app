@@ -21,6 +21,7 @@ describe('ThgGalleryNativeProjectImporter', () => {
   let context: ImportContext;
   let queryMock: ReturnType<typeof vi.fn>;
   let attachItemsToCollectionMock: ReturnType<typeof vi.fn>;
+  let setCollectionItemExtraMock: ReturnType<typeof vi.fn>;
 
   const logger: ILogger = {
     info: vi.fn(),
@@ -44,6 +45,12 @@ describe('ThgGalleryNativeProjectImporter', () => {
     tracker.set('mwnf3:monuments:DCA:eg:Mon01:7', 'item-monument-7', 'item');
 
     queryMock = vi.fn(async (sql: string) => {
+      if (sql.includes('FROM mwnf3_thematic_gallery.thg_gallery_mwnf3_objects')) {
+        return [{ project_id: 'DCA', country: 'eg', museum_id: 'Mus01', number: 2 }];
+      }
+      if (sql.includes('FROM mwnf3_thematic_gallery.thg_gallery_mwnf3_monuments')) {
+        return [];
+      }
       if (sql.includes('FROM mwnf3_thematic_gallery.thg_gallery')) {
         return [{ gallery_id: 9, mwnf3_project_id: 'DCA' }];
       }
@@ -67,11 +74,13 @@ describe('ThgGalleryNativeProjectImporter', () => {
     };
 
     attachItemsToCollectionMock = vi.fn().mockResolvedValue(undefined);
+    setCollectionItemExtraMock = vi.fn().mockResolvedValue(undefined);
 
     strategy = {
       exists: vi.fn().mockResolvedValue(false),
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       attachItemsToCollection: attachItemsToCollectionMock,
+      setCollectionItemExtra: setCollectionItemExtraMock,
     } as unknown as IWriteStrategy;
 
     context = { legacyDb, strategy, tracker, logger, dryRun: false };
@@ -87,6 +96,18 @@ describe('ThgGalleryNativeProjectImporter', () => {
       'item-object-1',
       'item-object-2',
       'item-monument-7',
+    ]);
+  });
+
+  it('marks the items no link table lists as members through their project only', async () => {
+    const importer = new ThgGalleryNativeProjectImporter(context);
+    const result = await importer.import();
+
+    expect(result.errors).toEqual([]);
+    const marked = setCollectionItemExtraMock.mock.calls.map((args: unknown[]) => [args[1], args[2]]);
+    expect(marked).toEqual([
+      ['item-object-1', JSON.stringify({ membership: 'project' })],
+      ['item-monument-7', JSON.stringify({ membership: 'project' })],
     ]);
   });
 

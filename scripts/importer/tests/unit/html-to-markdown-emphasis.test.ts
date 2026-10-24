@@ -18,3 +18,24 @@ describe('convertHtmlToMarkdown — emphasis inside emphasis', () => {
     expect(convertHtmlToMarkdown('<i>Qusayr Amra</i> and <i>hammam</i>')).toBe('*Qusayr Amra* and *hammam*');
   });
 });
+
+// A browser prints two runs of one style that touch as one run.
+describe('convertHtmlToMarkdown — touching runs', () => {
+  it('writes touching italics as one italic run', () => {
+    expect(convertHtmlToMarkdown('Hálová, <i>Brno</i><i>, stavební vývoj</i>, Prague')).toBe(
+      'Hálová, *Brno, stavební vývoj*, Prague'
+    );
+  });
+
+  it('writes three touching italics as one run', () => {
+    expect(convertHtmlToMarkdown('<i>a</i><em>b</em><i>c</i> d')).toBe('*abc* d');
+  });
+
+  it('writes touching bold as one bold run', () => {
+    expect(convertHtmlToMarkdown('<b>Abu Bakr</b><strong> Gallery</strong>')).toBe('**Abu Bakr Gallery**');
+  });
+
+  it('ignores an empty run between two italics', () => {
+    expect(convertHtmlToMarkdown('<i>a</i><i> </i>b')).toBe('*a* b');
+  });
+});
