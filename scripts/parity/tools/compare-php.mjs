@@ -14,6 +14,10 @@ const site = JSON.parse(readFileSync(`${OUT}/sitemap.json`, 'utf8')).sites.find(
 const cfg = PHP_SITES[slug];
 const pageUrl = (id, lang) => pageUrlOn(cfg.host, id, lang);
 const P = loadPackage(site.package, site.packageVersion);
+// A package that carries each language's artist line leaves the key out of a language without
+// one, and the site prints nothing there; an older package has none, and its sites printed the
+// record's names.
+const hasArtistLines = Object.values(P.translations.items ?? {}).some((rows) => Object.values(rows ?? {}).some((row) => row?.artist));
 const R = new Report(slug, {
   legacy: `record list from the mwnf3 dump; content from the live pages ${cfg.host}/database_item.php`,
   package: `${site.package}@${site.packageVersion} (published ${site.packagePublished?.slice(0, 10)})`,
@@ -53,7 +57,9 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
   const it = byKey.get(key);
   const L = legacy.get(rec) ?? [...legacy.values()].find((r) => lc(r.key) === key);
   const id = L?.id ?? idFromKey(rec);
-  const langs = new Set([...(L?.langs ?? []), ...(it?.languages ?? [])]);
+  // The record's language-independent fields are compared once, on the English page when there is
+  // one: the import takes them from the English row, and legacy's rows can disagree.
+  const langs = [...new Set([...(L?.langs ?? []), ...(it?.languages ?? [])])].sort((a, b) => (b === 'en') - (a === 'en'));
   let first = true;
   let legacyImages = 0;
   for (const lang of langs) {
@@ -76,7 +82,11 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
     for (const s of page.sections) {
       if (!s.term) {
         // Monument pages print each Special Feature (monument detail) as its own heading.
-        const d = details.find((x) => flatten(normalise(P.tr('items', lang, x.id)?.name ?? x.internal_name, { from: 'markdown' })) === flatten(normalise(s.label)));
+        // Two details of one monument can share a heading (legacy's own data): the page prints
+        // them in detail-number order, so the n-th section with a heading is the n-th detail with it.
+        const named = (x) => flatten(normalise(P.tr('items', lang, x.id)?.name ?? x.internal_name, { from: 'markdown' })) === flatten(normalise(s.label));
+        const byNumber = [...details].sort((a, b) => detailNumber(a) - detailNumber(b));
+        const d = byNumber.find((x) => named(x) && !detailsSeen.has(x.id)) ?? byNumber.find(named);
         if (d) {
           // <h3>name</h3><p>location</p><p>dates</p><p>artist</p><p>description…</p>
           detailsSeen.add(d.id);
@@ -93,13 +103,15 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
           // The artist line lists every artist; the package keeps each name (with its dates) once per spelling.
           const known = new Set((d.artist_names ?? []).map((a) => flatten(normalise(a))));
           const ai = paras.findIndex((p) => { const parts = p.split(/\s*[;,]\s*(?![^(]*\))/).map(flatten).filter(Boolean); return parts.length && parts.every((x) => known.has(x)); });
-          const artistHit = ai >= 0 ? (paras.splice(ai, 1), true) : (d.artist_names ?? []).some((a) => take(a, 'html'));
+          // The detail's translation keeps the artist line as this language prints it (#2332).
+          const artistHit = (dtr.artist && take(dtr.artist)) || (!hasArtistLines && (ai >= 0 ? (paras.splice(ai, 1), true) : (d.artist_names ?? []).some((a) => take(a, 'html'))));
           // An artist line the names don't match is still the paragraph before the description:
           // compare it as the artist, not as the start of the description.
           let artistLine = null;
           if (!artistHit && paras.length > 1 && ['same', 'format'].includes(compare(paras.slice(1).join('\n'), dtr.description, { legacyFrom: 'text' }).verdict)) artistLine = paras.shift();
-          if (artistLine !== null) R.field('detail', 'artist', (d.artist_names ?? []).length ? { verdict: 'different', pkg: d.artist_names.join('; '), legacy: artistLine } : { verdict: 'missing-in-package', legacy: artistLine }, dw);
-          else if ((d.artist_names ?? []).length) R.field('detail', 'artist', artistHit ? { verdict: 'same' } : { verdict: 'different', pkg: d.artist_names.join('; '), legacy: paras.join(' ⏎ ') }, dw);
+          const pkgArtist = hasArtistLines ? (dtr.artist ?? null) : ((d.artist_names ?? []).length ? d.artist_names.join('; ') : null);
+          if (artistLine !== null) R.field('detail', 'artist', pkgArtist ? compare(artistLine, pkgArtist, { legacyFrom: 'text' }) : { verdict: 'missing-in-package', legacy: artistLine }, dw);
+          else if (pkgArtist) R.field('detail', 'artist', artistHit ? { verdict: 'same' } : { verdict: 'different', pkg: pkgArtist, legacy: paras.join(' ⏎ ') }, dw);
           R.field('detail', 'description', glossaryNote(s, compare(paras.join('\n'), dtr.description, { legacyFrom: 'text' })), dw);
         } else if (it.type === 'monument') R.field('detail', 'heading', { verdict: 'missing-in-package', legacy: s.label }, where);
         else R.unmapped('page', `label "${s.label}"`, where);
@@ -172,8 +184,11 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         seen.add('dynasty');
       } else if (s.term === 'db_artist' || s.term === 'db_author') {
         for (const f of ['artist', 'artist_birthdate', 'artist_birthplace', 'artist_deathdate', 'artist_deathplace']) seen.add(f);
-        if (tr.artist !== undefined || cfg.sh) R.field('item', 'artist', artistWithLife(s.html, tr), where);
-        else if (first) {
+        if (hasArtistLines && cfg.artistAlone) R.field('item', 'artist', compare(s.html, tr.artist), where);
+        else if (hasArtistLines || cfg.sh) R.field('item', 'artist', artistWithLife(s.html, tr), where);
+        else {
+          // Every language's page, since each prints its own artist line and the package's names
+          // stand for all of them.
           // The page prints the artist's life data after the name: "Georg Petel (1601/2, Weilheim-1634/5, Augsburg)".
           // The whole line first: a name can hold a comma ("Jenig, clockmaker"). Then entry by entry, for another order.
           const byLine = compareArtistLine(s.html, it.artist_names, tr);
@@ -182,7 +197,7 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
           // Drop the parenthesised groups that hold dates ("(1698 Unter Peissenberg – 1780(?) Baden)"), keep "(painter)".
           bare = bare.replace(/\s*\((?:[^()]|\([^()]*\))*\d(?:[^()]|\([^()]*\))*\)/g, '');
           if (r3.verdict === 'different' && [compareJoined(bare, it.artist_names), listCompare(bare.replace(/,/g, ';'), it.artist_names, true)].some((r) => /same|format/.test(r.verdict))) r3 = { ...r3, why: 'artist life data (birth/death) not in the package' };
-          R.field('item', 'artist', r3, key);
+          R.field('item', 'artist', r3, where);
         }
       } else if (s.term === 'db_museumnumberforobject' || s.term === 'db_invnumberforobject') {
         if (first) R.field('item', 'owner_reference', compare(s.html, it.owner_reference, { pkgFrom: 'html' }), key);
@@ -249,10 +264,18 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
   }
 }
 
-// Sharing History prints "Name (birthdate, birthplace-deathdate, deathplace)"; the package keeps the parts.
+// A monument detail's number, the last part of its legacy key (mwnf3:monument_details:…:<n>).
+function detailNumber(d) {
+  return Number(String(d.backward_compatibility ?? '').split(':').pop()) || 0;
+}
+
+// Sharing History prints "Name (birthdate, birthplace-deathdate, deathplace)", each part only when
+// set, joined as its database_item.php joins them: ", " before a place, "-" before the death date.
+// The package keeps the parts.
 function artistWithLife(html, tr) {
-  const life = [[tr.artist_birthdate, tr.artist_birthplace].filter(Boolean).join(', '), [tr.artist_deathdate, tr.artist_deathplace].filter(Boolean).join(', ')];
-  const composed = tr.artist && (life[0] || life[1]) ? `${tr.artist} (${life.join('-')})` : tr.artist;
+  const [born, bornAt, died, diedAt] = [tr.artist_birthdate, tr.artist_birthplace, tr.artist_deathdate, tr.artist_deathplace];
+  const life = `${born ?? ''}${bornAt ? `, ${bornAt}` : ''}${died ? `-${died}` : ''}${diedAt ? `, ${diedAt}` : ''}`;
+  const composed = tr.artist && life ? `${tr.artist} (${life})` : tr.artist;
   const r = compare(html, composed);
   return r.verdict === 'same' || r.verdict === 'format' ? { ...r, verdict: r.verdict, why: composed !== tr.artist ? 'name + life data from separate fields' : undefined } : r;
 }

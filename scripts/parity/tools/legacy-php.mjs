@@ -9,7 +9,8 @@ import { readTable } from './lib/sqldump.mjs';
 import { decodeEntities, htmlToText } from './lib/text.mjs';
 
 export const PHP_SITES = {
-  islamicart: { host: 'https://islamicart.museumwnf.org', projects: ['ISL', 'EPM'] },
+  // Islamic Art's sheet prints the artist line alone, without the life data.
+  islamicart: { host: 'https://islamicart.museumwnf.org', projects: ['ISL', 'EPM'], artistAlone: true },
   baroqueart: { host: 'https://baroqueart.museumwnf.org', projects: ['BAR'] },
   // Sharing History records have no museum in their key, and their pictures sit under sharing_history/.
   sharinghistory: { host: 'https://sharinghistory.museumwnf.org', projects: ['AWE'], sh: true, termPrefix: 'sh_db_' },
