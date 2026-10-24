@@ -168,11 +168,9 @@ export function transformShObjectTranslation(
       ? convertHtmlToMarkdown(text.holding_museum || text.holding_institution_org || '')
       : null;
 
-  // Build location
-  const locationParts = [text.location, text.province]
-    .filter((l): l is string => !!l && l.trim() !== '')
-    .map((l) => convertHtmlToMarkdown(l));
-  const location = locationParts.length > 0 ? locationParts.join(', ') : null;
+  // The location and the province are two columns, each kept on its own
+  // (extra.province below); each site composes the line it printed.
+  const location = text.location?.trim() ? convertHtmlToMarkdown(text.location) : null;
 
   // Build type (with truncation)
   let type = text.typeof ? convertHtmlToMarkdown(text.typeof) : null;
@@ -183,6 +181,7 @@ export function transformShObjectTranslation(
   // Build extra JSON for translation-specific fields
   const extra: Record<string, unknown> = {};
   if (text.archival) extra.archival = convertHtmlToMarkdown(text.archival);
+  if (text.province?.trim()) extra.province = convertHtmlToMarkdown(text.province);
   // The fields as the galleries and exhibitions sheet shows a Sharing History
   // record (dxa-api): description and short description apart, the second name
   // alone, keywords. The Sharing History site itself shows them merged, as

@@ -309,6 +309,9 @@ export class ItemExporter extends BaseExporter {
            ON ct.collection_id = c.id AND ct.language_id = 'eng'
          WHERE ci.item_id IN (${itemPh})
            AND c.backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:thg\\_gallery:%'
+           -- Legacy names only the galleries a link table lists, never the one
+           -- a record belongs to through its project alone.
+           AND COALESCE(JSON_UNQUOTE(JSON_EXTRACT(ci.extra, '$.membership')), '') <> 'project'
          ORDER BY ci.item_id, c.id`,
         this.memberItemIds
       ),
@@ -383,6 +386,9 @@ export class ItemExporter extends BaseExporter {
         workshop: extra?.['workshop'] ?? null,
         // The free-text Period / Dynasty line legacy prints on the sheet.
         dynasty: extra?.['dynasty'] ?? null,
+        // The artist line as this language's sheet prints it. The record's
+        // `artist_names` come from one language row and stand for none.
+        artist: extra?.['artist'] ?? null,
         // The artist's life data, per language, as this sheet prints it after the artist line.
         artist_birthdate: extra?.['artist_birthdate'] ?? null,
         artist_birthplace: extra?.['artist_birthplace'] ?? null,

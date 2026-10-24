@@ -207,6 +207,15 @@ export class ExploreLocationTranslationImporter extends BaseImporter {
           // For English: the original ExploreLocationImporter already created an English translation.
           // If this is English, update the existing translation's extra instead of creating a new one.
           if (languageId === 'eng') {
+            // Legacy's English pages print this row's spelling ("Algiers, l'enceinte
+            // fortifiée"), not the location's label, which is the name in the
+            // country's language ("Alger, l'enceinte fortifiée").
+            await this.context.strategy.setCollectionTranslationTitleByKey(
+              collectionId,
+              'eng',
+              this.exploreContextId,
+              trans.spelling.trim()
+            );
             if (trans.description && trans.description.trim()) {
               await this.context.strategy.setCollectionTranslationDescriptionByKey(
                 collectionId,

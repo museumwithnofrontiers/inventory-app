@@ -396,7 +396,9 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        location: ownRow.location,
+        // Legacy's sheet prints the location and the province on one line,
+        // joined with ", "; the importer keeps the province on its own.
+        location: [ownRow.location, extra?.province].filter((part) => typeof part === 'string' && part.trim()).join(', ') || null,
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
@@ -415,6 +417,8 @@ export class ItemExporter extends BaseExporter {
           // How the galleries' sheet shows this record; this site shows the
           // merged fields above.
           if (k === 'gallery_sheet') continue
+          // Printed in the location line above.
+          if (k === 'province') continue
           if (fields[k] == null) fields[k] = v
         }
       }

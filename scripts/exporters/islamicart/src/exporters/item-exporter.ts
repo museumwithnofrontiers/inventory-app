@@ -4,13 +4,18 @@ import { BaseExporter } from './base-exporter.js'
 // Legacy prints Location as its parts — a monument's address first, then
 // location and province — joined with ", ", each without its trailing period
 // (removeEndingPoint, which spares "C." as in "B.C."), the address keeping its
-// line breaks. The importer stores location and province already joined, and
-// the address in extra.monument_contact.
-export function legacyLocation(location: string | null, address?: string | null): string | null {
+// line breaks. The importer keeps each part on its own: location, province in
+// extra.province, the address in extra.monument_contact.
+export function legacyLocation(
+  location: string | null,
+  address?: string | null,
+  province?: string | null
+): string | null {
   const stripEnding = (part: string): string => part.replace(/([^C])\.+(?=\s*(?:,|$))/g, '$1').trim()
   const parts: string[] = []
   if (address?.trim()) parts.push(stripEnding(address.trim()).split(/\r?\n/).map(l => l.trim()).join('  \n'))
   if (location?.trim()) parts.push(stripEnding(location))
+  if (province?.trim()) parts.push(stripEnding(province))
   return parts.length > 0 ? parts.join(', ') : null
 }
 
@@ -405,7 +410,7 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        location: legacyLocation(ownRow.location, monumentAddress(ownRow.extra)),
+        location: legacyLocation(ownRow.location, monumentAddress(ownRow.extra), extra?.province),
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
@@ -417,6 +422,9 @@ export class ItemExporter extends BaseExporter {
         patrons: extra?.patrons ?? null,
         architects: extra?.architects ?? null,
         workshop: extra?.workshop ?? null,
+        // The artist line as this language's sheet prints it. The record's
+        // `artist_names` come from one language row and stand for none.
+        artist: extra?.artist ?? null,
         // The free-text Period / Dynasty line legacy prints on the sheet.
         dynasty: extra?.dynasty ?? null,
         // The artist's life data, per language, as this sheet prints it after the artist line.

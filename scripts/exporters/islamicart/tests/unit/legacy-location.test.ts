@@ -18,6 +18,14 @@ describe('legacyLocation', () => {
     )
   })
 
+  it('adds the province after the location, each without its period', () => {
+    expect(legacyLocation('Mértola.', null, 'Beja.')).toBe('Mértola, Beja')
+  })
+
+  it('prints the address, the location and the province in that order', () => {
+    expect(legacyLocation('Bursa.', 'Çekirge Caddesi', 'Bursa')).toBe('Çekirge Caddesi, Bursa, Bursa')
+  })
+
   it('returns null when there is nothing to show', () => {
     expect(legacyLocation(null, null)).toBeNull()
   })

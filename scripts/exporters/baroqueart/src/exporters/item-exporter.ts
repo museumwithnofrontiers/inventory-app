@@ -3,11 +3,12 @@ import { BaseExporter } from './base-exporter.js'
 
 // Legacy prints Location as its parts (location, province) joined with ", ",
 // each without its trailing period (removeEndingPoint, which spares "C." as in
-// "B.C."). The importer stores the parts already joined, so strip a period
-// that ends a part.
-export function legacyLocation(location: string | null): string | null {
-  if (!location) return location
-  return location.replace(/([^C])\.+(?=\s*(?:,|$))/g, '$1').trim()
+// "B.C."). The importer keeps each part on its own (the province in
+// extra.province).
+export function legacyLocation(location: string | null, province?: string | null): string | null {
+  const stripEnding = (part: string): string => part.replace(/([^C])\.+(?=\s*(?:,|$))/g, '$1').trim()
+  const parts = [location, province].filter((part): part is string => !!part?.trim()).map(stripEnding)
+  return parts.length > 0 ? parts.join(', ') : null
 }
 
 // Every person credited in one role on a translation row, in order, as legacy
@@ -497,7 +498,7 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        location: legacyLocation(ownRow.location),
+        location: legacyLocation(ownRow.location, extra?.province),
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
@@ -511,6 +512,9 @@ export class ItemExporter extends BaseExporter {
         workshop: extra?.workshop ?? null,
         // The free-text Period / Dynasty line legacy prints on the sheet.
         dynasty: extra?.dynasty ?? null,
+        // The artist line as this language's sheet prints it. The record's
+        // `artist_names` come from one language row and stand for none.
+        artist: extra?.artist ?? null,
         // The artist's life data, per language, as this sheet prints it after the artist line.
         artist_birthdate: extra?.artist_birthdate ?? null,
         artist_birthplace: extra?.artist_birthplace ?? null,

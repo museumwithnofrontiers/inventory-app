@@ -231,14 +231,16 @@ export function transformMonumentTranslation(
     ? convertHtmlToMarkdown(monument.datationmethod)
     : null;
 
-  // Convert location (composed from multiple fields)
-  const locationParts = [monument.location, monument.province]
-    .filter(Boolean)
-    .map((part) => convertHtmlToMarkdown(part));
-  const locationMarkdown = locationParts.length > 0 ? locationParts.join(', ') : null;
+  // The location and the province are two columns, each kept on its own: the
+  // PHP sites print both on one line, the galleries and exhibitions the
+  // location alone, and each site composes the line it printed.
+  const locationMarkdown = monument.location?.trim()
+    ? convertHtmlToMarkdown(monument.location)
+    : null;
 
   // Build extra field for fields without dedicated columns
   const extraData: Record<string, unknown> = {};
+  if (monument.province?.trim()) extraData.province = convertHtmlToMarkdown(monument.province);
 
   // External links
   if (monument.linkcatalogs) extraData.linkcatalogs = monument.linkcatalogs;
