@@ -325,6 +325,17 @@ Sharing History's original-language institution headings. Its `diff-runs.md` lis
 against 2026-10-22, both on the-hijaz-railway and both accepted: the three items legacy added since
 the dump was taken are now imported, and their pictures bring four more image URLs outside `/pub`.
 
+`baselines/2026-10-24` is the run after reimport 4, on the packages published from it: 1,342 real
+differences. The fall comes from #2331 (the tool decodes legacy's entities, line breaks and
+Markdown escapes, and places shared credit labels), #2332 (Sharing History authors keep their own
+spelling; Baroque Art details keep a translation that has only a name, and their artist line as
+legacy prints it) and the refreshed copy of legacy's images (image URLs outside `/pub`: 699 → 153;
+the files still missing are missing on legacy too). Its `diff-runs.md` lists one regression against
+2026-10-22b, baroqueart `detail.heading` (22 → 24). Legacy itself gives two details of the same
+monument the same heading (`BAR:cz:Mon11_E:25` and `BAR:it:Mon12:16`, details 2 and 3 of each).
+The package now carries both, and the tool, which pairs details by heading, counts the second as
+extra.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
