@@ -165,15 +165,6 @@ export function containsHtml(text: string | null | undefined): boolean {
 function tokensContainHtml(tokens: Token[] | undefined): boolean {
   for (const token of tokens ?? []) {
     if (token.type === 'html') return true;
-    // Legacy prints its texts as HTML, where a line indented by a tab or four
-    // spaces is just a line. Markdown reads it as a code block and keeps its
-    // tags as text, so the tags would pass unseen and reach the sites raw.
-    // The block's text is read again as the paragraph it is. A fenced block is
-    // left alone: nobody writes one by accident.
-    if (token.type === 'code' && (token as Tokens.Code).codeBlockStyle === 'indented') {
-      if (tokensContainHtml(markdown.lexer((token as Tokens.Code).text))) return true;
-      continue;
-    }
     if (token.type === 'table') {
       const table = token as Tokens.Table;
       const cells = [...table.header, ...table.rows.flat()];
@@ -365,8 +356,20 @@ export function sanitizeAllStrings<T extends object>(data: T): T {
  * `marked` is the Markdown parser this estate already uses — viewer-core
  * renders every text with it — so this is not a second opinion on the grammar,
  * it is the same one asked a different question.
+ *
+ * Read as viewer-core 2.10 reads it: no text is code. Legacy wrote the ʿayn as
+ * a backtick ("Fu`ad"), and a line indented by a tab or four spaces is just a
+ * line in HTML. Read as code, the words between two backticks or an indented
+ * line hid their tags from containsHtml, and the tags reached the sites raw.
  */
 const markdown = new Marked({ async: false, gfm: true });
+markdown.use({
+  tokenizer: {
+    codespan: () => undefined,
+    code: () => undefined,
+    fences: () => undefined,
+  },
+});
 
 function textOfTokens(tokens: Token[] | undefined): string {
   let text = '';

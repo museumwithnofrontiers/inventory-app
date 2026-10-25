@@ -300,10 +300,8 @@ export class ShMonumentDetailPictureImporter extends BaseImporter {
       const hasPhotographer = !!(text.photographer && text.photographer.trim());
       const hasCopyright = !!(text.copyright && text.copyright.trim());
 
-      // Skip translation rows that carry no text or metadata content.
-      if (!hasCaption && !hasPhotographer && !hasCopyright) {
-        continue;
-      }
+      // Every row is kept, one with no text too: legacy shows a picture on a page
+      // only where it has a row in that language, so the row itself is the data.
 
       const languageId = mapLanguageCode(text.lang);
 

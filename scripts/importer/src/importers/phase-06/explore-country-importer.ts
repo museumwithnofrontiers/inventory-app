@@ -32,6 +32,7 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { parseGeoCoordinates } from '../../domain/transformers/explore-monument-transformer.js';
 import { mapCountryCode } from '../../utils/code-mappings.js';
+import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 
 /**
  * Country info from locations, with its map position from `countries`
@@ -114,6 +115,25 @@ export class ExploreCountryImporter extends BaseImporter {
 
       this.logInfo(`Found ${countries.length} unique countries in Explore locations`);
 
+      // A country's description as legacy's Explore prints it (its
+      // `countrytranslated` row). Its name is the country's own, from the
+      // countries reference, which the site reads; only the description is
+      // Explore's.
+      const descriptions = await this.context.legacyDb.query<{
+        countryId: string;
+        langId: string;
+        description: string | null;
+      }>(
+        `SELECT countryId, langId, description FROM mwnf3_explore.countrytranslated
+         WHERE description IS NOT NULL AND description <> ''`
+      );
+      const englishDescription = new Map<string, string>();
+      for (const row of descriptions) {
+        if ((await this.getLanguageIdByLegacyCodeAsync(row.langId)) === 'eng' && row.description) {
+          englishDescription.set(row.countryId, convertHtmlToMarkdown(row.description));
+        }
+      }
+
       for (const legacy of countries) {
         try {
           const backwardCompat = `mwnf3_explore:country:${legacy.countryId}`;
@@ -190,7 +210,7 @@ export class ExploreCountryImporter extends BaseImporter {
             context_id: this.exploreContextId,
             backward_compatibility: translationBackwardCompat,
             title: countryName || legacy.countryId.toUpperCase(),
-            description: '',
+            description: englishDescription.get(legacy.countryId) ?? '',
           });
 
           result.imported++;

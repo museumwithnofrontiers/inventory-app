@@ -25,7 +25,8 @@ describe('SH institution names in their own language', () => {
     expect(extraOf(result).holding_institution_org).toBe('Museo Nacional de Antropología');
   });
 
-  it('keeps it when it is the only name legacy has', () => {
+  // Legacy prints it under its own heading only, never as the holding museum.
+  it('keeps it apart when it is the only name legacy has', () => {
     const result = transformShObjectTranslation({
       project_id: 'AWE',
       country: 'pt',
@@ -34,7 +35,7 @@ describe('SH institution names in their own language', () => {
       name: 'José Mouzinho da Silveira',
       holding_institution_org: 'Ministério das Finanças',
     } as never);
-    expect(result?.data.holder).toBe('Ministério das Finanças');
+    expect(result?.data.holder).toBeNull();
     expect(extraOf(result).holding_institution_org).toBe('Ministério das Finanças');
   });
 

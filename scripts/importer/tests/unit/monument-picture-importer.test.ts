@@ -205,7 +205,9 @@ describe('MonumentPictureImporter', () => {
     );
   });
 
-  it('skips translation when no caption, photographer, or copyright', async () => {
+  // Legacy shows a picture on a page only where it has a row in that language,
+  // so a row with no text is kept: the row itself is the data.
+  it('keeps a translation row with no caption, photographer or copyright', async () => {
     queryMock.mockImplementation(async (sql: string) => {
       if (sql.includes('FROM mwnf3.monuments_pictures')) return [rowEmpty];
       return [];
@@ -213,7 +215,8 @@ describe('MonumentPictureImporter', () => {
     const importer = new MonumentPictureImporter(context);
     await importer.import();
 
-    expect(writeItemTranslationMock).not.toHaveBeenCalled();
+    expect(writeItemTranslationMock).toHaveBeenCalledTimes(1);
+    expect(writeItemTranslationMock.mock.calls[0]![0]).toMatchObject({ description: '' });
   });
 
   it('does not create Image N placeholder names', async () => {
