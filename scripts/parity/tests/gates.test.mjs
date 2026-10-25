@@ -54,6 +54,16 @@ test('raw HTML tags in texts fail, wherever they sit', () => {
   assert.deepEqual(r.html.samples.map((s) => s.tag).sort(), ['<br/>', '<i>', '<p style="x">']);
 });
 
+test('texts whose backticks pair up fail; a lone or escaped backtick passes', () => {
+  const root = pkg([{ id: 'a' }], {
+    a: { description: 'Khedive `Abbas Hilmi, then Fu`ad', bibliography: 'Qasr al-`Ayni' },
+    b: { description: 'Khedive \\`Abbas Hilmi, then Fu\\`ad' },
+  });
+  const r = scanPackage(root);
+  assert.equal(r.code.bad, 1);
+  assert.match(r.code.samples[0].where, /items\.en\.json: a\.description$/);
+});
+
 test('the HTML pattern ignores comparisons, autolinks and e-mail brackets', () => {
   for (const ok of ['a < b > c', '<https://x.org>', '<a@b.org>', '<5 cm>', 'Ibn <Ali>']) assert.equal(HTML_TAG.test(ok), false, ok);
   for (const bad of ['<br>', '<BR />', '</p>', '<a href="x">', '<span class="y">', '<strong>']) assert.equal(HTML_TAG.test(bad), true, bad);
@@ -142,6 +152,16 @@ test('a site the baseline does not know is judged strictly by the package checks
   const r = diff(base, now);
   assert.equal(r.status, 1);
   assert.match(r.stderr, /glass: package image URLs not \/pub\/<uuid> .* 0 → 1/);
+});
+
+test('a baseline taken before the code check lists code texts without judging them', () => {
+  const base = mkdtempSync(join(tmpdir(), 'parity-base-'));
+  const now = mkdtempSync(join(tmpdir(), 'parity-run-'));
+  run(base, { carpets: report({}) }, { carpets: clean });
+  run(now, { carpets: report({}) }, { carpets: { ...clean, code: { total: 1, bad: 2, samples: [{ where: 'x', value: '`a`' }] } } });
+  assert.equal(diff(base, now).status, 0);
+  const open = JSON.parse(readFileSync(`${now}/diff-runs.json`, 'utf8')).open;
+  assert.deepEqual(open, [{ slug: 'carpets', check: 'texts that render as code', before: null, after: 2 }]);
 });
 
 test('a baseline without package counts lists the package checks without judging them', () => {

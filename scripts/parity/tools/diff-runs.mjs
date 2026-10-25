@@ -58,7 +58,7 @@ function summarise(dir) {
   }
   if (existsSync(`${dir}/packages.json`)) {
     for (const [slug, p] of Object.entries(JSON.parse(readFileSync(`${dir}/packages.json`, 'utf8')).sites)) {
-      (perSite[slug] ??= { fields: {}, sets: {} }).packages = { images: p.images.bad, html: p.html.bad };
+      (perSite[slug] ??= { fields: {}, sets: {} }).packages = { images: p.images.bad, html: p.html.bad, ...(p.code ? { code: p.code.bad } : {}) };
     }
   }
   const ov = existsSync(`${dir}/overview.json`) ? JSON.parse(readFileSync(`${dir}/overview.json`, 'utf8')) : { rows: [] };
@@ -139,14 +139,18 @@ for (const [s, r] of Object.entries(packages ?? {})) {
   if (!inRun(s)) continue;
   // A baseline taken before the package checks existed has no counts: list, don't judge.
   const measured = !A[s] || A[s].packages;
-  const base = A[s]?.packages ?? { images: measured ? 0 : null, html: measured ? 0 : null };
+  const base = A[s]?.packages ?? { images: measured ? 0 : null, html: measured ? 0 : null, code: measured ? 0 : null };
   const checks = [
-    ['images', r.images, `package image URLs not /pub/<uuid> (e.g. ${r.images.samples[0]?.value})`],
-    ['html', r.html, `package texts with raw HTML (e.g. ${r.html.samples[0]?.tag} in ${r.html.samples[0]?.where})`],
+    ['images', r.images, `package image URLs not /pub/<uuid> (e.g. ${r.images.samples[0]?.value})`, 'image URLs not /pub/<uuid>'],
+    ['html', r.html, `package texts with raw HTML (e.g. ${r.html.samples[0]?.tag} in ${r.html.samples[0]?.where})`, 'texts with raw HTML'],
+    ['code', r.code, `package texts that render as code (e.g. ${r.code?.samples[0]?.where})`, 'texts that render as code'],
   ];
-  for (const [k, now, what] of checks) {
-    if (measured && now.bad > base[k]) failures.push({ slug: s, what, before: base[k], after: now.bad });
-    else if (now.bad || base[k]) open.push({ slug: s, check: k === 'images' ? 'image URLs not /pub/<uuid>' : 'texts with raw HTML', before: base[k], after: now.bad });
+  for (const [k, now, what, check] of checks) {
+    if (!now) continue;
+    // A baseline taken before a check existed has no count for it: list, don't judge.
+    const judged = measured && base[k] !== undefined && base[k] !== null;
+    if (judged && now.bad > base[k]) failures.push({ slug: s, what, before: base[k], after: now.bad });
+    else if (now.bad || base[k]) open.push({ slug: s, check, before: base[k] ?? null, after: now.bad });
   }
 }
 

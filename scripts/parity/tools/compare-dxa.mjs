@@ -78,6 +78,21 @@ function compareList(legacy, pkg) {
   if (commaSplit) return { ...base, verdict: 'different', why: 'legacy entry split at its commas' };
   return base;
 }
+// dxa-api prints a credit as "Firstname LASTNAME" (its SQL upper-cases the surname) and lists the
+// names in authors_objects.priority order. Letter case and order are format differences to
+// compare(), but the sheet reads differently, so a credit that differs only in them is different.
+function creditAsPrinted(r, legacy, pkg) {
+  if (r.verdict !== 'format' && r.verdict !== 'different') return r;
+  const names = (s, from) => normalise(s, { from }).replace(/[.\s]+$/, '').split(/\s*,\s*/);
+  const a = names(legacy, 'html');
+  const b = names(pkg, 'markdown');
+  if (a.join(', ') === b.join(', ')) return r;
+  const lower = (list) => list.map((n) => n.toLowerCase());
+  const sameNames = [...lower(a)].sort().join('|') === [...lower(b)].sort().join('|');
+  if (!sameNames) return r;
+  const why = lower(a).join('|') === lower(b).join('|') ? 'legacy prints the surname in capitals' : 'names in another order than legacy';
+  return { ...r, verdict: 'different', legacy: a.join(', '), pkg: b.join(', '), why };
+}
 const relKey = (href) => lc(dbUidToKey(new URL(href).pathname.replace(/^.*\/api\/v2/, '').replace(/\/[a-z]{2}$/, '')));
 const selfName = L.self?.galleryName;
 const hasArtistLines = Object.values(P.translations.items ?? {}).some((rows) => Object.values(rows ?? {}).some((row) => row?.artist));
@@ -122,7 +137,7 @@ for (const s of L.sheets) {
       if (r.verdict === 'different' && latin && lang !== 'en' && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(latin)) r.why = `legacy prints the ${lang} spelling; the package keeps the Latin one`;
       if (r.verdict === 'different' && names.length > 1 && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(names[0])) r.why = `package keeps only the first of ${names.length} names`;
       if (r.verdict === 'different' && names.length > 1 && flatten(normalise(tr[pf], { from: 'markdown' })).replace(/ (and|&|;) /g, ', ') === flatten(legacy)) r.verdict = 'format';
-      R.field('item', pf, r, where);
+      R.field('item', pf, creditAsPrinted(r, legacy, tr[pf]), where);
     }
     for (const [k, v] of Object.entries(sh)) if (!IGNORE.has(k) && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) R.unmapped('item', k, where);
     for (const k of Object.keys(tr)) if (!pkgFieldsSeen.has(k)) pkgOnly[k] = (pkgOnly[k] ?? 0) + 1;

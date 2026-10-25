@@ -2,6 +2,7 @@
 // export before anything is published. Both caught a regression that reached production on
 // 2026-10-19 (relative image URLs, raw HTML in texts).
 import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { rendersAsCode } from './text.mjs';
 
 // The stable public route: the npm packages bake it in, so it never changes.
 export const GOOD_IMAGE_URL = /^https:\/\/inventory\.metanull\.eu\/pub\/[0-9a-f-]{36}\.(jpe?g|png|gif|webp)$/i;
@@ -36,6 +37,8 @@ function* strings(value, path = '', key = '') {
 export function scanPackage(root, { max = 20 } = {}) {
   const images = { total: 0, bad: 0, samples: [] };
   const html = { total: 0, bad: 0, samples: [] };
+  // Texts whose backticks pair up: the sites print the words between them as code.
+  const code = { total: 0, bad: 0, samples: [] };
   for (const file of jsonFiles(root)) {
     const data = JSON.parse(readFileSync(`${root}/${file}`, 'utf8'));
     for (const { path, key, value } of strings(data)) {
@@ -53,7 +56,13 @@ export function scanPackage(root, { max = 20 } = {}) {
         html.bad++;
         if (html.samples.length < max) html.samples.push({ where: `${file}: ${path}`, tag: m[0], value: value.length > 160 ? value.slice(0, 160) + '…' : value });
       }
+      code.total++;
+      if (rendersAsCode(value)) {
+        code.bad++;
+        const at = value.indexOf('`');
+        if (code.samples.length < max) code.samples.push({ where: `${file}: ${path}`, value: value.slice(Math.max(0, at - 40), at + 120) });
+      }
     }
   }
-  return { images, html };
+  return { images, html, code };
 }

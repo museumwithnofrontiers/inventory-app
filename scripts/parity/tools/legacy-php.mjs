@@ -11,7 +11,8 @@ import { decodeEntities, htmlToText } from './lib/text.mjs';
 export const PHP_SITES = {
   // Islamic Art's sheet prints the artist line alone, without the life data.
   islamicart: { host: 'https://islamicart.museumwnf.org', projects: ['ISL', 'EPM'], artistAlone: true },
-  baroqueart: { host: 'https://baroqueart.museumwnf.org', projects: ['BAR'] },
+  // Baroque Art's monument sheet shows at most 15 pictures; the site caps it the same way.
+  baroqueart: { host: 'https://baroqueart.museumwnf.org', projects: ['BAR'], pictureLimit: { monument: 15 } },
   // Sharing History records have no museum in their key, and their pictures sit under sharing_history/.
   sharinghistory: { host: 'https://sharinghistory.museumwnf.org', projects: ['AWE'], sh: true, termPrefix: 'sh_db_' },
 };
@@ -141,7 +142,9 @@ export function parseCredits(html, lang, labels) {
   const clean = html.replace(/<span class="su_tooltip_1-content">[\s\S]*?<\/span><\/span><\/span><\/span>/g, '');
   for (const p of clean.matchAll(/<p>([\s\S]*?)<\/p>/g)) {
     for (const line of p[1].split(/<\/?br\s*\/?>/)) {
-      const m = line.match(/^\s*([^<:]{2,60}):\s*([\s\S]*)$/);
+      // Most labels end with a colon in the dictionary; some don't (Arabic "تنقيح الترجمة"), and the
+      // page prints the label, a space and the names: take the longest label the line starts with.
+      const m = line.match(/^\s*([^<:]{2,60}):\s*([\s\S]*)$/) ?? labelPrefix(line, lang, labels);
       if (!m) continue;
       const label = decodeEntities(m[1]).trim();
       const key = labels.has(`${lang}|${norm(label)}`) ? `${lang}|${norm(label)}` : `en|${norm(label)}`;
@@ -155,6 +158,18 @@ export function parseCredits(html, lang, labels) {
     }
   }
   return { credits, shared };
+}
+
+function labelPrefix(line, lang, labels) {
+  const text = htmlToText(line).replace(/\s+/g, ' ').trim();
+  const lower = text.toLowerCase();
+  let best = '';
+  for (const key of labels.keys()) {
+    if (!key.startsWith(`${lang}|`)) continue;
+    const label = key.slice(lang.length + 1);
+    if (label.length > best.length && lower.startsWith(`${label} `)) best = label;
+  }
+  return best ? [line, text.slice(0, best.length), text.slice(best.length + 1)] : null;
 }
 
 // The record's own pictures: images.museumwnf.org/<size>/<objects|monuments>/<project>/<country>/<museum no.>/<number>/<n>.jpg

@@ -11,3 +11,10 @@ test('a label one term prints is keyed by that term', () => {
   assert.deepEqual(credits, { db_writer: ['Houria Cherid'] });
   assert.deepEqual(shared, [{ terms: ['db_copyeditor', 'db_translationcopyeditor'], names: ['Margot Cortez'] }]);
 });
+
+test('a label the dictionary writes without a colon is read from the start of its line', () => {
+  const ar = new Map([['ar|الإعداد', 'db_writer'], ['ar|الترجمة', 'db_translator'], ['ar|تنقيح الترجمة', 'db_translationcopyeditor']]);
+  ar.terms = new Map([...ar].map(([k, v]) => [k, new Set([v])]));
+  const { credits } = parseCredits('<p>الإعداد: ينْس كروغر<br/>الترجمة: هاني صالح.<br/>تنقيح الترجمة عباس عباس<br/></p>', 'ar', ar);
+  assert.deepEqual(credits, { db_writer: ['ينْس كروغر'], db_translator: ['هاني صالح.'], db_translationcopyeditor: ['عباس عباس'] });
+});

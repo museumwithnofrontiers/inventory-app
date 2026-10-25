@@ -20,21 +20,22 @@ for (const s of sites) {
 }
 writeFileSync(`${OUT}/packages.json`, JSON.stringify({ packages: sitemap.packages, sites: result }, null, 1));
 
-const failing = Object.entries(result).filter(([, r]) => r.images.bad || r.html.bad);
+const failing = Object.entries(result).filter(([, r]) => r.images.bad || r.html.bad || r.code.bad);
 const md = [
   `# Package gates (${sitemap.packages})`,
   '',
-  'Image URLs must be `https://inventory.metanull.eu/pub/<uuid>.<ext>`; texts must hold no raw HTML tags.',
+  'Image URLs must be `https://inventory.metanull.eu/pub/<uuid>.<ext>`; texts must hold no raw HTML tags, and no backticks that pair up into code.',
   '',
-  '| Site | Package | Image URLs | not /pub/<uuid> | Texts | with HTML tags |',
-  '|---|---|---|---|---|---|',
-  ...Object.entries(result).map(([slug, r]) => `| ${slug} | ${r.package} | ${r.images.total} | ${r.images.bad ? `**${r.images.bad}**` : 0} | ${r.html.total} | ${r.html.bad ? `**${r.html.bad}**` : 0} |`),
+  '| Site | Package | Image URLs | not /pub/<uuid> | Texts | with HTML tags | that render as code |',
+  '|---|---|---|---|---|---|---|',
+  ...Object.entries(result).map(([slug, r]) => `| ${slug} | ${r.package} | ${r.images.total} | ${r.images.bad ? `**${r.images.bad}**` : 0} | ${r.html.total} | ${r.html.bad ? `**${r.html.bad}**` : 0} | ${r.code.bad ? `**${r.code.bad}**` : 0} |`),
 ];
 for (const [slug, r] of failing) {
   md.push('', `## ${slug}`, '');
   for (const b of r.images.samples) md.push(`- image \`${b.where}\`: ${b.value}`);
   for (const b of r.html.samples) md.push(`- html \`${b.where}\` ${b.tag}: ${b.value.replace(/\n/g, ' ⏎ ')}`);
+  for (const b of r.code.samples) md.push(`- code \`${b.where}\`: ${b.value.replace(/\n/g, ' ⏎ ')}`);
 }
 writeFileSync(`${OUT}/packages.md`, md.join('\n') + '\n');
-for (const [slug, r] of failing) console.error(`${slug}: ${r.images.bad} bad image URLs, ${r.html.bad} texts with HTML tags`);
-console.log(`packages: ${sites.length} checked, ${failing.length} with a bad image URL or an HTML text`);
+for (const [slug, r] of failing) console.error(`${slug}: ${r.images.bad} bad image URLs, ${r.html.bad} texts with HTML tags, ${r.code.bad} texts that render as code`);
+console.log(`packages: ${sites.length} checked, ${failing.length} with a bad image URL, an HTML text or a code text`);

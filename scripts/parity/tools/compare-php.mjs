@@ -122,8 +122,9 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         // Sharing History: the package joins the second name and the original-language name.
         const names = page.sections.filter((x) => ['alternate_name', 'second_name'].includes(TERM[x.term])).map((x) => normalise(x.html));
         if (pf === 'alternate_name' || !page.sections.some((x) => TERM[x.term] === 'alternate_name')) {
-          const r4 = compare(names.join('; '), tr.alternate_name, { legacyFrom: 'text' });
-          if (names.length > 1 && ['same', 'format'].includes(r4.verdict)) r4.why = 'second name and original-language name joined in one field';
+          let r4 = compare(names.join('; '), tr.alternate_name, { legacyFrom: 'text' });
+          // Legacy prints two fields under two headings; one field holding both prints them as one.
+          if (names.length > 1 && ['same', 'format'].includes(r4.verdict)) r4 = { ...r4, verdict: 'different', legacy: names.join(' ⏎ '), pkg: tr.alternate_name, why: 'second name and original-language name joined in one field' };
           R.field('item', 'alternate_name', r4, where);
         }
         seen.add('alternate_name');
@@ -132,19 +133,28 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       if (cfg.sh && pf === 'history') {
         // Sharing History monuments: the package appends History to the Description.
         const inDesc = tr.description && flatten(normalise(tr.description, { from: 'markdown' })).includes(flatten(normalise(s.html)));
-        R.field('item', 'history', inDesc ? { verdict: 'format', why: 'History merged into the Description' } : compare(s.html, tr.history), where);
+        // Legacy prints History under its own heading; merged into the Description, it has none.
+        R.field('item', 'history', inDesc ? { verdict: 'missing-in-package', legacy: normalise(s.html), why: 'History merged into the Description' } : compare(s.html, tr.history), where);
         continue;
       }
       if (cfg.sh && s.term === 'db_description') {
         const hist = page.sections.find((x) => TERM[x.term] === 'history');
         const merged = hist ? `${normalise(s.html)}\n${normalise(hist.html)}` : null;
         let r5 = compare(s.html, tr.description);
-        if (r5.verdict === 'different' && merged && ['same', 'format'].includes(compare(merged, tr.description, { legacyFrom: 'text' }).verdict)) r5 = { ...r5, verdict: 'format', why: 'History merged into the Description' };
+        if (r5.verdict === 'different' && merged && ['same', 'format'].includes(compare(merged, tr.description, { legacyFrom: 'text' }).verdict)) r5 = { ...r5, why: 'History merged into the Description' };
         R.field('item', 'description', glossaryNote(s, r5), where);
         seen.add('description');
         continue;
       }
-      if (pf === 'location') {
+      if (pf === 'location' && cfg.sh) {
+        // Sharing History prints the location, the present-day country and the record's country on
+        // one line ("Vienna, Austria, Public domain"); the site composes the same line.
+        const country = (cid) => (cid ? P.tr('countries', lang, cid)?.name : null);
+        const line = [tr.location, country(tr.country_id_present_days), country(it.country_id)].filter(Boolean).join(', ');
+        R.field('item', 'location', compare(s.html, line), where);
+        seen.add('location');
+        seen.add('country_id_present_days');
+      } else if (pf === 'location') {
         // The page prints location, province and then the country name.
         const r0 = compare(s.html, tr.location);
         const a = flatten(normalise(s.html));
@@ -260,7 +270,10 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
   }
   if (it && !first) {
     const n = legacyImages;
-    R.field('item', 'image.count', n === it.images.length ? { verdict: n ? 'same' : 'both-empty' } : { verdict: n > it.images.length ? 'missing-in-package' : 'extra-in-package', legacy: String(n), pkg: String(it.images.length) }, key);
+    // The site shows at most as many pictures as legacy's sheet did (its pictureLimit); the
+    // package keeps them all.
+    const shownBySite = Math.min(it.images.length, cfg.pictureLimit?.[it.type] ?? Infinity);
+    R.field('item', 'image.count', n === shownBySite ? { verdict: n ? 'same' : 'both-empty' } : { verdict: n > shownBySite ? 'missing-in-package' : 'extra-in-package', legacy: String(n), pkg: String(shownBySite) }, key);
   }
 }
 
@@ -288,8 +301,10 @@ function glossaryNote(section, result) {
     const words = (s) => flatten(s).split(/\s+/);
     const a = words(result.legacy);
     const lost = words(result.pkg).filter((w) => /'/.test(w) && !a.includes(w));
+    // The punctuation around the lost word stays on the page ("among the ."), so compare words only.
+    const bare = (s) => s.replace(/[^\p{L}\p{N}'\s]+/gu, ' ').replace(/\s+/g, ' ').trim();
     const strip = (s) => flatten(s).split(/\s+/).filter((w) => !lost.includes(w)).join(' ');
-    if (lost.length && strip(result.pkg) === flatten(result.legacy)) return { ...result, verdict: 'expected:legacy glossary link drops a term with an apostrophe' };
+    if (lost.length && bare(strip(result.pkg)) === bare(flatten(result.legacy))) return { ...result, verdict: 'expected:legacy glossary link drops a term with an apostrophe' };
   }
   return result;
 }
