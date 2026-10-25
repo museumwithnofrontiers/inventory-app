@@ -132,6 +132,8 @@ for (const s of L.sheets) {
       const legacy = names.length ? names.join(', ') : sh[col];
       const r = compare(legacy, tr[pf]);
       if (r.verdict === 'extra-in-package' && droppedByCvJoin(key, lang, role)) r.verdict = 'expected:dxa-api drops a credit whose author has a CV in other languages only';
+      // With the author dropped, the sheet falls back to the objects column ("Sevinç Gök.").
+      if (r.verdict === 'different' && !names.length && droppedByCvJoin(key, lang, role)) r.verdict = 'expected:dxa-api drops a credit whose author has a CV in other languages only, and prints the objects column';
       // Legacy prints the credit in the page's script when authors_objects has it (e.g. Arabic).
       const latin = (sh.authors?.[role] ?? []).map((a) => a.en).filter(Boolean).join(', ');
       if (r.verdict === 'different' && latin && lang !== 'en' && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(latin)) r.why = `legacy prints the ${lang} spelling; the package keeps the Latin one`;
