@@ -1,0 +1,808 @@
+{
+ "rows": [
+  {
+   "slug": "baroqueart",
+   "kind": "standalone",
+   "sets": 6,
+   "setsOff": [
+    "exhibitions: −1/+0",
+    "exhibition_themes: −3/+0",
+    "partners referenced by records: −4/+12"
+   ],
+   "compared": 29738,
+   "real": 12,
+   "unexp": 8
+  },
+  {
+   "slug": "explore",
+   "kind": "standalone",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 11973,
+   "real": 9,
+   "unexp": 9
+  },
+  {
+   "slug": "galleries",
+   "kind": "standalone",
+   "sets": 2,
+   "setsOff": [],
+   "compared": 299,
+   "real": 0,
+   "unexp": 0
+  },
+  {
+   "slug": "islamicart",
+   "kind": "standalone",
+   "sets": 9,
+   "setsOff": [
+    "record × language (dump vs package): −4/+16",
+    "partners referenced by records: −10/+1"
+   ],
+   "compared": 128732,
+   "real": 60,
+   "unexp": 48
+  },
+  {
+   "slug": "sharinghistory",
+   "kind": "standalone",
+   "sets": 9,
+   "setsOff": [
+    "record × language (dump vs package): −1/+0",
+    "partners referenced by records: −0/+15"
+   ],
+   "compared": 40361,
+   "real": 40,
+   "unexp": 40
+  },
+  {
+   "slug": "amulets",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+1",
+    "item × language: −0/+1",
+    "partners: −0/+1"
+   ],
+   "compared": 6430,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "archaeology",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+1",
+    "item × language: −0/+1",
+    "partners: −0/+1"
+   ],
+   "compared": 16491,
+   "real": 4,
+   "unexp": 4
+  },
+  {
+   "slug": "architectural-elements",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+2",
+    "item × language: −0/+2",
+    "partners: −0/+2"
+   ],
+   "compared": 17410,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "arms-armoury",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 8450,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "calligraphy",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+3",
+    "item × language: −2/+3",
+    "partners: −0/+3"
+   ],
+   "compared": 71410,
+   "real": 17,
+   "unexp": 16
+  },
+  {
+   "slug": "carpets",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 21310,
+   "real": 3,
+   "unexp": 2
+  },
+  {
+   "slug": "ceramics",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+2",
+    "item × language: −1/+2",
+    "partners: −0/+1"
+   ],
+   "compared": 50241,
+   "real": 12,
+   "unexp": 10
+  },
+  {
+   "slug": "clothing",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+7",
+    "item × language: −0/+7",
+    "partners: −0/+2"
+   ],
+   "compared": 12774,
+   "real": 5,
+   "unexp": 5
+  },
+  {
+   "slug": "coins-medals",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+9",
+    "item × language: −0/+9",
+    "partners: −0/+4"
+   ],
+   "compared": 7959,
+   "real": 3,
+   "unexp": 3
+  },
+  {
+   "slug": "communication",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+17",
+    "item × language: −0/+17",
+    "partners: −0/+8"
+   ],
+   "compared": 5793,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "funerary-objects",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 8975,
+   "real": 2,
+   "unexp": 2
+  },
+  {
+   "slug": "glass",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+1",
+    "item × language: −0/+1",
+    "partners: −0/+2"
+   ],
+   "compared": 23409,
+   "real": 2,
+   "unexp": 2
+  },
+  {
+   "slug": "gold-silver",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+5",
+    "item × language: −1/+5",
+    "partners: −0/+2"
+   ],
+   "compared": 8762,
+   "real": 3,
+   "unexp": 3
+  },
+  {
+   "slug": "historical-cars",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 6113,
+   "real": 0,
+   "unexp": 0
+  },
+  {
+   "slug": "ivory",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 9059,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "jewellery",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+2",
+    "item × language: −0/+2",
+    "partners: −0/+1"
+   ],
+   "compared": 11555,
+   "real": 2,
+   "unexp": 2
+  },
+  {
+   "slug": "landscapes",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+13",
+    "item × language: −0/+13",
+    "partners: −0/+5"
+   ],
+   "compared": 6309,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "leatherworks",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+1",
+    "item × language: −0/+1",
+    "partners: −0/+1"
+   ],
+   "compared": 5914,
+   "real": 2,
+   "unexp": 1
+  },
+  {
+   "slug": "manuscripts",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+8",
+    "item × language: −1/+8",
+    "partners: −0/+4"
+   ],
+   "compared": 22947,
+   "real": 8,
+   "unexp": 8
+  },
+  {
+   "slug": "metalwork",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+2",
+    "item × language: −0/+2",
+    "partners: −0/+1"
+   ],
+   "compared": 32351,
+   "real": 6,
+   "unexp": 6
+  },
+  {
+   "slug": "mosaics",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 4238,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "musical-instruments",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 4058,
+   "real": 0,
+   "unexp": 0
+  },
+  {
+   "slug": "paintings",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+18",
+    "item × language: −0/+18",
+    "partners: −0/+7"
+   ],
+   "compared": 20935,
+   "real": 3,
+   "unexp": 3
+  },
+  {
+   "slug": "photographs",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+100",
+    "item × language: −0/+100",
+    "partners: −0/+11",
+    "countries (items ∪ timeline ∪ partners): −0/+1"
+   ],
+   "compared": 14164,
+   "real": 5,
+   "unexp": 5
+  },
+  {
+   "slug": "porcelain",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 3627,
+   "real": 1,
+   "unexp": 1
+  },
+  {
+   "slug": "portraits",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+2",
+    "item × language: −0/+2",
+    "partners: −0/+2"
+   ],
+   "compared": 10949,
+   "real": 3,
+   "unexp": 3
+  },
+  {
+   "slug": "precious-stones",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 6983,
+   "real": 3,
+   "unexp": 3
+  },
+  {
+   "slug": "prints-drawings",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+29",
+    "item × language: −0/+29",
+    "partners: −0/+7"
+   ],
+   "compared": 19440,
+   "real": 12,
+   "unexp": 10
+  },
+  {
+   "slug": "religious-life",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+5",
+    "item × language: −0/+5",
+    "partners: −0/+2"
+   ],
+   "compared": 21743,
+   "real": 4,
+   "unexp": 3
+  },
+  {
+   "slug": "scientific-objects",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+3",
+    "item × language: −0/+3",
+    "partners: −0/+2"
+   ],
+   "compared": 6993,
+   "real": 5,
+   "unexp": 4
+  },
+  {
+   "slug": "sculptures",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+2",
+    "item × language: −0/+2",
+    "partners: −0/+2"
+   ],
+   "compared": 14082,
+   "real": 3,
+   "unexp": 2
+  },
+  {
+   "slug": "textiles",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+9",
+    "item × language: −0/+9",
+    "partners: −0/+2"
+   ],
+   "compared": 12561,
+   "real": 0,
+   "unexp": 0
+  },
+  {
+   "slug": "theatre",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 3982,
+   "real": 0,
+   "unexp": 0
+  },
+  {
+   "slug": "toys-games",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 3863,
+   "real": 0,
+   "unexp": 0
+  },
+  {
+   "slug": "wallpaintings",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 5454,
+   "real": 3,
+   "unexp": 3
+  },
+  {
+   "slug": "weights-measures",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [],
+   "compared": 4828,
+   "real": 0,
+   "unexp": 0
+  },
+  {
+   "slug": "woodwork",
+   "kind": "gallery",
+   "sets": 6,
+   "setsOff": [
+    "items (membership): −0/+3",
+    "item × language: −0/+3",
+    "partners: −0/+1"
+   ],
+   "compared": 21657,
+   "real": 8,
+   "unexp": 8
+  },
+  {
+   "slug": "arts-in-dialogue",
+   "kind": "exhibition",
+   "sets": 8,
+   "setsOff": [
+    "items (membership): −1/+3",
+    "item × language: −0/+22",
+    "partners: −1/+5",
+    "timeline events (country|year|text, en): −0/+4"
+   ],
+   "compared": 5934,
+   "real": 7,
+   "unexp": 7
+  },
+  {
+   "slug": "the-table-is-set",
+   "kind": "exhibition",
+   "sets": 8,
+   "setsOff": [
+    "items (membership): −0/+2",
+    "item × language: −2/+13",
+    "partners: −1/+0"
+   ],
+   "compared": 23838,
+   "real": 21,
+   "unexp": 21
+  },
+  {
+   "slug": "the-use-of-colours-in-art",
+   "kind": "exhibition",
+   "sets": 8,
+   "setsOff": [
+    "items (membership): −1/+1",
+    "item × language: −0/+6",
+    "partners: −2/+1",
+    "timeline events (country|year|text, en): −0/+45"
+   ],
+   "compared": 12332,
+   "real": 2,
+   "unexp": 2
+  },
+  {
+   "slug": "water-in-islam",
+   "kind": "exhibition",
+   "sets": 8,
+   "setsOff": [
+    "items (membership): −0/+3",
+    "item × language: −0/+4",
+    "partners: −2/+11"
+   ],
+   "compared": 26084,
+   "real": 10,
+   "unexp": 10
+  },
+  {
+   "slug": "with-brush-and-qalam",
+   "kind": "exhibition",
+   "sets": 8,
+   "setsOff": [],
+   "compared": 3657,
+   "real": 0,
+   "unexp": 0
+  }
+ ],
+ "causes": {
+  "item location — page adds the country name (format)": {
+   "baroqueart": 1018,
+   "islamicart": 7425,
+   "sharinghistory": 2953
+  },
+  "item artist — name + life data from separate fields (format)": {
+   "baroqueart": 31,
+   "sharinghistory": 13
+  },
+  "item artist — name + life data from separate fields (same)": {
+   "baroqueart": 327,
+   "sharinghistory": 429
+  },
+  "item owner_reference — stray or misplaced Markdown emphasis in the package text (different)": {
+   "baroqueart": 3,
+   "prints-drawings": 2,
+   "scientific-objects": 1
+  },
+  "detail description — stray or misplaced Markdown emphasis in the package text (different)": {
+   "baroqueart": 1
+  },
+  "item location — page prints only the country name (format)": {
+   "islamicart": 71,
+   "sharinghistory": 93
+  },
+  "item description — stray or misplaced Markdown emphasis in the package text (different)": {
+   "islamicart": 2
+  },
+  "item bibliography — stray or misplaced Markdown emphasis in the package text (different)": {
+   "islamicart": 10,
+   "calligraphy": 1,
+   "carpets": 1,
+   "ceramics": 2,
+   "leatherworks": 1,
+   "religious-life": 1,
+   "sculptures": 1
+  },
+  "item translation_copy_editor — Arabic page omits a credit that has no Arabic spelling (extra-in-package)": {
+   "islamicart": 968
+  },
+  "item description — History merged into the Description (format)": {
+   "sharinghistory": 226
+  },
+  "item alternate_name — second name and original-language name joined in one field (same)": {
+   "sharinghistory": 61
+  },
+  "item alternate_name — second name and original-language name joined in one field (format)": {
+   "sharinghistory": 1
+  },
+  "item history — History merged into the Description (format)": {
+   "sharinghistory": 228
+  }
+ },
+ "unexplained": {
+  "item.artist": {
+   "baroqueart": 1,
+   "sharinghistory": 1
+  },
+  "item.type": {
+   "baroqueart": 1,
+   "calligraphy": 1,
+   "clothing": 1,
+   "landscapes": 1,
+   "manuscripts": 1,
+   "woodwork": 1
+  },
+  "item.bibliography": {
+   "baroqueart": 4,
+   "islamicart": 5,
+   "architectural-elements": 1,
+   "calligraphy": 2,
+   "ceramics": 1,
+   "metalwork": 1,
+   "paintings": 1,
+   "portraits": 1,
+   "religious-life": 1,
+   "woodwork": 1,
+   "the-table-is-set": 1
+  },
+  "item.alternate_name": {
+   "baroqueart": 2,
+   "sharinghistory": 4,
+   "scientific-objects": 2
+  },
+  "country.name": {
+   "explore": 4
+  },
+  "country.description": {
+   "explore": 1
+  },
+  "territory.name": {
+   "explore": 2
+  },
+  "territory.description": {
+   "explore": 2
+  },
+  "item.location": {
+   "islamicart": 3,
+   "sharinghistory": 22,
+   "calligraphy": 1,
+   "ceramics": 1,
+   "manuscripts": 1,
+   "the-table-is-set": 1
+  },
+  "item.holder": {
+   "islamicart": 2,
+   "calligraphy": 1,
+   "ceramics": 1,
+   "manuscripts": 1
+  },
+  "item.dates": {
+   "islamicart": 3,
+   "calligraphy": 1,
+   "ceramics": 1,
+   "manuscripts": 1,
+   "the-table-is-set": 1
+  },
+  "item.dynasty (free text)": {
+   "islamicart": 3,
+   "calligraphy": 1,
+   "ceramics": 1,
+   "manuscripts": 1,
+   "the-table-is-set": 1
+  },
+  "item.provenance": {
+   "islamicart": 1,
+   "calligraphy": 1,
+   "manuscripts": 1
+  },
+  "item.description": {
+   "islamicart": 22,
+   "sharinghistory": 6,
+   "carpets": 1,
+   "the-table-is-set": 1
+  },
+  "item.method_for_datation": {
+   "islamicart": 1,
+   "sharinghistory": 2,
+   "the-table-is-set": 1
+  },
+  "record.package language": {
+   "islamicart": 4
+  },
+  "item.short_description": {
+   "islamicart": 3,
+   "calligraphy": 2,
+   "coins-medals": 1,
+   "gold-silver": 1,
+   "manuscripts": 1,
+   "photographs": 1,
+   "the-table-is-set": 1
+  },
+  "item.patrons": {
+   "islamicart": 1,
+   "the-table-is-set": 1
+  },
+  "item.history": {
+   "sharinghistory": 4
+  },
+  "membership.sh_exhibition_subthemes (assigned ∪ slideshow items)": {
+   "sharinghistory": 1
+  },
+  "partner.languages": {
+   "amulets": 1,
+   "archaeology": 3,
+   "arms-armoury": 1,
+   "calligraphy": 2,
+   "carpets": 1,
+   "ceramics": 1,
+   "clothing": 2,
+   "coins-medals": 2,
+   "communication": 1,
+   "funerary-objects": 1,
+   "glass": 2,
+   "gold-silver": 2,
+   "ivory": 1,
+   "jewellery": 1,
+   "manuscripts": 1,
+   "metalwork": 2,
+   "mosaics": 1,
+   "paintings": 2,
+   "photographs": 3,
+   "porcelain": 1,
+   "portraits": 1,
+   "precious-stones": 2,
+   "prints-drawings": 2,
+   "religious-life": 1,
+   "scientific-objects": 1,
+   "sculptures": 2,
+   "wallpaintings": 3,
+   "woodwork": 1,
+   "arts-in-dialogue": 1,
+   "the-table-is-set": 2,
+   "the-use-of-colours-in-art": 1
+  },
+  "item.start/end": {
+   "archaeology": 1
+  },
+  "item.author": {
+   "calligraphy": 3,
+   "ceramics": 4,
+   "clothing": 1,
+   "metalwork": 3,
+   "precious-stones": 1,
+   "prints-drawings": 3,
+   "religious-life": 1,
+   "woodwork": 4,
+   "the-table-is-set": 8,
+   "water-in-islam": 7
+  },
+  "item.translation_copy_editor": {
+   "calligraphy": 1,
+   "funerary-objects": 1,
+   "the-table-is-set": 1
+  },
+  "partner.city": {
+   "clothing": 1,
+   "jewellery": 1,
+   "leatherworks": 1,
+   "photographs": 1,
+   "portraits": 1,
+   "prints-drawings": 1,
+   "scientific-objects": 1,
+   "woodwork": 1
+  },
+  "item.dimensions": {
+   "prints-drawings": 4,
+   "water-in-islam": 1
+  },
+  "item.image.photographer": {
+   "arts-in-dialogue": 3
+  },
+  "site.hidden": {
+   "arts-in-dialogue": 1
+  },
+  "partner.name": {
+   "arts-in-dialogue": 1
+  },
+  "exhibition.related content": {
+   "arts-in-dialogue": 1
+  },
+  "item.keywords": {
+   "the-table-is-set": 1
+  },
+  "item.translator": {
+   "the-table-is-set": 1
+  },
+  "item.copy_editor": {
+   "the-use-of-colours-in-art": 1,
+   "water-in-islam": 1
+  },
+  "site.banner item": {
+   "water-in-islam": 1
+  }
+ }
+}
