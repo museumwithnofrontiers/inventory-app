@@ -367,6 +367,12 @@ export class ItemExporter extends BaseExporter {
     const sharingHistoryIds = new Set(
       items.filter(item => item.backward_compatibility?.startsWith('mwnf3_sharing_history:')).map(item => item.id)
     )
+    // dxa-api returns a Sharing History monument's credit columns in lower case
+    // (`translationby`), which its client, reading `translationBy`, never finds:
+    // the galleries print no column credit for those records.
+    const noColumnCredits = new Set(
+      items.filter(item => sharingHistoryIds.has(item.id) && item.type === 'monument').map(item => item.id)
+    )
 
     const translationsByItemLang = new Map<string, ItemTranslationRow[]>()
     for (const row of translations) {
@@ -459,7 +465,9 @@ export class ItemExporter extends BaseExporter {
         ...creditFields(
           ownRow.id,
           credits,
-          (extra?.['credits_as_written'] as unknown as Record<string, string> | undefined) ?? null
+          noColumnCredits.has(itemId)
+            ? null
+            : ((extra?.['credits_as_written'] as unknown as Record<string, string> | undefined) ?? null)
         ),
         // The Material(s) / Technique(s) line and the keywords as the record
         // writes them, which legacy prints: one entry each, so the language's

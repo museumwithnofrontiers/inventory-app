@@ -474,9 +474,13 @@ export class ItemExporter extends BaseExporter {
       imageMap.get(pic.item_id)!.push({
         url: this.imageUrl(pic.path),
         display_order: pic.display_order,
-        // The languages the picture has a row in, empty or not: legacy's sheet
-        // lists a picture on a page only where it has one.
-        languages: Object.keys(perLang).sort(),
+        // The languages the sheet shows the picture in: legacy's Sharing History
+        // sheet prints a picture only where its row in that language has a
+        // photographer or a copyright (database_item.php), not merely a row.
+        languages: Object.entries(perLang)
+          .filter(([, t]) => !!(t.photographer || t.copyright))
+          .map(([lang]) => lang)
+          .sort(),
         captions,
         photographers,
         copyrights,
