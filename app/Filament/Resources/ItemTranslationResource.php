@@ -98,8 +98,8 @@ class ItemTranslationResource extends Resource
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255),
-                        TextInput::make('alternate_name')
-                            ->maxLength(255),
+                        Textarea::make('alternate_name')
+                            ->rows(2),
                         Textarea::make('description')
                             ->rows(4)
                             ->columnSpanFull(),
@@ -108,9 +108,9 @@ class ItemTranslationResource extends Resource
 
                 Section::make('Object Details')
                     ->schema([
-                        TextInput::make('type')
+                        Textarea::make('type')
                             ->placeholder('e.g., painting, sculpture, monument')
-                            ->maxLength(255),
+                            ->rows(2),
                         TextInput::make('dates')
                             ->placeholder('e.g., 1920–1930, 18th century')
                             ->maxLength(255),

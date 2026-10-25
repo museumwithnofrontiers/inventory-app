@@ -38,4 +38,19 @@ class ItemTest extends TestCase
             ->assertJsonPath('data.id', $item->id)
             ->assertJsonStructure(['data' => ['translations']]);
     }
+
+    /**
+     * Legacy dates an object from the Paleolithic: -300000 to -8000.
+     */
+    public function test_keeps_a_paleolithic_start_year(): void
+    {
+        $item = Item::factory()->create();
+
+        $this->putJson(route('item.update', $item), ['start_date' => -300000, 'end_date' => -8000])
+            ->assertOk();
+
+        $item->refresh();
+        $this->assertSame(-300000, $item->start_date);
+        $this->assertSame(-8000, $item->end_date);
+    }
 }

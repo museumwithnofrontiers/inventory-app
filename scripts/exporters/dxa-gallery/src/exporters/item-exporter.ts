@@ -1,39 +1,66 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
-// A Sharing History record shown in a gallery or exhibition: its fields as the
-// galleries' sheet (dxa-api) shows them, which the importer keeps apart in
-// extra.gallery_sheet. The record's own translation holds the Sharing History
-// site's merged form, and its dimensions and materials sit in extra.
-function sharingHistorySheet(
-  sheet: Record<string, string>,
-  extra: Record<string, string> | null
-): Record<string, unknown> {
+// A Sharing History record shown in a gallery or exhibition: the fields the
+// galleries' sheet (dxa-api) reads from it that a mwnf3 record keeps elsewhere.
+// Its second description is the sheet's short description; its dimensions,
+// materials and artist line sit in extra.
+function sharingHistorySheet(extra: Record<string, unknown> | null): Record<string, unknown> {
+  const text = (key: string) => (typeof extra?.[key] === 'string' ? (extra[key] as string) : null)
   return {
-    description: sheet['description'] ?? null,
-    short_description: sheet['short_description'] ?? null,
-    alternate_name: sheet['also_known_as'] ?? null,
-    history: sheet['history'] ?? null,
+    short_description: text('description2'),
     // The artist as this language writes it ("Unknown", "Inconnu"). The
     // record has no artist entity, so the name lives on the translation.
-    artist: extra?.['artist'] ?? null,
-    dimensions: extra?.['dimensions'] ?? null,
-    materials: extra?.['materials'] ? [extra['materials']] : [],
-    // The column as the record writes it, in one entry, as dxa-api returned it.
-    keywords: sheet['keywords'] ? [sheet['keywords']] : [],
+    artist: text('artist'),
+    dimensions: text('dimensions'),
+    materials: text('materials') ? [text('materials')] : [],
   }
 }
-// Every person credited in one role on a translation row, in order, as legacy
-// prints them: joined with ", ", each in Arabic script on an Arabic row when
-// the author has that spelling. Falls back to the role's FK column for a
-// database imported before item_translation_author existed.
-function creditList(role: string, fallback: string): string {
-  return `COALESCE((SELECT GROUP_CONCAT(
-              IF(it.language_id = 'ara' AND a.originalname <> '', a.originalname, a.name)
-              ORDER BY ita.display_order, a.name SEPARATOR ', ')
-            FROM item_translation_author ita
-            JOIN authors a ON a.id = ita.author_id
-            WHERE ita.item_translation_id = it.id AND ita.role = '${role}'), ${fallback}.name)`
+
+// The credit roles: item_translation_author's role → the package's key.
+const CREDIT_ROLES = {
+  author: 'author',
+  text_copy_editor: 'copy_editor',
+  translator: 'translator',
+  translation_copy_editor: 'translation_copy_editor',
+} as const
+
+// One credited person as the galleries' sheet prints them (dxa-api): their name
+// parts, which the sites print as "Firstname LASTNAME" (the surname capitalised
+// at render time, as dxa-api's SQL did; the data keeps it as written); on an
+// Arabic row the original spelling when the author has one; and, for a role the
+// credit table has nobody for, the row's own credit column as written.
+type CreditName = { firstname: string; lastname: string } | { name: string }
+
+function creditName(row: CreditRow): CreditName {
+  if (row.language_id === 'ara' && row.originalname?.trim()) return { name: row.originalname }
+  if (row.lastname?.trim()) return { firstname: row.firstname ?? '', lastname: row.lastname }
+  return { name: row.name }
+}
+
+function creditText(entry: CreditName): string {
+  return 'name' in entry ? entry.name : [entry.firstname, entry.lastname].filter(part => part.trim()).join(' ')
+}
+
+// A translation row's credits, per role: the credit table's people in legacy's
+// order, else the row's own credit column, which dxa-api printed when the
+// table had nobody (never the other way round). `credit_names` keeps each
+// person apart for the sites to print; the joined line stays for the others.
+function creditFields(
+  translationId: string,
+  credits: Map<string, CreditName[]>,
+  asWritten: Record<string, string> | null
+): Record<string, unknown> {
+  const fields: Record<string, unknown> = {}
+  const names: Record<string, CreditName[]> = {}
+  for (const [role, key] of Object.entries(CREDIT_ROLES)) {
+    let entries = credits.get(`${translationId} ${role}`) ?? []
+    if (!entries.length && asWritten?.[key]?.trim()) entries = [{ name: asWritten[key] }]
+    fields[key] = entries.length ? entries.map(creditText).join(', ') : null
+    if (entries.length) names[key] = entries
+  }
+  fields['credit_names'] = Object.keys(names).length ? names : null
+  return fields
 }
 interface ItemRow {
   id: string
@@ -54,6 +81,7 @@ interface ItemRow {
 }
 
 interface ItemTranslationRow {
+  id: string
   item_id: string
   language_id: string
   context_id: string
@@ -74,10 +102,16 @@ interface ItemTranslationRow {
   obtention: string | null
   bibliography: string | null
   extra: unknown
-  author_name: string | null
-  copy_editor_name: string | null
-  translator_name: string | null
-  translation_copy_editor_name: string | null
+}
+
+interface CreditRow {
+  item_translation_id: string
+  role: string
+  language_id: string
+  name: string
+  firstname: string | null
+  lastname: string | null
+  originalname: string | null
 }
 
 interface PictureItemRow {
@@ -206,21 +240,13 @@ export class ItemExporter extends BaseExporter {
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also fixes which row `rows[0]` picks below when an
         // item's own context is not among its translation rows).
-        `SELECT it.item_id, it.language_id, it.context_id,
+        `SELECT it.id, it.item_id, it.language_id, it.context_id,
                 it.name, it.alternate_name, it.description,
                 it.type, it.holder, it.owner, it.initial_owner, it.dates,
                 it.location, it.dimensions, it.place_of_production,
                 it.method_for_datation, it.method_for_provenance,
-                it.provenance, it.obtention, it.bibliography, it.extra,
-                ${creditList('author', 'a1')} AS author_name,
-                ${creditList('text_copy_editor', 'a2')} AS copy_editor_name,
-                ${creditList('translator', 'a3')} AS translator_name,
-                ${creditList('translation_copy_editor', 'a4')} AS translation_copy_editor_name
+                it.provenance, it.obtention, it.bibliography, it.extra
          FROM item_translations it
-         LEFT JOIN authors a1 ON a1.id = it.author_id
-         LEFT JOIN authors a2 ON a2.id = it.text_copy_editor_id
-         LEFT JOIN authors a3 ON a3.id = it.translator_id
-         LEFT JOIN authors a4 ON a4.id = it.translation_copy_editor_id
          WHERE it.item_id IN (${itemPh})
          ORDER BY it.item_id, it.context_id`,
         this.memberItemIds
@@ -317,6 +343,28 @@ export class ItemExporter extends BaseExporter {
       ),
     ])
 
+    // Every person credited per translation row and role, in legacy's order.
+    const creditRows = await this.db.query<CreditRow>(
+      `SELECT ita.item_translation_id, ita.role, it.language_id,
+              a.name, a.firstname, a.lastname, a.originalname
+       FROM item_translation_author ita
+       JOIN authors a ON a.id = ita.author_id
+       JOIN item_translations it ON it.id = ita.item_translation_id
+       WHERE it.item_id IN (${itemPh})
+       ORDER BY ita.item_translation_id, ita.role, ita.display_order, a.name`,
+      this.memberItemIds
+    )
+    const credits = new Map<string, CreditName[]>()
+    for (const row of creditRows) {
+      const key = `${row.item_translation_id} ${row.role}`
+      const bucket = credits.get(key)
+      if (bucket) bucket.push(creditName(row))
+      else credits.set(key, [creditName(row)])
+    }
+    const sharingHistoryIds = new Set(
+      items.filter(item => item.backward_compatibility?.startsWith('mwnf3_sharing_history:')).map(item => item.id)
+    )
+
     const translationsByItemLang = new Map<string, ItemTranslationRow[]>()
     for (const row of translations) {
       const code = langCodeMap.get(row.language_id)
@@ -402,10 +450,11 @@ export class ItemExporter extends BaseExporter {
         copyright: extra?.['copyright'] ?? null,
         catalogue_holding_link: extra?.['catalogue_holding_link'] ?? null,
         linkcatalogs: extra?.['linkcatalogs'] ?? null,
-        author: ownRow.author_name,
-        copy_editor: ownRow.copy_editor_name,
-        translator: ownRow.translator_name,
-        translation_copy_editor: ownRow.translation_copy_editor_name,
+        ...creditFields(
+          ownRow.id,
+          credits,
+          (extra?.['credits_as_written'] as unknown as Record<string, string> | undefined) ?? null
+        ),
         // The Material(s) / Technique(s) line and the keywords as the record
         // writes them, which legacy prints: one entry each, so the language's
         // own spelling and separators ("؛" in Arabic) survive. The material and
@@ -413,9 +462,8 @@ export class ItemExporter extends BaseExporter {
         keywords: extra?.['keywords'] ? [extra['keywords']] : [],
         materials: extra?.['materials'] ? [extra['materials']] : [],
       }
-      const gallerySheet = parseJson<{ gallery_sheet?: Record<string, string> }>(ownRow.extra)?.gallery_sheet
-      if (gallerySheet) {
-        Object.assign(byLang[code]!, sharingHistorySheet(gallerySheet, extra))
+      if (sharingHistoryIds.has(itemId)) {
+        Object.assign(byLang[code]!, sharingHistorySheet(extra))
         const artist = extra?.['artist']
         if (artist) {
           const byCode = sharingHistoryArtists.get(itemId) ?? new Map<string, string>()
@@ -553,6 +601,9 @@ export class ItemExporter extends BaseExporter {
         url: this.imageUrl(picture.path),
         display_order: picture.display_order,
         alt_text: picture.alt_text,
+        // The languages the picture has a row in, empty or not: legacy lists
+        // a picture on a page only where it has one.
+        languages: Object.keys(perLanguage).sort(),
         captions,
         photographers,
         copyrights,

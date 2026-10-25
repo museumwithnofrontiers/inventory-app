@@ -22,7 +22,6 @@ describe('containsHtml', () => {
   it('does not mistake ordinary Markdown for markup', () => {
     expect(containsHtml('An *italic* title with a [link](https://example.org).')).toBe(false);
     expect(containsHtml('Write to <office@museumwnf.net> or see <https://example.org/>.')).toBe(false);
-    expect(containsHtml('The code span `<div>` is text.')).toBe(false);
     expect(containsHtml('a < b and c > d')).toBe(false);
     expect(containsHtml('')).toBe(false);
     expect(containsHtml(null)).toBe(false);
@@ -74,11 +73,7 @@ describe('containsHtml — indented and tabular legacy text', () => {
   it('still reads indented and tabular text without tags as plain', () => {
     expect(containsHtml('    a < b and c > d')).toBe(false);
     expect(containsHtml('\tWrite to <office@museumwnf.net>.')).toBe(false);
-    expect(containsHtml('| a | b |\n| --- | --- |\n| 1 < 2 | `<i>` |')).toBe(false);
-  });
-
-  it('leaves a fenced code block alone', () => {
-    expect(containsHtml('```\n<i>x</i>\n```')).toBe(false);
+    expect(containsHtml('| a | b |\n| --- | --- |\n| 1 < 2 | 3 > 2 |')).toBe(false);
   });
 
   it('converts the indented bibliography, and its Markdown stays as it is', () => {
@@ -93,5 +88,31 @@ describe('containsHtml — indented and tabular legacy text', () => {
     const once = convertHtmlToMarkdown('\tLane, A., <i>Early Islamic Pottery</i>, London, 1947.');
     expect(once).toBe('Lane, A., *Early Islamic Pottery*, London, 1947.');
     expect(convertHtmlToMarkdown(once)).toBe(once);
+  });
+});
+
+// No text is code (viewer-core 2.10): legacy writes the ʿayn as a backtick, so
+// two of them in one text are letters, and a tag between them is a tag.
+describe('containsHtml — backticks are letters', () => {
+  const banknote =
+    'From the days of Khedive `Abbas Hilmi II. They bore the name of Sultan Muhammad V.<br/>\nHowever, in 1898 Khedive `Abbas founded the National Bank.';
+
+  it('sees a tag between two backticks', () => {
+    expect(containsHtml(banknote)).toBe(true);
+    expect(containsHtml('The span `<div>` is markup.')).toBe(true);
+    expect(containsHtml('```\n<i>x</i>\n```')).toBe(true);
+  });
+
+  it('converts it, and keeps each backtick a letter', () => {
+    const once = convertHtmlToMarkdown(banknote);
+    expect(once).not.toContain('<br/>');
+    expect(once).toContain('Muhammad V.');
+    expect(once.match(/`/g)?.length).toBe(2);
+    expect(containsHtml(once)).toBe(false);
+    expect(convertHtmlToMarkdown(once)).toBe(once);
+  });
+
+  it('leaves a text whose backticks hold no tag as it is', () => {
+    expect(convertHtmlToMarkdown('Qasr al-`Ayni under King Fu`ad I')).toBe('Qasr al-`Ayni under King Fu`ad I');
   });
 });

@@ -207,17 +207,26 @@ export class TimelineExporter extends BaseExporter {
         : Promise.resolve([]),
     ])
 
+    // dxa-api returns no date text for a Sharing History event (its SQL selects
+    // `null eventDate`), so the galleries print its years only. The text stays
+    // in the inventory; this site leaves it out, as legacy did.
+    const sourceOfTimeline = new Map(timelines.map(t => [t.id, timelineSource(t.backward_compatibility)]))
+    const sharingHistoryEvents = new Set(
+      events.filter(e => sourceOfTimeline.get(e.timeline_id) === 'sharing_history').map(e => e.id)
+    )
+
     const byLang = new Map<string, Record<string, unknown>>()
     for (const row of translations) {
       const code = langCodeMap.get(row.language_id)
       if (!code) continue
       const bucket = byLang.get(code) ?? {}
+      const dated = !sharingHistoryEvents.has(row.timeline_event_id)
       bucket[row.timeline_event_id] = this.stripNulls({
         name: row.name,
         description: row.description,
-        date_from_description: row.date_from_description,
-        date_to_description: row.date_to_description,
-        date_from_ah_description: row.date_from_ah_description,
+        date_from_description: dated ? row.date_from_description : null,
+        date_to_description: dated ? row.date_to_description : null,
+        date_from_ah_description: dated ? row.date_from_ah_description : null,
       })
       byLang.set(code, bucket)
     }

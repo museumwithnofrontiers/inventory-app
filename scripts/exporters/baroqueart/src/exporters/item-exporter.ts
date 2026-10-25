@@ -14,9 +14,10 @@ export function legacyLocation(location: string | null, province?: string | null
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ". On an Arabic row legacy's sheet prints only the
 // Arabic spelling (authors.originalname), and nothing for a person who has none,
-// so neither does this. Falls back to the role's FK column for a database
-// imported before item_translation_author existed.
-function creditList(role: string, fallback: string): string {
+// so neither does this. Nothing else: the sheet prints the credit table only,
+// never the record's own credit columns (extra.credits_as_written, which the
+// galleries print).
+function creditList(role: string): string {
   return `IF(EXISTS (SELECT 1 FROM item_translation_author ita
                      WHERE ita.item_translation_id = it.id AND ita.role = '${role}'),
             (SELECT GROUP_CONCAT(
@@ -25,7 +26,7 @@ function creditList(role: string, fallback: string): string {
               FROM item_translation_author ita
               JOIN authors a ON a.id = ita.author_id
               WHERE ita.item_translation_id = it.id AND ita.role = '${role}'),
-            IF(it.language_id = 'ara', NULLIF(${fallback}.originalname, ''), ${fallback}.name))`
+            NULL)`
 }
 interface ItemRow {
   id: string
@@ -299,15 +300,11 @@ export class ItemExporter extends BaseExporter {
               it.location, it.dimensions, it.place_of_production,
               it.method_for_datation, it.method_for_provenance,
               it.provenance, it.obtention, it.bibliography, it.extra,
-              ${creditList('author', 'a1')} AS author_name,
-              ${creditList('text_copy_editor', 'a2')} AS copy_editor_name,
-              ${creditList('translator', 'a3')} AS translator_name,
-              ${creditList('translation_copy_editor', 'a4')} AS translation_copy_editor_name
+              ${creditList('author')} AS author_name,
+              ${creditList('text_copy_editor')} AS copy_editor_name,
+              ${creditList('translator')} AS translator_name,
+              ${creditList('translation_copy_editor')} AS translation_copy_editor_name
        FROM item_translations it
-       LEFT JOIN authors a1 ON a1.id = it.author_id
-       LEFT JOIN authors a2 ON a2.id = it.text_copy_editor_id
-       LEFT JOIN authors a3 ON a3.id = it.translator_id
-       LEFT JOIN authors a4 ON a4.id = it.translation_copy_editor_id
        WHERE it.item_id IN (${itemPh})
          AND it.context_id IN (${this.placeholders(translationContextIds.length)})
        ORDER BY it.item_id, it.context_id`,
@@ -604,6 +601,9 @@ export class ItemExporter extends BaseExporter {
       imageMap.get(pic.item_id)!.push({
         url: this.imageUrl(pic.path),
         display_order: pic.display_order,
+        // The languages the picture has a row in, empty or not: legacy's sheet
+        // lists a picture on a page only where it has one.
+        languages: Object.keys(perLang).sort(),
         captions,
         photographers,
         copyrights,
@@ -750,6 +750,7 @@ export class ItemExporter extends BaseExporter {
 interface ImageEntry {
   url: string
   display_order: number | null
+  languages: string[]
   captions: Record<string, string>
   photographers: Record<string, string>
   copyrights: Record<string, string>
