@@ -29,7 +29,13 @@ export function htmlToText(s) {
     .replace(/<\/(p|div|li|h\d)>/gi, '\n');
   // Only what a browser reads as a tag: "<" followed by a letter, "/", "!" or "?". Any other "<" is
   // printed as it is, so legacy's "25.<<br/>" shows "25.<" and its "<\i>" shows "<\i>".
-  return decodeEntities(text.replace(/<[a-z/!?][^>]*>/gi, ''));
+  // Repeated until nothing changes, so removing one tag never leaves another behind.
+  let previous;
+  do {
+    previous = text;
+    text = text.replace(/<[a-z/!?][^>]*>/gi, '');
+  } while (text !== previous);
+  return decodeEntities(text);
 }
 
 // An escaped character ("\_", "\*") is text, never an emphasis marker: it is set aside in the
