@@ -35,10 +35,10 @@ class TranslationFormSchema
             ->maxLength(255);
     }
 
-    public static function alternateNameField(): TextInput
+    public static function alternateNameField(): Textarea
     {
-        return TextInput::make('alternate_name')
-            ->maxLength(255);
+        return Textarea::make('alternate_name')
+            ->rows(2);
     }
 
     public static function descriptionField(): Textarea

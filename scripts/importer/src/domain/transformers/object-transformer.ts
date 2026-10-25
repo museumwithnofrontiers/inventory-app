@@ -6,10 +6,10 @@
  * - Denormalized data (multiple language rows per object)
  * - EPM description2 handling
  * - HTML to Markdown conversion
- * - Field truncation for database limits
  * - Tag and artist extraction
  */
 
+import { creditsAsWritten } from './credits-as-written.js';
 import type { LegacyObject, ObjectGroup } from '../types/index.js';
 import type { ItemData, ItemTranslationData } from '../../core/types.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
@@ -84,7 +84,7 @@ export interface ExtractedArtist {
  * Parse a year value from a legacy varchar column, as legacy itself reads it:
  * dxa-api takes `NULLIF(CAST(start_date AS SIGNED), 0)`, so the leading
  * integer counts ("1070s" is 1070) and 0 means no year. The value must fit
- * the SMALLINT range (-32768 to 32767).
+ * the INT range: legacy dates the Paleolithic from -300000.
  * Returns a warning when the value is non-null but cannot be stored.
  */
 export function parseItemYear(raw: string | null | undefined): {
@@ -100,8 +100,8 @@ export function parseItemYear(raw: string | null | undefined): {
   }
   const n = parseInt(leading[0], 10);
   if (n === 0) return { value: null, warning: null };
-  if (n < -32768 || n > 32767) {
-    return { value: null, warning: `Year value ${n} out of SMALLINT range, ignored` };
+  if (n < -2147483648 || n > 2147483647) {
+    return { value: null, warning: `Year value ${n} out of INT range, ignored` };
   }
   return { value: n, warning: null };
 }
@@ -241,21 +241,9 @@ export function transformObjectTranslation(
   const descriptionMarkdown = hasDescription ? convertHtmlToMarkdown(sourceDescription!) : null;
   const bibliographyMarkdown = obj.bibliography ? convertHtmlToMarkdown(obj.bibliography) : null;
 
-  // Handle alternate_name with truncation
-  let alternateNameMarkdown = obj.name2 ? convertHtmlToMarkdown(obj.name2) : null;
-  if (alternateNameMarkdown && alternateNameMarkdown.length > 255) {
-    warnings.push(
-      `${objectKey}:${obj.lang} - alternate_name truncated (${alternateNameMarkdown.length} → 255 chars)`
-    );
-    alternateNameMarkdown = alternateNameMarkdown.substring(0, 252) + '...';
-  }
-
-  // Handle type with truncation
-  let typeMarkdown = obj.typeof ? convertHtmlToMarkdown(obj.typeof) : null;
-  if (typeMarkdown && typeMarkdown.length > 255) {
-    warnings.push(`${objectKey}:${obj.lang} - type truncated (${typeMarkdown.length} → 255 chars)`);
-    typeMarkdown = typeMarkdown.substring(0, 252) + '...';
-  }
+  // Kept whole: both are text columns, as long as legacy wrote them.
+  const alternateNameMarkdown = obj.name2 ? convertHtmlToMarkdown(obj.name2) : null;
+  const typeMarkdown = obj.typeof ? convertHtmlToMarkdown(obj.typeof) : null;
 
   // Convert other fields
   const holderMarkdown = obj.holding_museum ? convertHtmlToMarkdown(obj.holding_museum) : null;
@@ -285,6 +273,8 @@ export function transformObjectTranslation(
   // Build extra field for fields without dedicated columns
   const extraData: Record<string, unknown> = {};
   if (obj.province?.trim()) extraData.province = convertHtmlToMarkdown(obj.province);
+  const credits = creditsAsWritten(obj);
+  if (credits) extraData.credits_as_written = credits;
   // The artist line as this language's sheet prints it. The Artist records
   // are shared across languages and made from one row, so they can't stand
   // in for another language's line. Same key as the Sharing History

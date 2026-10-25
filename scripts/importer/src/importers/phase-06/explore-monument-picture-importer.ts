@@ -336,9 +336,8 @@ export class ExploreMonumentPictureImporter extends BaseImporter {
     const hasPhotographer = !!(translation.photographer && translation.photographer.trim());
     const hasCopyright = !!(translation.copyright && translation.copyright.trim());
 
-    if (!hasCaption && !hasPhotographer && !hasCopyright) {
-      return;
-    }
+    // Every row is kept, one with no text too: legacy shows a picture on a page
+    // only where it has a row in that language, so the row itself is the data.
 
     const languageId = mapLanguageCode(translation.lang);
 

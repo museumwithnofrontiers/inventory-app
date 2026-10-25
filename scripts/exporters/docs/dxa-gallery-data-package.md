@@ -234,14 +234,29 @@ gallery deltas:
     joins entries with "; ".
   - The material tags are shared across records, so they are not read.
 - And **`keywords[]`**, the same way:
-  - the record's own column, as one entry: `extra.keywords` for an mwnf3
-    object or monument, `extra.gallery_sheet.keywords` for a Sharing History
-    record.
+  - the record's own column, as one entry: `extra.keywords`, for mwnf3 and
+    Sharing History records alike.
   - Legacy prints no keyword line; the viewers search the keywords.
   - The mwnf3 keyword and material tags (`mwnf3:tags:{keyword,material}:…`)
     are not read, and must never be mixed into `tags.json`: on amulets alone
     that would add 441 keyword and 188 unfaceted material links to the search
     dropdowns.
+- A **Sharing History** record keeps each field legacy prints under its own
+  heading apart: `description`, `alternate_name` (its "also known as"),
+  `short_description` (its second description, `extra.description2`),
+  `history` (`extra.history`), and `dimensions` and `artist` from `extra`.
+- Credits, as dxa-api printed them:
+  - `author`, `copy_editor`, `translator` and `translation_copy_editor`, each
+    the line joined with ", ";
+  - **`credit_names`**: per role, each person apart, in legacy's order —
+    `{firstname, lastname}`, which the site prints as "Firstname LASTNAME"
+    (dxa-api's SQL capitalised the surname; the data keeps it as written), or
+    `{name}` for the original spelling on an Arabic row and for a role's text
+    as written;
+  - a role the credit table has nobody for falls back to the row's own credit
+    column (`extra.credits_as_written`), printed as written, as dxa-api did.
+- Each picture carries **`languages`**: the languages it has a row in, empty
+  or not. Legacy lists a picture on a page only where it has one.
 
 ## tags.json (new)
 
@@ -294,9 +309,9 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
   nothing to resolve from; it reports the gallery's own project (its
   `projectId` UUID) instead, since that branch means the partner belongs to
   it regardless.
-- **`languages`**: the language codes (sorted) the partner has a
-  translation in, i.e. the `translations/partners.<lang>.json` files it
-  appears in. Same derivation as each item's `languages` in `items.json`;
+- **`languages`**: the language codes (sorted) the partner's page offers, as
+  dxa-api lists them: every language a mwnf3 museum has a translation in, but
+  only those where a Sharing History partner's translation has a description.
   `[]` for a partner with no translation.
 - **`contact_persons`**: the legacy `cp1_*`/`cp2_*` contacts as a list in
   legacy order (person 1 first), leaving out the ones the partner doesn't

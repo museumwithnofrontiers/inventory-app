@@ -190,7 +190,7 @@ describe('transformObjectTranslation', () => {
     expect(result).toBeNull();
   });
 
-  it('should truncate long alternate_name', () => {
+  it('keeps a long alternate_name whole', () => {
     const longName = 'A'.repeat(300);
     const obj: LegacyObject = {
       project_id: 'EPM',
@@ -205,8 +205,7 @@ describe('transformObjectTranslation', () => {
 
     const result = transformObjectTranslation(obj, 'description');
 
-    expect(result?.data.alternate_name?.length).toBe(255);
-    expect(result?.warnings.length).toBeGreaterThan(0);
+    expect(result?.data.alternate_name).toBe(longName);
   });
 
   it('should extract author names', () => {
@@ -712,14 +711,18 @@ describe('parseItemYear', () => {
     expect(result.warning).not.toBeNull();
   });
 
+  it('keeps a Paleolithic year (legacy dates one object from -300000)', () => {
+    expect(parseItemYear('-300000')).toMatchObject({ value: -300000, warning: null });
+  });
+
   it('returns null with warning for out-of-range value (too large)', () => {
-    const result = parseItemYear('40000');
+    const result = parseItemYear('3000000000');
     expect(result.value).toBeNull();
     expect(result.warning).not.toBeNull();
   });
 
   it('returns null with warning for out-of-range value (too small)', () => {
-    const result = parseItemYear('-40000');
+    const result = parseItemYear('-3000000000');
     expect(result.value).toBeNull();
     expect(result.warning).not.toBeNull();
   });
@@ -729,9 +732,9 @@ describe('parseItemYear', () => {
     expect(parseItemYear(undefined)).toMatchObject({ value: null, warning: null });
   });
 
-  it('returns value at SMALLINT boundary (32767)', () => {
-    expect(parseItemYear('32767')).toMatchObject({ value: 32767, warning: null });
-    const over = parseItemYear('32768');
+  it('returns value at INT boundary (2147483647)', () => {
+    expect(parseItemYear('2147483647')).toMatchObject({ value: 2147483647, warning: null });
+    const over = parseItemYear('2147483648');
     expect(over.value).toBeNull();
     expect(over.warning).not.toBeNull();
   });

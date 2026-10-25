@@ -8,11 +8,12 @@
  * - pd_country stored in extra JSON as `country_id_present_days`
  */
 
+import { creditsAsWritten } from './credits-as-written.js';
 import type { ShLegacyMonument, ShLegacyMonumentText, ShMonumentGroup } from '../types/index.js';
 import type { ItemData, ItemTranslationData } from '../../core/types.js';
 import { mapCountryCode, mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
-import { gallerySheetFields } from './sh-gallery-sheet.js';
+import { textFields } from './sh-text-fields.js';
 import { formatShBackwardCompatibility } from './sh-project-transformer.js';
 import { selectItemInternalName } from './item-internal-name-transformer.js';
 
@@ -131,25 +132,11 @@ export function transformShMonumentTranslation(
     return null;
   }
 
-  // Build description combining description, description2, and history (use whichever is available)
-  const descriptions = [text.description, text.description2, text.history]
-    .filter((d): d is string => !!d && d.trim() !== '')
-    .map((d) => convertHtmlToMarkdown(d));
-
-  // Use combined description, or fallback to empty string if none available
-  // (allow items with name but no description to be imported)
-  const description = descriptions.length > 0 ? descriptions.join('\n\n') : '';
-
-  // Build alternate name from name2, second_name, third_name
-  const alternateNames = [text.name2, text.second_name, text.third_name]
-    .filter((n): n is string => !!n && n.trim() !== '')
-    .map((n) => convertHtmlToMarkdown(n));
-  let alternateName = alternateNames.length > 0 ? alternateNames.join('; ') : null;
-
-  // Truncate if needed
-  if (alternateName && alternateName.length > 255) {
-    alternateName = alternateName.substring(0, 252) + '...';
-  }
+  // Every column legacy prints under a heading of its own stays a field of its
+  // own: the description here; the second one, the history and the second and
+  // third names in extra below. Each site prints the ones its legacy sheet printed.
+  const description = text.description?.trim() ? convertHtmlToMarkdown(text.description) : '';
+  const alternateName = text.name2?.trim() ? convertHtmlToMarkdown(text.name2) : null;
 
   // Build dates string
   const datesParts: string[] = [];
@@ -159,37 +146,32 @@ export function transformShMonumentTranslation(
   // The dynasty is its own line on the sheet (extra.dynasty), not part of the dates.
   const dates = datesParts.length > 0 ? datesParts.join('; ') : null;
 
-  // Build holder info from institution
-  const holder =
-    text.institution || text.responsible_institution_org
-      ? convertHtmlToMarkdown(text.institution || text.responsible_institution_org || '')
-      : null;
+  // The institution alone: legacy prints the responsible institution's
+  // own-language name under its own heading (extra.responsible_institution_org),
+  // never in the institution's place.
+  const holder = text.institution?.trim() ? convertHtmlToMarkdown(text.institution) : null;
 
   // The location and the province are two columns, each kept on its own
   // (extra.province below); each site composes the line it printed.
   const location = text.location?.trim() ? convertHtmlToMarkdown(text.location) : null;
 
-  // Build type (with truncation)
-  let type = text.typeof ? convertHtmlToMarkdown(text.typeof) : null;
-  if (type && type.length > 255) {
-    type = type.substring(0, 252) + '...';
-  }
+  const type = text.typeof ? convertHtmlToMarkdown(text.typeof) : null;
 
   // Build extra JSON for translation-specific fields
   const extra: Record<string, unknown> = {};
   if (text.province?.trim()) extra.province = convertHtmlToMarkdown(text.province);
-  // The fields as the galleries and exhibitions sheet shows a Sharing History
-  // record (dxa-api): description and short description apart, the second name
-  // alone, keywords. The Sharing History site itself shows them merged, as
-  // above; its exporter leaves this block out.
-  const gallerySheet = gallerySheetFields({
-    description: text.description,
-    short_description: text.description2,
-    history: text.history,
-    also_known_as: text.name2,
-    keywords: text.keywords,
-  });
-  if (gallerySheet) extra.gallery_sheet = gallerySheet;
+  const credits = creditsAsWritten(text);
+  if (credits) extra.credits_as_written = credits;
+  Object.assign(
+    extra,
+    textFields({
+      description2: text.description2,
+      history: text.history,
+      second_name: text.second_name,
+      third_name: text.third_name,
+      keywords: text.keywords,
+    })
+  );
   // The free-text Period / Dynasty line legacy prints on the sheet (its own
   // line, not part of the dates). The linked dynasties are a separate index.
   if (text.dynasty) extra.dynasty = convertHtmlToMarkdown(text.dynasty);
