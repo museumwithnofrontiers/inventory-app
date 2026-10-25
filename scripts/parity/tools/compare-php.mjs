@@ -41,7 +41,7 @@ const TERM = {
   db_obtentionmethod: 'obtention', db_provenanceestablished: 'method_for_provenance', db_catalogue_link_txt: 'catalogue_holding_link',
   db_bibliography: 'bibliography', db_architects: 'architects', db_artistsm: 'architects',
   db_type_of_object: 'type', db_denominationsdb: 'type', db_typeof_object: 'type', db_archival: 'archival', db_institution: 'holder', db_Patrons: 'patrons', db_production_db_place: 'place_of_production', db_history: 'history', db_patrons: 'patrons', db_notice_b_title: 'copyright',
-  db_thirdname_object: 'alternate_name', db_thirdname_monument: 'alternate_name', db_secondname_object: 'second_name', db_secondname_monument: 'second_name',
+  db_thirdname_object: 'third_name', db_thirdname_monument: 'third_name', db_secondname_object: 'second_name', db_secondname_monument: 'second_name',
   // Sharing History: the institution's name in its own language, under a heading of its own.
   db_holdinginstitutionorg: 'holding_institution_org', db_responsibleinstitutionorg: 'responsible_institution_org',
 };
@@ -62,6 +62,7 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
   const langs = [...new Set([...(L?.langs ?? []), ...(it?.languages ?? [])])].sort((a, b) => (b === 'en') - (a === 'en'));
   let first = true;
   let legacyImages = 0;
+  let pkgImages = 0;
   for (const lang of langs) {
     const r = await get(pageUrl(id, lang));
     if (!r.body) { R.note(`not fetched: ${pageUrl(id, lang)}`); continue; }
@@ -118,42 +119,24 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         continue;
       }
       const pf = TERM[s.term];
-      if (cfg.sh && (pf === 'alternate_name' || pf === 'second_name')) {
-        // Sharing History: the package joins the second name and the original-language name.
-        const names = page.sections.filter((x) => ['alternate_name', 'second_name'].includes(TERM[x.term])).map((x) => normalise(x.html));
-        if (pf === 'alternate_name' || !page.sections.some((x) => TERM[x.term] === 'alternate_name')) {
-          let r4 = compare(names.join('; '), tr.alternate_name, { legacyFrom: 'text' });
-          // Legacy prints two fields under two headings; one field holding both prints them as one.
-          if (names.length > 1 && ['same', 'format'].includes(r4.verdict)) r4 = { ...r4, verdict: 'different', legacy: names.join(' ⏎ '), pkg: tr.alternate_name, why: 'second name and original-language name joined in one field' };
-          R.field('item', 'alternate_name', r4, where);
-        }
-        seen.add('alternate_name');
-        continue;
-      }
-      if (cfg.sh && pf === 'history') {
-        // Sharing History monuments: the package appends History to the Description.
-        const inDesc = tr.description && flatten(normalise(tr.description, { from: 'markdown' })).includes(flatten(normalise(s.html)));
-        // Legacy prints History under its own heading; merged into the Description, it has none.
-        R.field('item', 'history', inDesc ? { verdict: 'missing-in-package', legacy: normalise(s.html), why: 'History merged into the Description' } : compare(s.html, tr.history), where);
-        continue;
-      }
       if (cfg.sh && s.term === 'db_description') {
-        const hist = page.sections.find((x) => TERM[x.term] === 'history');
-        const merged = hist ? `${normalise(s.html)}\n${normalise(hist.html)}` : null;
-        let r5 = compare(s.html, tr.description);
-        if (r5.verdict === 'different' && merged && ['same', 'format'].includes(compare(merged, tr.description, { legacyFrom: 'text' }).verdict)) r5 = { ...r5, why: 'History merged into the Description' };
-        R.field('item', 'description', glossaryNote(s, r5), where);
-        seen.add('description');
+        // Sharing History prints its two descriptions under the same heading, the first then the
+        // second; the package keeps them apart (`description`, `description2`).
+        const field = seen.has('description') ? 'description2' : 'description';
+        R.field('item', field, glossaryNote(s, compare(s.html, tr[field])), where);
+        seen.add(field);
         continue;
       }
       if (pf === 'location' && cfg.sh) {
-        // Sharing History prints the location, the present-day country and the record's country on
-        // one line ("Vienna, Austria, Public domain"); the site composes the same line.
+        // Sharing History's Location line: a monument's address, the location and the province
+        // (each without its final period), the present-day country and the record's country
+        // ("Vienna, Austria, Public domain"); the site composes the same line.
         const country = (cid) => (cid ? P.tr('countries', lang, cid)?.name : null);
-        const line = [tr.location, country(tr.country_id_present_days), country(it.country_id)].filter(Boolean).join(', ');
+        const address = it.type === 'monument' ? tr.monument_contact?.address : null;
+        const line = [address, tr.location, tr.province].map((part) => String(part ?? '').trim().replace(/\.$/, ''))
+          .concat(country(tr.country_id_present_days), country(it.country_id)).filter(Boolean).join(', ');
         R.field('item', 'location', compare(s.html, line), where);
-        seen.add('location');
-        seen.add('country_id_present_days');
+        for (const k of ['location', 'province', 'country_id_present_days']) seen.add(k);
       } else if (pf === 'location') {
         // The page prints location, province and then the country name.
         const r0 = compare(s.html, tr.location);
@@ -264,16 +247,17 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       if (credits[role]) creditShown[role] = (creditShown[role] ?? 0) + 1;
       R.field('item', role, r2, where);
     }
-    // A page shows the pictures that have a caption row in its language; keep the most any page shows.
+    // A page shows the pictures that have a row in its language, and so does the site (viewer-core
+    // picturesInLanguage, from each picture's `languages`), at most as many as legacy's sheet did
+    // (the site's pictureLimit). Keep the most any page shows, on each side.
     legacyImages = Math.max(legacyImages, imageNumbers(r.body, id).length);
+    const inLanguage = it.images.filter((img) => !Array.isArray(img.languages) || img.languages.includes(lang)).length;
+    pkgImages = Math.max(pkgImages, Math.min(inLanguage, cfg.pictureLimit?.[it.type] ?? Infinity));
     first = false;
   }
   if (it && !first) {
     const n = legacyImages;
-    // The site shows at most as many pictures as legacy's sheet did (its pictureLimit); the
-    // package keeps them all.
-    const shownBySite = Math.min(it.images.length, cfg.pictureLimit?.[it.type] ?? Infinity);
-    R.field('item', 'image.count', n === shownBySite ? { verdict: n ? 'same' : 'both-empty' } : { verdict: n > shownBySite ? 'missing-in-package' : 'extra-in-package', legacy: String(n), pkg: String(shownBySite) }, key);
+    R.field('item', 'image.count', n === pkgImages ? { verdict: n ? 'same' : 'both-empty' } : { verdict: n > pkgImages ? 'missing-in-package' : 'extra-in-package', legacy: String(n), pkg: String(pkgImages) }, key);
   }
 }
 
@@ -290,6 +274,9 @@ function artistWithLife(html, tr) {
   const life = `${born ?? ''}${bornAt ? `, ${bornAt}` : ''}${died ? `-${died}` : ''}${diedAt ? `, ${diedAt}` : ''}`;
   const composed = tr.artist && life ? `${tr.artist} (${life})` : tr.artist;
   const r = compare(html, composed);
+  // Legacy opens the brackets when a life-data field holds only spaces, and prints "(- )" after the
+  // name: a bug of its display code (#2344), not a value the site should print.
+  if (r.verdict === 'different' && /\(\s*-?\s*\)\s*$/.test(normalise(html)) && compare(normalise(html).replace(/\s*\(\s*-?\s*\)\s*$/, ''), composed, { legacyFrom: 'text' }).verdict === 'same') return { ...r, verdict: 'expected:legacy prints empty life data as "(- )" (#2344)' };
   return r.verdict === 'same' || r.verdict === 'format' ? { ...r, verdict: r.verdict, why: composed !== tr.artist ? 'name + life data from separate fields' : undefined } : r;
 }
 

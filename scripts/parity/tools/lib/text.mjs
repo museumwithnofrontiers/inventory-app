@@ -72,20 +72,12 @@ export function flatten(s) {
     .trim();
 }
 
-// Two unescaped backticks make a Markdown code span: the site prints the text between them in a
-// code font, with any markup inside it as literal characters. Legacy uses the backtick as a letter
-// (the ʿayn of "Fu`ad"), so the same words read differently on the page.
-export function rendersAsCode(markdown) {
-  return typeof markdown === 'string' && (markdown.replace(/\\`/g, '').match(/`/g) ?? []).length >= 2;
-}
-
 export function compare(legacyRaw, pkgRaw, { legacyFrom = 'html', pkgFrom = 'markdown' } = {}) {
   const a = normalise(legacyRaw, { from: legacyFrom });
   const b = normalise(pkgRaw, { from: pkgFrom });
   if (!a && !b) return { verdict: 'both-empty' };
   if (a && !b) return { verdict: 'missing-in-package', legacy: a };
   if (!a && b) return { verdict: 'extra-in-package', pkg: b };
-  if (pkgFrom === 'markdown' && rendersAsCode(pkgRaw)) return { verdict: 'different', legacy: a, pkg: b, why: 'package text renders as code (backticks)' };
   if (a === b) return { verdict: 'same' };
   if (flatten(a) === flatten(b)) return { verdict: 'format', legacy: a, pkg: b };
   if (/&(#\d+|[a-z]+);/i.test(b) && flatten(a) === flatten(decodeEntities(b))) return { verdict: 'different', legacy: a, pkg: b, why: 'package text holds HTML entities (&agrave; …)' };

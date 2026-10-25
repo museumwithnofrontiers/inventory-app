@@ -72,14 +72,6 @@ test('a soft hyphen is invisible on either side', () => {
   assert.equal(compare('Grimm &ndash; architekt', 'Grimm –­­ architekt').verdict, 'same');
 });
 
-test('backticks that pair up print as code, so the text differs; escaped ones are letters', () => {
-  const r = compare('Khedive `Abbas Hilmi under Fu`ad', 'Khedive `Abbas Hilmi under Fu`ad');
-  assert.equal(r.verdict, 'different');
-  assert.equal(r.why, 'package text renders as code (backticks)');
-  assert.equal(compare('Khedive `Abbas Hilmi under Fu`ad', 'Khedive \\`Abbas Hilmi under Fu\\`ad').verdict, 'same');
-  assert.equal(compare('Qasr al-`Ayni', 'Qasr al-`Ayni').verdict, 'same');
-});
-
 test('escaped underscores and asterisks are text, not emphasis', () => {
   assert.equal(compare('- ______. "حفريات مدينة الرقة."', '\\- \\_\\_\\_\\_\\_\\_. "حفريات مدينة الرقة."').verdict, 'same');
   assert.equal(compare('a * b * c', 'a \\* b \\* c').verdict, 'same');

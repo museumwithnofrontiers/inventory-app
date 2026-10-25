@@ -241,12 +241,9 @@ package" is extra.
   resolved on the legacy image host on purpose, so they are not checked;
 - the package has more texts holding a raw HTML tag than in the baseline (`<i>`, `<br/>`,
   `<p …>` and the like, in any JSON file of the package, `extra` included). `< 5 cm` and
-  `<https://…>` are not tags;
-- the package has more texts whose unescaped backticks pair up into a Markdown code span than in
-  the baseline. A baseline taken before this check existed has no count for it, so the check is
-  listed, not judged, until the next baseline.
+  `<https://…>` are not tags.
 
-The package checks run in `check-packages.mjs` and need no legacy request; `diff-runs.mjs`
+The two package checks run in `check-packages.mjs` and need no legacy request; `diff-runs.mjs`
 judges their counts. The `packages` mode does that alone, in about three minutes for all 48
 sites.
 
@@ -364,6 +361,12 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
 - **Two fields are never joined into one** (2026-10-24). A package field holding what legacy
   prints under two headings (Sharing History's second and original-language names, its History
   inside the Description) is `different`, not `format`.
+- **Order and letter case** (2026-10-25). Where legacy's code sets no order (no `ORDER BY`), a
+  different order is no difference. Where legacy changes the letter case on the page, the site does
+  the same at render time and the data stays as written.
+- **Legacy data errors** are tracked in #2339, one task per problem, and fixed in the data, never
+  worked around in code. `lib/data-errors.mjs` lists the records; the tool counts them as
+  `expected:`, citing the task. A record leaves the list once its data is fixed.
 - **Layouts and text.** The style and static passes measure the new sites against legacy, and
   legacy is the target. Text that legacy doesn't have is dropped, never added.
 
@@ -387,24 +390,30 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
   the country name"). On monuments they also print the address first. The package doesn't ship
   the address, and that one is a real difference.
 - Legacy galleries answer a bare size folder (`…/zoom/`) as the image of a gallery that has none.
+- dxa-api is scoped per instance: other records answer 404. Its `/items` pages after the first
+  come back keyed by offset, and `/partners` is a bare array. `legacy-dxa.mjs` handles all three.
+- Legacy Baroque Art and Sharing History print "(- )" after an artist whose life-data fields hold
+  only spaces (#2344); the site prints the name alone.
 
 **What a page prints**, which the comparison follows rather than the raw text:
 
 - A browser reads `<` as a tag only before a letter, `/`, `!` or `?`. Legacy's `25.<<br/>`
-  prints `25.<` and its `<\i>` prints `<\i>`, so neither is stripped.
+  prints `25.<` and its `<\i>` prints `<\i>`, so neither is stripped. A backtick is a letter on
+  both sides (viewer-core 2.10 reads no code spans).
 - A soft hyphen (U+00AD) is invisible on both sides.
-- Two unescaped backticks in a package text make a Markdown code span: the site prints the words
-  between them in a code font, and any markup inside as characters. Legacy writes the ʿayn as a
-  backtick (Fu\`ad), so such a text is `different`, and the package gates count it.
-- dxa-api prints a credit as "Firstname LASTNAME", in `authors_objects.priority` order. A gallery
-  or exhibition credit that differs only in letter case or in the names' order is `different`.
-  The PHP sheets print the names as stored, so this applies to the dxa families only.
-- Sharing History's Location line is the location, the present-day country and the record's
-  country ("Vienna, Austria, Public domain"); the tool composes the package's line the same way.
-- Baroque Art's monument sheet shows at most 15 pictures, and the site caps it the same way, so
-  the picture count compares what the site shows.
-- dxa-api is scoped per instance: other records answer 404. Its `/items` pages after the first
-  come back keyed by offset, and `/partners` is a bare array. `legacy-dxa.mjs` handles all three.
+- dxa-api prints a credit as "Firstname LASTNAME". The tool compares the line the site prints
+  from the package's `credit_names` (viewer-core `creditLine`), so letter case counts. An object's
+  names are in `authors_objects.priority` order; a monument's query has no `ORDER BY`, so its order
+  does not count. The PHP sheets print the names as stored.
+- Every legacy sheet lists only the pictures with a row in the page's language; the package
+  carries those languages per picture, and the count, captions and credits compare the pictures
+  the site shows in that language, within its picture cap (Baroque Art: 15 per monument).
+- Sharing History's Location line is a monument's address, the location, the province, the
+  present-day country and the record's country ("Vienna, Austria, Public domain"); the tool
+  composes the package's line the same way. Its two descriptions print under one heading each;
+  the second is `description2`.
+- Explore names a country from the country reference, as its site does, never from the
+  country's collection title.
 
 ## The cache
 
