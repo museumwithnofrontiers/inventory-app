@@ -1,5 +1,6 @@
 // Collects findings and writes report.json + report.md for one site.
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { dataError } from './data-errors.mjs';
 
 export class Report {
   constructor(slug, meta) {
@@ -23,6 +24,9 @@ export class Report {
 
   field(entity, field, result, where, max = result.why ? 3 : 12) {
     const k = `${entity}.${field}`;
+    // A difference that comes from an error in the legacy data, tracked for a fix there.
+    const known = !['same', 'both-empty', 'format'].includes(result.verdict) && !result.verdict.startsWith('expected') ? dataError(where, k) : null;
+    if (known) result = { ...result, verdict: `expected:${known}` };
     const f = (this.fields[k] ??= {});
     f[result.verdict] = (f[result.verdict] ?? 0) + 1;
     if (result.why) {

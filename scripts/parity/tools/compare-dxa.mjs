@@ -78,6 +78,38 @@ function compareList(legacy, pkg) {
   if (commaSplit) return { ...base, verdict: 'different', why: 'legacy entry split at its commas' };
   return base;
 }
+// dxa-api prints a credit as "Firstname LASTNAME" (its SQL upper-cases the surname). It lists an
+// object's names in authors_objects.priority order; its monument query has no ORDER BY, so a
+// monument's order is no difference (Pascal, 2026-10-25). Letter case is a format difference to
+// compare(), but the sheet reads differently: a credit that differs only in it is different.
+function creditAsPrinted(r, legacy, pkg, { ordered = true } = {}) {
+  if (r.verdict !== 'format' && r.verdict !== 'different') return r;
+  const names = (s, from) => normalise(s, { from }).replace(/[.\s]+$/, '').split(/\s*,\s*/);
+  const a = names(legacy, 'html');
+  const b = names(pkg, 'markdown');
+  if (a.join(', ') === b.join(', ')) return { ...r, verdict: 'same' };
+  const sorted = (list) => [...list].sort().join('|');
+  if (!ordered && sorted(a) === sorted(b)) return { ...r, verdict: 'format', why: 'same names, another order (legacy sets none)' };
+  const lower = (list) => list.map((n) => n.toLowerCase());
+  const sameNames = sorted(lower(a)) === sorted(lower(b));
+  if (!sameNames) return r;
+  const sameOrder = lower(a).join('|') === lower(b).join('|');
+  if (!ordered && !sameOrder && sorted(a) !== sorted(b)) return { ...r, verdict: 'different', legacy: a.join(', '), pkg: b.join(', '), why: 'legacy prints the surname in capitals' };
+  const why = sameOrder ? 'legacy prints the surname in capitals' : 'names in another order than legacy';
+  return { ...r, verdict: 'different', legacy: a.join(', '), pkg: b.join(', '), why };
+}
+
+// The line a gallery sheet prints for a role: from the package's `credit_names` when it has them
+// (viewer-core's creditLine: "Firstname LASTNAME", a spelling of its own as written), else the
+// joined line of an older package.
+function creditLine(tr, role) {
+  const names = tr.credit_names?.[role];
+  if (!Array.isArray(names) || !names.length) return tr[role];
+  return names
+    .map((e) => (typeof e?.name === 'string' ? e.name.trim() : [e?.firstname?.trim(), e?.lastname?.trim()?.toLocaleUpperCase()].filter(Boolean).join(' ')))
+    .filter(Boolean)
+    .join(', ');
+}
 const relKey = (href) => lc(dbUidToKey(new URL(href).pathname.replace(/^.*\/api\/v2/, '').replace(/\/[a-z]{2}$/, '')));
 const selfName = L.self?.galleryName;
 const hasArtistLines = Object.values(P.translations.items ?? {}).some((rows) => Object.values(rows ?? {}).some((row) => row?.artist));
@@ -115,28 +147,36 @@ for (const s of L.sheets) {
     for (const [role, [col, pf]] of Object.entries(CREDITS)) {
       const names = (sh.authors?.[role] ?? []).map((a) => a[lang] || a.en).filter(Boolean);
       const legacy = names.length ? names.join(', ') : sh[col];
-      const r = compare(legacy, tr[pf]);
+      const printed = creditLine(tr, pf);
+      const r = compare(legacy, printed);
       if (r.verdict === 'extra-in-package' && droppedByCvJoin(key, lang, role)) r.verdict = 'expected:dxa-api drops a credit whose author has a CV in other languages only';
+      // With the author dropped, the sheet falls back to the objects column ("Sevinç Gök.").
+      if (r.verdict === 'different' && !names.length && droppedByCvJoin(key, lang, role)) r.verdict = 'expected:dxa-api drops a credit whose author has a CV in other languages only, and prints the objects column';
       // Legacy prints the credit in the page's script when authors_objects has it (e.g. Arabic).
       const latin = (sh.authors?.[role] ?? []).map((a) => a.en).filter(Boolean).join(', ');
       if (r.verdict === 'different' && latin && lang !== 'en' && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(latin)) r.why = `legacy prints the ${lang} spelling; the package keeps the Latin one`;
       if (r.verdict === 'different' && names.length > 1 && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(names[0])) r.why = `package keeps only the first of ${names.length} names`;
       if (r.verdict === 'different' && names.length > 1 && flatten(normalise(tr[pf], { from: 'markdown' })).replace(/ (and|&|;) /g, ', ') === flatten(legacy)) r.verdict = 'format';
-      R.field('item', pf, r, where);
+      let printedResult = creditAsPrinted(r, legacy, printed, { ordered: it.type !== 'monument' });
+      // dxa-api dropped this author (its CV join) and printed the objects column as written, so
+      // its letter case too, whatever the credit table holds: the known legacy defect.
+      if (['different', 'extra-in-package'].includes(printedResult.verdict) && droppedByCvJoin(key, lang, role)) printedResult = { ...printedResult, verdict: 'expected:dxa-api drops a credit whose author has a CV in other languages only, and prints the objects column' };
+      R.field('item', pf, printedResult, where);
     }
     for (const [k, v] of Object.entries(sh)) if (!IGNORE.has(k) && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) R.unmapped('item', k, where);
     for (const k of Object.keys(tr)) if (!pkgFieldsSeen.has(k)) pkgOnly[k] = (pkgOnly[k] ?? 0) + 1;
 
+    // dxa-api listed only the pictures with a row in the page's language; a package carries those
+    // languages per picture, and the sheet shows the same ones (viewer-core picturesInLanguage).
+    const shown = (it.images ?? []).filter((img) => !Array.isArray(img.languages) || img.languages.includes(lang));
     // Picture captions are per language: dxa-api returned the page language's row only.
     (sh.pictures ?? []).forEach((pic, i) => {
-      if (pic.caption || it.images[i]?.captions?.[lang]) R.field('item', 'image.caption', compare(pic.caption, it.images[i]?.captions?.[lang]), `${where}#${i + 1}`);
+      if (pic.caption || shown[i]?.captions?.[lang]) R.field('item', 'image.caption', compare(pic.caption, shown[i]?.captions?.[lang]), `${where}#${i + 1}`);
     });
-    // So are their credits. Legacy lists only the pictures that have a row in the language, so a
-    // picture's position differs between the two sides: compare the credits the sheet shows, as a
-    // set per record and language, rather than picture by picture.
+    // So are their credits, compared as the set the sheet shows per record and language.
     for (const f of ['photographer', 'copyright']) {
       const L = (sh.pictures ?? []).map((p) => flatten(normalise(p[f]))).filter(Boolean).sort();
-      const P = (it.images ?? []).map((img) => flatten(normalise(pictureCredits(img, lang)[f], { from: 'html' }))).filter(Boolean).sort();
+      const P = shown.map((img) => flatten(normalise(pictureCredits(img, lang)[f], { from: 'html' }))).filter(Boolean).sort();
       R.field('item', `image.${f}`, L.join('|') === P.join('|')
         ? { verdict: L.length ? 'same' : 'both-empty' }
         : { verdict: !P.length ? 'missing-in-package' : !L.length ? 'extra-in-package' : 'different', legacy: L.join('; '), pkg: P.join('; ') }, where);
@@ -177,7 +217,7 @@ for (const s of L.sheets) {
     const tP = (it.tag_ids ?? []).map((id) => tags.get(id)?.legacy_tag_id);
     R.field('item', 'tags', tL.length === tP.length && tL.every((t) => tP.includes(t)) ? { verdict: tL.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: tL.sort().join(' '), pkg: tP.sort().join(' ') }, key);
     const pics = sh.pictures ?? [];
-    R.field('item', 'image.count', pics.length === it.images.length ? { verdict: pics.length ? 'same' : 'both-empty' } : { verdict: pics.length > it.images.length ? 'missing-in-package' : 'extra-in-package', legacy: String(pics.length), pkg: String(it.images.length) }, key);
+    R.field('item', 'image.count', pics.length === shown.length ? { verdict: pics.length ? 'same' : 'both-empty' } : { verdict: pics.length > shown.length ? 'missing-in-package' : 'extra-in-package', legacy: String(pics.length), pkg: String(shown.length) }, key);
     const gl = (sh.galleries ?? []).map((g) => g.name).filter((n) => n !== selfName).sort();
     const gp = (it.gallery_references ?? []).filter((g) => g.kind === 'gallery').map((g) => g.name).sort();
     R.field('item', 'other galleries', gl.join('|') === gp.join('|') ? { verdict: gl.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: gl.join('; '), pkg: gp.join('; ') }, key);

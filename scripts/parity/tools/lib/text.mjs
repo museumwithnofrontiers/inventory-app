@@ -27,11 +27,13 @@ export function htmlToText(s) {
   let text = String(s)
     .replace(/<\/?br\s*\/?>/gi, '\n')
     .replace(/<\/(p|div|li|h\d)>/gi, '\n');
-  // Until the text stops changing: one pass over "<<b>i>" leaves "<i>".
+  // Only what a browser reads as a tag: "<" followed by a letter, "/", "!" or "?". Any other "<" is
+  // printed as it is, so legacy's "25.<<br/>" shows "25.<" and its "<\i>" shows "<\i>".
+  // Repeated until nothing changes, so removing one tag never leaves another behind.
   let previous;
   do {
     previous = text;
-    text = text.replace(/<[^>]+>/g, '');
+    text = text.replace(/<[a-z/!?][^>]*>/gi, '');
   } while (text !== previous);
   return decodeEntities(text);
 }
@@ -52,7 +54,8 @@ export function markdownToText(s) {
     .replace(/[-]/g, (c) => String.fromCharCode(c.charCodeAt(0) - PUA));
 }
 
-const ws = (s) => s.replace(/\r\n?/g, '\n').replace(/[\u00a0\u2007\u202f\t ]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
+// A soft hyphen (U+00AD) is invisible unless the line breaks there, on either side.
+const ws = (s) => s.replace(/­/g, '').replace(/\r\n?/g, '\n').replace(/[\u00a0\u2007\u202f\t ]+/g, ' ').replace(/ *\n */g, '\n').replace(/\n{2,}/g, '\n').trim();
 
 export function normalise(v, { from = 'html' } = {}) {
   if (v === null || v === undefined) return '';
