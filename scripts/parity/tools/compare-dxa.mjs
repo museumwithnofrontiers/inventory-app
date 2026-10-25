@@ -157,7 +157,11 @@ for (const s of L.sheets) {
       if (r.verdict === 'different' && latin && lang !== 'en' && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(latin)) r.why = `legacy prints the ${lang} spelling; the package keeps the Latin one`;
       if (r.verdict === 'different' && names.length > 1 && flatten(normalise(tr[pf], { from: 'markdown' })) === flatten(names[0])) r.why = `package keeps only the first of ${names.length} names`;
       if (r.verdict === 'different' && names.length > 1 && flatten(normalise(tr[pf], { from: 'markdown' })).replace(/ (and|&|;) /g, ', ') === flatten(legacy)) r.verdict = 'format';
-      R.field('item', pf, creditAsPrinted(r, legacy, printed, { ordered: it.type !== 'monument' }), where);
+      let printedResult = creditAsPrinted(r, legacy, printed, { ordered: it.type !== 'monument' });
+      // dxa-api dropped this author (its CV join) and printed the objects column as written, so
+      // its letter case too, whatever the credit table holds: the known legacy defect.
+      if (['different', 'extra-in-package'].includes(printedResult.verdict) && droppedByCvJoin(key, lang, role)) printedResult = { ...printedResult, verdict: 'expected:dxa-api drops a credit whose author has a CV in other languages only, and prints the objects column' };
+      R.field('item', pf, printedResult, where);
     }
     for (const [k, v] of Object.entries(sh)) if (!IGNORE.has(k) && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) R.unmapped('item', k, where);
     for (const k of Object.keys(tr)) if (!pkgFieldsSeen.has(k)) pkgOnly[k] = (pkgOnly[k] ?? 0) + 1;

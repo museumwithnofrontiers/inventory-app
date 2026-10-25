@@ -49,6 +49,8 @@ const CREDIT = (term) => (/translation_?copy|transcopy/.test(term) ? 'translatio
 const pkgOnly = {};
 const creditExtra = {};
 const creditShown = {};
+// Per page: how many "Description" sections a Sharing History page has printed so far.
+const descriptionsSeen = {};
 
 let shown = 0;
 let notShown = 0;
@@ -120,9 +122,12 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       }
       const pf = TERM[s.term];
       if (cfg.sh && s.term === 'db_description') {
-        // Sharing History prints its two descriptions under the same heading, the first then the
-        // second; the package keeps them apart (`description`, `description2`).
-        const field = seen.has('description') ? 'description2' : 'description';
+        // Sharing History prints its two descriptions under the same heading, each only when it has
+        // one: the n-th "Description" on the page is the n-th of the package's `description` and
+        // `description2` that is not empty.
+        const present = ['description', 'description2'].filter((f) => tr[f]);
+        const index = (descriptionsSeen[where] = (descriptionsSeen[where] ?? -1) + 1);
+        const field = present[index] ?? (index === 0 ? 'description' : 'description2');
         R.field('item', field, glossaryNote(s, compare(s.html, tr[field])), where);
         seen.add(field);
         continue;
