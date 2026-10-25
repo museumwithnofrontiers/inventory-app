@@ -421,6 +421,9 @@ export class ItemExporter extends BaseExporter {
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
         location: ownRow.location,
+        // Its own key: the item sheet prints the location alone, the exhibition's
+        // banner caption the location and the province.
+        province: extra?.['province'] ?? null,
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
