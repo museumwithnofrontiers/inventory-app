@@ -208,6 +208,14 @@ Gallery package's partners.json section):
   flagged — the viewer must exclude them from every list/profile page while
   their items still render (legacy behaviour: the museum is hidden, the item
   is not).
+- **A mwnf3 museum is named in every language.** dxa-api names it
+  `nvl(museumnames.name, museums.name)` in the language asked, so a museum with
+  no name row in a language (MATHAF, `Mus51;qt`, has none at all) is listed
+  under its own name, `museums.name` (the partner's `internal_name`). The
+  package gives it an entry holding only that `name` in each
+  `translations/partners.<lang>.json` it has no row for. Its `languages` stay
+  the rows it has, as dxa-api's `i18n` does. A Sharing History partner gets no
+  such entry: dxa-api's query for it needs a name row.
 
 ## related_content.json
 
