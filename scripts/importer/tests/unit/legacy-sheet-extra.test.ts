@@ -48,8 +48,10 @@ describe('artist life data (C10)', () => {
   });
 });
 
-describe('Sharing History records as the galleries show them (C16)', () => {
-  it('keeps an object’s descriptions, second name and keywords apart', () => {
+// Legacy prints each of these under a heading of its own, so each stays a
+// field of its own: never two joined into one.
+describe('Sharing History fields kept apart', () => {
+  it('keeps an object’s descriptions, names and keywords apart', () => {
     const result = transformShObjectTranslation({
       project_id: 'AWE',
       country: 'mc',
@@ -58,19 +60,24 @@ describe('Sharing History records as the galleries show them (C16)', () => {
       name: 'Reliquary',
       name2: 'Ornament with prophylactic intention',
       second_name: 'Other',
+      third_name: 'Third',
+      description: 'A reliquary.',
       description2: 'Throughout the 19th century in Macedonia…',
       keywords: 'Reliquary; talisman; metalwork',
     } as ShLegacyObjectText);
 
-    expect(result?.data.description).toBe('Throughout the 19th century in Macedonia…');
-    expect(extraOf(result).gallery_sheet).toEqual({
-      short_description: 'Throughout the 19th century in Macedonia…',
-      also_known_as: 'Ornament with prophylactic intention',
+    expect(result?.data.description).toBe('A reliquary.');
+    expect(result?.data.alternate_name).toBe('Ornament with prophylactic intention');
+    expect(extraOf(result)).toMatchObject({
+      description2: 'Throughout the 19th century in Macedonia…',
+      second_name: 'Other',
+      third_name: 'Third',
       keywords: 'Reliquary; talisman; metalwork',
     });
+    expect(extraOf(result).gallery_sheet).toBeUndefined();
   });
 
-  it('keeps a monument’s history apart', () => {
+  it('keeps a monument’s history out of its description', () => {
     const result = transformShMonumentTranslation({
       project_id: 'AWE',
       country: 'jo',
@@ -81,6 +88,31 @@ describe('Sharing History records as the galleries show them (C16)', () => {
       history: 'History',
     } as ShLegacyMonumentText);
 
-    expect(extraOf(result).gallery_sheet).toEqual({ description: 'Description', history: 'History' });
+    expect(result?.data.description).toBe('Description');
+    expect(extraOf(result).history).toBe('History');
+  });
+
+  it('keeps the holder to the holding museum, never the institution’s own-language name', () => {
+    const object = transformShObjectTranslation({
+      project_id: 'AWE', country: 'pt', number: 70, lang: 'en', name: 'Banknote',
+      holding_institution_org: 'Ministério das Finanças',
+    } as ShLegacyObjectText);
+    expect(object?.data.holder).toBeNull();
+    expect(extraOf(object).holding_institution_org).toBe('Ministério das Finanças');
+
+    const monument = transformShMonumentTranslation({
+      project_id: 'AWE', country: 'tn', number: 1, lang: 'en', name: 'Palais du Bardo',
+      responsible_institution_org: 'Institut national du Patrimoine',
+    } as ShLegacyMonumentText);
+    expect(monument?.data.holder).toBeNull();
+    expect(extraOf(monument).responsible_institution_org).toBe('Institut national du Patrimoine');
+  });
+
+  it('keeps the credit columns as written', () => {
+    const result = transformShObjectTranslation({
+      project_id: 'AWE', country: 'dz', number: 8, lang: 'fr', name: 'Petit pot',
+      preparedby: 'Cherid Houria', copyeditedby: '',
+    } as ShLegacyObjectText);
+    expect(extraOf(result).credits_as_written).toEqual({ author: 'Cherid Houria' });
   });
 });

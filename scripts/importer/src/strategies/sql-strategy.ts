@@ -608,18 +608,11 @@ export class SqlWriteStrategy implements IWriteStrategy {
         this.now,
       ]
     );
-
-    // The free-text credit is the role's whole list until a junction step
-    // replaces it (replaceItemTranslationCredits).
-    for (const [fkColumn, role] of Object.entries(CREDIT_ROLE_BY_FK_COLUMN)) {
-      const authorId = sanitized[fkColumn as keyof ItemTranslationData];
-      if (typeof authorId !== 'string' || authorId === '') continue;
-      await this.db.execute(
-        `INSERT IGNORE INTO item_translation_author (item_translation_id, role, author_id, display_order, created_at, updated_at)
-         VALUES (?, ?, ?, 0, ?, ?)`,
-        [id, role, authorId, this.now, this.now]
-      );
-    }
+    // item_translation_author holds legacy's credit tables only, written by
+    // the junction step (replaceItemTranslationCredits). The row's own credit
+    // text stays in its FK columns and, as written, in extra.credits_as_written:
+    // seeding the list with it made a role legacy's table has nobody for print
+    // that text on sites whose legacy sheet never did.
   }
 
   async attachTagsToItem(itemId: string, tagIds: string[]): Promise<void> {

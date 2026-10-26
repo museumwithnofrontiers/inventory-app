@@ -41,7 +41,7 @@ const TERM = {
   db_obtentionmethod: 'obtention', db_provenanceestablished: 'method_for_provenance', db_catalogue_link_txt: 'catalogue_holding_link',
   db_bibliography: 'bibliography', db_architects: 'architects', db_artistsm: 'architects',
   db_type_of_object: 'type', db_denominationsdb: 'type', db_typeof_object: 'type', db_archival: 'archival', db_institution: 'holder', db_Patrons: 'patrons', db_production_db_place: 'place_of_production', db_history: 'history', db_patrons: 'patrons', db_notice_b_title: 'copyright',
-  db_thirdname_object: 'alternate_name', db_thirdname_monument: 'alternate_name', db_secondname_object: 'second_name', db_secondname_monument: 'second_name',
+  db_thirdname_object: 'third_name', db_thirdname_monument: 'third_name', db_secondname_object: 'second_name', db_secondname_monument: 'second_name',
   // Sharing History: the institution's name in its own language, under a heading of its own.
   db_holdinginstitutionorg: 'holding_institution_org', db_responsibleinstitutionorg: 'responsible_institution_org',
 };
@@ -49,6 +49,8 @@ const CREDIT = (term) => (/translation_?copy|transcopy/.test(term) ? 'translatio
 const pkgOnly = {};
 const creditExtra = {};
 const creditShown = {};
+// Per page: how many "Description" sections a Sharing History page has printed so far.
+const descriptionsSeen = {};
 
 let shown = 0;
 let notShown = 0;
@@ -62,6 +64,7 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
   const langs = [...new Set([...(L?.langs ?? []), ...(it?.languages ?? [])])].sort((a, b) => (b === 'en') - (a === 'en'));
   let first = true;
   let legacyImages = 0;
+  let pkgImages = 0;
   for (const lang of langs) {
     const r = await get(pageUrl(id, lang));
     if (!r.body) { R.note(`not fetched: ${pageUrl(id, lang)}`); continue; }
@@ -118,33 +121,28 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         continue;
       }
       const pf = TERM[s.term];
-      if (cfg.sh && (pf === 'alternate_name' || pf === 'second_name')) {
-        // Sharing History: the package joins the second name and the original-language name.
-        const names = page.sections.filter((x) => ['alternate_name', 'second_name'].includes(TERM[x.term])).map((x) => normalise(x.html));
-        if (pf === 'alternate_name' || !page.sections.some((x) => TERM[x.term] === 'alternate_name')) {
-          const r4 = compare(names.join('; '), tr.alternate_name, { legacyFrom: 'text' });
-          if (names.length > 1 && ['same', 'format'].includes(r4.verdict)) r4.why = 'second name and original-language name joined in one field';
-          R.field('item', 'alternate_name', r4, where);
-        }
-        seen.add('alternate_name');
-        continue;
-      }
-      if (cfg.sh && pf === 'history') {
-        // Sharing History monuments: the package appends History to the Description.
-        const inDesc = tr.description && flatten(normalise(tr.description, { from: 'markdown' })).includes(flatten(normalise(s.html)));
-        R.field('item', 'history', inDesc ? { verdict: 'format', why: 'History merged into the Description' } : compare(s.html, tr.history), where);
-        continue;
-      }
       if (cfg.sh && s.term === 'db_description') {
-        const hist = page.sections.find((x) => TERM[x.term] === 'history');
-        const merged = hist ? `${normalise(s.html)}\n${normalise(hist.html)}` : null;
-        let r5 = compare(s.html, tr.description);
-        if (r5.verdict === 'different' && merged && ['same', 'format'].includes(compare(merged, tr.description, { legacyFrom: 'text' }).verdict)) r5 = { ...r5, verdict: 'format', why: 'History merged into the Description' };
-        R.field('item', 'description', glossaryNote(s, r5), where);
-        seen.add('description');
+        // Sharing History prints its two descriptions under the same heading, each only when it has
+        // one: the n-th "Description" on the page is the n-th of the package's `description` and
+        // `description2` that is not empty.
+        const present = ['description', 'description2'].filter((f) => tr[f]);
+        const index = (descriptionsSeen[where] = (descriptionsSeen[where] ?? -1) + 1);
+        const field = present[index] ?? (index === 0 ? 'description' : 'description2');
+        R.field('item', field, glossaryNote(s, compare(s.html, tr[field])), where);
+        seen.add(field);
         continue;
       }
-      if (pf === 'location') {
+      if (pf === 'location' && cfg.sh) {
+        // Sharing History's Location line: a monument's address, the location and the province
+        // (each without its final period), the present-day country and the record's country
+        // ("Vienna, Austria, Public domain"); the site composes the same line.
+        const country = (cid) => (cid ? P.tr('countries', lang, cid)?.name : null);
+        const address = it.type === 'monument' ? tr.monument_contact?.address : null;
+        const line = [address, tr.location, tr.province].map((part) => String(part ?? '').trim().replace(/\.$/, ''))
+          .concat(country(tr.country_id_present_days), country(it.country_id)).filter(Boolean).join(', ');
+        R.field('item', 'location', compare(s.html, line), where);
+        for (const k of ['location', 'province', 'country_id_present_days']) seen.add(k);
+      } else if (pf === 'location') {
         // The page prints location, province and then the country name.
         const r0 = compare(s.html, tr.location);
         const a = flatten(normalise(s.html));
@@ -254,13 +252,17 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       if (credits[role]) creditShown[role] = (creditShown[role] ?? 0) + 1;
       R.field('item', role, r2, where);
     }
-    // A page shows the pictures that have a caption row in its language; keep the most any page shows.
+    // A page shows the pictures that have a row in its language, and so does the site (viewer-core
+    // picturesInLanguage, from each picture's `languages`), at most as many as legacy's sheet did
+    // (the site's pictureLimit). Keep the most any page shows, on each side.
     legacyImages = Math.max(legacyImages, imageNumbers(r.body, id).length);
+    const inLanguage = it.images.filter((img) => !Array.isArray(img.languages) || img.languages.includes(lang)).length;
+    pkgImages = Math.max(pkgImages, Math.min(inLanguage, cfg.pictureLimit?.[it.type] ?? Infinity));
     first = false;
   }
   if (it && !first) {
     const n = legacyImages;
-    R.field('item', 'image.count', n === it.images.length ? { verdict: n ? 'same' : 'both-empty' } : { verdict: n > it.images.length ? 'missing-in-package' : 'extra-in-package', legacy: String(n), pkg: String(it.images.length) }, key);
+    R.field('item', 'image.count', n === pkgImages ? { verdict: n ? 'same' : 'both-empty' } : { verdict: n > pkgImages ? 'missing-in-package' : 'extra-in-package', legacy: String(n), pkg: String(pkgImages) }, key);
   }
 }
 
@@ -277,6 +279,9 @@ function artistWithLife(html, tr) {
   const life = `${born ?? ''}${bornAt ? `, ${bornAt}` : ''}${died ? `-${died}` : ''}${diedAt ? `, ${diedAt}` : ''}`;
   const composed = tr.artist && life ? `${tr.artist} (${life})` : tr.artist;
   const r = compare(html, composed);
+  // Legacy opens the brackets when a life-data field holds only spaces, and prints "(- )" after the
+  // name: a bug of its display code (#2344), not a value the site should print.
+  if (r.verdict === 'different' && /\(\s*-?\s*\)\s*$/.test(normalise(html)) && compare(normalise(html).replace(/\s*\(\s*-?\s*\)\s*$/, ''), composed, { legacyFrom: 'text' }).verdict === 'same') return { ...r, verdict: 'expected:legacy prints empty life data as "(- )" (#2344)' };
   return r.verdict === 'same' || r.verdict === 'format' ? { ...r, verdict: r.verdict, why: composed !== tr.artist ? 'name + life data from separate fields' : undefined } : r;
 }
 
@@ -288,8 +293,10 @@ function glossaryNote(section, result) {
     const words = (s) => flatten(s).split(/\s+/);
     const a = words(result.legacy);
     const lost = words(result.pkg).filter((w) => /'/.test(w) && !a.includes(w));
+    // The punctuation around the lost word stays on the page ("among the ."), so compare words only.
+    const bare = (s) => s.replace(/[^\p{L}\p{N}'\s]+/gu, ' ').replace(/\s+/g, ' ').trim();
     const strip = (s) => flatten(s).split(/\s+/).filter((w) => !lost.includes(w)).join(' ');
-    if (lost.length && strip(result.pkg) === flatten(result.legacy)) return { ...result, verdict: 'expected:legacy glossary link drops a term with an apostrophe' };
+    if (lost.length && bare(strip(result.pkg)) === bare(flatten(result.legacy))) return { ...result, verdict: 'expected:legacy glossary link drops a term with an apostrophe' };
   }
   return result;
 }

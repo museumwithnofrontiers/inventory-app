@@ -64,4 +64,23 @@ class ItemTranslationTest extends TestCase
             ['id' => $resource->id] + array_intersect_key($updateData, array_flip($modelClass::make()->getFillable()))
         );
     }
+
+    /**
+     * Legacy writes alternate names and types longer than 255 characters; both
+     * are kept whole.
+     */
+    public function test_keeps_a_long_alternate_name_and_type_whole(): void
+    {
+        $resource = ItemTranslation::factory()->create();
+        $long = rtrim(str_repeat('Wax statue of a man showing deep muscles; ', 10));
+
+        $this->putJson(route('item-translation.update', $resource), [
+            'alternate_name' => $long,
+            'type' => $long,
+        ])->assertOk();
+
+        $resource->refresh();
+        $this->assertSame($long, $resource->alternate_name);
+        $this->assertSame($long, $resource->type);
+    }
 }

@@ -148,6 +148,20 @@ interface PartnerHeldItemRow {
  */
 const EXCLUDED_PARTNER_KEYS = ['mwnf3:museums:Mus51:uk', 'mwnf3:museums:Mus51:us']
 
+// dxa-api lists a mwnf3 museum in every language it has a name row in, but a
+// Sharing History partner only in those whose row has a description: a page
+// with a name and nothing else is not offered. The rows themselves are kept.
+function partnerLanguages(
+  backwardCompatibility: string | null,
+  byLang: Record<string, Record<string, string | null>>
+): string[] {
+  const sharingHistory = backwardCompatibility?.startsWith('mwnf3_sharing_history:') ?? false
+  return Object.entries(byLang)
+    .filter(([, fields]) => !sharingHistory || !!fields['description']?.trim())
+    .map(([code]) => code)
+    .sort()
+}
+
 export class PartnerExporter extends BaseExporter {
   getName(): string {
     return 'Partners'
@@ -390,8 +404,8 @@ export class PartnerExporter extends BaseExporter {
         // Legacy `showOnPortal`. The home page shows a random subset of the
         // featured partners, so the package ships the flag and the viewer picks.
         featured: extra?.portal_display?.toLowerCase() === 'y',
-        // Same derivation as each item's languages in items.json
-        languages: Object.keys(translationMap.get(partner.id) ?? {}).sort(),
+        // The languages the partner's page offers, as dxa-api lists them.
+        languages: partnerLanguages(partner.backward_compatibility, translationMap.get(partner.id) ?? {}),
         contact_persons: contactPersons(extra),
         additional_urls: extra?.urls ?? [],
         images: imageMap.get(partner.id) ?? [],

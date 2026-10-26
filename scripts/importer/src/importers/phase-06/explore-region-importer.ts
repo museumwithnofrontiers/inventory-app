@@ -7,7 +7,7 @@
  *
  * Legacy schema:
  * - mwnf3_explore.regions (regionId, countryId, label, geoCoordinates, zoom, type)
- * - mwnf3_explore.regiontranslated (regionId, langId, spelling)
+ * - mwnf3_explore.regiontranslated (regionId, langId, spelling, description)
  * - mwnf3_explore.regionsthemes (regionId, themeId)
  *
  * New schema:
@@ -25,6 +25,7 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { mapLanguageCode } from '../../utils/code-mappings.js';
 import { selectItemInternalName } from '../../domain/transformers/item-internal-name-transformer.js';
+import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 
 function parseGeoCoordinates(coords: string | null): [number | null, number | null] {
   if (!coords || !coords.trim()) return [null, null];
@@ -50,6 +51,7 @@ interface LegacyRegionTranslation {
   regionId: number;
   langId: string;
   spelling: string;
+  description: string | null;
 }
 
 interface LegacyRegionTheme {
@@ -97,7 +99,7 @@ export class ExploreRegionImporter extends BaseImporter {
 
       // Pre-fetch translations and theme associations
       const translations = await this.context.legacyDb.query<LegacyRegionTranslation>(
-        `SELECT regionId, langId, spelling FROM mwnf3_explore.regiontranslated`
+        `SELECT regionId, langId, spelling, description FROM mwnf3_explore.regiontranslated`
       );
       const translationsByRegion = new Map<number, LegacyRegionTranslation[]>();
       for (const t of translations) {
@@ -198,19 +200,23 @@ export class ExploreRegionImporter extends BaseImporter {
           });
           this.registerEntity(collectionId, backwardCompat, 'collection');
 
-          // Write English translation from label
+          // Legacy's Explore prints a region's name and description from
+          // regiontranslated, English included ("Tyrol"); `label` is the
+          // region's own-language label ("Tirol"), the English title only
+          // when regiontranslated has no English row.
+          const english = await this.findEnglish(regionTranslations);
           await this.context.strategy.writeCollectionTranslation({
             collection_id: collectionId,
             language_id: 'eng',
             context_id: this.exploreContextId,
             backward_compatibility: `${backwardCompat}:translation:eng`,
-            title: legacy.label,
-            description: '',
+            title: english?.spelling?.trim() ? english.spelling : legacy.label,
+            description: english?.description ? convertHtmlToMarkdown(english.description) : '',
             extra: extraJson,
           });
 
           // Write multilingual translations from regiontranslated
-          for (const trans of translationsByRegion.get(legacy.regionId) ?? []) {
+          for (const trans of regionTranslations) {
             try {
               const languageId = await this.getLanguageIdByLegacyCodeAsync(trans.langId);
               if (!languageId) {
@@ -230,7 +236,7 @@ export class ExploreRegionImporter extends BaseImporter {
                 context_id: this.exploreContextId,
                 backward_compatibility: `${backwardCompat}:translation:${languageId}`,
                 title: trans.spelling,
-                description: '',
+                description: trans.description ? convertHtmlToMarkdown(trans.description) : '',
               });
             } catch (error) {
               const message = error instanceof Error ? error.message : String(error);
@@ -274,5 +280,14 @@ export class ExploreRegionImporter extends BaseImporter {
       );
     }
     return collectionId;
+  }
+
+  private async findEnglish(
+    translations: LegacyRegionTranslation[]
+  ): Promise<LegacyRegionTranslation | undefined> {
+    for (const trans of translations) {
+      if ((await this.getLanguageIdByLegacyCodeAsync(trans.langId)) === 'eng') return trans;
+    }
+    return undefined;
   }
 }

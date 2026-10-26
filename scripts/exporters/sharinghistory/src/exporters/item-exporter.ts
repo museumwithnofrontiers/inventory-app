@@ -4,9 +4,10 @@ import { BaseExporter } from './base-exporter.js'
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ". On an Arabic row legacy's sheet prints only the
 // Arabic spelling (authors.originalname), and nothing for a person who has none,
-// so neither does this. Falls back to the role's FK column for a database
-// imported before item_translation_author existed.
-function creditList(role: string, fallback: string): string {
+// so neither does this. Nothing else: the sheet prints the credit table only,
+// never the record's own credit columns (extra.credits_as_written, which the
+// galleries print).
+function creditList(role: string): string {
   return `IF(EXISTS (SELECT 1 FROM item_translation_author ita
                      WHERE ita.item_translation_id = it.id AND ita.role = '${role}'),
             (SELECT GROUP_CONCAT(
@@ -15,7 +16,7 @@ function creditList(role: string, fallback: string): string {
               FROM item_translation_author ita
               JOIN authors a ON a.id = ita.author_id
               WHERE ita.item_translation_id = it.id AND ita.role = '${role}'),
-            IF(it.language_id = 'ara', NULLIF(${fallback}.originalname, ''), ${fallback}.name))`
+            NULL)`
 }
 interface ItemRow {
   id: string
@@ -208,15 +209,11 @@ export class ItemExporter extends BaseExporter {
               it.location, it.dimensions, it.place_of_production,
               it.method_for_datation, it.method_for_provenance,
               it.provenance, it.obtention, it.bibliography, it.extra,
-              ${creditList('author', 'a1')} AS author_name,
-              ${creditList('text_copy_editor', 'a2')} AS copy_editor_name,
-              ${creditList('translator', 'a3')} AS translator_name,
-              ${creditList('translation_copy_editor', 'a4')} AS translation_copy_editor_name
+              ${creditList('author')} AS author_name,
+              ${creditList('text_copy_editor')} AS copy_editor_name,
+              ${creditList('translator')} AS translator_name,
+              ${creditList('translation_copy_editor')} AS translation_copy_editor_name
        FROM item_translations it
-       LEFT JOIN authors a1 ON a1.id = it.author_id
-       LEFT JOIN authors a2 ON a2.id = it.text_copy_editor_id
-       LEFT JOIN authors a3 ON a3.id = it.translator_id
-       LEFT JOIN authors a4 ON a4.id = it.translation_copy_editor_id
        WHERE it.item_id IN (${itemPh})
          AND it.context_id IN (${contextPh})
        ORDER BY it.item_id, it.context_id`,
@@ -396,9 +393,9 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        // Legacy's sheet prints the location and the province on one line,
-        // joined with ", "; the importer keeps the province on its own.
-        location: [ownRow.location, extra?.province].filter((part) => typeof part === 'string' && part.trim()).join(', ') || null,
+        // The location alone; the province is its own key (from extra below),
+        // and the site composes the line legacy printed.
+        location: ownRow.location,
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
@@ -414,11 +411,9 @@ export class ItemExporter extends BaseExporter {
       if (extra) {
         for (const [k, v] of Object.entries(extra)) {
           if (k === 'legacy_display_status') continue
-          // How the galleries' sheet shows this record; this site shows the
-          // merged fields above.
-          if (k === 'gallery_sheet') continue
-          // Printed in the location line above.
-          if (k === 'province') continue
+          // The record's own credit columns: legacy's sheet prints the credit
+          // table only (the galleries print these).
+          if (k === 'credits_as_written') continue
           if (fields[k] == null) fields[k] = v
         }
       }
@@ -479,6 +474,13 @@ export class ItemExporter extends BaseExporter {
       imageMap.get(pic.item_id)!.push({
         url: this.imageUrl(pic.path),
         display_order: pic.display_order,
+        // The languages the sheet shows the picture in: legacy's Sharing History
+        // sheet prints a picture only where its row in that language has a
+        // photographer or a copyright (database_item.php), not merely a row.
+        languages: Object.entries(perLang)
+          .filter(([, t]) => !!(t.photographer || t.copyright))
+          .map(([lang]) => lang)
+          .sort(),
         captions,
         photographers,
         copyrights,
@@ -595,6 +597,7 @@ export class ItemExporter extends BaseExporter {
 interface ImageEntry {
   url: string
   display_order: number | null
+  languages: string[]
   captions: Record<string, string>
   photographers: Record<string, string>
   copyrights: Record<string, string>

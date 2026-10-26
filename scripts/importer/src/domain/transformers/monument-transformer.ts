@@ -5,6 +5,7 @@
  * Similar to ObjectTransformer but for monuments.
  */
 
+import { creditsAsWritten } from './credits-as-written.js';
 import type { LegacyMonument, MonumentGroup } from '../types/index.js';
 import type { ItemData, ItemTranslationData } from '../../core/types.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
@@ -199,23 +200,9 @@ export function transformMonumentTranslation(
     ? convertHtmlToMarkdown(monument.bibliography)
     : null;
 
-  // Handle alternate_name with truncation
-  let alternateNameMarkdown = monument.name2 ? convertHtmlToMarkdown(monument.name2) : null;
-  if (alternateNameMarkdown && alternateNameMarkdown.length > 255) {
-    warnings.push(
-      `${monumentKey}:${monument.lang} - alternate_name truncated (${alternateNameMarkdown.length} → 255 chars)`
-    );
-    alternateNameMarkdown = alternateNameMarkdown.substring(0, 252) + '...';
-  }
-
-  // Handle type with truncation
-  let typeMarkdown = monument.typeof ? convertHtmlToMarkdown(monument.typeof) : null;
-  if (typeMarkdown && typeMarkdown.length > 255) {
-    warnings.push(
-      `${monumentKey}:${monument.lang} - type truncated (${typeMarkdown.length} → 255 chars)`
-    );
-    typeMarkdown = typeMarkdown.substring(0, 252) + '...';
-  }
+  // Kept whole: both are text columns, as long as legacy wrote them.
+  const alternateNameMarkdown = monument.name2 ? convertHtmlToMarkdown(monument.name2) : null;
+  const typeMarkdown = monument.typeof ? convertHtmlToMarkdown(monument.typeof) : null;
 
   // Convert other fields
   const ownerMarkdown = monument.current_owner
@@ -241,6 +228,8 @@ export function transformMonumentTranslation(
   // Build extra field for fields without dedicated columns
   const extraData: Record<string, unknown> = {};
   if (monument.province?.trim()) extraData.province = convertHtmlToMarkdown(monument.province);
+  const credits = creditsAsWritten(monument);
+  if (credits) extraData.credits_as_written = credits;
 
   // External links
   if (monument.linkcatalogs) extraData.linkcatalogs = monument.linkcatalogs;

@@ -186,7 +186,7 @@ describe('ItemExporter — materials and keywords as the record writes them', ()
       translations: [
         translationRow('item-c', 'eng', {
           materials: 'Paper, ink',
-          gallery_sheet: { keywords: 'Hijaz Railway; Ottoman Empire; Pilgrimage' },
+          keywords: 'Hijaz Railway; Ottoman Empire; Pilgrimage',
         }),
       ],
     })

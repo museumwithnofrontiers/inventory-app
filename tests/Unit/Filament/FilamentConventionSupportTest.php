@@ -38,7 +38,7 @@ class FilamentConventionSupportTest extends TestCase
         $this->assertSame('context_id', $schema[1]->getName());
         $this->assertInstanceOf(TextInput::class, $schema[2]);
         $this->assertSame('name', $schema[2]->getName());
-        $this->assertInstanceOf(TextInput::class, $schema[3]);
+        $this->assertInstanceOf(Textarea::class, $schema[3]);
         $this->assertSame('alternate_name', $schema[3]->getName());
         $this->assertInstanceOf(Textarea::class, $schema[4]);
         $this->assertSame('description', $schema[4]->getName());

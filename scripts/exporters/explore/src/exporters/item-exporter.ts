@@ -420,6 +420,8 @@ export class ItemExporter extends BaseExporter {
       }
       if (extra) {
         for (const [k, v] of Object.entries(extra)) {
+          // The record's own credit columns, which only the galleries print.
+          if (k === 'credits_as_written') continue
           if (fields[k] == null) fields[k] = v
         }
       }

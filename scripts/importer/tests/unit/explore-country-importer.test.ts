@@ -164,6 +164,8 @@ describe('ExploreCountryImporter', () => {
 
       return [];
     });
+    // The countries' Explore descriptions (countrytranslated): none.
+    queryMock.mockImplementationOnce(async () => []);
     queryMock.mockImplementationOnce(async () => {
       throw new Error('bad legacy query');
     });

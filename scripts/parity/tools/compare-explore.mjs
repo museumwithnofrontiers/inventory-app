@@ -50,13 +50,14 @@ const texts = (entity, key, names, descs) => {
   for (const [lang, v] of Object.entries(names)) R.field(entity, 'name', compare(v, tr(c, lang).title), `${key}|${lang}`);
   for (const [lang, v] of Object.entries(descs)) R.field(entity, 'description', compare(v, tr(c, lang).description), `${key}|${lang}`);
 };
-// A country's name in other languages lives in countries.json (by legacy code), not on its collection.
+// A country's name is the country reference's (countries.json, by legacy code), which the site
+// prints (explore.js `nameOf`); its collection's title is never shown.
 const countryEntity = new Map(P.read('countries.json').filter((c) => c.code).map((c) => [c.code, c]));
 for (const c of countries) {
   const key = `mwnf3_explore:country:${c.countryId}`;
   const col = C.get(key);
   const ent = countryEntity.get(c.countryId);
-  for (const [lang, v] of Object.entries(byLang(c.countryName))) R.field('country', 'name', compare(v, tr(col, lang).title ?? (ent && P.tr('countries', lang, ent.id)?.name)), `${key}|${lang}`);
+  for (const [lang, v] of Object.entries(byLang(c.countryName))) R.field('country', 'name', compare(v, (ent && P.tr('countries', lang, ent.id)?.name) ?? tr(col, lang).title), `${key}|${lang}`);
   for (const [lang, v] of Object.entries(byLang(c.countryDescription))) R.field('country', 'description', compare(v, tr(col, lang).description), `${key}|${lang}`);
 }
 for (const t of territories) texts('territory', `mwnf3_explore:region:${t.territoryId}`, byLang(t.territoryName), byLang(t.territoryDescription));
