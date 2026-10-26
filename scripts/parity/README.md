@@ -364,6 +364,17 @@ differences. The fall comes from #2338, #2345, viewer-core 2.10.0 and viewer-lay
 Its `diff-runs.md` lists one regression against 2026-10-25: the-hijaz-railway's dump items only in
 the package (262 → 263). Hijaz is excluded from parity (decision of 2026-10-18).
 
+`baselines/2026-10-26b` is the run after reimport 7, on the packages published from it, read from
+an empty cache: 8 real differences. The fall comes from #2354 (the import no longer names a
+nameless Sharing History partner translation), #2355 (Islamic Art's EPM-only language is the short
+description; a mwnf3 museum is named in every language) and #2356 (the tool reads partial CV-join
+credit drops, glossary terms with an apostrophe and partners without `i18n`). The 8 left: stray
+Markdown emphasis in Baroque Art, prints-drawings and scientific-objects owner references and one
+Baroque Art detail description, and Arts in Dialogue's `site.hidden`.
+Its `diff-runs.md` lists two regressions against 2026-10-26, both on the-hijaz-railway: dump items
+only in the package (263 → 281) and image URLs not `/pub/<uuid>` (10 → 11). Hijaz has no public
+legacy and is compared against the dump only.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
