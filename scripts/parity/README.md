@@ -336,6 +336,17 @@ monument the same heading (`BAR:cz:Mon11_E:25` and `BAR:it:Mon12:16`, details 2 
 The package now carries both, and the tool, which pairs details by heading, counts the second as
 extra.
 
+`baselines/2026-10-25` is the run after reimport 5, on the packages published from it: 287 real
+differences. The fall comes from #2335 (the tool compares what each language page shows) and #2336.
+Under #2336 the import keeps each legacy field apart: location and province are no longer joined.
+It also writes each language's own artist line, reads years as dxa-api reads them, and drops the
+stray asterisks of touching italics. It takes Explore's English place names, and it leaves a
+gallery's project-only records out of "other galleries". The sites print the artist line in the
+page's language only (viewer-core 2.9.0). Its `diff-runs.md` lists one regression against
+2026-10-24: the-hijaz-railway `theme.presentation` (3 → 4). Legacy's Hijaz exhibition still
+shows placeholder texts ("This is the About section"), and Hijaz is excluded from parity
+(decision of 2026-10-18).
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
