@@ -9,7 +9,7 @@ import { compareExhibition } from './exhibition-themes.mjs';
 import { compare, flatten, normalise, splitList } from './lib/text.mjs';
 import { asList, dbUidToKey, link, paged, readLegacyDxa } from './legacy-dxa.mjs';
 import { OUT } from './lib/paths.mjs';
-import { droppedByCvJoin } from './lib/credits-cv.mjs';
+import { droppedByCvJoin, namesDroppedByCvJoin } from './lib/credits-cv.mjs';
 
 const slug = process.argv[2];
 const site = JSON.parse(readFileSync(`${OUT}/sitemap.json`, 'utf8')).sites.find((s) => s.slug === slug);
@@ -161,6 +161,12 @@ for (const s of L.sheets) {
       // dxa-api dropped this author (its CV join) and printed the objects column as written, so
       // its letter case too, whatever the credit table holds: the known legacy defect.
       if (['different', 'extra-in-package'].includes(printedResult.verdict) && droppedByCvJoin(key, lang, role)) printedResult = { ...printedResult, verdict: 'expected:dxa-api drops a credit whose author has a CV in other languages only, and prints the objects column' };
+      // The CV join dropped some of the credited authors and kept the others: legacy prints only those kept.
+      if (['different', 'extra-in-package'].includes(printedResult.verdict)) {
+        const gone = namesDroppedByCvJoin(key, lang, role).map((n) => flatten(normalise(n)));
+        const kept = String(printed ?? '').split(/\s*,\s*/).filter((n) => !gone.includes(flatten(normalise(n, { from: 'markdown' })))).join(', ');
+        if (gone.length && ['same', 'format'].includes(creditAsPrinted(compare(legacy, kept), legacy, kept, { ordered: it.type !== 'monument' }).verdict)) printedResult = { ...printedResult, verdict: 'expected:dxa-api drops a credit whose author has a CV in other languages only' };
+      }
       R.field('item', pf, printedResult, where);
     }
     for (const [k, v] of Object.entries(sh)) if (!IGNORE.has(k) && v !== null && v !== '' && !(Array.isArray(v) && !v.length) && !(typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length)) R.unmapped('item', k, where);
@@ -262,11 +268,14 @@ await mapAll(L.partners.rows, async (row) => {
   const key = partnerKey(row);
   const p = pByKey.get(key);
   if (!p) return;
-  const langs = String(row.i18n ?? 'en').split(',').map((x) => x.trim()).filter(Boolean);
-  R.field('partner', 'languages', langs.sort().join(',') === [...p.languages].sort().join(',') ? { verdict: 'same' } : { verdict: 'different', legacy: langs.join(','), pkg: p.languages.join(',') }, key);
+  // dxa-api's i18n: the languages of the partner's name rows, none for a museum without any (it is
+  // then named by museums.name in the language asked, which the fields below check in English).
+  // A row without the key (an exhibition's /institutions) is read in English.
+  const offered = 'i18n' in row ? String(row.i18n ?? '').split(',').map((x) => x.trim()).filter(Boolean) : ['en'];
+  R.field('partner', 'languages', offered.sort().join(',') === [...p.languages].sort().join(',') ? { verdict: 'same' } : { verdict: 'different', legacy: offered.join(','), pkg: p.languages.join(',') }, key);
   if (row.hasObjects !== undefined) R.field('partner', 'holds items', (row.hasObjects ? 1 : 0) === (p.item_count > 0 ? 1 : 0) ? { verdict: 'same' } : { verdict: 'different', legacy: String(row.hasObjects), pkg: String(p.item_count) }, key);
   const href = link(row, 'partner');
-  for (const lang of langs) {
+  for (const lang of offered.length ? offered : ['en']) {
     const d = href ? (await getJson(`${href}/${lang}`)).json : null;
     const rec = d && !Array.isArray(d) ? d : row;
     const tr = P.tr('partners', lang, p.id) ?? {};
@@ -275,7 +284,8 @@ await mapAll(L.partners.rows, async (row) => {
       if (!(lf in rec) || (lf === 'partnerName' && 'name' in rec)) continue;
       const r = compare(rec[lf], tr[pf]);
       // dxa-api answers some partners in English whatever the language asked; the package has the translation.
-      if (r.verdict === 'different' && lang !== 'en' && compare(rec[lf], en[pf]).verdict === 'same') r.verdict = 'expected:legacy API answers in English';
+      // The same when the package has nothing in that language (ES_01_A in Spanish, #2343).
+      if (['different', 'missing-in-package'].includes(r.verdict) && lang !== 'en' && compare(rec[lf], en[pf]).verdict === 'same') r.verdict = 'expected:legacy API answers in English';
       R.field('partner', pf, r, `${key}|${lang}`);
     }
     if (d) for (const [k, v] of Object.entries(d)) if (!(k in PTR) && v && typeof v !== 'object' && !/Id$|^has|^is|Name$|^logo$|^i18n$|^languageId$|^lat|^lon|^zoom/.test(k)) R.unmapped('partner', k, `${key}|${lang}`);

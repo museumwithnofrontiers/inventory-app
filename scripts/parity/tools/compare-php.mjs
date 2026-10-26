@@ -287,17 +287,6 @@ function artistWithLife(html, tr) {
 
 function glossaryNote(section, result) {
   if (section.brokenGlossary && ['same', 'format'].includes(result.verdict)) return { ...result, verdict: 'expected:legacy page prints broken glossary markup' };
-  // A glossary term with an apostrophe (Shi'ite, mina'i) breaks legacy's javascript: link and the
-  // word disappears from the page; the package keeps it.
-  if (result.verdict === 'different' && !result.why) {
-    const words = (s) => flatten(s).split(/\s+/);
-    const a = words(result.legacy);
-    const lost = words(result.pkg).filter((w) => /'/.test(w) && !a.includes(w));
-    // The punctuation around the lost word stays on the page ("among the ."), so compare words only.
-    const bare = (s) => s.replace(/[^\p{L}\p{N}'\s]+/gu, ' ').replace(/\s+/g, ' ').trim();
-    const strip = (s) => flatten(s).split(/\s+/).filter((w) => !lost.includes(w)).join(' ');
-    if (lost.length && bare(strip(result.pkg)) === bare(flatten(result.legacy))) return { ...result, verdict: 'expected:legacy glossary link drops a term with an apostrophe' };
-  }
   return result;
 }
 R.note(`${shown} legacy pages with content; ${notShown} record × language pairs where legacy shows nothing.`);

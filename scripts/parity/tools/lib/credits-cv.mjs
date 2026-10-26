@@ -25,19 +25,35 @@ function load() {
       credits.get(k).push(`${db}|${r.author_id}|${lc(r.project_id)}`);
     }
   };
+  const names = new Map();
+  const addNames = (db, rows) => {
+    for (const r of rows) names.set(`${db}|${r.author_id}`, [r.firstname, r.lastname].map((n) => String(n ?? '').trim()).filter(Boolean).join(' '));
+  };
+  addNames('mwnf3', readTable('mwnf3', 'authors'));
+  addNames('sh', readTable('mwnf3_sharing_history', 'sh_authors'));
   addCv('mwnf3', readTable('mwnf3', 'authors_cv'), 'lang_id');
   addCv('sh', readTable('mwnf3_sharing_history', 'sh_authors_cv'), 'lang');
   addCredits('mwnf3', readTable('mwnf3', 'authors_objects'), (r) => lc(`mwnf3:objects:${r.project_id}:${r.country_id}:${r.museum_id}:${r.object_id}`), 'lang_id');
   addCredits('mwnf3', readTable('mwnf3', 'authors_monuments'), (r) => lc(`mwnf3:monuments:${r.project_id}:${r.country_id}:${r.institution_id}:${r.monument_id}`), 'lang_id');
   addCredits('sh', readTable('mwnf3_sharing_history', 'sh_authors_objects'), (r) => lc(`mwnf3_sharing_history:sh_objects:${r.project_id}:${r.country}:${r.number}`), 'lang');
   addCredits('sh', readTable('mwnf3_sharing_history', 'sh_authors_monuments'), (r) => lc(`mwnf3_sharing_history:sh_monuments:${r.project_id}:${r.country}:${r.number}`), 'lang');
-  index = { cvLangs, credits };
+  index = { cvLangs, credits, names };
   return index;
 }
+
+const dropped = (cvLangs, a, lang) => cvLangs.has(a) && !cvLangs.get(a).has(lang);
 
 // True when every author credited for this record, language and role is one the CV join drops.
 export function droppedByCvJoin(key, lang, type) {
   const { cvLangs, credits } = load();
   const authors = credits.get(`${key.toLowerCase()}|${lang}|${type}`) ?? [];
-  return authors.length > 0 && authors.every((a) => cvLangs.has(a) && !cvLangs.get(a).has(lang));
+  return authors.length > 0 && authors.every((a) => dropped(cvLangs, a, lang));
+}
+
+// The names ("Firstname Lastname", as the credit table writes them) of the authors credited for
+// this record, language and role that the CV join drops.
+export function namesDroppedByCvJoin(key, lang, type) {
+  const { cvLangs, credits, names } = load();
+  const authors = credits.get(`${key.toLowerCase()}|${lang}|${type}`) ?? [];
+  return authors.filter((a) => dropped(cvLangs, a, lang)).map((a) => names.get(a.split('|').slice(0, 2).join('|'))).filter(Boolean);
 }

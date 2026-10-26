@@ -56,7 +56,7 @@ export async function compareExhibition({ apiBase, self, P, R }) {
   }
   const rc = Object.values(self?.exhibitionRelatedContents ?? {}).flat();
   const prc = P.read('related_content.json') ?? [];
-  R.field('exhibition', 'related content', rc.length === prc.length ? { verdict: rc.length ? 'same' : 'both-empty' } : { verdict: rc.length > prc.length ? 'missing-in-package' : 'extra-in-package', legacy: String(rc.length), pkg: String(prc.length) }, 'related_content.json');
+  R.field('exhibition', 'related content', rc.length === prc.length ? { verdict: rc.length ? 'same' : 'both-empty' } : { verdict: rc.length > prc.length ? 'missing-in-package' : 'extra-in-package', legacy: String(rc.length), pkg: String(prc.length) }, `related_content.json|${self?.galleryKey}`);
   const lp = Object.values(self?.exhibitionPartners ?? {}).flat();
   R.field('exhibition', 'exhibition partners (sponsors) count', { verdict: 'same', legacy: String(lp.length) }, 'self');
 }
