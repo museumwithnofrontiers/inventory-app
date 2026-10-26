@@ -347,6 +347,23 @@ page's language only (viewer-core 2.9.0). Its `diff-runs.md` lists one regressio
 shows placeholder texts ("This is the About section"), and Hijaz is excluded from parity
 (decision of 2026-10-18).
 
+`baselines/2026-10-26` is the run after reimport 6, on the packages published from it: 49 real
+differences. The fall comes from #2338, #2345, viewer-core 2.10.0 and viewer-layout 3.10.0:
+- **Tool (#2338):** it compares what a page prints. A "<" that starts no tag is text, soft hyphens
+  are invisible, and Sharing History's two descriptions are matched in the order they print.
+  Legacy's data errors are recorded in story #2339 and its child tasks.
+- **Import (#2345):** it keeps every row and column legacy holds: the credit columns as written,
+  picture rows with no text, Sharing History's fields each in its own key, long alternate names and
+  Palaeolithic years.
+- **Export (#2345):** it applies each legacy site's own display rule: dxa-api's credit fallback,
+  only the pictures with a row in the page's language, and on Sharing History only those with a
+  credit.
+- **Sites:** they print credits as dxa-api did ("Firstname LASTNAME") and backticks as characters
+  (viewer-core 2.10.0), and they show legacy's banner caption (viewer-layout 3.10.0).
+
+Its `diff-runs.md` lists one regression against 2026-10-25: the-hijaz-railway's dump items only in
+the package (262 → 263). Hijaz is excluded from parity (decision of 2026-10-18).
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
