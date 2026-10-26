@@ -389,6 +389,11 @@ export class ItemExporter extends BaseExporter {
       const ownRow =
         (ownContext ? rows.find(r => r.context_id === ownContext) : undefined) ?? rows[0]!
       const otherRow = rows.find(r => r !== ownRow)
+      // A language with no own-context row: the row there is a secondary
+      // context's, so its description is the short one. Legacy keeps both texts
+      // on one row and prints this one as the short description, with no long
+      // description (e.g. ISL;es;Mus01;26 in Arabic).
+      const ownIsSecondary = ownContext !== undefined && ownRow.context_id !== ownContext
 
       // Fields without a dedicated column live in item_translations.extra JSON.
       // Each key is only ever set by the importer for the item type it applies
@@ -400,8 +405,8 @@ export class ItemExporter extends BaseExporter {
       translationMap.get(itemId)![code] = {
         name: ownRow.name,
         alternate_name: ownRow.alternate_name,
-        description: ownRow.description,
-        short_description: otherRow?.description ?? null,
+        description: ownIsSecondary ? null : ownRow.description,
+        short_description: ownIsSecondary ? ownRow.description : (otherRow?.description ?? null),
         type: ownRow.type,
         holder: ownRow.holder,
         owner: ownRow.owner,

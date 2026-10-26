@@ -193,7 +193,7 @@ export interface Partner {
   item_count: number
   /** Legacy `portal_display === 'y'` — drives the home page featured strip. */
   featured: boolean
-  /** Languages the partner has a translation in (codes, sorted): its entries across `translations/partners.<lang>.json`. */
+  /** Languages the partner has a translation in (codes, sorted), as dxa-api's i18n lists them. A mwnf3 museum also has an entry, its own name only, in the other `translations/partners.<lang>.json`. */
   languages: string[]
   /** Contact persons in legacy order (person 1 first); `[]` for none. */
   contact_persons: PartnerContactPerson[]
