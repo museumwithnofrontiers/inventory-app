@@ -162,6 +162,10 @@ function partnerLanguages(
     .sort()
 }
 
+function isMwnf3Museum(backwardCompatibility: string | null): boolean {
+  return backwardCompatibility?.toLowerCase().startsWith('mwnf3:museums:') ?? false
+}
+
 export class PartnerExporter extends BaseExporter {
   getName(): string {
     return 'Partners'
@@ -307,6 +311,16 @@ export class PartnerExporter extends BaseExporter {
         const bucket = byLang.get(langCode) ?? {}
         bucket[partnerId] = this.stripNulls(fields as Record<string, unknown>)
         byLang.set(langCode, bucket)
+      }
+    }
+    // dxa-api names a mwnf3 museum `nvl(museumnames.name, museums.name)` in the
+    // language asked: without a name row in that language, the museum's own
+    // name (internal_name), and nothing else. Its `languages` stay the rows it
+    // has, as dxa-api's i18n does.
+    for (const partner of partners) {
+      if (!isMwnf3Museum(partner.backward_compatibility) || !partner.internal_name) continue
+      for (const bucket of byLang.values()) {
+        if (!(partner.id in bucket)) bucket[partner.id] = { name: partner.internal_name }
       }
     }
     await this.writeTranslationFiles('partners', byLang)

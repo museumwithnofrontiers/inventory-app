@@ -240,6 +240,32 @@ describe('PartnerExporter — shared partner shape', () => {
     ])
   })
 
+  // dxa-api: nvl(museumnames.name, museums.name) in the language asked (MATHAF,
+  // mwnf3:museums:Mus51:qt, has no name row at all).
+  it("names a mwnf3 museum by its own name in a language it has no row in, and lists no language for it", async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 1), partnerRow('partner-b', 0)],
+      translations: [translationRow('partner-a'), { ...translationRow('partner-a'), language_id: 'fra' }],
+    })
+    await new PartnerExporter(context(db, null)).export()
+
+    const read = (lang: string) =>
+      JSON.parse(readFileSync(join(outputDir, 'translations', `partners.${lang}.json`), 'utf-8')) as Record<string, Record<string, string>>
+    expect(read('en')['partner-b']).toEqual({ name: 'Museum partner-b' })
+    expect(read('fr')['partner-b']).toEqual({ name: 'Museum partner-b' })
+    expect(read('en')['partner-a']).toMatchObject({ name: 'Partner partner-a' })
+    expect(readOutput().find(p => p.id === 'partner-b')?.languages).toEqual([])
+  })
+
+  it('gives a Sharing History partner no name in a language it has no row in', async () => {
+    const shPartner = { ...partnerRow('partner-sh', 1), backward_compatibility: 'mwnf3_sharing_history:sh_partners:es_01_a' }
+    const db = stubDb({ partners: [partnerRow('partner-a', 1), shPartner], translations: [translationRow('partner-a')] })
+    await new PartnerExporter(context(db, null)).export()
+
+    const en = JSON.parse(readFileSync(join(outputDir, 'translations', 'partners.en.json'), 'utf-8')) as Record<string, unknown>
+    expect(en).not.toHaveProperty('partner-sh')
+  })
+
   it('reports the exhibition own project for an MWNF-384 partner holding no item', async () => {
     const db = stubDb({ partners: [partnerRow('partner-orphan', 0)] })
     await new PartnerExporter(context(db, 'project-colour-uuid')).export()
