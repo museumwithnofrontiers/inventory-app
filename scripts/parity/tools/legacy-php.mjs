@@ -94,12 +94,13 @@ export function parsePage(html, lang, labels) {
     const label = decodeEntities(part.slice(0, close)).trim();
     // Glossary terms are links. Legacy's glossary pass sometimes nests one link inside another's
     // href (it then prints residue such as ,'ar');" on the page); remove the links and the residue,
-    // and remember that the page text was damaged.
+    // and remember that the page text was damaged. A term may hold an apostrophe (rab'a, Shi'ite):
+    // inside the double-quoted href it breaks only the javascript, and the page prints the word.
     let content = part.slice(close + 5);
     const brokenGlossary = /showGlossary\('[^']*'<a /.test(content);
     content = content
       .replace(/<a href="javascript:showGlossary\('[^']*'(?=<a )/g, '')
-      .replace(/<a href="javascript:showGlossary\('[^']*','[a-z]{2}'\);" style="text-decoration: underline;">/g, '')
+      .replace(/<a href="javascript:showGlossary\('[^"]*?','[a-z]{2}'\);" style="text-decoration: underline;">/g, '')
       .replace(/,'[a-z]{2}'\);"/g, '')
       .replace(/ style="text-decoration: underline;">/g, '');
     // A label missing from the dictionary prints as its raw key, e.g. "[db_artist]".
