@@ -180,6 +180,13 @@ export function transformShPartnerTranslation(
 ): TransformedShPartnerTranslation {
   const languageId = mapLanguageCode(legacy.lang);
 
+  // A row without a name is a legacy data error (#2343): it is skipped, as a
+  // museum translation without a name is, never given a name of our own.
+  const name = legacy.name?.trim();
+  if (!name) {
+    throw new Error(`SH partner translation missing name: ${legacy.partners_id}:${legacy.lang}`);
+  }
+
   // Build description from available fields
   const descriptionParts: string[] = [];
   if (legacy.description) {
@@ -206,7 +213,7 @@ export function transformShPartnerTranslation(
   const data: Omit<PartnerTranslationData, 'partner_id' | 'context_id' | 'backward_compatibility'> =
     {
       language_id: languageId,
-      name: legacy.name ? convertHtmlToMarkdown(legacy.name) : `Partner ${legacy.partners_id}`,
+      name: convertHtmlToMarkdown(name),
       description: descriptionParts.length > 0 ? descriptionParts.join('\n\n') : null,
       city_display: legacy.city ? convertHtmlToMarkdown(legacy.city) : null,
       address: partner.address ? convertHtmlToMarkdown(partner.address) : null,
