@@ -77,8 +77,10 @@ function touchingRun(sibling: DomNode | null, names: Set<string>): boolean {
 // run, and the page shows the asterisks instead. Whitespace and line breaks at
 // an edge are outside the run on the page, so they go outside the delimiters;
 // punctuation at an edge that touches a letter outside the run goes with
-// them, and a run of punctuation alone is printed without its style.
-const PUNCTUATION = /[\p{P}\p{S}]/u;
+// them, with the whitespace it uncovers (`K.A.C<i>., Early</i>` would open
+// the run on a space), and a run of punctuation alone is printed without its
+// style.
+const EDGE = /[\p{P}\p{S}\s]/u;
 const WORD = /[\p{L}\p{N}]/u;
 
 function edgeCharacter(sibling: DomNode | null, end: 'first' | 'last'): string {
@@ -93,13 +95,13 @@ function delimited(content: string, node: DomNode, delimiter: string): string {
   let body = inner;
   let after = trail;
   if (!after && WORD.test(edgeCharacter(node.nextSibling, 'first'))) {
-    while (body && PUNCTUATION.test(body.charAt(body.length - 1))) {
+    while (body && EDGE.test(body.charAt(body.length - 1))) {
       after = body.charAt(body.length - 1) + after;
       body = body.slice(0, -1);
     }
   }
   if (!before && WORD.test(edgeCharacter(node.previousSibling, 'last'))) {
-    while (body && PUNCTUATION.test(body.charAt(0))) {
+    while (body && EDGE.test(body.charAt(0))) {
       before += body.charAt(0);
       body = body.slice(1);
     }
