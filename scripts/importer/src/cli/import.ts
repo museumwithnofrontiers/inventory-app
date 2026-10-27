@@ -481,7 +481,8 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description:
       'Import mwnf3 exhibition page images (item refs + custom) and exhibition-level images',
     importerClass: Mwnf3ExhibitionItemImporter,
-    dependencies: ['mwnf3-exhibition', 'object', 'monument'],
+    // A placement links the picture child item legacy shows, which the picture importers create.
+    dependencies: ['mwnf3-exhibition', 'object', 'monument', 'object-picture', 'monument-picture'],
   },
   // Phase 4: Glossary
   {

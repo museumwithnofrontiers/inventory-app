@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-the-umayyads",
+  "name": "The Umayyads",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "0f404f1e-3645-5bfa-870f-1b45825073f7",
+  "partner_ids": ["33f89573-8b54-5c1a-86ba-1663e604740f", "559ab197-7289-5af4-a295-1118bde9afce"],
+  "package_name": "@museumwnf/islamicart-the-umayyads-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_umayyads/"
+}

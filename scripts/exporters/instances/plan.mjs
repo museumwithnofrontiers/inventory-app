@@ -96,9 +96,19 @@ for (const file of files) {
     }
     exporterDir = exporterField
     args = []
+  } else if (kind === 'minisite') {
+    // A mini-site's package is exported from the database by the exporter of
+    // the project it belongs to, narrowed to its own collection subtree.
+    const exporterField = data.exporter
+    if (typeof exporterField !== 'string' || exporterField.trim() === '') {
+      errors.push(`${path}: kind "minisite" requires a non-empty "exporter" field naming its project's exporter directory`)
+      continue
+    }
+    exporterDir = exporterField
+    args = ['--minisite', slug]
   } else {
     errors.push(
-      `${path}: unknown "kind" ${JSON.stringify(kind)} (expected "gallery", "exhibition", or "standalone")`
+      `${path}: unknown "kind" ${JSON.stringify(kind)} (expected "gallery", "exhibition", "standalone" or "minisite")`
     )
     continue
   }

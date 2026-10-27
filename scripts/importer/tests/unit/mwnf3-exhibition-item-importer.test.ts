@@ -143,6 +143,7 @@ function makeContext(
     findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
     writeCollectionItem: writeCollectionItemMock,
     writeCollectionImage: vi.fn().mockResolvedValue(undefined),
+    imageExists: vi.fn().mockResolvedValue(null),
   } as unknown as IWriteStrategy;
 
   return {
@@ -235,7 +236,7 @@ describe('Mwnf3ExhibitionItemImporter — story #1225: page image EAV fields', (
     expect(extra.detail_justification).toEqual({ en: 'The detail text.' });
   });
 
-  it('preserves n, n2, picture, and details alongside new EAV fields', async () => {
+  it('preserves n and n2 alongside new EAV fields, and no picture path', async () => {
     const eavRows = [
       { entity_id: IMAGE_ID, lang_id: 'en', field: 'item_name', value: 'Vessel' },
     ];
@@ -252,7 +253,7 @@ describe('Mwnf3ExhibitionItemImporter — story #1225: page image EAV fields', (
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
     expect(extra.n).toBe(1);
     expect(extra.n2).toBe(0);
-    expect(extra.picture).toBe('images/item.jpg');
+    expect(extra.picture).toBeUndefined();
   });
 
   it('stores multi-language values as separate lang keys', async () => {
@@ -456,7 +457,7 @@ describe('Mwnf3ExhibitionItemImporter — story #1224: exhibition-level image EA
     expect(extra.item_museum).toEqual({ en: 'National Museum' });
   });
 
-  it('regression: n, n2, and picture are still written to extra', async () => {
+  it('writes n and n2 to extra, and a picture that is none of the item’s own as a page image', async () => {
     const ctx = makeContext(
       makeExhibitionImageQueryMock([EXHIBITION_IMAGE_ROW], []),
       tracker,
@@ -469,7 +470,10 @@ describe('Mwnf3ExhibitionItemImporter — story #1224: exhibition-level image EA
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
     expect(extra.n).toBe(1);
     expect(extra.n2).toBe(0);
-    expect(extra.picture).toBe('images/exh.jpg');
+    expect(extra.picture).toBeUndefined();
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ collection_id: 'exh-collection-uuid', path: 'images/exh.jpg', display_order: 1 })
+    );
   });
 });
 
@@ -536,7 +540,7 @@ describe('Mwnf3ExhibitionItemImporter — story #1223: artintro page image EAV f
     expect(extra.item_museum).toEqual({ en: 'Amman Museum' });
   });
 
-  it('regression: n, n2, and picture are still written to extra', async () => {
+  it('writes n and n2 to extra, and no picture path', async () => {
     const ctx = makeContext(
       makeArtintroImageQueryMock([ARTINTRO_IMAGE_ROW], []),
       tracker,
@@ -549,7 +553,7 @@ describe('Mwnf3ExhibitionItemImporter — story #1223: artintro page image EAV f
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
     expect(extra.n).toBe(1);
     expect(extra.n2).toBe(0);
-    expect(extra.picture).toBe('images/artintro.jpg');
+    expect(extra.picture).toBeUndefined();
   });
 });
 
@@ -596,9 +600,129 @@ describe('Mwnf3ExhibitionItemImporter — artintro page image dedup (first occur
     };
     expect(call.display_order).toBe(1);
     expect(call.extra.n).toBe(1);
-    expect(call.extra.picture).toBe('images/first.jpg');
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledTimes(1);
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'images/first.jpg', display_order: 1 })
+    );
 
     // The two skipped duplicates are still accounted for in the import stats.
     expect(result.skipped).toBe(2);
+  });
+});
+
+// ===========================================================================
+// Tests: a placement links the picture child item legacy shows
+// ===========================================================================
+
+const PICTURE_ROWS = [
+  // objects_pictures rows are one per language; a path is one picture.
+  { project_id: 'isl', country: 'jo', museum_id: 'Mus01', number: 8, type: '', image_number: 1, path: 'objects/isl/jo/1/8/1.jpg' },
+  { project_id: 'isl', country: 'jo', museum_id: 'Mus01', number: 8, type: '', image_number: 2, path: 'objects/isl/jo/1/8/2.jpg' },
+  { project_id: 'isl', country: 'jo', museum_id: 'Mus01', number: 9, type: '', image_number: 1, path: 'objects/isl/jo/1/9/1.jpg' },
+];
+
+function withPictures(queryMock: ReturnType<typeof vi.fn>): ReturnType<typeof vi.fn> {
+  const query = queryMock as unknown as (sql: string) => Promise<unknown[]>;
+  return vi.fn(async (sql: string) => {
+    if (sql.includes('objects_pictures')) return PICTURE_ROWS;
+    if (sql.includes('monuments_pictures')) return [];
+    return query(sql);
+  });
+}
+
+describe('Mwnf3ExhibitionItemImporter — placements link picture child items', () => {
+  let tracker: UnifiedTracker;
+  let writeCollectionItemMock: ReturnType<typeof vi.fn>;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    tracker = new UnifiedTracker();
+    tracker.set(PAGE_COLLECTION_BC, 'page-collection-uuid', 'collection');
+    tracker.set(ITEM_BC, 'item-uuid', 'item');
+    tracker.set('mwnf3:objects_pictures:isl:jo:Mus01:8:1', 'picture-1-uuid', 'item');
+    tracker.set('mwnf3:objects_pictures:isl:jo:Mus01:8:2', 'picture-2-uuid', 'item');
+    writeCollectionItemMock = vi.fn().mockResolvedValue(undefined);
+  });
+
+  it('links the picture child item of the picture legacy shows', async () => {
+    const row = { ...PAGE_IMAGE_ROW, picture: 'objects/isl/jo/1/8/2.jpg' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([row], [])), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledTimes(1);
+    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('picture-2-uuid');
+    expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
+
+  it('keeps every variant of one item placed with two of its pictures, each with its own texts', async () => {
+    const first = { ...PAGE_IMAGE_ROW, image_id: 1, n: 1, n2: 1, picture: 'objects/isl/jo/1/8/1.jpg' };
+    const second = { ...PAGE_IMAGE_ROW, image_id: 2, n: 1, n2: 2, picture: 'objects/isl/jo/1/8/2.jpg' };
+    const eavRows = [
+      { entity_id: 1, lang_id: 'en', field: 'detail_justification', value: 'First view.' },
+      { entity_id: 2, lang_id: 'en', field: 'detail_justification', value: 'Second view.' },
+    ];
+    const ctx = makeContext(
+      withPictures(makePageImageQueryMock([first, second], eavRows)),
+      tracker,
+      writeCollectionItemMock
+    );
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    const calls = writeCollectionItemMock.mock.calls.map((c) => c[0]);
+    expect(calls.map((c) => c.item_id)).toEqual(['picture-1-uuid', 'picture-2-uuid']);
+    expect(calls.map((c) => c.extra.n2)).toEqual([1, 2]);
+    expect(calls.map((c) => c.extra.detail_justification)).toEqual([
+      { en: 'First view.' },
+      { en: 'Second view.' },
+    ]);
+  });
+
+  it('links the item and keeps the picture as a page image when it is another item’s picture', async () => {
+    const row = { ...PAGE_IMAGE_ROW, picture: 'objects/isl/jo/1/9/1.jpg' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([row], [])), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('item-uuid');
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ collection_id: 'page-collection-uuid', path: 'objects/isl/jo/1/9/1.jpg', display_order: 1 })
+    );
+  });
+
+  it('links the item and keeps a custom exhibition picture as a page image', async () => {
+    const row = { ...PAGE_IMAGE_ROW, picture: 'custom/exhibition/33.jpg' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([row], [])), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('item-uuid');
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'custom/exhibition/33.jpg' })
+    );
+  });
+
+  it('links the item alone when the placement shows no picture', async () => {
+    const row = { ...PAGE_IMAGE_ROW, picture: '' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([row], [])), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('item-uuid');
+    expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
+
+  it('reports the same picture placed twice on one page and keeps the first placement', async () => {
+    const first = { ...PAGE_IMAGE_ROW, image_id: 1, n: 1, picture: 'objects/isl/jo/1/8/1.jpg' };
+    const again = { ...PAGE_IMAGE_ROW, image_id: 2, n: 3, picture: 'objects/isl/jo/1/8/1.jpg' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([first, again], [])), tracker, writeCollectionItemMock);
+
+    const result = await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledTimes(1);
+    expect(writeCollectionItemMock.mock.calls[0][0].display_order).toBe(1);
+    expect(result.skipped).toBe(1);
+    expect(result.warnings?.some((w) => w.includes('Page image 2') && w.includes('placed twice'))).toBe(true);
   });
 });

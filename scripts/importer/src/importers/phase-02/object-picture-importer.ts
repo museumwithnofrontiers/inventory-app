@@ -22,6 +22,7 @@ import type {
 } from '../../core/types.js';
 import type { LegacyObjectPicture } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { objectPictureBackwardCompatibility } from '../../utils/picture-backward-compatibility.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { pickImageCopyright } from '../../utils/image-copyright.js';
@@ -150,26 +151,7 @@ export class ObjectPictureImporter extends BaseImporter {
   }
 
   private getPictureBackwardCompatibility(group: PictureGroup): string {
-    // `type` is only appended when non-empty, so the identity of default-type
-    // pictures is unchanged (matches MonumentPictureImporter's fix — see
-    // Epic 10 in the islamicart parity backlog). Without this, a typed
-    // picture sharing the same image_number as the default photo would
-    // collide with it and be silently skipped as a duplicate.
-    const pkValues: (string | number)[] = [
-      group.project_id,
-      group.country,
-      group.museum_id,
-      group.number,
-      group.image_number,
-    ];
-    if (group.type && group.type.trim() !== '') {
-      pkValues.push(group.type);
-    }
-    return formatBackwardCompatibility({
-      schema: 'mwnf3',
-      table: 'objects_pictures',
-      pkValues,
-    });
+    return objectPictureBackwardCompatibility(group);
   }
 
   private async importPicture(group: PictureGroup, result: ImportResult): Promise<boolean> {

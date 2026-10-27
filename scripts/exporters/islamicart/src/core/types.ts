@@ -9,6 +9,27 @@ export interface ExportContext {
   projectKeys: string[]
   baseUrl: string
   logger: Logger
+  /** Set for a mini-site package: the records of one collection subtree only. */
+  scope?: ExportScope
+}
+
+/**
+ * A mini-site's package (src/minisite/scope.ts resolves it from the
+ * database): one collection and everything under it, the items those
+ * collections place (a picture placement as its parent item) with their
+ * parent records, and the partners the mini-site names itself.
+ */
+export interface ExportScope {
+  /** The mini-site's key: its instance slug. */
+  key: string
+  /** The collection the mini-site is. */
+  rootCollectionId: string
+  legacyUrl: string | null
+  /** The site that carried it on legacy. */
+  parentKey: string
+  collectionIds: string[]
+  itemIds: string[]
+  partnerIds: string[]
 }
 
 export interface ExportResult {

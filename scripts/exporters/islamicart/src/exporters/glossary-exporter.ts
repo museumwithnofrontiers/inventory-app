@@ -32,7 +32,27 @@ export class GlossaryExporter extends BaseExporter {
     // a spelling) from this project's items, collection text, or timeline event text; without
     // this every project's export would ship every other project's glossary too.
     const ph = this.placeholders(this.projectIds.length)
-    const usedIds = await this.db.query<{ id: string }>(
+    const scope = this.context.scope
+    // A mini-site's package: the entries its own texts reference — its
+    // collections' and its items'.
+    const usedIds = scope
+      ? await this.db.query<{ id: string }>(
+          `SELECT DISTINCT gs.glossary_id AS id
+           FROM glossary_spellings gs
+           JOIN collection_translation_spelling cts ON cts.spelling_id = gs.id
+           JOIN collection_translations ct ON ct.id = cts.collection_translation_id
+           WHERE ct.collection_id IN (${this.placeholders(scope.collectionIds.length)})
+
+           UNION
+
+           SELECT DISTINCT gs.glossary_id AS id
+           FROM glossary_spellings gs
+           JOIN item_translation_spelling its ON its.spelling_id = gs.id
+           JOIN item_translations it ON it.id = its.item_translation_id
+           WHERE it.item_id IN (${this.placeholders(Math.max(scope.itemIds.length, 1))})`,
+          [...scope.collectionIds, ...(scope.itemIds.length > 0 ? scope.itemIds : [''])]
+        )
+      : await this.db.query<{ id: string }>(
       `SELECT DISTINCT gs.glossary_id AS id
        FROM glossary_spellings gs
        JOIN item_translation_spelling its ON its.spelling_id = gs.id

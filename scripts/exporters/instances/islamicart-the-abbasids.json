@@ -1,0 +1,15 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-the-abbasids",
+  "name": "The Abbasids",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "da493358-92ba-5a20-8866-fa30fb03bfb2",
+  "partner_ids": [
+    "ee0a71f8-dc12-5d5d-b02a-4402969e8274",
+    "f0c1b6b9-8198-5a97-9aea-8ebedfa90ca3",
+    "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
+  ],
+  "package_name": "@museumwnf/islamicart-the-abbasids-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_abbasids/"
+}

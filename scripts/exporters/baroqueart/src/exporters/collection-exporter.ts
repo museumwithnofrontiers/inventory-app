@@ -63,6 +63,8 @@ interface CollectionItemRow {
   item_id: string
   display_order: number | null
   extra: unknown
+  /** The image of the picture the placement shows, when it links one. */
+  picture_path: string | null
 }
 
 export class CollectionExporter extends BaseExporter {
@@ -115,19 +117,27 @@ export class CollectionExporter extends BaseExporter {
          ORDER BY collection_id, display_order`,
         collectionIds
       ),
-      // Items in these collections, restricted to items that exist as
-      // top-level rows in items.json — 'picture' and 'detail' children are
-      // embedded on their parent there (#1515), so a membership row pointing
-      // at one would dangle.
+      // Items in these collections, as items that exist as top-level rows in
+      // items.json — 'picture' and 'detail' children are embedded on their
+      // parent there (#1515), so a membership row pointing at one would
+      // dangle. An exhibition placement links the picture child item legacy
+      // showed: it ships as its parent item, with that picture's image.
       this.db.query<CollectionItemRow>(
-        `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra
+        `SELECT ci.collection_id,
+                IF(i.type = 'picture', i.parent_id, i.id) AS item_id,
+                ci.display_order, ci.extra,
+                IF(i.type = 'picture',
+                   (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
+                    ORDER BY ii.display_order, ii.id LIMIT 1),
+                   NULL) AS picture_path
          FROM collection_item ci
          JOIN items i ON i.id = ci.item_id
+         LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
-           AND i.project_id IN (${ph})
-           AND i.type IN ('object', 'monument')
-         ORDER BY ci.collection_id, ci.display_order`,
-        [...collectionIds, ...this.projectIds]
+           AND ((i.type IN ('object', 'monument') AND i.project_id IN (${ph}))
+             OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
+         ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), ci.item_id`,
+        [...collectionIds, ...this.projectIds, ...this.projectIds]
       ),
     ])
 
@@ -274,6 +284,7 @@ function extractCaptions(fields: Record<string, unknown>): Record<string, Collec
 
 /**
  * Builds one collections.json item entry from a collection_item pivot row.
+ * Exported for unit tests.
  *
  * `extra` holds legacy placement metadata: `n`/`n2` (grid row/column — items
  * sharing the same row can have several selectable variants at different
@@ -282,13 +293,14 @@ function extractCaptions(fields: Record<string, unknown>): Record<string, Collec
  * array of additional selectable sub-images of the same item (e.g. a
  * close-up of one part of a monument), each with its own image and caption.
  */
-function buildCollectionItemEntry(
+export function buildCollectionItemEntry(
   link: CollectionItemRow,
   imageUrlFn: (path: string) => string
 ): {
   id: string
   display_order: number | null
   variant_order: number | null
+  image_url?: string
   caption?: Record<string, CollectionItemCaption>
   details?: CollectionItemDetailEntry[]
 } {
@@ -312,6 +324,7 @@ function buildCollectionItemEntry(
     id: link.item_id,
     display_order: link.display_order,
     variant_order: variantOrder,
+    ...(link.picture_path ? { image_url: imageUrlFn(link.picture_path) } : {}),
     ...(Object.keys(caption).length > 0 ? { caption } : {}),
     ...(details.length > 0 ? { details } : {}),
   }
