@@ -310,7 +310,7 @@ export function minisiteDepths(
   }
   const present = new Set(collections.map(c => c.id))
   const depths = new Map<string, number>()
-  const queue = rootIds.filter(id => present.has(id)).map(id => [id, 0] as const)
+  const queue: Array<[string, number]> = rootIds.filter(id => present.has(id)).map(id => [id, 0])
   for (const [id] of queue) depths.set(id, 0)
   while (queue.length > 0) {
     const [id, depth] = queue.shift()!
