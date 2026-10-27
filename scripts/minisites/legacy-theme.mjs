@@ -5,14 +5,15 @@
  * Discover Islamic Art's (and Discover Baroque Art's) virtual exhibitions ran
  * on one set of pages each, and every exhibition styled them with a
  * stylesheet of its own: its colours, and also where its titles, menus and
- * links sit on its pictures. A mini-site's src/styles/site.css lays the pages
- * out the way those pages did; every value an exhibition's stylesheet set is
- * a token, written here from that stylesheet — `_styles.css` for every
- * language, `_styles_ar.css` over it for Arabic — so the site is legacy's
- * values, transcribed rather than retyped.
+ * links sit on its pictures. viewer-layout's `./minisite` (minisite.css) lays
+ * the pages out the way those pages did, for every mini-site; every value an
+ * exhibition's stylesheet set is a `--minisite-*` token, written here from
+ * that stylesheet — `_styles.css` for every language, `_styles_ar.css` over it
+ * for Arabic — so a site's theme is legacy's values, transcribed rather than
+ * retyped.
  *
- * A property the stylesheet does not set gets no token: site.css falls back
- * to what the browser drew for it on legacy.
+ * A property the stylesheet does not set gets no token: minisite.css falls
+ * back to what the browser drew for it on legacy.
  *
  * Usage (no dependencies; Docker, no Node on the host):
  *   node scripts/minisites/legacy-theme.mjs <legacy exhibition folder> [--name "<Exhibition>"] > theme/tokens.css
@@ -201,7 +202,7 @@ export function tokens(rules) {
 }
 
 function block(selector, entries) {
-  return `${selector} {\n${entries.map(([token, value]) => `  --ex-${token}: ${value};`).join('\n')}\n}\n`
+  return `${selector} {\n${entries.map(([token, value]) => `  --minisite-${token}: ${value};`).join('\n')}\n}\n`
 }
 
 export function themeCss(folder, name) {
@@ -212,8 +213,8 @@ export function themeCss(folder, name) {
  * The visual identity of ${name ?? basename(folder)}: every value its legacy
  * stylesheet set (${basename(folder)}/_styles.css, and _styles_ar.css over it
  * for Arabic), transcribed by inventory-app's scripts/minisites/legacy-theme.mjs.
- * src/styles/site.css lays the pages out with them. This file belongs to the
- * webdesigner: change a value here, never in site.css.
+ * viewer-layout's minisite.css lays the pages out with them. This file
+ * belongs to the webdesigner: change a value here.
  */
 `
   return `${header}\n${block(':root', main)}${arabic.length ? `\n${block("[dir='rtl']", arabic)}` : ''}`
