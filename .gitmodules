@@ -205,3 +205,51 @@
 [submodule ".new-architecture/islamicart-the-abbasids"]
 	path = .new-architecture/islamicart-the-abbasids
 	url = https://github.com/museumwithnofrontiers/islamicart-the-abbasids
+[submodule ".new-architecture/islamicart-arabic-calligraphy"]
+	path = .new-architecture/islamicart-arabic-calligraphy
+	url = https://github.com/museumwithnofrontiers/islamicart-arabic-calligraphy
+[submodule ".new-architecture/islamicart-crusader"]
+	path = .new-architecture/islamicart-crusader
+	url = https://github.com/museumwithnofrontiers/islamicart-crusader
+[submodule ".new-architecture/islamicart-fatimids"]
+	path = .new-architecture/islamicart-fatimids
+	url = https://github.com/museumwithnofrontiers/islamicart-fatimids
+[submodule ".new-architecture/islamicart-figural"]
+	path = .new-architecture/islamicart-figural
+	url = https://github.com/museumwithnofrontiers/islamicart-figural
+[submodule ".new-architecture/islamicart-floral"]
+	path = .new-architecture/islamicart-floral
+	url = https://github.com/museumwithnofrontiers/islamicart-floral
+[submodule ".new-architecture/islamicart-geometric"]
+	path = .new-architecture/islamicart-geometric
+	url = https://github.com/museumwithnofrontiers/islamicart-geometric
+[submodule ".new-architecture/islamicart-mudejar-art"]
+	path = .new-architecture/islamicart-mudejar-art
+	url = https://github.com/museumwithnofrontiers/islamicart-mudejar-art
+[submodule ".new-architecture/islamicart-muslim-west"]
+	path = .new-architecture/islamicart-muslim-west
+	url = https://github.com/museumwithnofrontiers/islamicart-muslim-west
+[submodule ".new-architecture/islamicart-pilgrimage"]
+	path = .new-architecture/islamicart-pilgrimage
+	url = https://github.com/museumwithnofrontiers/islamicart-pilgrimage
+[submodule ".new-architecture/islamicart-siculo-norman"]
+	path = .new-architecture/islamicart-siculo-norman
+	url = https://github.com/museumwithnofrontiers/islamicart-siculo-norman
+[submodule ".new-architecture/islamicart-the-ayyubids"]
+	path = .new-architecture/islamicart-the-ayyubids
+	url = https://github.com/museumwithnofrontiers/islamicart-the-ayyubids
+[submodule ".new-architecture/islamicart-the-mamluks"]
+	path = .new-architecture/islamicart-the-mamluks
+	url = https://github.com/museumwithnofrontiers/islamicart-the-mamluks
+[submodule ".new-architecture/islamicart-the-ottomans"]
+	path = .new-architecture/islamicart-the-ottomans
+	url = https://github.com/museumwithnofrontiers/islamicart-the-ottomans
+[submodule ".new-architecture/islamicart-water"]
+	path = .new-architecture/islamicart-water
+	url = https://github.com/museumwithnofrontiers/islamicart-water
+[submodule ".new-architecture/islamicart-western-influence"]
+	path = .new-architecture/islamicart-western-influence
+	url = https://github.com/museumwithnofrontiers/islamicart-western-influence
+[submodule ".new-architecture/islamicart-women"]
+	path = .new-architecture/islamicart-women
+	url = https://github.com/museumwithnofrontiers/islamicart-women
