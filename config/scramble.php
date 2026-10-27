@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\CustomRestrictedDocsAccess;
+use App\Support\Csp\ApiDocsPreset;
+use Spatie\Csp\AddCspHeaders;
 
 return [
     /*
@@ -81,6 +83,8 @@ return [
     'middleware' => [
         'web',
         CustomRestrictedDocsAccess::class,
+        // Takes precedence over the web group's policy: the docs view loads from a CDN
+        AddCspHeaders::class.':'.ApiDocsPreset::class,
     ],
 
     'extensions' => [],

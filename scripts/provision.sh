@@ -400,6 +400,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name ${DOMAIN};
+    server_tokens off;
     return 301 https://${DOMAIN}\$request_uri;
 }
 
@@ -414,8 +415,14 @@ server {
     root ${APP_DIR}/current/public;
     index index.php;
 
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
+    # No version in the Server header: Ubuntu patches its nginx package
+    # without changing the upstream version scanners compare against.
+    server_tokens off;
+
+    # A location that sets its own add_header drops all of these.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
 
     charset utf-8;
 
@@ -439,8 +446,10 @@ server {
     root ${APP_DIR}/current/public;
     index index.php;
 
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
+    server_tokens off;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
 
     charset utf-8;
 
@@ -457,6 +466,36 @@ fi
 
 # Enable site (do not remove default — another app may rely on it)
 ln -sfn "$NGINX_CONF" /etc/nginx/sites-enabled/inventory
+
+# Catch-all for host names no vhost serves (the bare domain, the IP, ...).
+# Without it nginx hands them to the first vhost it loaded, which then serves
+# this app under a certificate that doesn't match. Server-wide, so it is only
+# written when no other site already claims default_server.
+CATCHALL_CONF=/etc/nginx/sites-available/default-catchall
+if [[ -f "$CATCHALL_CONF" ]]; then
+    info "Catch-all vhost already present."
+elif grep -rqs default_server /etc/nginx/sites-enabled/ /etc/nginx/conf.d/; then
+    warn "Another site already has default_server — catch-all vhost not written."
+else
+    cat > "$CATCHALL_CONF" <<NGINX
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    server_name _;
+    server_tokens off;
+    return 301 https://${DOMAIN}\$request_uri;
+}
+
+server {
+    listen 443 ssl default_server;
+    listen [::]:443 ssl default_server;
+    server_name _;
+    ssl_reject_handshake on;
+}
+NGINX
+    ln -sfn "$CATCHALL_CONF" /etc/nginx/sites-enabled/00-default-catchall
+    info "Catch-all vhost written."
+fi
 
 # Test and reload
 nginx -t || error "Nginx config test failed!"

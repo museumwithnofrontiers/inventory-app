@@ -3,14 +3,17 @@
 use App\Http\Middleware\EnsureApiEnabled;
 use App\Http\Middleware\RequirePermission;
 use App\Http\Middleware\RequireRole;
+use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Contracts\Auth\Middleware\AuthenticatesRequests;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Laravel\Passport\Http\Middleware\CheckToken;
 use Laravel\Passport\Http\Middleware\CheckTokenForAnyScope;
+use Spatie\Csp\AddCspHeaders;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
@@ -54,6 +57,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // Use custom CSRF verification middleware that excludes API routes
         $middleware->validateCsrfTokens(
             except: ['api/*']
+        );
+
+        // The app's CSRF middleware sends no XSRF-TOKEN cookie (see the class),
+        // and every page carries the Content Security Policy (config/csp.php).
+        $middleware->web(
+            append: [AddCspHeaders::class],
+            replace: [ValidateCsrfToken::class => VerifyCsrfToken::class],
         );
 
         // Register authorization middleware

@@ -16,4 +16,13 @@ class VerifyCsrfToken extends Middleware
         // API authentication uses OAuth bearer tokens (Passport), not session cookies
         'api/*',
     ];
+
+    /**
+     * No XSRF-TOKEN cookie. It exists for JavaScript that copies it into an
+     * X-XSRF-TOKEN header, so it can't be HttpOnly, and nothing here reads it:
+     * Livewire sends the page's token, and the API uses bearer tokens.
+     *
+     * @var bool
+     */
+    protected $addHttpCookie = false;
 }
