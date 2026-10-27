@@ -7,7 +7,12 @@
  * Item references (exhibition_page_images.ref_item, artintro_page_images.ref_item):
  * - Format: 'O;ISL;jo;1;8' (type;project;country;partner;number) for objects
  * - Format: 'M;BAR;it;12;30' for monuments
- * - Empty ref_item = custom image (CollectionImage, not a pivot)
+ * - Empty ref_item on a page with a custom exhibition photo → an item of its
+ *   own (Pascal, 2026-10-27): a picture with no parent, the photo as its
+ *   image, the placement's caption as its texts in every language, tagged
+ *   `custom exhibition picture`, placed like any item. Legacy showed such a
+ *   photo with its caption and no record behind it.
+ * - Empty ref_item otherwise = custom image (CollectionImage, not a pivot)
  *
  * What a placement links (`picture`, the path legacy shows):
  * - one of the referenced item's own pictures → that picture's child item
@@ -52,7 +57,7 @@ import type {
 } from '../../domain/types/index.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
-import { mapCountryCode } from '../../utils/code-mappings.js';
+import { mapCountryCode, mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import {
   monumentPictureBackwardCompatibility,
@@ -184,10 +189,15 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
   // Pass 1: Page-level images
   // --------------------------------------------------------------------------
   private async importPageImages(result: ImportResult): Promise<void> {
-    const images = await this.context.legacyDb.query<Mwnf3LegacyExhibitionPageImage>(
-      `SELECT image_id, page_id, n, n2, ref_item, picture
-       FROM ${MWNF3_SCHEMA}.exhibition_page_images
-       ORDER BY page_id, n, n2`
+    // The exhibition's project: an item made for a photo placed with no item
+    // belongs to it.
+    const images = await this.context.legacyDb.query<Mwnf3LegacyExhibitionPageImage & { project_id: string | null }>(
+      `SELECT pi.image_id, pi.page_id, pi.n, pi.n2, pi.ref_item, pi.picture, e.project_id
+       FROM ${MWNF3_SCHEMA}.exhibition_page_images pi
+       LEFT JOIN ${MWNF3_SCHEMA}.exhibition_pages p ON p.page_id = pi.page_id
+       LEFT JOIN ${MWNF3_SCHEMA}.exhibition_themes t ON t.theme_id = p.theme_id
+       LEFT JOIN ${MWNF3_SCHEMA}.exhibitions e ON e.exhibition_id = t.exhibition_id
+       ORDER BY pi.page_id, pi.n, pi.n2`
     );
 
     this.logInfo(`Found ${images.length} exhibition page images`);
@@ -260,6 +270,39 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             { itemId, itemBackwardCompat, parsed, picture: img.picture, n: img.n, extra },
             result
           );
+        } else if (CUSTOM_PICTURE.test(img.picture?.trim() ?? '') && img.project_id) {
+          // A custom photo with no item behind it → an item of its own.
+          const eav = imageEavMap.get(img.image_id) ?? {};
+          const extra: Record<string, unknown> = { n: img.n, n2: img.n2, ...eav };
+          const details = detailMap.get(img.image_id);
+          if (details && details.length > 0) extra.details = details;
+
+          const label = `Page image ${img.image_id}`;
+          const itemId = await this.standalonePicture(img.picture.trim(), img.project_id, eav);
+          if (!itemId) {
+            // A dry or sample run writes nothing.
+            result.imported++;
+            this.showProgress();
+            continue;
+          }
+          const placedKey = `${collectionId}:${itemId}`;
+          if (this.placed.has(placedKey)) {
+            result.warnings = result.warnings || [];
+            result.warnings.push(`${label}: placed twice on the same page, first placement kept`);
+            this.logWarning(`${label}: placed twice on the same page, first placement kept`);
+            result.skipped++;
+            this.showSkipped();
+            continue;
+          }
+          this.placed.add(placedKey);
+          await this.context.strategy.writeCollectionItem({
+            collection_id: collectionId,
+            item_id: itemId,
+            display_order: img.n,
+            extra,
+          });
+          result.imported++;
+          this.showProgress();
         } else {
           // Custom image (empty ref_item) → CollectionImage. collection_images
           // has no backward_compatibility column — identity is (owner, legacy
@@ -653,6 +696,80 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
     await tags.attachToItem(pictureId, await tags.findOrCreateList(CUSTOM_PICTURE_TAG, 'image-type', language));
     this.registerEntity(pictureId, backwardCompat, 'item');
     return pictureId;
+  }
+
+  /**
+   * A custom exhibition photo placed with no item, as an item of its own: a
+   * picture with no parent, the photo as its image, tagged
+   * `custom exhibition picture`, made once per photo. Its texts are the
+   * placement's caption in each language that names it (legacy printed that
+   * caption and nothing else): the name, the date, the place, the museum and
+   * the justification; the dynasty, which an item translation has no column
+   * for, in its extra. Null in a dry or sample run, where nothing is written.
+   */
+  private async standalonePicture(picture: string, projectId: string, eav: ImageEav): Promise<string | null> {
+    const backwardCompat = formatBackwardCompatibility({
+      schema: MWNF3_SCHEMA,
+      table: 'exhibition_custom_pictures',
+      pkValues: [picture.toLowerCase()],
+    });
+    const existing = await this.getEntityUuidAsync(backwardCompat, 'item');
+    if (existing) return existing;
+    if (this.isDryRun || this.isSampleOnlyMode) return null;
+
+    const projectBackwardCompat = formatBackwardCompatibility({
+      schema: MWNF3_SCHEMA,
+      table: 'projects',
+      pkValues: [projectId.toLowerCase()],
+    });
+    const contextId = await this.getEntityUuidAsync(projectBackwardCompat, 'context');
+    if (!contextId) throw new Error(`Context not found: ${projectBackwardCompat}`);
+
+    const itemId = await this.context.strategy.writeItem({
+      type: 'picture',
+      internal_name: `Custom exhibition picture ${picture}`,
+      collection_id: await this.getEntityUuidAsync(projectBackwardCompat, 'collection'),
+      partner_id: null,
+      parent_id: null,
+      country_id: null,
+      project_id: await this.getEntityUuidAsync(projectBackwardCompat, 'project'),
+      owner_reference: null,
+      mwnf_reference: null,
+      display_order: null,
+      backward_compatibility: backwardCompat,
+    });
+    await this.context.strategy.writeItemImage({
+      item_id: itemId,
+      path: picture,
+      original_name: picture.split('/').pop() || picture,
+      mime_type: 'image/jpeg',
+      size: 1, // Placeholder for ImageSyncTool
+      alt_text: null,
+      display_order: 1,
+    });
+    const tags = new TagHelper(this.context.strategy, this.context.tracker, this.context.logger);
+    const language = this.context.tracker.getMetadata('default_language_id') ?? 'eng';
+    await tags.attachToItem(itemId, await tags.findOrCreateList(CUSTOM_PICTURE_TAG, 'image-type', language));
+
+    const MAX_NAME_LENGTH = 255;
+    for (const [lang, name] of Object.entries(eav.item_name ?? {})) {
+      const text = (field: string) => eav[field]?.[lang] ?? null;
+      await this.context.strategy.writeItemTranslation({
+        item_id: itemId,
+        language_id: mapLanguageCode(lang),
+        context_id: contextId,
+        backward_compatibility: `${backwardCompat}:${lang}`,
+        name: name.slice(0, MAX_NAME_LENGTH),
+        description: text('detail_justification'),
+        dates: text('item_date'),
+        location: text('item_location'),
+        holder: text('item_museum'),
+        extra: text('item_dynasty') ? JSON.stringify({ dynasty: text('item_dynasty') }) : null,
+      });
+    }
+
+    this.registerEntity(itemId, backwardCompat, 'item');
+    return itemId;
   }
 
   /**

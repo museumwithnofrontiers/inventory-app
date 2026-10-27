@@ -10,8 +10,9 @@ const placeholders = (values: unknown[]): string => values.map(() => '?').join('
  * A mini-site's scope, read from the database:
  * - its collection and every collection below it;
  * - the items those collections place — a placement that links a picture
- *   child item counts as that picture's item — and their parent records (a
- *   detail's monument), so a caption can name and link its record;
+ *   child item counts as that picture's item, a custom photo placed with no
+ *   item as itself — and their parent records (a detail's monument), so a
+ *   caption can name and link its record;
  * - the partners the instance names (the exhibition's curators, whom its
  *   home page credits).
  */
@@ -30,7 +31,7 @@ export async function resolveScope(db: Query, instance: MinisiteInstance): Promi
   }
 
   const placed = await db.query<{ id: string | null }>(
-    `SELECT DISTINCT IF(i.type = 'picture', i.parent_id, i.id) AS id
+    `SELECT DISTINCT IF(i.type = 'picture' AND i.parent_id IS NOT NULL, i.parent_id, i.id) AS id
      FROM collection_item ci
      JOIN items i ON i.id = ci.item_id
      WHERE ci.collection_id IN (${placeholders(collectionIds)})`,

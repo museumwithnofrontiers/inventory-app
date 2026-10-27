@@ -146,6 +146,7 @@ function makeContext(
     imageExists: vi.fn().mockResolvedValue(null),
     writeItem: vi.fn().mockResolvedValue('custom-picture-uuid'),
     writeItemImage: vi.fn().mockResolvedValue(undefined),
+    writeItemTranslation: vi.fn().mockResolvedValue(undefined),
     writeTag: vi.fn().mockResolvedValue('custom-tag-uuid'),
     attachTagsToItem: vi.fn().mockResolvedValue(undefined),
   } as unknown as IWriteStrategy;
@@ -738,6 +739,64 @@ describe('Mwnf3ExhibitionItemImporter — placements link picture child items', 
 
     expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('item-uuid');
     expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
+
+  it('makes a custom photo placed with no item an item of its own, its caption as its texts', async () => {
+    tracker.set('mwnf3:projects:isl', 'isl-context-uuid', 'context');
+    const row = { ...PAGE_IMAGE_ROW, ref_item: '', picture: 'custom/exhibition/51.jpg', project_id: 'ISL' };
+    const eavRows = [
+      { entity_id: row.image_id, lang_id: 'en', field: 'item_name', value: 'Cihanoğlu Mosque' },
+      { entity_id: row.image_id, lang_id: 'en', field: 'item_date', value: 'AH 1170 / AD 1756–7' },
+      { entity_id: row.image_id, lang_id: 'en', field: 'item_dynasty', value: 'Ottoman' },
+      { entity_id: row.image_id, lang_id: 'en', field: 'item_location', value: 'Aydın, Turkey' },
+      { entity_id: row.image_id, lang_id: 'en', field: 'detail_justification', value: 'Built only a year after.' },
+      { entity_id: row.image_id, lang_id: 'fr', field: 'item_name', value: 'Mosquée Cihanoğlu' },
+    ];
+    const ctx = makeContext(withPictures(makePageImageQueryMock([row], eavRows)), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(ctx.strategy.writeItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'picture',
+        parent_id: null,
+        backward_compatibility: 'mwnf3:exhibition_custom_pictures:custom/exhibition/51.jpg',
+      })
+    );
+    expect(ctx.strategy.writeItemImage).toHaveBeenCalledWith(
+      expect.objectContaining({ item_id: 'custom-picture-uuid', path: 'custom/exhibition/51.jpg' })
+    );
+    expect(ctx.strategy.attachTagsToItem).toHaveBeenCalledWith('custom-picture-uuid', ['custom-tag-uuid']);
+    const translations = vi.mocked(ctx.strategy.writeItemTranslation).mock.calls.map((c) => c[0]);
+    expect(translations).toEqual([
+      expect.objectContaining({
+        language_id: 'eng',
+        context_id: 'isl-context-uuid',
+        name: 'Cihanoğlu Mosque',
+        dates: 'AH 1170 / AD 1756–7',
+        location: 'Aydın, Turkey',
+        description: 'Built only a year after.',
+        extra: JSON.stringify({ dynasty: 'Ottoman' }),
+      }),
+      expect.objectContaining({ language_id: 'fra', name: 'Mosquée Cihanoğlu', dates: null }),
+    ]);
+    const placement = writeCollectionItemMock.mock.calls[0][0];
+    expect(placement.item_id).toBe('custom-picture-uuid');
+    expect(placement.extra).toMatchObject({ n: row.n, n2: row.n2, item_name: { en: 'Cihanoğlu Mosque', fr: 'Mosquée Cihanoğlu' } });
+    expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
+
+  it('keeps a picture placed with no item that is no custom photo as a page image', async () => {
+    const row = { ...PAGE_IMAGE_ROW, ref_item: '', picture: 'objects/isl/jo/1/9/1.jpg', project_id: 'ISL' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([row], [])), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(ctx.strategy.writeItem).not.toHaveBeenCalled();
+    expect(writeCollectionItemMock).not.toHaveBeenCalled();
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'objects/isl/jo/1/9/1.jpg', display_order: 1 })
+    );
   });
 
   it('reports the same picture placed twice on one page and keeps the first placement', async () => {
