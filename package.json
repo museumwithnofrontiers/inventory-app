@@ -18,7 +18,7 @@
         "@tailwindcss/upgrade": "^4.3.3",
         "@types/node": "^26.6.3",
         "autoprefixer": "^10.6.1",
-        "baseline-browser-mapping": "^2.11.26",
+        "baseline-browser-mapping": "^2.11.32",
         "concurrently": "^10.0.5",
         "form-data": "^4.0.6",
         "laravel-vite-plugin": "^3.2.0",
