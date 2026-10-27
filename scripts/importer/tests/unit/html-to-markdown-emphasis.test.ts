@@ -56,6 +56,16 @@ describe('convertHtmlToMarkdown — a run whose edges Markdown can close', () =>
     expect(convertHtmlToMarkdown('Lüster<i>-Kacheln</i> aus Irak')).toBe('Lüster\\-*Kacheln* aus Irak');
   });
 
+  it('starts an italic run after the punctuation and the space that follow the previous word', () => {
+    expect(convertHtmlToMarkdown('Creswell,K.A.C<i>., Early Muslim Architecture</i>. 2nd edition')).toBe(
+      'Creswell,K.A.C., *Early Muslim Architecture*. 2nd edition'
+    );
+  });
+
+  it('ends an italic run before the space and the punctuation that touch the next word', () => {
+    expect(convertHtmlToMarkdown('the <i>Kacheln ,</i>mit denen')).toBe('the *Kacheln* ,mit denen');
+  });
+
   it('prints a run of punctuation alone without its style', () => {
     expect(convertHtmlToMarkdown('Die 139 Kacheln<i>,</i> mit denen')).toBe('Die 139 Kacheln, mit denen');
   });
