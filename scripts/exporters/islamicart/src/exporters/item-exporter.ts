@@ -163,7 +163,9 @@ export class ItemExporter extends BaseExporter {
     // (museumwithnofrontiers/inventory-app#1515: the legacy sites never displayed
     // monument details as items); ISL/EPM have zero detail rows, so this
     // changes no data.
-    // A mini-site's package holds the items its subtree places only.
+    // A mini-site's package holds the items its subtree places only — and,
+    // among them, the custom exhibition photos placed with no item behind
+    // them, each a picture of its own with no parent.
     const scope = this.context.scope
     const items = await this.db.query<ItemRow>(
       `SELECT id, type, internal_name, backward_compatibility, parent_id,
@@ -172,7 +174,7 @@ export class ItemExporter extends BaseExporter {
               display_order, latitude, longitude
        FROM items
        WHERE ${scope ? `id IN (${this.placeholders(Math.max(scope.itemIds.length, 1))})` : `project_id IN (${ph})`}
-         AND type IN ('object', 'monument')
+         AND (type IN ('object', 'monument')${scope ? ` OR (type = 'picture' AND parent_id IS NULL)` : ''})
        ORDER BY type, display_order, internal_name`,
       scope ? (scope.itemIds.length > 0 ? scope.itemIds : ['']) : this.projectIds
     )

@@ -129,10 +129,11 @@ export class CollectionExporter extends BaseExporter {
       ),
       // Items in these collections from the project. An exhibition placement
       // links the picture child item legacy showed: it ships as its parent
-      // item, with that picture's image.
+      // item, with that picture's image. A mini-site also ships the custom
+      // photos placed with no item, each a picture of its own with no parent.
       this.db.query<CollectionItemRow>(
         `SELECT ci.collection_id,
-                IF(i.type = 'picture', i.parent_id, i.id) AS item_id,
+                IF(i.type = 'picture' AND i.parent_id IS NOT NULL, i.parent_id, i.id) AS item_id,
                 ci.display_order, ci.extra,
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
@@ -143,9 +144,11 @@ export class CollectionExporter extends BaseExporter {
          LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
            AND ((i.type IN ('object', 'monument', 'detail') AND i.project_id IN (${ph}))
-             OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
+             OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph}))${
+               scope ? `\n             OR (i.type = 'picture' AND i.parent_id IS NULL AND i.project_id IN (${ph}))` : ''
+             })
          ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), ci.item_id`,
-        [...collectionIds, ...this.projectIds, ...this.projectIds]
+        [...collectionIds, ...this.projectIds, ...this.projectIds, ...(scope ? this.projectIds : [])]
       ),
       // The glossary terms each text links, per language: legacy linked a
       // text's own terms (its Glossary list), never every spelling it holds.
