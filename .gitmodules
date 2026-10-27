@@ -199,3 +199,9 @@
 [submodule ".new-architecture/explore"]
 	path = .new-architecture/explore
 	url = https://github.com/museumwithnofrontiers/explore
+[submodule ".new-architecture/islamicart-the-umayyads"]
+	path = .new-architecture/islamicart-the-umayyads
+	url = https://github.com/museumwithnofrontiers/islamicart-the-umayyads
+[submodule ".new-architecture/islamicart-the-abbasids"]
+	path = .new-architecture/islamicart-the-abbasids
+	url = https://github.com/museumwithnofrontiers/islamicart-the-abbasids
