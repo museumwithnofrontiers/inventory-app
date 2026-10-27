@@ -1178,7 +1178,12 @@ const ALL_IMPORTERS: ImporterConfig[] = [
 // with no further log output, during a `stage` run against the real legacy
 // DB). Racing every execute() against this timeout turns that silent hang
 // into a retryable error instead.
-const QUERY_TIMEOUT_MS = 30000;
+//
+// The ceiling must stay above the slowest legitimate query, not just a
+// typical one: reading the whole of mwnf3.objects returns tens of megabytes,
+// and over a slow uplink that transfer alone outlasted a short ceiling on
+// every retry, so the Objects step imported nothing.
+const QUERY_TIMEOUT_MS = 300000;
 
 function withQueryTimeout<T>(promise: Promise<T>, label: string): Promise<T> {
   return new Promise<T>((resolve, reject) => {
@@ -1661,6 +1666,18 @@ program
             result.errors.length,
             importerDuration
           );
+
+          // A step that processed nothing but reports errors failed before its
+          // first record, typically on its source query. Many importers keep
+          // that error in their result without logging it, which leaves only
+          // a count behind, so name the cause here. Only the first few are
+          // printed: a step whose every record failed has already logged each.
+          if (result.imported === 0 && result.skipped === 0 && result.errors.length > 0) {
+            for (const message of result.errors.slice(0, 3)) {
+              logger.logImporterError(config.name, message);
+              console.error(chalk.red(`  ${config.name}: ${message}`));
+            }
+          }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           const importerDuration = Date.now() - importerStart;
