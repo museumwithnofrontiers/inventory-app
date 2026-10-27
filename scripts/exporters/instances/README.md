@@ -12,6 +12,10 @@ reads every file here to build its batch plan — including the `kind:
 "standalone"` files below, which exist only for that batch and are never read
 by `dxa-gallery` or `dxa-exhibition` themselves.
 
+A `kind: "minisite"` file is one of the sites a standalone virtual museum
+carried inside it on legacy — a Discover Islamic Art virtual exhibition, say —
+now a website of its own. See [Mini-sites](#mini-sites) below.
+
 For a `gallery`/`exhibition` site, authoring an instance file is one step of
 a larger procedure — see
 [`docs/deployment/new-website.md`](../../../docs/deployment/new-website.md)
@@ -97,6 +101,34 @@ instead reach the `kind` check and fail with `must have "kind": "gallery"
 database.) `docker-entrypoint.sh all` itself never invokes `dxa-gallery` or
 `dxa-exhibition` for a `standalone` instance in the first place — see the
 *Batch* section of `../README.md`.
+
+## Mini-sites
+
+A `kind: "minisite"` file is read by the exporter of the project the site
+belongs to (`exporter`), as `npm run export -- --minisite <slug>` — the
+islamicart exporter for Discover Islamic Art's exhibitions. Its package is
+exported from the database in that exporter's own shapes, narrowed to one
+collection and everything under it: the collections, the items their pages
+place (a placement that links a picture child item counts as that picture's
+item) with their parent records, the partners the file names, and the
+glossary terms those texts link. Nothing is read from the parent's own
+export, and the order of the batch does not matter.
+
+Fields, all required unless marked:
+
+- `kind` — `"minisite"`.
+- `slug`, `name`, `package_name` — as for the other kinds.
+- `exporter` — the exporter directory of the project the site belongs to.
+- `parent` — the key of the site that carried it on legacy (`islamicart`):
+  written into `manifest.site.parent` with that site's names.
+- `collection_id` — the UUID of the collection the site is (an exhibition).
+- `partner_ids` — optional: the UUIDs of the partners the site credits itself
+  (an exhibition's curators, whose logos its home page shows), so the package
+  holds their records.
+- `legacy_url` — optional: the site's address on legacy, written into
+  `manifest.site.legacy_url`.
+
+Any other field is rejected.
 
 ## Obtaining a `collection_id`
 

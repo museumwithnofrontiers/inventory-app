@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { computeUnpublishedExhibitionSubtree } from '../../src/exporters/collection-exporter.js'
+import {
+  buildCollectionItemEntry,
+  computeUnpublishedExhibitionSubtree,
+} from '../../src/exporters/collection-exporter.js'
 
 /**
  * The legacy site only listed exhibitions with mwnf3.exhibitions.show='y';
@@ -55,5 +58,29 @@ describe('computeUnpublishedExhibitionSubtree', () => {
       { collection_id: 'root', extra: null },
     ]
     expect(computeUnpublishedExhibitionSubtree(collections, translations).size).toBe(0)
+  })
+})
+
+/**
+ * An exhibition placement links the picture child item legacy showed; the
+ * query hands its parent item and that picture's image path to the entry.
+ */
+describe('buildCollectionItemEntry', () => {
+  const url = (path: string) => `https://example.org/pub/${path}`
+
+  it("carries the image of the picture the placement shows", () => {
+    const entry = buildCollectionItemEntry(
+      { collection_id: 'page', item_id: 'item', display_order: 1, extra: { n: 1, n2: 2 }, picture_path: 'abc.jpg' },
+      url
+    )
+    expect(entry).toMatchObject({ id: 'item', display_order: 1, variant_order: 2, image_url: 'https://example.org/pub/abc.jpg' })
+  })
+
+  it('carries no image when the placement links the item itself', () => {
+    const entry = buildCollectionItemEntry(
+      { collection_id: 'page', item_id: 'item', display_order: 1, extra: { n: 1, n2: 1 }, picture_path: null },
+      url
+    )
+    expect(entry).not.toHaveProperty('image_url')
   })
 })

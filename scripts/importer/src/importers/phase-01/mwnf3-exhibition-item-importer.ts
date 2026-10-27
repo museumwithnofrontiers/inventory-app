@@ -9,6 +9,19 @@
  * - Format: 'M;BAR;it;12;30' for monuments
  * - Empty ref_item = custom image (CollectionImage, not a pivot)
  *
+ * What a placement links (`picture`, the path legacy shows):
+ * - one of the referenced item's own pictures → that picture's child item
+ *   (type 'picture', which the picture importers create): an item placed
+ *   twice on a page with two of its pictures is two placements, each with
+ *   its own texts, and the picture is the one legacy showed;
+ * - any other picture (custom/exhibition/…, or a path legacy's picture tables
+ *   do not list) → the item itself, and the picture becomes a CollectionImage
+ *   of the page at the placement's position, as legacy's other custom
+ *   pictures are;
+ * - no picture → the item itself.
+ * A record placed twice on one page keeps its first placement (legacy shows
+ * the first on page load); the others are reported.
+ *
  * Exhibition-level images (exhibition_images.ref_item):
  * - Same format, linked to exhibition Collection
  * - 92 item references + 2 custom images
@@ -34,8 +47,27 @@ import type {
   Mwnf3LegacyArtintroPageImage,
 } from '../../domain/types/index.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import {
+  monumentPictureBackwardCompatibility,
+  objectPictureBackwardCompatibility,
+} from '../../utils/picture-backward-compatibility.js';
 
 const MWNF3_SCHEMA = 'mwnf3';
+
+/** An item picture of legacy's picture tables, found by its path. */
+interface LegacyPicture {
+  /** The picture child item it was imported as. */
+  pictureBackwardCompat: string;
+  /** The item it is a picture of. */
+  itemBackwardCompat: string;
+}
+
+/** What one placement writes: the record it links, and a picture of its own. */
+interface Placement {
+  linkedId: string;
+  /** A picture that is none of the item's own, kept as a page image. */
+  pagePicture: string | null;
+}
 
 /**
  * Parsed ref_item components.
@@ -91,6 +123,11 @@ type ImageEavFieldName = string;
 type ImageEav = Record<ImageEavFieldName, Record<string, string>>;
 
 export class Mwnf3ExhibitionItemImporter extends BaseImporter {
+  /** legacy's item pictures by lowercased path */
+  private pictures = new Map<string, LegacyPicture>();
+  /** `collection:record` pairs already placed, so a second placement is reported, not merged */
+  private placed = new Set<string>();
+
   getName(): string {
     return 'Mwnf3ExhibitionItemImporter';
   }
@@ -100,6 +137,9 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
 
     try {
       this.logInfo('Importing mwnf3 exhibition item references and custom images...');
+
+      this.pictures = await this.loadPictures();
+      this.placed = new Set();
 
       // ========================================================================
       // Pass 1: Page-level images (2,394 rows)
@@ -181,11 +221,10 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             continue;
           }
 
-          // Build extra with ordering, picture path, and editorial EAV
+          // Build extra with ordering and editorial EAV
           const extra: Record<string, unknown> = {
             n: img.n,
             n2: img.n2,
-            picture: img.picture,
           };
 
           // Merge EAV placement metadata
@@ -202,21 +241,12 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             extra.details = details;
           }
 
-          if (this.isDryRun || this.isSampleOnlyMode) {
-            result.imported++;
-            this.showProgress();
-            continue;
-          }
-
-          await this.context.strategy.writeCollectionItem({
-            collection_id: collectionId,
-            item_id: itemId,
-            display_order: img.n,
-            extra,
-          });
-
-          result.imported++;
-          this.showProgress();
+          await this.writePlacement(
+            `Page image ${img.image_id}`,
+            collectionId,
+            { itemId, itemBackwardCompat, picture: img.picture, n: img.n, extra },
+            result
+          );
         } else {
           // Custom image (empty ref_item) → CollectionImage. collection_images
           // has no backward_compatibility column — identity is (owner, legacy
@@ -306,17 +336,10 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             continue;
           }
 
-          if (this.isDryRun || this.isSampleOnlyMode) {
-            result.imported++;
-            this.showProgress();
-            continue;
-          }
-
-          // Build extra with ordering, picture path, and EAV placement metadata
+          // Build extra with ordering and EAV placement metadata
           const extra: Record<string, unknown> = {
             n: img.n,
             n2: img.n2,
-            picture: img.picture,
           };
 
           // Merge exhibition-level EAV placement metadata
@@ -327,15 +350,12 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             }
           }
 
-          await this.context.strategy.writeCollectionItem({
-            collection_id: collectionId,
-            item_id: itemId,
-            display_order: img.n,
-            extra,
-          });
-
-          result.imported++;
-          this.showProgress();
+          await this.writePlacement(
+            `Exhibition image ${img.image_id}`,
+            collectionId,
+            { itemId, itemBackwardCompat, picture: img.picture, n: img.n, extra },
+            result
+          );
         } else {
           // Custom image → CollectionImage. collection_images has no
           // backward_compatibility column — identity is (owner, legacy path).
@@ -388,16 +408,6 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
     // Pre-load EAV placement metadata for artintro page images
     const artintroImageEavMap = await this.loadArtintroImageEav();
 
-    // `collection_item` has one row per (collection_id, item_id) — when the
-    // same item appears more than once on a page (distinct `n` grid slots,
-    // e.g. several photos of the same monument), only one row can survive.
-    // Legacy always treats the *first* occurrence (n=1) as the default/
-    // featured item shown on page load, and this query is already ordered by
-    // `n` ascending, so keep the first occurrence per (collection, item) and
-    // skip the rest — otherwise writeCollectionItem's "ON DUPLICATE KEY
-    // UPDATE" lets whichever occurrence is processed *last* silently win.
-    const seenCollectionItems = new Set<string>();
-
     for (const img of images) {
       try {
         const collectionBackwardCompat = `${MWNF3_SCHEMA}:artintro_pages:${img.page_id}`;
@@ -444,25 +454,10 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
           continue;
         }
 
-        const dedupeKey = `${collectionId}:${itemId}`;
-        if (seenCollectionItems.has(dedupeKey)) {
-          result.skipped++;
-          this.showSkipped();
-          continue;
-        }
-        seenCollectionItems.add(dedupeKey);
-
-        if (this.isDryRun || this.isSampleOnlyMode) {
-          result.imported++;
-          this.showProgress();
-          continue;
-        }
-
-        // Build extra with ordering, picture path, and EAV placement metadata
+        // Build extra with ordering and EAV placement metadata
         const artintroExtra: Record<string, unknown> = {
           n: img.n,
           n2: img.n2,
-          picture: img.picture,
         };
 
         // Merge artintro EAV placement metadata
@@ -473,15 +468,12 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
           }
         }
 
-        await this.context.strategy.writeCollectionItem({
-          collection_id: collectionId,
-          item_id: itemId,
-          display_order: img.n,
-          extra: artintroExtra,
-        });
-
-        result.imported++;
-        this.showProgress();
+        await this.writePlacement(
+          `Artintro page image ${img.image_id}`,
+          collectionId,
+          { itemId, itemBackwardCompat, picture: img.picture, n: img.n, extra: artintroExtra },
+          result
+        );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         result.errors.push(`Artintro page image ${img.image_id}: ${message}`);
@@ -494,6 +486,149 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
   // ==========================================================================
   // Helpers
   // ==========================================================================
+
+  /**
+   * Write one placement of an item on a collection: the record it links (see
+   * the file header), its position and texts, and a picture that is none of
+   * the item's own as a page image at the same position.
+   */
+  private async writePlacement(
+    label: string,
+    collectionId: string,
+    placement: {
+      itemId: string;
+      itemBackwardCompat: string;
+      picture: string | null;
+      n: number;
+      extra: Record<string, unknown>;
+    },
+    result: ImportResult
+  ): Promise<void> {
+    const { linkedId, pagePicture } = await this.resolvePlacement(label, placement, result);
+
+    const placedKey = `${collectionId}:${linkedId}`;
+    if (this.placed.has(placedKey)) {
+      result.warnings = result.warnings || [];
+      result.warnings.push(`${label}: placed twice on the same page, first placement kept`);
+      this.logWarning(`${label}: placed twice on the same page, first placement kept`);
+      result.skipped++;
+      this.showSkipped();
+      return;
+    }
+    this.placed.add(placedKey);
+
+    if (this.isDryRun || this.isSampleOnlyMode) {
+      result.imported++;
+      this.showProgress();
+      return;
+    }
+
+    await this.context.strategy.writeCollectionItem({
+      collection_id: collectionId,
+      item_id: linkedId,
+      display_order: placement.n,
+      extra: placement.extra,
+    });
+
+    if (pagePicture && !(await this.imageExistsAsync('collection_images', collectionId, pagePicture))) {
+      await this.context.strategy.writeCollectionImage({
+        collection_id: collectionId,
+        path: pagePicture,
+        original_name: pagePicture.split('/').pop() || pagePicture,
+        mime_type: 'image/jpeg',
+        size: 1, // Placeholder for ImageSyncTool
+        alt_text: null,
+        display_order: placement.n,
+      });
+    }
+
+    result.imported++;
+    this.showProgress();
+  }
+
+  /** The record a placement links, and the picture it keeps as a page image. */
+  private async resolvePlacement(
+    label: string,
+    placement: { itemId: string; itemBackwardCompat: string; picture: string | null },
+    result: ImportResult
+  ): Promise<Placement> {
+    const picture = placement.picture?.trim() ?? '';
+    if (!picture) return { linkedId: placement.itemId, pagePicture: null };
+
+    const own = this.pictures.get(picture.toLowerCase());
+    if (!own || own.itemBackwardCompat.toLowerCase() !== placement.itemBackwardCompat.toLowerCase()) {
+      return { linkedId: placement.itemId, pagePicture: picture };
+    }
+
+    const pictureId = await this.getEntityUuidAsync(own.pictureBackwardCompat, 'item');
+    if (!pictureId) {
+      result.warnings = result.warnings || [];
+      result.warnings.push(
+        `${label}: picture item not found (${own.pictureBackwardCompat}), kept as a page image`
+      );
+      this.logWarning(`${label}: picture item not found (${own.pictureBackwardCompat}), kept as a page image`);
+      return { linkedId: placement.itemId, pagePicture: picture };
+    }
+    return { linkedId: pictureId, pagePicture: null };
+  }
+
+  /**
+   * Legacy's item pictures by lowercased path, each with the picture child
+   * item it was imported as and the item it is a picture of. Rows are one
+   * per language; a path is one picture.
+   */
+  private async loadPictures(): Promise<Map<string, LegacyPicture>> {
+    const map = new Map<string, LegacyPicture>();
+    const add = (path: string, picture: LegacyPicture) => {
+      const key = path.trim().toLowerCase();
+      if (key && !map.has(key)) map.set(key, picture);
+    };
+
+    const objects = await this.context.legacyDb.query<{
+      project_id: string;
+      country: string;
+      museum_id: string;
+      number: number;
+      type: string;
+      image_number: number;
+      path: string;
+    }>(
+      `SELECT DISTINCT project_id, country, museum_id, number, type, image_number, path
+       FROM ${MWNF3_SCHEMA}.objects_pictures
+       WHERE path IS NOT NULL AND TRIM(path) != ''
+       ORDER BY project_id, country, museum_id, number, type, image_number`
+    );
+    for (const row of objects) {
+      add(row.path, {
+        pictureBackwardCompat: objectPictureBackwardCompatibility(row),
+        itemBackwardCompat: `${MWNF3_SCHEMA}:objects:${row.project_id.toLowerCase()}:${row.country.toLowerCase()}:${row.museum_id}:${row.number}`,
+      });
+    }
+
+    const monuments = await this.context.legacyDb.query<{
+      project_id: string;
+      country: string;
+      institution_id: string;
+      number: number;
+      type: string;
+      image_number: number;
+      path: string;
+    }>(
+      `SELECT DISTINCT project_id, country, institution_id, number, type, image_number, path
+       FROM ${MWNF3_SCHEMA}.monuments_pictures
+       WHERE path IS NOT NULL AND TRIM(path) != ''
+       ORDER BY project_id, country, institution_id, number, type, image_number`
+    );
+    for (const row of monuments) {
+      add(row.path, {
+        pictureBackwardCompat: monumentPictureBackwardCompatibility(row),
+        itemBackwardCompat: `${MWNF3_SCHEMA}:monuments:${row.project_id.toLowerCase()}:${row.country.toLowerCase()}:${row.institution_id}:${row.number}`,
+      });
+    }
+
+    this.logInfo(`Loaded ${map.size} item pictures by path`);
+    return map;
+  }
 
   /**
    * Parse mwnf3 ref_item format: 'O;ISL;jo;1;8' or 'M;BAR;it;12;30'.

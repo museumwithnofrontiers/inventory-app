@@ -6,7 +6,56 @@
  * under `overrides`, where it is a shared viewer-i18n entry the site's locale
  * overrides.
  */
-import type { StandaloneSite } from './standalone.js'
+import type { StandaloneSite, StandaloneWord } from './standalone.js'
+
+/**
+ * The words Discover Islamic Art's virtual exhibitions print: every one of
+ * them runs on the same pages (exhibitions/ISL/generic_*.php), so their words
+ * are the same; each exhibition is a site of its own (a mini-site).
+ */
+const ISLAMICART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
+  // The window title (generic_index.php and every other page's <title>).
+  'identity.windowTitle': 've_isl_windowstitle',
+  // The header (#header): the logo's tooltip, the two links and the second's tooltip.
+  'header.logoTip': 'back_to_home',
+  'header.exhibitionsList': 'back_exhibitions_list',
+  'header.home': 'back_to_section',
+  'header.homeTip': 'Back_to_diaHome',
+  // The home page's menu (generic_index.php) and partner band (generic_homelogo.php).
+  'home.introduction': 'exh_introduction',
+  'home.curatedBy': 'exhibition_partners_produced',
+  // The navigation over the introduction and every exhibition page.
+  'nav.entrance': 'exh_back_entrance',
+  'nav.previous': 'Previous page',
+  'nav.next': 'Next page',
+  // The introduction's map (generic_introduction.php).
+  'intro.enlargeMap': 'enlargethemap',
+  // The item panel (generic_exhibition.php): the tooltips and the link to the sheet.
+  'item.showZoom': 'showzoom',
+  'item.showDetail': 'showdetail',
+  'item.moreInfo': 'moreinfo_item',
+  // The download block under every text.
+  'download.heading': 'gn_download',
+  'download.asPdf': 'gn_aspdf_img',
+  'download.asWord': 'gn_asword_txt',
+  // The menu over the footer (generic_footerTop.php), in its order.
+  'menu.permanentCollection': 'PermanentCollection',
+  'menu.database': 'home_database',
+  'menu.exhibitions': 'home_exhibitions',
+  'menu.artisticIntroduction': 'home_artistic_intro',
+  'menu.timeline': 'timeline_header',
+  'menu.partners': 'home_partnermuseums',
+  'menu.myCollection': 'my_museum',
+  // The footer, in its order; the year follows the copyright. Legacy's
+  // language-policy link prints no text (its tag is never closed), so it is
+  // not read.
+  'footer.aboutMwnf': 'footer1',
+  'footer.contact': 'footer2',
+  'footer.legalNotice': 'footer3',
+  'footer.credits': 'footer4',
+  'footer.cookies': 'cookie_policy',
+  'footer.copyright': 'footer5',
+}
 
 export const STANDALONE_SITES: Record<string, StandaloneSite> = {
   islamicart: {
@@ -260,5 +309,15 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     },
     links: { 'pm_partner_list.php': '#/partners' },
     tables: ['sharinghistoryAbout', 'sharinghistoryTeam', 'sharinghistorySponsors'],
+  },
+
+  'islamicart-the-umayyads': {
+    root: 'islamicart/www.discoverislamicart.org',
+    host: 'https://islamicart.museumwnf.org',
+    // exhibitions/ISL/libs/config.inc.php: $LNGLIST.
+    languages: ['en', 'fr', 'ar', 'es', 'pt', 'it', 'de', 'tr', 'se'],
+    // The exhibition pages read group 6 ($TRSL_GROUP), with 2 and 3.
+    groups: [2, 3, 6],
+    words: ISLAMICART_EXHIBITION_WORDS,
   },
 }
