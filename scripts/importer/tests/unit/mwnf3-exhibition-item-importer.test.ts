@@ -144,6 +144,10 @@ function makeContext(
     writeCollectionItem: writeCollectionItemMock,
     writeCollectionImage: vi.fn().mockResolvedValue(undefined),
     imageExists: vi.fn().mockResolvedValue(null),
+    writeItem: vi.fn().mockResolvedValue('custom-picture-uuid'),
+    writeItemImage: vi.fn().mockResolvedValue(undefined),
+    writeTag: vi.fn().mockResolvedValue('custom-tag-uuid'),
+    attachTagsToItem: vi.fn().mockResolvedValue(undefined),
   } as unknown as IWriteStrategy;
 
   return {
@@ -691,16 +695,39 @@ describe('Mwnf3ExhibitionItemImporter — placements link picture child items', 
     );
   });
 
-  it('links the item and keeps a custom exhibition picture as a page image', async () => {
+  it('makes a custom exhibition photo a tagged picture item of the item, and links it', async () => {
     const row = { ...PAGE_IMAGE_ROW, picture: 'custom/exhibition/33.jpg' };
     const ctx = makeContext(withPictures(makePageImageQueryMock([row], [])), tracker, writeCollectionItemMock);
 
     await new Mwnf3ExhibitionItemImporter(ctx).import();
 
-    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('item-uuid');
-    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
-      expect.objectContaining({ path: 'custom/exhibition/33.jpg' })
+    expect(ctx.strategy.writeItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'picture',
+        parent_id: 'item-uuid',
+        backward_compatibility: 'mwnf3:exhibition_custom_pictures:custom/exhibition/33.jpg',
+      })
     );
+    expect(ctx.strategy.writeItemImage).toHaveBeenCalledWith(
+      expect.objectContaining({ item_id: 'custom-picture-uuid', path: 'custom/exhibition/33.jpg' })
+    );
+    expect(ctx.strategy.writeTag).toHaveBeenCalledWith(
+      expect.objectContaining({ internal_name: 'custom exhibition picture', category: 'image-type' })
+    );
+    expect(ctx.strategy.attachTagsToItem).toHaveBeenCalledWith('custom-picture-uuid', ['custom-tag-uuid']);
+    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('custom-picture-uuid');
+    expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
+
+  it('makes one picture item per custom photo, whatever pages place it', async () => {
+    const first = { ...PAGE_IMAGE_ROW, image_id: 1, picture: 'custom/exhibition/33.jpg' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([first], [])), tracker, writeCollectionItemMock);
+    tracker.set('mwnf3:exhibition_custom_pictures:custom/exhibition/33.jpg', 'existing-picture-uuid', 'item');
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(ctx.strategy.writeItem).not.toHaveBeenCalled();
+    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('existing-picture-uuid');
   });
 
   it('links the item alone when the placement shows no picture', async () => {

@@ -14,13 +14,17 @@
  *   (type 'picture', which the picture importers create): an item placed
  *   twice on a page with two of its pictures is two placements, each with
  *   its own texts, and the picture is the one legacy showed;
- * - any other picture (custom/exhibition/…, or a path legacy's picture tables
- *   do not list) → the item itself, and the picture becomes a CollectionImage
- *   of the page at the placement's position, as legacy's other custom
- *   pictures are;
+ * - a custom exhibition photo of the item (custom/exhibition/…, which legacy's
+ *   picture tables do not list) → a picture child item of the item made for
+ *   it, tagged `custom exhibition picture` (image-type) so the exporters keep
+ *   it off the item's own pictures (Pascal, 2026-10-27);
+ * - any other picture (a path legacy's picture tables do not list) → the item
+ *   itself, and the picture becomes a CollectionImage of the page at the
+ *   placement's position, as legacy's other custom pictures are;
  * - no picture → the item itself.
  * A record placed twice on one page keeps its first placement (legacy shows
- * the first on page load); the others are reported.
+ * the first on page load); the others are reported — a legacy data error
+ * (#2360).
  *
  * Exhibition-level images (exhibition_images.ref_item):
  * - Same format, linked to exhibition Collection
@@ -46,6 +50,9 @@ import type {
   Mwnf3LegacyExhibitionLevelImage,
   Mwnf3LegacyArtintroPageImage,
 } from '../../domain/types/index.js';
+import { TagHelper } from '../../helpers/tag-helper.js';
+import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import {
   monumentPictureBackwardCompatibility,
@@ -53,6 +60,12 @@ import {
 } from '../../utils/picture-backward-compatibility.js';
 
 const MWNF3_SCHEMA = 'mwnf3';
+
+/** Legacy's exhibition-only photos of an item. */
+const CUSTOM_PICTURE = /^custom\//i;
+
+/** The tag that marks a custom exhibition photo's picture item (category `image-type`). */
+export const CUSTOM_PICTURE_TAG = 'custom exhibition picture';
 
 /** An item picture of legacy's picture tables, found by its path. */
 interface LegacyPicture {
@@ -244,7 +257,7 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
           await this.writePlacement(
             `Page image ${img.image_id}`,
             collectionId,
-            { itemId, itemBackwardCompat, picture: img.picture, n: img.n, extra },
+            { itemId, itemBackwardCompat, parsed, picture: img.picture, n: img.n, extra },
             result
           );
         } else {
@@ -353,7 +366,7 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
           await this.writePlacement(
             `Exhibition image ${img.image_id}`,
             collectionId,
-            { itemId, itemBackwardCompat, picture: img.picture, n: img.n, extra },
+            { itemId, itemBackwardCompat, parsed, picture: img.picture, n: img.n, extra },
             result
           );
         } else {
@@ -471,7 +484,7 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
         await this.writePlacement(
           `Artintro page image ${img.image_id}`,
           collectionId,
-          { itemId, itemBackwardCompat, picture: img.picture, n: img.n, extra: artintroExtra },
+          { itemId, itemBackwardCompat, parsed, picture: img.picture, n: img.n, extra: artintroExtra },
           result
         );
       } catch (error) {
@@ -498,6 +511,7 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
     placement: {
       itemId: string;
       itemBackwardCompat: string;
+      parsed: ParsedRefItem;
       picture: string | null;
       n: number;
       extra: Record<string, unknown>;
@@ -549,11 +563,16 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
   /** The record a placement links, and the picture it keeps as a page image. */
   private async resolvePlacement(
     label: string,
-    placement: { itemId: string; itemBackwardCompat: string; picture: string | null },
+    placement: { itemId: string; itemBackwardCompat: string; parsed: ParsedRefItem; picture: string | null },
     result: ImportResult
   ): Promise<Placement> {
     const picture = placement.picture?.trim() ?? '';
     if (!picture) return { linkedId: placement.itemId, pagePicture: null };
+
+    if (CUSTOM_PICTURE.test(picture)) {
+      const pictureId = await this.customPicture(placement.parsed, placement.itemId, picture);
+      return pictureId ? { linkedId: pictureId, pagePicture: null } : { linkedId: placement.itemId, pagePicture: picture };
+    }
 
     const own = this.pictures.get(picture.toLowerCase());
     if (!own || own.itemBackwardCompat.toLowerCase() !== placement.itemBackwardCompat.toLowerCase()) {
@@ -570,6 +589,70 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
       return { linkedId: placement.itemId, pagePicture: picture };
     }
     return { linkedId: pictureId, pagePicture: null };
+  }
+
+  /**
+   * A custom exhibition photo of an item as a picture child item of that
+   * item, made once per photo: its image is the photo, and the
+   * `custom exhibition picture` tag keeps it off the item's own pictures, which
+   * legacy's sheet never showed it among. Null in a dry or sample run, where
+   * nothing is written; the placement then falls back to the item.
+   */
+  private async customPicture(parsed: ParsedRefItem, itemId: string, picture: string): Promise<string | null> {
+    const backwardCompat = formatBackwardCompatibility({
+      schema: MWNF3_SCHEMA,
+      table: 'exhibition_custom_pictures',
+      pkValues: [picture.toLowerCase()],
+    });
+    const existing = await this.getEntityUuidAsync(backwardCompat, 'item');
+    if (existing) return existing;
+    if (this.isDryRun || this.isSampleOnlyMode) return null;
+
+    const projectBackwardCompat = formatBackwardCompatibility({
+      schema: MWNF3_SCHEMA,
+      table: 'projects',
+      pkValues: [parsed.projectId.toLowerCase()],
+    });
+    const partnerBackwardCompat =
+      parsed.type === 'monument'
+        ? formatBackwardCompatibility({
+            schema: MWNF3_SCHEMA,
+            table: 'institutions',
+            pkValues: [this.formatPartnerId('Mon', parsed.partnerId), parsed.country.toLowerCase()],
+          })
+        : formatBackwardCompatibility({
+            schema: MWNF3_SCHEMA,
+            table: 'museums',
+            pkValues: [this.formatPartnerId('Mus', parsed.partnerId), parsed.country.toLowerCase()],
+          });
+
+    const pictureId = await this.context.strategy.writeItem({
+      type: 'picture',
+      internal_name: `Custom exhibition picture ${picture}`,
+      collection_id: await this.getEntityUuidAsync(projectBackwardCompat, 'collection'),
+      partner_id: await this.getEntityUuidAsync(partnerBackwardCompat, 'partner'),
+      parent_id: itemId,
+      country_id: mapCountryCode(parsed.country.toLowerCase()),
+      project_id: await this.getEntityUuidAsync(projectBackwardCompat, 'project'),
+      owner_reference: null,
+      mwnf_reference: null,
+      display_order: null,
+      backward_compatibility: backwardCompat,
+    });
+    await this.context.strategy.writeItemImage({
+      item_id: pictureId,
+      path: picture,
+      original_name: picture.split('/').pop() || picture,
+      mime_type: 'image/jpeg',
+      size: 1, // Placeholder for ImageSyncTool
+      alt_text: null,
+      display_order: 1,
+    });
+    const tags = new TagHelper(this.context.strategy, this.context.tracker, this.context.logger);
+    const language = this.context.tracker.getMetadata('default_language_id') ?? 'eng';
+    await tags.attachToItem(pictureId, await tags.findOrCreateList(CUSTOM_PICTURE_TAG, 'image-type', language));
+    this.registerEntity(pictureId, backwardCompat, 'item');
+    return pictureId;
   }
 
   /**

@@ -320,4 +320,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     groups: [2, 3, 6],
     words: ISLAMICART_EXHIBITION_WORDS,
   },
+
+  'islamicart-the-abbasids': {
+    root: 'islamicart/www.discoverislamicart.org',
+    host: 'https://islamicart.museumwnf.org',
+    languages: ['en', 'fr', 'ar', 'es', 'pt', 'it', 'de', 'tr', 'se'],
+    groups: [2, 3, 6],
+    words: ISLAMICART_EXHIBITION_WORDS,
+  },
 }
