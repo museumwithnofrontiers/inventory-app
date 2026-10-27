@@ -1,0 +1,15 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-arabic-calligraphy",
+  "name": "Arabic Calligraphy",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "647c6643-4c92-5053-a855-7bc6c0f2444a",
+  "partner_ids": [
+    "ee0a71f8-dc12-5d5d-b02a-4402969e8274",
+    "f0c1b6b9-8198-5a97-9aea-8ebedfa90ca3",
+    "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
+  ],
+  "package_name": "@museumwnf/islamicart-arabic-calligraphy-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/arabic_calligraphy/"
+}

@@ -1,0 +1,15 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-the-mamluks",
+  "name": "The Mamluks",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "217482b1-7626-531f-8ca9-51c2f680fe3d",
+  "partner_ids": [
+    "f0c1b6b9-8198-5a97-9aea-8ebedfa90ca3",
+    "325b7505-1527-5442-99ea-6a40f8c43d3f",
+    "71715b75-3521-53ee-8c85-91fca0b977d0"
+  ],
+  "package_name": "@museumwnf/islamicart-the-mamluks-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_mamluks/"
+}

@@ -1,0 +1,18 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-western-influence",
+  "name": "Western Influence in Ottoman Lands",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "2c60ed37-eb2d-5736-98a0-24252466e0a4",
+  "partner_ids": [
+    "c0c2fa4f-c38c-578e-8cc1-4703cc60b8a9",
+    "f6a3053d-d710-547e-be54-96097d448f7a",
+    "33f89573-8b54-5c1a-86ba-1663e604740f",
+    "f0c1b6b9-8198-5a97-9aea-8ebedfa90ca3",
+    "ee0a71f8-dc12-5d5d-b02a-4402969e8274",
+    "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
+  ],
+  "package_name": "@museumwnf/islamicart-western-influence-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/western_influence/"
+}

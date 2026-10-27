@@ -6,8 +6,9 @@
 submodule `.new-architecture/museumwithnofrontiers.github.io`).
 
 - **Which sites:** every public, unarchived repository created from one of the
-  three site templates (`museumwithnofrontiers/website-template`,
-  `gallery-template`, `exhibition-template`) that has GitHub Pages enabled.
+  four site templates (`museumwithnofrontiers/website-template`,
+  `gallery-template`, `exhibition-template`, `minisite-template`) that has
+  GitHub Pages enabled.
   This is the rule `propagate.mjs` (viewer-workflows) uses, so there is no list
   to keep by hand.
 - **Title and kind:** from the exporter instance with the same slug

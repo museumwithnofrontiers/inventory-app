@@ -1,0 +1,16 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-women",
+  "name": "Women",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "a09c8ed7-01f3-5c9b-bd21-96a1d81c4678",
+  "partner_ids": [
+    "ee0a71f8-dc12-5d5d-b02a-4402969e8274",
+    "f0c1b6b9-8198-5a97-9aea-8ebedfa90ca3",
+    "71715b75-3521-53ee-8c85-91fca0b977d0",
+    "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
+  ],
+  "package_name": "@museumwnf/islamicart-women-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/women/"
+}

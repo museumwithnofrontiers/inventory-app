@@ -77,7 +77,10 @@ Before starting, have on hand:
   (`museumwithnofrontiers/<slug>`) and the data package
   (`@museumwnf/<slug>-data`);
 - the class — `gallery` or `exhibition` (`standalone` sites are not created
-  by this recipe, see above);
+  by this recipe, see above; a `minisite`, one of legacy's virtual
+  exhibitions, follows `minisite-template`'s README, whose steps 0 and 2 are
+  `scripts/minisites/legacy-minisite.mjs` and whose step 3 is steps 7 to 9
+  here);
 - the namespace — one lowercase word, no hyphens (`carpets`,
   `waterInIslam`) — the four DXA sites' own choices are examples: `carpets`,
   `amulets`, `colours` (not `theUseOfColoursInArt`), `waterInIslam`;

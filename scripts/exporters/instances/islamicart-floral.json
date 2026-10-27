@@ -1,0 +1,15 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-floral",
+  "name": "Echoes of Paradise: the Garden and Flora in Islamic Art",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "12faaae8-0400-53bd-ba84-f5e66e0027ef",
+  "partner_ids": [
+    "c0c2fa4f-c38c-578e-8cc1-4703cc60b8a9",
+    "01ed0e00-4aed-5afc-bdea-937514669d4b",
+    "5db20458-bdcf-5050-98fb-3fb2d1392a0a"
+  ],
+  "package_name": "@museumwnf/islamicart-floral-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/floral/"
+}

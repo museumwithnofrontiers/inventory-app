@@ -1,0 +1,14 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-water",
+  "name": "Water",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "e0d404ea-dbc1-591a-86a5-75265066d6f0",
+  "partner_ids": [
+    "f6a3053d-d710-547e-be54-96097d448f7a",
+    "3b73a306-1129-5c8d-acba-8e34a39e132f"
+  ],
+  "package_name": "@museumwnf/islamicart-water-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/water/"
+}

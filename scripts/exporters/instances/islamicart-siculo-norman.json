@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-siculo-norman",
+  "name": "The Normans in Sicily",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "87981465-ac17-588c-98d9-d4f2d4298bdc",
+  "partner_ids": [
+    "2970af60-fdee-5b70-8e87-7b8865a0c88d"
+  ],
+  "package_name": "@museumwnf/islamicart-siculo-norman-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/siculo_norman/"
+}

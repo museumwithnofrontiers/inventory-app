@@ -11,6 +11,7 @@ const instances = new Map([
   ['amulets', { title: 'Amulets', kind: 'gallery' }],
   ['islamicart', { title: 'Discover Islamic Art', kind: 'standalone' }],
   ['water-in-islam', { title: 'Water in Islam', kind: 'exhibition' }],
+  ['islamicart-the-mamluks', { title: 'The Mamluks', kind: 'minisite' }],
 ])
 
 const site = (name, extra = {}) => ({
@@ -26,16 +27,17 @@ test('lists only repositories created from the website template', () => {
   assert.deepEqual(sites.map((s) => s.slug), ['carpets'])
 })
 
-test('lists a site from any of the three site templates, and none from another template', () => {
+test('lists a site from any of the four site templates, and none from another template', () => {
   const repos = [
     site('amulets', { template: `${OWNER}/gallery-template` }),
     site('water-in-islam', { template: `${OWNER}/exhibition-template` }),
+    site('islamicart-the-mamluks', { template: `${OWNER}/minisite-template` }),
     site('islamicart'),
     site('carpets', { template: 'someone-else/gallery-template' }),
     site('new-site', { template: `${OWNER}/some-other-template` }),
   ]
   const sites = buildSiteList(OWNER, repos, instances)
-  assert.deepEqual(sites.map((s) => s.slug), ['islamicart', 'water-in-islam', 'amulets'])
+  assert.deepEqual(sites.map((s) => s.slug), ['islamicart', 'water-in-islam', 'amulets', 'islamicart-the-mamluks'])
 })
 
 test('leaves out a site whose GitHub Pages is not enabled yet', () => {
