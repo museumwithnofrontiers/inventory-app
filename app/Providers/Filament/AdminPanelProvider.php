@@ -22,6 +22,7 @@ use App\Http\Controllers\Filament\PartnerTranslationImageController as FilamentP
 use App\Http\Controllers\Filament\TimelineEventImageController as FilamentTimelineEventImageController;
 use App\Http\Controllers\Filament\VerifyEmailController;
 use App\Http\Middleware\Filament\EnsureTwoFactorEnrolled;
+use App\Http\Middleware\VerifyCsrfToken;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -37,7 +38,6 @@ use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Config;
@@ -46,6 +46,7 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Livewire\Livewire;
+use Spatie\Csp\AddCspHeaders;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -129,6 +130,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                AddCspHeaders::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

@@ -400,6 +400,7 @@ server {
     listen 80;
     listen [::]:80;
     server_name ${DOMAIN};
+    server_tokens off;
     return 301 https://${DOMAIN}\$request_uri;
 }
 
@@ -414,8 +415,14 @@ server {
     root ${APP_DIR}/current/public;
     index index.php;
 
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
+    # No version in the Server header: Ubuntu patches its nginx package
+    # without changing the upstream version scanners compare against.
+    server_tokens off;
+
+    # A location that sets its own add_header drops all of these.
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
 
     charset utf-8;
 
@@ -439,8 +446,10 @@ server {
     root ${APP_DIR}/current/public;
     index index.php;
 
-    add_header X-Frame-Options "SAMEORIGIN";
-    add_header X-Content-Type-Options "nosniff";
+    server_tokens off;
+
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
 
     charset utf-8;
 
