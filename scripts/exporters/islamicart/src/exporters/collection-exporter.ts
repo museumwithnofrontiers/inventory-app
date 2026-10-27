@@ -1,5 +1,9 @@
 import type { ExportResult } from '../core/types.js'
+import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
+
+/** The site this exporter's own package is, as the mini-site instances name it. */
+const SITE_KEY = 'islamicart'
 
 interface CollectionRow {
   id: string
@@ -185,9 +189,32 @@ export class CollectionExporter extends BaseExporter {
       )
     }
 
+    // An exhibition that is a mini-site of its own (inventory-app#2359)
+    // keeps here only what this site shows of it: its title (the exhibitions
+    // list), its themes' titles and which items its pages place, in their
+    // order (an item sheet's "on display in" link to the mini-site page).
+    // Its texts, quotes, introduction, captions and pictures are the
+    // mini-site's package's.
+    const minisite = scope
+      ? new Map<string, number>()
+      : minisiteDepths(publishedCollections, loadMinisiteInstances(SITE_KEY).map(i => i.collectionId))
+    if (minisite.size > 0) {
+      this.logger.info(`Keeping titles and page placements only of ${minisite.size} mini-site collection(s)`)
+    }
+
     // collection_id -> lang_code -> fields
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const t of translations) {
+      const depth = minisite.get(t.collection_id)
+      if (depth !== undefined) {
+        // A page's title is the mini-site's: the link names the exhibition and the theme.
+        if (depth >= 2) continue
+        const code = langCodeMap.get(t.language_id)
+        if (!code) continue
+        if (!translationMap.has(t.collection_id)) translationMap.set(t.collection_id, {})
+        translationMap.get(t.collection_id)![code] = { title: t.title }
+        continue
+      }
       if (!translationMap.has(t.collection_id)) translationMap.set(t.collection_id, {})
       const code = langCodeMap.get(t.language_id)
       if (!code) continue
@@ -219,6 +246,7 @@ export class CollectionExporter extends BaseExporter {
       { url: string; alt_text: string | null; display_order: number }[]
     >()
     for (const img of images) {
+      if (minisite.has(img.collection_id)) continue
       if (!imageMap.has(img.collection_id)) imageMap.set(img.collection_id, [])
       imageMap.get(img.collection_id)!.push({
         url: this.imageUrl(img.path),
@@ -231,8 +259,17 @@ export class CollectionExporter extends BaseExporter {
     const imageUrlFn = (path: string) => this.imageUrl(path)
     const itemMap = new Map<string, ReturnType<typeof buildCollectionItemEntry>[]>()
     for (const link of itemLinks) {
+      const depth = minisite.get(link.collection_id)
+      // Legacy's item sheet linked the pages that place an item, not an
+      // exhibition's introduction: a mini-site page keeps its items, bare.
+      if (depth !== undefined && depth < 2) continue
       if (!itemMap.has(link.collection_id)) itemMap.set(link.collection_id, [])
-      itemMap.get(link.collection_id)!.push(buildCollectionItemEntry(link, imageUrlFn))
+      const entries = itemMap.get(link.collection_id)!
+      if (depth === undefined) {
+        entries.push(buildCollectionItemEntry(link, imageUrlFn))
+      } else if (!entries.some(e => e.id === link.item_id)) {
+        entries.push({ id: link.item_id, display_order: link.display_order, variant_order: null })
+      }
     }
 
     const output = publishedCollections.map(c => ({
@@ -255,6 +292,35 @@ export class CollectionExporter extends BaseExporter {
 
     return { file: 'collections.json', count: output.length }
   }
+}
+
+/**
+ * Every collection of the subtrees rooted at `rootIds`, with its depth below
+ * its root: 0 the exhibition, 1 a theme, 2 a page. Exported for unit tests.
+ */
+export function minisiteDepths(
+  collections: Pick<CollectionRow, 'id' | 'parent_id'>[],
+  rootIds: string[]
+): Map<string, number> {
+  const childrenByParent = new Map<string, string[]>()
+  for (const c of collections) {
+    if (!c.parent_id) continue
+    if (!childrenByParent.has(c.parent_id)) childrenByParent.set(c.parent_id, [])
+    childrenByParent.get(c.parent_id)!.push(c.id)
+  }
+  const present = new Set(collections.map(c => c.id))
+  const depths = new Map<string, number>()
+  const queue = rootIds.filter(id => present.has(id)).map(id => [id, 0] as const)
+  for (const [id] of queue) depths.set(id, 0)
+  while (queue.length > 0) {
+    const [id, depth] = queue.shift()!
+    for (const childId of childrenByParent.get(id) ?? []) {
+      if (depths.has(childId)) continue
+      depths.set(childId, depth + 1)
+      queue.push([childId, depth + 1])
+    }
+  }
+  return depths
 }
 
 /**

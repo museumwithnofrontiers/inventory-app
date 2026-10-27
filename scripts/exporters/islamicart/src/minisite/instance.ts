@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'fs'
+import { existsSync, readdirSync, readFileSync } from 'fs'
 import { resolve } from 'path'
 
 /**
@@ -34,6 +34,19 @@ function resolveInstancePath(ref: string): string {
     return resolve(process.cwd(), ref)
   }
   return resolve(process.cwd(), '..', 'instances', `${ref}.json`)
+}
+
+/** Every mini-site the site `parent` carried on legacy, from scripts/exporters/instances/. */
+export function loadMinisiteInstances(parent: string, dir = resolve(process.cwd(), '..', 'instances')): MinisiteInstance[] {
+  if (!existsSync(dir)) return []
+  return readdirSync(dir)
+    .filter(file => file.endsWith('.json'))
+    .sort()
+    .filter(file => {
+      const data = JSON.parse(readFileSync(resolve(dir, file), 'utf-8')) as Record<string, unknown>
+      return data['kind'] === 'minisite' && data['parent'] === parent
+    })
+    .map(file => loadMinisiteInstance(resolve(dir, file)))
 }
 
 export function loadMinisiteInstance(ref: string): MinisiteInstance {
