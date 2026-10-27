@@ -1,0 +1,14 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-the-ayyubids",
+  "name": "The Atabegs and Ayyubids",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "28d9a4d3-c0f4-52e4-b504-b865ba01f483",
+  "partner_ids": [
+    "f6a3053d-d710-547e-be54-96097d448f7a",
+    "3b73a306-1129-5c8d-acba-8e34a39e132f"
+  ],
+  "package_name": "@museumwnf/islamicart-the-ayyubids-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ayyubids/"
+}

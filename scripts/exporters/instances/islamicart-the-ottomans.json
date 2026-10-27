@@ -1,0 +1,15 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-the-ottomans",
+  "name": "The Ottomans",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "618dce7d-8482-5ccb-b334-54c0c96e6db0",
+  "partner_ids": [
+    "c0c2fa4f-c38c-578e-8cc1-4703cc60b8a9",
+    "01ed0e00-4aed-5afc-bdea-937514669d4b",
+    "5db20458-bdcf-5050-98fb-3fb2d1392a0a"
+  ],
+  "package_name": "@museumwnf/islamicart-the-ottomans-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ottomans/"
+}

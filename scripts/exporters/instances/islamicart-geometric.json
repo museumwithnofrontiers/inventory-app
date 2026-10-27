@@ -1,0 +1,16 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-geometric",
+  "name": "Geometric Decoration",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "9f0c366a-10e7-53d5-91e8-2d8a35ffc22a",
+  "partner_ids": [
+    "ce4d8147-795e-5a50-9c18-cf90561d29e5",
+    "8a41ae85-1217-5a1f-a8f2-68da1d74234d",
+    "236add0a-18d4-55b1-88dd-71cad26804b1",
+    "7712e497-33e4-5529-91c3-47abff00f87c"
+  ],
+  "package_name": "@museumwnf/islamicart-geometric-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/geometric/"
+}

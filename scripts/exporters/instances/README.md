@@ -130,6 +130,13 @@ Fields, all required unless marked:
 
 Any other field is rejected.
 
+A Discover Islamic Art exhibition's file is not written by hand:
+`scripts/minisites/legacy-minisite.mjs <legacy exhibition folder> --name
+"<English title>"` writes it from the legacy folder (which exhibition it is,
+the curators its home page credits), with the importer's own ids. Run again
+with `--site <clone>`, the same script writes the site's own values into a
+copy of `minisite-template` (see that template's README).
+
 ## Obtaining a `collection_id`
 
 Collection UUIDs are importer-deterministic, not assigned by hand. Look one

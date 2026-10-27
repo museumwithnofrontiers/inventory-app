@@ -1,0 +1,16 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-muslim-west",
+  "name": "The Muslim West",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "82d1ab69-c61e-55a9-920a-bf67ddfb6bda",
+  "partner_ids": [
+    "ce4d8147-795e-5a50-9c18-cf90561d29e5",
+    "8a41ae85-1217-5a1f-a8f2-68da1d74234d",
+    "236add0a-18d4-55b1-88dd-71cad26804b1",
+    "7712e497-33e4-5529-91c3-47abff00f87c"
+  ],
+  "package_name": "@museumwnf/islamicart-muslim-west-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/muslim_west/"
+}

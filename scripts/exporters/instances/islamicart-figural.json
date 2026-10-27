@@ -1,0 +1,14 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-figural",
+  "name": "Figurative Art",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "96e50aab-a868-5824-b376-8cdd7e37d384",
+  "partner_ids": [
+    "33f89573-8b54-5c1a-86ba-1663e604740f",
+    "559ab197-7289-5af4-a295-1118bde9afce"
+  ],
+  "package_name": "@museumwnf/islamicart-figural-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/figural/"
+}

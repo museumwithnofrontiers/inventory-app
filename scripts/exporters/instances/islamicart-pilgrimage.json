@@ -1,0 +1,15 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-pilgrimage",
+  "name": "Pilgrimage",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "e0fad146-3560-5ca0-86d7-06707053fbef",
+  "partner_ids": [
+    "f0c1b6b9-8198-5a97-9aea-8ebedfa90ca3",
+    "325b7505-1527-5442-99ea-6a40f8c43d3f",
+    "71715b75-3521-53ee-8c85-91fca0b977d0"
+  ],
+  "package_name": "@museumwnf/islamicart-pilgrimage-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/pilgrimage/"
+}

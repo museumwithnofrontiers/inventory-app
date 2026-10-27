@@ -1,0 +1,16 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-fatimids",
+  "name": "The Fatimids",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "35beb34a-375b-5bd2-98d3-523a97e96b21",
+  "partner_ids": [
+    "ee0a71f8-dc12-5d5d-b02a-4402969e8274",
+    "f0c1b6b9-8198-5a97-9aea-8ebedfa90ca3",
+    "71715b75-3521-53ee-8c85-91fca0b977d0",
+    "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
+  ],
+  "package_name": "@museumwnf/islamicart-fatimids-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/fatimids/"
+}

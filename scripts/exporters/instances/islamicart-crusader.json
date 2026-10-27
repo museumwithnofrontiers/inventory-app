@@ -1,0 +1,16 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-crusader",
+  "name": "Al-Franj: the Crusaders in the Levant",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "4c126e80-2567-5abd-9191-3d40f380e81f",
+  "partner_ids": [
+    "f6a3053d-d710-547e-be54-96097d448f7a",
+    "325b7505-1527-5442-99ea-6a40f8c43d3f",
+    "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa",
+    "3b73a306-1129-5c8d-acba-8e34a39e132f"
+  ],
+  "package_name": "@museumwnf/islamicart-crusader-data",
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/crusader/"
+}
