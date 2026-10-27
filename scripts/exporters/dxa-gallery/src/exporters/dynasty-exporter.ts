@@ -86,6 +86,9 @@ export class DynastyExporter extends BaseExporter {
         `SELECT idyn.dynasty_id, ii.path
          FROM item_dynasty idyn
          JOIN items pic ON pic.parent_id = idyn.item_id AND pic.type = 'picture'
+           -- A custom exhibition photo is the exhibition's picture, not one of the item's own.
+           AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
+                           WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
          JOIN item_images ii ON ii.item_id = pic.id
          WHERE idyn.dynasty_id IN (${dynastyPh})
            AND idyn.item_id IN (${itemPh})

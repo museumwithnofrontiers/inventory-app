@@ -11,7 +11,9 @@ import type { StandaloneSite, StandaloneWord } from './standalone.js'
 /**
  * The words Discover Islamic Art's virtual exhibitions print: every one of
  * them runs on the same pages (exhibitions/ISL/generic_*.php), so their words
- * are the same; each exhibition is a site of its own (a mini-site).
+ * are the same, and every mini-site (one exhibition, a website of its own)
+ * reads them from viewer-i18n's shared `minisite` namespace, extracted with
+ * `extract:standalone -- islamicart-exhibitions --namespace minisite`.
  */
 const ISLAMICART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
   // The window title (generic_index.php and every other page's <title>).
@@ -311,7 +313,7 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     tables: ['sharinghistoryAbout', 'sharinghistoryTeam', 'sharinghistorySponsors'],
   },
 
-  'islamicart-the-umayyads': {
+  'islamicart-exhibitions': {
     root: 'islamicart/www.discoverislamicart.org',
     host: 'https://islamicart.museumwnf.org',
     // exhibitions/ISL/libs/config.inc.php: $LNGLIST.

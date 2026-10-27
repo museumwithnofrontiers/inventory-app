@@ -257,6 +257,9 @@ export class ItemExporter extends BaseExporter {
          FROM items pic
          JOIN item_images ii ON ii.item_id = pic.id
          WHERE pic.type = 'picture'
+           -- A custom exhibition photo is the exhibition's picture, not one of the item's own.
+           AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
+                           WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
            AND pic.parent_id IN (${itemPh})
          ORDER BY pic.parent_id, pic.display_order`,
         this.memberItemIds

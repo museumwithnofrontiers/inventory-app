@@ -71,6 +71,52 @@ function touchingRun(sibling: DomNode | null, names: Set<string>): boolean {
   return !!sibling && names.has(sibling.nodeName) && (sibling.textContent ?? '').trim() !== '';
 }
 
+// A run's edges as Markdown can close it. A browser prints `<b>…fountain.<br></b>`
+// and `<i>Lüster-</i>Glasur` in bold or italics; in Markdown a delimiter after
+// a line break, or one between punctuation and a letter, does not close its
+// run, and the page shows the asterisks instead. Whitespace and line breaks at
+// an edge are outside the run on the page, so they go outside the delimiters;
+// punctuation at an edge that touches a letter outside the run goes with
+// them, and a run of punctuation alone is printed without its style.
+const PUNCTUATION = /[\p{P}\p{S}]/u;
+const WORD = /[\p{L}\p{N}]/u;
+
+function edgeCharacter(sibling: DomNode | null, end: 'first' | 'last'): string {
+  const text = sibling?.textContent ?? '';
+  return end === 'first' ? text.charAt(0) : text.charAt(text.length - 1);
+}
+
+function delimited(content: string, node: DomNode, delimiter: string): string {
+  if (!content.trim()) return content;
+  const [, lead = '', inner = '', trail = ''] = /^(\s*)([\s\S]*?)(\s*)$/.exec(content) ?? [];
+  let before = lead;
+  let body = inner;
+  let after = trail;
+  if (!after && WORD.test(edgeCharacter(node.nextSibling, 'first'))) {
+    while (body && PUNCTUATION.test(body.charAt(body.length - 1))) {
+      after = body.charAt(body.length - 1) + after;
+      body = body.slice(0, -1);
+    }
+  }
+  if (!before && WORD.test(edgeCharacter(node.previousSibling, 'last'))) {
+    while (body && PUNCTUATION.test(body.charAt(0))) {
+      before += body.charAt(0);
+      body = body.slice(1);
+    }
+  }
+  return body ? `${before}${delimiter}${body}${delimiter}${after}` : `${before}${after}`;
+}
+
+for (const [name, names, delimiter] of [
+  ['edgeEmphasis', EMPHASIS, '*'],
+  ['edgeStrong', STRONG, '**'],
+] as const) {
+  turndownService.addRule(name, {
+    filter: (node) => names.has(node.nodeName) && !insideStyle(node, names),
+    replacement: (content, node) => delimited(content, node as unknown as DomNode, delimiter),
+  });
+}
+
 for (const [name, names, delimiter] of [
   ['touchingEmphasis', EMPHASIS, '*'],
   ['touchingStrong', STRONG, '**'],

@@ -39,3 +39,28 @@ describe('convertHtmlToMarkdown — touching runs', () => {
     expect(convertHtmlToMarkdown('<i>a</i><i> </i>b')).toBe('*a* b');
   });
 });
+
+// A delimiter after a line break, or between punctuation and a letter, does not
+// close its run in Markdown; the page would show the asterisks legacy never did.
+describe('convertHtmlToMarkdown — a run whose edges Markdown can close', () => {
+  it('ends a bold run before the line break it ends with', () => {
+    expect(convertHtmlToMarkdown('<b>the domed fountain.<br></b>Next')).toBe('**the domed fountain.**  \nNext');
+  });
+
+  it('ends an italic run before the punctuation that touches the next word', () => {
+    expect(convertHtmlToMarkdown('mit Blau und <i>Lüster-</i>Glasur verziert')).toBe('mit Blau und *Lüster*-Glasur verziert');
+  });
+
+  it('starts an italic run after the punctuation that touches the previous word', () => {
+    // Turndown escapes a hyphen that starts a run's text; the escape moves with it.
+    expect(convertHtmlToMarkdown('Lüster<i>-Kacheln</i> aus Irak')).toBe('Lüster\\-*Kacheln* aus Irak');
+  });
+
+  it('prints a run of punctuation alone without its style', () => {
+    expect(convertHtmlToMarkdown('Die 139 Kacheln<i>,</i> mit denen')).toBe('Die 139 Kacheln, mit denen');
+  });
+
+  it('keeps punctuation inside a run that ends before a space', () => {
+    expect(convertHtmlToMarkdown('the <i>caliph’s</i> palace (<i>qasr</i>.)')).toBe('the *caliph’s* palace (*qasr*.)');
+  });
+});
