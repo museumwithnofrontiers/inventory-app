@@ -913,7 +913,8 @@ export interface Mwnf3LegacyExhibitionPageImageDetail {
   image_id: number;
   n: number;
   n2: number;
-  ref_detail_item: string; // same format as ref_item
+  /** 'BAR;it;11;9;3': project;country;institution;monument;detail, a monument_details row. */
+  ref_detail_item: string;
   picture_details: string;
 }
 

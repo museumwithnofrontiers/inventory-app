@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   buildCollectionItemEntry,
   computeUnpublishedExhibitionSubtree,
+  groupDetailViews,
 } from '../../src/exporters/collection-exporter.js'
 
 /**
@@ -82,5 +83,43 @@ describe('buildCollectionItemEntry', () => {
       url
     )
     expect(entry).not.toHaveProperty('image_url')
+  })
+
+  it('ships its detail views as details, each with its image and caption', () => {
+    const entry = buildCollectionItemEntry(
+      { collection_id: 'page', item_id: 'monument', display_order: 4, extra: { n: 4, n2: 2 }, picture_path: null },
+      url,
+      [
+        { collection_id: 'page', extra: { n: 4, n2: 2, parent_n2: 2, item_name: { en: 'High altar' } }, picture_path: 'd1.jpg' },
+        { collection_id: 'page', extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: null },
+      ]
+    )
+    expect(entry.details).toEqual([
+      { image_url: 'https://example.org/pub/d1.jpg', caption: { en: { name: 'High altar' } } },
+      { image_url: null },
+    ])
+  })
+
+  it('has no details without detail views', () => {
+    const entry = buildCollectionItemEntry(
+      { collection_id: 'page', item_id: 'item', display_order: 1, extra: { n: 1, n2: 1 }, picture_path: null },
+      url
+    )
+    expect(entry).not.toHaveProperty('details')
+  })
+})
+
+describe('groupDetailViews', () => {
+  it('groups views by page, position and the n2 of the placement they belong to, in order', () => {
+    const views = [
+      { collection_id: 'page', extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'a.jpg' },
+      { collection_id: 'page', extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: 'b.jpg' },
+      { collection_id: 'page', extra: { n: 4, n2: 1, parent_n2: 1 }, picture_path: 'c.jpg' },
+      { collection_id: 'other', extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'd.jpg' },
+    ]
+    const groups = groupDetailViews(views)
+    expect(groups.get('page|4|2')?.map(v => v.picture_path)).toEqual(['a.jpg', 'b.jpg'])
+    expect(groups.get('page|4|1')?.map(v => v.picture_path)).toEqual(['c.jpg'])
+    expect(groups.get('other|4|2')?.map(v => v.picture_path)).toEqual(['d.jpg'])
   })
 })
