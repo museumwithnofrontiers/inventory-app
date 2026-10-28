@@ -364,6 +364,30 @@ differences. The fall comes from #2338, #2345, viewer-core 2.10.0 and viewer-lay
 Its `diff-runs.md` lists one regression against 2026-10-25: the-hijaz-railway's dump items only in
 the package (262 → 263). Hijaz is excluded from parity (decision of 2026-10-18).
 
+`baselines/2026-10-28` is the run after reimport 8, on the 66 packages published from it: the 48
+sites and the 18 Islamic Art mini-sites. It has 8 real differences. Reimport 7 brought the fall,
+and reimport 8 changed none of it:
+- **Import (#2354):** a nameless Sharing History partner translation is no longer named.
+- **Export (#2355):** Islamic Art's EPM-only language is the short description, and a mwnf3
+  museum is named in every language.
+- **Tool (#2356):** it reads partial CV-join credit drops, glossary terms with an apostrophe and
+  partners without `i18n`.
+
+The 8 left: stray Markdown emphasis in owner references (Baroque Art, prints-drawings and
+scientific-objects), one Baroque Art detail description, and Arts in Dialogue's `site.hidden`.
+
+Its `diff-runs.md` lists 17 regressions against 2026-10-26:
+- **The mini-sites (15):** image URLs that are not `/pub/<uuid>`. This is their first baseline.
+  The URLs are legacy pictures whose file is missing on legacy too (19 files), or that have no path
+  (one). They are kept as legacy shows them (decision of 2026-10-24).
+- **Baroque Art (1):** `membership.exhibition_pages` (0 → 1). One custom exhibition photo is
+  placed for two different monuments, a legacy data error (#2383).
+- **The-hijaz-railway (2):**
+  - Dump items only in the package (263 → 285): Hijaz is re-authored on live legacy, so the dump
+    falls behind.
+  - Image URLs not `/pub/<uuid>` (10 → 17): six of the new ones are Syrian monument pictures
+    (`galex5/sy/91`). Legacy serves them, but the image copy that `stage` reads predates them.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
