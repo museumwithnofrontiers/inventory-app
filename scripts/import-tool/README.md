@@ -65,7 +65,8 @@ Variables (see `.env.example` for the full list with inline comments):
 | `OVH_SSH_KEY_HOST_PATH` | Host path to the deploy SSH private key. |
 | `OVH_APP_DIR` / `OVH_SHARED_DIR` | Paths on the remote host (app directory, shared/persistent storage). |
 | `LEGACY_DB_*` | The legacy source database, reached over your VPN. Read by `stage` only. |
-| `LEGACY_IMAGES_HOST_PATH` | Host path to the legacy images source, mounted read-only into `stage`. |
+| `LEGACY_IMAGES_HOST_PATH` | Host path to the local copy of legacy's image tree, mounted read-only into `stage`. |
+| `LEGACY_IMAGES_SOURCE` | Legacy's image tree on the server (a UNC path, over the VPN). `Sync-LegacyImages.ps1` mirrors it into `LEGACY_IMAGES_HOST_PATH`; no container reads it. |
 | `CONFIRM_WIPE` | Required verbatim (`yes-really-wipe-production`) for `ship` to proceed. Leave unset in `.env`; pass it inline on the command line only when you mean it. |
 | `ADMIN_EMAIL` / `REGULAR_USER_EMAIL` | Fallback accounts `ship` creates if no auth snapshot exists — see "Auth restore" below. |
 
@@ -96,6 +97,23 @@ Anything listed is a live importer; stop it before starting another. Note that
 **Ctrl-C does not stop a detached or `run`-created container** — the CLI exits
 and the container keeps going, so always confirm with `docker ps` rather than
 assuming. Compose names its one-offs `inventory-stage-run-<hash>`.
+
+### Then: refresh the local copy of legacy's images
+
+`stage` reads legacy's pictures from `LEGACY_IMAGES_HOST_PATH`, a copy of the
+image tree on the legacy server. Pictures added on legacy since the last
+refresh are missing from that copy, and image-sync then reports them as
+`Legacy image not found` although legacy shows them. Mirror the tree first
+(Windows host, VPN up):
+
+```powershell
+./scripts/import-tool/Sync-LegacyImages.ps1 -ListOnly   # what would change
+./scripts/import-tool/Sync-LegacyImages.ps1
+```
+
+The mirror is exact: a file deleted on legacy is deleted from the copy too. The
+log, under `scripts/import-tool/logs/`, lists every file copied or deleted. A
+full pass takes about 40 minutes, most of it comparing unchanged files.
 
 ### 1. Build the local copy from legacy
 
@@ -509,6 +527,10 @@ docker compose --env-file scripts/import-tool/.env --profile import build stage
 # Confirms the VPN reaches legacy and staging-mysql answers, before you commit
 # an hour and a half to a run that would fail at the first query.
 docker compose --env-file scripts/import-tool/.env --profile import run --rm --entrypoint sh stage -c "cd /opt/import-tool/importer && npx tsx src/cli/import.ts validate"
+
+# Mirror legacy's image tree into LEGACY_IMAGES_HOST_PATH (~40 min). Without
+# it, pictures added on legacy since the last mirror are "not found".
+./scripts/import-tool/Sync-LegacyImages.ps1
 
 # OPTIONAL — start the dataset over. Mandatory after an aborted or doubled run:
 # the importer skips rows that already exist, so a half-finished import
