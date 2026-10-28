@@ -147,16 +147,18 @@ export class ItemExporter extends BaseExporter {
     // hit) — details are embedded as details[] on their parent monument
     // below (museumwithnofrontiers/inventory-app#1515). 'picture' child items are
     // likewise excluded — those are exported as images on their parent.
+    // A mini-site's package holds the items its subtree places only.
+    const scope = this.context.scope
     const items = await this.db.query<ItemRow>(
       `SELECT id, type, internal_name, backward_compatibility, parent_id,
               partner_id, country_id, collection_id, project_id,
               owner_reference, mwnf_reference, start_date, end_date,
               display_order, latitude, longitude
        FROM items
-       WHERE project_id IN (${ph})
+       WHERE ${scope ? `id IN (${this.placeholders(Math.max(scope.itemIds.length, 1))})` : `project_id IN (${ph})`}
          AND type IN ('object', 'monument')
        ORDER BY type, display_order, internal_name`,
-      this.projectIds
+      scope ? (scope.itemIds.length > 0 ? scope.itemIds : ['']) : this.projectIds
     )
 
     if (items.length === 0) {
@@ -498,7 +500,13 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        location: legacyLocation(ownRow.location, extra?.province),
+        // The item sheet's Location line, composed as legacy printed it. A
+        // mini-site's caption composes its own from the parts (legacy's
+        // exhibition pages printed location, province and country), so its
+        // package carries each part on its own.
+        ...(scope
+          ? { location: ownRow.location, province: extra?.province ?? null }
+          : { location: legacyLocation(ownRow.location, extra?.province) }),
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,

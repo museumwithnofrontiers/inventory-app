@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 /**
- * What a Discover Islamic Art virtual exhibition configured for itself alone,
- * written into a copy of minisite-template and into this repository's
- * exporter instances.
+ * What a Discover Islamic Art or Discover Baroque Art virtual exhibition
+ * configured for itself alone, written into a copy of minisite-template and
+ * into this repository's exporter instances.
  *
- * Every ISL exhibition ran on the same pages (exhibitions/ISL/generic_*.php);
- * what set one apart is its folder: libs/config.inc.php (which exhibition it
- * is, and the curators its home page credits, HOMELOGOS), index.php (where
+ * Every exhibition of a family ran on the same pages (exhibitions/ISL/ or
+ * exhibitions/BAR/generic_*.php); what set one apart is its folder:
+ * libs/config.inc.php (which exhibition it is, the curators its home page
+ * credits, HOMELOGOS, and for Baroque Art who designed it), index.php (where
  * the home menu's second column starts), its stylesheets and its pictures, and
- * ISL/libs/config.inc.php (whether its introduction has a map). This reads
- * them and writes:
+ * the family's libs/config.inc.php (whether its introduction has a map). This
+ * reads them and writes:
  *
  *   <site>/src/minisite.json          the exhibition's settings
  *   <site>/theme/tokens.css           its stylesheet's values (legacy-theme.mjs)
@@ -27,6 +28,7 @@
  *   node scripts/minisites/legacy-minisite.mjs <legacy exhibition folder> --name "<English title>" \
  *     [--site <minisite repository>] [--instances scripts/exporters/instances]
  * e.g. .legacy-code/islamicart/www.discoverislamicart.org/exhibitions/ISL/the_abbasids --name "The Abbasids"
+ *      .legacy-code/baroqueart/www.discoverbaroqueart.org/exhibitions/BAR/absolutism --name "Absolutism"
  */
 import { createHash } from 'node:crypto'
 import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
@@ -37,9 +39,20 @@ import { themeCss } from './legacy-theme.mjs'
 const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = resolve(HERE, '../..')
 
-// Where legacy serves the exhibitions, and the project they belong to.
-const LEGACY_EXHIBITIONS = 'https://islamicart.museumwnf.org/exhibitions/ISL'
-const PARENT = 'islamicart'
+// The families, by the folder their exhibitions sit in: where legacy serves
+// them, the site that carried them, and its name.
+export const FAMILIES = {
+  ISL: { exhibitions: 'https://islamicart.museumwnf.org/exhibitions/ISL', parent: 'islamicart', site: 'Discover Islamic Art' },
+  BAR: { exhibitions: 'https://baroqueart.museumwnf.org/exhibitions/BAR', parent: 'baroqueart', site: 'Discover Baroque Art' },
+}
+
+/** The family of a legacy exhibition folder: the folder it sits in. */
+export function familyOf(folder) {
+  const key = basename(dirname(resolve(folder)))
+  const family = FAMILIES[key]
+  if (!family) throw new Error(`${folder} is in no known family (exhibitions/${Object.keys(FAMILIES).join('|')}/).`)
+  return { key, ...family }
+}
 
 // scripts/importer/src/utils/deterministic-uuid.ts: frozen, like the ids it makes.
 const IMPORTER_UUID_NAMESPACE = 'bc112041-0784-4475-80b2-0c96425ac5ea'
@@ -85,9 +98,10 @@ export function countryCodes(source) {
 
 /**
  * HOMELOGOS, the curators the home page credits, in legacy's order: a partner
- * (getMuseumName("Mus01;tn"), its page on the parent site), or a name and a
- * country legacy wrote out, with the link legacy gave it ("" or "#"); each
- * with its logo and the space after it.
+ * (getMuseumName("Mus01;tn") or getInstitutionName("Mon11;hu"), its page on
+ * the parent site; with Baroque Art, the city and country printed after its
+ * name), or a name and a country legacy wrote out, with the link legacy gave
+ * it ("" or "#"); each with its logo and the space after it.
  */
 export function curators(config, countries) {
   const source = stripPhpComments(config)
@@ -100,9 +114,15 @@ export function curators(config, countries) {
     if (!image) throw new Error(`A HOMELOGOS entry has no sponsor_logo image: ${entry.trim().slice(0, 120)}`)
     const space = Number(field('rightmargin').replace(/"/g, '')) || 0
     const logo = `legacy/${image}`
-    const museum = field('name').match(/getMuseumName\("([^";]+);([a-z]{2})"/)
-    if (museum) {
-      return { partner: deterministicUuid(`partner:mwnf3:museums:${museum[1]}:${museum[2]}`.toLowerCase()), logo, space }
+    const partner = field('name').match(/get(Museum|Institution)Name\("([^";]+);([a-z]{2})"/)
+    if (partner) {
+      const table = partner[1] === 'Museum' ? 'museums' : 'institutions'
+      const id = deterministicUuid(`partner:mwnf3:${table}:${partner[2]}:${partner[3]}`.toLowerCase())
+      // Baroque Art printed the partner's name followed by a city legacy wrote
+      // out and the country: `getMuseumName(…).", Brno, ".$NAVLNGCOUNTRIES['cz']`.
+      const at = field('name').match(/\.\s*"\s*,\s*([^",]+?)\s*,\s*"\s*\.\s*\$NAVLNGCOUNTRIES\['([a-z]{2})'\]/)
+      if (at && !countries[at[2]]) throw new Error(`No ISO code for legacy country "${at[2]}" (${partner[2]}).`)
+      return { partner: id, ...(at ? { place: at[1], country: countries[at[2]] } : {}), logo, space }
     }
     const name = [...field('name').matchAll(/"([^"]*)"/g)].map((m) => m[1]).join('').replace(/,\s*$/, '').trim()
     const country = field('name').match(/\$NAVLNGCOUNTRIES\['([a-z]{2})'\]/)?.[1]
@@ -112,13 +132,28 @@ export function curators(config, countries) {
   })
 }
 
+/**
+ * Who designed the exhibition, as a Baroque Art home page credits it beside
+ * the curators: $designBy, its logo in the shared sponsor_logo folder and
+ * $designUrl. Null for an exhibition that names no designer (every ISL one).
+ */
+export function design(config) {
+  const source = stripPhpComments(config)
+  const value = (name) => source.match(new RegExp(`\\$${name}\\s*=\\s*'([^']*)'\\s*;`))?.[1]?.trim() ?? ''
+  const name = value('designBy')
+  if (!name) return null
+  const image = value('designLogo').match(/sponsor_logo\/(.+)$/)?.[1]
+  if (!image) throw new Error(`$designLogo is not in sponsor_logo: ${value('designLogo')}`)
+  return { name, logo: `legacy/${image}`, href: value('designUrl') }
+}
+
 /** $_HOME_MENU_COL2 from the folder's index.php; legacy's pages fell back to one column without it. */
 export function menuSecondColumnFrom(index) {
   const value = stripPhpComments(index).match(/\$_HOME_MENU_COL2\s*=\s*(\d+)\s*;/)?.[1]
   return value ? Number(value) : null
 }
 
-/** How many maps the introduction opens: none unless ISL/libs/config.inc.php lists the exhibition. */
+/** How many maps the introduction opens: none unless the family's libs/config.inc.php lists the exhibition. */
 export function mapCount(islConfig, id, images) {
   const listed = stripPhpComments(islConfig).match(/\$INTROPAGE_HAVEMAP\s*=\s*array\(([^)]*)\)/)?.[1] ?? ''
   if (![...listed.matchAll(/"(\d+)"/g)].some((m) => m[1] === id)) return 0
@@ -145,21 +180,25 @@ async function main(args) {
     console.error('usage: node legacy-minisite.mjs <legacy exhibition folder> --name "<English title>" [--site <dir>] [--instances <dir>]')
     process.exit(64)
   }
+  const family = familyOf(folder)
   const legacyFolder = basename(resolve(folder))
-  const slug = `${PARENT}-${legacyFolder.replace(/_/g, '-')}`
-  const legacyUrl = `${LEGACY_EXHIBITIONS}/${legacyFolder}/`
+  const slug = `${family.parent}-${legacyFolder.replace(/_/g, '-')}`
+  const legacyUrl = `${family.exhibitions}/${legacyFolder}/`
   const read = (file) => readFileSync(join(folder, file), 'utf8')
 
   const config = read('libs/config.inc.php')
   const id = exhibitionId(config)
   const countries = countryCodes(readFileSync(join(REPO, 'scripts/importer/src/utils/code-mappings.ts'), 'utf8'))
   const credited = curators(config, countries)
+  const designer = design(config)
   const images = readdirSync(join(folder, 'images'))
   const maps = mapCount(readFileSync(join(folder, '../libs/config.inc.php'), 'utf8'), id, images)
   const settings = {
     legacy: legacyUrl,
+    family: family.key,
     menuSecondColumnFrom: menuSecondColumnFrom(read('index.php')),
     curators: credited,
+    ...(designer ? { design: designer } : {}),
     maps,
   }
 
@@ -167,8 +206,8 @@ async function main(args) {
     kind: 'minisite',
     slug,
     name,
-    exporter: PARENT,
-    parent: PARENT,
+    exporter: family.parent,
+    parent: family.parent,
     collection_id: deterministicUuid(`collection:mwnf3:exhibitions:${id}`),
     partner_ids: credited.filter((c) => c.partner).map((c) => c.partner),
     package_name: `@museumwnf/${slug}-data`,
@@ -183,8 +222,9 @@ async function main(args) {
   writeFileSync(join(site, 'src/minisite.json'), `${JSON.stringify(settings, null, 2)}\n`)
   writeFileSync(join(site, 'theme/tokens.css'), themeCss(folder, name))
 
-  // The frame's pictures, the maps, and the curators' logos from the
-  // exhibitions' shared sponsor_logo folder; legacy's copy, not the repository's.
+  // The frame's pictures, the maps, and the curators' (and the designer's)
+  // logos from the exhibitions' shared sponsor_logo folder; legacy's copy, not
+  // the repository's.
   const pictures = [...FRAME]
   if (maps) {
     pictures.push('intro_map_thumb.jpg')
@@ -204,7 +244,10 @@ async function main(args) {
   const files = {}
   const sources = [
     ...pictures.map((file) => [file, `${legacyUrl}images/${file}`]),
-    ...credited.map((c) => [basename(c.logo), `${LEGACY_EXHIBITIONS}/sponsor_logo/${basename(c.logo)}`]),
+    ...[...credited, ...(designer ? [designer] : [])].map((c) => [
+      basename(c.logo),
+      `${family.exhibitions}/sponsor_logo/${basename(c.logo)}`,
+    ]),
   ].sort(([a], [b]) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
   for (const [file, url] of sources) {
     const bytes = await download(url)
@@ -213,23 +256,25 @@ async function main(args) {
   }
   const noSwedishMap = maps && !images.includes('map_se.jpg')
   const about =
-    `The frame this website takes from legacy Discover Islamic Art's virtual exhibition ${name} ` +
-    `(exhibitions/ISL/${legacyFolder}/), each file as legacy serves it, byte for byte; the curators' logos come ` +
+    `The frame this website takes from legacy ${family.site}'s virtual exhibition ${name} ` +
+    `(exhibitions/${family.key}/${legacyFolder}/), each file as legacy serves it, byte for byte; the ` +
+    `${designer ? "curators' and the designer's" : "curators'"} logos come ` +
     `from the exhibitions' shared sponsor_logo folder. tests/assets.test.js checks every file against its hash.` +
     (noSwedishMap ? ' Legacy drew no Swedish map (map_se.jpg): the map window shows none in Swedish.' : '')
   writeFileSync(join(assets, 'SOURCES.json'), `${JSON.stringify({ about, files }, null, 2)}\n`)
-  writeFileSync(join(site, 'README.md'), siteReadme({ slug, name, legacyFolder }))
+  writeFileSync(join(site, 'README.md'), siteReadme({ slug, name, legacyFolder, family }))
   console.log(`site      ${resolve(site)}: minisite.json, tokens.css, ${sources.length} pictures, README.md`)
 }
 
 /** The mini-site's own README: what it is, and how each role works on it. */
-export function siteReadme({ slug, name, legacyFolder }) {
+export function siteReadme({ slug, name, legacyFolder, family = { key: 'ISL', ...FAMILIES.ISL } }) {
+  const legacyAddress = `${family.exhibitions.replace(/^https:\/\//, '')}/${legacyFolder}/`
   return `# ${slug}
 
-**${name}**, a virtual exhibition of Discover Islamic Art, as a website of its
-own. On legacy it lived inside Discover Islamic Art
-(\`islamicart.museumwnf.org/exhibitions/ISL/${legacyFolder}/\`); here it is a
-product in its own right, and Discover Islamic Art links to it.
+**${name}**, a virtual exhibition of ${family.site}, as a website of its
+own. On legacy it lived inside ${family.site}
+(\`${legacyAddress}\`); here it is a
+product in its own right, and ${family.site} links to it.
 
 It shows what legacy showed, the way legacy showed it: the exhibition's home
 page, its introduction, its pages theme by theme, and the three windows those

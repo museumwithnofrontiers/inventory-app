@@ -107,6 +107,20 @@ describe('buildCollectionItemEntry', () => {
     )
     expect(entry).not.toHaveProperty('details')
   })
+
+  it('carries the artist and material lines Baroque Art captions print', () => {
+    const entry = buildCollectionItemEntry(
+      {
+        collection_id: 'page',
+        item_id: 'item',
+        display_order: 1,
+        extra: { n: 1, n2: 1, item_artist: { en: 'Andrea Pozzo' }, item_material: { en: 'Fresco' } },
+        picture_path: null,
+      },
+      url
+    )
+    expect(entry.caption).toEqual({ en: { artist: 'Andrea Pozzo', material: 'Fresco' } })
+  })
 })
 
 describe('groupDetailViews', () => {

@@ -59,6 +59,28 @@ const ISLAMICART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
   'footer.copyright': 'footer5',
 }
 
+/**
+ * The words Discover Baroque Art's virtual exhibitions print where they are
+ * not Discover Islamic Art's: their pages (exhibitions/BAR/generic_*.php) are
+ * ISL's with Baroque Art's title and home-page link, and a home page that
+ * credits the curators, the partner institutions and the designer. Every
+ * other word is the same word as ISL's, read from the shared `minisite`
+ * namespace. Each Baroque Art mini-site carries these in its own locales,
+ * extracted with `extract:standalone -- baroqueart-exhibitions --namespace
+ * minisite`: they are English only, as the exhibitions were
+ * (exhibitions/BAR/libs/config.inc.php: $LNGLIST), where the shared
+ * namespace promises every ISL language.
+ */
+const BAROQUEART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
+  'identity.windowTitle': 've_bar_windowstitle',
+  'header.homeTip': 'Back_to_dbaHome',
+  // The home page's band (generic_homelogo.php), in its order.
+  'home.curatedBy': 'exhibition_curated_baroqueart',
+  'home.cooperation': 'exhibition_curated_baroqueart_cooperation',
+  'home.partnerInstitutions': 'exhibition_curated_baroqueart_partner',
+  'home.design': 'exhibition_curated_baroqueart_design',
+}
+
 export const STANDALONE_SITES: Record<string, StandaloneSite> = {
   islamicart: {
     root: 'islamicart/www.discoverislamicart.org',
@@ -321,5 +343,15 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     // The exhibition pages read group 6 ($TRSL_GROUP), with 2 and 3.
     groups: [2, 3, 6],
     words: ISLAMICART_EXHIBITION_WORDS,
+  },
+
+  'baroqueart-exhibitions': {
+    root: 'baroqueart/www.discoverbaroqueart.org',
+    host: 'https://baroqueart.museumwnf.org',
+    // exhibitions/BAR/libs/config.inc.php: $LNGLIST.
+    languages: ['en'],
+    // The exhibition pages read group 6 ($TRSL_GROUP), with 2 and 3.
+    groups: [2, 3, 6],
+    words: BAROQUEART_EXHIBITION_WORDS,
   },
 }
