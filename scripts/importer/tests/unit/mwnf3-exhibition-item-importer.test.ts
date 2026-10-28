@@ -300,10 +300,33 @@ describe('Mwnf3ExhibitionItemImporter — story #1225: page image EAV fields', (
 });
 
 // ===========================================================================
-// Tests: story #1222 — exhibition_page_image_details_fields extended fields
+// Tests: detail views (exhibition_page_image_details) are placements
 // ===========================================================================
 
-describe('Mwnf3ExhibitionItemImporter — story #1222: page image detail annotation EAV fields', () => {
+const MONUMENT_BC = 'mwnf3:monuments:bar:it:Mon11:9';
+const DETAIL_BC = 'mwnf3:monument_details:BAR:it:Mon11:9:3';
+const DETAIL_PICTURE_BC = 'mwnf3:monument_detail_pictures:BAR:it:Mon11:9:3:2';
+
+/** A Baroque Art placement of monument 'M;BAR;it;11;9' at n=4, n2=2, with no picture of its own. */
+const MONUMENT_PLACEMENT = { ...PAGE_IMAGE_ROW, n: 4, n2: 2, ref_item: 'M;BAR;it;11;9', picture: '', project_id: 'BAR' };
+
+const DETAIL_PICTURE_ROWS = [
+  { project_id: 'BAR', country_id: 'it', institution_id: 'Mon11', monument_id: 9, detail_id: 3, picture_id: 2, path: 'monuments/bar/it/11/9/details/3/2.jpg' },
+];
+
+function withDetailPictures(queryMock: ReturnType<typeof vi.fn>): ReturnType<typeof vi.fn> {
+  const query = queryMock as unknown as (sql: string) => Promise<unknown[]>;
+  return vi.fn(async (sql: string) => {
+    if (sql.includes('monument_detail_pictures')) return DETAIL_PICTURE_ROWS;
+    return query(sql);
+  });
+}
+
+function detailRow(id: number, n2: number, ref: string, picture: string): Record<string, unknown> {
+  return { detail_id: id, image_id: IMAGE_ID, n: 1, n2, ref_detail_item: ref, picture_details: picture };
+}
+
+describe('Mwnf3ExhibitionItemImporter — detail views are placements of their own', () => {
   let tracker: UnifiedTracker;
   let writeCollectionItemMock: ReturnType<typeof vi.fn>;
 
@@ -311,93 +334,142 @@ describe('Mwnf3ExhibitionItemImporter — story #1222: page image detail annotat
     vi.clearAllMocks();
     tracker = new UnifiedTracker();
     tracker.set(PAGE_COLLECTION_BC, 'page-collection-uuid', 'collection');
-    tracker.set(ITEM_BC, 'item-uuid', 'item');
+    tracker.set(MONUMENT_BC, 'monument-uuid', 'item');
+    tracker.set(DETAIL_BC, 'detail-uuid', 'item');
+    tracker.set(DETAIL_PICTURE_BC, 'detail-picture-uuid', 'item');
+    tracker.set('mwnf3:projects:bar', 'bar-context-uuid', 'context');
     writeCollectionItemMock = vi.fn().mockResolvedValue(undefined);
   });
 
-  it('stores item_name, item_date, item_dynasty, item_location on nested detail annotation', async () => {
-    const DETAIL_ID = 99;
-    const detailRows = [
-      { detail_id: DETAIL_ID, image_id: IMAGE_ID, n: 1, n2: 0, ref_detail_item: null, picture_details: null },
+  it('places the monument-detail picture a view shows, at the placement’s n with its own n2 and texts', async () => {
+    const details = [detailRow(60, 3, 'BAR;it;11;9;3', 'monuments/bar/it/11/9/details/3/2.jpg')];
+    const detailEav = [
+      { entity_id: 60, lang_id: 'en', field: 'item_name', value: 'High altar' },
+      { entity_id: 60, lang_id: 'en', field: 'item_artist', value: 'Gian Lorenzo Bernini' },
     ];
-    const detailEavRows = [
-      { entity_id: DETAIL_ID, lang_id: 'en', field: 'item_name', value: 'Fragment' },
-      { entity_id: DETAIL_ID, lang_id: 'en', field: 'item_date', value: '10th century' },
-      { entity_id: DETAIL_ID, lang_id: 'en', field: 'item_dynasty', value: 'Fatimid' },
-      { entity_id: DETAIL_ID, lang_id: 'en', field: 'item_location', value: 'Cairo' },
-    ];
-
     const ctx = makeContext(
-      makePageImageQueryMock([PAGE_IMAGE_ROW], [], detailRows, detailEavRows),
+      withDetailPictures(makePageImageQueryMock([MONUMENT_PLACEMENT], [], details, detailEav)),
       tracker,
       writeCollectionItemMock
     );
 
-    const importer = new Mwnf3ExhibitionItemImporter(ctx);
-    await importer.import();
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
 
-    const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    const details = extra.details as Array<Record<string, unknown>>;
-    expect(details).toHaveLength(1);
-    expect(details[0].item_name).toEqual({ en: 'Fragment' });
-    expect(details[0].item_date).toEqual({ en: '10th century' });
-    expect(details[0].item_dynasty).toEqual({ en: 'Fatimid' });
-    expect(details[0].item_location).toEqual({ en: 'Cairo' });
-  });
-
-  it('regression: detail_name and detail_justification remain present on nested annotations', async () => {
-    const DETAIL_ID = 100;
-    const detailRows = [
-      { detail_id: DETAIL_ID, image_id: IMAGE_ID, n: 1, n2: 0, ref_detail_item: null, picture_details: null },
-    ];
-    const detailEavRows = [
-      { entity_id: DETAIL_ID, lang_id: 'en', field: 'detail_name', value: 'Close-up' },
-      { entity_id: DETAIL_ID, lang_id: 'en', field: 'detail_justification', value: 'Shows craftsmanship.' },
-    ];
-
-    const ctx = makeContext(
-      makePageImageQueryMock([PAGE_IMAGE_ROW], [], detailRows, detailEavRows),
-      tracker,
-      writeCollectionItemMock
-    );
-
-    const importer = new Mwnf3ExhibitionItemImporter(ctx);
-    await importer.import();
-
-    const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    const details = extra.details as Array<Record<string, unknown>>;
-    expect(details[0].detail_name).toEqual({ en: 'Close-up' });
-    expect(details[0].detail_justification).toEqual({ en: 'Shows craftsmanship.' });
-  });
-
-  it('preserves n, n2, ref_detail_item, and picture_details on annotation', async () => {
-    const DETAIL_ID = 101;
-    const detailRows = [
-      {
-        detail_id: DETAIL_ID,
-        image_id: IMAGE_ID,
-        n: 2,
-        n2: 1,
-        ref_detail_item: 'O;ISL;jo;1;9',
-        picture_details: 'detail.jpg',
+    const calls = writeCollectionItemMock.mock.calls.map((c) => c[0]);
+    expect(calls.map((c) => c.item_id)).toEqual(['monument-uuid', 'detail-picture-uuid']);
+    expect(calls[0].extra.details).toBeUndefined();
+    expect(calls[1]).toMatchObject({
+      collection_id: 'page-collection-uuid',
+      display_order: 4,
+      extra: {
+        n: 4,
+        n2: 3,
+        parent_n2: 2,
+        detail_n: 1,
+        item_name: { en: 'High altar' },
+        item_artist: { en: 'Gian Lorenzo Bernini' },
       },
-    ];
+    });
+    expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
 
+  it('places the referenced detail, its picture as a page image, when the picture is not one of the detail’s', async () => {
+    const details = [detailRow(61, 2, 'BAR;it;11;9;3', 'monuments/bar/it/11/9/other.jpg')];
     const ctx = makeContext(
-      makePageImageQueryMock([PAGE_IMAGE_ROW], [], detailRows),
+      withDetailPictures(makePageImageQueryMock([MONUMENT_PLACEMENT], [], details)),
       tracker,
       writeCollectionItemMock
     );
 
-    const importer = new Mwnf3ExhibitionItemImporter(ctx);
-    await importer.import();
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
 
-    const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    const details = extra.details as Array<Record<string, unknown>>;
-    expect(details[0].n).toBe(2);
-    expect(details[0].n2).toBe(1);
-    expect(details[0].ref_detail_item).toBe('O;ISL;jo;1;9');
-    expect(details[0].picture_details).toBe('detail.jpg');
+    expect(writeCollectionItemMock.mock.calls[1][0].item_id).toBe('detail-uuid');
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'monuments/bar/it/11/9/other.jpg', display_order: 4 })
+    );
+  });
+
+  it('places the referenced detail alone when the view shows no picture', async () => {
+    const details = [detailRow(62, 2, 'BAR;it;11;9;3', '')];
+    const ctx = makeContext(
+      withDetailPictures(makePageImageQueryMock([MONUMENT_PLACEMENT], [], details)),
+      tracker,
+      writeCollectionItemMock
+    );
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(writeCollectionItemMock.mock.calls[1][0].item_id).toBe('detail-uuid');
+    expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
+
+  it('makes a view that references no detail an item of its own under the placed item', async () => {
+    const details = [detailRow(63, 2, '', 'custom/exhibition/137.jpg')];
+    const detailEav = [
+      { entity_id: 63, lang_id: 'en', field: 'item_name', value: 'Benedict Altar' },
+      { entity_id: 63, lang_id: 'en', field: 'detail_justification', value: 'Painting of the high altar.' },
+    ];
+    const ctx = makeContext(
+      withDetailPictures(makePageImageQueryMock([MONUMENT_PLACEMENT], [], details, detailEav)),
+      tracker,
+      writeCollectionItemMock
+    );
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(ctx.strategy.writeItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'picture',
+        parent_id: 'monument-uuid',
+        backward_compatibility: 'mwnf3:exhibition_page_image_details:63',
+      })
+    );
+    expect(ctx.strategy.writeItemImage).not.toHaveBeenCalled();
+    expect(ctx.strategy.attachTagsToItem).toHaveBeenCalledWith('custom-picture-uuid', ['custom-tag-uuid']);
+    expect(ctx.strategy.writeItemTranslation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        context_id: 'bar-context-uuid',
+        name: 'Benedict Altar',
+        description: 'Painting of the high altar.',
+      })
+    );
+    expect(writeCollectionItemMock.mock.calls[1][0].item_id).toBe('custom-picture-uuid');
+    // The placeholder legacy shows stays at the view's position.
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'custom/exhibition/137.jpg', display_order: 4 })
+    );
+  });
+
+  it('places the detail and keeps the placeholder as a page image, never a picture of the detail', async () => {
+    const details = [detailRow(67, 2, 'BAR;it;11;9;3', 'custom/exhibition/137.jpg')];
+    const ctx = makeContext(
+      withDetailPictures(makePageImageQueryMock([MONUMENT_PLACEMENT], [], details)),
+      tracker,
+      writeCollectionItemMock
+    );
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(ctx.strategy.writeItem).not.toHaveBeenCalled();
+    expect(writeCollectionItemMock.mock.calls[1][0].item_id).toBe('detail-uuid');
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'custom/exhibition/137.jpg', display_order: 4 })
+    );
+  });
+
+  it('skips and reports a view whose detail is not imported', async () => {
+    const details = [detailRow(64, 2, 'BAR;it;11;9;99', '')];
+    const ctx = makeContext(
+      withDetailPictures(makePageImageQueryMock([MONUMENT_PLACEMENT], [], details)),
+      tracker,
+      writeCollectionItemMock
+    );
+
+    const result = await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(writeCollectionItemMock).toHaveBeenCalledTimes(1);
+    expect(result.skipped).toBe(1);
+    expect(result.warnings?.some((w) => w.includes('detail view 64') && w.includes('detail not found'))).toBe(true);
   });
 });
 
@@ -729,6 +801,19 @@ describe('Mwnf3ExhibitionItemImporter — placements link picture child items', 
 
     expect(ctx.strategy.writeItem).not.toHaveBeenCalled();
     expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('existing-picture-uuid');
+  });
+
+  it('links the item and keeps the "Awaiting Image" placeholder as a page image, making no picture of it', async () => {
+    const row = { ...PAGE_IMAGE_ROW, picture: 'custom/exhibition/137.jpg' };
+    const ctx = makeContext(withPictures(makePageImageQueryMock([row], [])), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(ctx.strategy.writeItem).not.toHaveBeenCalled();
+    expect(writeCollectionItemMock.mock.calls[0][0].item_id).toBe('item-uuid');
+    expect(ctx.strategy.writeCollectionImage).toHaveBeenCalledWith(
+      expect.objectContaining({ path: 'custom/exhibition/137.jpg', display_order: 1 })
+    );
   });
 
   it('links the item alone when the placement shows no picture', async () => {

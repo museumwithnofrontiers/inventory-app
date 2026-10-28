@@ -67,6 +67,14 @@ interface CollectionItemRow {
   picture_path: string | null
 }
 
+/** A detail view of a placement: a placement of its own whose extra carries `parent_n2`. */
+export interface DetailViewRow {
+  collection_id: string
+  extra: unknown
+  /** The image of the picture the view shows, when it links one. */
+  picture_path: string | null
+}
+
 export class CollectionExporter extends BaseExporter {
   getName(): string {
     return 'Collections'
@@ -101,7 +109,7 @@ export class CollectionExporter extends BaseExporter {
     const colPh = this.placeholders(collectionIds.length)
     const langCodeMap = await this.buildLangCodeMap()
 
-    const [allTranslations, images, itemLinks] = await Promise.all([
+    const [allTranslations, images, itemLinks, detailViews] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT collection_id, language_id, title, description, quote, url, extra
@@ -134,10 +142,27 @@ export class CollectionExporter extends BaseExporter {
          JOIN items i ON i.id = ci.item_id
          LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
+           AND JSON_EXTRACT(ci.extra, '$.parent_n2') IS NULL
            AND ((i.type IN ('object', 'monument') AND i.project_id IN (${ph}))
              OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
          ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), ci.item_id`,
         [...collectionIds, ...this.projectIds, ...this.projectIds]
+      ),
+      // A placement's detail views ship inside it, as its `details`: the
+      // pictures legacy showed in its place, each with its own texts.
+      this.db.query<DetailViewRow>(
+        `SELECT ci.collection_id, ci.extra,
+                IF(i.type = 'picture',
+                   (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
+                    ORDER BY ii.display_order, ii.id LIMIT 1),
+                   NULL) AS picture_path
+         FROM collection_item ci
+         JOIN items i ON i.id = ci.item_id
+         WHERE ci.collection_id IN (${colPh})
+           AND JSON_EXTRACT(ci.extra, '$.parent_n2') IS NOT NULL
+         ORDER BY ci.collection_id, JSON_EXTRACT(ci.extra, '$.n'), JSON_EXTRACT(ci.extra, '$.parent_n2'),
+                  JSON_EXTRACT(ci.extra, '$.n2'), ci.item_id`,
+        collectionIds
       ),
     ])
 
@@ -197,10 +222,13 @@ export class CollectionExporter extends BaseExporter {
 
     // collection_id -> items[]
     const imageUrlFn = (path: string) => this.imageUrl(path)
+    const viewsOf = groupDetailViews(detailViews)
     const itemMap = new Map<string, ReturnType<typeof buildCollectionItemEntry>[]>()
     for (const link of itemLinks) {
       if (!itemMap.has(link.collection_id)) itemMap.set(link.collection_id, [])
-      itemMap.get(link.collection_id)!.push(buildCollectionItemEntry(link, imageUrlFn))
+      const extra = parseJson(link.extra) as Record<string, unknown> | null
+      const views = viewsOf.get(detailViewKey(link.collection_id, extra?.n, extra?.n2)) ?? []
+      itemMap.get(link.collection_id)!.push(buildCollectionItemEntry(link, imageUrlFn, views))
     }
 
     const output = publishedCollections.map(c => ({
@@ -282,20 +310,43 @@ function extractCaptions(fields: Record<string, unknown>): Record<string, Collec
   return caption
 }
 
+/** The placement a detail view belongs to: its page, its position and the placement's n2. */
+function detailViewKey(collectionId: string, n: unknown, n2: unknown): string {
+  return `${collectionId}|${String(n)}|${String(n2)}`
+}
+
+/**
+ * Groups detail views by the placement they belong to (same page, same n,
+ * `parent_n2` = the placement's n2), in their query order. Exported for unit
+ * tests.
+ */
+export function groupDetailViews(views: DetailViewRow[]): Map<string, DetailViewRow[]> {
+  const map = new Map<string, DetailViewRow[]>()
+  for (const view of views) {
+    const extra = parseJson(view.extra) as Record<string, unknown> | null
+    const key = detailViewKey(view.collection_id, extra?.n, extra?.parent_n2)
+    if (!map.has(key)) map.set(key, [])
+    map.get(key)!.push(view)
+  }
+  return map
+}
+
 /**
  * Builds one collections.json item entry from a collection_item pivot row.
  * Exported for unit tests.
  *
  * `extra` holds legacy placement metadata: `n`/`n2` (grid row/column — items
  * sharing the same row can have several selectable variants at different
- * columns, mirroring the legacy artintro/exhibition thumbnail-grid UI),
- * per-language caption overrides, and — for exhibitions only — a `details`
- * array of additional selectable sub-images of the same item (e.g. a
- * close-up of one part of a monument), each with its own image and caption.
+ * columns, mirroring the legacy artintro/exhibition thumbnail-grid UI) and
+ * per-language caption overrides. `views` are the placement's detail views
+ * (exhibitions only): the pictures legacy showed in its place (e.g. a
+ * close-up of one part of a monument), each with its own image and caption,
+ * shipped as its `details`.
  */
 export function buildCollectionItemEntry(
   link: CollectionItemRow,
-  imageUrlFn: (path: string) => string
+  imageUrlFn: (path: string) => string,
+  views: DetailViewRow[] = []
 ): {
   id: string
   display_order: number | null
@@ -308,17 +359,14 @@ export function buildCollectionItemEntry(
   const variantOrder = extra && typeof extra.n2 === 'number' ? extra.n2 : null
   const caption = extra ? extractCaptions(extra) : {}
 
-  const details: CollectionItemDetailEntry[] = []
-  if (extra && Array.isArray(extra.details)) {
-    for (const raw of extra.details as Record<string, unknown>[]) {
-      const picture = typeof raw.picture_details === 'string' ? raw.picture_details : null
-      const detailCaption = extractCaptions(raw)
-      details.push({
-        image_url: picture ? imageUrlFn(picture) : null,
-        ...(Object.keys(detailCaption).length > 0 ? { caption: detailCaption } : {}),
-      })
+  const details: CollectionItemDetailEntry[] = views.map(view => {
+    const viewExtra = parseJson(view.extra) as Record<string, unknown> | null
+    const detailCaption = viewExtra ? extractCaptions(viewExtra) : {}
+    return {
+      image_url: view.picture_path ? imageUrlFn(view.picture_path) : null,
+      ...(Object.keys(detailCaption).length > 0 ? { caption: detailCaption } : {}),
     }
-  }
+  })
 
   return {
     id: link.item_id,
