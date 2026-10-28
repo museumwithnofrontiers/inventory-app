@@ -46,6 +46,8 @@ const CAPTION_FIELD_MAP: Record<string, keyof CollectionItemCaption> = {
 
 /** One selectable detail sub-image of an item (e.g. a close-up of one part of a monument). */
 interface CollectionItemDetailEntry {
+  /** The record the view shows (DetailViewRow.record_id). */
+  id?: string
   image_url: string | null
   caption?: Record<string, CollectionItemCaption>
 }
@@ -85,6 +87,12 @@ interface CollectionItemRow {
 /** A detail view of a placement: a placement of its own whose extra carries `parent_n2`. */
 export interface DetailViewRow {
   collection_id: string
+  /**
+   * The record the view shows: the monument detail whose picture it links (or
+   * the detail itself), else the item its own picture belongs to. Legacy's
+   * captions fell back on the monument detail's texts.
+   */
+  record_id: string | null
   extra: unknown
   /** The image of the picture the view shows, when it links one. */
   picture_path: string | null
@@ -170,7 +178,9 @@ export class CollectionExporter extends BaseExporter {
       // A placement's detail views ship inside it, as its `details`: the
       // pictures legacy showed in its place, each with its own texts.
       this.db.query<DetailViewRow>(
-        `SELECT ci.collection_id, ci.extra,
+        `SELECT ci.collection_id,
+                IF(i.type = 'picture', i.parent_id, i.id) AS record_id,
+                ci.extra,
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
                     ORDER BY ii.display_order, ii.id LIMIT 1),
@@ -464,6 +474,7 @@ export function buildCollectionItemEntry(
     const viewExtra = parseJson(view.extra) as Record<string, unknown> | null
     const detailCaption = viewExtra ? extractCaptions(viewExtra) : {}
     return {
+      ...(view.record_id ? { id: view.record_id } : {}),
       image_url: view.picture_path ? imageUrlFn(view.picture_path) : null,
       ...(Object.keys(detailCaption).length > 0 ? { caption: detailCaption } : {}),
     }

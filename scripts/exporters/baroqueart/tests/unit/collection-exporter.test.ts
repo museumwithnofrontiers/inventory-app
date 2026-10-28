@@ -85,17 +85,17 @@ describe('buildCollectionItemEntry', () => {
     expect(entry).not.toHaveProperty('image_url')
   })
 
-  it('ships its detail views as details, each with its image and caption', () => {
+  it('ships its detail views as details, each with the record it shows, its image and caption', () => {
     const entry = buildCollectionItemEntry(
       { collection_id: 'page', item_id: 'monument', display_order: 4, extra: { n: 4, n2: 2 }, picture_path: null },
       url,
       [
-        { collection_id: 'page', extra: { n: 4, n2: 2, parent_n2: 2, item_name: { en: 'High altar' } }, picture_path: 'd1.jpg' },
-        { collection_id: 'page', extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: null },
+        { collection_id: 'page', record_id: 'detail', extra: { n: 4, n2: 2, parent_n2: 2, item_name: { en: 'High altar' } }, picture_path: 'd1.jpg' },
+        { collection_id: 'page', record_id: null, extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: null },
       ]
     )
     expect(entry.details).toEqual([
-      { image_url: 'https://example.org/pub/d1.jpg', caption: { en: { name: 'High altar' } } },
+      { id: 'detail', image_url: 'https://example.org/pub/d1.jpg', caption: { en: { name: 'High altar' } } },
       { image_url: null },
     ])
   })
@@ -126,10 +126,10 @@ describe('buildCollectionItemEntry', () => {
 describe('groupDetailViews', () => {
   it('groups views by page, position and the n2 of the placement they belong to, in order', () => {
     const views = [
-      { collection_id: 'page', extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'a.jpg' },
-      { collection_id: 'page', extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: 'b.jpg' },
-      { collection_id: 'page', extra: { n: 4, n2: 1, parent_n2: 1 }, picture_path: 'c.jpg' },
-      { collection_id: 'other', extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'd.jpg' },
+      { collection_id: 'page', record_id: null, extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'a.jpg' },
+      { collection_id: 'page', record_id: null, extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: 'b.jpg' },
+      { collection_id: 'page', record_id: null, extra: { n: 4, n2: 1, parent_n2: 1 }, picture_path: 'c.jpg' },
+      { collection_id: 'other', record_id: null, extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'd.jpg' },
     ]
     const groups = groupDetailViews(views)
     expect(groups.get('page|4|2')?.map(v => v.picture_path)).toEqual(['a.jpg', 'b.jpg'])

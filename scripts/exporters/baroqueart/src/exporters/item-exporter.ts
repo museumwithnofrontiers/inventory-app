@@ -202,13 +202,14 @@ export class ItemExporter extends BaseExporter {
     // parent monument's "Special Features" section; browse and search never
     // list them. They are fetched here and folded into details[] on the
     // parent item below.
+    // A mini-site's package holds the details of its own records only.
     const detailRows = await this.db.query<DetailRow>(
       `SELECT id, internal_name, backward_compatibility, parent_id, display_order
        FROM items
-       WHERE project_id IN (${ph})
+       WHERE ${scope ? `parent_id IN (${itemPh})` : `project_id IN (${ph})`}
          AND type = 'detail'
        ORDER BY parent_id, display_order, internal_name`,
-      this.projectIds
+      scope ? itemIds : this.projectIds
     )
 
     // Some details were imported with parent_id = null (the importer logs
