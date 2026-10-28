@@ -156,10 +156,12 @@ export class CollectionExporter extends BaseExporter {
       // items.json — 'picture' and 'detail' children are embedded on their
       // parent there (#1515), so a membership row pointing at one would
       // dangle. An exhibition placement links the picture child item legacy
-      // showed: it ships as its parent item, with that picture's image.
+      // showed: it ships as its parent item, with that picture's image. A
+      // mini-site also ships the custom photos placed with no item, each a
+      // picture of its own with no parent.
       this.db.query<CollectionItemRow>(
         `SELECT ci.collection_id,
-                IF(i.type = 'picture', i.parent_id, i.id) AS item_id,
+                IF(i.type = 'picture' AND i.parent_id IS NOT NULL, i.parent_id, i.id) AS item_id,
                 ci.display_order, ci.extra,
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
@@ -171,9 +173,11 @@ export class CollectionExporter extends BaseExporter {
          WHERE ci.collection_id IN (${colPh})
            AND JSON_EXTRACT(ci.extra, '$.parent_n2') IS NULL
            AND ((i.type IN ('object', 'monument') AND i.project_id IN (${ph}))
-             OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
+             OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph}))${
+               scope ? `\n             OR (i.type = 'picture' AND i.parent_id IS NULL AND i.project_id IN (${ph}))` : ''
+             })
          ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), ci.item_id`,
-        [...collectionIds, ...this.projectIds, ...this.projectIds]
+        [...collectionIds, ...this.projectIds, ...this.projectIds, ...(scope ? this.projectIds : [])]
       ),
       // A placement's detail views ship inside it, as its `details`: the
       // pictures legacy showed in its place, each with its own texts.

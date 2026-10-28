@@ -1,7 +1,7 @@
 // node --test scripts/minisites/legacy-minisite.test.mjs
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { curators, design, deterministicUuid, exhibitionId, familyFiles, familyOf, mapCount, menuSecondColumnFrom } from './legacy-minisite.mjs'
+import { banner, curators, design, deterministicUuid, exhibitionId, familyFiles, familyOf, mapCount, menuSecondColumnFrom } from './legacy-minisite.mjs'
 
 test('ids are the importer’s own UUIDv5 of the backward_compatibility', () => {
   assert.equal(deterministicUuid('collection:mwnf3:exhibitions:13'), 'da493358-92ba-5a20-8866-fa30fb03bfb2')
@@ -96,5 +96,12 @@ test("a site reads its family's label set and opens with its family's window tit
   const own = familyFiles(files, familyOf('exhibitions/BAR/absolutism'))
   assert.deepEqual(JSON.parse(own.packageJson).viewerI18n, { class: 'minisiteBaroque', namespace: 'absolutism' })
   assert.equal(own.indexHtml, '<title>Discover Baroque Art Virtual Museum | Absolutism</title>')
+  assert.match(own.texts, /from '@museumwnf\/viewer-i18n\/minisiteBaroque'/)
   assert.equal(familyFiles(files, familyOf('exhibitions/ISL/the_abbasids')).indexHtml, files.indexHtml)
+})
+test("Baroque Art's home picture: drawn by the stylesheet, and in the folder", () => {
+  const styles = '#banner{ position:absolute; top:-600px; background-image: url(images/banner.png); }'
+  assert.equal(banner(styles, ['banner.png']), 'legacy/banner.png')
+  assert.equal(banner(styles, []), null)
+  assert.equal(banner('#header { color: red; }', ['banner.png']), null)
 })

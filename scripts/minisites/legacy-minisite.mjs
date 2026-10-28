@@ -61,8 +61,9 @@ export const FAMILIES = {
 }
 
 /**
- * A site's package.json and index.html, with its family's viewer-i18n class
- * and window title: minisite-template's are Discover Islamic Art's.
+ * A site's package.json, index.html and src/texts.js, with its family's
+ * viewer-i18n class, window title and label bundle: minisite-template's are
+ * Discover Islamic Art's.
  */
 export function familyFiles({ packageJson, indexHtml }, family) {
   const pkg = JSON.parse(packageJson)
@@ -70,6 +71,10 @@ export function familyFiles({ packageJson, indexHtml }, family) {
   return {
     packageJson: `${JSON.stringify(pkg, null, 2)}\n`,
     indexHtml: indexHtml.replace(/<title>[^|<]*\|/, `<title>${family.windowTitle} |`),
+    texts:
+      `// The label set this website reads from viewer-i18n: ${family.site}'s own,\n` +
+      `// written by inventory-app's scripts/minisites/legacy-minisite.mjs.\n` +
+      `export { catalogues } from '@museumwnf/viewer-i18n/${family.labels}'\n`,
   }
 }
 
@@ -174,6 +179,16 @@ export function design(config) {
   return { name, logo: `legacy/${image}`, href: value('designUrl') }
 }
 
+/**
+ * Discover Baroque Art's home picture: the stylesheet's #banner draws the
+ * folder's images/banner.png against the footer. None where the stylesheet
+ * draws none, or names a file the folder lacks (legacy showed nothing).
+ */
+export function banner(styles, images) {
+  const rule = styles.replace(/\/\*[\s\S]*?\*\//g, '').match(/#banner\s*\{([^}]*)\}/)?.[1] ?? ''
+  return /url\(\s*['"]?images\/banner\.png['"]?\s*\)/.test(rule) && images.includes('banner.png') ? 'legacy/banner.png' : null
+}
+
 /** $_HOME_MENU_COL2 from the folder's index.php; legacy's pages fell back to one column without it. */
 export function menuSecondColumnFrom(index) {
   const value = stripPhpComments(index).match(/\$_HOME_MENU_COL2\s*=\s*(\d+)\s*;/)?.[1]
@@ -220,12 +235,14 @@ async function main(args) {
   const designer = design(config)
   const images = readdirSync(join(folder, 'images'))
   const maps = mapCount(readFileSync(join(folder, '../libs/config.inc.php'), 'utf8'), id, images)
+  const homePicture = banner(read('_styles.css'), images)
   const settings = {
     legacy: legacyUrl,
     family: family.key,
     menuSecondColumnFrom: menuSecondColumnFrom(read('index.php')),
     curators: credited,
     ...(designer ? { design: designer } : {}),
+    ...(homePicture ? { banner: homePicture } : {}),
     maps,
   }
 
@@ -254,11 +271,12 @@ async function main(args) {
   )
   writeFileSync(join(site, 'package.json'), own.packageJson)
   writeFileSync(join(site, 'index.html'), own.indexHtml)
+  writeFileSync(join(site, 'src/texts.js'), own.texts)
 
   // The frame's pictures, the maps, and the curators' (and the designer's)
   // logos from the exhibitions' shared sponsor_logo folder; legacy's copy, not
   // the repository's.
-  const pictures = [...FRAME]
+  const pictures = [...FRAME, ...(homePicture ? ['banner.png'] : [])]
   if (maps) {
     pictures.push('intro_map_thumb.jpg')
     for (let n = 1; n <= maps; n++) {
@@ -296,7 +314,7 @@ async function main(args) {
     (noSwedishMap ? ' Legacy drew no Swedish map (map_se.jpg): the map window shows none in Swedish.' : '')
   writeFileSync(join(assets, 'SOURCES.json'), `${JSON.stringify({ about, files }, null, 2)}\n`)
   writeFileSync(join(site, 'README.md'), siteReadme({ slug, name, legacyFolder, family }))
-  console.log(`site      ${resolve(site)}: minisite.json, tokens.css, ${sources.length} pictures, package.json, index.html, README.md`)
+  console.log(`site      ${resolve(site)}: minisite.json, tokens.css, ${sources.length} pictures, package.json, index.html, texts.js, README.md`)
 }
 
 /** The mini-site's own README: what it is, and how each role works on it. */
