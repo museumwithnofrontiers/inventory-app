@@ -60,25 +60,60 @@ const ISLAMICART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
 }
 
 /**
- * The words Discover Baroque Art's virtual exhibitions print where they are
- * not Discover Islamic Art's: their pages (exhibitions/BAR/generic_*.php) are
- * ISL's with Baroque Art's title and home-page link, and a home page that
- * credits the curators, the partner institutions and the designer. Every
- * other word is the same word as ISL's, read from the shared `minisite`
- * namespace. Each Baroque Art mini-site carries these in its own locales,
- * extracted with `extract:standalone -- baroqueart-exhibitions --namespace
- * minisite`: they are English only, as the exhibitions were
- * (exhibitions/BAR/libs/config.inc.php: $LNGLIST), where the shared
- * namespace promises every ISL language.
+ * The words Discover Baroque Art's virtual exhibitions print. Their pages
+ * (exhibitions/BAR/generic_*.php) are built like Discover Islamic Art's, but
+ * Baroque Art is a product of its own, so its mini-sites read a set of their
+ * own — viewer-i18n's `minisiteBaroque` namespace, extracted with
+ * `extract:standalone -- baroqueart-exhibitions --namespace minisiteBaroque`
+ * — complete, even where a word is also ISL's. The entries are named as
+ * ISL's, so the mini-site pages read either set; Baroque Art adds the home
+ * band's cooperation and design lines, and its menu has no Artistic
+ * Introduction.
  */
 const BAROQUEART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
+  // The window title (generic_index.php and every other page's <title>).
   'identity.windowTitle': 've_bar_windowstitle',
+  // The header (#header): the logo's tooltip, the two links and the second's tooltip.
+  'header.logoTip': 'back_to_home',
+  'header.exhibitionsList': 'back_exhibitions_list',
+  'header.home': 'back_to_section',
   'header.homeTip': 'Back_to_dbaHome',
-  // The home page's band (generic_homelogo.php), in its order.
+  // The home page's menu (generic_index.php) and band (generic_homelogo.php), in its order.
+  'home.introduction': 'exh_introduction',
   'home.curatedBy': 'exhibition_curated_baroqueart',
   'home.cooperation': 'exhibition_curated_baroqueart_cooperation',
   'home.partnerInstitutions': 'exhibition_curated_baroqueart_partner',
   'home.design': 'exhibition_curated_baroqueart_design',
+  // The navigation over the introduction and every exhibition page.
+  'nav.entrance': 'exh_back_entrance',
+  'nav.previous': 'Previous page',
+  'nav.next': 'Next page',
+  // The introduction's map (generic_introduction.php).
+  'intro.enlargeMap': 'enlargethemap',
+  // The item panel (generic_exhibition.php): the tooltips and the link to the sheet.
+  'item.showZoom': 'showzoom',
+  'item.showDetail': 'showdetail',
+  'item.moreInfo': 'moreinfo_item',
+  // The download block under every text.
+  'download.heading': 'gn_download',
+  'download.asPdf': 'gn_aspdf_img',
+  'download.asWord': 'gn_asword_txt',
+  // The menu over the footer (generic_footerTop.php), in its order.
+  'menu.permanentCollection': 'PermanentCollection',
+  'menu.database': 'home_database',
+  'menu.exhibitions': 'home_exhibitions',
+  'menu.timeline': 'timeline_header',
+  'menu.partners': 'home_partnermuseums',
+  'menu.myCollection': 'my_museum',
+  // The footer, in its order; the year follows the copyright. Unlike ISL's,
+  // Baroque Art's language-policy link is closed, so it prints its text.
+  'footer.aboutMwnf': 'footer1',
+  'footer.contact': 'footer2',
+  'footer.legalNotice': 'footer3',
+  'footer.credits': 'footer4',
+  'footer.languagePolicy': 'language_policy',
+  'footer.cookies': 'cookie_policy',
+  'footer.copyright': 'footer5',
 }
 
 export const STANDALONE_SITES: Record<string, StandaloneSite> = {
