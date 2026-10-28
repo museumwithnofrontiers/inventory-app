@@ -135,10 +135,19 @@ half-finished:
 docker compose run --rm staging-migrate php artisan migrate:fresh --force
 ```
 
-`stage` exits 0 even though the importer itself exits non-zero: this dataset
-always produces a few hundred per-row errors (bad or missing legacy data),
-which are summarised in the run's own output and are not a reason to skip
-image-sync. Expect on the order of 141,000 rows imported with ~380 errors.
+The importer ends one of three ways, and `stage` follows it:
+
+- **0, clean** — `stage` runs image-sync and completes.
+- **1, row errors** — this dataset always produces a few hundred per-row
+  errors (bad or missing legacy data), summarised in the run's own output. Not
+  a reason to skip image-sync: `stage` still completes and exits 0. Expect on
+  the order of 141,000 rows imported with ~380 errors.
+- **2, a step failed** — a step threw, or processed nothing and reported
+  errors (its source query timed out, say). The importer stops there, names
+  the step and its cause after the summary, and `stage` ends with
+  `FATAL: importer 'import' stopped on a failed step`, skips image-sync and
+  exits non-zero. The staged copy is incomplete: do not ship it. Reset staging
+  and stage again.
 
 ### 2. Re-run image-sync until it stops failing
 
@@ -543,6 +552,9 @@ docker compose --env-file scripts/import-tool/.env --profile import run -d --nam
 
 # Follow it. Ends with: Mode 'stage' completed successfully
 # Expect ~141,000 rows imported and ~380 per-row errors — that is this dataset.
+# If it ends with "FATAL: importer 'import' stopped on a failed step" instead,
+# a whole step failed and the importer stopped: fix the cause it names, then
+# go back to the migrate:fresh line in step 2 and stage again. Never ship it.
 docker logs -f inventory-import-stage
 
 # ── 4. THE ENOMEM LOOP — DO NOT SKIP ─────────────────────────────────────────

@@ -28,6 +28,13 @@ import type { ImportContext, ILegacyDatabase } from '../core/base-importer.js';
 import type { ImportResult } from '../core/types.js';
 import { FileLogger, type PhaseSummary } from '../core/file-logger.js';
 import { orderConfigsByDependencies } from '../utils/importer-order.js';
+import {
+  IMPORT_EXIT_CLEAN,
+  IMPORT_EXIT_STEP_FAILED,
+  importExitCode,
+  isFailedStep,
+  thrownStepResult,
+} from '../utils/import-outcome.js';
 
 import {
   DefaultContextImporter,
@@ -1646,7 +1653,10 @@ program
 
       const orderedImporters = orderConfigsByDependencies(selectedImporters);
 
-      // Execute importers
+      // Execute importers. A step that failed outright stops the run: later
+      // steps build on its rows, and a stage that carried on would leave a
+      // copy that lacks a whole step yet looks complete.
+      let failedStep: ImporterConfig | undefined;
       for (const config of orderedImporters) {
         logger.logImporterStart(config.name);
         const importerStart = Date.now();
@@ -1672,11 +1682,12 @@ program
           // that error in their result without logging it, which leaves only
           // a count behind, so name the cause here. Only the first few are
           // printed: a step whose every record failed has already logged each.
-          if (result.imported === 0 && result.skipped === 0 && result.errors.length > 0) {
+          if (isFailedStep(result)) {
             for (const message of result.errors.slice(0, 3)) {
               logger.logImporterError(config.name, message);
               console.error(chalk.red(`  ${config.name}: ${message}`));
             }
+            failedStep = config;
           }
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
@@ -1684,13 +1695,13 @@ program
           importerTimings.set(config.key, importerDuration);
           logger.logImporterComplete(config.name, 0, 0, 1, importerDuration);
           logger.logImporterError(config.name, message);
-          results.set(config.key, {
-            success: false,
-            imported: 0,
-            skipped: 0,
-            errors: [message],
-            warnings: [],
-          });
+          console.error(chalk.red(`  ${config.name}: ${message}`));
+          results.set(config.key, thrownStepResult(message));
+          failedStep = config;
+        }
+
+        if (failedStep) {
+          break;
         }
       }
 
@@ -1711,19 +1722,17 @@ program
         }
       }
 
-      // Calculate totals
-      const totals = Array.from(results.values()).reduce(
-        (acc, r) => ({
-          imported: acc.imported + r.imported,
-          skipped: acc.skipped + r.skipped,
-          errors: acc.errors + r.errors.length,
-          warnings: acc.warnings + (r.warnings?.length || 0),
-        }),
-        { imported: 0, skipped: 0, errors: 0, warnings: 0 }
-      );
-
       // Log final summary (handles both console and file output)
       logger.logFinalSummary(summaries);
+
+      // Named again after the summary, where a reader of the run looks last.
+      if (failedStep) {
+        const firstErrors = results.get(failedStep.key)?.errors.slice(0, 3) ?? [];
+        logger.error(
+          'Import stopped',
+          `${failedStep.name} failed, so no later step ran: ${firstErrors.join(' | ')}`
+        );
+      }
 
       // Cleanup
       logger.info('Disconnecting from databases...');
@@ -1731,8 +1740,9 @@ program
       await newDb.end();
       logger.info('Import process ended');
 
-      if (totals.errors > 0) {
-        process.exit(1);
+      const exitCode = importExitCode(results.values());
+      if (exitCode !== IMPORT_EXIT_CLEAN) {
+        process.exit(exitCode);
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -1745,7 +1755,9 @@ program
       if (error instanceof Error && error.stack) {
         console.error(chalk.gray(error.stack));
       }
-      process.exit(1);
+      // An error caught here is outside any one step (a database that never
+      // connected, say): the run failed, not a few of its rows.
+      process.exit(IMPORT_EXIT_STEP_FAILED);
     }
   });
 

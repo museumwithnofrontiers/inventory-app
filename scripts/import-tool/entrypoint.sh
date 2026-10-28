@@ -162,16 +162,21 @@ remote_image_path() {
 # Importer steps — `stage` only. They run in this container against
 # DB_HOST/DB_PORT, which compose points at staging-mysql.
 # ------------------------------------------------------------------------------
-# The importer's `import` command exits 1 whenever totals.errors > 0 (see
-# src/cli/import.ts) — which this legacy dataset always has some of:
-# individual rows with genuinely bad/missing legacy data, already tracked and
-# summarized as warnings/errors in the run's own output, not a sign the whole
-# run failed. image-sync still needs to run against whatever WAS imported
-# rather than the whole stage aborting over a handful of known,
-# already-summarized per-row failures — this used to die() here, which
-# silently skipped image-sync on every real run (confirmed: the run that
-# produced "135343 imported ... 385 errors" never reached it, because this
-# function killed the container right after the import summary printed).
+# The importer's `import` command exits with one of three codes (see
+# src/utils/import-outcome.ts):
+#   0 — every step ran clean.
+#   1 — every step ran, but some rows failed. This legacy dataset always has
+#       some: individual rows with genuinely bad/missing legacy data, already
+#       tracked and summarized in the run's own output, not a sign the whole
+#       run failed. image-sync still needs to run against whatever WAS
+#       imported — this used to die() on any non-zero code, which silently
+#       skipped image-sync on every real run (confirmed: the run that produced
+#       "135343 imported ... 385 errors" never reached it, because this
+#       function killed the container right after the import summary printed).
+#   2 — a step failed outright (it threw, or processed nothing and reported
+#       errors, as when its source query times out) and the importer stopped
+#       there. The staged copy lacks that step and every later one, so stage
+#       must fail rather than end "completed successfully" and invite a ship.
 run_importer_import() {
   local extra_args=()
   [ "$DRY_RUN" = "1" ] && extra_args+=(--dry-run)
@@ -179,6 +184,9 @@ run_importer_import() {
   log "Running importer: import ${extra_args[*]}"
   local rc=0
   (cd "$IMPORTER_DIR" && npx tsx src/cli/import.ts import "${extra_args[@]}") || rc=$?
+  if [ "$rc" -eq 2 ]; then
+    die "importer 'import' stopped on a failed step (rc=2) — the run's own output above names the step and its cause. Skipping image-sync; the staged copy is incomplete and must not be shipped. Reset staging (migrate:fresh) and stage again."
+  fi
   if [ "$rc" -ne 0 ]; then
     log "NOTE: importer 'import' exited non-zero (rc=$rc) — see the run's own summary above for the error count. Continuing to image-sync regardless; this is expected for this dataset, not treated as fatal."
   fi
