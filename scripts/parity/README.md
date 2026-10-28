@@ -388,6 +388,20 @@ Its `diff-runs.md` lists 17 regressions against 2026-10-26:
   - Image URLs not `/pub/<uuid>` (10 → 17): six of the new ones are Syrian monument pictures
     (`galex5/sy/91`). Legacy serves them, but the image copy that `stage` reads predates them.
 
+`baselines/2026-10-28b` is the run after reimport 9, on the 66 packages published from it. It has
+7 real differences: the 8 above less Baroque Art's `membership.exhibition_pages`. Its
+`diff-runs.md` lists no regression against 2026-10-28, and three counts that fell:
+- **Baroque Art:** image URLs not `/pub/<uuid>` (275 → 6). Since #2387 every detail view is a
+  placement linking a picture item, where legacy paths used to go into `extra.details`. Each
+  placement of the "Awaiting Image" placeholder links its own item and keeps the placeholder as a
+  page image, so no photo is placed for two monuments any more (#2383). The 6 left are legacy
+  pictures whose file is missing on legacy too.
+- **Photographs and the-hijaz-railway:** image URLs not `/pub/<uuid>` (9 → 2 and 17 → 4). On
+  live legacy a curator removed a second picture, which had no file, from seven
+  `galex5/uk/Mus92` objects, and the import follows; photographs also compares 7 fields fewer.
+  The-hijaz-railway also lost the six Syrian monument pictures (`galex5/sy/91`): the legacy image
+  copy now comes from `scripts/import-tool/Sync-LegacyImages.ps1` (#2385), which brought them in.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
