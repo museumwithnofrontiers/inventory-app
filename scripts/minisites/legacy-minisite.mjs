@@ -40,10 +40,37 @@ const HERE = dirname(fileURLToPath(import.meta.url))
 const REPO = resolve(HERE, '../..')
 
 // The families, by the folder their exhibitions sit in: where legacy serves
-// them, the site that carried them, and its name.
+// them, the site that carried them, and its name; the viewer-i18n class its
+// mini-sites read (each family has a label set of its own) and the window
+// title legacy's pages opened with (ve_isl_windowstitle, ve_bar_windowstitle).
 export const FAMILIES = {
-  ISL: { exhibitions: 'https://islamicart.museumwnf.org/exhibitions/ISL', parent: 'islamicart', site: 'Discover Islamic Art' },
-  BAR: { exhibitions: 'https://baroqueart.museumwnf.org/exhibitions/BAR', parent: 'baroqueart', site: 'Discover Baroque Art' },
+  ISL: {
+    exhibitions: 'https://islamicart.museumwnf.org/exhibitions/ISL',
+    parent: 'islamicart',
+    site: 'Discover Islamic Art',
+    labels: 'minisite',
+    windowTitle: 'Discover Islamic Art Virtual Exhibitions',
+  },
+  BAR: {
+    exhibitions: 'https://baroqueart.museumwnf.org/exhibitions/BAR',
+    parent: 'baroqueart',
+    site: 'Discover Baroque Art',
+    labels: 'minisiteBaroque',
+    windowTitle: 'Discover Baroque Art Virtual Museum',
+  },
+}
+
+/**
+ * A site's package.json and index.html, with its family's viewer-i18n class
+ * and window title: minisite-template's are Discover Islamic Art's.
+ */
+export function familyFiles({ packageJson, indexHtml }, family) {
+  const pkg = JSON.parse(packageJson)
+  pkg.viewerI18n = { ...pkg.viewerI18n, class: family.labels }
+  return {
+    packageJson: `${JSON.stringify(pkg, null, 2)}\n`,
+    indexHtml: indexHtml.replace(/<title>[^|<]*\|/, `<title>${family.windowTitle} |`),
+  }
 }
 
 /** The family of a legacy exhibition folder: the folder it sits in. */
@@ -221,6 +248,12 @@ async function main(args) {
   if (!site) return
   writeFileSync(join(site, 'src/minisite.json'), `${JSON.stringify(settings, null, 2)}\n`)
   writeFileSync(join(site, 'theme/tokens.css'), themeCss(folder, name))
+  const own = familyFiles(
+    { packageJson: readFileSync(join(site, 'package.json'), 'utf8'), indexHtml: readFileSync(join(site, 'index.html'), 'utf8') },
+    family,
+  )
+  writeFileSync(join(site, 'package.json'), own.packageJson)
+  writeFileSync(join(site, 'index.html'), own.indexHtml)
 
   // The frame's pictures, the maps, and the curators' (and the designer's)
   // logos from the exhibitions' shared sponsor_logo folder; legacy's copy, not
@@ -263,7 +296,7 @@ async function main(args) {
     (noSwedishMap ? ' Legacy drew no Swedish map (map_se.jpg): the map window shows none in Swedish.' : '')
   writeFileSync(join(assets, 'SOURCES.json'), `${JSON.stringify({ about, files }, null, 2)}\n`)
   writeFileSync(join(site, 'README.md'), siteReadme({ slug, name, legacyFolder, family }))
-  console.log(`site      ${resolve(site)}: minisite.json, tokens.css, ${sources.length} pictures, README.md`)
+  console.log(`site      ${resolve(site)}: minisite.json, tokens.css, ${sources.length} pictures, package.json, index.html, README.md`)
 }
 
 /** The mini-site's own README: what it is, and how each role works on it. */

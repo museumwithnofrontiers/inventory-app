@@ -1,7 +1,7 @@
 // node --test scripts/minisites/legacy-minisite.test.mjs
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { curators, design, deterministicUuid, exhibitionId, familyOf, mapCount, menuSecondColumnFrom } from './legacy-minisite.mjs'
+import { curators, design, deterministicUuid, exhibitionId, familyFiles, familyOf, mapCount, menuSecondColumnFrom } from './legacy-minisite.mjs'
 
 test('ids are the importer’s own UUIDv5 of the backward_compatibility', () => {
   assert.equal(deterministicUuid('collection:mwnf3:exhibitions:13'), 'da493358-92ba-5a20-8866-fa30fb03bfb2')
@@ -87,4 +87,14 @@ test('the family is the folder the exhibition sits in', () => {
   assert.equal(familyOf('exhibitions/BAR/absolutism').parent, 'baroqueart')
   assert.equal(familyOf('exhibitions/ISL/the_abbasids').exhibitions, 'https://islamicart.museumwnf.org/exhibitions/ISL')
   assert.throws(() => familyOf('exhibitions/SH/travelling'), /no known family/)
+})
+test("a site reads its family's label set and opens with its family's window title", () => {
+  const files = {
+    packageJson: '{\n  "name": "x",\n  "viewerI18n": { "class": "minisite", "namespace": "absolutism" }\n}\n',
+    indexHtml: '<title>Discover Islamic Art Virtual Exhibitions | Absolutism</title>',
+  }
+  const own = familyFiles(files, familyOf('exhibitions/BAR/absolutism'))
+  assert.deepEqual(JSON.parse(own.packageJson).viewerI18n, { class: 'minisiteBaroque', namespace: 'absolutism' })
+  assert.equal(own.indexHtml, '<title>Discover Baroque Art Virtual Museum | Absolutism</title>')
+  assert.equal(familyFiles(files, familyOf('exhibitions/ISL/the_abbasids')).indexHtml, files.indexHtml)
 })
