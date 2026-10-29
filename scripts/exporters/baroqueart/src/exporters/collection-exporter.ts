@@ -93,6 +93,9 @@ export interface DetailViewRow {
    * captions fell back on the monument detail's texts.
    */
   record_id: string | null
+  /** The object or monument the view shows a part of: the placement's record. */
+  owner_id: string | null
+  display_order: number | null
   extra: unknown
   /** The image of the picture the view shows, when it links one. */
   picture_path: string | null
@@ -184,13 +187,19 @@ export class CollectionExporter extends BaseExporter {
       this.db.query<DetailViewRow>(
         `SELECT ci.collection_id,
                 IF(i.type = 'picture', i.parent_id, i.id) AS record_id,
-                ci.extra,
+                CASE
+                  WHEN i.type = 'picture' AND parent.type = 'detail' THEN parent.parent_id
+                  WHEN i.type = 'picture' AND parent.type IN ('object', 'monument') THEN parent.id
+                  WHEN i.type = 'detail' THEN i.parent_id
+                END AS owner_id,
+                ci.display_order, ci.extra,
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
                     ORDER BY ii.display_order, ii.id LIMIT 1),
                    NULL) AS picture_path
          FROM collection_item ci
          JOIN items i ON i.id = ci.item_id
+         LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
            AND JSON_EXTRACT(ci.extra, '$.parent_n2') IS NOT NULL
          ORDER BY ci.collection_id, JSON_EXTRACT(ci.extra, '$.n'), JSON_EXTRACT(ci.extra, '$.parent_n2'),
@@ -315,6 +324,30 @@ export class CollectionExporter extends BaseExporter {
       } else if (!entries.some(e => e.id === link.item_id)) {
         entries.push({ id: link.item_id, display_order: link.display_order, variant_order: null })
       }
+    }
+    // Legacy could place a monument twice at one position, once with its
+    // picture and once only to carry detail views; the inventory keeps one
+    // membership per item, so those views have no placement of their own and
+    // ship under one made for them.
+    const placedKeys = new Set(
+      itemLinks.map(link => {
+        const extra = parseJson(link.extra) as Record<string, unknown> | null
+        return detailViewKey(link.collection_id, extra?.n, extra?.n2)
+      })
+    )
+    for (const placement of unplacedDetailViews(viewsOf, placedKeys)) {
+      const depth = minisite.get(placement.collection_id)
+      if (depth !== undefined && depth < 2) continue
+      if (!itemMap.has(placement.collection_id)) itemMap.set(placement.collection_id, [])
+      const entries = itemMap.get(placement.collection_id)!
+      if (depth === undefined) {
+        entries.push(buildCollectionItemEntry(placement, imageUrlFn, viewsOf.get(placement.key)!))
+      } else if (!entries.some(e => e.id === placement.item_id)) {
+        entries.push({ id: placement.item_id, display_order: placement.display_order, variant_order: null })
+      }
+      entries.sort(
+        (a, b) => (a.display_order ?? 0) - (b.display_order ?? 0) || (a.variant_order ?? 0) - (b.variant_order ?? 0)
+      )
     }
 
     const output = publishedCollections.map(c => ({
@@ -444,6 +477,34 @@ export function groupDetailViews(views: DetailViewRow[]): Map<string, DetailView
     map.get(key)!.push(view)
   }
   return map
+}
+
+/**
+ * The detail views no placement carries (`placedKeys`, the placements'
+ * detailViewKey), each group as the placement legacy showed them in: the
+ * object or monument they show, at their position, its n2 their
+ * `parent_n2`. A group whose record is no part of an item is left out.
+ * Exported for unit tests.
+ */
+export function unplacedDetailViews(
+  viewsOf: Map<string, DetailViewRow[]>,
+  placedKeys: Set<string>
+): (CollectionItemRow & { key: string })[] {
+  const placements: (CollectionItemRow & { key: string })[] = []
+  for (const [key, views] of viewsOf) {
+    const owner = views.find(view => view.owner_id)?.owner_id
+    if (placedKeys.has(key) || !owner) continue
+    const extra = parseJson(views[0].extra) as Record<string, unknown> | null
+    placements.push({
+      key,
+      collection_id: views[0].collection_id,
+      item_id: owner,
+      display_order: views[0].display_order,
+      extra: { n: extra?.n, n2: extra?.parent_n2 },
+      picture_path: null,
+    })
+  }
+  return placements
 }
 
 /**
