@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-international-exhibitions",
+  "name": "International Exhibitions",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "c3a68819-dcf2-5be4-8f9b-dcc45c8848e4",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-international-exhibitions-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=7"
+}

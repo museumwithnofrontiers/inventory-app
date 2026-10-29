@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-music-literature-dance-and-fashion",
+  "name": "Music, Literature, Dance and Fashion",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "c9335788-c5e2-5748-8aca-0d5e79500ab0",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-music-literature-dance-and-fashion-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=9"
+}
