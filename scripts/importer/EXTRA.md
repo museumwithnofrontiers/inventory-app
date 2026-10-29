@@ -121,6 +121,7 @@ Paths are relative to `src/`; `T:` is `domain/transformers/`.
 | partner_translations | `entity_country`, `contact_title`, `contact_name`, `contact_fax`, `further_reading`                                                                                       | exhibition_partner_i18n                                                        | importers/phase-10/thg-gallery-content-importer.ts                                                                   |
 | partner_images       | `photographer`, `copyright`                                                                                                                                               | museums_pictures, institutions_pictures, schools_pictures, sh_partner_pictures | importers/phase-02/partner-picture-importer.ts, phase-01/school-importer.ts, phase-03/sh-partner-picture-importer.ts |
 | collection_images    | `link`, `category_id`, `category_name`, `visible`, `labels`, `alts`, `further_readings`                                                                                   | exhibition_logo, _category, _i18n                                              | importers/phase-10/thg-gallery-content-importer.ts, phase-11/exhibition-logo-extra-backfill-importer.ts              |
+| collection_images    | `link`                                                                                                                                                                    | sh_exhibitions url1, url2, url3 (the link of logo1, logo2, logo3)              | importers/phase-03/sh-exhibition-image-importer.ts                                                                   |
 | collection_media     | `overview_page`                                                                                                                                                           | theme_audio, theme_video                                                       | T:media-transformer.ts                                                                                               |
 | collection_media     | `category_id`, `further_reading`, `entity_location`, `entity_country`, `authors`, `type_resource`                                                                         | exhibition_related_content(_i18n)                                              | importers/phase-10/thg-gallery-content-importer.ts                                                                   |
 | item_documents       | `img_count`                                                                                                                                                               | sh_objects_document                                                            | T:media-transformer.ts                                                                                               |
@@ -131,13 +132,13 @@ Paths are relative to `src/`; `T:` is `domain/transformers/`.
 
 To review with the keys above:
 
-- Explore's `monument_contact.address` joins three legacy columns (street, zip
-  and city) into one (`explore-monument-translation-importer.ts`, the
-  `CONCAT_WS` in its query).
+- Merged legacy fields, Explore's addresses among them, are registered in
+  [MERGE.md](MERGE.md).
 - Language keys inside `extra` are mixed: legacy two-letter codes in the SH
   bibliography maps, justifications, mwnf3 placement fields and SH image
   captions; ISO three-letter codes in timelines, THG texts, logo captions and
-  the Explore blocks.
+  the Explore blocks. The inventory uses three-letter codes only; a two-letter
+  code belongs only in `backward_compatibility`, where it is the legacy id.
 - `monument_contact` has two shapes: `institution` (mwnf3) and
   `responsible_institution` (SH).
 - `mwnf3-exhibition-importer.ts` builds an `extra` (`show`, `portal_image`,

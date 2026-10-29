@@ -46,6 +46,7 @@ export {
   ShMonumentDetailPictureImporter,
   ShExhibitionImporter,
   ShExhibitionTranslationImporter,
+  ShExhibitionImageImporter,
   ShExhibitionItemImporter,
   ShNationalContextImporter,
   ShBibliographyHbImporter,

@@ -67,6 +67,7 @@ import {
   ShMonumentDetailPictureImporter,
   ShExhibitionImporter,
   ShExhibitionTranslationImporter,
+  ShExhibitionImageImporter,
   ShExhibitionItemImporter,
   // Phase 04: Glossary
   GlossaryImporter,
@@ -419,6 +420,14 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     name: 'SH Exhibition Translations',
     description: 'Import translations for SH exhibitions, themes, and subthemes',
     importerClass: ShExhibitionTranslationImporter,
+    dependencies: ['sh-exhibition', 'language'],
+  },
+  {
+    key: 'sh-exhibition-image',
+    name: 'SH Exhibition Images',
+    description:
+      'Import the home image, thumbnail, portal image and partner logos of SH exhibitions',
+    importerClass: ShExhibitionImageImporter,
     dependencies: ['sh-exhibition', 'language'],
   },
   {
