@@ -149,16 +149,18 @@ export class ItemExporter extends BaseExporter {
     const ph = this.placeholders(this.projectIds.length)
 
     // Exclude 'picture' child items — those are exported as images on their parent.
+    // A mini-site's package holds the items its pages place only, with their parents.
+    const scope = this.context.scope
     const items = await this.db.query<ItemRow>(
       `SELECT id, type, internal_name, backward_compatibility, parent_id,
               partner_id, country_id, collection_id, project_id,
               owner_reference, mwnf_reference, start_date, end_date,
               display_order, latitude, longitude
        FROM items
-       WHERE project_id IN (${ph})
+       WHERE ${scope ? `id IN (${this.placeholders(Math.max(scope.itemIds.length, 1))})` : `project_id IN (${ph})`}
          AND type IN ('object', 'monument', 'detail')
        ORDER BY type, display_order, internal_name`,
-      this.projectIds
+      scope ? (scope.itemIds.length > 0 ? scope.itemIds : ['']) : this.projectIds
     )
 
     if (items.length === 0) {

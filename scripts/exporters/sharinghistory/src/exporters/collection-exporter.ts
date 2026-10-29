@@ -52,10 +52,17 @@ interface CollectionTranslationRow {
 }
 
 interface CollectionImageRow {
+  id: string
   collection_id: string
   path: string
   alt_text: string | null
   display_order: number
+  extra: unknown
+}
+
+interface CollectionImageTypeRow {
+  collection_image_id: string
+  type: string
 }
 
 interface CollectionItemRow {
@@ -77,16 +84,20 @@ export class CollectionExporter extends BaseExporter {
     // All collections (root + exhibitions + themes + pages) for a project
     // share the same context_id as the project itself.
     const ph = this.placeholders(this.projectIds.length)
+    const scope = this.context.scope
 
+    // A mini-site's package holds its own subtree only.
     const collections = await this.db.query<CollectionRow>(
       `SELECT c.id, c.type, c.purpose, c.internal_name, c.backward_compatibility,
               c.parent_id, c.display_order, c.country_id, c.latitude, c.longitude
        FROM collections c
-       WHERE c.context_id IN (
-         SELECT p.context_id FROM projects p WHERE p.id IN (${ph})
-       )
+       WHERE ${
+         scope
+           ? `c.id IN (${this.placeholders(scope.collectionIds.length)})`
+           : `c.context_id IN (SELECT p.context_id FROM projects p WHERE p.id IN (${ph}))`
+       }
        ORDER BY c.parent_id IS NOT NULL, c.display_order, c.internal_name`,
-      this.projectIds
+      scope ? scope.collectionIds : this.projectIds
     )
 
     if (collections.length === 0) {
@@ -99,7 +110,7 @@ export class CollectionExporter extends BaseExporter {
     const colPh = this.placeholders(collectionIds.length)
     const langCodeMap = await this.buildLangCodeMap()
 
-    const [allTranslations, images, itemLinks] = await Promise.all([
+    const [allTranslations, images, imageTypes, itemLinks] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT collection_id, language_id, title, description, quote, url, extra
@@ -109,10 +120,22 @@ export class CollectionExporter extends BaseExporter {
         collectionIds
       ),
       this.db.query<CollectionImageRow>(
-        `SELECT collection_id, path, alt_text, display_order
+        `SELECT id, collection_id, path, alt_text, display_order, extra
          FROM collection_images
          WHERE collection_id IN (${colPh})
-         ORDER BY collection_id, display_order`,
+         ORDER BY collection_id, display_order, id`,
+        collectionIds
+      ),
+      // What each image is on the exhibition's pages (its home image, its
+      // thumbnail, a partner logo…): its `image-type` tag, matched on the
+      // tag's identity, as the DXA exporters match the logo tag.
+      this.db.query<CollectionImageTypeRow>(
+        `SELECT cit.collection_image_id, t.internal_name AS type
+         FROM collection_image_tag cit
+         JOIN tags t ON t.id = cit.tag_id
+         JOIN collection_images ci ON ci.id = cit.collection_image_id
+         WHERE ci.collection_id IN (${colPh}) AND t.category = 'image-type'
+         ORDER BY cit.collection_image_id, t.internal_name`,
         collectionIds
       ),
       // Items in these collections, restricted to non-picture items from the project
@@ -169,17 +192,13 @@ export class CollectionExporter extends BaseExporter {
     await this.writeTranslationFiles('collections', byLang)
 
     // collection_id -> images[]
-    const imageMap = new Map<
-      string,
-      { url: string; alt_text: string | null; display_order: number }[]
-    >()
+    const typeOf = new Map(imageTypes.map(row => [row.collection_image_id, row.type]))
+    const imageMap = new Map<string, ReturnType<typeof buildCollectionImageEntry>[]>()
     for (const img of images) {
       if (!imageMap.has(img.collection_id)) imageMap.set(img.collection_id, [])
-      imageMap.get(img.collection_id)!.push({
-        url: this.imageUrl(img.path),
-        alt_text: img.alt_text,
-        display_order: img.display_order,
-      })
+      imageMap
+        .get(img.collection_id)!
+        .push(buildCollectionImageEntry(img, typeOf.get(img.id) ?? null, this.imageUrl(img.path)))
     }
 
     // collection_id -> items[]
@@ -248,6 +267,28 @@ export function computeUnpublishedExhibitionSubtree(
     }
   }
   return excluded
+}
+
+/**
+ * One collections.json image entry. `type` is what the image is on the
+ * exhibition's pages (its `image-type` tag: `home image`, `thumbnail`,
+ * `portal image`, `logo`), and `link` where a partner logo leads (its
+ * `extra.link`). Exported for unit tests.
+ */
+export function buildCollectionImageEntry(
+  img: Pick<CollectionImageRow, 'alt_text' | 'display_order' | 'extra'>,
+  type: string | null,
+  url: string
+): { url: string; alt_text: string | null; display_order: number; type?: string; link?: string } {
+  const extra = parseJson(img.extra) as Record<string, unknown> | null
+  const link = typeof extra?.link === 'string' && extra.link.trim() ? extra.link : null
+  return {
+    url,
+    alt_text: img.alt_text,
+    display_order: img.display_order,
+    ...(type ? { type } : {}),
+    ...(link ? { link } : {}),
+  }
 }
 
 /**
