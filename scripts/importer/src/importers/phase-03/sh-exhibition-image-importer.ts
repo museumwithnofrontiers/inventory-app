@@ -167,6 +167,7 @@ export class ShExhibitionImageImporter extends BaseImporter {
               original_name: path.basename(image.path),
               mime_type: MIME_TYPES[path.extname(image.path).toLowerCase()] ?? 'image/jpeg',
               size: 1,
+              alt_text: null,
               display_order: image.display_order,
               extra: image.extra ? JSON.stringify(image.extra) : null,
             });

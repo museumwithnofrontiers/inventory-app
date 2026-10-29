@@ -119,6 +119,8 @@ describe('ShExhibitionImageImporter', () => {
         original_name: 'homeImg11.jpg',
         mime_type: 'image/jpeg',
         size: 1,
+        // The strategy binds alt_text as given: undefined fails the insert.
+        alt_text: null,
         extra: null,
       })
     );
