@@ -383,8 +383,9 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
   'baroqueart-exhibitions': {
     root: 'baroqueart/www.discoverbaroqueart.org',
     host: 'https://baroqueart.museumwnf.org',
-    // exhibitions/BAR/libs/config.inc.php: $LNGLIST.
-    languages: ['en'],
+    // exhibitions/BAR/libs/config.inc.php: $LNGLIST, English; Reformation's
+    // own (reformation/libs/config.inc.php) adds Italian.
+    languages: ['en', 'it'],
     // The exhibition pages read group 6 ($TRSL_GROUP), with 2 and 3.
     groups: [2, 3, 6],
     words: BAROQUEART_EXHIBITION_WORDS,
