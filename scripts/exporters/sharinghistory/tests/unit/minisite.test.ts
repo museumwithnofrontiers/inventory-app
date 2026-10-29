@@ -30,6 +30,7 @@ const collections = [
   { id: ROOT, parent_id: 'root' },
   { id: 'theme', parent_id: ROOT },
   { id: 'subtheme', parent_id: 'theme' },
+  { id: 'national', parent_id: ROOT, purpose: 'national-context' },
   { id: 'elsewhere', parent_id: 'root' },
 ]
 const items = [
@@ -42,6 +43,7 @@ const placements = [
   { collection_id: ROOT, item_id: 'painting' },
   { collection_id: 'subtheme', item_id: 'detail' },
   { collection_id: 'elsewhere', item_id: 'other' },
+  { collection_id: 'national', item_id: 'other' },
 ]
 
 /** The few queries resolveScope makes, answered from the arrays above. */
@@ -49,7 +51,10 @@ const db = {
   query: async <T>(sql: string, params: unknown[] = []): Promise<T[]> => {
     const ids = new Set(params as string[])
     if (sql.includes('FROM collections WHERE id =')) return collections.filter(c => ids.has(c.id)).map(c => ({ id: c.id })) as T[]
-    if (sql.includes('FROM collections WHERE parent_id')) return collections.filter(c => ids.has(c.parent_id)).map(c => ({ id: c.id })) as T[]
+    if (sql.includes('WHERE parent_id IN')) {
+      const pages = collections.filter(c => !sql.includes("purpose <> 'national-context'") || c.purpose !== 'national-context')
+      return pages.filter(c => ids.has(c.parent_id)).map(c => ({ id: c.id })) as T[]
+    }
     if (sql.includes('FROM collection_item')) {
       return placements.filter(p => ids.has(p.collection_id)).map(p => ({ id: p.item_id })) as T[]
     }
@@ -65,7 +70,7 @@ const db = {
 }
 
 describe('resolveScope', () => {
-  it('keeps the exhibition, its themes and subthemes, nothing beside it', async () => {
+  it('keeps the exhibition, its themes and subthemes, not its national contexts nor anything beside it', async () => {
     const scope = await resolveScope(db, instance)
     expect(scope.collectionIds).toEqual([ROOT, 'theme', 'subtheme'])
   })

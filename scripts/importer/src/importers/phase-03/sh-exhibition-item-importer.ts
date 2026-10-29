@@ -423,7 +423,13 @@ export class ShExhibitionItemImporter extends BaseImporter {
         const written = await this.writeCollectionItemPivot(
           result,
           collectionBackwardCompat,
-          itemBackwardCompat,
+          await this.placedItemReference(
+            await this.firstPictureOf(legacy.image_item, legacy.item_type),
+            legacy.item_type,
+            itemBackwardCompat,
+            result,
+            `Exhibition image ${legacy.image_id}`
+          ),
           `sh_exhibition_images ${legacy.image_id}`,
           legacy.sort_order,
           null
@@ -577,27 +583,21 @@ export class ShExhibitionItemImporter extends BaseImporter {
   // Shared helpers
   // ==========================================================================
 
-  /**
-   * Resolve an image_item reference (format: 'project_id;country;number') to a backward_compatibility key.
-   * Returns null if the reference cannot be parsed.
-   */
   /** Legacy picture path (lowercase) → the backward_compatibility of its picture item. */
   private pictureItems: Map<string, string> | null = null;
-
   /**
-   * The item a theme or subtheme image row places: the picture item of the
-   * picture legacy shows (its `picture` path), as the mwnf3 exhibitions place
-   * theirs; the record itself where no picture item has that path.
+   * A record (`obj awe;fr;60`, lowercase) → the path of its first picture, the
+   * one legacy's introduction shows for an exhibition image row.
    */
-  private async placedItemReference(
-    picture: string | null,
-    itemType: string,
-    itemBackwardCompat: string,
-    result: ImportResult,
-    label: string
-  ): Promise<string> {
-    if (!this.pictureItems) {
-      this.pictureItems = new Map();
+  private firstPictures: Map<string, string> | null = null;
+
+  private async loadPictures(): Promise<{
+    pictureItems: Map<string, string>;
+    firstPictures: Map<string, string>;
+  }> {
+    if (!this.pictureItems || !this.firstPictures) {
+      const pictureItems = new Map<string, string>();
+      const firstPictures = new Map<string, string>();
       for (const [table, kind] of [
         ['sh_object_images', 'obj'],
         ['sh_monument_images', 'mon'],
@@ -610,11 +610,12 @@ export class ShExhibitionItemImporter extends BaseImporter {
           image_number: number;
           path: string;
         }>(
-          `SELECT project_id, country, number, type, image_number, path FROM ${SH_SCHEMA}.${table}`
+          `SELECT project_id, country, number, type, image_number, path FROM ${SH_SCHEMA}.${table}
+           ORDER BY project_id, country, number, type, image_number`
         );
         for (const row of rows) {
           if (!row.path) continue;
-          this.pictureItems.set(
+          pictureItems.set(
             `${kind} ${row.path.trim().toLowerCase()}`,
             formatShBackwardCompatibility(
               table,
@@ -625,12 +626,45 @@ export class ShExhibitionItemImporter extends BaseImporter {
               row.image_number
             )
           );
+          const record = `${kind} ${row.project_id};${row.country};${row.number}`.toLowerCase();
+          if (!firstPictures.has(record)) firstPictures.set(record, row.path);
         }
       }
+      this.pictureItems = pictureItems;
+      this.firstPictures = firstPictures;
     }
+    return { pictureItems: this.pictureItems, firstPictures: this.firstPictures };
+  }
+
+  /**
+   * The picture an exhibition image row shows: its record's first picture
+   * (legacy's introduction takes the first of the record's pictures).
+   */
+  private async firstPictureOf(imageItem: string, itemType: string): Promise<string | null> {
+    const { firstPictures } = await this.loadPictures();
+    const [projectId, country, number] = imageItem.split(';').map((s) => s.trim());
+    const kind = itemType === 'mon' ? 'mon' : 'obj';
+    return (
+      firstPictures.get(`${kind} ${projectId};${country};${Number(number)}`.toLowerCase()) ?? null
+    );
+  }
+
+  /**
+   * The item an exhibition, theme or subtheme image row places: the picture
+   * item of the picture legacy shows (its path), as the mwnf3 exhibitions
+   * place theirs; the record itself where no picture item has that path.
+   */
+  private async placedItemReference(
+    picture: string | null,
+    itemType: string,
+    itemBackwardCompat: string,
+    result: ImportResult,
+    label: string
+  ): Promise<string> {
+    const { pictureItems } = await this.loadPictures();
     const kind = itemType === 'mon' ? 'mon' : 'obj';
     const pictureBackwardCompat = picture
-      ? this.pictureItems.get(`${kind} ${picture.trim().toLowerCase()}`)
+      ? pictureItems.get(`${kind} ${picture.trim().toLowerCase()}`)
       : undefined;
     if (pictureBackwardCompat && (await this.getEntityUuidAsync(pictureBackwardCompat, 'item'))) {
       return pictureBackwardCompat;
@@ -642,6 +676,10 @@ export class ShExhibitionItemImporter extends BaseImporter {
     return itemBackwardCompat;
   }
 
+  /**
+   * Resolve an image_item reference (format: 'project_id;country;number') to a backward_compatibility key.
+   * Returns null if the reference cannot be parsed.
+   */
   private resolveImageItemReference(imageItem: string, itemType: string): string | null {
     if (!imageItem || !imageItem.trim()) return null;
 

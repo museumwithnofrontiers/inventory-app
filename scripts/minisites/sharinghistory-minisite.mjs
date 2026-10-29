@@ -47,10 +47,11 @@ export const FAMILY = {
   windowTitle: 'Sharing History Exhibitions',
 }
 
-// The pictures the pages draw from exhibitions/AWE/images/: the frame and its icons.
+// The pictures the pages draw from exhibitions/AWE/images/: the frame and its
+// icons. The fading strips _mainpage.css names are missing on legacy.
 export const FRAME = [
   'arrow.gif', 'arrow_black.gif', 'arrow_black_down.gif', 'arrow_curator.gif', 'arrow_inner.gif', 'arrow_inner_black.gif',
-  'bg.png', 'bg_fading_left.gif', 'bg_fading_right.gif', 'magnify.png', 'mwnfLogoShExIn-en.png', 'print.gif',
+  'bg.png', 'dash_dark_back.gif', 'magnify.png', 'mwnfLogoShExIn-en.png', 'print.gif',
 ]
 
 // Each style the pages print, by the rule that prints it in _styles.css.php

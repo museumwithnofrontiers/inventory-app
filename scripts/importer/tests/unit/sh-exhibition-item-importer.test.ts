@@ -11,6 +11,7 @@ describe('ShExhibitionItemImporter, subtheme images', () => {
   let context: ImportContext;
   let writeCollectionItem: ReturnType<typeof vi.fn>;
   let subthemeImages: Record<string, unknown>[];
+  let exhibitionImages: Record<string, unknown>[];
 
   const logger: ILogger = {
     info: vi.fn(),
@@ -37,8 +38,10 @@ describe('ShExhibitionItemImporter, subtheme images', () => {
         rel_sort_order: 2,
       },
     ];
+    exhibitionImages = [];
     const query = vi.fn(async (sql: string) => {
       if (sql.includes('.sh_exhibition_subtheme_images')) return subthemeImages;
+      if (sql.includes('.sh_exhibition_images')) return exhibitionImages;
       if (sql.includes('.sh_object_images')) {
         return [
           {
@@ -69,6 +72,7 @@ describe('ShExhibitionItemImporter, subtheme images', () => {
 
     const tracker = new UnifiedTracker();
     tracker.set('mwnf3_sharing_history:sh_exhibition_subthemes:91', 'subtheme-91', 'collection');
+    tracker.set('mwnf3_sharing_history:sh_exhibitions:11', 'exhibition-11', 'collection');
     tracker.set('mwnf3_sharing_history:sh_objects:awe:ua:81', 'object-81', 'item');
     tracker.set('mwnf3_sharing_history:sh_object_images:awe:ua:81:_:1', 'picture-81-1', 'item');
     context = { legacyDb, strategy, tracker, logger, dryRun: false };
@@ -94,5 +98,21 @@ describe('ShExhibitionItemImporter, subtheme images', () => {
       expect.objectContaining({ item_id: 'object-81', extra: { n: 1, n2: 2 } })
     );
     expect(result.warnings?.some((w) => w.includes('no picture item'))).toBe(true);
+  });
+
+  it("places an exhibition image on its record's first picture, as the introduction shows it", async () => {
+    subthemeImages = [];
+    exhibitionImages = [
+      { image_id: 7, exhibition_id: 11, image_item: 'AWE;ua;81', item_type: 'obj', sort_order: 3 },
+    ];
+    const result = await new ShExhibitionItemImporter(context).import();
+
+    expect(result.errors).toEqual([]);
+    expect(writeCollectionItem).toHaveBeenCalledWith({
+      collection_id: 'exhibition-11',
+      item_id: 'picture-81-1',
+      display_order: 3,
+      extra: null,
+    });
   });
 });

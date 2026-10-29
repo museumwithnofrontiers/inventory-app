@@ -140,8 +140,8 @@ export class CollectionExporter extends BaseExporter {
          ORDER BY cit.collection_image_id, t.internal_name`,
         collectionIds
       ),
-      // Items in these collections from the project. A theme or subtheme image
-      // places the picture item legacy showed: it ships as its parent item,
+      // Items in these collections from the project. An exhibition, theme or
+      // subtheme image places the picture item legacy showed: it ships as its parent item,
       // with that picture's image (mergePlacements below).
       this.db.query<CollectionItemRow>(
         `SELECT ci.collection_id,

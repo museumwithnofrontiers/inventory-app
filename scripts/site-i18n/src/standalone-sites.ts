@@ -164,6 +164,8 @@ const SHARINGHISTORY_EXHIBITION_WORDS: Record<string, string | StandaloneWord> =
   'nav.allExhibitions': 'sh_all_exh',
   'nav.previous': 'sh_previous_page',
   'nav.next': 'sh_next_page',
+  // Further Reading (bibliography.php): its link closing the window.
+  'reading.close': 'close',
   // The exhibition pages (theme_items.php, subtheme_items.php).
   'page.moreAbout': 'sh_more_about',
   'page.inExhibition': 'sh_in_exh',

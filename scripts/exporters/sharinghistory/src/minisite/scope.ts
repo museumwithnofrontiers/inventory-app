@@ -8,7 +8,9 @@ const placeholders = (values: unknown[]): string => values.map(() => '?').join('
 
 /**
  * A mini-site's scope, read from the database:
- * - its exhibition and every theme and subtheme below it;
+ * - its exhibition and every theme and subtheme below it, not its national
+ *   contexts (the parent site's collection browser reads those, the
+ *   exhibition's pages never did);
  * - the items those collections place and their parent records (a detail's
  *   monument), so a caption can name and link its record;
  * - the partners those items name (a caption's museum), and the partners the
@@ -21,7 +23,9 @@ export async function resolveScope(db: Query, instance: MinisiteInstance): Promi
   const collectionIds = [root.id]
   for (let level = [root.id]; level.length > 0; ) {
     const children = await db.query<{ id: string }>(
-      `SELECT id FROM collections WHERE parent_id IN (${placeholders(level)}) ORDER BY id`,
+      `SELECT id FROM collections
+       WHERE parent_id IN (${placeholders(level)}) AND (purpose IS NULL OR purpose <> 'national-context')
+       ORDER BY id`,
       level
     )
     level = children.map(c => c.id).filter(id => !collectionIds.includes(id))
