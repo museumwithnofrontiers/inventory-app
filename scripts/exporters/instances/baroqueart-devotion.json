@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-devotion",
+  "name": "Devotion and Pilgrimage",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "a11fa453-837e-50e2-84b1-9f53c842227b",
+  "partner_ids": [
+    "f446146a-791c-5ab5-a762-4bd0263541be"
+  ],
+  "package_name": "@museumwnf/baroqueart-devotion-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/devotion/"
+}

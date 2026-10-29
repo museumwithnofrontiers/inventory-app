@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-bourgeoisie",
+  "name": "The Ascension of the Bourgeoisie",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "75f28465-8738-554e-af5d-f6804a9c2802",
+  "partner_ids": [
+    "f446146a-791c-5ab5-a762-4bd0263541be"
+  ],
+  "package_name": "@museumwnf/baroqueart-bourgeoisie-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/bourgeoisie/"
+}

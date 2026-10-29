@@ -4,6 +4,7 @@ import {
   buildCollectionItemEntry,
   computeUnpublishedExhibitionSubtree,
   groupDetailViews,
+  unplacedDetailViews,
 } from '../../src/exporters/collection-exporter.js'
 
 /**
@@ -85,17 +86,17 @@ describe('buildCollectionItemEntry', () => {
     expect(entry).not.toHaveProperty('image_url')
   })
 
-  it('ships its detail views as details, each with its image and caption', () => {
+  it('ships its detail views as details, each with the record it shows, its image and caption', () => {
     const entry = buildCollectionItemEntry(
       { collection_id: 'page', item_id: 'monument', display_order: 4, extra: { n: 4, n2: 2 }, picture_path: null },
       url,
       [
-        { collection_id: 'page', extra: { n: 4, n2: 2, parent_n2: 2, item_name: { en: 'High altar' } }, picture_path: 'd1.jpg' },
-        { collection_id: 'page', extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: null },
+        { collection_id: 'page', record_id: 'detail', owner_id: null, display_order: 4, extra: { n: 4, n2: 2, parent_n2: 2, item_name: { en: 'High altar' } }, picture_path: 'd1.jpg' },
+        { collection_id: 'page', record_id: null, owner_id: null, display_order: 4, extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: null },
       ]
     )
     expect(entry.details).toEqual([
-      { image_url: 'https://example.org/pub/d1.jpg', caption: { en: { name: 'High altar' } } },
+      { id: 'detail', image_url: 'https://example.org/pub/d1.jpg', caption: { en: { name: 'High altar' } } },
       { image_url: null },
     ])
   })
@@ -107,19 +108,50 @@ describe('buildCollectionItemEntry', () => {
     )
     expect(entry).not.toHaveProperty('details')
   })
+
+  it('carries the artist and material lines Baroque Art captions print', () => {
+    const entry = buildCollectionItemEntry(
+      {
+        collection_id: 'page',
+        item_id: 'item',
+        display_order: 1,
+        extra: { n: 1, n2: 1, item_artist: { en: 'Andrea Pozzo' }, item_material: { en: 'Fresco' } },
+        picture_path: null,
+      },
+      url
+    )
+    expect(entry.caption).toEqual({ en: { artist: 'Andrea Pozzo', material: 'Fresco' } })
+  })
 })
 
 describe('groupDetailViews', () => {
   it('groups views by page, position and the n2 of the placement they belong to, in order', () => {
     const views = [
-      { collection_id: 'page', extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'a.jpg' },
-      { collection_id: 'page', extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: 'b.jpg' },
-      { collection_id: 'page', extra: { n: 4, n2: 1, parent_n2: 1 }, picture_path: 'c.jpg' },
-      { collection_id: 'other', extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'd.jpg' },
+      { collection_id: 'page', record_id: null, owner_id: null, display_order: 4, extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'a.jpg' },
+      { collection_id: 'page', record_id: null, owner_id: null, display_order: 4, extra: { n: 4, n2: 3, parent_n2: 2 }, picture_path: 'b.jpg' },
+      { collection_id: 'page', record_id: null, owner_id: null, display_order: 4, extra: { n: 4, n2: 1, parent_n2: 1 }, picture_path: 'c.jpg' },
+      { collection_id: 'other', record_id: null, owner_id: null, display_order: 4, extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'd.jpg' },
     ]
     const groups = groupDetailViews(views)
     expect(groups.get('page|4|2')?.map(v => v.picture_path)).toEqual(['a.jpg', 'b.jpg'])
     expect(groups.get('page|4|1')?.map(v => v.picture_path)).toEqual(['c.jpg'])
     expect(groups.get('other|4|2')?.map(v => v.picture_path)).toEqual(['d.jpg'])
+  })
+})
+describe('unplacedDetailViews', () => {
+  it('gives the views a placement whose own link the inventory merged into another a placement of the monument they show', () => {
+    const views = [
+      { collection_id: 'page', record_id: 'hall', owner_id: 'palace', display_order: 2, extra: { n: 2, n2: 2, parent_n2: 2 }, picture_path: 'a.jpg' },
+      { collection_id: 'page', record_id: 'hall', owner_id: 'palace', display_order: 2, extra: { n: 2, n2: 3, parent_n2: 2 }, picture_path: 'b.jpg' },
+      { collection_id: 'page', record_id: 'altar', owner_id: 'church', display_order: 4, extra: { n: 4, n2: 2, parent_n2: 2 }, picture_path: 'c.jpg' },
+      { collection_id: 'page', record_id: null, owner_id: null, display_order: 5, extra: { n: 5, n2: 2, parent_n2: 2 }, picture_path: 'd.jpg' },
+    ]
+    const placements = unplacedDetailViews(groupDetailViews(views), new Set(['page|4|2']))
+    expect(placements).toEqual([
+      { key: 'page|2|2', collection_id: 'page', item_id: 'palace', display_order: 2, extra: { n: 2, n2: 2 }, picture_path: null },
+    ])
+    const entry = buildCollectionItemEntry(placements[0], p => `/pub/${p}`, groupDetailViews(views).get('page|2|2'))
+    expect(entry).toMatchObject({ id: 'palace', display_order: 2, variant_order: 2 })
+    expect(entry.details?.map(d => d.image_url)).toEqual(['/pub/a.jpg', '/pub/b.jpg'])
   })
 })

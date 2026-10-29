@@ -36,7 +36,8 @@
  *
  * Exhibition-level images (exhibition_images.ref_item):
  * - Same format, linked to exhibition Collection
- * - 92 item references + 2 custom images
+ * - 92 item references + 2 custom photos, each an item of its own as on the
+ *   pages (its caption its texts), or a CollectionImage for any other picture
  *
  * EAV metadata (exhibition_page_images_fields):
  * - detail_justification, detail_name, item_artist, item_date, item_dynasty,
@@ -393,10 +394,11 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
   // Pass 2: Exhibition-level images
   // --------------------------------------------------------------------------
   private async importExhibitionLevelImages(result: ImportResult): Promise<void> {
-    const images = await this.context.legacyDb.query<Mwnf3LegacyExhibitionLevelImage>(
-      `SELECT image_id, exhibition_id, n, n2, ref_item, picture
-       FROM ${MWNF3_SCHEMA}.exhibition_images
-       ORDER BY exhibition_id, n, n2`
+    const images = await this.context.legacyDb.query<Mwnf3LegacyExhibitionLevelImage & { project_id: string | null }>(
+      `SELECT ei.image_id, ei.exhibition_id, ei.n, ei.n2, ei.ref_item, ei.picture, e.project_id
+       FROM ${MWNF3_SCHEMA}.exhibition_images ei
+       LEFT JOIN ${MWNF3_SCHEMA}.exhibitions e ON e.exhibition_id = ei.exhibition_id
+       ORDER BY ei.exhibition_id, ei.n, ei.n2`
     );
 
     this.logInfo(`Found ${images.length} exhibition-level images`);
@@ -460,6 +462,37 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             { itemId, itemBackwardCompat, parsed, picture: img.picture, n: img.n, extra },
             result
           );
+        } else if (isCustomPhoto(img.picture ?? '') && img.project_id) {
+          // A custom photo with no item behind it → an item of its own, its
+          // caption its texts, as on the exhibition's pages: the introduction
+          // printed it among the others.
+          const eav = exhibitionImageEavMap.get(img.image_id) ?? {};
+          const itemId = await this.standalonePicture(img.picture.trim(), img.project_id, eav);
+          if (!itemId) {
+            // A dry or sample run writes nothing.
+            result.imported++;
+            this.showProgress();
+            continue;
+          }
+          const placedKey = `${collectionId}:${itemId}`;
+          if (this.placed.has(placedKey)) {
+            const label = `Exhibition image ${img.image_id}`;
+            result.warnings = result.warnings || [];
+            result.warnings.push(`${label}: placed twice on the same exhibition, first placement kept`);
+            this.logWarning(`${label}: placed twice on the same exhibition, first placement kept`);
+            result.skipped++;
+            this.showSkipped();
+            continue;
+          }
+          this.placed.add(placedKey);
+          await this.context.strategy.writeCollectionItem({
+            collection_id: collectionId,
+            item_id: itemId,
+            display_order: img.n,
+            extra: { n: img.n, n2: img.n2, ...eav },
+          });
+          result.imported++;
+          this.showProgress();
         } else {
           // Custom image → CollectionImage. collection_images has no
           // backward_compatibility column — identity is (owner, legacy path).
