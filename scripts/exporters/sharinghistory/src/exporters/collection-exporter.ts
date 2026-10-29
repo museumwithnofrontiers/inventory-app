@@ -70,6 +70,8 @@ interface CollectionItemRow {
   item_id: string
   display_order: number | null
   extra: unknown
+  /** The image of the picture item a theme or subtheme image places. */
+  picture_path?: string | null
 }
 
 export class CollectionExporter extends BaseExporter {
@@ -138,16 +140,25 @@ export class CollectionExporter extends BaseExporter {
          ORDER BY cit.collection_image_id, t.internal_name`,
         collectionIds
       ),
-      // Items in these collections, restricted to non-picture items from the project
+      // Items in these collections from the project. A theme or subtheme image
+      // places the picture item legacy showed: it ships as its parent item,
+      // with that picture's image (mergePlacements below).
       this.db.query<CollectionItemRow>(
-        `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra
+        `SELECT ci.collection_id,
+                IF(i.type = 'picture', i.parent_id, i.id) AS item_id,
+                ci.display_order, ci.extra,
+                IF(i.type = 'picture',
+                   (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
+                    ORDER BY ii.display_order, ii.id LIMIT 1),
+                   NULL) AS picture_path
          FROM collection_item ci
          JOIN items i ON i.id = ci.item_id
+         LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
-           AND i.project_id IN (${ph})
-           AND i.type IN ('object', 'monument', 'detail')
-         ORDER BY ci.collection_id, ci.display_order`,
-        [...collectionIds, ...this.projectIds]
+           AND ((i.type IN ('object', 'monument', 'detail') AND i.project_id IN (${ph}))
+             OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
+         ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), item_id`,
+        [...collectionIds, ...this.projectIds, ...this.projectIds]
       ),
     ])
 
@@ -208,6 +219,7 @@ export class CollectionExporter extends BaseExporter {
       if (!itemMap.has(link.collection_id)) itemMap.set(link.collection_id, [])
       itemMap.get(link.collection_id)!.push(buildCollectionItemEntry(link, imageUrlFn))
     }
+    for (const [collectionId, entries] of itemMap) itemMap.set(collectionId, mergePlacements(entries))
 
     const output = publishedCollections.map(c => ({
       id: c.id,
@@ -327,6 +339,7 @@ function buildCollectionItemEntry(
   id: string
   display_order: number | null
   variant_order: number | null
+  image_url?: string
   caption?: Record<string, CollectionItemCaption>
   details?: CollectionItemDetailEntry[]
   justifications?: Record<string, { partner: string | null; curator: string | null }>
@@ -362,11 +375,43 @@ function buildCollectionItemEntry(
     id: link.item_id,
     display_order: link.display_order,
     variant_order: variantOrder,
+    ...(link.picture_path ? { image_url: imageUrlFn(link.picture_path) } : {}),
     ...(Object.keys(caption).length > 0 ? { caption } : {}),
     ...(details.length > 0 ? { details } : {}),
     ...(justifications && Object.keys(justifications).length > 0 ? { justifications } : {}),
     ...(curatorStatus ? { curator_status: curatorStatus } : {}),
   }
+}
+
+/**
+ * One collection's entries, merged. A collection places an item twice over:
+ * the rel_* table relates it (with the curator's and partner's
+ * justification), and an image table shows one of its pictures at a position
+ * (`image_url`, one entry per view). Each picture entry takes its item's
+ * justification; a relation whose item a picture shows is then dropped, so an
+ * item is listed once per picture it shows, or once. Exported for unit tests.
+ */
+export function mergePlacements<
+  T extends {
+    id: string
+    image_url?: string
+    justifications?: Record<string, { partner: string | null; curator: string | null }>
+    curator_status?: string
+  },
+>(entries: T[]): T[] {
+  const shown = new Set(entries.filter(e => e.image_url).map(e => e.id))
+  const related = new Map(entries.filter(e => !e.image_url).map(e => [e.id, e]))
+  return entries
+    .filter(e => e.image_url || !shown.has(e.id))
+    .map(e => {
+      const relation = e.image_url ? related.get(e.id) : undefined
+      if (!relation) return e
+      return {
+        ...e,
+        ...(relation.justifications && !e.justifications ? { justifications: relation.justifications } : {}),
+        ...(relation.curator_status && !e.curator_status ? { curator_status: relation.curator_status } : {}),
+      }
+    })
 }
 
 /**

@@ -436,7 +436,14 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description:
       'Import item assignments and image references for SH exhibitions, themes, and subthemes',
     importerClass: ShExhibitionItemImporter,
-    dependencies: ['sh-exhibition', 'sh-object', 'sh-monument'],
+    // A theme or subtheme image places the picture item it shows.
+    dependencies: [
+      'sh-exhibition',
+      'sh-object',
+      'sh-monument',
+      'sh-object-picture',
+      'sh-monument-picture',
+    ],
   },
   {
     key: 'sh-national-context',

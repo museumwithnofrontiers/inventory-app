@@ -18,8 +18,9 @@
  * - sh_exhibition_subtheme_images (subtheme level)
  *
  * Note: Image tables encode item references as 'project_id;country;number' with item_type
- * ('obj' or 'mon'). These are resolved to Items and stored as collection_item pivots with
- * display_order from sort_order.
+ * ('obj' or 'mon'). A theme or subtheme image row places the picture item of the picture it
+ * shows (its `picture` path), with display_order from sort_order and extra `n` (sort_order)
+ * and, for a subtheme, `n2` (rel_sort_order: the views sharing a position).
  *
  * For rel_* tables at the exhibition level, justification texts (partner + curator, per language)
  * are merged into pivot extra.justifications.
@@ -44,6 +45,7 @@ import type {
   ShLegacyExhibitionThemeImage,
   ShLegacyExhibitionSubthemeImage,
 } from '../../domain/types/index.js';
+import { formatShBackwardCompatibility } from '../../domain/transformers/index.js';
 
 const SH_SCHEMA = 'mwnf3_sharing_history';
 
@@ -478,10 +480,16 @@ export class ShExhibitionItemImporter extends BaseImporter {
         const written = await this.writeCollectionItemPivot(
           result,
           collectionBackwardCompat,
-          itemBackwardCompat,
+          await this.placedItemReference(
+            legacy.picture,
+            legacy.item_type,
+            itemBackwardCompat,
+            result,
+            `Theme image ${legacy.image_id}`
+          ),
           `sh_exhibition_theme_images ${legacy.image_id}`,
           legacy.sort_order,
-          null
+          { n: legacy.sort_order }
         );
 
         if (written) {
@@ -535,10 +543,18 @@ export class ShExhibitionItemImporter extends BaseImporter {
         const written = await this.writeCollectionItemPivot(
           result,
           collectionBackwardCompat,
-          itemBackwardCompat,
+          await this.placedItemReference(
+            legacy.picture,
+            legacy.item_type,
+            itemBackwardCompat,
+            result,
+            `Subtheme image ${legacy.image_id}`
+          ),
           `sh_exhibition_subtheme_images ${legacy.image_id}`,
           legacy.sort_order,
-          null
+          // The pictures sharing a position are its views, in rel_sort_order:
+          // the first is the thumbnail, the others the item panel's "Related".
+          { n: legacy.sort_order, n2: legacy.rel_sort_order ?? 1 }
         );
 
         if (written) {
@@ -565,6 +581,67 @@ export class ShExhibitionItemImporter extends BaseImporter {
    * Resolve an image_item reference (format: 'project_id;country;number') to a backward_compatibility key.
    * Returns null if the reference cannot be parsed.
    */
+  /** Legacy picture path (lowercase) → the backward_compatibility of its picture item. */
+  private pictureItems: Map<string, string> | null = null;
+
+  /**
+   * The item a theme or subtheme image row places: the picture item of the
+   * picture legacy shows (its `picture` path), as the mwnf3 exhibitions place
+   * theirs; the record itself where no picture item has that path.
+   */
+  private async placedItemReference(
+    picture: string | null,
+    itemType: string,
+    itemBackwardCompat: string,
+    result: ImportResult,
+    label: string
+  ): Promise<string> {
+    if (!this.pictureItems) {
+      this.pictureItems = new Map();
+      for (const [table, kind] of [
+        ['sh_object_images', 'obj'],
+        ['sh_monument_images', 'mon'],
+      ] as const) {
+        const rows = await this.context.legacyDb.query<{
+          project_id: string;
+          country: string;
+          number: number;
+          type: string | null;
+          image_number: number;
+          path: string;
+        }>(
+          `SELECT project_id, country, number, type, image_number, path FROM ${SH_SCHEMA}.${table}`
+        );
+        for (const row of rows) {
+          if (!row.path) continue;
+          this.pictureItems.set(
+            `${kind} ${row.path.trim().toLowerCase()}`,
+            formatShBackwardCompatibility(
+              table,
+              row.project_id,
+              row.country,
+              row.number,
+              row.type || '_',
+              row.image_number
+            )
+          );
+        }
+      }
+    }
+    const kind = itemType === 'mon' ? 'mon' : 'obj';
+    const pictureBackwardCompat = picture
+      ? this.pictureItems.get(`${kind} ${picture.trim().toLowerCase()}`)
+      : undefined;
+    if (pictureBackwardCompat && (await this.getEntityUuidAsync(pictureBackwardCompat, 'item'))) {
+      return pictureBackwardCompat;
+    }
+    if (picture) {
+      result.warnings = result.warnings || [];
+      result.warnings.push(`${label}: no picture item for '${picture}', the record placed instead`);
+    }
+    return itemBackwardCompat;
+  }
+
   private resolveImageItemReference(imageItem: string, itemType: string): string | null {
     if (!imageItem || !imageItem.trim()) return null;
 
@@ -676,8 +753,7 @@ export class ShExhibitionItemImporter extends BaseImporter {
    */
   private buildJustificationExtra(
     justifications:
-      | Array<{ lang: string; partner: string | null; curator: string | null }>
-      | undefined
+      Array<{ lang: string; partner: string | null; curator: string | null }> | undefined
   ): Record<string, unknown> | null {
     if (!justifications || justifications.length === 0) return null;
 

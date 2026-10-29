@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildCollectionImageEntry } from '../../src/exporters/collection-exporter.js'
+import { buildCollectionImageEntry, mergePlacements } from '../../src/exporters/collection-exporter.js'
 import { minisiteLanguages } from '../../src/exporters/manifest-exporter.js'
 import type { MinisiteInstance } from '../../src/minisite/instance.js'
 import { resolveScope } from '../../src/minisite/scope.js'
@@ -93,6 +93,24 @@ describe('minisiteLanguages', () => {
       { collection_id: 'subtheme', code: 'en' },
     ]
     expect(minisiteLanguages(titled, [ROOT, 'theme', 'subtheme'])).toEqual(['en'])
+  })
+})
+
+describe('mergePlacements', () => {
+  it("gives each picture its item's justification, and lists a related item once otherwise", () => {
+    const justifications = { en: { partner: 'P', curator: 'C' } }
+    expect(
+      mergePlacements([
+        { id: 'painting', display_order: 1, variant_order: 1, image_url: 'p1.jpg' },
+        { id: 'print', display_order: 1, variant_order: 2, image_url: 'p2.jpg' },
+        { id: 'painting', display_order: 1, variant_order: null, justifications, curator_status: 'Y' },
+        { id: 'coin', display_order: 2, variant_order: null, justifications },
+      ])
+    ).toEqual([
+      { id: 'painting', display_order: 1, variant_order: 1, image_url: 'p1.jpg', justifications, curator_status: 'Y' },
+      { id: 'print', display_order: 1, variant_order: 2, image_url: 'p2.jpg' },
+      { id: 'coin', display_order: 2, variant_order: null, justifications },
+    ])
   })
 })
 
