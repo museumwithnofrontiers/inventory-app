@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-travelling-and-exotism",
+  "name": "Travelling and Exoticism",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "fb21ee03-874b-5ba1-95d5-bde929f2762d",
+  "partner_ids": [
+    "4df52263-9f4f-577a-8758-36bd2784101b"
+  ],
+  "package_name": "@museumwnf/baroqueart-travelling-and-exotism-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/travelling_and_exotism/"
+}

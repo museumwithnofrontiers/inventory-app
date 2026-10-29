@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-enlightenment",
+  "name": "The Age of Enlightenment",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "504a47df-11ce-5a98-8680-243fd198e8df",
+  "partner_ids": [],
+  "package_name": "@museumwnf/baroqueart-enlightenment-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/enlightenment/"
+}

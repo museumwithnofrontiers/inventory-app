@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-ephemera",
+  "name": "Ephemera, Festivals and Theatrical Representation",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "9e8b4feb-4136-5c7e-9fb9-a6267e9aa01a",
+  "partner_ids": [
+    "6a136d05-856b-5321-aaeb-eba1b39136a2"
+  ],
+  "package_name": "@museumwnf/baroqueart-ephemera-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/ephemera/"
+}

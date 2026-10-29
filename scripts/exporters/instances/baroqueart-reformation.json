@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-reformation",
+  "name": "Reformation and Counter-Reformation",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "371247bc-5f01-5a23-98c8-7d4ce55b2551",
+  "partner_ids": [
+    "fae81dae-0250-52ec-acc1-171da28b9eef"
+  ],
+  "package_name": "@museumwnf/baroqueart-reformation-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/reformation/"
+}
