@@ -2,7 +2,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { deterministicUuid } from './legacy-minisite.mjs'
-import { historicalProfiles, slugOf, STYLE_RULES, stylesOf, tokensCss } from './sharinghistory-minisite.mjs'
+import { historicalProfiles, partnerLinks, slugOf, STYLE_RULES, stylesOf, tokensCss } from './sharinghistory-minisite.mjs'
+
+test("leads a partner logo to the partner's page on the parent site", () => {
+  const html = '<a href="https://sharinghistory.museumwnf.org/pm_partner.php?id=AT_01;at&amp;shpro=AWE&amp;"><img></a>'
+  const partners = [{ id: 'p-at', backward_compatibility: 'mwnf3_sharing_history:sh_partners:at_01' }]
+  assert.deepEqual(partnerLinks(html, partners, 'https://p'), {
+    'https://sharinghistory.museumwnf.org/pm_partner.php?id=AT_01;at&shpro=AWE&': 'https://p/#/partner/p-at',
+  })
+})
 
 test('a slug is the title in kebab case', () => {
   assert.equal(slugOf('Economy and Trade'), 'economy-and-trade')

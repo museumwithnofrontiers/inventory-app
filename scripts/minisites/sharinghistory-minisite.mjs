@@ -11,8 +11,9 @@
  * its title), which the pages print into _styles.css.php for the session's
  * exhibition. This reads them from legacy as it serves them, and writes:
  *
- *   <site>/src/minisite.json          the exhibition's settings, and the parent
+ *   <site>/src/minisite.json          the exhibition's settings, the parent
  *                                     site's Historical Profiles for the menu
+ *                                     and its partner pages for the logos
  *   <site>/theme/tokens.css           its styles, as --sh-* tokens
  *   <site>/theme/assets/legacy/       the frame's pictures and the exhibition's
  *                                     backgrounds, byte for byte, and SOURCES.json
@@ -170,14 +171,34 @@ async function download(url, init) {
   return response
 }
 
-/** _styles.css.php as legacy serves it for exhibition `eId`: its session is the home page's. */
-export async function legacyStylesheet(eId) {
+/**
+ * The exhibition's home page and _styles.css.php as legacy serves them for
+ * exhibition `eId`: the stylesheet prints the home page's session.
+ */
+export async function legacyPages(eId) {
   const home = await download(`${FAMILY.exhibitions}/exh_items.php?eId=${eId}`)
   const cookie = (home.headers.getSetCookie?.() ?? [home.headers.get('set-cookie') ?? ''])
     .map((c) => c.split(';')[0])
     .filter(Boolean)
     .join('; ')
-  return (await download(`${FAMILY.exhibitions}/_styles.css.php`, { headers: { cookie } })).text()
+  const html = await home.text()
+  const css = await (await download(`${FAMILY.exhibitions}/_styles.css.php`, { headers: { cookie } })).text()
+  return { html, css }
+}
+
+/**
+ * Where the home page's partner logos lead on the parent site: legacy linked
+ * each to its partner page (pm_partner.php?id=<partner>;<country>), which the
+ * parent site rebuilt at #/partner/<id>. Keyed by legacy's address, as the
+ * data package's logo carries it (`link`).
+ */
+export function partnerLinks(html, partners, parentSite) {
+  const links = {}
+  for (const [, href, key] of html.matchAll(/href="([^"]*pm_partner\.php\?id=([A-Za-z0-9_]+);[^"]*)"/g)) {
+    const partner = partners.find((p) => p.backward_compatibility === `mwnf3_sharing_history:sh_partners:${key.toLowerCase()}`)
+    if (partner) links[href.replace(/&amp;/g, '&')] = `${parentSite}/#/partner/${encodeURIComponent(partner.id)}`
+  }
+  return links
 }
 
 function option(args, name) {
@@ -218,8 +239,15 @@ async function main(args) {
     { collections: readJson('collections.json'), countries: readJson('translations/countries.en.json') },
     FAMILY.parentSite,
   )
-  const styles = stylesOf(await legacyStylesheet(eId))
-  const settings = { legacy: legacyUrl, family: FAMILY.key, eId: Number(eId), profiles }
+  const { html, css } = await legacyPages(eId)
+  const styles = stylesOf(css)
+  const settings = {
+    legacy: legacyUrl,
+    family: FAMILY.key,
+    eId: Number(eId),
+    profiles,
+    partnerLinks: partnerLinks(html, readJson('partners.json'), FAMILY.parentSite),
+  }
   writeFileSync(join(site, 'src/minisite.json'), `${JSON.stringify(settings, null, 2)}\n`)
   writeFileSync(join(site, 'theme/tokens.css'), tokensCss(styles, name, eId))
   const own = familyFiles(
