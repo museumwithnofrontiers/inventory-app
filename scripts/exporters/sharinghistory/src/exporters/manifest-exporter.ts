@@ -1,14 +1,19 @@
 import type { ExportResult, ExportScope } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
-/** The language codes every collection of a mini-site has a title in. Exported for unit tests. */
+/**
+ * The language codes every page of a mini-site has a title in. A collection
+ * with no title in any language is not a page: legacy listed only titled
+ * themes and subthemes. Exported for unit tests.
+ */
 export function minisiteLanguages(
   titled: { collection_id: string; code: string }[],
   collectionIds: string[]
 ): string[] {
   const codes = [...new Set(titled.map(row => row.code))].sort()
+  const pages = collectionIds.filter(id => titled.some(row => row.collection_id === id))
   return codes.filter(code =>
-    collectionIds.every(id => titled.some(row => row.collection_id === id && row.code === code))
+    pages.every(id => titled.some(row => row.collection_id === id && row.code === code))
   )
 }
 

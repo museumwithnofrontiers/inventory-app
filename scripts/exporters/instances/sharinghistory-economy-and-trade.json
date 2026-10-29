@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-economy-and-trade",
+  "name": "Economy and Trade",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "8bebd45c-0749-50b8-ad43-dc6cb58c395b",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-economy-and-trade-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=6"
+}

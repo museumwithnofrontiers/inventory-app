@@ -99,6 +99,14 @@ describe('minisiteLanguages', () => {
     ]
     expect(minisiteLanguages(titled, [ROOT, 'theme', 'subtheme'])).toEqual(['en'])
   })
+
+  it('leaves out a collection with no title at all: legacy listed it as no page', () => {
+    const titled = [
+      { collection_id: ROOT, code: 'en' },
+      { collection_id: 'theme', code: 'en' },
+    ]
+    expect(minisiteLanguages(titled, [ROOT, 'theme', 'untitled'])).toEqual(['en'])
+  })
 })
 
 describe('mergePlacements', () => {
