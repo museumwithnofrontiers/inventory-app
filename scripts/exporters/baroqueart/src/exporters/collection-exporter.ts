@@ -88,9 +88,9 @@ interface CollectionItemRow {
 export interface DetailViewRow {
   collection_id: string
   /**
-   * The record the view shows: the monument detail whose picture it links (or
-   * the detail itself), else the item its own picture belongs to. Legacy's
-   * captions fell back on the monument detail's texts.
+   * The monument detail the view shows: the detail whose picture it links, or
+   * the detail itself. Legacy's captions fell back on its texts, and on no
+   * record's for a view that referenced no detail (a photo of its own).
    */
   record_id: string | null
   /** The object or monument the view shows a part of: the placement's record. */
@@ -186,7 +186,10 @@ export class CollectionExporter extends BaseExporter {
       // pictures legacy showed in its place, each with its own texts.
       this.db.query<DetailViewRow>(
         `SELECT ci.collection_id,
-                IF(i.type = 'picture', i.parent_id, i.id) AS record_id,
+                CASE
+                  WHEN i.type = 'detail' THEN i.id
+                  WHEN i.type = 'picture' AND parent.type = 'detail' THEN parent.id
+                END AS record_id,
                 CASE
                   WHEN i.type = 'picture' AND parent.type = 'detail' THEN parent.parent_id
                   WHEN i.type = 'picture' AND parent.type IN ('object', 'monument') THEN parent.id
