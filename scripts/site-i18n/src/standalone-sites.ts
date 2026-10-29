@@ -116,6 +116,90 @@ const BAROQUEART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
   'footer.copyright': 'footer5',
 }
 
+/**
+ * The words Sharing History's virtual exhibitions print. They are a family of
+ * their own: one set of pages (exhibitions/AWE/) inside the Sharing History
+ * site's frame, unlike Discover Islamic Art's and Baroque Art's generic
+ * pages. Their mini-sites read viewer-i18n's `minisiteSharingHistory`
+ * namespace, extracted with
+ * `extract:standalone -- sharinghistory-exhibitions --namespace minisiteSharingHistory`.
+ */
+const SHARINGHISTORY_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
+  // The window title (_headerTopEx.php).
+  'identity.windowTitle': 'sh_exh_windowstitle',
+  // The header (_headerEx.php): the site's name, its links with their
+  // tooltips, and the text-size buttons.
+  'header.heading': 'sh_home_heading1',
+  'header.subheading': 'sh_home_heading2',
+  'header.about': 'sh_menu_introduction',
+  'header.aboutTip': 'sh_menu_introd_tool_tip',
+  'header.project': 'sh_about_project',
+  'header.historicalBackground': 'sh_about_hb',
+  'header.home': 'back_to_section',
+  'header.homeTip': 'sh_back_to_Home',
+  'header.portal': 'portal_link',
+  'header.portalTip': 'sh_back_portal',
+  'header.decreaseSize': 'sh_decrease_size',
+  'header.revertSize': 'sh_revert_size',
+  'header.increaseSize': 'sh_increase_size',
+  // The home page's menu (exh_items.php).
+  'home.introduction': 'sh_ex_exabout_introduction',
+  'home.overview': 'sh_ex_theabout_introduction',
+  // The Related Content box (exh_items.php, and every exhibition page).
+  'related.heading': 'sh_related_context',
+  'related.politicalTimeline': 'sh_timeline_pc',
+  'related.thematicTimeline': 'sh_timeline_thematic_timeline',
+  'related.gallery': 'sh_ex_all_item_theme',
+  'related.galleryTip': 'sh_ex_all_item_theme_tooltip',
+  'related.furtherReading': 'sh_ex_further_reading',
+  'related.furtherReadingTip': 'sh_ex_further_reading_tooltip',
+  'related.seeAlso': 'sh_ex_see_also',
+  'related.seeAlsoTip': 'sh_ex_see_also_tooltip',
+  // The band under the home page and the exhibition pages (_curator_and_image.php).
+  'band.curatedBy': 'sh_ex_curated_by_text',
+  'band.coverImage': 'sh_coverimage',
+  'band.support': 'sh_support',
+  // The navigation over the introduction and every exhibition page.
+  'nav.entrance': 'sh_exh_back_entrance',
+  'nav.allExhibitions': 'sh_all_exh',
+  'nav.previous': 'sh_previous_page',
+  'nav.next': 'sh_next_page',
+  // The exhibition pages (theme_items.php, subtheme_items.php).
+  'page.moreAbout': 'sh_more_about',
+  'page.inExhibition': 'sh_in_exh',
+  // The item panel: the zoom's tooltip, the link to the record, its related pictures.
+  'item.showZoom': 'showzoom',
+  'item.moreInfo': 'sh_ex_more_info',
+  'item.related': 'sh_related_images',
+  // The download block under every text.
+  'download.heading': 'sh_download',
+  'download.asPdf': 'sh_aspdf',
+  'download.asWord': 'sh_asword',
+  // The menu over the footer (_menuFooterEx.php), in its order, with its tooltips.
+  'menu.about': 'sh_menu_introduction',
+  'menu.exhibitions': 'home_exhibitions',
+  'menu.exhibitionsTip': 'sh_exhibition_tool_tip',
+  'menu.collections': 'sh_home_pc',
+  'menu.collectionsTip': 'sh_pc_tool_tip',
+  'menu.database': 'home_database',
+  'menu.databaseTip': 'sh_db_tool_tip',
+  'menu.timeline': 'sh_menu_timeline',
+  'menu.timelineTip': 'sh_menu_timeline_tool_tip',
+  'menu.historicalProfiles': 'sh_menu_hb',
+  'menu.partners': 'sh_home_partners',
+  'menu.partnersTip': 'sh_partners_tool_tip',
+  'menu.myCollection': 'my_museum',
+  'menu.myCollectionTip': 'sh_mymuseum_tool_tip',
+  // The footer (_footer_inside.inc.php), in its order; the year follows the copyright.
+  'footer.aboutMwnf': 'footer1',
+  'footer.contact': 'footer2',
+  'footer.legalNotice': 'footer3',
+  'footer.credits': 'footer4',
+  'footer.languagePolicy': 'language_policy',
+  'footer.cookies': 'cookie_policy',
+  'footer.copyright': 'footer5',
+}
+
 export const STANDALONE_SITES: Record<string, StandaloneSite> = {
   islamicart: {
     root: 'islamicart/www.discoverislamicart.org',
@@ -389,5 +473,32 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     // The exhibition pages read group 6 ($TRSL_GROUP), with 2 and 3.
     groups: [2, 3, 6],
     words: BAROQUEART_EXHIBITION_WORDS,
+  },
+
+  'sharinghistory-exhibitions': {
+    root: 'sharinghistory/www.sharinghistory.org',
+    host: 'https://sharinghistory.museumwnf.org',
+    // exhibitions/AWE/libs/config.inc.php: $LNGLIST, English only.
+    languages: ['en'],
+    // The exhibition pages read groups 13 and 2 ($TRSL_GROUP); the frame's
+    // shared words are in 3.
+    groups: [13, 2, 3],
+    words: SHARINGHISTORY_EXHIBITION_WORDS,
+    regions: {
+      // The two windows' headings, written into their pages rather than read
+      // from the dictionary.
+      'windows.curators': {
+        file: 'exhibitions/AWE/credits.php',
+        start: '<p>Curators',
+        end: '</p>',
+        language: 'en',
+      },
+      'windows.coverImage': {
+        file: 'exhibitions/AWE/coverImage.php',
+        start: '<p>Exhibition cover image',
+        end: '</p>',
+        language: 'en',
+      },
+    },
   },
 }
