@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 /**
  * What a Sharing History virtual exhibition configured for itself alone,
- * written into a copy of minisite-template and into this repository's
- * exporter instances.
+ * written into a copy of sharinghistory-minisite-template and into this
+ * repository's exporter instances.
  *
  * Sharing History's exhibitions are a family of their own: every one runs on
  * the same pages (exhibitions/AWE/), named by its id (`eId`), inside the
@@ -17,7 +17,7 @@
  *   <site>/theme/tokens.css           its styles, as --sh-* tokens
  *   <site>/theme/assets/legacy/       the frame's pictures and the exhibition's
  *                                     backgrounds, byte for byte, and SOURCES.json
- *   <site>/package.json, index.html, src/texts.js, README.md
+ *   <site>/README.md                  the site's own
  *   <instances>/<slug>.json           the exporter instance of its data package
  *
  * The exhibition's collection id is the importer's own: the UUIDv5 of its
@@ -31,7 +31,7 @@ import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { deterministicUuid, familyFiles } from './legacy-minisite.mjs'
+import { deterministicUuid } from './legacy-minisite.mjs'
 
 const REPO = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..')
 
@@ -44,7 +44,6 @@ export const FAMILY = {
   parentSite: 'https://museumwithnofrontiers.github.io/sharinghistory',
   site: 'Sharing History',
   labels: 'minisiteSharingHistory',
-  windowTitle: 'Sharing History Exhibitions',
 }
 
 // The pictures the pages draw from exhibitions/AWE/images/: the frame and its
@@ -251,13 +250,6 @@ async function main(args) {
   }
   writeFileSync(join(site, 'src/minisite.json'), `${JSON.stringify(settings, null, 2)}\n`)
   writeFileSync(join(site, 'theme/tokens.css'), tokensCss(styles, name, eId))
-  const own = familyFiles(
-    { packageJson: readFileSync(join(site, 'package.json'), 'utf8'), indexHtml: readFileSync(join(site, 'index.html'), 'utf8') },
-    FAMILY,
-  )
-  writeFileSync(join(site, 'package.json'), own.packageJson)
-  writeFileSync(join(site, 'index.html'), own.indexHtml)
-  writeFileSync(join(site, 'src/texts.js'), own.texts)
 
   // The frame's pictures, and the exhibition's three backgrounds under the
   // names the pages draw them by.
@@ -282,7 +274,7 @@ async function main(args) {
     `intro_image and exh_image). tests/assets.test.js checks every file against its hash.`
   writeFileSync(join(assets, 'SOURCES.json'), `${JSON.stringify({ about, files }, null, 2)}\n`)
   writeFileSync(join(site, 'README.md'), siteReadme({ slug, name, eId }))
-  console.log(`site      ${resolve(site)}: minisite.json (${profiles.length} profiles), tokens.css, ${sources.length} pictures, package.json, index.html, texts.js, README.md`)
+  console.log(`site      ${resolve(site)}: minisite.json (${profiles.length} profiles), tokens.css, ${sources.length} pictures, README.md`)
 }
 
 /** The mini-site's own README: what it is, and how each role works on it. */
@@ -302,7 +294,7 @@ every record comes from the data package, every text from viewer-i18n or
 \`locales/\`.
 
 Its pages are every Sharing History mini-site's, from
-[\`minisite-template\`](https://github.com/museumwithnofrontiers/minisite-template)
+[\`sharinghistory-minisite-template\`](https://github.com/museumwithnofrontiers/sharinghistory-minisite-template)
 and the Sharing History pages of the mini-site layer: a change to how a page
 is drawn is made once, in \`@museumwnf/viewer-layout/minisite\`, for every
 Sharing History mini-site. What is this exhibition's own is written from
@@ -327,7 +319,7 @@ texts — its titles, quotes, essays and captions — arrive in the data package
 and are not edited anywhere. \`locales/\` holds this website's own texts, one
 file per language; it starts empty, and an entry written there overrides the
 shared one of the same name for this website alone. See
-\`minisite-template\`'s README, "Translator", for the steps in the browser.
+\`sharinghistory-minisite-template\`'s README, "Translator", for the steps in the browser.
 
 ---
 
