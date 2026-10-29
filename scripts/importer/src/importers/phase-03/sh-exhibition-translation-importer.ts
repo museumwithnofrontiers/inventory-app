@@ -15,7 +15,11 @@
  *
  * New schema:
  * - collection_translations (collection_id, language_id, context_id, title, description, quote,
- *   backward_compatibility)
+ *   extra, backward_compatibility)
+ *
+ * Each legacy column stays its own field: the introduction is the description,
+ * a subtheme's quotation its quote, and the columns the model has no field for
+ * keep their legacy names in `extra` (registered in scripts/importer/EXTRA.md).
  *
  * Dependencies:
  * - ShExhibitionImporter (must run first to create exhibition/theme/subtheme collections)
@@ -31,6 +35,20 @@ import type {
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 
 const SH_SCHEMA = 'mwnf3_sharing_history';
+
+function markdownOrNull(html: string | null | undefined): string | null {
+  return html && html.trim() ? convertHtmlToMarkdown(html) : null;
+}
+
+/** The legacy columns given, as Markdown under their own names; null when all are empty. */
+export function extraOf(columns: Record<string, string | null | undefined>): string | null {
+  const extra: Record<string, string> = {};
+  for (const [name, html] of Object.entries(columns)) {
+    const markdown = markdownOrNull(html);
+    if (markdown) extra[name] = markdown;
+  }
+  return Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
+}
 
 export class ShExhibitionTranslationImporter extends BaseImporter {
   getName(): string {
@@ -107,26 +125,15 @@ export class ShExhibitionTranslationImporter extends BaseImporter {
             continue;
           }
 
-          const title = legacy.title || legacy.subtitle || `Exhibition ${legacy.exhibition_id}`;
-
-          // Build description from all rich-text fields
-          const descriptionParts: string[] = [];
-          if (legacy.subtitle && legacy.title) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.subtitle));
-          }
-          if (legacy.introduction) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.introduction));
-          }
-          if (legacy.curated_by) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.curated_by));
-          }
-          if (legacy.further_reading) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.further_reading));
-          }
-          if (legacy.see_also_links) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.see_also_links));
-          }
-          const description = descriptionParts.join('\n\n') || null;
+          const title = legacy.title || `Exhibition ${legacy.exhibition_id}`;
+          const description = markdownOrNull(legacy.introduction);
+          const extra = extraOf({
+            subtitle: legacy.subtitle,
+            curated_by: legacy.curated_by,
+            cover_images: legacy.cover_images,
+            further_reading: legacy.further_reading,
+            see_also_links: legacy.see_also_links,
+          });
 
           this.collectSample(
             'sh_exhibition_translation',
@@ -151,6 +158,7 @@ export class ShExhibitionTranslationImporter extends BaseImporter {
             context_id: contextId,
             title,
             description,
+            extra,
             backward_compatibility: backwardCompat,
           });
 
@@ -233,18 +241,11 @@ export class ShExhibitionTranslationImporter extends BaseImporter {
           }
 
           const title = legacy.title || `Theme ${legacy.theme_id}`;
-
-          const descriptionParts: string[] = [];
-          if (legacy.introduction) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.introduction));
-          }
-          if (legacy.further_reading) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.further_reading));
-          }
-          if (legacy.see_also_links) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.see_also_links));
-          }
-          const description = descriptionParts.join('\n\n') || null;
+          const description = markdownOrNull(legacy.introduction);
+          const extra = extraOf({
+            further_reading: legacy.further_reading,
+            see_also_links: legacy.see_also_links,
+          });
 
           this.collectSample(
             'sh_exhibition_theme_translation',
@@ -270,6 +271,7 @@ export class ShExhibitionTranslationImporter extends BaseImporter {
             context_id: contextId,
             title,
             description,
+            extra,
             backward_compatibility: backwardCompat,
           });
 
@@ -351,20 +353,12 @@ export class ShExhibitionTranslationImporter extends BaseImporter {
           }
 
           const title = legacy.title || `Subtheme ${legacy.subtheme_id}`;
-
-          const descriptionParts: string[] = [];
-          if (legacy.introduction) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.introduction));
-          }
-          if (legacy.further_reading) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.further_reading));
-          }
-          if (legacy.see_also_links) {
-            descriptionParts.push(convertHtmlToMarkdown(legacy.see_also_links));
-          }
-          const description = descriptionParts.join('\n\n') || null;
-
-          const quote = legacy.quotation ? convertHtmlToMarkdown(legacy.quotation) : null;
+          const description = markdownOrNull(legacy.introduction);
+          const quote = markdownOrNull(legacy.quotation);
+          const extra = extraOf({
+            further_reading: legacy.further_reading,
+            see_also_links: legacy.see_also_links,
+          });
 
           this.collectSample(
             'sh_exhibition_subtheme_translation',
@@ -391,6 +385,7 @@ export class ShExhibitionTranslationImporter extends BaseImporter {
             title,
             description,
             quote,
+            extra,
             backward_compatibility: backwardCompat,
           });
 
