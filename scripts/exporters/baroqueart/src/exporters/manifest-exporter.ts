@@ -1,4 +1,4 @@
-import type { ExportResult } from '../core/types.js'
+import type { ExportResult, ExportScope } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
 interface LanguageNameRow {
@@ -66,11 +66,13 @@ export class ManifestExporter extends BaseExporter {
         terms_url: 'https://www.museumwnf.org/about/legal-notice',
         attribution: 'Content © Museum With No Frontiers, used under the MWNF legal notice.',
       },
-      site: {
-        key: 'baroqueart',
-        languages: await this.siteLanguages(),
-        names: await this.siteNames(),
-      },
+      site: this.context.scope
+        ? await this.minisite(this.context.scope)
+        : {
+            key: 'baroqueart',
+            languages: await this.siteLanguages(),
+            names: await this.siteNames(),
+          },
       languages: langRows.map(r => r.backward_compatibility),
       // Every project referenced by anything this package ships — for a
       // project-scoped exporter that is exactly the exported project(s)
@@ -108,6 +110,41 @@ export class ManifestExporter extends BaseExporter {
     return rows
       .map(row => ({ code: row.code, label: row.name || row.code.toUpperCase() }))
       .sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0))
+  }
+
+  /**
+   * A mini-site's `site`: its key, the languages its collection has a title in
+   * (legacy's exhibition switcher offered exactly those), its name per
+   * language, the collection it is, its legacy address, and the site that
+   * carried it on legacy, named.
+   */
+  private async minisite(scope: ExportScope): Promise<{
+    key: string
+    languages: { code: string; label: string }[]
+    names: Record<string, string>
+    root_collection_id: string
+    legacy_url: string | null
+    parent: { key: string; names: Record<string, string> }
+  }> {
+    const rows = await this.db.query<LanguageNameRow & { code: string; title: string | null }>(
+      `SELECT l.id AS language_id, l.backward_compatibility AS code, lt.name, ct.title
+       FROM collection_translations ct
+       JOIN languages l ON l.id = ct.language_id
+       LEFT JOIN language_translations lt
+         ON lt.language_id = l.id AND lt.display_language_id = l.id
+       WHERE ct.collection_id = ? AND l.backward_compatibility IS NOT NULL
+       ORDER BY l.backward_compatibility`,
+      [scope.rootCollectionId]
+    )
+    const titled = rows.filter(row => row.title?.trim())
+    return {
+      key: scope.key,
+      languages: titled.map(row => ({ code: row.code, label: row.name || row.code.toUpperCase() })),
+      names: Object.fromEntries(titled.map(row => [row.code, row.title as string])),
+      root_collection_id: scope.rootCollectionId,
+      legacy_url: scope.legacyUrl,
+      parent: { key: scope.parentKey, names: await this.siteNames() },
+    }
   }
 
   /**

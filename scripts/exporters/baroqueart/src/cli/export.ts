@@ -41,6 +41,7 @@ import {
   CollectionExporter,
   GlossaryExporter,
 } from '../exporters/index.js'
+import { runMinisite } from '../minisite/run.js'
 
 dotenv.config({ path: resolve(process.cwd(), '.env') })
 
@@ -73,6 +74,10 @@ program
     '--npm-registry <url>',
     'npm registry URL for publish (overrides NPM_REGISTRY env var)'
   )
+  .option(
+    '--minisite <slug>',
+    'Export one mini-site package (instances/<slug>.json, kind "minisite"): its collection subtree only'
+  )
   .action(
     async (options: {
       force: boolean
@@ -81,7 +86,17 @@ program
       publish: boolean
       packageVersion?: string
       npmRegistry?: string
+      minisite?: string
     }) => {
+      if (options.minisite) {
+        try {
+          await runMinisite(options.minisite, options, PROJECT_KEYS)
+          process.exit(0)
+        } catch (err) {
+          console.error(chalk.red(`\n${err instanceof Error ? err.message : String(err)}\n`))
+          process.exit(1)
+        }
+      }
       const subdirectory = SUBDIRECTORY
       const projectKeys = PROJECT_KEYS
       const logger = new Logger('Exporter')

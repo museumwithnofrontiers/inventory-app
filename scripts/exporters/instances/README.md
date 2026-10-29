@@ -106,7 +106,7 @@ database.) `docker-entrypoint.sh all` itself never invokes `dxa-gallery` or
 
 A `kind: "minisite"` file is read by the exporter of the project the site
 belongs to (`exporter`), as `npm run export -- --minisite <slug>` — the
-islamicart exporter for Discover Islamic Art's exhibitions. Its package is
+islamicart exporter for Discover Islamic Art's exhibitions, the baroqueart\nexporter for Discover Baroque Art's. Its package is
 exported from the database in that exporter's own shapes, narrowed to one
 collection and everything under it: the collections, the items their pages
 place (a placement that links a picture child item counts as that picture's
@@ -119,7 +119,7 @@ Fields, all required unless marked:
 - `kind` — `"minisite"`.
 - `slug`, `name`, `package_name` — as for the other kinds.
 - `exporter` — the exporter directory of the project the site belongs to.
-- `parent` — the key of the site that carried it on legacy (`islamicart`):
+- `parent` — the key of the site that carried it on legacy (`islamicart`,\n  `baroqueart`):
   written into `manifest.site.parent` with that site's names.
 - `collection_id` — the UUID of the collection the site is (an exhibition).
 - `partner_ids` — optional: the UUIDs of the partners the site credits itself
@@ -130,7 +130,7 @@ Fields, all required unless marked:
 
 Any other field is rejected.
 
-A Discover Islamic Art exhibition's file is not written by hand:
+A Discover Islamic Art or Discover Baroque Art exhibition's file is not\nwritten by hand:
 `scripts/minisites/legacy-minisite.mjs <legacy exhibition folder> --name
 "<English title>"` writes it from the legacy folder (which exhibition it is,
 the curators its home page credits), with the importer's own ids. Run again

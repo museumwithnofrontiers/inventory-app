@@ -552,6 +552,40 @@ describe('Mwnf3ExhibitionItemImporter — story #1224: exhibition-level image EA
       expect.objectContaining({ collection_id: 'exh-collection-uuid', path: 'images/exh.jpg', display_order: 1 })
     );
   });
+
+  it('makes a custom photo the introduction places with no item an item of its own, its caption as its texts', async () => {
+    tracker.set('mwnf3:projects:bar', 'bar-context-uuid', 'context');
+    const row = { ...EXHIBITION_IMAGE_ROW, ref_item: '', picture: 'custom/exhibition/129.jpg', n: 3, project_id: 'BAR' };
+    const eavRows = [
+      { entity_id: row.image_id, lang_id: 'en', field: 'item_name', value: 'Battle between the Turks and Christians' },
+      { entity_id: row.image_id, lang_id: 'en', field: 'item_date', value: 'First half of the 18th century' },
+      { entity_id: row.image_id, lang_id: 'en', field: 'item_museum', value: 'Pinacoteca Comunale Foresiana' },
+    ];
+    const ctx = makeContext(makeExhibitionImageQueryMock([row], eavRows), tracker, writeCollectionItemMock);
+
+    await new Mwnf3ExhibitionItemImporter(ctx).import();
+
+    expect(ctx.strategy.writeItem).toHaveBeenCalledWith(
+      expect.objectContaining({
+        type: 'picture',
+        parent_id: null,
+        backward_compatibility: 'mwnf3:exhibition_custom_pictures:custom/exhibition/129.jpg',
+      })
+    );
+    const translations = vi.mocked(ctx.strategy.writeItemTranslation).mock.calls.map((c) => c[0]);
+    expect(translations).toEqual([
+      expect.objectContaining({
+        language_id: 'eng',
+        context_id: 'bar-context-uuid',
+        name: 'Battle between the Turks and Christians',
+        dates: 'First half of the 18th century',
+      }),
+    ]);
+    const placement = writeCollectionItemMock.mock.calls[0][0];
+    expect(placement).toMatchObject({ collection_id: 'exh-collection-uuid', item_id: 'custom-picture-uuid', display_order: 3 });
+    expect(placement.extra).toMatchObject({ n: 3, item_museum: { en: 'Pinacoteca Comunale Foresiana' } });
+    expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
+  });
 });
 
 // ===========================================================================

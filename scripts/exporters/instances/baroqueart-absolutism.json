@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-absolutism",
+  "name": "Absolutism",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "7b1abeea-6930-5264-b1ee-9c77bec1e5b9",
+  "partner_ids": [
+    "f446146a-791c-5ab5-a762-4bd0263541be"
+  ],
+  "package_name": "@museumwnf/baroqueart-absolutism-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/absolutism/"
+}

@@ -1,0 +1,13 @@
+{
+  "kind": "minisite",
+  "slug": "baroqueart-languages-baroque",
+  "name": "Languages of Baroque",
+  "exporter": "baroqueart",
+  "parent": "baroqueart",
+  "collection_id": "92811773-7d90-5bec-90f3-f22c45c8cc29",
+  "partner_ids": [
+    "31de84d4-3de2-5ea1-b1d4-c8712cbcb314"
+  ],
+  "package_name": "@museumwnf/baroqueart-languages-baroque-data",
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/languages_baroque/"
+}
