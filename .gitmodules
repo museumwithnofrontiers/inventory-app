@@ -253,3 +253,27 @@
 [submodule ".new-architecture/islamicart-women"]
 	path = .new-architecture/islamicart-women
 	url = https://github.com/museumwithnofrontiers/islamicart-women
+[submodule ".new-architecture/baroqueart-absolutism"]
+	path = .new-architecture/baroqueart-absolutism
+	url = https://github.com/museumwithnofrontiers/baroqueart-absolutism
+[submodule ".new-architecture/baroqueart-devotion"]
+	path = .new-architecture/baroqueart-devotion
+	url = https://github.com/museumwithnofrontiers/baroqueart-devotion
+[submodule ".new-architecture/baroqueart-ephemera"]
+	path = .new-architecture/baroqueart-ephemera
+	url = https://github.com/museumwithnofrontiers/baroqueart-ephemera
+[submodule ".new-architecture/baroqueart-languages-baroque"]
+	path = .new-architecture/baroqueart-languages-baroque
+	url = https://github.com/museumwithnofrontiers/baroqueart-languages-baroque
+[submodule ".new-architecture/baroqueart-enlightenment"]
+	path = .new-architecture/baroqueart-enlightenment
+	url = https://github.com/museumwithnofrontiers/baroqueart-enlightenment
+[submodule ".new-architecture/baroqueart-bourgeoisie"]
+	path = .new-architecture/baroqueart-bourgeoisie
+	url = https://github.com/museumwithnofrontiers/baroqueart-bourgeoisie
+[submodule ".new-architecture/baroqueart-reformation"]
+	path = .new-architecture/baroqueart-reformation
+	url = https://github.com/museumwithnofrontiers/baroqueart-reformation
+[submodule ".new-architecture/baroqueart-travelling-and-exotism"]
+	path = .new-architecture/baroqueart-travelling-and-exotism
+	url = https://github.com/museumwithnofrontiers/baroqueart-travelling-and-exotism
