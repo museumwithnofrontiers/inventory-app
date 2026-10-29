@@ -345,16 +345,16 @@ exhibition's own is written from its legacy folder by inventory-app's
 | \`@museumwnf/${slug}-data\` | the exhibition: its collection, its themes and pages, the items they place, the curators it credits |
 | \`@museumwnf/viewer-core\` | application engine (routing, data access, texts, language) |
 | \`@museumwnf/viewer-layout\` | the mini-site pages and frame (\`./minisite\`) |
-| \`@museumwnf/viewer-i18n\` | the texts every mini-site shows (\`./minisite\`) |
+| \`@museumwnf/viewer-i18n\` | the texts every ${family.site} mini-site shows (\`./${family.labels}\`) |
 
 ---
 
 ## Translator — editing the website's texts
 
-The texts every mini-site shows — the menu, the navigation, the credits
+The texts every ${family.site} mini-site shows — the menu, the navigation, the credits
 window's labels — are shared, in
 [\`viewer-i18n\`](https://github.com/museumwithnofrontiers/viewer-i18n)'s
-\`minisite/\` folder, and are edited there. The exhibition's own texts — its
+\`${family.labels}/\` folder, and are edited there. The exhibition's own texts — its
 titles, quotes, essays and captions — arrive translated in the data package
 and are not edited anywhere. \`locales/\` holds this website's own texts, one
 file per language; it starts empty, and an entry written there overrides the
