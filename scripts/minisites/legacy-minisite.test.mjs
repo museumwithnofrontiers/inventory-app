@@ -7,7 +7,7 @@ import { test } from 'node:test'
 import { themeCss } from './legacy-theme.mjs'
 import {
   artintroId, banner, curators, design, deterministicUuid, exhibitionId, familyFiles, familyOf, mapCount, menuSecondColumnFrom,
-  socialLinks,
+  siteReadme, socialLinks,
 } from './legacy-minisite.mjs'
 
 test('ids are the importer’s own UUIDv5 of the backward_compatibility', () => {
@@ -131,6 +131,20 @@ test("the Artistic Introduction's social-media links: the ones its home page sho
     { href: 'https://www.weibo.com/1?a=1&b=2', name: 'weibo', aspect: 1 },
   ])
   assert.match(links[0].svg, /^<svg[^>]*data-icon="square-youtube"/)
+})
+
+test("Discover Baroque Art's sites name their own template and stylesheet, Discover Islamic Art's theirs", () => {
+  const bar = siteReadme({ slug: 'baroqueart-absolutism', name: 'Absolutism', legacyFolder: 'absolutism', family: familyOf('exhibitions/BAR/absolutism') })
+  assert.match(bar, /\[`baroqueart-minisite-template`\]/)
+  assert.doesNotMatch(bar, /`minisite-template`|the map and the zoom|maps/)
+  assert.match(bar, /every Discover Baroque Art mini-site/)
+  const isl = siteReadme({ slug: 'islamicart-the-abbasids', name: 'The Abbasids', legacyFolder: 'the_abbasids', family: familyOf('exhibitions/ISL/the_abbasids') })
+  assert.match(isl, /\[`minisite-template`\]/)
+  assert.match(isl, /the credits, the map and the zoom/)
+  const folder = mkdtempSync(join(tmpdir(), 'theme-'))
+  writeFileSync(join(folder, '_styles.css'), '#footer { height: 18px; }')
+  assert.match(themeCss(folder, 'Absolutism', { stylesheet: familyOf('exhibitions/BAR/absolutism').stylesheet }), /viewer-layout's minisite-baroqueart\.css lays/)
+  assert.match(themeCss(folder, 'The Abbasids'), /viewer-layout's minisite\.css lays/)
 })
 
 test("the Artistic Introduction's own tokens are written for it alone", () => {
