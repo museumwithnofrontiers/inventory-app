@@ -277,3 +277,6 @@
 [submodule ".new-architecture/baroqueart-travelling-and-exotism"]
 	path = .new-architecture/baroqueart-travelling-and-exotism
 	url = https://github.com/museumwithnofrontiers/baroqueart-travelling-and-exotism
+[submodule ".new-architecture/islamicart-artistic-introduction"]
+	path = .new-architecture/islamicart-artistic-introduction
+	url = https://github.com/museumwithnofrontiers/islamicart-artistic-introduction
