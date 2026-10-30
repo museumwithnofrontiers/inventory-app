@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-great-inventions-of-the-19th-century",
+  "name": "Great Inventions of the 19th Century",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "1f123df9-1e8c-522c-833c-709f517c53f5",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-great-inventions-of-the-19th-century-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=4"
+}

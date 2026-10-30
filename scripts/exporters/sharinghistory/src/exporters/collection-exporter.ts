@@ -1,5 +1,8 @@
 import type { ExportResult } from '../core/types.js'
+import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
+
+const SITE_KEY = 'sharinghistory'
 
 interface CollectionRow {
   id: string
@@ -52,10 +55,17 @@ interface CollectionTranslationRow {
 }
 
 interface CollectionImageRow {
+  id: string
   collection_id: string
   path: string
   alt_text: string | null
   display_order: number
+  extra: unknown
+}
+
+interface CollectionImageTypeRow {
+  collection_image_id: string
+  type: string
 }
 
 interface CollectionItemRow {
@@ -63,6 +73,8 @@ interface CollectionItemRow {
   item_id: string
   display_order: number | null
   extra: unknown
+  /** The image of the picture item a theme or subtheme image places. */
+  picture_path?: string | null
 }
 
 export class CollectionExporter extends BaseExporter {
@@ -77,16 +89,20 @@ export class CollectionExporter extends BaseExporter {
     // All collections (root + exhibitions + themes + pages) for a project
     // share the same context_id as the project itself.
     const ph = this.placeholders(this.projectIds.length)
+    const scope = this.context.scope
 
+    // A mini-site's package holds its own subtree only.
     const collections = await this.db.query<CollectionRow>(
       `SELECT c.id, c.type, c.purpose, c.internal_name, c.backward_compatibility,
               c.parent_id, c.display_order, c.country_id, c.latitude, c.longitude
        FROM collections c
-       WHERE c.context_id IN (
-         SELECT p.context_id FROM projects p WHERE p.id IN (${ph})
-       )
+       WHERE ${
+         scope
+           ? `c.id IN (${this.placeholders(scope.collectionIds.length)})`
+           : `c.context_id IN (SELECT p.context_id FROM projects p WHERE p.id IN (${ph}))`
+       }
        ORDER BY c.parent_id IS NOT NULL, c.display_order, c.internal_name`,
-      this.projectIds
+      scope ? scope.collectionIds : this.projectIds
     )
 
     if (collections.length === 0) {
@@ -99,7 +115,7 @@ export class CollectionExporter extends BaseExporter {
     const colPh = this.placeholders(collectionIds.length)
     const langCodeMap = await this.buildLangCodeMap()
 
-    const [allTranslations, images, itemLinks] = await Promise.all([
+    const [allTranslations, images, imageTypes, itemLinks] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT collection_id, language_id, title, description, quote, url, extra
@@ -109,22 +125,43 @@ export class CollectionExporter extends BaseExporter {
         collectionIds
       ),
       this.db.query<CollectionImageRow>(
-        `SELECT collection_id, path, alt_text, display_order
+        `SELECT id, collection_id, path, alt_text, display_order, extra
          FROM collection_images
          WHERE collection_id IN (${colPh})
-         ORDER BY collection_id, display_order`,
+         ORDER BY collection_id, display_order, id`,
         collectionIds
       ),
-      // Items in these collections, restricted to non-picture items from the project
+      // What each image is on the exhibition's pages (its home image, its
+      // thumbnail, a partner logo…): its `image-type` tag, matched on the
+      // tag's identity, as the DXA exporters match the logo tag.
+      this.db.query<CollectionImageTypeRow>(
+        `SELECT cit.collection_image_id, t.internal_name AS type
+         FROM collection_image_tag cit
+         JOIN tags t ON t.id = cit.tag_id
+         JOIN collection_images ci ON ci.id = cit.collection_image_id
+         WHERE ci.collection_id IN (${colPh}) AND t.category = 'image-type'
+         ORDER BY cit.collection_image_id, t.internal_name`,
+        collectionIds
+      ),
+      // Items in these collections from the project. An exhibition, theme or
+      // subtheme image places the picture item legacy showed: it ships as its parent item,
+      // with that picture's image (mergePlacements below).
       this.db.query<CollectionItemRow>(
-        `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra
+        `SELECT ci.collection_id,
+                IF(i.type = 'picture', i.parent_id, i.id) AS item_id,
+                ci.display_order, ci.extra,
+                IF(i.type = 'picture',
+                   (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
+                    ORDER BY ii.display_order, ii.id LIMIT 1),
+                   NULL) AS picture_path
          FROM collection_item ci
          JOIN items i ON i.id = ci.item_id
+         LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
-           AND i.project_id IN (${ph})
-           AND i.type IN ('object', 'monument', 'detail')
-         ORDER BY ci.collection_id, ci.display_order`,
-        [...collectionIds, ...this.projectIds]
+           AND ((i.type IN ('object', 'monument', 'detail') AND i.project_id IN (${ph}))
+             OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
+         ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), item_id`,
+        [...collectionIds, ...this.projectIds, ...this.projectIds]
       ),
     ])
 
@@ -143,12 +180,30 @@ export class CollectionExporter extends BaseExporter {
       )
     }
 
+    // An exhibition that is a mini-site of its own (inventory-app#2359)
+    // keeps here only what this site shows of it: the titles of the
+    // exhibition, its themes and its subthemes (the lists, the Permanent
+    // Collection's exhibition filter, an item sheet's "on display in") and
+    // which items each one places. Its texts, pictures, captions and
+    // justifications are the mini-site's package's. Its National Context
+    // collections are this site's own pages, not the mini-site's: they stay whole.
+    const minisite = scope
+      ? new Set<string>()
+      : minisiteCollections(publishedCollections, loadMinisiteInstances(SITE_KEY).map(i => i.collectionId))
+    if (minisite.size > 0) {
+      this.logger.info(`Keeping titles and placements only of ${minisite.size} mini-site collection(s)`)
+    }
+
     // collection_id -> lang_code -> fields
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const t of translations) {
       if (!translationMap.has(t.collection_id)) translationMap.set(t.collection_id, {})
       const code = langCodeMap.get(t.language_id)
       if (!code) continue
+      if (minisite.has(t.collection_id)) {
+        translationMap.get(t.collection_id)![code] = { title: t.title }
+        continue
+      }
       translationMap.get(t.collection_id)![code] = {
         title: t.title,
         description: t.description,
@@ -169,17 +224,14 @@ export class CollectionExporter extends BaseExporter {
     await this.writeTranslationFiles('collections', byLang)
 
     // collection_id -> images[]
-    const imageMap = new Map<
-      string,
-      { url: string; alt_text: string | null; display_order: number }[]
-    >()
+    const typeOf = new Map(imageTypes.map(row => [row.collection_image_id, row.type]))
+    const imageMap = new Map<string, ReturnType<typeof buildCollectionImageEntry>[]>()
     for (const img of images) {
+      if (minisite.has(img.collection_id)) continue
       if (!imageMap.has(img.collection_id)) imageMap.set(img.collection_id, [])
-      imageMap.get(img.collection_id)!.push({
-        url: this.imageUrl(img.path),
-        alt_text: img.alt_text,
-        display_order: img.display_order,
-      })
+      imageMap
+        .get(img.collection_id)!
+        .push(buildCollectionImageEntry(img, typeOf.get(img.id) ?? null, this.imageUrl(img.path)))
     }
 
     // collection_id -> items[]
@@ -188,6 +240,10 @@ export class CollectionExporter extends BaseExporter {
     for (const link of itemLinks) {
       if (!itemMap.has(link.collection_id)) itemMap.set(link.collection_id, [])
       itemMap.get(link.collection_id)!.push(buildCollectionItemEntry(link, imageUrlFn))
+    }
+    for (const [collectionId, entries] of itemMap) {
+      const merged = mergePlacements(entries)
+      itemMap.set(collectionId, minisite.has(collectionId) ? barePlacements(merged) : merged)
     }
 
     const output = publishedCollections.map(c => ({
@@ -251,6 +307,75 @@ export function computeUnpublishedExhibitionSubtree(
 }
 
 /**
+ * The collections of the subtrees rooted at `rootIds` (the mini-sites'
+ * exhibitions, their themes and subthemes), without the National Context
+ * collections and what hangs from them. Exported for unit tests.
+ */
+export function minisiteCollections(
+  collections: Pick<CollectionRow, 'id' | 'parent_id' | 'purpose'>[],
+  rootIds: string[]
+): Set<string> {
+  const childrenByParent = new Map<string, Pick<CollectionRow, 'id' | 'purpose'>[]>()
+  for (const c of collections) {
+    if (!c.parent_id) continue
+    if (!childrenByParent.has(c.parent_id)) childrenByParent.set(c.parent_id, [])
+    childrenByParent.get(c.parent_id)!.push(c)
+  }
+  const present = new Set(collections.map(c => c.id))
+  const found = new Set(rootIds.filter(id => present.has(id)))
+  const queue = [...found]
+  while (queue.length > 0) {
+    const id = queue.pop()!
+    for (const child of childrenByParent.get(id) ?? []) {
+      if (found.has(child.id) || child.purpose === 'national-context') continue
+      found.add(child.id)
+      queue.push(child.id)
+    }
+  }
+  return found
+}
+
+/**
+ * A mini-site collection's placements as this site keeps them: each item
+ * once, at its first position, without its picture, caption or
+ * justifications. Exported for unit tests.
+ */
+export function barePlacements(
+  entries: { id: string; display_order: number | null }[]
+): { id: string; display_order: number | null; variant_order: null }[] {
+  const seen = new Set<string>()
+  const bare: { id: string; display_order: number | null; variant_order: null }[] = []
+  for (const entry of entries) {
+    if (seen.has(entry.id)) continue
+    seen.add(entry.id)
+    bare.push({ id: entry.id, display_order: entry.display_order, variant_order: null })
+  }
+  return bare
+}
+
+/**
+ * One collections.json image entry. `type` is what the image is on the
+ * exhibition's pages (its `image-type` tag: `home image`, `thumbnail`,
+ * `portal image`, `logo`), and `link` where a partner logo leads (its
+ * `extra.link`). Exported for unit tests.
+ */
+export function buildCollectionImageEntry(
+  img: Pick<CollectionImageRow, 'alt_text' | 'display_order' | 'extra'>,
+  type: string | null,
+  url: string
+): { url: string; alt_text: string | null; display_order: number; type?: string; link?: string } {
+  const extra = parseJson(img.extra) as Record<string, unknown> | null
+  const link = typeof extra?.link === 'string' && extra.link.trim() ? extra.link : null
+  return {
+    url,
+    alt_text: img.alt_text,
+    display_order: img.display_order,
+    ...(type ? { type } : {}),
+    ...(link ? { link } : {}),
+  }
+}
+
+/**
  * Pivots caption/override fields (item_name, item_date, item_dynasty,
  * item_location, item_museum, detail_name, detail_justification — each a
  * language-keyed map) into a per-language caption record.
@@ -286,6 +411,7 @@ function buildCollectionItemEntry(
   id: string
   display_order: number | null
   variant_order: number | null
+  image_url?: string
   caption?: Record<string, CollectionItemCaption>
   details?: CollectionItemDetailEntry[]
   justifications?: Record<string, { partner: string | null; curator: string | null }>
@@ -321,11 +447,43 @@ function buildCollectionItemEntry(
     id: link.item_id,
     display_order: link.display_order,
     variant_order: variantOrder,
+    ...(link.picture_path ? { image_url: imageUrlFn(link.picture_path) } : {}),
     ...(Object.keys(caption).length > 0 ? { caption } : {}),
     ...(details.length > 0 ? { details } : {}),
     ...(justifications && Object.keys(justifications).length > 0 ? { justifications } : {}),
     ...(curatorStatus ? { curator_status: curatorStatus } : {}),
   }
+}
+
+/**
+ * One collection's entries, merged. A collection places an item twice over:
+ * the rel_* table relates it (with the curator's and partner's
+ * justification), and an image table shows one of its pictures at a position
+ * (`image_url`, one entry per view). Each picture entry takes its item's
+ * justification; a relation whose item a picture shows is then dropped, so an
+ * item is listed once per picture it shows, or once. Exported for unit tests.
+ */
+export function mergePlacements<
+  T extends {
+    id: string
+    image_url?: string
+    justifications?: Record<string, { partner: string | null; curator: string | null }>
+    curator_status?: string
+  },
+>(entries: T[]): T[] {
+  const shown = new Set(entries.filter(e => e.image_url).map(e => e.id))
+  const related = new Map(entries.filter(e => !e.image_url).map(e => [e.id, e]))
+  return entries
+    .filter(e => e.image_url || !shown.has(e.id))
+    .map(e => {
+      const relation = e.image_url ? related.get(e.id) : undefined
+      if (!relation) return e
+      return {
+        ...e,
+        ...(relation.justifications && !e.justifications ? { justifications: relation.justifications } : {}),
+        ...(relation.curator_status && !e.curator_status ? { curator_status: relation.curator_status } : {}),
+      }
+    })
 }
 
 /**

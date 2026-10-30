@@ -67,6 +67,7 @@ import {
   ShMonumentDetailPictureImporter,
   ShExhibitionImporter,
   ShExhibitionTranslationImporter,
+  ShExhibitionImageImporter,
   ShExhibitionItemImporter,
   // Phase 04: Glossary
   GlossaryImporter,
@@ -422,12 +423,27 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     dependencies: ['sh-exhibition', 'language'],
   },
   {
+    key: 'sh-exhibition-image',
+    name: 'SH Exhibition Images',
+    description:
+      'Import the home image, thumbnail, portal image and partner logos of SH exhibitions',
+    importerClass: ShExhibitionImageImporter,
+    dependencies: ['sh-exhibition', 'language'],
+  },
+  {
     key: 'sh-exhibition-item',
     name: 'SH Exhibition Items',
     description:
       'Import item assignments and image references for SH exhibitions, themes, and subthemes',
     importerClass: ShExhibitionItemImporter,
-    dependencies: ['sh-exhibition', 'sh-object', 'sh-monument'],
+    // A theme or subtheme image places the picture item it shows.
+    dependencies: [
+      'sh-exhibition',
+      'sh-object',
+      'sh-monument',
+      'sh-object-picture',
+      'sh-monument-picture',
+    ],
   },
   {
     key: 'sh-national-context',

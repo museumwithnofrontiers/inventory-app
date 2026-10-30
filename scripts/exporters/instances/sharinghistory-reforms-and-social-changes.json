@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-reforms-and-social-changes",
+  "name": "Reforms and Social Changes",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "a64d0674-78bf-5ac3-97ad-7d66056c91e2",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-reforms-and-social-changes-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=10"
+}

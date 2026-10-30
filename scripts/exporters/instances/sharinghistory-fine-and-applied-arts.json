@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-fine-and-applied-arts",
+  "name": "Fine and Applied Arts",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "6b99dfaa-ab1c-5153-b0c4-a5823a98f95c",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-fine-and-applied-arts-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=5"
+}

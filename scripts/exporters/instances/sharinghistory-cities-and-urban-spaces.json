@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-cities-and-urban-spaces",
+  "name": "Cities and Urban Spaces",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "5760ea9a-dc6f-52b5-bfd7-2c63dd3da757",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-cities-and-urban-spaces-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=3"
+}

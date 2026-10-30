@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-travelling",
+  "name": "Travelling",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "77fd6ce2-6118-5d1c-a682-046646e098fb",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-travelling-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=11"
+}
