@@ -357,7 +357,12 @@ export function artintroId(config) {
  * icon's width over its height, from its viewBox.
  */
 export function socialLinks(index) {
-  const page = index.replace(/<!--[\s\S]*?-->/g, '')
+  // Until none is left: removing one comment can join the pieces of another.
+  let page = index
+  for (let before; before !== page; ) {
+    before = page
+    page = page.replace(/<!--[\s\S]*?-->/g, '')
+  }
   const block = page.match(/<div id="social-media">([\s\S]*?)<\/div>/)?.[1]
   if (!block) throw new Error('generic_index.php has no #social-media.')
   return [...block.matchAll(/<a href="([^"]+)"[^>]*>\s*(<svg[\s\S]*?<\/svg>)\s*<\/a>/g)].map(([, href, svg]) => {
