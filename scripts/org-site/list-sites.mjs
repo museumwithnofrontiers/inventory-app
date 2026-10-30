@@ -3,9 +3,10 @@
  * Writes the list of websites the organization site
  * (museumwithnofrontiers.github.io) shows, as `sites.json`.
  *
- * A website is a repository created from one of `<owner>`'s five site templates
+ * A website is a repository created from one of `<owner>`'s six site templates
  * (`website-template`, `gallery-template`, `exhibition-template`,
- * `minisite-template`, `sharinghistory-minisite-template`): the rule
+ * `minisite-template`, `baroqueart-minisite-template`,
+ * `sharinghistory-minisite-template`): the rule
  * propagate.mjs (viewer-workflows) uses, so the org site lists exactly the sites
  * a platform release reaches, and there is no hand-kept list to drift. Titles and
  * kinds come from this repository's exporter instances
@@ -21,12 +22,13 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-// viewer-workflows' `SITE_TEMPLATES` (tools/gh-lib.mjs), the same five.
+// viewer-workflows' `SITE_TEMPLATES` (tools/gh-lib.mjs), the same six.
 export const SITE_TEMPLATES = [
   'website-template',
   'gallery-template',
   'exhibition-template',
   'minisite-template',
+  'baroqueart-minisite-template',
   'sharinghistory-minisite-template',
 ]
 const DEFAULT_OWNER = 'museumwithnofrontiers'
