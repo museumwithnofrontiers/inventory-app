@@ -117,6 +117,34 @@ const BAROQUEART_EXHIBITION_WORDS: Record<string, string | StandaloneWord> = {
 }
 
 /**
+ * The words Discover Islamic Art's Artistic Introduction prints (gai/
+ * generic_index.php, generic_page.php). It runs in the exhibitions' frame but
+ * on pages of its own, a site of its own, so it reads a set of its own —
+ * viewer-i18n's `minisiteArtIntro` namespace, extracted with
+ * `extract:standalone -- islamicart-artintro --namespace minisiteArtIntro` —
+ * complete, even where a word is also the exhibitions'. Its header leads to
+ * the MWNF portal and the site's home page, and it has no menu over its footer.
+ */
+const ISLAMICART_ARTINTRO_WORDS: Record<string, string | StandaloneWord> = {
+  // The header (#header): the two links, each with its tooltip.
+  'header.portal': 'portal_link',
+  'header.portalTip': 'back_portal_mouseover',
+  'header.home': 'back_to_section',
+  'header.homeTip': 'Back_to_diaHome',
+  // The item panel (generic_page.php): the tooltips and the link to the sheet.
+  'item.showZoom': 'showzoom',
+  'item.showDetail': 'showdetail',
+  'item.moreInfo': 'moreinfo_item',
+  // The footer, in its order; the year follows the copyright.
+  'footer.aboutMwnf': 'footer1',
+  'footer.contact': 'footer2',
+  'footer.legalNotice': 'footer3',
+  'footer.credits': 'footer4',
+  'footer.cookies': 'cookie_policy',
+  'footer.copyright': 'footer5',
+}
+
+/**
  * The words Sharing History's virtual exhibitions print. They are a family of
  * their own: one set of pages (exhibitions/AWE/) inside the Sharing History
  * site's frame, unlike Discover Islamic Art's and Baroque Art's generic
@@ -464,6 +492,25 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     // The exhibition pages read group 6 ($TRSL_GROUP), with 2 and 3.
     groups: [2, 3, 6],
     words: ISLAMICART_EXHIBITION_WORDS,
+  },
+
+  'islamicart-artintro': {
+    root: 'islamicart/www.discoverislamicart.org',
+    host: 'https://islamicart.museumwnf.org',
+    // gai/libs/config.inc.php: $LNGLIST.
+    languages: ['en', 'fr', 'ar', 'es'],
+    // The pages read group 6 ($TRSL_GROUP, gai/ISL/libs/config.inc.php), with 2 and 3.
+    groups: [2, 3, 6],
+    words: ISLAMICART_ARTINTRO_WORDS,
+    regions: {
+      // The window title, written into the pages rather than read from the dictionary.
+      'identity.windowTitle': {
+        file: 'gai/generic_index.php',
+        start: 'Discover Islamic Art',
+        end: ' |',
+        language: 'en',
+      },
+    },
   },
 
   'baroqueart-exhibitions': {
