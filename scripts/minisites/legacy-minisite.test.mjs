@@ -1,6 +1,10 @@
 // node --test scripts/minisites/legacy-minisite.test.mjs
 import assert from 'node:assert/strict'
+import { mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { test } from 'node:test'
+import { themeCss } from './legacy-theme.mjs'
 import {
   artintroId, banner, curators, design, deterministicUuid, exhibitionId, familyFiles, familyOf, mapCount, menuSecondColumnFrom,
   socialLinks,
@@ -127,4 +131,13 @@ test("the Artistic Introduction's social-media links: the ones its home page sho
     { href: 'https://www.weibo.com/1?a=1&b=2', name: 'weibo', aspect: 1 },
   ])
   assert.match(links[0].svg, /^<svg[^>]*data-icon="square-youtube"/)
+})
+
+test("the Artistic Introduction's own tokens are written for it alone", () => {
+  const folder = mkdtempSync(join(tmpdir(), 'theme-'))
+  writeFileSync(join(folder, '_styles.css'), '#exh_image { width: 340px; } #footer { height: 18px; }')
+  const exhibition = themeCss(folder, 'An exhibition')
+  assert.doesNotMatch(exhibition, /--minisite-artintro-/)
+  assert.match(exhibition, /--minisite-footer-height: 18px;/)
+  assert.match(themeCss(folder, 'The introduction', { artintro: true }), /--minisite-artintro-image-width: 340px;/)
 })

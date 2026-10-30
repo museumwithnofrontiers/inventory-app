@@ -408,7 +408,7 @@ async function artintro(folder, name, args, family) {
   const site = option(args, '--site')
   if (!site) return
   writeFileSync(join(site, 'src/minisite.json'), `${JSON.stringify(settings, null, 2)}\n`)
-  writeFileSync(join(site, 'theme/tokens.css'), themeCss(folder, name, { after: ['../../css/font-awesome.css'] }))
+  writeFileSync(join(site, 'theme/tokens.css'), themeCss(folder, name, { after: ['../../css/font-awesome.css'], artintro: true }))
   const own = familyFiles(
     { packageJson: readFileSync(join(site, 'package.json'), 'utf8'), indexHtml: readFileSync(join(site, 'index.html'), 'utf8') },
     family,

@@ -322,12 +322,15 @@ function block(selector, entries) {
 /**
  * `after`: the stylesheets legacy's pages loaded after the folder's own
  * (paths from the folder), whose rules win over it: the Artistic
- * Introduction's site-wide font-awesome.css.
+ * Introduction's site-wide font-awesome.css. `artintro`: the site is the
+ * Artistic Introduction; its own tokens are written for it alone, though an
+ * exhibition's stylesheet styles some of the same selectors.
  */
-export function themeCss(folder, name, { after = [] } = {}) {
+export function themeCss(folder, name, { after = [], artintro = false } = {}) {
   const read = (file) => (existsSync(join(folder, file)) ? readFileSync(join(folder, file), 'utf8') : '')
-  const main = tokens(parseCss([read('_styles.css'), ...after.map(read)].join('\n')))
-  const arabic = tokens(parseCss(read('_styles_ar.css')))
+  const own = ([token]) => artintro || !token.startsWith('artintro-')
+  const main = tokens(parseCss([read('_styles.css'), ...after.map(read)].join('\n'))).filter(own)
+  const arabic = tokens(parseCss(read('_styles_ar.css'))).filter(own)
   const also = after.length ? `, then ${after.map((file) => basename(file)).join(', ')}` : ''
   const header = `/*
  * The visual identity of ${name ?? basename(folder)}: every value its legacy
