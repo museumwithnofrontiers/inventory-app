@@ -277,3 +277,33 @@
 [submodule ".new-architecture/baroqueart-travelling-and-exotism"]
 	path = .new-architecture/baroqueart-travelling-and-exotism
 	url = https://github.com/museumwithnofrontiers/baroqueart-travelling-and-exotism
+[submodule ".new-architecture/sharinghistory-rediscovering-the-past"]
+	path = .new-architecture/sharinghistory-rediscovering-the-past
+	url = https://github.com/museumwithnofrontiers/sharinghistory-rediscovering-the-past
+[submodule ".new-architecture/sharinghistory-cities-and-urban-spaces"]
+	path = .new-architecture/sharinghistory-cities-and-urban-spaces
+	url = https://github.com/museumwithnofrontiers/sharinghistory-cities-and-urban-spaces
+[submodule ".new-architecture/sharinghistory-great-inventions-of-the-19th-century"]
+	path = .new-architecture/sharinghistory-great-inventions-of-the-19th-century
+	url = https://github.com/museumwithnofrontiers/sharinghistory-great-inventions-of-the-19th-century
+[submodule ".new-architecture/sharinghistory-fine-and-applied-arts"]
+	path = .new-architecture/sharinghistory-fine-and-applied-arts
+	url = https://github.com/museumwithnofrontiers/sharinghistory-fine-and-applied-arts
+[submodule ".new-architecture/sharinghistory-economy-and-trade"]
+	path = .new-architecture/sharinghistory-economy-and-trade
+	url = https://github.com/museumwithnofrontiers/sharinghistory-economy-and-trade
+[submodule ".new-architecture/sharinghistory-international-exhibitions"]
+	path = .new-architecture/sharinghistory-international-exhibitions
+	url = https://github.com/museumwithnofrontiers/sharinghistory-international-exhibitions
+[submodule ".new-architecture/sharinghistory-migrations"]
+	path = .new-architecture/sharinghistory-migrations
+	url = https://github.com/museumwithnofrontiers/sharinghistory-migrations
+[submodule ".new-architecture/sharinghistory-music-literature-dance-and-fashion"]
+	path = .new-architecture/sharinghistory-music-literature-dance-and-fashion
+	url = https://github.com/museumwithnofrontiers/sharinghistory-music-literature-dance-and-fashion
+[submodule ".new-architecture/sharinghistory-reforms-and-social-changes"]
+	path = .new-architecture/sharinghistory-reforms-and-social-changes
+	url = https://github.com/museumwithnofrontiers/sharinghistory-reforms-and-social-changes
+[submodule ".new-architecture/sharinghistory-travelling"]
+	path = .new-architecture/sharinghistory-travelling
+	url = https://github.com/museumwithnofrontiers/sharinghistory-travelling
