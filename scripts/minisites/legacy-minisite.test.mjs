@@ -1,7 +1,10 @@
 // node --test scripts/minisites/legacy-minisite.test.mjs
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { banner, curators, design, deterministicUuid, exhibitionId, familyFiles, familyOf, mapCount, menuSecondColumnFrom } from './legacy-minisite.mjs'
+import {
+  artintroId, banner, curators, design, deterministicUuid, exhibitionId, familyFiles, familyOf, mapCount, menuSecondColumnFrom,
+  socialLinks,
+} from './legacy-minisite.mjs'
 
 test('ids are the importer’s own UUIDv5 of the backward_compatibility', () => {
   assert.equal(deterministicUuid('collection:mwnf3:exhibitions:13'), 'da493358-92ba-5a20-8866-fa30fb03bfb2')
@@ -104,4 +107,24 @@ test("Baroque Art's home picture: drawn by the stylesheet, and in the folder", (
   assert.equal(banner(styles, ['banner.png']), 'legacy/banner.png')
   assert.equal(banner(styles, []), null)
   assert.equal(banner('#header { color: red; }', ['banner.png']), null)
+})
+test("the Artistic Introduction: its family, its collection's id, and the menu its config sets after index.php", () => {
+  const family = familyOf('islamicart/www.discoverislamicart.org/gai/ISL')
+  assert.equal(family.key, 'GAI')
+  assert.equal(family.labels, 'minisiteArtIntro')
+  assert.equal(artintroId('    $_SESSION["artintro"] = 1;\n'), '1')
+  assert.equal(deterministicUuid('collection:mwnf3:artintros:1'), 'e2c12e55-44f5-5291-ad8b-8fa7958dbad2')
+  assert.equal(menuSecondColumnFrom('    $_HOME_MENU_COL2 = 6 ;\n'), 6)
+})
+
+test("the Artistic Introduction's social-media links: the ones its home page shows, not the commented-out ones", () => {
+  const index = `
+<!--<div id="social-media"><a href="https://old.example/"><i class="fa fa-facebook-f"></i></a></div>-->
+<div id="social-media"><a href="https://www.youtube.com/x" target="_blank"><svg class="svg-inline--fa" data-icon="square-youtube" viewBox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M0 0"></path></svg></a><a href="https://www.weibo.com/1?a=1&amp;b=2" target="_blank"><svg data-icon="weibo" viewBox="0 0 512 512"><path d="M1 1"></path></svg></a></div><br/>`
+  const links = socialLinks(index)
+  assert.deepEqual(links.map(({ href, name, aspect }) => ({ href, name, aspect })), [
+    { href: 'https://www.youtube.com/x', name: 'square-youtube', aspect: 0.875 },
+    { href: 'https://www.weibo.com/1?a=1&b=2', name: 'weibo', aspect: 1 },
+  ])
+  assert.match(links[0].svg, /^<svg[^>]*data-icon="square-youtube"/)
 })

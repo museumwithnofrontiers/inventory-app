@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "islamicart-artistic-introduction",
+  "name": "Artistic Introduction",
+  "exporter": "islamicart",
+  "parent": "islamicart",
+  "collection_id": "e2c12e55-44f5-5291-ad8b-8fa7958dbad2",
+  "partner_ids": [],
+  "package_name": "@museumwnf/islamicart-artistic-introduction-data",
+  "legacy_url": "https://islamicart.museumwnf.org/gai/ISL/"
+}

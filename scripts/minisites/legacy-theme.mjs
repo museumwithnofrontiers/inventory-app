@@ -35,6 +35,7 @@ export const TOKENS = [
   ['header-nav-width', '#headerNav', 'width'],
   ['header-nav-align', '#headerNav', 'text-align'],
   ['header-text', '#headerNavBack', 'color'],
+  ['header-back-margin', '#headerNavBack', 'margin'],
   ['header-link', '#headerNavBack a', 'color'],
   ['header-link-font', '.headerLinks', 'font'],
   ['select', '#headerLngSelect', 'background-color'],
@@ -48,6 +49,7 @@ export const TOKENS = [
   ['menu-link', '.nav-in li a', 'color'],
   ['strip', '#strip-white', 'background-color'],
   ['footer', '#footer', 'background-color'],
+  ['footer-height', '#footer', 'height'],
   ['footer-text', '#footer', 'color'],
   ['footer-font', '#footer', 'font'],
   ['footer-link', '#footer a', 'color'],
@@ -207,6 +209,71 @@ export const TOKENS = [
   ['credits-color', 'body#Credits', 'color'],
   ['credits-font', 'body#Credits', 'font'],
   ['credits-title-font', 'body#Credits h1', 'font'],
+  // The Artistic Introduction (gai/ISL/_styles.css): its home page's subtitle,
+  // credits and social-media links (their margin and colour set by the site's
+  // font-awesome.css, read after it), and its pages.
+  ['artintro-subtitle-left', '#homeSubTitle', 'left'],
+  ['artintro-subtitle-top', '#homeSubTitle', 'top'],
+  ['artintro-subtitle-font', '#homeSubTitle', 'font'],
+  ['artintro-subtitle-color', '#homeSubTitle', 'color'],
+  ['artintro-credits-left', '#homeCredits', 'left'],
+  ['artintro-credits-top', '#homeCredits', 'top'],
+  ['artintro-credits-width', '#homeCredits', 'width'],
+  ['artintro-credits-font', '#homeCredits', 'font'],
+  ['artintro-credits-color', '#homeCredits', 'color'],
+  ['artintro-icons-bottom', '#icons', 'bottom'],
+  ['artintro-icons-right', '#icons', 'right'],
+  ['artintro-icons-width', '#icons', 'width'],
+  ['artintro-icons-padding-right', '#icons', 'padding-right'],
+  ['artintro-icons-align', '#icons', 'text-align'],
+  ['artintro-social-padding', '#social-media', 'padding'],
+  ['artintro-social-link-margin', '#social-media a', 'margin'],
+  ['artintro-social-link-size', '#social-media a', 'font-size'],
+  ['artintro-social-icon', '.svg-inline--fa', 'color'],
+  ['artintro-page-paper', '#GaiPage', 'background-color'],
+  ['artintro-head-height', '#GaiBlock1', 'height'],
+  ['artintro-head', '#GaiBlock1', 'background-color'],
+  ['artintro-back-top', '#GaiBlock1_navLeft', 'top'],
+  ['artintro-back-left', '#GaiBlock1_navLeft', 'left'],
+  ['artintro-back-font', '#GaiBlock1_navLeft', 'font'],
+  ['artintro-back-color', '#GaiBlock1_navLeft', 'color'],
+  ['artintro-back-link-font', '#GaiBlock1_navLeft a', 'font'],
+  ['artintro-back-link-color', '#GaiBlock1_navLeft a', 'color'],
+  ['artintro-text-width', '#GaiBlock2TD1', 'width'],
+  ['artintro-text-padding', '#GaiBlock2TD1', 'padding'],
+  ['artintro-text-paper', '#GaiBlock2TD1', 'background-color'],
+  ['artintro-title-font', '#GaiBlock2TD1 .Title', 'font'],
+  ['artintro-title-margin-top', '#GaiBlock2TD1 .Title', 'margin-top'],
+  ['artintro-title-margin-bottom', '#GaiBlock2TD1 .Title', 'margin-bottom'],
+  ['artintro-pages-margin-top', '#GaiBlock2TD1 #pageNavigation', 'margin-top'],
+  ['artintro-pages-margin-bottom', '#GaiBlock2TD1 #pageNavigation', 'margin-bottom'],
+  ['artintro-quote-font', '#GaiBlock2TD1 .Quote', 'font'],
+  ['artintro-quote-align', '#GaiBlock2TD1 .Quote', 'text-align'],
+  ['artintro-quote-margin-top', '#GaiBlock2TD1 .Quote', 'margin-top'],
+  ['artintro-quote-margin-bottom', '#GaiBlock2TD1 .Quote', 'margin-bottom'],
+  ['artintro-content-font', '#GaiBlock2TD1 .Text', 'font'],
+  ['artintro-content-margin-top', '#GaiBlock2TD1 .Text', 'margin-top'],
+  ['artintro-content-margin-bottom', '#GaiBlock2TD1 .Text', 'margin-bottom'],
+  ['artintro-content-min-height', '#GaiBlock2TD1 .Text', 'min-height'],
+  ['artintro-paragraph-font', '#GaiBlock2TD1 .Text p', 'font'],
+  ['artintro-paragraph-margin-top', '#GaiBlock2TD1 .Text p', 'margin-top'],
+  ['artintro-paragraph-margin-bottom', '#GaiBlock2TD1 .Text p', 'margin-bottom'],
+  ['artintro-item-padding', '#GaiBlock2TD2', 'padding'],
+  ['artintro-item-paper', '#GaiBlock2TD2', 'background-color'],
+  ['artintro-image-width', '#exh_image', 'width'],
+  ['artintro-image-height', '#exh_image', 'height'],
+  ['artintro-image-margin', '#exh_image', 'margin'],
+  ['artintro-image-padding', '#exh_image', 'padding'],
+  ['artintro-caption-min-height', '#exh_item', 'min-height'],
+  ['artintro-caption-line-margin-bottom', '#exh_item div', 'margin-bottom'],
+  ['artintro-caption-color', '#exh_item div', 'color'],
+  ['artintro-justification-color', '#exh_item #itemJustification', 'color'],
+  ['artintro-thumbs-margin-top', '#GaiBlock2TD2 .ItemLinks', 'margin-top'],
+  ['artintro-thumbs-margin-bottom', '#GaiBlock2TD2 .ItemLinks', 'margin-bottom'],
+  ['artintro-thumbs-padding-top', '#GaiBlock2TD2 .ItemLinks', 'padding-top'],
+  ['artintro-thumbs-border-top', '#GaiBlock2TD2 .ItemLinks', 'border-top'],
+  ['artintro-thumb-border', '#GaiBlock2TD2 .ItemLinks img', 'border'],
+  ['artintro-thumb-margin', '#GaiBlock2TD2 .ItemLinks img', 'margin'],
 ]
 
 /** selector → { property: value }, in source order, later declarations winning. */
@@ -252,13 +319,19 @@ function block(selector, entries) {
   return `${selector} {\n${entries.map(([token, value]) => `  --minisite-${token}: ${value};`).join('\n')}\n}\n`
 }
 
-export function themeCss(folder, name) {
+/**
+ * `after`: the stylesheets legacy's pages loaded after the folder's own
+ * (paths from the folder), whose rules win over it: the Artistic
+ * Introduction's site-wide font-awesome.css.
+ */
+export function themeCss(folder, name, { after = [] } = {}) {
   const read = (file) => (existsSync(join(folder, file)) ? readFileSync(join(folder, file), 'utf8') : '')
-  const main = tokens(parseCss(read('_styles.css')))
+  const main = tokens(parseCss([read('_styles.css'), ...after.map(read)].join('\n')))
   const arabic = tokens(parseCss(read('_styles_ar.css')))
+  const also = after.length ? `, then ${after.map((file) => basename(file)).join(', ')}` : ''
   const header = `/*
  * The visual identity of ${name ?? basename(folder)}: every value its legacy
- * stylesheet set (${basename(folder)}/_styles.css, and _styles_ar.css over it
+ * stylesheet set (${basename(folder)}/_styles.css${also}, and _styles_ar.css over it
  * for Arabic), transcribed by inventory-app's scripts/minisites/legacy-theme.mjs.
  * viewer-layout's minisite.css lays the pages out with them. This file
  * belongs to the webdesigner: change a value here.
