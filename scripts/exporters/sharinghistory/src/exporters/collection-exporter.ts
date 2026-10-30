@@ -1,5 +1,8 @@
 import type { ExportResult } from '../core/types.js'
+import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
+
+const SITE_KEY = 'sharinghistory'
 
 interface CollectionRow {
   id: string
@@ -177,12 +180,30 @@ export class CollectionExporter extends BaseExporter {
       )
     }
 
+    // An exhibition that is a mini-site of its own (inventory-app#2359)
+    // keeps here only what this site shows of it: the titles of the
+    // exhibition, its themes and its subthemes (the lists, the Permanent
+    // Collection's exhibition filter, an item sheet's "on display in") and
+    // which items each one places. Its texts, pictures, captions and
+    // justifications are the mini-site's package's. Its National Context
+    // collections are this site's own pages, not the mini-site's: they stay whole.
+    const minisite = scope
+      ? new Set<string>()
+      : minisiteCollections(publishedCollections, loadMinisiteInstances(SITE_KEY).map(i => i.collectionId))
+    if (minisite.size > 0) {
+      this.logger.info(`Keeping titles and placements only of ${minisite.size} mini-site collection(s)`)
+    }
+
     // collection_id -> lang_code -> fields
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const t of translations) {
       if (!translationMap.has(t.collection_id)) translationMap.set(t.collection_id, {})
       const code = langCodeMap.get(t.language_id)
       if (!code) continue
+      if (minisite.has(t.collection_id)) {
+        translationMap.get(t.collection_id)![code] = { title: t.title }
+        continue
+      }
       translationMap.get(t.collection_id)![code] = {
         title: t.title,
         description: t.description,
@@ -206,6 +227,7 @@ export class CollectionExporter extends BaseExporter {
     const typeOf = new Map(imageTypes.map(row => [row.collection_image_id, row.type]))
     const imageMap = new Map<string, ReturnType<typeof buildCollectionImageEntry>[]>()
     for (const img of images) {
+      if (minisite.has(img.collection_id)) continue
       if (!imageMap.has(img.collection_id)) imageMap.set(img.collection_id, [])
       imageMap
         .get(img.collection_id)!
@@ -219,7 +241,10 @@ export class CollectionExporter extends BaseExporter {
       if (!itemMap.has(link.collection_id)) itemMap.set(link.collection_id, [])
       itemMap.get(link.collection_id)!.push(buildCollectionItemEntry(link, imageUrlFn))
     }
-    for (const [collectionId, entries] of itemMap) itemMap.set(collectionId, mergePlacements(entries))
+    for (const [collectionId, entries] of itemMap) {
+      const merged = mergePlacements(entries)
+      itemMap.set(collectionId, minisite.has(collectionId) ? barePlacements(merged) : merged)
+    }
 
     const output = publishedCollections.map(c => ({
       id: c.id,
@@ -279,6 +304,53 @@ export function computeUnpublishedExhibitionSubtree(
     }
   }
   return excluded
+}
+
+/**
+ * The collections of the subtrees rooted at `rootIds` (the mini-sites'
+ * exhibitions, their themes and subthemes), without the National Context
+ * collections and what hangs from them. Exported for unit tests.
+ */
+export function minisiteCollections(
+  collections: Pick<CollectionRow, 'id' | 'parent_id' | 'purpose'>[],
+  rootIds: string[]
+): Set<string> {
+  const childrenByParent = new Map<string, Pick<CollectionRow, 'id' | 'purpose'>[]>()
+  for (const c of collections) {
+    if (!c.parent_id) continue
+    if (!childrenByParent.has(c.parent_id)) childrenByParent.set(c.parent_id, [])
+    childrenByParent.get(c.parent_id)!.push(c)
+  }
+  const present = new Set(collections.map(c => c.id))
+  const found = new Set(rootIds.filter(id => present.has(id)))
+  const queue = [...found]
+  while (queue.length > 0) {
+    const id = queue.pop()!
+    for (const child of childrenByParent.get(id) ?? []) {
+      if (found.has(child.id) || child.purpose === 'national-context') continue
+      found.add(child.id)
+      queue.push(child.id)
+    }
+  }
+  return found
+}
+
+/**
+ * A mini-site collection's placements as this site keeps them: each item
+ * once, at its first position, without its picture, caption or
+ * justifications. Exported for unit tests.
+ */
+export function barePlacements(
+  entries: { id: string; display_order: number | null }[]
+): { id: string; display_order: number | null; variant_order: null }[] {
+  const seen = new Set<string>()
+  const bare: { id: string; display_order: number | null; variant_order: null }[] = []
+  for (const entry of entries) {
+    if (seen.has(entry.id)) continue
+    seen.add(entry.id)
+    bare.push({ id: entry.id, display_order: entry.display_order, variant_order: null })
+  }
+  return bare
 }
 
 /**
