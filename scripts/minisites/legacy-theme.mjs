@@ -324,9 +324,11 @@ function block(selector, entries) {
  * (paths from the folder), whose rules win over it: the Artistic
  * Introduction's site-wide font-awesome.css. `artintro`: the site is the
  * Artistic Introduction; its own tokens are written for it alone, though an
- * exhibition's stylesheet styles some of the same selectors.
+ * exhibition's stylesheet styles some of the same selectors. `stylesheet`:
+ * viewer-layout's stylesheet that lays the site's pages out with them, its
+ * family's.
  */
-export function themeCss(folder, name, { after = [], artintro = false } = {}) {
+export function themeCss(folder, name, { after = [], artintro = false, stylesheet = 'minisite.css' } = {}) {
   const read = (file) => (existsSync(join(folder, file)) ? readFileSync(join(folder, file), 'utf8') : '')
   const own = ([token]) => artintro || !token.startsWith('artintro-')
   const main = tokens(parseCss([read('_styles.css'), ...after.map(read)].join('\n'))).filter(own)
@@ -336,7 +338,7 @@ export function themeCss(folder, name, { after = [], artintro = false } = {}) {
  * The visual identity of ${name ?? basename(folder)}: every value its legacy
  * stylesheet set (${basename(folder)}/_styles.css${also}, and _styles_ar.css over it
  * for Arabic), transcribed by inventory-app's scripts/minisites/legacy-theme.mjs.
- * viewer-layout's minisite.css lays the pages out with them. This file
+ * viewer-layout's ${stylesheet} lays the pages out with them. This file
  * belongs to the webdesigner: change a value here.
  */
 `

@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 /**
  * What a Discover Islamic Art or Discover Baroque Art virtual exhibition
- * configured for itself alone, written into a copy of minisite-template and
- * into this repository's exporter instances.
+ * configured for itself alone, written into a copy of its family's template
+ * (minisite-template, baroqueart-minisite-template) and into this repository's
+ * exporter instances.
  *
  * Every exhibition of a family ran on the same pages (exhibitions/ISL/ or
  * exhibitions/BAR/generic_*.php); what set one apart is its folder:
@@ -45,7 +46,9 @@ const REPO = resolve(HERE, '../..')
 // The families, by the folder their exhibitions sit in: where legacy serves
 // them, the site that carried them, and its name; the viewer-i18n class its
 // mini-sites read (each family has a label set of its own) and the window
-// title legacy's pages opened with (ve_isl_windowstitle, ve_bar_windowstitle).
+// title legacy's pages opened with (ve_isl_windowstitle, ve_bar_windowstitle);
+// the template its sites are created from, viewer-layout's stylesheet that
+// lays their pages out, and the windows those pages open.
 export const FAMILIES = {
   ISL: {
     exhibitions: 'https://islamicart.museumwnf.org/exhibitions/ISL',
@@ -53,13 +56,21 @@ export const FAMILIES = {
     site: 'Discover Islamic Art',
     labels: 'minisite',
     windowTitle: 'Discover Islamic Art Virtual Exhibitions',
+    template: 'minisite-template',
+    stylesheet: 'minisite.css',
+    windows: 'the three windows those pages open — the credits, the map and the zoom',
   },
+  // Discover Baroque Art: a product of its own, with pages of its own in the
+  // mini-site layer and a template of its own.
   BAR: {
     exhibitions: 'https://baroqueart.museumwnf.org/exhibitions/BAR',
     parent: 'baroqueart',
     site: 'Discover Baroque Art',
     labels: 'minisiteBaroque',
     windowTitle: 'Discover Baroque Art Virtual Museum',
+    template: 'baroqueart-minisite-template',
+    stylesheet: 'minisite-baroqueart.css',
+    windows: 'the zoom window those pages open',
   },
   // Discover Islamic Art's Artistic Introduction (gai/ISL/): one site, in the
   // exhibitions' frame, on pages of its own (artintro()).
@@ -69,6 +80,8 @@ export const FAMILIES = {
     site: 'Discover Islamic Art',
     labels: 'minisiteArtIntro',
     windowTitle: 'Discover Islamic Art',
+    template: 'minisite-template',
+    stylesheet: 'minisite.css',
   },
 }
 
@@ -281,7 +294,7 @@ async function main(args) {
   const site = option(args, '--site')
   if (!site) return
   writeFileSync(join(site, 'src/minisite.json'), `${JSON.stringify(settings, null, 2)}\n`)
-  writeFileSync(join(site, 'theme/tokens.css'), themeCss(folder, name))
+  writeFileSync(join(site, 'theme/tokens.css'), themeCss(folder, name, { stylesheet: family.stylesheet }))
   const own = familyFiles(
     { packageJson: readFileSync(join(site, 'package.json'), 'utf8'), indexHtml: readFileSync(join(site, 'index.html'), 'utf8') },
     family,
@@ -540,6 +553,9 @@ See [LICENSE.md](LICENSE.md).
 /** The mini-site's own README: what it is, and how each role works on it. */
 export function siteReadme({ slug, name, legacyFolder, family = { key: 'ISL', ...FAMILIES.ISL } }) {
   const legacyAddress = `${family.exhibitions.replace(/^https:\/\//, '')}/${legacyFolder}/`
+  // Discover Baroque Art's mini-sites are a product of their own, with pages of their own.
+  const bar = family.key === 'BAR'
+  const kind = bar ? `${family.site} mini-site` : 'mini-site'
   return `# ${slug}
 
 **${name}**, a virtual exhibition of ${family.site}, as a website of its
@@ -548,15 +564,14 @@ own. On legacy it lived inside ${family.site}
 product in its own right, and ${family.site} links to it.
 
 It shows what legacy showed, the way legacy showed it: the exhibition's home
-page, its introduction, its pages theme by theme, and the three windows those
-pages open — the credits, the map and the zoom. Nothing on it is written for
+page, its introduction, its pages theme by theme, and ${family.windows}. Nothing on it is written for
 it: every record comes from the data package, every text from viewer-i18n or
 \`locales/\`.
 
-Its pages are every mini-site's, from
-[\`minisite-template\`](https://github.com/museumwithnofrontiers/minisite-template)
+Its pages are every ${kind}'s, from
+[\`${family.template}\`](https://github.com/museumwithnofrontiers/${family.template})
 and the mini-site family layer: a change to how a page is drawn is made once,
-in \`@museumwnf/viewer-layout/minisite\`, for every mini-site. What is this
+in \`@museumwnf/viewer-layout/minisite\`, for every ${kind}. What is this
 exhibition's own is written from its legacy folder by inventory-app's
 \`scripts/minisites/legacy-minisite.mjs\`.
 
@@ -571,15 +586,14 @@ exhibition's own is written from its legacy folder by inventory-app's
 
 ## Translator — editing the website's texts
 
-The texts every ${family.site} mini-site shows — the menu, the navigation, the credits
-window's labels — are shared, in
+The texts every ${family.site} mini-site shows — the menu, the navigation, ${bar ? "the home\nband's labels" : "the credits\nwindow's labels"} — are shared, in
 [\`viewer-i18n\`](https://github.com/museumwithnofrontiers/viewer-i18n)'s
 \`${family.labels}/\` folder, and are edited there. The exhibition's own texts — its
 titles, quotes, essays and captions — arrive translated in the data package
 and are not edited anywhere. \`locales/\` holds this website's own texts, one
 file per language; it starts empty, and an entry written there overrides the
 shared one of the same name for this website alone. See
-\`minisite-template\`'s README, "Translator", for the steps in the browser.
+\`${family.template}\`'s README, "Translator", for the steps in the browser.
 
 ---
 
@@ -589,15 +603,14 @@ The website's look is legacy's exhibition frame, kept as it was:
 
 - \`theme/tokens.css\` — every value legacy's \`${legacyFolder}/_styles.css\`
   set (and \`_styles_ar.css\` over it for Arabic), as \`--minisite-*\` tokens;
-- \`theme/assets/legacy/\` — legacy's own pictures of the frame, the maps and
-  the curators' logos; \`SOURCES.json\` names where each file was taken from
+- \`theme/assets/legacy/\` — legacy's own pictures of the frame, ${bar ? "the home picture,\n  the curators' and the designer's logos" : "the maps and\n  the curators' logos"}; \`SOURCES.json\` names where each file was taken from
   and its hash, and \`tests/assets.test.js\` checks every file against it;
 - \`theme/overrides.css\` — the escape hatch, empty until a need cannot be
   expressed with a token.
 
-A change to the pages' layout itself is a change to every mini-site: a
+A change to the pages' layout itself is a change to every ${kind}: a
 request for [\`viewer-layout\`](https://github.com/museumwithnofrontiers/viewer-layout)'s
-\`./minisite\`. To preview, run \`docker compose up\` and open
+\`./minisite\`${bar ? ' (its Discover Baroque Art pages)' : ''}. To preview, run \`docker compose up\` and open
 **http://localhost:5173**.
 
 ---
@@ -607,7 +620,7 @@ request for [\`viewer-layout\`](https://github.com/museumwithnofrontiers/viewer-
 - \`src/dataset.config.js\` is the whole declaration and needs no edit;
   \`src/minisite.json\` holds what legacy configured for this exhibition alone
   (its address, the home menu's second column, the curators the home page
-  credits, the maps of its introduction).
+  credits, ${bar ? 'the designer beside them and the home picture' : 'the maps of its introduction'}).
 - Every caption legacy prints is in its pages' \`pageItems\` script, all views
   included; a page here can be compared field by field with the page there,
   in every language.
