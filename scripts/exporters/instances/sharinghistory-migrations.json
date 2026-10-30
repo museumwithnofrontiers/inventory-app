@@ -1,0 +1,11 @@
+{
+  "kind": "minisite",
+  "slug": "sharinghistory-migrations",
+  "name": "Migrations",
+  "exporter": "sharinghistory",
+  "parent": "sharinghistory",
+  "collection_id": "2353a4ff-1dd5-5807-9b96-c146b09485c2",
+  "partner_ids": [],
+  "package_name": "@museumwnf/sharinghistory-migrations-data",
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=8"
+}

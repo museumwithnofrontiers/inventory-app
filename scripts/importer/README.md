@@ -510,6 +510,7 @@ These files are the same sources used by Laravel seeders and the API importer.
 2. Create transformer in `domain/transformers/`
 3. Create importer in `importers/phase-XX/` (existing phase, or a new one if it's a genuinely new stage)
 4. Add to the CLI registry in `cli/import.ts`, with accurate `dependencies`
+5. Keep each legacy column in its own field, never merged with another; an exception is recorded in [MERGE.md](MERGE.md). A column the model has no field for goes into `extra` under its own name, and is recorded in [EXTRA.md](EXTRA.md)
 
 ## Special Transformations
 

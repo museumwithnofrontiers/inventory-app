@@ -116,8 +116,18 @@ export class PartnerExporter extends BaseExporter {
     // attachment was never curated onto the legacy Partners page. Only the dedicated
     // hierarchy importers (partner-hierarchy-importer.ts / institution-hierarchy-importer.ts)
     // set a level, so requiring one here excludes the generic item-owner rows.
+    //
+    // A mini-site's package holds the partners its scope names only: the
+    // museums its items name, and any the instance names itself.
+    const scope = this.context.scope
     const partners = await this.db.query<PartnerRow>(
-      `SELECT DISTINCT p.id, p.type, p.internal_name, p.backward_compatibility,
+      scope
+        ? `SELECT p.id, p.type, p.internal_name, p.backward_compatibility,
+                  p.country_id, p.latitude, p.longitude, p.map_zoom, p.monument_item_id
+           FROM partners p
+           WHERE p.id IN (${this.placeholders(Math.max(scope.partnerIds.length, 1))})
+           ORDER BY p.type, p.internal_name`
+        : `SELECT DISTINCT p.id, p.type, p.internal_name, p.backward_compatibility,
               p.country_id, p.latitude, p.longitude, p.map_zoom, p.monument_item_id
        FROM partners p
        WHERE EXISTS (
@@ -132,7 +142,7 @@ export class PartnerExporter extends BaseExporter {
            AND proj.id IN (${ph})
        )
        ORDER BY p.type, p.internal_name`,
-      this.projectIds
+      scope ? (scope.partnerIds.length > 0 ? scope.partnerIds : ['']) : this.projectIds
     )
 
     if (partners.length === 0) {

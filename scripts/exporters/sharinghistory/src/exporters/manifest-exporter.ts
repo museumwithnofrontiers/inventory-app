@@ -1,5 +1,21 @@
-import type { ExportResult } from '../core/types.js'
+import type { ExportResult, ExportScope } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+
+/**
+ * The language codes every page of a mini-site has a title in. A collection
+ * with no title in any language is not a page: legacy listed only titled
+ * themes and subthemes. Exported for unit tests.
+ */
+export function minisiteLanguages(
+  titled: { collection_id: string; code: string }[],
+  collectionIds: string[]
+): string[] {
+  const codes = [...new Set(titled.map(row => row.code))].sort()
+  const pages = collectionIds.filter(id => titled.some(row => row.collection_id === id))
+  return codes.filter(code =>
+    pages.every(id => titled.some(row => row.collection_id === id && row.code === code))
+  )
+}
 
 interface LanguageNameRow {
   language_id: string
@@ -66,11 +82,13 @@ export class ManifestExporter extends BaseExporter {
         terms_url: 'https://www.museumwnf.org/about/legal-notice',
         attribution: 'Content © Museum With No Frontiers, used under the MWNF legal notice.',
       },
-      site: {
-        key: 'sharinghistory',
-        languages: await this.siteLanguages(),
-        names: await this.siteNames(),
-      },
+      site: this.context.scope
+        ? await this.minisite(this.context.scope)
+        : {
+            key: 'sharinghistory',
+            languages: await this.siteLanguages(),
+            names: await this.siteNames(),
+          },
       languages: langRows.map(r => r.backward_compatibility),
       // Every project referenced by anything this package ships — for a
       // project-scoped exporter that is exactly the exported project(s)
@@ -108,6 +126,46 @@ export class ManifestExporter extends BaseExporter {
     return rows
       .map(row => ({ code: row.code, label: row.name || row.code.toUpperCase() }))
       .sort((a, b) => (a.code < b.code ? -1 : a.code > b.code ? 1 : 0))
+  }
+
+  /**
+   * A mini-site's `site`: its key, the languages it is shown in, its name per
+   * language, the collection it is, its legacy address, and the site that
+   * carried it on legacy, named. It is shown in a language only when every
+   * page of the exhibition has a title in it: Sharing History's exhibitions
+   * hold a few titles in other languages, but their themes are in English
+   * only, and legacy showed them in English.
+   */
+  private async minisite(scope: ExportScope): Promise<{
+    key: string
+    languages: { code: string; label: string }[]
+    names: Record<string, string>
+    root_collection_id: string
+    legacy_url: string | null
+    parent: { key: string; names: Record<string, string> }
+  }> {
+    const rows = await this.db.query<LanguageNameRow & { code: string; collection_id: string; title: string | null }>(
+      `SELECT ct.collection_id, l.id AS language_id, l.backward_compatibility AS code, lt.name, ct.title
+       FROM collection_translations ct
+       JOIN languages l ON l.id = ct.language_id
+       LEFT JOIN language_translations lt
+         ON lt.language_id = l.id AND lt.display_language_id = l.id
+       WHERE ct.collection_id IN (${this.placeholders(scope.collectionIds.length)})
+         AND l.backward_compatibility IS NOT NULL
+       ORDER BY l.backward_compatibility`,
+      scope.collectionIds
+    )
+    const titled = rows.filter(row => row.title?.trim())
+    const shown = minisiteLanguages(titled, scope.collectionIds)
+    const root = titled.filter(row => row.collection_id === scope.rootCollectionId && shown.includes(row.code))
+    return {
+      key: scope.key,
+      languages: root.map(row => ({ code: row.code, label: row.name || row.code.toUpperCase() })),
+      names: Object.fromEntries(root.map(row => [row.code, row.title as string])),
+      root_collection_id: scope.rootCollectionId,
+      legacy_url: scope.legacyUrl,
+      parent: { key: scope.parentKey, names: await this.siteNames() },
+    }
   }
 
   /**

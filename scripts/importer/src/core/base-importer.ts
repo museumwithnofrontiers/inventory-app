@@ -245,10 +245,12 @@ export abstract class BaseImporter {
       return trackerValue;
     }
 
-    // Fall back to database lookup - find context with is_default=true
-    // We need to query the database directly since findByBackwardCompatibility
-    // doesn't work for this case (default context has backward_compatibility='default')
-    const result = await this.context.strategy.findByBackwardCompatibility('contexts', 'default');
+    // Fall back to the database, for a run that starts after the default
+    // context's step (--start-at, --only): the key DefaultContextImporter gives it.
+    const result = await this.context.strategy.findByBackwardCompatibility(
+      'contexts',
+      '__default_context__'
+    );
 
     if (result) {
       // Cache in tracker for future lookups
