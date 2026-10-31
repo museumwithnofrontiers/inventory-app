@@ -402,6 +402,20 @@ Its `diff-runs.md` lists 17 regressions against 2026-10-26:
   The-hijaz-railway also lost the six Syrian monument pictures (`galex5/sy/91`): the legacy image
   copy now comes from `scripts/import-tool/Sync-LegacyImages.ps1` (#2385), which brought them in.
 
+`baselines/2026-10-31` is the run after reimport 10, on the 85 packages published from it: the 66
+above, the Baroque Art and Sharing History mini-sites, and the Artistic Introduction. It has the
+same 7 real differences. Its `diff-runs.md` lists 23 regressions against 2026-10-28b:
+- **The new mini-sites (17):** image URLs that are not `/pub/<uuid>`. This is their first
+  baseline. Each URL is a legacy picture whose file is missing on legacy too. They are kept as
+  legacy shows them (decision of 2026-10-24).
+- **The Grand Bazaar (5):** on legacy, `monuments/isl/tr/1/28/3.jpg` is gone and `1.jpg` has
+  appeared since the last image copy, but the monument still has three picture rows. Picture 3 now has no file. The URL counts
+  of islamicart, explore, islamicart-the-ottomans and the-hijaz-railway each grow by one, and
+  islamicart's `item.image.count` gains the monument (legacy shows 2 pictures, the package 3).
+- **The-hijaz-railway (1):** `theme.picture count` (3 → 4). The package gives the About theme 9
+  pictures and a new text, while the cached legacy page still reads "This is the About section".
+  Hijaz is re-authored on live legacy.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
