@@ -65,11 +65,13 @@ export const TOKENS = [
   ['home-bg1', '#homeBG1', 'background-color'],
   ['home-bg2-height', '#homeBG2', 'height'],
   ['home-title-left', '#homeTitle', 'left'],
+  ['home-title-right', '#homeTitle', 'right'],
   ['home-title-top', '#homeTitle', 'top'],
   ['home-title-width', '#homeTitle', 'width'],
   ['home-title-font', '#homeTitle', 'font'],
   ['home-title-color', '#homeTitle', 'color'],
   ['home-description-left', '#homeDescription', 'left'],
+  ['home-description-right', '#homeDescription', 'right'],
   ['home-description-top', '#homeDescription', 'top'],
   ['home-description-width', '#homeDescription', 'width'],
   ['home-description-font', '#homeDescription', 'font'],
@@ -109,6 +111,7 @@ export const TOKENS = [
   ['partners-curators-margin-right', '.homePartners_tab_lt', 'margin-right'],
   ['partners-curators-rule', '.homePartners_tab_lt', 'border-right'],
   ['partners-tab-width', '.homePartners_tab', 'width'],
+  ['partners-tab-padding-right', '.homePartners_tab', 'padding-right'],
   ['partners-tab-font', '.homePartners_tab', 'font'],
   ['partners-tab-color', '.homePartners_tab', 'color'],
   ['partners-tab-spacing', '.homePartners_tab', 'letter-spacing'],
@@ -142,6 +145,7 @@ export const TOKENS = [
   ['banner-position', '#banner', 'background-position'],
   // The introduction.
   ['intro-paper', '#IntroPage', 'background-color'],
+  ['intro-padding-top', '#IntroPage', 'padding-top'],
   ['intro-title-left', '#IntroTitle', 'left'],
   ['intro-title-right', '#IntroTitle', 'right'],
   ['intro-title-top', '#IntroTitle', 'top'],
@@ -276,23 +280,32 @@ export const TOKENS = [
   ['artintro-thumb-margin', '#GaiBlock2TD2 .ItemLinks img', 'margin'],
 ]
 
+// What a `font` shorthand resets: a longhand written before it no longer
+// applies ("line-height: 14px; font: 9px verdana" draws a normal line height).
+const FONT_LONGHANDS = ['font-style', 'font-variant', 'font-weight', 'font-size', 'line-height', 'font-family']
+
 /** selector → { property: value }, in source order, later declarations winning. */
 export function parseCss(css) {
   const rules = new Map()
   const source = css.replace(/\/\*[\s\S]*?\*\//g, '')
   for (const match of source.matchAll(/([^{}]+)\{([^{}]*)\}/g)) {
-    const declarations = {}
+    const declarations = []
     for (const part of match[2].split(';')) {
       const colon = part.indexOf(':')
       if (colon < 0) continue
       const property = part.slice(0, colon).trim().toLowerCase()
       const value = part.slice(colon + 1).replace(/!important/i, '').trim().replace(/\s+/g, ' ')
-      if (property && value) declarations[property] = value
+      if (property && value) declarations.push([property, value])
     }
     for (const selector of match[1].split(',')) {
       const key = selector.trim().replace(/\s+/g, ' ')
       if (!key) continue
-      rules.set(key, { ...(rules.get(key) ?? {}), ...declarations })
+      const rule = { ...(rules.get(key) ?? {}) }
+      for (const [property, value] of declarations) {
+        if (property === 'font') for (const longhand of FONT_LONGHANDS) delete rule[longhand]
+        rule[property] = value
+      }
+      rules.set(key, rule)
     }
   }
   return rules
