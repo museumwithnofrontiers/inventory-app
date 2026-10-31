@@ -147,6 +147,31 @@ test("Discover Baroque Art's sites name their own template and stylesheet, Disco
   assert.match(themeCss(folder, 'The Abbasids'), /viewer-layout's minisite\.css lays/)
 })
 
+test('a home title or description placed from the right keeps its offset', () => {
+  // Reformation, Crusader and Women place them so; without the token they
+  // fell to the left edge.
+  const folder = mkdtempSync(join(tmpdir(), 'theme-'))
+  writeFileSync(join(folder, '_styles.css'), '#homeTitle { right: 33px; top: 60px } #homeDescription { right: 33px }')
+  writeFileSync(join(folder, '_styles_ar.css'), '#homeTitle { right: 242px }')
+  const theme = themeCss(folder, 'Reformation')
+  assert.match(theme, /:root \{[^}]*--minisite-home-title-right: 33px;[^}]*--minisite-home-description-right: 33px;/)
+  assert.match(theme, /\[dir='rtl'\] \{[^}]*--minisite-home-title-right: 242px;/)
+  assert.doesNotMatch(theme, /--minisite-home-title-left/)
+})
+
+test('a font shorthand resets the longhands written before it, not after it', () => {
+  // Reformation's #homePartners .txt: the line height before the shorthand
+  // never applied on legacy.
+  const folder = mkdtempSync(join(tmpdir(), 'theme-'))
+  writeFileSync(join(folder, '_styles.css'), [
+    '#homePartners .txt { line-height: 14px; font: Normal 9px verdana; }',
+    '.homePartners_tab { width: 130px; font: Normal 9px/12px verdana; line-height: 14px; padding-right: 20px; }',
+  ].join('\n'))
+  const theme = themeCss(folder, 'Reformation', { stylesheet: 'minisite-baroqueart.css' })
+  assert.doesNotMatch(theme, /--minisite-partners-line-height/)
+  assert.match(theme, /--minisite-partners-tab-padding-right: 20px;/)
+})
+
 test("the Artistic Introduction's own tokens are written for it alone", () => {
   const folder = mkdtempSync(join(tmpdir(), 'theme-'))
   writeFileSync(join(folder, '_styles.css'), '#exh_image { width: 340px; } #footer { height: 18px; }')
