@@ -273,51 +273,24 @@ package. The steps below get the new data in front of a visitor.
 ### 7. Publish the data packages
 
 Each website installs `@museumwnf/<dataset>-data` from the public npmjs
-registry (`registry.npmjs.org`), and an exporter run with `--publish` both
-exports and publishes — there is no separate `npm publish`. The compose
+registry (`registry.npmjs.org`). Every package's source lives in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages): an
+exporter run with `--publish` stages its export there, with the next version,
+and merging the pull request that carries it publishes every changed package
+from that repository's release workflow
+([#2433](https://github.com/museumwithnofrontiers/inventory-app/issues/2433)).
+Nothing here publishes, and nothing needs an npm login. The compose
 `exporter` service forces the staging database into its environment, so this
 reads the copy you just reviewed, whatever `scripts/exporters/<dataset>/.env`
 says. `docker-entrypoint.sh all` ([#1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922))
 does every dataset in one run — that is the command below; see
 [`scripts/exporters/README.md`](../exporters/README.md#batch-re-export-every-instance-in-one-run)
 for `--dry-run`, `--only <slug>[,<slug>…]` to redo a subset, and what its
-summary table and failure handling look like.
+summary table and failure handling look like. The mechanics are in
+[`scripts/exporters/docs/publishing.md`](../exporters/docs/publishing.md).
 
-Authentication is a one-time, per-machine step, done **on the host** — this
-is a manual, local publish, never run from CI (see
-[`docs/deployment/release-and-propagation.md`](../../docs/deployment/release-and-propagation.md)
-§5.3):
-
-```bash
-npm login
-```
-
-That writes a session token to your **host** `~/.npmrc`. `compose.yml` mounts
-that file read-only into the `exporter` container
-(`${HOME}/.npmrc:/root/.npmrc:ro`) — the container never runs `npm login`
-itself and no token is ever written to a tracked file. **Windows** —
-PowerShell does not export `$HOME` to child processes, so `${HOME}` above
-resolves to nothing unless you set it first, in every new shell:
-
-```powershell
-$env:HOME = $env:USERPROFILE
-```
-
-`--publish` runs `npm whoami` against that mounted session before the export
-starts and fails fast with an `npm login` hint if it is dead (#1865), instead
-of only surfacing as a registry 404 after the whole export has run. A session
-dies after a while: check `npm whoami` before every publish, and log in again
-when it fails (`npm login --auth-type=web` prints a link to approve).
-
-Each publish asks npmjs for a web confirmation (2FA). The container has no
-browser (`NPM_CONFIG_BROWSER=false` in `compose.yml`), so npm prints the URL
-and polls the registry until it is approved — **but only when it runs in a
-terminal** (`docker compose run` from an interactive shell, or `docker run -i
--t`); without one it fails with `EOTP`. A link is valid for about two minutes,
-so be at the keyboard before you start. Approving with "stay authenticated for
-publish for the next 5 minutes" lets the following packages through without a
-new link; a link that expires fails only its own package (`E404`), which a
-rerun with `--only <slug>` retries.
+The data-packages checkout sits next to this one (`../data-packages`, or
+`DATA_PACKAGES_PATH`); `--publish` refuses to start without it.
 
 `--publish` requires `--base-url https://inventory.metanull.eu`. The packages
 bake every image URL in, and without an absolute base they all point nowhere
@@ -327,41 +300,39 @@ bake every image URL in, and without an absolute base they all point nowhere
 # What is published now — the only reliable way to read it. No credential
 # needed: @museumwnf packages are public.
 docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view @museumwnf/<dataset>-data version
-# See the plan, then export every dataset from staging and publish the next
-# patch of each.
+# Bring data-packages to main and branch it.
+git -C ../data-packages switch main
+git -C ../data-packages pull --ff-only
+git -C ../data-packages switch -c feature/reimport-<date>
+# See the plan, then export every dataset from staging and stage the next
+# patch of each one that changed.
 docker compose --profile jobs run --rm --no-deps exporter all --dry-run
 docker compose --profile jobs run --rm --no-deps exporter all --force --publish --base-url https://inventory.metanull.eu
 # To redo some instances instead of the whole batch:
 docker compose --profile jobs run --rm --no-deps exporter all --force --publish --base-url https://inventory.metanull.eu --only <slug>[,<slug>…]
 ```
 
-With many instances, three runs side by side, each with its own `--only`
-list, finish in a third of the time; one approval with "stay authenticated"
-covers all three.
+The next version is one patch above the later of the version data-packages
+holds and the registry's latest. A package whose export is unchanged keeps
+its version and is not staged. Pass `--package-version <next>` yourself only
+for a minor/major bump.
 
-A single `--publish` run computes the next patch version: it asks the
-registry first and uses it whenever the registry is ahead of the local
-counter in `output/.version-<dataset>` — a gitignored, per-worktree file that
-is absent in any worktree that has never exported, so a fresh worktree or a
-deleted `output/` no longer walks into a taken number. As of #1865 that
-counter is written only once `npm publish` has actually succeeded, so a
-failed publish never burns the number — a plain rerun retries the very same
-version rather than skipping past it. Pass `--package-version <next>`
-yourself only for a minor/major bump, or when the registry cannot be reached.
-
-The exporter prints `✓ Published: @museumwnf/<dataset>-data@<next>` on
-success; confirm by running the first command again. `all` runs every
-instance to the end even if one fails, then prints a summary table (instance,
-exporter, result, published version) and exits non-zero if any instance
-failed — publishing only some leaves the other websites on the previous
+`all` runs every instance to the end even if one fails, then prints a summary
+table (instance, exporter, result, staged version) and exits non-zero if any
+instance failed — staging only some leaves the other websites on the previous
 import, and the summary is how you see that happened instead of assuming
-everything went out. On success it also prints the ready-to-paste
+everything went out. It also prints the ready-to-paste
 `--expect <pkg>@<version>` list that step 8 needs.
 
-`PACKAGE_REPO_URL` in `scripts/exporters/<dataset>/.env` is good package
-metadata — it populates the published `repository` field — but npmjs does not
-require it to install a version, so it is not something a first publish is
-blocked on.
+Then publish:
+
+1. Commit `packages/` on the data-packages branch, push it and open a pull
+   request. Its `Validate packages` check refuses a changed package whose
+   version is not above main's or is already published.
+2. Merge it. Its `release.yml` run publishes every package whose version the
+   registry does not hold yet, with provenance.
+3. Confirm with the first command above: it must print the new version
+   (npmjs can lag a few minutes; never conclude from one check).
 
 ### 8. Propagate the new versions to the websites
 
@@ -579,12 +550,9 @@ Everything else is required.
 
 The VPN to the legacy network must be up for steps 2, 3 and 4, and stay up for
 the whole of step 3. Step 8 needs the SSH key instead (and the count check in
-step 7 reads the server over it). Steps 9 to 11 need neither — only your own
-npm login on the host (see step 9) and `gh` logged in; step 12 needs the VPN
-again, for live legacy. **Windows** — set
-`$env:HOME = $env:USERPROFILE` in every new shell before step 9's first
-`docker compose run exporter ... --publish`, or the container's mount of your
-npm session is silently empty.
+step 7 reads the server over it). Steps 9 to 11 need neither — only `gh` logged in and a
+data-packages checkout next to this one; step 12 needs the VPN
+again, for live legacy.
 
 ```powershell
 # ── 0. NOTHING ELSE MAY BE IMPORTING ─────────────────────────────────────────
@@ -683,45 +651,45 @@ docker compose --env-file scripts/import-tool/.env --profile import run --build 
 
 # ── 9. PUBLISH THE DATA PACKAGES ─────────────────────────────────────────────
 # Shipping updates the application; the websites read published npm packages
-# and step 8 does not touch them. `--publish` exports AND publishes, so this
-# replaces step 7's export commands rather than following them.
-# `docker-entrypoint.sh all` (#1922) does every dataset — the forked
-# exporters plus the parameterised ones, once per instance slug they carry —
-# in one run instead of one invocation per row.
-#
-# PowerShell does not export $HOME to child processes, so ${HOME} in
-# compose.yml — which mounts your npm session read-only into the exporter
-# container — resolves to nothing unless you set this first, in EVERY new
-# shell:
-$env:HOME = $env:USERPROFILE
+# and step 8 does not touch them. `--publish` exports AND stages each package
+# into the data-packages checkout, so this replaces step 7's export commands
+# rather than following them. `docker-entrypoint.sh all` (#1922) does every
+# dataset — the forked exporters plus the parameterised ones, once per
+# instance slug they carry — in one run instead of one invocation per row.
+# Merging the data-packages pull request publishes them (#2433); nothing here
+# needs an npm login.
 
-# Authenticate ON THE HOST (never inside the container). This writes a
-# session token to your host ~/.npmrc; nothing in this repo ever writes to
-# that file, and no token reaches a tracked file. Sessions expire: run it
-# again whenever `npm whoami` fails.
-npm whoami
-npm login --auth-type=web
+# Bring data-packages to main and branch it.
+git -C ../data-packages switch main
+git -C ../data-packages pull --ff-only
+git -C ../data-packages switch -c feature/reimport-<date>
 
 # See the plan first — touches nothing.
 docker compose --profile jobs run --rm --no-deps exporter all --dry-run
 
-# Export every dataset from staging and publish the next patch of each. Be at
-# the keyboard: each publish prints an npmjs link to approve within about two
-# minutes ("stay authenticated for 5 minutes" covers the next ones). One
-# `npm whoami` preflight up front; one dataset failing does not stop the
-# others. Ends with a summary table (instance, exporter, result, published
-# version) and, on success, a ready-to-paste
+# Export every dataset from staging and stage the next patch of each one that
+# changed. One dataset failing does not stop the others. Ends with a summary
+# table (instance, exporter, result, staged version) and a ready-to-paste
 # `node tools/propagate.mjs --expect <pkg>@<version> …` block for step 10.
 # --base-url is required: the packages bake every image URL in.
 docker compose --profile jobs run --rm --no-deps exporter all --force --publish --base-url https://inventory.metanull.eu
 
-# To redo some instances (an expired link, say) instead of the whole batch:
+# To redo some instances instead of the whole batch:
 docker compose --profile jobs run --rm --no-deps exporter all --force --publish --base-url https://inventory.metanull.eu --only carpets
+
+# Publish: one pull request in data-packages, merged once its checks pass.
+git -C ../data-packages add packages
+git -C ../data-packages commit -m "Reimport <date>"
+git -C ../data-packages push -u origin feature/reimport-<date>
+gh pr create -R museumwithnofrontiers/data-packages --head feature/reimport-<date> --fill
+gh pr checks -R museumwithnofrontiers/data-packages feature/reimport-<date> --watch
+gh pr merge -R museumwithnofrontiers/data-packages feature/reimport-<date> --squash --delete-branch
+gh run list -R museumwithnofrontiers/data-packages --workflow release.yml --limit 1
 
 # Confirm before moving on — the registry, not the summary table, is the
 # source of truth. Must print a version newer than before the run; if it
-# still prints the same one, the publish did not happen and the website will
-# not see anything either.
+# still prints the same one, the release run did not publish it and the
+# website will not see anything either.
 docker compose --profile tools run --rm --no-deps -w /var/www/app tools npm view "@museumwnf/<slug>-data" version
 
 # ── 10. PROPAGATE TO THE WEBSITES ────────────────────────────────────────────

@@ -1,257 +1,208 @@
-import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'child_process'
 import { describe, expect, it, vi, beforeEach } from 'vitest'
 
-import { PublishManager, assertPublishableBaseUrl } from '../../src/core/publish-manager.js'
+import { PublishManager, assertPublishableBaseUrl, prettyJson } from '../../src/core/publish-manager.js'
 import { Logger } from '../../src/core/logger.js'
 
 vi.mock('child_process', () => ({ spawnSync: vi.fn() }))
 
-/**
- * The next version comes from the registry, not from the counter file.
- *
- * The file is untracked and lives per exporter, and nothing keeps it in step
- * with what was actually published. Four of the seven datasets were found
- * sitting at 1.0.0 while the registry held 1.0.2 and 1.0.3, so the first
- * `--publish` after a rebuild walked straight into a taken number and npm
- * refused it.
- *
- * getNextVersion()/setVersion() only compute a version now; the counter file
- * is written by recordPublished(), called only once publish() has actually
- * succeeded — see "persisting the published version" below.
- */
+const templatePath = resolve(dirname(fileURLToPath(import.meta.url)), '../../../docs/LICENSE.md.template')
 
 const registrySays = (version: string) =>
   vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: version + '\n' } as never)
 
-const registrySilent = () =>
-  vi.mocked(spawnSync).mockReturnValue({ status: 1, stdout: '' } as never)
+const registrySilent = () => vi.mocked(spawnSync).mockReturnValue({ status: 1, stdout: '' } as never)
 
-function manager(fileContent?: string) {
-  const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-sharinghistory')
-  if (fileContent !== undefined) writeFileSync(versionFile, fileContent, 'utf-8')
-  const publisher = new PublishManager({
-    outputDir: '.',
-    versionFile,
-    packageName: '@museumwnf/sharinghistory-data',
-    projectKeys: ['sharinghistory'],
-    logger: new Logger('test'),
-    registry: 'https://npm.pkg.github.com',
-  })
-  return { publisher, versionFile }
+/** An export as the exporters write it: compact JSON, .gz companions, generatedAt in the manifest. */
+function exportDir(items: unknown[] = [{ id: 'a' }]): string {
+  const dir = mkdtempSync(join(tmpdir(), 'export-'))
+  mkdirSync(join(dir, 'translations'))
+  writeFileSync(
+    join(dir, 'manifest.json'),
+    JSON.stringify({ generatedAt: new Date().toISOString(), counts: { items: items.length } })
+  )
+  writeFileSync(join(dir, 'items.json'), JSON.stringify(items))
+  writeFileSync(join(dir, 'items.json.gz'), 'not json')
+  writeFileSync(join(dir, 'translations', 'items.en.json'), JSON.stringify({ a: { name: 'A' } }))
+  return dir
 }
+
+/** An empty data-packages checkout: what assertDataPackagesCheckout() looks for. */
+function dataPackagesDir(): string {
+  const dir = mkdtempSync(join(tmpdir(), 'data-packages-'))
+  mkdirSync(join(dir, 'scripts'))
+  writeFileSync(join(dir, 'scripts', 'check.mjs'), '')
+  return dir
+}
+
+function manager(outputDir = exportDir(), dataPackages = dataPackagesDir(), license?: string) {
+  return new PublishManager({
+    outputDir,
+    dataPackagesDir: dataPackages,
+    packageName: '@museumwnf/sharinghistory-data',
+    projectKeys: ['ISL'],
+    logger: new Logger('test'),
+    registry: 'https://registry.npmjs.org',
+    license,
+  })
+}
+
+const read = (path: string) => readFileSync(path, 'utf-8')
 
 describe('choosing the next version', () => {
   beforeEach(() => vi.mocked(spawnSync).mockReset())
 
-  it('follows the registry when the counter file is behind', () => {
-    registrySays('1.0.3')
-    const { publisher, versionFile } = manager('1.0.0')
-
-    expect(publisher.getNextVersion()).toBe('1.0.4')
-    // getNextVersion() only computes; nothing is written until recordPublished().
-    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.0')
+  it('follows the registry when data-packages is behind it', () => {
+    // A checkout that was not pulled since the last release.
+    registrySays('1.0.61')
+    const dataPackages = dataPackagesDir()
+    manager(exportDir(), dataPackages).stage('1.0.40')
+    expect(manager(exportDir([{ id: 'b' }]), dataPackages).getNextVersion()).toBe('1.0.62')
   })
 
-  it('follows the registry when there is no counter file at all', () => {
-    registrySays('1.0.27')
-    const { publisher } = manager()
-
-    expect(publisher.getNextVersion()).toBe('1.0.28')
+  it('follows data-packages when it is ahead of the registry', () => {
+    // A merged pull request whose release run has not published yet.
+    registrySays('1.0.61')
+    const dataPackages = dataPackagesDir()
+    manager(exportDir(), dataPackages).stage('1.0.62')
+    expect(manager(exportDir([{ id: 'b' }]), dataPackages).getNextVersion()).toBe('1.0.63')
   })
 
-  it('keeps the counter file when it is the one ahead', () => {
-    // A version published from elsewhere and since unpublished, or a deliberate
-    // jump made with --package-version. Never go backwards.
-    registrySays('1.0.3')
-    const { publisher } = manager('2.0.1')
-
-    expect(publisher.getNextVersion()).toBe('2.0.2')
-  })
-
-  it('falls back to the counter file when the registry does not answer', () => {
-    // Unreachable, unauthenticated, or a package that has never been published.
+  it('falls back to data-packages when the registry does not answer', () => {
     registrySilent()
-    const { publisher } = manager('1.2.1')
-
-    expect(publisher.getNextVersion()).toBe('1.2.2')
+    const dataPackages = dataPackagesDir()
+    manager(exportDir(), dataPackages).stage('1.2.1')
+    expect(manager(exportDir([{ id: 'b' }]), dataPackages).getNextVersion()).toBe('1.2.2')
   })
 
   it('falls back when the registry answers with something that is not a version', () => {
     vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: 'npm warn ...\n' } as never)
-    const { publisher } = manager('1.2.1')
-
-    expect(publisher.getNextVersion()).toBe('1.2.2')
+    expect(manager().getNextVersion()).toBe('1.0.1')
   })
 
   it('asks the registry for this package, at this registry', () => {
     registrySays('1.0.3')
-    manager('1.0.0').publisher.getNextVersion()
+    manager().getNextVersion()
 
     const [command, args] = vi.mocked(spawnSync).mock.calls[0]
     expect(command).toBe('npm')
-    expect(args).toEqual([
-      'view',
-      '@museumwnf/sharinghistory-data',
-      'version',
-      '--registry',
-      'https://npm.pkg.github.com',
-    ])
+    expect(args).toEqual(['view', '@museumwnf/sharinghistory-data', 'version', '--registry', 'https://registry.npmjs.org'])
+  })
+
+  it('refuses an explicit version that is not one', () => {
+    expect(() => manager().setVersion('latest')).toThrow(/Invalid version/)
   })
 })
 
-describe('setting a version explicitly', () => {
-  beforeEach(() => vi.mocked(spawnSync).mockReset())
-
-  it('validates without writing or asking the registry', () => {
-    const { publisher, versionFile } = manager('1.0.0')
-
-    expect(publisher.setVersion('1.0.3')).toBe('1.0.3')
-    // Not persisted until recordPublished() is called after a successful
-    // publish — see the "persisting the published version" tests below.
-    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.0')
-    expect(spawnSync).not.toHaveBeenCalled()
+describe('the data-packages checkout', () => {
+  it('refuses a directory that is not one', () => {
+    const notACheckout = mkdtempSync(join(tmpdir(), 'elsewhere-'))
+    expect(() => manager(exportDir(), notACheckout).assertDataPackagesCheckout()).toThrow(/data-packages/)
   })
 
-  it('refuses something that is not a version', () => {
-    expect(() => manager('1.0.0').publisher.setVersion('latest')).toThrow(/Invalid version/)
-  })
-})
-
-describe('confirming the npm session before a slow export', () => {
-  beforeEach(() => vi.mocked(spawnSync).mockReset())
-
-  it('throws with the npm login hint when whoami fails', () => {
-    vi.mocked(spawnSync).mockReturnValue({ status: 1, stdout: '' } as never)
-    const { publisher } = manager('1.0.0')
-
-    expect(() => publisher.assertLoggedIn()).toThrow(/npm login/)
+  it('accepts one', () => {
+    expect(() => manager().assertDataPackagesCheckout()).not.toThrow()
   })
 
-  it('throws when whoami exits zero but answers with no user name', () => {
-    vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: '' } as never)
-    const { publisher } = manager('1.0.0')
-
-    expect(() => publisher.assertLoggedIn()).toThrow(/npm login/)
-  })
-
-  it('passes and logs the user name when whoami succeeds', () => {
-    vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: 'pascalh\n' } as never)
-    const { publisher } = manager('1.0.0')
-
-    expect(() => publisher.assertLoggedIn()).not.toThrow()
-  })
-
-  it('asks whoami at the configured registry', () => {
-    vi.mocked(spawnSync).mockReturnValue({ status: 0, stdout: 'pascalh\n' } as never)
-    const { publisher } = manager('1.0.0')
-    publisher.assertLoggedIn()
-
-    const [command, args] = vi.mocked(spawnSync).mock.calls[0]
-    expect(command).toBe('npm')
-    expect(args).toEqual(['whoami', '--registry', 'https://npm.pkg.github.com'])
+  it('holds the package in packages/<name without the scope>', () => {
+    const dataPackages = dataPackagesDir()
+    expect(manager(exportDir(), dataPackages).packageDir).toBe(resolve(dataPackages, 'packages', 'sharinghistory-data'))
   })
 })
 
 /**
- * A failed publish must never burn the version number the next run would
- * otherwise walk straight into: getNextVersion()/setVersion() only compute,
- * and the counter file is written by recordPublished() alone, which callers
- * (see src/cli/export.ts) call only once publish() has returned without
- * throwing.
+ * data-packages commits pretty-printed JSON so that a new version is a line
+ * diff; its release workflow compacts it again and sets generatedAt from the
+ * commit time, so what npm receives keeps the layout the exporters write.
  */
-describe('persisting the published version', () => {
-  beforeEach(() => vi.mocked(spawnSync).mockReset())
+describe('staging an export', () => {
+  beforeEach(() => registrySays('1.0.61'))
 
-  it('leaves the counter file untouched when the publish that follows fails', () => {
-    registrySilent()
-    const { publisher, versionFile } = manager('1.0.5')
+  it('writes pretty-printed JSON, without generatedAt or the .gz companions', () => {
+    const publisher = manager()
+    const staged = publisher.stage()
 
-    const next = publisher.getNextVersion()
-    expect(next).toBe('1.0.6')
-    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.5')
-
-    vi.mocked(spawnSync).mockReturnValue({ status: 1 } as never)
-    expect(() => publisher.publish()).toThrow(/npm publish exited/)
-    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.5')
+    expect(staged).toEqual({ changed: true, version: '1.0.62', packageDir: publisher.packageDir })
+    expect(read(join(publisher.packageDir, 'items.json'))).toBe(prettyJson([{ id: 'a' }]))
+    expect(read(join(publisher.packageDir, 'translations', 'items.en.json'))).toBe(prettyJson({ a: { name: 'A' } }))
+    expect(JSON.parse(read(join(publisher.packageDir, 'manifest.json')))).toEqual({ counts: { items: 1 } })
+    expect(existsSync(join(publisher.packageDir, 'items.json.gz'))).toBe(false)
   })
 
-  it('holds the published version once publish has actually succeeded', () => {
-    registrySilent()
-    const { publisher, versionFile } = manager('1.0.5')
-    const next = publisher.getNextVersion()
+  it('writes the package.json data-packages publishes from', () => {
+    const publisher = manager()
+    publisher.stage()
 
-    vi.mocked(spawnSync).mockReturnValue({ status: 0 } as never)
-    publisher.publish()
-    publisher.recordPublished(next)
-
-    expect(readFileSync(versionFile, 'utf-8')).toBe(next)
+    const pkg = JSON.parse(read(join(publisher.packageDir, 'package.json')))
+    expect(pkg['name']).toBe('@museumwnf/sharinghistory-data')
+    expect(pkg['version']).toBe('1.0.62')
+    // npm provenance refuses a repository other than the one the release runs in.
+    expect(pkg['repository']).toEqual({
+      type: 'git',
+      url: 'git+https://github.com/museumwithnofrontiers/data-packages.git',
+      directory: 'packages/sharinghistory-data',
+    })
+    expect(read(join(publisher.packageDir, 'package.json'))).toBe(prettyJson(pkg))
   })
 
-  it('persists an explicit --package-version only once recordPublished is called', () => {
-    const { publisher, versionFile } = manager('1.0.0')
-    const version = publisher.setVersion('2.0.0')
-    expect(readFileSync(versionFile, 'utf-8')).toBe('1.0.0')
+  it('replaces what the folder held, so a file the export no longer writes goes', () => {
+    const dataPackages = dataPackagesDir()
+    const first = manager(exportDir(), dataPackages)
+    first.stage()
+    writeFileSync(join(first.packageDir, 'timelines.json'), prettyJson([]))
 
-    publisher.recordPublished(version)
-    expect(readFileSync(versionFile, 'utf-8')).toBe('2.0.0')
+    manager(exportDir([{ id: 'b' }]), dataPackages).stage()
+    expect(existsSync(join(first.packageDir, 'timelines.json'))).toBe(false)
+  })
+
+  it('writes nothing and keeps the version when the export is unchanged', () => {
+    // Two exports of the same data differ only in generatedAt.
+    const dataPackages = dataPackagesDir()
+    manager(exportDir(), dataPackages).stage()
+    const again = manager(exportDir(), dataPackages).stage()
+
+    expect(again.changed).toBe(false)
+    expect(again.version).toBe('1.0.62')
+  })
+
+  it('honours an explicit version', () => {
+    expect(manager().stage('2.0.0').version).toBe('2.0.0')
   })
 })
 
 /**
  * The MWNF legal notice permits non-commercial/educational use, which
- * 'UNLICENSED' (all rights reserved) contradicts, see story #1690. No SPDX
+ * 'UNLICENSED' (all rights reserved) contradicts — see story #1690. No SPDX
  * identifier matches the notice's actual terms, so 'SEE LICENSE IN
  * LICENSE.md' is the encoding, and the file it points at must actually ship.
  */
 describe('licence', () => {
-  const templatePath = resolve(dirname(fileURLToPath(import.meta.url)), '../../../docs/LICENSE.md.template')
+  beforeEach(() => registrySays('1.0.61'))
 
   it('defaults package.json license to the custom-terms marker', () => {
-    const { publisher } = manager('1.0.0')
-    expect(publisher.generatePackageJson('1.0.1')['license']).toBe('SEE LICENSE IN LICENSE.md')
+    expect(manager().generatePackageJson('1.0.1')['license']).toBe('SEE LICENSE IN LICENSE.md')
   })
 
   it('still honours an explicit PACKAGE_LICENSE override', () => {
-    const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-sharinghistory')
-    const publisher = new PublishManager({
-      outputDir: '.',
-      versionFile,
-      packageName: '@museumwnf/sharinghistory-data',
-      projectKeys: ['sharinghistory'],
-      logger: new Logger('test'),
-      license: 'MIT',
-    })
-    expect(publisher.generatePackageJson('1.0.1')['license']).toBe('MIT')
+    expect(manager(exportDir(), dataPackagesDir(), 'MIT').generatePackageJson('1.0.1')['license']).toBe('MIT')
   })
 
-  it('generates a README with a Terms of use section linking the notice', () => {
-    const { publisher } = manager('1.0.0')
-    const readme = publisher.generateReadme('@museumwnf/sharinghistory-data')
+  it('stages a README with a Terms of use section linking the notice', () => {
+    const publisher = manager()
+    publisher.stage()
+    const readme = read(join(publisher.packageDir, 'README.md'))
     expect(readme).toContain('## Terms of use')
     expect(readme).toContain('https://www.museumwnf.org/about/legal-notice')
   })
 
-  it('writes LICENSE.md as an exact copy of the shared template', () => {
-    const outputDir = mkdtempSync(join(tmpdir(), 'publish-output-'))
-    const versionFile = join(mkdtempSync(join(tmpdir(), 'publish-')), '.version-sharinghistory')
-    const publisher = new PublishManager({
-      outputDir,
-      versionFile,
-      packageName: '@museumwnf/sharinghistory-data',
-      projectKeys: ['sharinghistory'],
-      logger: new Logger('test'),
-    })
-
-    publisher.writeLicense()
-
-    const written = readFileSync(join(outputDir, 'LICENSE.md'), 'utf-8')
-    const template = readFileSync(templatePath, 'utf-8')
-    expect(written).toBe(template)
-    expect(written).toContain('https://www.museumwnf.org/about/legal-notice')
+  it('stages LICENSE.md as an exact copy of the shared template', () => {
+    const publisher = manager()
+    publisher.stage()
+    expect(read(join(publisher.packageDir, 'LICENSE.md'))).toBe(read(templatePath))
   })
 })
 
