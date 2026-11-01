@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, rmSync } from 'fs'
 import { resolve } from 'path'
 import chalk from 'chalk'
 import { Database } from '../core/database.js'
@@ -22,12 +22,13 @@ export interface MinisiteOptions {
   outputDir: string
   baseUrl: string
   publish: boolean
+  dataPackages: string
   packageVersion?: string
   npmRegistry?: string
 }
 
 /**
- * `--minisite <slug>`: export (and with --publish, publish) one mini-site's
+ * `--minisite <slug>`: export (and with --publish, stage into data-packages) one mini-site's
  * package from the database: the islamicart exporters, each narrowed to the
  * mini-site's scope (src/minisite/scope.ts), in the same shapes. What a
  * mini-site never shows is left out: dynasties (its captions print the
@@ -39,7 +40,6 @@ export async function runMinisite(ref: string, options: MinisiteOptions, project
   const outputBaseDir = resolve(process.cwd(), options.outputDir)
   const outputDir = resolve(outputBaseDir, instance.slug)
   const registry = options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
-  const versionFile = resolve(outputBaseDir, `.version-${instance.slug}`)
 
   console.log(chalk.bold.cyan(`MINI-SITE ${instance.slug}`) + chalk.gray(` — collection ${instance.collectionId}`))
   if (existsSync(outputDir)) {
@@ -50,18 +50,17 @@ export async function runMinisite(ref: string, options: MinisiteOptions, project
 
   const publishManager = new PublishManager({
     outputDir,
-    versionFile,
+    dataPackagesDir: resolve(process.cwd(), options.dataPackages),
     packageName: instance.packageName,
     projectKeys,
     logger,
     author: process.env['PACKAGE_AUTHOR'],
     license: process.env['PACKAGE_LICENSE'],
-    repositoryUrl: process.env['PACKAGE_REPO_URL'],
     registry,
   })
   if (options.publish) {
     assertPublishableBaseUrl(options.baseUrl)
-    publishManager.assertLoggedIn()
+    publishManager.assertDataPackagesCheckout()
   }
 
   const db = new Database()
@@ -99,11 +98,10 @@ export async function runMinisite(ref: string, options: MinisiteOptions, project
   }
 
   if (!options.publish) return
-  const version = options.packageVersion ? publishManager.setVersion(options.packageVersion) : publishManager.getNextVersion()
-  writeFileSync(resolve(outputDir, 'package.json'), JSON.stringify(publishManager.generatePackageJson(version), null, 2), 'utf-8')
-  writeFileSync(resolve(outputDir, 'README.md'), publishManager.generateReadme(instance.packageName), 'utf-8')
-  publishManager.writeLicense()
-  publishManager.publish()
-  publishManager.recordPublished(version)
-  console.log(chalk.green(`  ✓ Published: ${instance.packageName}@${version}`))
+  const staged = publishManager.stage(options.packageVersion)
+  console.log(
+    staged.changed
+      ? chalk.green(`  ✓ Staged: ${instance.packageName}@${staged.version} in ${staged.packageDir}`)
+      : chalk.green(`  ✓ Unchanged: ${instance.packageName}@${staged.version} — nothing to publish`)
+  )
 }

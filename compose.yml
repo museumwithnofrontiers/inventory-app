@@ -521,6 +521,11 @@ services:
       #   `${HOME}` below resolves to nothing there unless you set it first —
       #   see scripts/exporters/*/NPM_PUBLISH.md.
       - ${HOME}/.npmrc:/root/.npmrc:ro
+      # A checkout of museumwithnofrontiers/data-packages, next to this one
+      # unless DATA_PACKAGES_PATH says otherwise: an exporter moved there
+      # stages its package into it on --publish, and that repository's
+      # release workflow publishes it once the pull request is merged.
+      - ${DATA_PACKAGES_PATH:-../data-packages}:/var/www/data-packages
       # Each exporter's dependencies live in a named volume rather than the
       # host tree: tsx pulls in esbuild, whose binary is platform-specific, so
       # a node_modules installed on a Windows host cannot run in this container.
@@ -543,6 +548,7 @@ services:
       # it, npm prints the login URL and polls instead — see the comment on
       # the .npmrc mount above.
       NPM_CONFIG_BROWSER: "false"
+      DATA_PACKAGES_DIR: /var/www/data-packages
     depends_on:
       staging-mysql:
         condition: service_healthy
