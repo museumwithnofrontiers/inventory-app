@@ -25,6 +25,35 @@ function creditList(role: string): string {
               WHERE ita.item_translation_id = it.id AND ita.role = '${role}'),
             NULL)`
 }
+
+// The credit roles: item_translation_author's role → the translation's key.
+const CREDIT_KEYS: Record<string, string> = {
+  author: 'author',
+  text_copy_editor: 'copy_editor',
+  translator: 'translator',
+  translation_copy_editor: 'translation_copy_editor',
+}
+
+interface CreditIdRow {
+  item_translation_id: string
+  role: string
+  author_id: string
+}
+
+interface AuthorRow {
+  id: string
+  name: string
+  firstname: string | null
+  lastname: string | null
+  originalname: string | null
+}
+
+interface AuthorCvRow {
+  author_id: string
+  language_id: string
+  curriculum: string | null
+}
+
 interface ItemRow {
   id: string
   type: string
@@ -45,6 +74,7 @@ interface ItemRow {
 }
 
 interface ItemTranslationRow {
+  translation_id?: string
   item_id: string
   language_id: string
   context_id: string
@@ -205,7 +235,7 @@ export class ItemExporter extends BaseExporter {
       // Row order is unspecified; sorted so two exports of one database are
       // byte-identical (also fixes which row `rows[0]` picks below when an
       // item's own context is not among its translation rows).
-      `SELECT it.item_id, it.language_id, it.context_id,
+      `SELECT it.id AS translation_id, it.item_id, it.language_id, it.context_id,
               it.name, it.alternate_name, it.description,
               it.type, it.holder, it.owner, it.initial_owner, it.dates,
               it.location, it.dimensions, it.place_of_production,
@@ -348,6 +378,31 @@ export class ItemExporter extends BaseExporter {
       ),
     ])
 
+    // The people each translation row credits, per role, in the order and with
+    // the filter of `creditList` (an Arabic row only those with an Arabic
+    // spelling), so `credit_ids` lines up with the names the row prints. The
+    // sheet shows a person's biography from `authors.json` beside their name.
+    const creditRows = await this.db.query<CreditIdRow>(
+      `SELECT ita.item_translation_id, ita.role, a.id AS author_id
+       FROM item_translation_author ita
+       JOIN authors a ON a.id = ita.author_id
+       JOIN item_translations it ON it.id = ita.item_translation_id
+       WHERE it.item_id IN (${itemPh})
+         AND it.context_id IN (${contextPh})
+         AND (it.language_id <> 'ara' OR NULLIF(a.originalname, '') IS NOT NULL)
+       ORDER BY ita.item_translation_id, ita.role, ita.display_order, a.name`,
+      [...itemIds, ...contextIds]
+    )
+    const creditIds = new Map<string, Record<string, string[]>>()
+    for (const row of creditRows) {
+      const key = CREDIT_KEYS[row.role]
+      if (!key) continue
+      const roles = creditIds.get(row.item_translation_id) ?? {}
+      ;(roles[key] ??= []).push(row.author_id)
+      creditIds.set(row.item_translation_id, roles)
+    }
+    const creditedAuthorIds = new Set<string>()
+
     // ── Build maps ───────────────────────────────────────────────────────────
 
     // item_id -> lang_code -> translation fields
@@ -389,6 +444,8 @@ export class ItemExporter extends BaseExporter {
       // to (history/patrons/architects: monuments; workshop/scriber/binding_desc/
       // catalogue_holding_link/linkcatalogs: objects), so no type gating is needed here.
       const extra = ownRow.extra ? (parseJson(ownRow.extra) as Record<string, string> | null) : null
+      const ownCredits = ownRow.translation_id ? creditIds.get(ownRow.translation_id) : undefined
+      for (const ids of Object.values(ownCredits ?? {})) ids.forEach(id => creditedAuthorIds.add(id))
 
       if (!translationMap.has(itemId)) translationMap.set(itemId, {})
       translationMap.get(itemId)![code] = {
@@ -450,6 +507,7 @@ export class ItemExporter extends BaseExporter {
         copy_editor: ownRow.copy_editor_name,
         translator: ownRow.translator_name,
         translation_copy_editor: ownRow.translation_copy_editor_name,
+        credit_ids: scope ? null : (ownCredits ?? null),
       }
     }
 
@@ -462,6 +520,8 @@ export class ItemExporter extends BaseExporter {
       }
     }
     await this.writeTranslationFiles('items', byLang)
+    // A mini-site's package prints no credits.
+    if (!scope) await this.writeAuthors([...creditedAuthorIds].sort(), langCodeMap, contextIds)
 
     // picture_id -> lang_code -> { caption, photographer, copyright }
     const picTransMap = new Map<
@@ -619,6 +679,49 @@ export class ItemExporter extends BaseExporter {
     this.logger.success(`items.json (${output.length} items)`)
 
     return { file: 'items.json', count: output.length }
+  }
+
+  // The credited people: authors.json (each name as the sheet prints it, the
+  // Arabic spelling, and the name parts legacy's tooltip heads with) and
+  // translations/authors.<lang>.json (the biography in this project's
+  // context, in each language it has one), which the item sheet shows
+  // beside a credited name.
+  private async writeAuthors(
+    authorIds: string[],
+    langCodeMap: Map<string, string>,
+    contextIds: string[]
+  ): Promise<void> {
+    const cvs = authorIds.length === 0 || contextIds.length === 0
+      ? []
+      : await this.db.query<AuthorCvRow>(
+          `SELECT author_id, language_id, curriculum
+           FROM author_translations
+           WHERE author_id IN (${this.placeholders(authorIds.length)})
+             AND context_id IN (${this.placeholders(contextIds.length)})
+             AND NULLIF(TRIM(curriculum), '') IS NOT NULL
+           ORDER BY author_id, language_id, context_id`,
+          [...authorIds, ...contextIds]
+        )
+    const byLang = new Map<string, Record<string, unknown>>()
+    for (const row of cvs) {
+      const code = langCodeMap.get(row.language_id)
+      if (!code) continue
+      if (!byLang.has(code)) byLang.set(code, {})
+      const entries = byLang.get(code)!
+      entries[row.author_id] ??= { curriculum: row.curriculum }
+    }
+    const authors = authorIds.length === 0
+      ? []
+      : await this.db.query<AuthorRow>(
+          `SELECT id, name, firstname, lastname, originalname
+           FROM authors
+           WHERE id IN (${this.placeholders(authorIds.length)})
+           ORDER BY id`,
+          authorIds
+        )
+    await this.writeJson('authors.json', authors.map(author => this.stripNulls({ ...author })))
+    await this.writeTranslationFiles('authors', byLang)
+    this.logger.info(`authors.json (${authors.length}, ${new Set(cvs.map(row => row.author_id)).size} with a biography)`)
   }
 }
 
