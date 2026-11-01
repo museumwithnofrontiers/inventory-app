@@ -2,7 +2,9 @@
 
 Reads the `inventory-app` database and writes the static JSON package behind
 the galleries hub, the site that replaces <https://galleries.museumwnf.org>:
-`@museumwnf/galleries-data`. It optionally publishes that output to npmjs.
+`@museumwnf/galleries-data`. It optionally stages that output in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages), which
+publishes it on npmjs.
 
 The package specification is
 [`../docs/galleries-hub-data-package.md`](../docs/galleries-hub-data-package.md),

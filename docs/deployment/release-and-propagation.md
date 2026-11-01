@@ -38,7 +38,10 @@ staging database (local Docker)               viewer-core, viewer-layout, viewer
       │  import-tool: ship                         │  GitHub Release vX.Y.Z → npm package
       ▼                                            │
 inventory-app on the VPS (OVH) ◄── Build + deploy-ovh on push to main
-      │  exporter --publish                        │  propagate (one PR per website)
+      │  exporter --publish                        │
+      ▼                                            │
+data-packages (one folder per package)             │
+      │  merge to main → release.yml               │  propagate (one PR per website)
       ▼                                            ▼
 @<scope>/<site>-data (npm package) ─────────► website repositories (from website-template)
       │                                            │  merge to main → Deploy
@@ -64,7 +67,7 @@ session, a fresh checkout) that are not worth repeating here.
 |---|---|---|---|---|
 | App deploy | Merge to `main`, or a `v*.*.*` tag | None — automatic ([§1](#1-application-inventory-app)) | `gh run list -R museumwithnofrontiers/inventory-app --workflow=deploy-ovh.yml --limit 1` is `completed success` | [Production Deployment](production-deployment) |
 | Content re-import + ship | New legacy content is ready to land | `stage`, then `ship` ([§2](#2-content-import-tool)) | Staged DB reviewed locally before `ship`; `ship`'s own console output | `scripts/import-tool/README.md` |
-| Data package republish | Shipped content should reach a website | `exporter all --force --publish` ([§3](#3-data-packages-exporters)) | `npm view @museumwnf/<site>-data version` and `time.modified`, for each of the seven | `scripts/exporters/<site>/NPM_PUBLISH.md` |
+| Data package republish | Shipped content should reach a website | `exporter all --force --publish`, then a data-packages pull request ([§3](#3-data-packages-exporters)) | data-packages' `release.yml` run is `completed success`, then `npm view @museumwnf/<site>-data version` | `scripts/exporters/docs/publishing.md` |
 | Shared package release | A viewer-core / viewer-layout / viewer-i18n PR merges | `gh release create` ([§5.1](#51-release)) | `gh run list --workflow=release.yml` is `completed success`, then `npm view @museumwnf/<package> version` | `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
 | Propagate | A data or shared package release should reach sites | `tools/propagate.mjs --expect ...` ([§5.2](#52-propagate)) | Each site's propagation PR reaches MERGED, then its `deploy.yml` run is `completed success` | `MAINTENANCE.md` in museumwithnofrontiers/viewer-workflows |
 | Scaffold | A new website is created | Copy `website-template` by hand, then its "Admin" steps | Pages enabled once by hand on the new repository | `README.md` in museumwithnofrontiers/website-template |
@@ -76,7 +79,7 @@ session, a fresh checkout) that are not worth repeating here.
 |---|---|---|---|
 | Application | inventory-app | push to `main` (or a `v*.*.*` tag) | merge of a PR |
 | Content | the staged database | `ship` to the VPS | operator, by hand |
-| Data packages | `scripts/exporters/<site>` (one per website) | `--publish` from the operator's machine | operator, by hand |
+| Data packages | museumwithnofrontiers/data-packages, staged by `scripts/exporters/<site>` | merge to `main`: `release.yml` publishes every changed package | merge of a PR |
 | Reusable workflows | viewer-workflows | git tag `vX.Y.Z` | operator, by hand |
 | Shared packages | viewer-core, viewer-layout, viewer-i18n | GitHub Release `vX.Y.Z` | operator, by hand |
 | Scaffold | website-template | none, it is copied when a site is created | n/a |
@@ -125,8 +128,15 @@ in `scripts/import-tool/README.md`.
 
 ## 3. Data packages (exporters)
 
-One exporter per website, under `scripts/exporters/<site>/`. Publishing is a
-manual step on the operator's machine. No workflow publishes data packages.
+One exporter per website, under `scripts/exporters/<site>/`. Every package's
+source lives in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages), one
+folder per package. `--publish` stages an export there; merging the pull
+request that carries it publishes every changed package from that
+repository's `release.yml`, through npm trusted publishing
+([#2433](https://github.com/museumwithnofrontiers/inventory-app/issues/2433)).
+Nobody publishes by hand, and nothing needs an npm login. The mechanics are
+in [`scripts/exporters/docs/publishing.md`](../../scripts/exporters/docs/publishing.md).
 
 A brand-new site's very first publish — before its repository even exists —
 is step 3 of [New Website Recipe](new-website), not the republish loop
@@ -144,24 +154,17 @@ git log -1 --format=%h
 Confirm the hash is the commit you mean to publish. A tree one commit behind
 can republish a field that was just removed.
 
-Authenticate on the host immediately before the batch below, not once at the
-start of the day:
+The data-packages checkout sits next to this one (`../data-packages`, or
+`DATA_PACKAGES_PATH`). Bring it to main and branch it before the batch below:
 
 ```powershell
-npm login
-npm whoami
+git -C ../data-packages switch main
+git -C ../data-packages pull --ff-only
+git -C ../data-packages switch -c feature/reimport-<date>
 ```
 
-`npm whoami` must print your login. A session from the previous morning is
-commonly already dead by the next morning. `all --publish` runs this same
-check itself, once, before any export starts (#1865, batched by #1922) — so a
-dead session fails in seconds, with an `npm login` hint, and nothing exports
-rather than working through all seven exports first and only then failing the
-publish step with
-`E404 Not Found - PUT https://registry.npmjs.org/@museumwnf%2f<x>-data`
-("could not be found or you do not have permission" — not a 401; do not read
-that error as a permissions problem if you ever do see it past the
-preflight).
+`all --publish` refuses to start, before any export, when that checkout is
+missing (#1865, batched by #1922).
 
 **Gate the export before you publish it.** Export without `--publish` (always
 with `--base-url https://inventory.metanull.eu`), then compare the export on
@@ -182,7 +185,7 @@ raw HTML. The last two are the regressions that reached all 48 sites on
 runbook, its verdicts and its baselines are in
 [`scripts/parity/README.md`](../../scripts/parity/README.md#before-a-publish-the-gate).
 
-One command re-exports and republishes all seven
+One command re-exports and stages every package
 ([#1922](https://github.com/museumwithnofrontiers/inventory-app/issues/1922)):
 it iterates every `scripts/exporters/instances/*.json` — the three
 still-forked exporters via a `kind: "standalone"` file, plus the two
@@ -190,22 +193,22 @@ parameterised DXA exporters once per instance slug they carry — running each
 one's exporter in turn. See the plan first, then run for real — PowerShell:
 
 ```powershell
-$env:HOME = $env:USERPROFILE
 docker compose --profile jobs run --rm --no-deps exporter all --dry-run
-docker compose --profile jobs run --rm --no-deps exporter all --force --publish
+docker compose --profile jobs run --rm --no-deps exporter all --force --publish --base-url https://inventory.metanull.eu
 ```
 
 One instance failing does not stop the others — the batch runs every planned
-instance, then prints a summary table (instance, exporter, result, published
-version) and a non-zero exit if any instance failed. On success it prints a
-ready-to-paste block for every package it actually published:
+instance, then prints a summary table (instance, exporter, result, staged
+version) and a non-zero exit if any instance failed. A package whose export
+is unchanged keeps its version and is not staged. On success it prints a
+ready-to-paste block for every package that got a new version:
 
 ```
 node tools/propagate.mjs --expect <pkg>@<version> --expect <pkg>@<version> …
 ```
 
-paste that straight into [§5.2](#52-propagate) once you are ready to
-propagate. See [`scripts/exporters/README.md`](../../scripts/exporters/README.md#batch-re-export-every-instance-in-one-run)
+paste that into [§5.2](#52-propagate) once the versions are published (below).
+See [`scripts/exporters/README.md`](../../scripts/exporters/README.md#batch-re-export-every-instance-in-one-run)
 for `--only <slug>[,<slug>…]` (redo a subset) and the failure-naming behaviour
 for a malformed instance file.
 
@@ -213,39 +216,23 @@ To redo a single site instead of the whole batch, the per-instance command is
 still there — one example per exporter shape:
 
 ```powershell
-docker compose --profile jobs run --rm --no-deps exporter islamicart --force --publish
-docker compose --profile jobs run --rm --no-deps exporter dxa-gallery --instance carpets --force --publish
-docker compose --profile jobs run --rm --no-deps exporter dxa-exhibition --instance water-in-islam --force --publish
+docker compose --profile jobs run --rm --no-deps exporter islamicart --force --publish --base-url https://inventory.metanull.eu
+docker compose --profile jobs run --rm --no-deps exporter dxa-gallery --instance carpets --force --publish --base-url https://inventory.metanull.eu
+docker compose --profile jobs run --rm --no-deps exporter dxa-exhibition --instance water-in-islam --force --publish --base-url https://inventory.metanull.eu
 ```
 
-Either way, that single run per site/instance exports, bumps the patch
-version, generates `package.json`, `README.md` and `LICENSE.md`, and runs
-`npm publish`. Do not run `npm publish` yourself afterwards.
+Either way, a run writes each changed package into `packages/<name>-data/` of
+the data-packages checkout, with the next patch version: one above the later
+of the version the checkout holds and the registry's latest.
 
-npmjs requires a web authentication per publish, and the container cannot open
-a browser: the `exporter` service sets `NPM_CONFIG_BROWSER=false` (#1865), so
-`npm publish` prints `Authenticate your account at:
-https://www.npmjs.com/auth/cli/<id>` and polls the registry for the login to
-complete, instead of trying to launch a browser and exiting with `npm error
-Set the BROWSER environment variable`. Open that URL yourself, sign in, tick
-"stay authenticated for publish for the next 5 minutes"; npm's poll then
-unblocks and the run continues on its own — there is no ENTER prompt to
-answer. All seven publishes complete comfortably inside that window (the
-whole loop took under two minutes on 2026-09-20 and 2026-09-21).
+Then publish:
 
-The version counter lives in `output/.version-<site>` (in the parameterised
-`dxa-gallery`/`dxa-exhibition` directories, `<site>` is the instance slug, one
-counter per instance), outside the package directory and gitignored. As of
-#1865 it is written only once `npm publish`
-has actually succeeded, so a failed publish never burns a patch number — a
-plain rerun after a failure retries the very same version rather than
-skipping past it; fix the underlying cause, or pass `--package-version`
-explicitly, instead of expecting a rerun to auto-increment. Gaps in the
-version sequence can still occur legitimately (the registry is asked first
-and wins whenever it is ahead of the local counter), just not from a failed
-publish any more. If the counter file is lost entirely, the next publish
-would restart at 1.0.0 and collide; recover with
-`--package-version <next-free-version>` after checking the registry.
+1. Commit `packages/` on the data-packages branch, push it and open a pull
+   request. Its `Validate packages` check refuses a changed package whose
+   version is not above main's or is already published.
+2. Merge it. `release.yml` publishes every package whose version the
+   registry does not hold yet, with provenance, and logs a skip for the
+   others.
 
 The `exporter` service reads `staging-mysql`, and `stage` only migrates that
 database on a full rebuild. After pulling a change that adds a migration, run
@@ -254,14 +241,16 @@ before exporting, or re-run `stage` fully — otherwise the export can fail
 with an `Unknown column` error, and columns the importer fills (e.g. a URL
 map) stay NULL until the next full `stage`.
 
-Each exporter's `NPM_PUBLISH.md` documents the mechanics, including the
-`PACKAGE_REPO_URL` setting that must be present in the exporter's `.env` so the
-generated package carries a `repository` field, and the host `~/.npmrc` mount
-the `exporter` service needs for `--publish` to authenticate against npmjs.
+[`scripts/exporters/docs/publishing.md`](../../scripts/exporters/docs/publishing.md)
+documents the mechanics, and data-packages' README how a new package joins
+it (its first version is published by hand: trusted publishing cannot create
+a package).
 
-Verify, for each of the seven: `npm view @museumwnf/<site>-data version` and
-`time.modified`; the export output under
-`scripts/exporters/<site>/output/<site>/` is what was published.
+Verify: the `release.yml` run is `completed success` and logs
+`+ @museumwnf/<site>-data@<version>` for each staged package; then
+`npm view @museumwnf/<site>-data version` answers it (npmjs can lag a few
+minutes). What was published is the package's folder in data-packages at the
+merge commit.
 
 ## 4. Reusable workflows (viewer-workflows)
 
@@ -430,9 +419,11 @@ behind:
   package. After that, a trusted publisher was configured on npmjs.com for
   the package, naming the caller workflow `release.yml` — from then on, step
   5.1 publishes to npmjs without any stored token.
-- Data packages are still published by hand from the operator's machine, with
-  the operator's own npm login — there never was a CI path for them, by
-  design (see `NPM_PUBLISH.md` in each exporter).
+- Data packages were published by hand from the operator's machine until
+  2026-11-01. They now publish from data-packages' `release.yml` the same
+  way, through a trusted publisher per package
+  ([#2433](https://github.com/museumwithnofrontiers/inventory-app/issues/2433);
+  see stage 3 above).
 - What the cutover did **not** yet remove: `viewer-workflows`' reusable
   workflow still carries the old GitHub Packages publish path and the CI
   wiring that fed it (`NODE_AUTH_TOKEN`, `registry-url:
@@ -490,8 +481,8 @@ pointer to the section above.
 
 1. `stage`, then `staging-glossary-sync`, then review locally (stage 2).
 2. `ship` to the VPS (stage 2).
-3. Publish the seven data packages, one `exporter all --force --publish` run
-   (stage 3).
+3. Stage the data packages, one `exporter all --force --publish` run, and
+   merge the data-packages pull request that carries them (stage 3).
 4. Propagate each data package with `--expect <site>-data@X.Y.Z` (stage 5.2),
    which opens and merges one PR per website; the merges deploy the websites.
 5. Start the demo viewer workflows by hand if the demos should show the new
@@ -506,7 +497,7 @@ When the platform changes instead (a shared package), the sequence is stage
 
 - **No credential in a tracked file.** CI authenticates through
   `actions/setup-node` with the ephemeral `github.token` (or OIDC on npmjs);
-  developers use their own `~/.npmrc`; containers mount it read-only.
+  only a new package's first version needs a developer's own npm login.
 - **Published packages are `1.x` or higher and sites declare `^` ranges**,
   never `*`.
 - **Dependabot does not manage the package scope.** It is ignored in every

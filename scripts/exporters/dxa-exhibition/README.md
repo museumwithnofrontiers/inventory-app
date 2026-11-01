@@ -2,8 +2,10 @@
 
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for a DXA exhibition website — no API server, no auth, no
-runtime database dependency. Optionally packages and publishes that output as
-a public npm package (`@museumwnf/<site>-data`) on npmjs.
+runtime database dependency. Optionally stages that output as the public npm
+package `@museumwnf/<site>-data` in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages), which
+publishes it on npmjs.
 
 Unlike the four single-site forks it replaces (`the-use-of-colours-in-art`,
 `water-in-islam`, and the gallery-only `carpets`/`amulets`), this exporter is
@@ -64,8 +66,9 @@ The exporters run inside Docker; there is no host-side Node tooling required.
 docker compose --profile jobs run --rm exporter dxa-exhibition --instance the-use-of-colours-in-art --force
 ```
 
-Add `--publish` to bump the version, generate `package.json`/`README.md` and
-push to npmjs — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
+Add `--publish --data-packages <path> --base-url https://inventory.metanull.eu`
+to stage the package, with the next version, into a data-packages checkout —
+see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
 
 The compose service points at the **staging** database (`staging-mysql`), which
 is where the exporter should be developed and verified.
@@ -89,11 +92,9 @@ never the exhibition's legacy underscore slug, which stays in the data as
 two instances can be exported into the same `output/` without clobbering each
 other.
 
-The version counter for `--publish` lives next to it, per instance, at
-`output/.version-<slug>` — outside the package directory so `--force` does not
-reset it. See [`NPM_PUBLISH.md`](NPM_PUBLISH.md) for the publishing mechanics
-and version-management rules, which are unchanged from the single-site forks
-other than being keyed by instance slug instead of being hardcoded.
+`--publish` stages each instance into `packages/<package name without the
+scope>/` of the data-packages checkout, with a version of its own. See
+[`NPM_PUBLISH.md`](NPM_PUBLISH.md) for the publishing mechanics.
 
 ## Package contents
 

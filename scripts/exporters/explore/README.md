@@ -2,8 +2,10 @@
 
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for the Explore website — no API server, no auth, no
-runtime database dependency. Optionally packages and publishes that output
-as a public npm package (`@museumwnf/explore-data`) on npmjs.
+runtime database dependency. Optionally stages that output as the public
+npm package `@museumwnf/explore-data` in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages), which
+publishes it on npmjs.
 
 The package is specified in
 [`../docs/explore-data-package.md`](../docs/explore-data-package.md), and the
@@ -34,13 +36,14 @@ docker compose --profile jobs run --rm exporter explore --force
 ```
 
 ```powershell
-docker compose --profile jobs run --rm exporter explore --force --publish
+docker compose --profile jobs run --rm exporter explore --force --publish --base-url https://inventory.metanull.eu
 ```
 
 The dataset scope is hardcoded: the exporter takes no scope arguments and
 always writes `output/explore/` as `@museumwnf/explore-data`. Image URLs are
-built from `BASE_URL` (or `--base-url`). `--publish` bumps the version,
-writes `package.json`/`README.md`/`LICENSE.md` and runs `npm publish`; see
+built from `BASE_URL` (or `--base-url`). `--publish` stages the export,
+with the next version, into the data-packages checkout, and merging the pull
+request that carries it publishes the version; see
 [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
 
 ## Tests

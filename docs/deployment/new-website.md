@@ -131,27 +131,38 @@ docker compose --profile jobs run --rm exporter dxa-gallery --instance <slug> --
 writes `scripts/exporters/dxa-gallery/output/<slug>/` (or
 `scripts/exporters/dxa-exhibition/output/<slug>/`) without error. See
 [`scripts/exporters/README.md`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/exporters/README.md#adding-a-new-dataset)
-for validating the counts before the first publish. **Windows** —
-`$env:HOME = $env:USERPROFILE` is needed in every new shell before any
-`exporter` command that touches npm (see step 3); it is not needed for this
-export-only run.
+for validating the counts before the first publish.
 
 ## 3. First publish
 
-Done by hand, by the operator who holds the authenticated npm session (see
-[`scripts/exporters/dxa-gallery/NPM_PUBLISH.md`](https://github.com/museumwithnofrontiers/inventory-app/blob/main/scripts/exporters/dxa-gallery/NPM_PUBLISH.md)
-for the full mechanics — npm login, 2FA, version management). The same
-command as step 2, with `--publish` added:
+Every package's source lives in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages), which
+publishes each version from its release workflow. That workflow cannot create
+a package, so a new site's **first** version is published by hand, by the
+operator, who logs in to npm for it. The full steps are under "A new package"
+in data-packages' README; in short, with data-packages cloned next to
+inventory-app:
 
-```powershell
-$env:HOME = $env:USERPROFILE
-docker compose --profile jobs run --rm exporter dxa-gallery --instance <slug> --force --publish
-# or: dxa-exhibition, in place of dxa-gallery
-```
+1. Stage the package on a data-packages branch: the same command as step 2,
+   with `--publish` added.
 
-This is the site's data package's **first ever** publish, so it needs
-`--access public`, already passed automatically by `PublishManager` for a
-new `@museumwnf` package name.
+   ```powershell
+   git -C ../data-packages switch -c feature/<slug>-data
+   docker compose --profile jobs run --rm exporter dxa-gallery --instance <slug> --force --publish --base-url https://inventory.metanull.eu
+   # or: dxa-exhibition, in place of dxa-gallery
+   ```
+
+2. Commit `packages/<slug>-data/` on that branch.
+3. In data-packages, with `npm login` done, publish the first version and set
+   the package's trusted publisher:
+
+   ```bash
+   node scripts/publish.mjs --first <slug>-data
+   npm trust github @museumwnf/<slug>-data --repository museumwithnofrontiers/data-packages --file release.yml --allow-publish
+   ```
+
+4. Open the pull request and merge it. Every later version is published by
+   the release workflow.
 
 **Proof:**
 

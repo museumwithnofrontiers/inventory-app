@@ -3,7 +3,8 @@
 One exporter per public website ("dataset"). Each exporter reads the
 inventory-app MySQL database (read-only) and produces a static, denormalized
 JSON **data-package**, published as a public npm package on npmjs
-(`registry.npmjs.org`), under the `@museumwnf` scope. The matching viewer
+(`registry.npmjs.org`), under the `@museumwnf` scope, from
+[data-packages](https://github.com/museumwithnofrontiers/data-packages). The matching viewer
 (see [`../viewers/`](../viewers/README.md)) consumes that package at build
 time — the public websites never talk to the database or the Laravel API.
 
@@ -92,20 +93,20 @@ site. See the plan first:
 docker compose --profile jobs run --rm --no-deps exporter all --dry-run
 ```
 
-Then run it for real (add `--publish` only once you mean to publish all
-seven; see *Build + publish a data-package update* below for what a single
-`--publish` run does per package):
+Then run it for real (add `--publish` to stage every package into the
+data-packages checkout; see *Build + publish a data-package update* below):
 
 ```bash
 docker compose --profile jobs run --rm --no-deps exporter all --force
-docker compose --profile jobs run --rm --no-deps exporter all --force --publish
+docker compose --profile jobs run --rm --no-deps exporter all --force --publish --base-url https://inventory.metanull.eu
 ```
 
 One instance failing does not stop the others: the batch runs every planned
-instance, prints a summary table (instance, exporter, result, published
-version), exits non-zero if any instance failed, and — after a successful
-`--publish` run — prints a ready-to-paste `node tools/propagate.mjs --expect
-<pkg>@<version> …` line for every package it actually published. `--only
+instance, prints a summary table (instance, exporter, result, staged
+version), exits non-zero if any instance failed, and — after a `--publish`
+run — prints a ready-to-paste `node tools/propagate.mjs --expect
+<pkg>@<version> …` line for every package that got a new version, to run
+once the data-packages pull request is merged and released. `--only
 <slug>[,<slug>…]` restricts the batch to specific instances (e.g. to redo one
 after a targeted re-import); an unknown slug is refused rather than silently
 shrinking the batch. An instance file with an unknown `kind`, or a
@@ -158,8 +159,7 @@ output/<dataset>/
 │   └── <entity>.<lang>.json # one file per entity per language; a file is
 │                            #   absent when that entity has no translations
 │                            #   in that language — viewers must tolerate this
-├── *.json.gz                # precompressed copies
-└── .version… (state lives in output/.version-<dataset>)
+└── *.json.gz                # precompressed copies, never staged or published
 ```
 
 Entity files hold language-independent data (ids, relations, image URLs,
@@ -188,14 +188,14 @@ Every published package carries the MWNF legal notice, not `UNLICENSED`: the
 notice permits non-commercial/educational use, which `UNLICENSED` (all rights
 reserved) would contradict, and no SPDX identifier matches its actual terms.
 [`docs/LICENSE.md.template`](docs/LICENSE.md.template) is the single source of
-that text — each exporter's `PublishManager.writeLicense()` copies it verbatim
+that text — each exporter's `PublishManager.stage()` copies it verbatim
 into the package as `LICENSE.md` on every `--publish` run, and
 `generatePackageJson()` defaults `license` to `SEE LICENSE IN LICENSE.md`
 (override with `PACKAGE_LICENSE`). `manifest.json` additionally carries a
 `rights` block (`rights_holder`, `terms_url`, `attribution`) that a website
 reads to render a source credit (viewer-core#79). A test per exporter checks
-the generated `LICENSE.md` against the template so the seven packages cannot
-drift apart.
+the staged `LICENSE.md` against the template so the packages cannot drift
+apart.
 
 ## Running an export
 
@@ -220,50 +220,20 @@ node, the dependencies and a reachable database are your problem.
 
 ## Build + publish a data-package update (end to end)
 
-Prerequisites, one-time:
+Every package's source lives in
+[museumwithnofrontiers/data-packages](https://github.com/museumwithnofrontiers/data-packages).
+`--publish` stages an export there, with the next version; merging the pull
+request that carries it publishes the version from that repository's release
+workflow, through npm trusted publishing
+([#2433](https://github.com/museumwithnofrontiers/inventory-app/issues/2433)).
+Nothing here publishes, and nothing needs an npm login.
 
-- `.env` in the exporter directory (`cp .env.example .env` if present):
-  `BASE_URL` (the public base URL of the inventory app's storage, prepended to
-  image paths in the exported JSON) and
-  `PACKAGE_REPO_URL=https://github.com/museumwithnofrontiers/inventory-app` (good package
-  metadata; npmjs does not require it to install a version). `DB_*` matters
-  only for host-side runs; the compose service supplies its own.
-- npmjs authentication, done **on the host** first — this is a manual, local
-  publish, not run from CI (see [`docs/deployment/release-and-propagation.md`](../../docs/deployment/release-and-propagation.md)
-  §5.3):
-
-  ```bash
-  npm login
-  ```
-
-  That writes a session token to your **host** `~/.npmrc`. The `exporter`
-  service mounts that file read-only into the container (`${HOME}/.npmrc:/root/.npmrc:ro`
-  in `compose.yml`) — the container never runs `npm login` itself and no
-  token is ever written to a tracked file. **Windows** — PowerShell does not
-  export `$HOME` to child processes, so `${HOME}` in `compose.yml` resolves
-  to nothing unless you set it first, in every new shell:
-
-  ```powershell
-  $env:HOME = $env:USERPROFILE
-  ```
-
-  `--publish` runs `npm whoami` against that mounted session before the
-  export starts, and fails fast with an `npm login` hint if it is dead,
-  rather than only surfacing as a registry 404 after the whole export has
-  run. The container has no browser (`NPM_CONFIG_BROWSER=false` in
-  `compose.yml`), so if npmjs still asks for a 2FA one-time code or a
-  web-login confirmation, npm prints the URL right there in the terminal and
-  polls the registry for the login to complete — open the URL yourself, tick
-  "stay authenticated for publish for the next 5 minutes", and the run
-  continues on its own. Details, including the first-publish
-  `--access public` requirement for a new `@museumwnf` package name, are in
-  each dataset's `NPM_PUBLISH.md`.
-
-Then, per dataset (exports are **read-only**, but always check what `BASE_URL`
-points at first) — the command is identical for every dataset:
+[`docs/publishing.md`](docs/publishing.md) has the whole cycle — the
+data-packages checkout, versions, the package layout and troubleshooting.
+Per dataset, the command is the same (exports are **read-only**):
 
 ```bash
-docker compose run --rm exporter <dataset> --force --publish
+docker compose --profile jobs run --rm exporter <dataset> --force --publish --base-url https://inventory.metanull.eu
 ```
 
 Each exporter is single-purpose: its dataset scope — output subdirectory,
@@ -273,66 +243,10 @@ the islamicart exporter unconditionally exports **both** `ISL` and `EPM`:
 they are one dataset, and an ISL-only export would silently drop 29
 collections (see [`islamicart/README.md`](islamicart/README.md)).
 
-A single `--publish` run does everything: computes the next patch version (or
-use `--package-version` for an explicit semver), generates
-`package.json`/`README.md` in the output directory, runs `npm publish`
-against npmjs, and — only once that publish has actually succeeded —
-persists the version to `output/.version-<dataset>`. There is **no**
-separate manual `npm publish` step. Details in each dataset's
-`NPM_PUBLISH.md`.
-
-Publishing is where the exporter's job ends — consumers install the package
-on their own schedule. (For updating the viewers in this repo after a
-publish, see [`../viewers/README.md`](../viewers/README.md#deployment).)
-
-Two gotchas, learned the hard way (a third — package visibility — no longer
-applies: while these packages lived on GitHub Packages, a published version
-also had to be granted read access in that package's *Manage Actions access*
-settings on GitHub, UI-only and one-time, or the deploy workflow's
-`GITHUB_TOKEN` got a 403 on install. `@museumwnf` packages on npmjs are
-public, so no such grant exists any more — the deploy workflows install with
-a plain `npm install @museumwnf/<dataset>-data@latest`, no token involved):
-
-1. Version state lives in `<dataset>/output/.version-<dataset>` — one counter
-   per exporter, not one shared file — and it is not committed. **The registry
-   is asked first and wins whenever it is ahead**, so a missing or stale counter
-   no longer collides; that check is in `PublishManager.getNextVersion`, pinned
-   by `tests/unit/publish-manager.test.ts`.
-
-   It was added after this bit: four of the seven counters were sitting at
-   1.0.0 while the registry held 1.0.2 and 1.0.3, and the first `--publish`
-   after a rebuild walked straight into a taken number. A fresh worktree, a
-   deleted `output/`, or an exporter cloned from another all produce the same
-   thing — the counter has never had a reason to be right.
-
-   The counter is still the answer when the registry cannot be reached or has
-   never seen the package. As of #1865 it is written only **after** the
-   publish succeeds, so a failed publish no longer burns the number — a plain
-   rerun retries the very same version rather than skipping past it. Read it
-   before re-running:
-
-   ```bash
-   cat scripts/exporters/<dataset>/output/.version-<dataset>
-   ```
-
-   To override — a minor or major bump, or a registry you cannot reach — pass
-   `--package-version <next>`, which sets the counter and skips the lookup. The
-   live version, if you need to see it for yourself:
-
-   ```bash
-   docker compose --profile tools run --rm --no-deps -w /var/www/app \
-       tools npm view @museumwnf/<dataset>-data version
-   ```
-
-   No credential needed for this one — `@museumwnf` packages are public, so
-   reading their version works without any npm login.
-
-2. **Publishing changes nothing that is live.** Each viewer installs
-   `@museumwnf/<dataset>-data@latest` at *build* time, so the new package only
-   reaches production on the next deploy —
-   `gh workflow run deploy-viewer-<dataset>-ovh.yml --ref main`. A merge that
-   triggers a viewer deploy *before* the package is published builds against
-   the old data and needs a second dispatch.
+**Publishing changes nothing that is live.** Each site installs a pinned
+version of its data package at build time, so a new version only reaches a
+site once it is propagated — see
+[`docs/deployment/release-and-propagation.md`](../../docs/deployment/release-and-propagation.md).
 
 ## Adding a new dataset
 
@@ -352,10 +266,12 @@ scoped by a `collections` UUID: one instance file, no directory copy.
    (see `baroqueart/tools/legacy-validation.sql` for a worked example, and
    `.legacy-database/` for offline legacy dumps), then record the check as
    `scripts/exporters/docs/validation/<slug>-<date>.md`.
-5. Publish
-   (`docker compose --profile jobs run --rm exporter dxa-gallery --instance <slug> --force --publish`,
-   or `dxa-exhibition` for an exhibition), then create the matching viewer
-   (see [`../viewers/README.md`](../viewers/README.md)).
+5. Stage it
+   (`docker compose --profile jobs run --rm exporter dxa-gallery --instance <slug> --force --publish --base-url https://inventory.metanull.eu`,
+   or `dxa-exhibition` for an exhibition). A new package's first version is
+   published by hand and its trusted publisher set before data-packages
+   takes it — see [`docs/publishing.md`](docs/publishing.md#trusted-publishing).
+   Then create the matching site.
 
 **A standalone site** — its feature set differs enough to need its own fork
 (see *Why forked per dataset* above):

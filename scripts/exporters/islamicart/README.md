@@ -159,7 +159,7 @@ regardless, then reports every failure at the end); `--publish` is skipped
 entirely if any exporter errored. Check the per-exporter error line in the
 final summary for which one failed and why.
 
-**`--publish` refuses to start: "is not a checkout of museumwithnofrontiers/data-packages"** — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md#troubleshooting).
+**`--publish` refuses to start: "is not a checkout of museumwithnofrontiers/data-packages"** — see [`../docs/publishing.md`](../docs/publishing.md#troubleshooting).
 
 **Database connection fails** — same `DB_*` variables and troubleshooting as
 the [importer](../importer/README.md#troubleshooting); this exporter has no

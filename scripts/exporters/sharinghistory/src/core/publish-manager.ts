@@ -1,6 +1,6 @@
-import { readFileSync, writeFileSync, existsSync } from 'fs'
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'fs'
 import { spawnSync } from 'child_process'
-import { dirname, resolve } from 'path'
+import { dirname, join, relative, resolve } from 'path'
 import { fileURLToPath } from 'url'
 import { Logger } from './logger.js'
 
@@ -10,18 +10,22 @@ import { Logger } from './logger.js'
 // to outputDir, so it resolves the same way regardless of --output-dir.
 const LICENSE_TEMPLATE_PATH = resolve(dirname(fileURLToPath(import.meta.url)), '../../../docs/LICENSE.md.template')
 
+// Packages are published by museumwithnofrontiers/data-packages' release
+// workflow, and npm provenance refuses a package.json that names another
+// repository than the one the workflow runs in.
+export const DATA_PACKAGES_REPOSITORY_URL = 'git+https://github.com/museumwithnofrontiers/data-packages.git'
+
 export interface PublishConfig {
   outputDir: string
-  /** Path to the version counter file — must live OUTSIDE outputDir so --force doesn't reset it. */
-  versionFile: string
+  /** A checkout of museumwithnofrontiers/data-packages: the package is staged into its packages/ folder. */
+  dataPackagesDir: string
   packageName: string
   projectKeys: string[]
   logger: Logger
   // Package metadata — all optional; omitted fields are left out of package.json
   author?: string
   license?: string
-  repositoryUrl?: string
-  // Publishing
+  // The registry asked for the latest published version
   registry?: string
 }
 
@@ -31,6 +35,36 @@ export interface SemanticVersion {
   patch: number
 }
 
+export interface StageResult {
+  /** False when the export matches what data-packages already holds: there is nothing to publish. */
+  changed: boolean
+  version: string
+  packageDir: string
+}
+
+/** The layout data-packages commits: two-space indentation and a final newline, so diffs are line by line. */
+export function prettyJson(value: unknown): string {
+  return JSON.stringify(value, null, 2) + '\n'
+}
+
+function filesUnder(dir: string): string[] {
+  const out: string[] = []
+  const walk = (current: string) => {
+    for (const name of readdirSync(current).sort()) {
+      const path = join(current, name)
+      if (statSync(path).isDirectory()) walk(path)
+      else out.push(relative(dir, path).split('\\').join('/'))
+    }
+  }
+  if (existsSync(dir)) walk(dir)
+  return out
+}
+
+/**
+ * Stages an export into a data-packages checkout; the data-packages release
+ * workflow publishes it once the pull request that carries it is merged.
+ * Nothing here publishes or needs an npm login.
+ */
 export class PublishManager {
   private config: PublishConfig
 
@@ -54,12 +88,27 @@ export class PublishManager {
     return `${v.major}.${v.minor}.${v.patch}`
   }
 
-  private readCurrentVersion(): string {
-    if (existsSync(this.config.versionFile)) {
-      const content = readFileSync(this.config.versionFile, 'utf-8').trim()
-      return content || '1.0.0'
+  /** The package's folder in data-packages: its name without the scope. */
+  get packageDir(): string {
+    return resolve(this.config.dataPackagesDir, 'packages', this.config.packageName.replace(/^@[^/]+\//, ''))
+  }
+
+  /** Refuses a directory that is not a data-packages checkout, before the export spends minutes. */
+  assertDataPackagesCheckout(): void {
+    if (!existsSync(resolve(this.config.dataPackagesDir, 'scripts', 'check.mjs'))) {
+      throw new Error(
+        `${this.config.dataPackagesDir} is not a checkout of museumwithnofrontiers/data-packages. ` +
+          'Clone it next to inventory-app (or set DATA_PACKAGES_DIR) and pull main before exporting.'
+      )
     }
-    return '1.0.0'
+  }
+
+  /** The version data-packages holds for this package, or null when it holds none. */
+  private committedVersion(): string | null {
+    const path = resolve(this.packageDir, 'package.json')
+    if (!existsSync(path)) return null
+    const version = JSON.parse(readFileSync(path, 'utf-8'))['version']
+    return typeof version === 'string' ? version : null
   }
 
   /**
@@ -96,60 +145,23 @@ export class PublishManager {
   }
 
   /**
-   * Confirm the npm session is alive before the caller spends minutes on an
-   * export that would otherwise only fail at the very end, as a registry 404
-   * right after publish. Throws with the operator-facing fix rather than
-   * just the raw `npm whoami` failure.
-   */
-  assertLoggedIn(): void {
-    const args = ['whoami']
-    if (this.config.registry) {
-      args.push('--registry', this.config.registry)
-    }
-    const result = spawnSync('npm', args, {
-      encoding: 'utf-8',
-      env: process.env,
-      shell: true,
-    })
-    const user = (result.stdout ?? '').trim()
-    if (result.error || result.status !== 0 || !user) {
-      throw new Error(
-        'npm session is not authenticated (npm whoami failed). Run `npm login` on the host, ' +
-          'and on Windows set $env:HOME = $env:USERPROFILE before `docker compose` so the ' +
-          "container mounts the host's ~/.npmrc, then retry."
-      )
-    }
-    this.config.logger.info(`npm session: logged in as ${user}`)
-  }
-
-  /**
-   * Compute the version to publish next, without persisting it. Persisting
-   * happens only once the publish that uses this version has actually
-   * succeeded — see recordPublished() — so a failed publish never burns a
-   * number.
-   *
-   * The registry is asked first, and wins whenever it is ahead. The counter
-   * file is untracked, it lives per exporter, and nothing keeps it in step with
-   * what was actually published — four of the seven datasets were found sitting
-   * at 1.0.0 while the registry held 1.0.2 and 1.0.3, so the first --publish
-   * walked straight into a taken number. The registry is the only thing that
-   * knows for certain.
-   *
-   * The file is still the answer when the registry cannot be reached or has
-   * never seen this package.
+   * The next version: one patch above the later of what data-packages holds
+   * and what the registry holds. The registry can be ahead of a checkout
+   * that was not pulled, and the checkout ahead of the registry while a
+   * merged pull request waits for its release run.
    */
   getNextVersion(): string {
-    const local = this.readCurrentVersion()
-    const published = this.publishedVersion()
-
-    let current = local
-    if (published && this.isAfter(this.parseVersion(published), this.parseVersion(local))) {
-      this.config.logger.info(`Registry is ahead of ${this.config.versionFile}: ${local} → ${published}`)
-      current = published
-    } else if (!published) {
-      this.config.logger.info(`Registry did not answer for ${this.config.packageName}; using ${local}`)
+    const candidates = [this.committedVersion(), this.publishedVersion()].filter((v): v is string => v !== null)
+    let current = '1.0.0'
+    for (const candidate of candidates) {
+      if (this.isAfter(this.parseVersion(candidate), this.parseVersion(current))) current = candidate
     }
-
+    if (candidates.length === 0) {
+      this.config.logger.warning(
+        `${this.config.packageName} is neither in data-packages nor on the registry; ` +
+          'its first version has to be published by hand (trusted publishing cannot create a package)'
+      )
+    }
     const v = this.parseVersion(current)
     v.patch += 1
     const next = this.formatVersion(v)
@@ -157,27 +169,11 @@ export class PublishManager {
     return next
   }
 
-  /**
-   * Set an explicit version. Use when the auto-incremented value is wrong
-   * (e.g. first run after version file was lost). Not persisted until the
-   * publish that uses it succeeds — see recordPublished().
-   */
+  /** Set an explicit version instead of the next patch. */
   setVersion(version: string): string {
     this.parseVersion(version)
     this.config.logger.info(`Version set: ${version}`)
     return version
-  }
-
-  /**
-   * Persist the version that was just published successfully. Call only
-   * after publish() returns without throwing. Right after a publish the
-   * registry itself may still answer with the previous version for a
-   * minute or so; this file is what keeps the next run ahead of that lag.
-   */
-  recordPublished(version: string): void {
-    this.parseVersion(version)
-    writeFileSync(this.config.versionFile, version, 'utf-8')
-    this.config.logger.info(`Version recorded as published: ${version}`)
   }
 
   generatePackageJson(version: string): Record<string, unknown> {
@@ -191,7 +187,7 @@ export class PublishManager {
       // which contradicts the MWNF legal notice (non-commercial/educational
       // use is permitted). No SPDX identifier matches the notice's terms, so
       // this is the registry-sanctioned encoding for custom terms — see
-      // LICENSE.md, copied into the package by writeLicense() below.
+      // LICENSE.md, which stage() writes into the package.
       license: this.config.license ?? 'SEE LICENSE IN LICENSE.md',
       main: './manifest.json',
       exports: {
@@ -199,7 +195,6 @@ export class PublishManager {
         './*.json': './*.json',
         './translations/*': './translations/*',
       },
-      // Explicitly list .json only — .gz companion files are not useful to consumers
       files: [
         '*.json',
         'translations/*.json',
@@ -212,7 +207,11 @@ export class PublishManager {
     }
 
     if (this.config.author) pkg['author'] = this.config.author
-    if (this.config.repositoryUrl) pkg['repository'] = { type: 'git', url: this.config.repositoryUrl }
+    pkg['repository'] = {
+      type: 'git',
+      url: DATA_PACKAGES_REPOSITORY_URL,
+      directory: `packages/${this.config.packageName.replace(/^@[^/]+\//, '')}`,
+    }
 
     return pkg
   }
@@ -266,47 +265,51 @@ full terms). The notice text also ships in this package as \`LICENSE.md\`.
 `
   }
 
-  /**
-   * Copy the shared MWNF licence template into the package output as
-   * LICENSE.md. npm includes LICENSE.md in a published tarball automatically
-   * (it does not need to be added to the `files` allow-list above), so this
-   * only needs to land the file in outputDir before publish() runs.
-   */
-  writeLicense(): void {
-    const template = readFileSync(LICENSE_TEMPLATE_PATH, 'utf-8')
-    writeFileSync(resolve(this.config.outputDir, 'LICENSE.md'), template, 'utf-8')
+  /** The package's files as data-packages commits them, keyed by path, package.json aside. */
+  private stagedFiles(): Map<string, string> {
+    const files = new Map<string, string>()
+    for (const file of filesUnder(this.config.outputDir)) {
+      // The .gz companions serve local previews only; the package never shipped them.
+      if (!file.endsWith('.json') || file === 'package.json') continue
+      const value = JSON.parse(readFileSync(resolve(this.config.outputDir, file), 'utf-8'))
+      // The release workflow sets generatedAt from the commit time: kept
+      // here, it would make every export a change.
+      if (file === 'manifest.json') delete value['generatedAt']
+      files.set(file, prettyJson(value))
+    }
+    files.set('README.md', this.generateReadme(this.config.packageName))
+    files.set('LICENSE.md', readFileSync(LICENSE_TEMPLATE_PATH, 'utf-8'))
+    return files
+  }
+
+  private matchesCommitted(files: Map<string, string>): boolean {
+    const committed = filesUnder(this.packageDir).filter((file) => file !== 'package.json')
+    if (committed.length !== files.size) return false
+    return committed.every((file) => files.get(file) === readFileSync(resolve(this.packageDir, file), 'utf-8'))
   }
 
   /**
-   * Run `npm publish` inside outputDir.
-   * Throws if the publish command exits with a non-zero status.
+   * Writes the export into data-packages' packages/<name> folder, replacing
+   * what was there, with a new version — unless it matches what the folder
+   * already holds, in which case nothing is written.
    */
-  publish(): void {
-    const args = ['publish']
-    if (this.config.registry) {
-      args.push('--registry', this.config.registry)
+  stage(explicitVersion?: string): StageResult {
+    const files = this.stagedFiles()
+    if (this.matchesCommitted(files)) {
+      const version = this.committedVersion() ?? ''
+      this.config.logger.info(`${this.config.packageName} is unchanged from data-packages (${version}): nothing to publish`)
+      return { changed: false, version, packageDir: this.packageDir }
     }
-    // Scoped packages default to private on npmjs; these are meant to be
-    // public (non-commercial MWNF data, no npmjs org billing for private
-    // scoped packages either way). --access is a no-op against GitHub
-    // Packages, which derives visibility from the repository instead.
-    args.push('--access', 'public')
 
-    this.config.logger.info(`Running: npm ${args.join(' ')}`)
-
-    const result = spawnSync('npm', args, {
-      cwd: this.config.outputDir,
-      stdio: 'inherit',
-      env: process.env,
-      shell: true,
-    })
-
-    if (result.error) {
-      throw new Error(`Failed to spawn npm: ${result.error.message}`)
+    const version = explicitVersion ? this.setVersion(explicitVersion) : this.getNextVersion()
+    rmSync(this.packageDir, { recursive: true, force: true })
+    for (const [file, content] of files) {
+      const path = resolve(this.packageDir, file)
+      mkdirSync(dirname(path), { recursive: true })
+      writeFileSync(path, content, 'utf-8')
     }
-    if (result.status !== 0) {
-      throw new Error(`npm publish exited with code ${result.status}`)
-    }
+    writeFileSync(resolve(this.packageDir, 'package.json'), prettyJson(this.generatePackageJson(version)), 'utf-8')
+    return { changed: true, version, packageDir: this.packageDir }
   }
 }
 
