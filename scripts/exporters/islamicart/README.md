@@ -53,7 +53,9 @@ files, written to `output/islamicart/`:
 | `items.json` | `ItemExporter` | Items (objects/monuments/details), with images, dynasty/tag links, related-item links |
 | `collections.json` | `CollectionExporter` | Collections (exhibitions/themes/galleries), with images and item membership |
 | `glossary.json` | `GlossaryExporter` | Glossary terms + translations |
-| `translations/items.<lang>.json` | `ItemExporter` | Per-language item translation fields, lazy-loadable separately from `items.json` |
+| `translations/items.<lang>.json` | `ItemExporter` | Per-language item translation fields, lazy-loadable separately from `items.json`; `credit_ids` lists the credited people's ids per role, in the order their names print |
+| `authors.json` | `ItemExporter` | The credited people who have a biography in the project's context: id, name, first and last name, Arabic spelling (not in a mini-site's package) |
+| `translations/authors.<lang>.json` | `ItemExporter` | Each such person's biography (`curriculum`) in each language it has one, shown beside the credited name |
 | `translations/collections.<lang>.json` | `CollectionExporter` | Per-language collection translation fields |
 
 Every JSON file is also written gzip-compressed (`.json.gz`) alongside the
