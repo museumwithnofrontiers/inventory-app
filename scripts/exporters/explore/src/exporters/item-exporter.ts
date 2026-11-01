@@ -276,11 +276,12 @@ export class ItemExporter extends BaseExporter {
       ),
       this.db.query<ItemTagRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
+        // The collation holds "Wood" and "wood" equal, so the binary order breaks that tie.
         `SELECT it2.item_id, t.description AS tag, t.category
          FROM item_tag it2
          JOIN tags t ON t.id = it2.tag_id
          WHERE it2.item_id IN (${itemPh})
-         ORDER BY it2.item_id, t.description`,
+         ORDER BY it2.item_id, t.description, t.description COLLATE utf8mb4_bin`,
         itemIds
       ),
       // Glossary terms used anywhere in this item's translations (any language),
