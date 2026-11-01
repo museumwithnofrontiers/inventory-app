@@ -681,10 +681,11 @@ export class ItemExporter extends BaseExporter {
     return { file: 'items.json', count: output.length }
   }
 
-  // The credited people who have a biography in this project's context:
-  // authors.json (the name parts legacy's tooltip heads with) and
-  // translations/authors.<lang>.json (the biography, in each language it
-  // has one), which the item sheet shows beside a credited name.
+  // The credited people: authors.json (each name as the sheet prints it, the
+  // Arabic spelling, and the name parts legacy's tooltip heads with) and
+  // translations/authors.<lang>.json (the biography in this project's
+  // context, in each language it has one), which the item sheet shows
+  // beside a credited name.
   private async writeAuthors(
     authorIds: string[],
     langCodeMap: Map<string, string>,
@@ -709,19 +710,18 @@ export class ItemExporter extends BaseExporter {
       const entries = byLang.get(code)!
       entries[row.author_id] ??= { curriculum: row.curriculum }
     }
-    const withCv = [...new Set(cvs.map(row => row.author_id))]
-    const authors = withCv.length === 0
+    const authors = authorIds.length === 0
       ? []
       : await this.db.query<AuthorRow>(
           `SELECT id, name, firstname, lastname, originalname
            FROM authors
-           WHERE id IN (${this.placeholders(withCv.length)})
+           WHERE id IN (${this.placeholders(authorIds.length)})
            ORDER BY id`,
-          withCv
+          authorIds
         )
     await this.writeJson('authors.json', authors.map(author => this.stripNulls({ ...author })))
     await this.writeTranslationFiles('authors', byLang)
-    this.logger.info(`authors.json (${authors.length} with a biography)`)
+    this.logger.info(`authors.json (${authors.length}, ${new Set(cvs.map(row => row.author_id)).size} with a biography)`)
   }
 }
 

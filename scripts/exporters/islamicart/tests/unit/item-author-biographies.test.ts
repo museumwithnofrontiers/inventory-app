@@ -12,8 +12,8 @@ import type { Logger } from '../../src/core/logger.js'
  * Legacy's item sheet shows a credited person's biography beside their name
  * (modules/database_item.php's su_tooltip): their name in bold, then the
  * biography in the page's language. Each translation carries the ids of the
- * people it credits, per role, in the order its names print; authors.json and
- * translations/authors.<lang>.json carry those who have a biography.
+ * people it credits, per role, in the order its names print; authors.json names
+ * them, translations/authors.<lang>.json gives their biographies.
  */
 describe('ItemExporter — credited people and their biographies', () => {
   let outputDir: string
@@ -92,7 +92,10 @@ describe('ItemExporter — credited people and their biographies', () => {
           ]
         }
         if (sql.includes('FROM authors')) {
-          return [{ id: 'author-voigt', name: 'Friederike Voigt', firstname: 'Friederike', lastname: 'Voigt', originalname: 'فريدريك فويغت.' }]
+          return [
+            { id: 'author-allen', name: 'Monica Allen', firstname: 'Monica', lastname: 'Allen', originalname: null },
+            { id: 'author-voigt', name: 'Friederike Voigt', firstname: 'Friederike', lastname: 'Voigt', originalname: 'فريدريك فويغت.' },
+          ]
         }
         return []
       },
@@ -136,10 +139,11 @@ describe('ItemExporter — credited people and their biographies', () => {
     expect(credits).toContain('ORDER BY ita.item_translation_id, ita.role, ita.display_order, a.name')
   })
 
-  it('writes the people with a biography and their biography per language', async () => {
+  it('writes every credited person, and the biography of those who have one, per language', async () => {
     await new ItemExporter(context(stubDb())).export()
 
     expect(readJson('authors.json')).toEqual([
+      { id: 'author-allen', name: 'Monica Allen', firstname: 'Monica', lastname: 'Allen' },
       { id: 'author-voigt', name: 'Friederike Voigt', firstname: 'Friederike', lastname: 'Voigt', originalname: 'فريدريك فويغت.' },
     ])
     expect(readJson('translations', 'authors.en.json')).toEqual({
