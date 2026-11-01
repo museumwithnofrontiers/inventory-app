@@ -1,24 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
-// Legacy prints Location as its parts — a monument's address first, then
-// location and province — joined with ", ", each without its trailing period
-// (removeEndingPoint, which spares "C." as in "B.C."), the address keeping its
-// line breaks. The importer keeps each part on its own: location, province in
-// extra.province, the address in extra.monument_contact.
-export function legacyLocation(
-  location: string | null,
-  address?: string | null,
-  province?: string | null
-): string | null {
-  const stripEnding = (part: string): string => part.replace(/([^C])\.+(?=\s*(?:,|$))/g, '$1').trim()
-  const parts: string[] = []
-  if (address?.trim()) parts.push(stripEnding(address.trim()).split(/\r?\n/).map(l => l.trim()).join('  \n'))
-  if (location?.trim()) parts.push(stripEnding(location))
-  if (province?.trim()) parts.push(stripEnding(province))
-  return parts.length > 0 ? parts.join(', ') : null
-}
-
 // The monument's address, which the importer files with its visitor contact
 // details (extra.monument_contact.address).
 function monumentAddress(extra: unknown): string | null {
@@ -419,13 +401,14 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        // The item sheet's Location line, composed as legacy printed it. A
-        // mini-site's caption composes its own from the parts (legacy's
-        // exhibition pages printed location, province and country, never the
-        // address), so its package carries each part on its own.
-        ...(scope
-          ? { location: ownRow.location, province: extra?.province ?? null }
-          : { location: legacyLocation(ownRow.location, monumentAddress(ownRow.extra), extra?.province) }),
+        // Each part of legacy's Location lines on its own, never joined: the
+        // site composes each line as legacy printed it (the item sheet a
+        // monument's address, location and province; the results tile and a
+        // mini-site's caption the location and province alone).
+        location: ownRow.location,
+        province: extra?.province ?? null,
+        // A mini-site never printed the address.
+        address: scope ? null : monumentAddress(ownRow.extra),
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
