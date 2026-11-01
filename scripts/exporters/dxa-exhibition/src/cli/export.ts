@@ -29,13 +29,15 @@
  *   # Standard export
  *   npm run export -- --instance <site-slug> --force
  *
- *   # Export, bump the version, generate package.json/README.md, and publish
- *   npm run export -- --instance <site-slug> --force --publish
+ *   # Export and stage the package, with a new version, into a
+ *   # museumwithnofrontiers/data-packages checkout; its release workflow
+ *   # publishes it once the pull request carrying it is merged
+ *   npm run export -- --instance <site-slug> --force --publish --data-packages ../data-packages
  */
 
 import dotenv from 'dotenv'
 import { resolve } from 'path'
-import { existsSync, mkdirSync, rmSync, writeFileSync } from 'fs'
+import { existsSync, mkdirSync, rmSync } from 'fs'
 import { Command } from 'commander'
 import chalk from 'chalk'
 
@@ -72,12 +74,21 @@ program
   .option('--force', 'Overwrite output directory if it already exists', false)
   .option('--output-dir <path>', 'Base output directory (relative to cwd or absolute)', 'output')
   .option('--base-url <url>', 'Base URL for media files', process.env['BASE_URL'] ?? './images')
-  .option('--publish', 'Generate npm package.json, bump version, and publish to registry', false)
+  .option(
+    '--publish',
+    'Stage the package, with a new version, into the data-packages checkout for its release workflow to publish',
+    false
+  )
+  .option(
+    '--data-packages <path>',
+    'Checkout of museumwithnofrontiers/data-packages (overrides DATA_PACKAGES_DIR env var)',
+    process.env['DATA_PACKAGES_DIR'] ?? ''
+  )
   .option(
     '--package-version <semver>',
     'Set an explicit version instead of auto-incrementing (e.g. 1.0.4)'
   )
-  .option('--npm-registry <url>', 'npm registry URL for publish (overrides NPM_REGISTRY env var)')
+  .option('--npm-registry <url>', 'npm registry asked for the latest published version (overrides NPM_REGISTRY env var)')
   .action(
     async (options: {
       instance: string
@@ -85,6 +96,7 @@ program
       outputDir: string
       baseUrl: string
       publish: boolean
+      dataPackages: string
       packageVersion?: string
       npmRegistry?: string
     }) => {
@@ -117,18 +129,14 @@ program
       mkdirSync(outputDir, { recursive: true })
       logger.info(`Output directory: ${outputDir}`)
 
-      // Preflight for --publish: confirm the npm session is alive before
-      // spending minutes on the export below. A dead session would otherwise
-      // only surface at the very end, as a registry 404 right after export.
-      // The exhibition (and its real projectKeys) isn't resolved yet, so this
-      // preflight-only instance uses a placeholder — assertLoggedIn() does
-      // not use projectKeys.
+      // Preflight for --publish: refuse a relative image base URL or a
+      // missing data-packages checkout before spending minutes on the export.
       if (options.publish) {
         const registry =
           options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
         const preflight = new PublishManager({
           outputDir,
-          versionFile: resolve(outputBaseDir, `.version-${instance.slug}`),
+          dataPackagesDir: resolve(process.cwd(), options.dataPackages),
           packageName: instance.packageName,
           projectKeys: [instance.slug],
           logger,
@@ -136,7 +144,7 @@ program
         })
         try {
           assertPublishableBaseUrl(options.baseUrl)
-          preflight.assertLoggedIn()
+          preflight.assertDataPackagesCheckout()
         } catch (err) {
           const message = err instanceof Error ? err.message : String(err)
           console.error(chalk.red(`\n${message}\n`))
@@ -243,60 +251,35 @@ program
         if (options.publish && !hasErrors) {
           console.log('')
           console.log(chalk.bold('='.repeat(70)))
-          console.log(chalk.bold.cyan('PUBLISHING NPM PACKAGE'))
+          console.log(chalk.bold.cyan('STAGING THE PACKAGE INTO DATA-PACKAGES'))
           console.log(chalk.bold('='.repeat(70)))
 
           try {
             const registry =
               options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
 
-            // Version file lives next to the output base dir, NOT inside the
-            // project output directory, so it survives --force cleans.
-            const versionFile = resolve(outputBaseDir, `.version-${instance.slug}`)
-
             const publishManager = new PublishManager({
               outputDir,
-              versionFile,
+              dataPackagesDir: resolve(process.cwd(), options.dataPackages),
               packageName: instance.packageName,
               projectKeys: [exhibition.slug ?? instance.slug],
               logger,
               author: process.env['PACKAGE_AUTHOR'],
               license: process.env['PACKAGE_LICENSE'],
-              repositoryUrl: process.env['PACKAGE_REPO_URL'],
               registry,
             })
-
-            const nextVersion = options.packageVersion
-              ? publishManager.setVersion(options.packageVersion)
-              : publishManager.getNextVersion()
-            console.log(chalk.green(`  ✓ Version: ${nextVersion}`))
-
-            const packageJson = publishManager.generatePackageJson(nextVersion)
-            writeFileSync(
-              resolve(outputDir, 'package.json'),
-              JSON.stringify(packageJson, null, 2),
-              'utf-8'
-            )
-            console.log(chalk.green('  ✓ Generated: package.json'))
-
-            writeFileSync(
-              resolve(outputDir, 'README.md'),
-              publishManager.generateReadme(instance.packageName),
-              'utf-8'
-            )
-            console.log(chalk.green('  ✓ Generated: README.md'))
-
-            publishManager.writeLicense()
-            console.log(chalk.green('  ✓ Generated: LICENSE.md'))
-
-            console.log('')
-            publishManager.publish()
-            publishManager.recordPublished(nextVersion)
-            console.log(chalk.green(`  ✓ Published: ${instance.packageName}@${nextVersion}`))
+            const staged = publishManager.stage(options.packageVersion)
+            if (staged.changed) {
+              console.log(chalk.green(`  ✓ Staged: ${instance.packageName}@${staged.version} in ${staged.packageDir}`))
+              console.log(chalk.gray('    Commit it on a branch of data-packages and open a pull request:'))
+              console.log(chalk.gray('    merging it publishes the version.'))
+            } else {
+              console.log(chalk.green(`  ✓ Unchanged: ${instance.packageName}@${staged.version} — nothing to publish`))
+            }
             console.log('')
           } catch (err) {
             const message = err instanceof Error ? err.message : String(err)
-            console.error(chalk.red(`\nPublish failed: ${message}`))
+            console.error(chalk.red(`\nStaging failed: ${message}`))
             process.exit(1)
           }
         }

@@ -504,27 +504,11 @@ services:
     entrypoint: ["/bin/sh", "/var/www/app/scripts/exporters/docker-entrypoint.sh"]
     volumes:
       - .:/var/www/app
-      # `--publish` runs `npm publish` as root (this image's default user, no
-      # `user:` override) inside the container, so HOME=/root and npm reads
-      # /root/.npmrc. Mounting the operator's own npm session — written by
-      # `npm login` on the HOST, never by anything in this repo — is what lets
-      # a first publish of a new package name authenticate; when npmjs still
-      # asks for the extra web-login step on top of it, npm (with
-      # NPM_CONFIG_BROWSER=false below) prints the
-      # `https://www.npmjs.com/auth/cli/...` URL to this terminal instead of
-      # trying to launch a browser the container does not have, and polls the
-      # registry for the login to complete. The operator opens that URL in
-      # their OWN browser and ticks "stay authenticated for publish for the
-      # next 5 minutes"; npm's poll then unblocks and the publish proceeds. No
-      # token is ever written to a tracked file.
-      #   Windows: PowerShell does not export $HOME to child processes, so
-      #   `${HOME}` below resolves to nothing there unless you set it first —
-      #   see scripts/exporters/*/NPM_PUBLISH.md.
-      - ${HOME}/.npmrc:/root/.npmrc:ro
       # A checkout of museumwithnofrontiers/data-packages, next to this one
-      # unless DATA_PACKAGES_PATH says otherwise: an exporter moved there
-      # stages its package into it on --publish, and that repository's
-      # release workflow publishes it once the pull request is merged.
+      # unless DATA_PACKAGES_PATH says otherwise: --publish stages each
+      # package into it, and that repository's release workflow publishes it
+      # once the pull request is merged. Nothing here publishes, so no npm
+      # session is mounted.
       - ${DATA_PACKAGES_PATH:-../data-packages}:/var/www/data-packages
       # Each exporter's dependencies live in a named volume rather than the
       # host tree: tsx pulls in esbuild, whose binary is platform-specific, so
@@ -542,12 +526,6 @@ services:
       # left pointing somewhere else — the staging database is the only thing
       # this service can reach.
       <<: *staging-db-env
-      # No browser in this image: without this, npm's web-login prompt exits
-      # at "Press ENTER to open in the browser..." with `npm error Set the
-      # BROWSER environment variable` the moment it tries to launch one. With
-      # it, npm prints the login URL and polls instead — see the comment on
-      # the .npmrc mount above.
-      NPM_CONFIG_BROWSER: "false"
       DATA_PACKAGES_DIR: /var/www/data-packages
     depends_on:
       staging-mysql:

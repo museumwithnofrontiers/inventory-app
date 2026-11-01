@@ -33,6 +33,17 @@ usage() {
     exit 64
 }
 
+# The version a package.json holds, or "-" when there is none.
+package_version() {
+    node -e "
+        try {
+            process.stdout.write(require(process.argv[1]).version || '-');
+        } catch (e) {
+            process.stdout.write('-');
+        }
+    " "$1"
+}
+
 MODE="${1:-}"
 [ -n "$MODE" ] || usage
 shift
@@ -94,9 +105,9 @@ if [ "$MODE" = "all" ]; then
         exit 0
     fi
 
-    # One preflight for the whole batch, not one per instance: a dead npm
-    # session should stop the batch before the first export rather than
-    # surfacing seven times at the end (see #1867).
+    # One preflight for the whole batch, not one per instance: a missing
+    # image base URL or data-packages checkout should stop the batch before
+    # the first export rather than surfacing once per instance (see #1867).
     if [ "$ALL_PUBLISH" = "1" ]; then
         # Each exporter refuses a relative image base URL on --publish too;
         # checked here so the batch stops once, before any export.
@@ -108,26 +119,24 @@ if [ "$MODE" = "all" ]; then
                 echo "       relative image URLs that no website can load." >&2
                 exit 64 ;;
         esac
-        echo ""
-        echo "==> npm whoami (publish preflight for the whole batch)"
-        WHOAMI_USER="$(npm whoami 2>/dev/null || true)"
-        if [ -z "$WHOAMI_USER" ]; then
-            echo "error: npm session is not authenticated (npm whoami failed)." >&2
-            echo "       Run 'npm login' on the host (Windows: set \$env:HOME = \$env:USERPROFILE first, so the" >&2
-            echo "       container mounts the host's ~/.npmrc), then retry — see any exporter's NPM_PUBLISH.md." >&2
+        # --publish stages each package into a data-packages checkout, whose
+        # release workflow publishes it once the pull request is merged.
+        if [ ! -f "${DATA_PACKAGES_DIR:-}/scripts/check.mjs" ]; then
+            echo "error: --publish needs a checkout of museumwithnofrontiers/data-packages at" >&2
+            echo "       DATA_PACKAGES_DIR (${DATA_PACKAGES_DIR:-unset}). Clone it next to inventory-app" >&2
+            echo "       (or set DATA_PACKAGES_PATH) and pull main — see any exporter's NPM_PUBLISH.md." >&2
             exit 1
         fi
-        echo "  npm session: logged in as ${WHOAMI_USER}"
+        echo ""
+        echo "==> staging into ${DATA_PACKAGES_DIR}"
     fi
 
     RESULTS_FILE="$(mktemp)"
     : > "$RESULTS_FILE"
     BATCH_FAILED=0
 
-    # The plan is read on file descriptor 3, not on stdin: each export runs
-    # inside this loop, and `npm publish` needs the terminal on stdin for its
-    # web one-time-password flow (npm gives up with a bare EOTP when stdin is
-    # a file). A `done < "$PLAN_FILE"` here made every --publish fail.
+    # The plan is read on file descriptor 3, not on stdin, so that nothing an
+    # export runs inside this loop can read the plan's remaining lines.
     while IFS="$TAB" read -r slug exporterDir argsCsv packageName kind <&3; do
         [ -n "$slug" ] || continue
 
@@ -154,6 +163,8 @@ if [ "$MODE" = "all" ]; then
             IFS="$OLDIFS"
         fi
         [ "$ALL_FORCE" = "1" ] && RUN_ARGS="${RUN_ARGS} --force"
+        STAGED_PACKAGE_JSON="${DATA_PACKAGES_DIR:-}/packages/${packageName#@museumwnf/}/package.json"
+        BEFORE_VERSION=$(package_version "$STAGED_PACKAGE_JSON")
         [ "$ALL_PUBLISH" = "1" ] && RUN_ARGS="${RUN_ARGS} --publish"
         [ -n "$ALL_BASE_URL" ] && RUN_ARGS="${RUN_ARGS} --base-url ${ALL_BASE_URL}"
 
@@ -181,16 +192,12 @@ if [ "$MODE" = "all" ]; then
             continue
         fi
 
+        # A package whose export is unchanged keeps its version: only a new
+        # version is something to publish.
         PUB_VERSION="-"
         if [ "$ALL_PUBLISH" = "1" ]; then
-            PUB_VERSION=$(node -e "
-                try {
-                    const pkg = require('${TARGET}/output/${slug}/package.json');
-                    process.stdout.write(pkg.version || '-');
-                } catch (e) {
-                    process.stdout.write('-');
-                }
-            ")
+            AFTER_VERSION=$(package_version "$STAGED_PACKAGE_JSON")
+            [ "$AFTER_VERSION" != "$BEFORE_VERSION" ] && PUB_VERSION="$AFTER_VERSION"
         fi
         printf '%s\t%s\t%s\t%s\t%s\n' "$slug" "$exporterDir" "ok" "$PUB_VERSION" "$packageName" >> "$RESULTS_FILE"
     done 3< "$PLAN_FILE"
@@ -199,7 +206,7 @@ if [ "$MODE" = "all" ]; then
     echo "=================================================================="
     echo "EXPORTER BATCH SUMMARY"
     echo "=================================================================="
-    printf '%-28s %-16s %-24s %s\n' "instance" "exporter" "result" "published version"
+    printf '%-28s %-16s %-24s %s\n' "instance" "exporter" "result" "staged version"
     while IFS="$TAB" read -r slug exporterDir result version packageName; do
         [ -n "$slug" ] || continue
         printf '%-28s %-16s %-24s %s\n' "$slug" "$exporterDir" "$result" "$version"
@@ -218,8 +225,13 @@ if [ "$MODE" = "all" ]; then
 
         if [ -n "$EXPECT_ARGS" ]; then
             echo ""
-            echo "==> paste into a viewer-workflows checkout to propagate:"
+            echo "==> commit ${DATA_PACKAGES_DIR}/packages on a branch and open a pull request;"
+            echo "    once it is merged and its release run has published, paste into a"
+            echo "    viewer-workflows checkout to propagate:"
             echo "node tools/propagate.mjs${EXPECT_ARGS}"
+        else
+            echo ""
+            echo "==> no package changed: nothing to publish"
         fi
     fi
 

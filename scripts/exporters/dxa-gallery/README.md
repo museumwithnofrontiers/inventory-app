@@ -2,8 +2,10 @@
 
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for a DXA thematic-gallery website — no API server, no
-auth, no runtime database dependency. Optionally packages and publishes that
-output as a public npm package on npmjs.
+auth, no runtime database dependency. Optionally stages that output as a
+public npm package in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages), which
+publishes it on npmjs.
 
 This is the parameterised replacement for the forked DXA gallery exporters
 ([`../carpets`](../carpets/README.md), [`../amulets`](../amulets/README.md)),
@@ -47,8 +49,9 @@ On the host, from this directory (`.env` pointing at the target database):
 npm run export -- --instance carpets --force
 ```
 
-Add `--publish` to bump the version, generate `package.json`/`README.md` and
-push to npmjs — see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
+Add `--publish --data-packages <path> --base-url https://inventory.metanull.eu`
+to stage the package, with the next version, into a data-packages checkout —
+see [`NPM_PUBLISH.md`](NPM_PUBLISH.md).
 
 The compose service points at the **staging** database (`staging-mysql`),
 which is where the exporter should be developed and verified. `.env` is only
@@ -67,9 +70,8 @@ output/<slug>/
     └── <entity>.<lang>.json
 ```
 
-The version counter for `--publish` is `output/.version-<slug>` — one counter
-per site, outside the site's own output directory so `--force` (which
-deletes and recreates `output/<slug>/`) does not reset it. See
+`--publish` stages each site into `packages/<package name without the
+scope>/` of the data-packages checkout, with a version of its own. See
 [`NPM_PUBLISH.md`](NPM_PUBLISH.md) for the publishing mechanics.
 
 ## Site-specific notes

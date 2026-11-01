@@ -2,8 +2,10 @@
 
 Reads the `inventory-app` database directly and writes a set of denormalized,
 static JSON files for public-facing frontends to consume — no API server, no
-auth, no runtime database dependency. Optionally packages and publishes that
-output as a public npm package (`@museumwnf/sharinghistory-data`) on npmjs, for any consumer to install.
+auth, no runtime database dependency. Optionally stages that
+output as the public npm package `@museumwnf/sharinghistory-data` in
+[data-packages](https://github.com/museumwithnofrontiers/data-packages), which
+publishes it on npmjs for any consumer to install.
 
 This exporter produces the Sharing History data-package (one exporter per
 dataset lives under `scripts/exporters/<dataset>`).
@@ -64,16 +66,18 @@ cd scripts/exporters/sharinghistory
 npm install                # first run only
 npm run export -- `
   --force `
-  --publish
+  --publish `
+  --data-packages ../../../../data-packages `
+  --base-url https://inventory.metanull.eu
 ```
 
 The dataset scope is hardcoded — this exporter is single-purpose and takes
 no scope arguments: it always exports the `awe` project to
 `output/sharinghistory/` as `@museumwnf/sharinghistory-data`. Image URLs in
-the exported JSON are built from `BASE_URL` in `.env` (or `--base-url`). `--publish` does everything in
-one go: version bump, `package.json`/`README.md` generation, and the actual
-`npm publish` — no separate manual publish step. (`--package-version` is
-optional — omit it to auto-increment instead; see
+the exported JSON are built from `BASE_URL` in `.env` (or `--base-url`). `--publish` writes the
+export, with the next patch version, into a data-packages checkout; merging
+the pull request that carries it publishes the version. (`--package-version`
+is optional — omit it to auto-increment instead; see
 [`NPM_PUBLISH.md`](NPM_PUBLISH.md).)
 
 ## What it exports
@@ -120,8 +124,10 @@ cp .env.example .env
   reads)
 - `BASE_URL` — prepended to image paths in the exported JSON (defaults to
   `./images`, relative to wherever the JSON is served from)
-- `PACKAGE_AUTHOR` / `PACKAGE_LICENSE` / `PACKAGE_REPO_URL` / `NPM_REGISTRY`
-  — npm package metadata, only used with `--publish`
+- `DATA_PACKAGES_DIR` — the data-packages checkout `--publish` stages into
+- `PACKAGE_AUTHOR` / `PACKAGE_LICENSE` / `NPM_REGISTRY` — npm package
+  metadata and the registry asked for the latest version, only used with
+  `--publish`
 
 ## Usage
 
@@ -136,8 +142,8 @@ npm run export -- --force
 # Custom output location and image base URL
 npm run export -- --force --output-dir /tmp/export --base-url https://cdn.example.com/storage
 
-# Export, bump the package version, generate package.json/README.md, and publish
-npm run export -- --force --publish
+# Export and stage the package, with the next version, into data-packages
+npm run export -- --force --publish --data-packages ../data-packages --base-url https://inventory.metanull.eu
 ```
 
 | Option | Description |
@@ -145,12 +151,13 @@ npm run export -- --force --publish
 | `--force` | Overwrite the output directory if it already exists (refuses to run otherwise) |
 | `--output-dir <path>` | Base output directory (default: `output`, relative to cwd) |
 | `--base-url <url>` | Base URL prepended to image paths (default: `BASE_URL` env var, then `./images`) |
-| `--publish` | Bump version, generate `package.json`/`README.md`, and `npm publish` the output as an npm package |
+| `--publish` | Stage the export, with the next version, into the data-packages checkout for its release workflow to publish |
+| `--data-packages <path>` | The data-packages checkout (default: `DATA_PACKAGES_DIR` env var) |
 | `--package-version <semver>` | Set an explicit version instead of auto-incrementing |
-| `--npm-registry <url>` | Override the publish registry (default: `NPM_REGISTRY` env var, then npmjs) |
+| `--npm-registry <url>` | The registry asked for the latest published version (default: `NPM_REGISTRY` env var, then npmjs) |
 
 See [`NPM_PUBLISH.md`](NPM_PUBLISH.md) for the full publishing workflow —
-version-file mechanics, package structure, npmjs authentication,
+versions, package structure, how data-packages publishes,
 and the consumer-side install/import story.
 
 ## How this fits together
@@ -159,8 +166,11 @@ and the consumer-side install/import story.
 inventory-app DB
       │  (exporter reads directly — no API involved)
       ▼
-scripts/exporters/sharinghistory  ──npm publish──▶  @museumwnf/sharinghistory-data (npmjs)
-                                                       │  npm install
+scripts/exporters/sharinghistory  ──--publish──▶  data-packages: packages/sharinghistory-data
+                                                  │  pull request merged: release workflow
+                                                  ▼
+                                                  @museumwnf/sharinghistory-data (npmjs)
+                                                  │  npm install
                                                        ▼
                                                  any consumer
 ```
@@ -168,8 +178,9 @@ scripts/exporters/sharinghistory  ──npm publish──▶  @museumwnf/sharing
 The exporter and its consumers are decoupled entirely through the published
 package — a consumer never talks to the exporter or the database, it just
 depends on whatever version of the data package it installs. A routine
-content update is one re-export with `--publish --force` (which publishes by
-itself); consumers pick the new version up on their own schedule.
+content update is one re-export with `--publish --force` and one merged pull
+request in data-packages; consumers pick the new version up on their own
+schedule.
 
 ## Troubleshooting
 
@@ -190,7 +201,7 @@ same applies to `sh-exhibition-show-flag` (unpublished-exhibition filter),
 `sh-item-display-status`, `sh-exhibition-item-justifications` and
 `sh-partner-project-linker` (without the latter, `partners.json` is empty).
 
-**`npm publish` fails with "not authorized"** — not logged in to npmjs; see [`NPM_PUBLISH.md`](NPM_PUBLISH.md#npmjs-authentication).
+**`--publish` refuses to start: "is not a checkout of museumwithnofrontiers/data-packages"** — see [`../docs/publishing.md`](../docs/publishing.md#troubleshooting).
 
 **Database connection fails** — same `DB_*` variables and troubleshooting as
 the [importer](../../importer/README.md#troubleshooting).
