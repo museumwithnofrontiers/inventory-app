@@ -646,6 +646,20 @@ export class ItemExporter extends BaseExporter {
       }
     }
 
+    // Legacy listed an item's related records in its link table's index
+    // order: database_item.php reads them by the item's key with no ORDER BY,
+    // and the unique index on both keys returns them by the related record's
+    // key. The links carry no order of their own, so the related records
+    // follow their legacy keys.
+    const legacyKeyById = new Map(items.map(item => [item.id, item.backward_compatibility]))
+    for (const targets of relatedMap.values()) {
+      targets.sort(
+        (a, b) =>
+          compareLegacyLinkOrder(legacyKeyById.get(a), legacyKeyById.get(b)) ||
+          (a < b ? -1 : a > b ? 1 : 0)
+      )
+    }
+
     const output = items.map(item => ({
       id: item.id,
       type: item.type,
@@ -757,4 +771,32 @@ function parseJson(raw: unknown): unknown | null {
   } catch {
     return null
   }
+}
+
+/**
+ * Orders two related records as legacy's link tables returned them: by type,
+ * project, country and museum (or institution) as the tables' case-insensitive
+ * collation sorts them, then by number as a number. A record with no legacy
+ * key goes after those that have one.
+ */
+export function compareLegacyLinkOrder(
+  a: string | null | undefined,
+  b: string | null | undefined
+): number {
+  const ka = legacyLinkKey(a)
+  const kb = legacyLinkKey(b)
+  if (!ka || !kb) return ka ? -1 : kb ? 1 : 0
+  for (let i = 0; i < 4; i++) {
+    const textA = ka[i] as string
+    const textB = kb[i] as string
+    if (textA !== textB) return textA < textB ? -1 : 1
+  }
+  return (ka[4] as number) - (kb[4] as number)
+}
+
+function legacyLinkKey(key: string | null | undefined): [string, string, string, string, number] | null {
+  const match = /^mwnf3:(objects|monuments):([^:]+):([^:]+):([^:]+):(\d+)$/.exec(key ?? '')
+  if (!match) return null
+  const [, type, project, country, museum, number] = match as unknown as string[]
+  return [type, project.toUpperCase(), country.toUpperCase(), museum.toUpperCase(), Number(number)]
 }
