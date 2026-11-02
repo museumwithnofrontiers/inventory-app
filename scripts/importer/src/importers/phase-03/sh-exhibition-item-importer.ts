@@ -149,7 +149,7 @@ export class ShExhibitionItemImporter extends BaseImporter {
           itemBackwardCompat,
           `rel_objects_exhibitions ${legacy.id}`,
           null,
-          this.buildJustificationExtra(justMap.get(legacy.id))
+          withCuratorStatus(this.buildJustificationExtra(justMap.get(legacy.id)), legacy.curator_status)
         );
 
         if (written) {
@@ -201,7 +201,7 @@ export class ShExhibitionItemImporter extends BaseImporter {
           itemBackwardCompat,
           `rel_monuments_exhibitions ${legacy.id}`,
           null,
-          this.buildJustificationExtra(justMap.get(legacy.id))
+          withCuratorStatus(this.buildJustificationExtra(justMap.get(legacy.id)), legacy.curator_status)
         );
 
         if (written) {
@@ -810,4 +810,19 @@ export class ShExhibitionItemImporter extends BaseImporter {
 
     return { justifications: justificationsByLang };
   }
+}
+
+/**
+ * An exhibition-level pivot's extra with the relation's `curator_status`
+ * ('Y' or 'N'), as sh-exhibition-item-justifications writes it for themes and
+ * chapters: legacy's item sheet listed an exhibition by a confirmed relation
+ * only. Exported for unit tests.
+ */
+export function withCuratorStatus(
+  extra: Record<string, unknown> | null,
+  curatorStatus: string | null | undefined
+): Record<string, unknown> | null {
+  const status = curatorStatus?.trim();
+  if (status !== 'Y' && status !== 'N') return extra;
+  return { ...(extra ?? {}), curator_status: status };
 }
