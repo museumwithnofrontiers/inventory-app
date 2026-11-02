@@ -45,6 +45,8 @@ interface PartnerExtraFields {
   urls?: PartnerUrl[]
   /** Legacy `museums.portal_display` / `institutions.portal_display` — 'y' drives the home page featured strip. */
   portal_display?: string
+  /** Legacy `sh_partners.city`: the city as the partner list printed it, in every language. */
+  city?: string
 }
 
 interface PartnerImageRow {
@@ -346,6 +348,9 @@ export class PartnerExporter extends BaseExporter {
       // Legacy `showOnPortal`. The home page shows a random subset of the
       // featured partners, so the package ships the flag and the viewer picks.
       featured: extraMap.get(p.id)?.portal_display?.toLowerCase() === 'y',
+      // Legacy's partner list printed the base row's city ("Roma"), not a
+      // translation's own ("Rome").
+      city: extraMap.get(p.id)?.city ?? null,
       // Same derivation as each item's languages in items.json
       languages: Object.keys(translationMap.get(p.id) ?? {}).sort(),
       contact_persons: contactPersons(extraMap.get(p.id)),

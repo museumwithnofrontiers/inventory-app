@@ -171,12 +171,19 @@ export class CollectionExporter extends BaseExporter {
     // exhibitions — and their theme/page subtrees — stay in the inventory DB
     // as source of truth but must not ship in the data-package (e.g. BAR
     // exhibition 49 "Academia", which has themes but no content).
-    const excludedIds = computeUnpublishedExhibitionSubtree(collections, allTranslations)
+    // Legacy's timeline still searched one of them, the political context
+    // (exhibition 2): its gallery lists the records the exhibition places.
+    // So an unpublished exhibition and its themes ship as their titles and
+    // placements only, `published: false`; their National Context pages do
+    // not ship.
+    const unpublished = computeUnpublishedExhibitionSubtree(collections, allTranslations)
+    const excludedIds = withinNationalContext(collections, unpublished)
+    const hidden = new Set([...unpublished].filter(id => !excludedIds.has(id)))
     const publishedCollections = collections.filter(c => !excludedIds.has(c.id))
     const translations = allTranslations.filter(t => !excludedIds.has(t.collection_id))
-    if (excludedIds.size > 0) {
+    if (unpublished.size > 0) {
       this.logger.info(
-        `Excluding ${excludedIds.size} collection(s) under unpublished (show='n') exhibitions`
+        `Keeping titles and placements only of ${hidden.size} collection(s) under unpublished (show='n') exhibitions, excluding their ${excludedIds.size} National Context collection(s)`
       )
     }
 
@@ -200,7 +207,7 @@ export class CollectionExporter extends BaseExporter {
       if (!translationMap.has(t.collection_id)) translationMap.set(t.collection_id, {})
       const code = langCodeMap.get(t.language_id)
       if (!code) continue
-      if (minisite.has(t.collection_id)) {
+      if (minisite.has(t.collection_id) || hidden.has(t.collection_id)) {
         translationMap.get(t.collection_id)![code] = { title: t.title }
         continue
       }
@@ -227,7 +234,7 @@ export class CollectionExporter extends BaseExporter {
     const typeOf = new Map(imageTypes.map(row => [row.collection_image_id, row.type]))
     const imageMap = new Map<string, ReturnType<typeof buildCollectionImageEntry>[]>()
     for (const img of images) {
-      if (minisite.has(img.collection_id)) continue
+      if (minisite.has(img.collection_id) || hidden.has(img.collection_id)) continue
       if (!imageMap.has(img.collection_id)) imageMap.set(img.collection_id, [])
       imageMap
         .get(img.collection_id)!
@@ -243,7 +250,7 @@ export class CollectionExporter extends BaseExporter {
     }
     for (const [collectionId, entries] of itemMap) {
       const merged = mergePlacements(entries)
-      itemMap.set(collectionId, minisite.has(collectionId) ? barePlacements(merged) : merged)
+      itemMap.set(collectionId, minisite.has(collectionId) || hidden.has(collectionId) ? barePlacements(merged) : merged)
     }
 
     const output = publishedCollections.map(c => ({
@@ -257,6 +264,8 @@ export class CollectionExporter extends BaseExporter {
       display_order: c.display_order,
       latitude: c.latitude !== null ? parseFloat(c.latitude) : null,
       longitude: c.longitude !== null ? parseFloat(c.longitude) : null,
+      // false for an exhibition legacy did not list (show='n') and its themes.
+      published: !hidden.has(c.id),
       images: imageMap.get(c.id) ?? [],
       items: itemMap.get(c.id) ?? [],
     }))
@@ -336,19 +345,47 @@ export function minisiteCollections(
 }
 
 /**
+ * Those of `ids` that are a National Context collection or lie under one.
+ * Exported for unit tests.
+ */
+export function withinNationalContext(
+  collections: Pick<CollectionRow, 'id' | 'parent_id' | 'purpose'>[],
+  ids: Set<string>
+): Set<string> {
+  const byId = new Map(collections.map(c => [c.id, c]))
+  const found = new Set<string>()
+  for (const id of ids) {
+    for (let node = byId.get(id); node; node = node.parent_id ? byId.get(node.parent_id) : undefined) {
+      if (node.purpose === 'national-context') {
+        found.add(id)
+        break
+      }
+    }
+  }
+  return found
+}
+
+/**
  * A mini-site collection's placements as this site keeps them: each item
  * once, at its first position, without its picture, caption or
- * justifications. Exported for unit tests.
+ * justifications, but with its relation's `curator_status`: legacy listed a
+ * relation the curator had not confirmed ('N') nowhere on this site (an item
+ * sheet's "on display in", the timeline's gallery). Exported for unit tests.
  */
 export function barePlacements(
-  entries: { id: string; display_order: number | null }[]
-): { id: string; display_order: number | null; variant_order: null }[] {
+  entries: { id: string; display_order: number | null; curator_status?: string }[]
+): { id: string; display_order: number | null; variant_order: null; curator_status?: string }[] {
   const seen = new Set<string>()
-  const bare: { id: string; display_order: number | null; variant_order: null }[] = []
+  const bare: { id: string; display_order: number | null; variant_order: null; curator_status?: string }[] = []
   for (const entry of entries) {
     if (seen.has(entry.id)) continue
     seen.add(entry.id)
-    bare.push({ id: entry.id, display_order: entry.display_order, variant_order: null })
+    bare.push({
+      id: entry.id,
+      display_order: entry.display_order,
+      variant_order: null,
+      ...(entry.curator_status ? { curator_status: entry.curator_status } : {}),
+    })
   }
   return bare
 }
