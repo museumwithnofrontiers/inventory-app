@@ -5,6 +5,8 @@
  * - `baroqueartSponsors`: Discover Baroque Art's local sponsors
  *   (atrium_sponsor_detail.php?id=BAR&flg=local, Sponsors::LoadSponsors), as
  *   the data file the site lists them from;
+ * - `islamicartSponsors`: Discover Islamic Art's international sponsors
+ *   (atrium_sponsor_detail.php?id=ISL&flg=inter), the same way;
  * - `sharinghistoryAbout`: Sharing History's About text (Project::Load,
  *   `sh_project_names`);
  * - `sharinghistoryTeam`: its Team page (about_team.php: the categories of
@@ -122,6 +124,37 @@ const baroqueartSponsors: Builder = async ({ db }) => {
     if (name) countries.push({ code, name: name.name, rows })
   }
   return { files: { 'data/sponsors.json': composeBaroqueSponsors(countries) } }
+}
+
+// ── Discover Islamic Art: the international sponsors ────────────────────────
+
+/** One row of Islamic Art's Sponsors page: no country label, no region line. */
+export type InternationalSponsorEntry = Omit<SponsorEntry, 'label' | 'region'>
+
+/**
+ * atrium_sponsor_detail.php's international list (`flg=inter`, the one link
+ * Islamic Art's partner pages give): the project's sponsors of country `ww`,
+ * in the order LoadSponsors reads them, each with its name, web address,
+ * remarks and logo.
+ */
+export function composeInternationalSponsors(rows: SponsorRow[]): InternationalSponsorEntry[] {
+  return rows.map((row) => ({
+    name: text(row.spname),
+    web: (row.web ?? '').trim(),
+    remarks: text(row.remarks),
+    logo: (row.path ?? '').trim(),
+  }))
+}
+
+const islamicartSponsors: Builder = async ({ db }) => {
+  const rows = await db.select<SponsorRow>(
+    `SELECT DISTINCT s.sponsors_id, s.remarks, s.name AS spname, s.web, s.path, c.name AS cname, NULL AS regionname
+       FROM mwnf3.sponsors s, mwnf3.countrynames c
+      WHERE s.virtual_project_id = ? AND c.country = s.country_id AND s.country_id = 'ww' AND c.lang = 'en'
+      ORDER BY c.name`,
+    ['ISL']
+  )
+  return { files: { 'data/sponsors.json': composeInternationalSponsors(rows) } }
 }
 
 // ── Sharing History: the About text ─────────────────────────────────────────
@@ -277,6 +310,7 @@ const sharinghistorySponsors: Builder = async ({ db, site, namespace }) => {
 
 export const STANDALONE_TABLES: Record<string, Builder> = {
   baroqueartSponsors,
+  islamicartSponsors,
   sharinghistoryAbout,
   sharinghistoryTeam,
   sharinghistorySponsors,

@@ -295,9 +295,11 @@ with English, ready to copy into the site repo. An entry with no English text
 is named in a warning, not written.
 
 Islamic Art's set covers its header, menu, section banners, home page (the
-side links, today's highlight, the sponsor band), footer, item sheet and the
-Mission Statement and Recommended Links pages, in Arabic, English, Spanish
-and French. Another site is one more entry in `STANDALONE_SITES`.
+side links, today's highlight, the sponsor band), footer, item sheet, the
+Mission Statement and Recommended Links pages and the Sponsors page, in Arabic,
+English, Spanish and French. The Sponsors page's rows (legacy's international
+sponsors, `mwnf3.sponsors` of country `ww`) go to `output/islamicart/data/sponsors.json`,
+as Baroque Art's local ones do. Another site is one more entry in `STANDALONE_SITES`.
 
 ## Values are Markdown, not HTML
 

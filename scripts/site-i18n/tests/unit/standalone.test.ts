@@ -22,6 +22,7 @@ import {
 } from '../../src/standalone.js'
 import {
   composeBaroqueSponsors,
+  composeInternationalSponsors,
   countryKey,
   localTeamLine,
   STANDALONE_TABLES,
@@ -275,6 +276,12 @@ describe('the tables', () => {
       ['ITALY/  \nLECCE', '', 'B'],
     ])
     expect(rows[0]).toMatchObject({ web: 'www.example.org', remarks: '**Main** sponsor', logo: 'sponsors/34.jpg' })
+  })
+
+  it("lists Islamic Art's international sponsors in the order read, without labels", () => {
+    const rows = composeInternationalSponsors([sponsor('European Union'), sponsor('Euromed Heritage')])
+    expect(rows.map((r) => r.name)).toEqual(['European Union', 'Euromed Heritage'])
+    expect(rows[0]).toEqual({ name: 'European Union', web: 'www.example.org', remarks: '**Main** sponsor', logo: 'sponsors/34.jpg' })
   })
 
   const person = (fields: Partial<TeamRow>): TeamRow => ({
