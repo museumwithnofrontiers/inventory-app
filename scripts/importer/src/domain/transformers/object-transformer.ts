@@ -314,6 +314,11 @@ export function transformObjectTranslation(
   if (obj.birthplace?.trim()) extraData.artist_birthplace = convertHtmlToMarkdown(obj.birthplace);
   if (obj.deathdate?.trim()) extraData.artist_deathdate = obj.deathdate.trim();
   if (obj.deathplace?.trim()) extraData.artist_deathplace = convertHtmlToMarkdown(obj.deathplace);
+  // The Period of activity row legacy prints, per language. The Artist record's
+  // period_of_activity keeps one object's first-language value, for the same
+  // reason as the life data above. Same key as the Sharing History transformer.
+  if (obj.period_activity?.trim())
+    extraData.period_activity = convertHtmlToMarkdown(obj.period_activity);
   const extraField = Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null;
 
   // backward_compatibility matches parent item
