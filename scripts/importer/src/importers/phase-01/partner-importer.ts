@@ -27,6 +27,7 @@ import type {
   LegacyInstitutionName,
 } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { loadRegionNames, regionName } from '../../utils/region-names.js';
 
 /**
  * Deferred monument link for later resolution
@@ -115,6 +116,7 @@ export class PartnerImporter extends BaseImporter {
     );
 
     const grouped = groupMuseumsByKey(museums, museumNames);
+    const regionNames = await loadRegionNames(this.context.legacyDb);
     this.logInfo(`Found ${grouped.length} unique museums`);
 
     let monumentLinksCount = 0;
@@ -193,7 +195,11 @@ export class PartnerImporter extends BaseImporter {
         // Create translations
         for (const translation of group.translations) {
           try {
-            const translationData = transformMuseumTranslation(group.museum, translation);
+            const translationData = transformMuseumTranslation(
+              group.museum,
+              translation,
+              regionName(regionNames, group.museum.region_id, translation.lang)
+            );
             await this.context.strategy.writePartnerTranslation({
               ...translationData.data,
               partner_id: partnerId,
@@ -290,6 +296,7 @@ export class PartnerImporter extends BaseImporter {
     );
 
     const grouped = groupInstitutionsByKey(institutions, institutionNames);
+    const regionNames = await loadRegionNames(this.context.legacyDb);
     this.logInfo(`Found ${grouped.length} unique institutions`);
 
     let logosCount = 0;
@@ -339,7 +346,11 @@ export class PartnerImporter extends BaseImporter {
         // Create translations
         for (const translation of group.translations) {
           try {
-            const translationData = transformInstitutionTranslation(group.institution, translation);
+            const translationData = transformInstitutionTranslation(
+              group.institution,
+              translation,
+              regionName(regionNames, group.institution.region_id, translation.lang)
+            );
             await this.context.strategy.writePartnerTranslation({
               ...translationData.data,
               partner_id: partnerId,

@@ -45,6 +45,8 @@ interface PartnerExtraFields {
   urls?: PartnerUrl[]
   /** Legacy `museums.portal_display` / `institutions.portal_display` — 'y' drives the home page featured strip. */
   portal_display?: string
+  /** The partner's region in this row's language (legacy `regionnames`), unlike the fields above per language. */
+  region?: string
 }
 
 interface PartnerImageRow {
@@ -242,6 +244,7 @@ export class PartnerExporter extends BaseExporter {
     const extraMap = new Map<string, PartnerExtraFields>()
     for (const t of translations) {
       if (!translationMap.has(t.partner_id)) translationMap.set(t.partner_id, {})
+      const extra = t.extra ? parseJson<PartnerExtraFields>(t.extra) : null
       const code = langCodeMap.get(t.language_id)
       if (code) {
         translationMap.get(t.partner_id)![code] = {
@@ -253,12 +256,10 @@ export class PartnerExporter extends BaseExporter {
           phone: t.contact_phone,
           fax: t.contact_fax,
           email: t.contact_email_general,
+          region: extra?.region ?? null,
         }
       }
-      if (!extraMap.has(t.partner_id) && t.extra) {
-        const extra = parseJson<PartnerExtraFields>(t.extra)
-        if (extra) extraMap.set(t.partner_id, extra)
-      }
+      if (!extraMap.has(t.partner_id) && extra) extraMap.set(t.partner_id, extra)
     }
 
     // Write one translations/partners.{lang}.json per language (null fields omitted)

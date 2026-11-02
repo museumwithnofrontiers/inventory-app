@@ -521,6 +521,8 @@ export class ItemExporter extends BaseExporter {
         artist_birthplace: extra?.artist_birthplace ?? null,
         artist_deathdate: extra?.artist_deathdate ?? null,
         artist_deathplace: extra?.artist_deathplace ?? null,
+        // The Period of activity row, per language.
+        period_activity: extra?.period_activity ?? null,
         scriber: extra?.scriber ?? null,
         binding_desc: extra?.binding_desc ?? null,
         // The item's rights statement ("Copyright image: <institution>"), which
