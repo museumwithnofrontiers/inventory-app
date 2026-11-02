@@ -416,6 +416,31 @@ same 7 real differences. Its `diff-runs.md` lists 23 regressions against 2026-10
   pictures and a new text, while the cached legacy page still reads "This is the About section".
   Hijaz is re-authored on live legacy.
 
+`baselines/2026-11-02` is the run after reimport 11 (shipped 2026-11-02), on the 85 packages it
+published (28 changed, data-packages#10). Real differences go from 7 to 2856. Its `diff-runs.md`
+lists 14 regressions against 2026-10-31, and none is a site showing something legacy does not:
+- **Location split (4):** baroqueart `item.location` and `item.province` (892 each), and
+  islamicart `item.location` (1954) and `item.province` (1347). The packages now carry a
+  record's location and its province each in its own field, and the sites compose them (data
+  model rule: never merge legacy fields). This tool still compares the package's `location`
+  with legacy's composed "location, province, country" and counts `province` as extra. The
+  comparison must compose them the way the sites do; until then these counts are the tool's,
+  not the sites'.
+- **New fields the tool does not map yet (3):** baroqueart `item.period_activity` (213, the
+  period of activity of #2417, exported since inventory-app#2442), and islamicart `item.address`
+  (682, the monument's address) and `item.credit_ids` (6708, the credited people of
+  islamicart-data 1.0.63). Each is a field legacy shows in a section of its own, which this tool
+  does not read yet, so it counts them as extra in the package.
+- **Dynasty (3):** `item.dynasty (free text)` on islamicart, landscapes and photographs, one record
+  (`objects:epm:uk:mus22:1`). Live legacy now prints "Faisal bin Abd al-Aziz al-Saud", exactly
+  as the package does; the cached legacy page still has the old "Faisal bin ˋAbd al- ˋAziz
+  al-Saud". A live legacy edit; the cache is stale.
+- **Sharing History's unpublished exhibitions (4):** `sh_exhibitions` (1) and
+  `sh_exhibition_themes` (5) "only in the package", in both membership readings. Since
+  inventory-app#2444 the package carries legacy's unlisted exhibition 2 (the political context)
+  and its themes, marked `published: false`, for the political context's timeline gallery. The
+  site lists none of them. This tool should skip collections with `published: false`.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
