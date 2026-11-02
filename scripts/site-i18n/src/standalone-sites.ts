@@ -274,6 +274,11 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'sponsors.exploreHead': 'dia_supporttexthead2',
       'sponsors.exploreText': 'dia_supporttext2',
       'sponsors.europeanUnion': 'DatabaseEuOver',
+      // The partner pages' Sponsors link, and the page it opens
+      // (atrium_sponsor_detail.php?id=ISL&flg=inter).
+      'partner.sponsors': 'pm_home_sponsors',
+      'sponsors.title': 'submenu1_4',
+      'sponsors.internationalHeading': 'international_Sponsors',
       // The footer (includes/footer.php), in its order; the year follows the copyright.
       'footer.aboutMwnf': 'footer1',
       'footer.contact': 'footer2',
@@ -319,6 +324,7 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'record.action.viewShortDescription': 'pc_view_sdesc',
       'record.action.hideShortDescription': 'pc_hide_sdesc',
     },
+    tables: ['islamicartSponsors'],
     regions: {
       // recommendedlinks.php: every group heading and link, from the first
       // heading to the end of the page's content.
