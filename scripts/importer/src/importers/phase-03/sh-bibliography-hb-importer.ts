@@ -49,6 +49,7 @@ import type {
 import { TagHelper } from '../../helpers/tag-helper.js';
 import { mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { orderLikeLegacy } from '../../utils/legacy-collation.js';
 
 const SH_SCHEMA = 'mwnf3_sharing_history';
 
@@ -61,9 +62,11 @@ interface ResolvedBibliography {
 }
 
 export class ShBibliographyHbImporter extends BaseImporter {
-  // Pre-loaded bibliography resolver: biblio_id → { lang, desc, status, sort_order }
-  private biblioEntries: Map<number, Array<{ lang: string; desc: string; status: string }>> | null =
-    null;
+  // Pre-loaded bibliography resolver: biblio_id → { lang, desc, legacy text, status }
+  private biblioEntries: Map<
+    number,
+    Array<{ lang: string; desc: string; text: string; status: string }>
+  > | null = null;
 
   // Per-SH-project scope (project root collection + context), resolved lazily
   // by backward-compatibility key. `null` caches a project whose root/context
@@ -185,6 +188,7 @@ export class ShBibliographyHbImporter extends BaseImporter {
       this.biblioEntries.get(l.biblio_id)!.push({
         lang: l.lang,
         desc: convertHtmlToMarkdown(l.desc),
+        text: l.desc,
         status: statusMap.get(l.biblio_id) || 'A',
       });
     }
@@ -196,7 +200,11 @@ export class ShBibliographyHbImporter extends BaseImporter {
 
   /**
    * Resolve a set of bibliography links (with sort_order/sort_status) to formatted strings
-   * grouped by language, separated into active/disabled.
+   * grouped by language, separated into active/disabled, each list in the order legacy
+   * displayed it (modules/bibliography.php through class.br.inc.php): in `sort_order` when
+   * the list was ordered by hand (legacy reads `sort_status` off its first relation), else
+   * by the text, in each language. Items have no `sort_status`: legacy always sorted them
+   * by their text.
    */
   private resolveBibliography(
     links: Array<{ biblio_id: number; sort_order: number; sort_status: string }>
@@ -206,24 +214,31 @@ export class ShBibliographyHbImporter extends BaseImporter {
       disabled: new Map(),
     };
 
-    // Sort: sort_status='Y' first by sort_order, then sort_status='N' alphabetically
-    const sorted = [...links].sort((a, b) => {
-      if (a.sort_status === 'Y' && b.sort_status === 'Y') return a.sort_order - b.sort_order;
-      if (a.sort_status === 'Y') return -1;
-      if (b.sort_status === 'Y') return 1;
-      return a.sort_order - b.sort_order;
-    });
-
-    for (const link of sorted) {
+    const byHand = links[0]?.sort_status === 'Y';
+    const lists = { active: new Map(), disabled: new Map() } as Record<
+      'active' | 'disabled',
+      Map<string, Array<{ sort_order: number; text: string; desc: string }>>
+    >;
+    for (const link of links) {
       const entries = this.biblioEntries?.get(link.biblio_id);
       if (!entries) continue;
 
       for (const entry of entries) {
-        const target = entry.status === 'A' ? result.active : result.disabled;
+        const target = entry.status === 'A' ? lists.active : lists.disabled;
         if (!target.has(entry.lang)) {
           target.set(entry.lang, []);
         }
-        target.get(entry.lang)!.push(entry.desc);
+        target
+          .get(entry.lang)!
+          .push({ sort_order: link.sort_order, text: entry.text, desc: entry.desc });
+      }
+    }
+    for (const kind of ['active', 'disabled'] as const) {
+      for (const [lang, list] of lists[kind]) {
+        result[kind].set(
+          lang,
+          orderLikeLegacy(list, byHand).map((entry) => entry.desc)
+        );
       }
     }
 
