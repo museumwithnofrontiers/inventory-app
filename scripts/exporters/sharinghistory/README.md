@@ -41,6 +41,12 @@ The package is shaped by what the Sharing History dataset actually contains:
   entries also carry `extra` (per-language bibliography), and
   `timeline_events.json` entries can carry `item_extras` (legacy per-item
   caption texts from `sh_hcr_image_texts`).
+- **Project chronology** — legacy's Chronology (the MWNF activity tree
+  `act_activities` 351) is the timeline bound to the project's root
+  collection (no parent): its `extra` carries the root activity's own
+  fields, its events their EU funding columns in `extra`, and their
+  translations the other legacy columns (subtitle, place, organisers,
+  sponsors, remarks) in `extra`, each its own field.
 - **Historical Background / National Context** — exported as regular
   collections (children of the project collection); consumers resolve them
   via the `purpose` field (`historical-background-root` / `topics-root` /

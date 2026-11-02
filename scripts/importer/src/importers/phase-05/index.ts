@@ -6,3 +6,4 @@
  */
 
 export { TimelineImporter } from './timeline-importer.js';
+export { ShChronologyImporter } from './sh-chronology-importer.js';

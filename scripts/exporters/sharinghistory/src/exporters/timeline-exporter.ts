@@ -21,6 +21,7 @@ interface TimelineEventRow {
   date_from: string | null
   date_to: string | null
   display_order: number
+  extra: unknown
 }
 
 interface TimelineEventTranslationRow {
@@ -31,6 +32,7 @@ interface TimelineEventTranslationRow {
   date_from_description: string | null
   date_to_description: string | null
   date_from_ah_description: string | null
+  extra: unknown
 }
 
 interface TimelineEventImageRow {
@@ -104,7 +106,7 @@ export class TimelineExporter extends BaseExporter {
 
     const events = await this.db.query<TimelineEventRow>(
       `SELECT id, timeline_id, year_from, year_to, year_from_ah, year_to_ah,
-              date_from, date_to, display_order
+              date_from, date_to, display_order, extra
        FROM timeline_events
        WHERE timeline_id IN (${timelinePh})
        ORDER BY timeline_id, display_order`,
@@ -127,7 +129,7 @@ export class TimelineExporter extends BaseExporter {
       this.db.query<TimelineEventTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT timeline_event_id, language_id, name, description,
-                date_from_description, date_to_description, date_from_ah_description
+                date_from_description, date_to_description, date_from_ah_description, extra
          FROM timeline_event_translations
          WHERE timeline_event_id IN (${eventPh})
          ORDER BY timeline_event_id, language_id`,
@@ -167,6 +169,7 @@ export class TimelineExporter extends BaseExporter {
         date_from_description: t.date_from_description,
         date_to_description: t.date_to_description,
         date_from_ah_description: t.date_from_ah_description,
+        extra: nonEmpty(parseJson(t.extra)),
       }
     }
 
@@ -218,6 +221,7 @@ export class TimelineExporter extends BaseExporter {
       display_order: e.display_order,
       images: imageMap.get(e.id) ?? [],
       item_ids: itemMap.get(e.id) ?? [],
+      ...(nonEmpty(parseJson(e.extra)) ? { extra: parseJson(e.extra) } : {}),
       ...(itemExtraMap.has(e.id) ? { item_extras: itemExtraMap.get(e.id) } : {}),
     }))
 
@@ -263,4 +267,9 @@ function parseJson(raw: unknown): unknown | null {
   } catch {
     return null
   }
+}
+
+/** An `extra` object worth exporting: one with at least one key, else null. */
+function nonEmpty(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && Object.keys(value).length > 0 ? (value as Record<string, unknown>) : null
 }

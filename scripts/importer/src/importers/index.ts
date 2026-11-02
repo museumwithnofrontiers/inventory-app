@@ -93,7 +93,7 @@ export {
   ThgHiddenMuseumImporter,
 } from './phase-10/index.js';
 // Phase 05: Timelines
-export { TimelineImporter } from './phase-05/index.js';
+export { ShChronologyImporter, TimelineImporter } from './phase-05/index.js';
 // Phase 06: Explore
 export {
   ExploreContextImporter,
