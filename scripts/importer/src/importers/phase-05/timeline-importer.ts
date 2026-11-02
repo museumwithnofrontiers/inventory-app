@@ -48,6 +48,7 @@ import type {
 } from '../../domain/types/index.js';
 import { mapCountryCode } from '../../utils/code-mappings.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
+import { compareGeneralCi } from '../../utils/legacy-collation.js';
 
 // ---------------------------------------------------------------------------
 // BAR-specific internal types (not exported — private to this importer)
@@ -828,6 +829,15 @@ export class TimelineImporter extends BaseImporter {
           }
         }
 
+        // Legacy (class.br.inc.php getbr_hcr_rel_Info) kept `sort_order` for
+        // a list ordered by hand (`sort_status` 'Y' on its first relation)
+        // and sorted any other by its text.
+        if (links[0]?.sort_status !== 'Y') {
+          for (const list of [...Object.values(activeBiblio), ...Object.values(disabledBiblio)]) {
+            list.sort(compareGeneralCi);
+          }
+        }
+
         if (this.isDryRun || this.isSampleOnlyMode) {
           result.imported += links.length;
           this.showProgress();
@@ -994,11 +1004,7 @@ export class TimelineImporter extends BaseImporter {
             this.logInfo(
               `[${this.isSampleOnlyMode ? 'SAMPLE' : 'DRY-RUN'}] Would import BAR timeline: ${internalName} (${countryHcrRows.length} events, ${countryItems.length} items)`
             );
-            this.registerEntity(
-              'sample-bar-timeline-' + legacyCountryCode,
-              timelineBC,
-              'timeline'
-            );
+            this.registerEntity('sample-bar-timeline-' + legacyCountryCode, timelineBC, 'timeline');
             result.imported += 1 + countryHcrRows.length;
             this.showProgress();
             continue;
