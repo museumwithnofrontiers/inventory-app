@@ -240,6 +240,10 @@ export class TimelineExporter extends BaseExporter {
         internal_name: t.internal_name,
         country_id: t.country_id,
         collection_id: isPermanentCollection ? null : t.collection_id,
+        // The exhibition the timeline belongs to, also when legacy did not
+        // list it (collections.json's `published: false`): the political
+        // context's records make its gallery.
+        exhibition_id: t.collection_id,
         ...(extra && Object.keys(extra).length > 0 ? { extra } : {}),
       }
     })

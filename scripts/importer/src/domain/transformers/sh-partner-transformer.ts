@@ -36,6 +36,12 @@ export interface ShPartnerExtraFields {
   urls?: Array<{ url: string; title?: string }>;
   region_id?: string;
   portal_display?: string;
+  /**
+   * `sh_partners.city`: the city as legacy's partner list printed it ("Roma",
+   * "Lisboa"), one value for every language; each translation's own city is
+   * `city_display`.
+   */
+  city?: string;
 }
 
 /**
@@ -147,6 +153,9 @@ export function transformShPartner(legacy: ShLegacyPartner): TransformedShPartne
   }
   if (legacy.portal_display) {
     extra.portal_display = legacy.portal_display;
+  }
+  if (legacy.city?.trim()) {
+    extra.city = convertHtmlToMarkdown(legacy.city);
   }
 
   const data: Omit<PartnerData, 'project_id'> = {

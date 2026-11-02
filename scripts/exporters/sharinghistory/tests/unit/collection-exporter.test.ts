@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { barePlacements, computeUnpublishedExhibitionSubtree, minisiteCollections } from '../../src/exporters/collection-exporter.js'
+import { barePlacements, computeUnpublishedExhibitionSubtree, minisiteCollections, withinNationalContext } from '../../src/exporters/collection-exporter.js'
 
 /**
  * The legacy site only listed exhibitions with mwnf3.exhibitions.show='y';
@@ -84,16 +84,35 @@ describe('minisiteCollections', () => {
   })
 })
 
+/**
+ * An unpublished exhibition (legacy's political context) ships its titles and
+ * placements; its National Context pages, and what lies under them, do not.
+ */
+describe('withinNationalContext', () => {
+  it('finds the National Context collections and their descendants among the ids', () => {
+    const collections = [
+      { id: 'exh', parent_id: null, purpose: null },
+      { id: 'theme', parent_id: 'exh', purpose: null },
+      { id: 'nc', parent_id: 'exh', purpose: 'national-context' },
+      { id: 'nc-page', parent_id: 'nc', purpose: null },
+    ]
+    const ids = new Set(['exh', 'theme', 'nc', 'nc-page'])
+    expect([...withinNationalContext(collections, ids)].sort()).toEqual(['nc', 'nc-page'])
+  })
+})
+
 describe('barePlacements', () => {
-  it('keeps each item once, at its first position, with nothing but its order', () => {
+  it('keeps each item once, at its first position, with its order and its curator status', () => {
     const entries = [
       { id: 'i1', display_order: 1, variant_order: 1, image_url: 'a.jpg', justifications: { en: { partner: 'p', curator: null } } },
       { id: 'i1', display_order: 1, variant_order: 2, image_url: 'b.jpg' },
       { id: 'i2', display_order: 2, variant_order: null, curator_status: 'Y' },
+      { id: 'i3', display_order: 3, variant_order: null, curator_status: 'N' },
     ]
     expect(barePlacements(entries)).toEqual([
       { id: 'i1', display_order: 1, variant_order: null },
-      { id: 'i2', display_order: 2, variant_order: null },
+      { id: 'i2', display_order: 2, variant_order: null, curator_status: 'Y' },
+      { id: 'i3', display_order: 3, variant_order: null, curator_status: 'N' },
     ])
   })
 })
