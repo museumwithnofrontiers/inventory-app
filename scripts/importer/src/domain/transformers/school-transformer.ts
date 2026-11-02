@@ -48,6 +48,8 @@ export interface SchoolExtraFields {
   postal_address?: string;
   fax?: string;
   region_id?: string;
+  /** The region's name in this translation's language (mwnf3.regionnames) */
+  region?: string;
   /** Contact person 1 */
   contact_person_1?: ContactPerson;
   /** Contact person 2 */
@@ -105,7 +107,8 @@ export function transformSchool(legacy: LegacySchool): TransformedSchool {
  */
 export function transformSchoolTranslation(
   school: LegacySchool,
-  translation: LegacySchoolName
+  translation: LegacySchoolName,
+  regionName?: string
 ): TransformedSchoolTranslation {
   const languageId = mapLanguageCode(translation.lang);
 
@@ -133,6 +136,7 @@ export function transformSchoolTranslation(
   if (school.postal_address) extra.postal_address = school.postal_address;
   if (school.fax) extra.fax = school.fax;
   if (school.region_id) extra.region_id = school.region_id;
+  if (regionName) extra.region = regionName;
 
   // Contact person 1
   if (school.cp1_name || school.cp1_title || school.cp1_phone || school.cp1_email) {

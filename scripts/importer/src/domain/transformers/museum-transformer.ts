@@ -65,6 +65,8 @@ export interface MuseumExtraFields {
   opening_hours?: string;
   how_to_reach?: string;
   region_id?: string;
+  /** The region's name in this translation's language (mwnf3.regionnames) */
+  region?: string;
   portal_display?: string;
   /** Contact person 1 (detailed structure) */
   contact_person_1?: ContactPerson;
@@ -164,7 +166,8 @@ export function transformMuseum(legacy: LegacyMuseum): TransformedMuseum {
  */
 export function transformMuseumTranslation(
   museum: LegacyMuseum,
-  translation: LegacyMuseumName
+  translation: LegacyMuseumName,
+  regionName?: string
 ): TransformedMuseumTranslation {
   const languageId = mapLanguageCode(translation.lang);
 
@@ -201,6 +204,7 @@ export function transformMuseumTranslation(
 
   // Other museum fields
   if (museum.region_id) extra.region_id = museum.region_id;
+  if (regionName) extra.region = regionName;
   if (museum.portal_display) extra.portal_display = museum.portal_display;
 
   // Contact person 1 (primary contact)

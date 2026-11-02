@@ -22,6 +22,7 @@ import type {
 } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { toImageCopyright } from '../../utils/image-copyright.js';
+import { loadRegionNames, regionName } from '../../utils/region-names.js';
 import path from 'path';
 
 export class SchoolImporter extends BaseImporter {
@@ -79,6 +80,7 @@ export class SchoolImporter extends BaseImporter {
     );
 
     const grouped = groupSchoolsByKey(schools, schoolNames);
+    const regionNames = await loadRegionNames(this.context.legacyDb);
     this.logInfo(`Found ${grouped.length} unique schools`);
 
     let logosCount = 0;
@@ -162,7 +164,11 @@ export class SchoolImporter extends BaseImporter {
         // Create partner translations
         for (const translation of group.translations) {
           try {
-            const transformed_translation = transformSchoolTranslation(group.school, translation);
+            const transformed_translation = transformSchoolTranslation(
+              group.school,
+              translation,
+              regionName(regionNames, group.school.region_id, translation.lang)
+            );
 
             // Resolve language
             const languageId = await this.getLanguageIdByLegacyCodeAsync(translation.lang);

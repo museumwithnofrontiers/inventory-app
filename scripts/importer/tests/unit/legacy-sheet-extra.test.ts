@@ -18,7 +18,13 @@ function extraOf(result: { data: { extra?: string | null } } | null): Record<str
 
 describe('artist life data (C10)', () => {
   it('keeps each language its own life data', () => {
-    const base = { project_id: 'BAR', country: 'cz', museum_id: 'Mus11', number: '2', name: 'Painting' };
+    const base = {
+      project_id: 'BAR',
+      country: 'cz',
+      museum_id: 'Mus11',
+      number: '2',
+      name: 'Painting',
+    };
     const cs = extraOf(
       transformObjectTranslation({
         ...base,
@@ -45,6 +51,29 @@ describe('artist life data (C10)', () => {
       artist_deathdate: '1706',
       artist_deathplace: 'Lubiaz',
     });
+  });
+
+  it('keeps each language its own period of activity', () => {
+    const base = {
+      project_id: 'BAR',
+      country: 'hu',
+      museum_id: 'Mus11',
+      number: '22',
+      name: 'Altarpiece',
+    };
+    const en = extraOf(
+      transformObjectTranslation({
+        ...base,
+        lang: 'en',
+        period_activity: '17th century',
+      } as LegacyObject)
+    );
+    const de = extraOf(
+      transformObjectTranslation({ ...base, lang: 'de', period_activity: ' ' } as LegacyObject)
+    );
+
+    expect(en).toMatchObject({ period_activity: '17th century' });
+    expect(de).not.toHaveProperty('period_activity');
   });
 });
 
@@ -94,14 +123,22 @@ describe('Sharing History fields kept apart', () => {
 
   it('keeps the holder to the holding museum, never the institution’s own-language name', () => {
     const object = transformShObjectTranslation({
-      project_id: 'AWE', country: 'pt', number: 70, lang: 'en', name: 'Banknote',
+      project_id: 'AWE',
+      country: 'pt',
+      number: 70,
+      lang: 'en',
+      name: 'Banknote',
       holding_institution_org: 'Ministério das Finanças',
     } as ShLegacyObjectText);
     expect(object?.data.holder).toBeNull();
     expect(extraOf(object).holding_institution_org).toBe('Ministério das Finanças');
 
     const monument = transformShMonumentTranslation({
-      project_id: 'AWE', country: 'tn', number: 1, lang: 'en', name: 'Palais du Bardo',
+      project_id: 'AWE',
+      country: 'tn',
+      number: 1,
+      lang: 'en',
+      name: 'Palais du Bardo',
       responsible_institution_org: 'Institut national du Patrimoine',
     } as ShLegacyMonumentText);
     expect(monument?.data.holder).toBeNull();
@@ -110,8 +147,13 @@ describe('Sharing History fields kept apart', () => {
 
   it('keeps the credit columns as written', () => {
     const result = transformShObjectTranslation({
-      project_id: 'AWE', country: 'dz', number: 8, lang: 'fr', name: 'Petit pot',
-      preparedby: 'Cherid Houria', copyeditedby: '',
+      project_id: 'AWE',
+      country: 'dz',
+      number: 8,
+      lang: 'fr',
+      name: 'Petit pot',
+      preparedby: 'Cherid Houria',
+      copyeditedby: '',
     } as ShLegacyObjectText);
     expect(extraOf(result).credits_as_written).toEqual({ author: 'Cherid Houria' });
   });
