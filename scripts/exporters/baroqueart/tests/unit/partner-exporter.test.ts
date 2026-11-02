@@ -198,6 +198,22 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(queries.find(q => q.sql.includes('FROM partner_translations'))?.sql).toContain('contact_fax')
   })
 
+  it("ships each translation's own region, and none where that language names no region", async () => {
+    const db = stubDb({
+      partners: [partnerRow('partner-a', 'A')],
+      translations: [
+        translationRow('partner-a', JSON.stringify({ region_id: 'it_vb', region: 'Villa Borghese' })),
+        { ...translationRow('partner-a', JSON.stringify({ region_id: 'it_vb' })), language_id: 'fra' },
+      ],
+    })
+    await new PartnerExporter(context(db)).export()
+
+    const read = (lang: string) =>
+      JSON.parse(readFileSync(join(outputDir, 'translations', `partners.${lang}.json`), 'utf-8')) as Record<string, Record<string, string>>
+    expect(read('en')['partner-a'].region).toBe('Villa Borghese')
+    expect(read('fr')['partner-a']).not.toHaveProperty('region')
+  })
+
   it('lists the contact persons in legacy order, leaving out the missing ones', async () => {
     const db = stubDb({
       partners: [partnerRow('partner-a', 'A'), partnerRow('partner-b', 'B')],

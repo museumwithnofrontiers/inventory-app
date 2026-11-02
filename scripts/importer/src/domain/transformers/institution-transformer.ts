@@ -46,6 +46,8 @@ export interface TransformedInstitutionTranslation {
 export interface InstitutionExtraFields {
   source?: 'mwnf3';
   region_id?: string;
+  /** The region's name in this translation's language (mwnf3.regionnames) */
+  region?: string;
   /** Contact person 1 (detailed structure) */
   contact_person_1?: ContactPerson;
   /** Contact person 2 (detailed structure) */
@@ -102,7 +104,8 @@ export function transformInstitution(legacy: LegacyInstitution): TransformedInst
  */
 export function transformInstitutionTranslation(
   institution: LegacyInstitution,
-  translation: LegacyInstitutionName
+  translation: LegacyInstitutionName,
+  regionName?: string
 ): TransformedInstitutionTranslation {
   const languageId = mapLanguageCode(translation.lang);
 
@@ -132,6 +135,7 @@ export function transformInstitutionTranslation(
 
   // Other institution fields
   if (institution.region_id) extra.region_id = institution.region_id;
+  if (regionName) extra.region = regionName;
 
   // Contact person 1 (primary contact)
   if (
