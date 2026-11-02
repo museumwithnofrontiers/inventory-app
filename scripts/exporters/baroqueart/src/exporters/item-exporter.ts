@@ -1,15 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
-// Legacy prints Location as its parts (location, province) joined with ", ",
-// each without its trailing period (removeEndingPoint, which spares "C." as in
-// "B.C."). The importer keeps each part on its own (the province in
-// extra.province).
-export function legacyLocation(location: string | null, province?: string | null): string | null {
-  const stripEnding = (part: string): string => part.replace(/([^C])\.+(?=\s*(?:,|$))/g, '$1').trim()
-  const parts = [location, province].filter((part): part is string => !!part?.trim()).map(stripEnding)
-  return parts.length > 0 ? parts.join(', ') : null
-}
 
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ". On an Arabic row legacy's sheet prints only the
@@ -503,13 +494,12 @@ export class ItemExporter extends BaseExporter {
         owner: ownRow.owner,
         initial_owner: ownRow.initial_owner,
         dates: ownRow.dates,
-        // The item sheet's Location line, composed as legacy printed it. A
-        // mini-site's caption composes its own from the parts (legacy's
-        // exhibition pages printed location, province and country), so its
-        // package carries each part on its own.
-        ...(scope
-          ? { location: ownRow.location, province: extra?.province ?? null }
-          : { location: legacyLocation(ownRow.location, extra?.province) }),
+        // The location and the province each on its own, never joined: the
+        // site composes each line from them as legacy printed it (the item
+        // sheet's Location, the results tile, a mini-site's caption) and
+        // lists the provinces on the Permanent Collection results page.
+        location: ownRow.location,
+        province: extra?.province ?? null,
         dimensions: ownRow.dimensions,
         place_of_production: ownRow.place_of_production,
         method_for_datation: ownRow.method_for_datation,
