@@ -4,7 +4,11 @@
  * accents and trailing spaces, then compares code point by code point.
  */
 const fold = (text: string): string =>
-  text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toUpperCase().trimEnd();
+  text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toUpperCase()
+    .trimEnd();
 
 export function compareGeneralCi(a: string, b: string): number {
   const x = fold(a);
