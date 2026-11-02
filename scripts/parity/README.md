@@ -441,6 +441,20 @@ lists 14 regressions against 2026-10-31, and none is a site showing something le
   and its themes, marked `published: false`, for the political context's timeline gallery. The
   site lists none of them. This tool should skip collections with `published: false`.
 
+`baselines/2026-11-02b` is the same packages compared with the tool taught those shapes, and with
+the three stale legacy pages of the dynasty record re-read: 7 real differences, no
+regressions. None of the 14 regressions above is left:
+- **Location split:** the tool composes the Location line from `location`, `province` and the
+  country name (and, for an Islamic Art monument, `address` first), as the sites do, and compares
+  it with legacy's line. `item.province` and `item.address` are part of it, no longer extra.
+- **New fields:** Baroque Art's `period_activity` is compared with legacy's "Period of activity"
+  section, and Islamic Art's `credit_ids` with its credit block (the names the site prints from
+  `authors.json`). Every one of them prints on legacy's sheet: none is a decided difference.
+- **Unpublished collections:** `compare-collections` skips collections marked `published: false`.
+- **Dynasty:** the cached answers for `objects:epm:uk:mus22:1` (Islamic Art's English page and the
+  landscapes and photographs dxa-api answers) were deleted and fetched again; live legacy prints
+  the package's spelling.
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
@@ -491,9 +505,6 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
   Pacheco"). The package names them once.
 - dxa-api answers some partners in English whatever language is asked.
 - Some related-record links point at records that don't exist.
-- The PHP pages print the Location line with the country name at the end (`format`: "page adds
-  the country name"). On monuments they also print the address first. The package doesn't ship
-  the address, and that one is a real difference.
 - Legacy galleries answer a bare size folder (`…/zoom/`) as the image of a gallery that has none.
 - dxa-api is scoped per instance: other records answer 404. Its `/items` pages after the first
   come back keyed by offset, and `/partners` is a bare array. `legacy-dxa.mjs` handles all three.
@@ -513,6 +524,16 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
 - Every legacy sheet lists only the pictures with a row in the page's language; the package
   carries those languages per picture, and the count, captions and credits compare the pictures
   the site shows in that language, within its picture cap (Baroque Art: 15 per monument).
+- Islamic Art's and Baroque Art's Location line is the location and the province, each without its
+  final period, then the country's name in the page's language ("London, England, United
+  Kingdom"); on Islamic Art a monument's address comes first, each of its lines kept. The package
+  keeps each part in its own field, and the tool composes the line as the sites' `sheet.js` does
+  (`lib/sheet.mjs`), including legacy's rule that names no country for the Palestinian museum's
+  objects and some Palestinian monuments.
+- Islamic Art prints each credit from the people its `credit_ids` lists (their name, the Arabic
+  spelling on an Arabic page); the tool compares that line with legacy's credit block as
+  `item.credit_ids`, where the page prints the role. Where it prints none, the role's own row
+  holds the difference. Baroque Art's period of activity prints under its own heading.
 - Sharing History's Location line is a monument's address, the location, the province, the
   present-day country and the record's country ("Vienna, Austria, Public domain"); the tool
   composes the package's line the same way. Its two descriptions print under one heading each;

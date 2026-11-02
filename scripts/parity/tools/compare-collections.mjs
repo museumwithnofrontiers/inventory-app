@@ -6,6 +6,7 @@ import { loadPackage } from './lib/pkg.mjs';
 import { Report } from './lib/report.mjs';
 import { readTable } from './lib/sqldump.mjs';
 import { PHP_SITES } from './legacy-php.mjs';
+import { isListed } from './lib/sheet.mjs';
 import { LEGACY_DB, OUT } from './lib/paths.mjs';
 
 const slug = process.argv[2];
@@ -17,7 +18,8 @@ const R = new Report(`${slug} — collections`, {
   package: `${site.package}@${site.packageVersion}`,
 });
 const lc = (s) => String(s).toLowerCase();
-const collections = P.read('collections.json');
+// A collection the package marks unpublished is not on the site, so it is no record of the set.
+const collections = P.read('collections.json').filter(isListed);
 const items = P.read('items.json');
 const keyOf = new Map(items.map((i) => [i.id, i.backward_compatibility]));
 const byKey = new Map(collections.map((c) => [lc(c.backward_compatibility), c]));

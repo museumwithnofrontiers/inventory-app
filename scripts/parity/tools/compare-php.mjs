@@ -7,6 +7,7 @@ import { Report } from './lib/report.mjs';
 import { compare, compareArtistLine, compareJoined, flatten, normalise, splitList } from './lib/text.mjs';
 import { PHP_SITES, idFromKey, imageNumbers, labelIndex, legacyRecords, pageUrl as pageUrlOn, parsePage } from './legacy-php.mjs';
 import { checkImageUrls } from './lib/images.mjs';
+import { creditPeopleLine, locationLine } from './lib/sheet.mjs';
 import { OUT } from './lib/paths.mjs';
 
 const slug = process.argv[2] ?? 'islamicart';
@@ -28,6 +29,9 @@ const items = P.read('items.json').filter((i) => i.type === 'object' || i.type =
 const byKey = new Map(items.map((i) => [lc(i.backward_compatibility), i]));
 const legacy = legacyRecords(cfg);
 const labels = labelIndex(cfg);
+const partnerKeys = new Map((P.read('partners.json') ?? []).map((p) => [p.id, p.backward_compatibility]));
+// The credited people a package carries apart (Islamic Art): the site prints each credit from them.
+const people = new Map((P.read('authors.json') ?? []).map((a) => [a.id, a]));
 
 R.set('records (dump vs package)', [...legacy.keys()].map(lc), [...byKey.keys()]);
 R.set('record × language (dump vs package)', [...legacy.values()].flatMap((r) => r.langs.map((l) => `${lc(r.key)}|${l}`)), items.flatMap((i) => i.languages.map((l) => `${lc(i.backward_compatibility)}|${l}`)));
@@ -44,6 +48,8 @@ const TERM = {
   db_thirdname_object: 'third_name', db_thirdname_monument: 'third_name', db_secondname_object: 'second_name', db_secondname_monument: 'second_name',
   // Sharing History: the institution's name in its own language, under a heading of its own.
   db_holdinginstitutionorg: 'holding_institution_org', db_responsibleinstitutionorg: 'responsible_institution_org',
+  // Baroque Art: the artist's period of activity (#2417).
+  db_period_of_activity: 'period_activity',
 };
 const CREDIT = (term) => (/translation_?copy|transcopy/.test(term) ? 'translation_copy_editor' : /copy/.test(term) ? 'copy_editor' : /transl/.test(term) ? 'translator' : /writer|prepar|author/.test(term) ? 'author' : null);
 const pkgOnly = {};
@@ -143,20 +149,14 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         R.field('item', 'location', compare(s.html, line), where);
         for (const k of ['location', 'province', 'country_id_present_days']) seen.add(k);
       } else if (pf === 'location') {
-        // The page prints location, province and then the country name.
-        const r0 = compare(s.html, tr.location);
-        const a = flatten(normalise(s.html));
-        const b = flatten(normalise(tr.location, { from: 'markdown' }));
-        if (r0.verdict === 'different' && b && a.startsWith(b + ',') && !a.slice(b.length + 1).includes(',')) { r0.verdict = 'format'; r0.why = 'page adds the country name'; }
-        if (r0.verdict === 'missing-in-package' && !a.includes(',')) { r0.verdict = 'format'; r0.why = 'page prints only the country name'; }
-        if (r0.verdict === 'different') {
-          const a0 = normalise(s.html);
-          const b0 = normalise(tr.location, { from: 'markdown' }).replace(/\.(?=,|$)/g, '');
-          if (a0 === b0 || (a0.startsWith(b0 + ',') && !a0.slice(b0.length + 1).includes(','))) r0.why = 'package keeps a final period inside the location ("Mértola., Beja.")';
-          else if (b0 && a0.includes(', ' + b0 + ',') && !a0.startsWith(b0)) r0.why = `monument address missing: legacy prints monuments.address first in this line; the package does not ship it ("${a0.slice(0, a0.indexOf(', ' + b0)).slice(0, 40)}…")`;
-        }
+        // The page prints (on Islamic Art, a monument's address,) the location, the province and the
+        // country name; the site composes the same line from the package's fields.
+        const address = Boolean(cfg.monumentAddress && it.type === 'monument');
+        const line = locationLine(it, tr, { country: P.tr('countries', lang, it.country_id)?.name, partnerKey: partnerKeys.get(it.partner_id), address });
+        const r0 = compare(s.html, line);
+        if (r0.verdict === 'different' && address && !tr.address) r0.why = 'monument address missing: legacy prints monuments.address first in this line; the package does not ship it';
         R.field('item', 'location', r0, where);
-        seen.add('location');
+        for (const k of ['location', 'province', ...(address ? ['address'] : [])]) seen.add(k);
       } else if (pf) {
         seen.add(pf);
         R.field('item', pf, glossaryNote(s, compare(s.html, tr[pf])), where);
@@ -219,7 +219,7 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
     // on the item sheet; the site prints neither.
     const keptNotShown = cfg.sh ? new Set(['monument_contact', 'structured_bibliography']) : new Set();
     for (const [k, v] of Object.entries(tr)) {
-      if (seen.has(k) || ['short_description', 'author', 'copy_editor', 'translator', 'translation_copy_editor', 'keywords', 'linkcatalogs', 'type'].includes(k)) continue;
+      if (seen.has(k) || ['short_description', 'author', 'copy_editor', 'translator', 'translation_copy_editor', 'credit_ids', 'keywords', 'linkcatalogs', 'type'].includes(k)) continue;
       if (v && !(Array.isArray(v) && !v.length)) R.field('item', k, keptNotShown.has(k) ? { verdict: 'expected:kept in the data, displayed by neither site' } : { verdict: 'extra-in-package', pkg: Array.isArray(v) ? v.join('; ') : v }, where);
       pkgOnly[k] = (pkgOnly[k] ?? 0) + 1;
     }
@@ -239,18 +239,17 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
       if (role) credits[role] = names.join(', ');
     }
     for (const role of ['author', 'copy_editor', 'translator', 'translation_copy_editor']) {
-      let r2 = compare(credits[role], tr[role]);
-      const names = (credits[role] ?? '').split(', ');
-      // Legacy's credit query joins every CV the author has in the page's language, whatever its
-      // project, so an author with two such CVs is printed twice ("António Pacheco, António Pacheco").
-      const once = [...new Set(names.map((n) => n.replace(/\.$/, '')))];
-      if (r2.verdict === 'different' && once.length < names.length && ['same', 'format'].includes(compare(once.join(', '), tr[role]).verdict)) r2 = { ...r2, verdict: 'expected:legacy prints an author once per CV row' };
-      if (r2.verdict === 'different' && lang === 'ar') r2.why = 'Arabic page prints the original spelling';
-      else if (r2.verdict === 'extra-in-package' && lang === 'ar') r2.why = 'Arabic page omits a credit that has no Arabic spelling';
-      else if (r2.verdict === 'different' && names.length > 1 && flatten(normalise(tr[role] ?? '', { from: 'markdown' })) === flatten(names[0])) r2.why = 'package keeps only the first of several names';
+      const r2 = creditVerdict(credits[role], tr[role], lang);
       if (r2.verdict === 'extra-in-package') creditExtra[role] = (creditExtra[role] ?? 0) + 1;
       if (credits[role]) creditShown[role] = (creditShown[role] ?? 0) + 1;
       R.field('item', role, r2, where);
+      // Islamic Art's site prints the role's names from the people `credit_ids` lists, where the
+      // page prints that role; where it prints none, the role's own row above holds the difference.
+      const ids = tr.credit_ids?.[role];
+      if (ids?.length && tr[role] && credits[role]) {
+        const line = creditPeopleLine(ids, people, lang);
+        R.field('item', 'credit_ids', line === null ? { verdict: 'expected:a credited person is not in the package; the site prints the role\'s own line' } : creditVerdict(credits[role], line, lang), `${where}|${role}`);
+      }
     }
     // A page shows the pictures that have a row in its language, and so does the site (viewer-core
     // picturesInLanguage, from each picture's `languages`), at most as many as legacy's sheet did
@@ -283,6 +282,20 @@ function artistWithLife(html, tr) {
   // name: a bug of its display code (#2344), not a value the site should print.
   if (r.verdict === 'different' && /\(\s*-?\s*\)\s*$/.test(normalise(html)) && compare(normalise(html).replace(/\s*\(\s*-?\s*\)\s*$/, ''), composed, { legacyFrom: 'text' }).verdict === 'same') return { ...r, verdict: 'expected:legacy prints empty life data as "(- )" (#2344)' };
   return r.verdict === 'same' || r.verdict === 'format' ? { ...r, verdict: r.verdict, why: composed !== tr.artist ? 'name + life data from separate fields' : undefined } : r;
+}
+
+// One credit role: legacy's names against the line the site prints.
+function creditVerdict(legacyLine, pkgLine, lang) {
+  let r = compare(legacyLine, pkgLine);
+  const names = (legacyLine ?? '').split(', ');
+  // Legacy's credit query joins every CV the author has in the page's language, whatever its
+  // project, so an author with two such CVs is printed twice ("António Pacheco, António Pacheco").
+  const once = [...new Set(names.map((n) => n.replace(/\.$/, '')))];
+  if (r.verdict === 'different' && once.length < names.length && ['same', 'format'].includes(compare(once.join(', '), pkgLine).verdict)) r = { ...r, verdict: 'expected:legacy prints an author once per CV row' };
+  if (r.verdict === 'different' && lang === 'ar') r.why = 'Arabic page prints the original spelling';
+  else if (r.verdict === 'extra-in-package' && lang === 'ar') r.why = 'Arabic page omits a credit that has no Arabic spelling';
+  else if (r.verdict === 'different' && names.length > 1 && flatten(normalise(pkgLine ?? '', { from: 'markdown' })) === flatten(names[0])) r.why = 'package keeps only the first of several names';
+  return r;
 }
 
 function glossaryNote(section, result) {

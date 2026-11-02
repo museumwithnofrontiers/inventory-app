@@ -9,8 +9,9 @@ import { readTable } from './lib/sqldump.mjs';
 import { decodeEntities, htmlToText } from './lib/text.mjs';
 
 export const PHP_SITES = {
-  // Islamic Art's sheet prints the artist line alone, without the life data.
-  islamicart: { host: 'https://islamicart.museumwnf.org', projects: ['ISL', 'EPM'], artistAlone: true },
+  // Islamic Art's sheet prints the artist line alone, without the life data, and opens a monument's
+  // Location line with its address.
+  islamicart: { host: 'https://islamicart.museumwnf.org', projects: ['ISL', 'EPM'], artistAlone: true, monumentAddress: true },
   // Baroque Art's monument sheet shows at most 15 pictures; the site caps it the same way.
   baroqueart: { host: 'https://baroqueart.museumwnf.org', projects: ['BAR'], pictureLimit: { monument: 15 } },
   // Sharing History records have no museum in their key, and their pictures sit under sharing_history/.
