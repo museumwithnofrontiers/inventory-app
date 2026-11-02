@@ -152,6 +152,7 @@ import {
   ExploreMonumentCountryBackfillImporter,
   AuthorImporter,
   TimelineImporter,
+  ShChronologyImporter,
   ItemMediaImporter,
   ItemDocumentImporter,
   CollectionMediaImporter,
@@ -546,6 +547,14 @@ const ALL_IMPORTERS: ImporterConfig[] = [
       'Import Heritage Conservation Resources timelines, events, translations, item links, and bibliography from mwnf3 and Sharing History',
     importerClass: TimelineImporter,
     dependencies: ['country', 'language', 'object', 'monument', 'sh-object', 'sh-monument'],
+  },
+  {
+    key: 'sh-chronology',
+    name: 'SH Project Chronology',
+    description:
+      "Import Sharing History's project chronology (mwnf3 activity tree 351) as a timeline of the project's root collection, with its pictures",
+    importerClass: ShChronologyImporter,
+    dependencies: ['sh-project', 'language'],
   },
   // Phase 08: Media & Documents
   {
@@ -1036,8 +1045,7 @@ const ALL_IMPORTERS: ImporterConfig[] = [
   {
     key: 'thg-hidden-museum',
     name: 'THG Hidden Museums',
-    description:
-      'Import the museums curators suppressed from an exhibition\'s partner pages',
+    description: "Import the museums curators suppressed from an exhibition's partner pages",
     importerClass: ThgHiddenMuseumImporter,
     dependencies: ['thg-gallery', 'partner'],
   },

@@ -57,7 +57,7 @@ The importer runs in dependency order. This matters because later imports often 
 | `mwnf3` images | Object, monument, detail, partner, and logo pictures. | Item Images, picture Items, Partner Images, Partner Logos. |
 | Sharing History | Projects, partners, objects, monuments, details, images, exhibition structure, national context, historical background, bibliography. | Projects, Contexts, Collections, Partners, Items, Item Translations, Images, Collection relationships. |
 | Glossary | Words, definitions, spellings. | Glossaries, Glossary Translations, Glossary Spellings. |
-| Timelines | HCR chronology from `mwnf3` and Sharing History. | Timelines, Timeline Events, Timeline Event Translations, Timeline Event Images, Timeline Event Item links. |
+| Timelines | HCR chronology from `mwnf3` and Sharing History; Sharing History's project chronology from the `mwnf3` activities (`act_activities`). | Timelines, Timeline Events, Timeline Event Translations, Timeline Event Images, Timeline Event Item links. |
 | Media and documents | Item audio/video URLs and document references. | Item Media and Item Documents. |
 | Explore | Thematic cycles, country/region/location trees, monuments, itineraries, filters, images, translations, cross-references. | Collections, Items, Item Translations, Collection Images, Item Images, Tags, Item Links. |
 | Travels | Trails, itineraries, locations, travel monuments, pictures, translations. | Collections, Items, Item Translations, Collection Images, Item Images. |
