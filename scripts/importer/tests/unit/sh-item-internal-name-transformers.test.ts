@@ -93,4 +93,25 @@ describe('SH item internal_name selection', () => {
       'SH Monument Detail mwnf3_sharing_history:sh_monument_details:sh1:eg:1:2 missing required name field in all translations'
     );
   });
+
+  it('orders an SH monument detail by its number', () => {
+    const translation = {
+      project_id: 'SH1',
+      country: 'eg',
+      number: 1,
+      detail_id: 2,
+      lang: 'en',
+      name: 'Minaret',
+      description: '',
+      location: '',
+      date: '',
+      artist: '',
+    };
+    const result = transformShMonumentDetail(
+      { project_id: 'SH1', country: 'eg', number: 1, detail_id: 2, translations: [translation] },
+      'eng'
+    );
+
+    expect(result.data.display_order).toBe(2);
+  });
 });

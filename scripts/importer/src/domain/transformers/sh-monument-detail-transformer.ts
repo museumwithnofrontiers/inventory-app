@@ -107,6 +107,8 @@ export function transformShMonumentDetail(
     country_id: mapCountryCode(group.country),
     owner_reference: null,
     mwnf_reference: null,
+    // Legacy lists a monument's details by their number.
+    display_order: Number(group.detail_id),
   };
 
   return {

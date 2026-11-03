@@ -160,6 +160,9 @@ export function transformMonumentDetail(
     mwnf_reference: null,
     backward_compatibility: backwardCompatibility,
     country_id: countryId,
+    // Legacy reads a monument's details without ORDER BY: in key order, by
+    // their number.
+    display_order: Number(group.detail_id),
   };
 
   return {
