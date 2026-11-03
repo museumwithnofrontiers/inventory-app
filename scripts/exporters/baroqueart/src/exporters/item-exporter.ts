@@ -1,6 +1,21 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
+const CONTACT_LINES = ['address', 'phone', 'fax', 'email', 'institution'] as const
+
+// A monument's visitor contact as the importer keeps it on each language's
+// row (extra.monument_contact): its address, phone, fax, e-mail and
+// responsible institution, each line as the record writes it.
+export function monumentContact(extra: unknown): Record<string, string> | null {
+  const contact = (extra as { monument_contact?: unknown } | null)?.monument_contact
+  if (!contact || typeof contact !== 'object') return null
+  const lines: Record<string, string> = {}
+  for (const key of CONTACT_LINES) {
+    const value = (contact as Record<string, unknown>)[key]
+    if (typeof value === 'string' && value.trim() !== '') lines[key] = value
+  }
+  return Object.keys(lines).length > 0 ? lines : null
+}
 
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ". On an Arabic row legacy's sheet prints only the
@@ -510,6 +525,9 @@ export class ItemExporter extends BaseExporter {
         history: extra?.history ?? null,
         patrons: extra?.patrons ?? null,
         architects: extra?.architects ?? null,
+        // A monument's visitor contact, which legacy's sheet opens from
+        // "Contact Details" (database_item.php).
+        contact: monumentContact(extra),
         workshop: extra?.workshop ?? null,
         // The free-text Period / Dynasty line legacy prints on the sheet.
         dynasty: extra?.dynasty ?? null,
