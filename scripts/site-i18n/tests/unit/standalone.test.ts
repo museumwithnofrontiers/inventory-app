@@ -307,5 +307,23 @@ describe('the tables', () => {
     expect(countryKey('Türkiye')).toBe('Turkiye')
     expect(countryKey('Germany')).toBe('Germany')
   })
+
+  it("reads the project's name in each language the site offers, À as A", async () => {
+    const db = {
+      select: async <T>() =>
+        [
+          { lang: 'en', name: 'Discover Islamic Art' },
+          { lang: 'fr', name: 'Découvrir l’art islamique' },
+          { lang: 'de', name: 'Islamische Kunst entdecken' },
+          { lang: 'es', name: 'À la découverte' },
+        ] as T[],
+    }
+    const output = await STANDALONE_TABLES.islamicartProjectName!({ db, site: STANDALONE_SITES.islamicart!, namespace: 'islamicart', warn: () => {} })
+    expect(output.entries).toEqual({
+      en: { 'islamicart.partner.projectName': 'Discover Islamic Art' },
+      fr: { 'islamicart.partner.projectName': 'Découvrir l’art islamique' },
+      es: { 'islamicart.partner.projectName': 'A la découverte' },
+    })
+  })
 })
 

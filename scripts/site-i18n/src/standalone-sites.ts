@@ -279,6 +279,15 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'partner.sponsors': 'pm_home_sponsors',
       'sponsors.title': 'submenu1_4',
       'sponsors.internationalHeading': 'international_Sponsors',
+      // The Partners entrance (partners.php): About and its two texts, the
+      // links, and Explore's row; each project's name is a table's.
+      'partner.aboutLink': 'explenation_text',
+      'partner.about': { word: 'PartnerMuseumIntro', groups: [4] },
+      'partner.exploreAbout': { word: 'EIACPartnerMuseumIntro', groups: [4] },
+      'partner.museums': 'pm_home_partner_museums',
+      'partner.others': 'pc_parnter_other',
+      'partner.explore': 'explore_CIA',
+      'partner.explorePartners': 'db_partner',
       // The footer (includes/footer.php), in its order; the year follows the copyright.
       'footer.aboutMwnf': 'footer1',
       'footer.contact': 'footer2',
@@ -324,7 +333,7 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'record.action.viewShortDescription': 'pc_view_sdesc',
       'record.action.hideShortDescription': 'pc_hide_sdesc',
     },
-    tables: ['islamicartSponsors'],
+    tables: ['islamicartSponsors', 'islamicartProjectName'],
     regions: {
       // recommendedlinks.php: every group heading and link, from the first
       // heading to the end of the page's content.
@@ -374,8 +383,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       // The home page's band (dbaTemplates/bottomSection1.php): the two words
       // printed one after the other, the country names linked to partners.php.
       'home.cooperation': { word: 'dba_supporttexthead', words: ['dba_supporttexthead', 'dba_support_text'] },
-      // The Partners entrance (partners.php): the About popup and the Sponsors link.
+      // The Partners entrance (partners.php): About and its text, the links;
+      // the project's name is a table's.
+      'partner.aboutLink': 'explenation_text',
       'partner.about': { word: 'PartnerMuseumIntro_DBA', groups: [4] },
+      'partner.museums': 'pm_home_partner_museums',
+      'partner.others': 'pc_parnter_other',
       'partner.sponsors': 'pm_home_sponsors',
       // The Sponsors page (atrium_sponsor_detail.php?flg=local).
       'sponsors.title': 'submenu1_4',
@@ -401,7 +414,7 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       },
     },
     links: { 'partners.php': '#/partners' },
-    tables: ['baroqueartSponsors'],
+    tables: ['baroqueartSponsors', 'baroqueartProjectName'],
   },
 
   sharinghistory: {
