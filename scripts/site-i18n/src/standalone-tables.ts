@@ -12,10 +12,12 @@
  * - `sharinghistoryTeam`: its Team page (about_team.php: the categories of
  *   `sh_project_about_team_to_category`, each person's line by the page's own
  *   rules);
- * - `sharinghistorySponsors`: its sponsors' names and remarks (`sh_sponsors`).
+ * - `sharinghistorySponsors`: its sponsors' names and remarks (`sh_sponsors`);
+ * - `islamicartProjectName`, `baroqueartProjectName`: the project's name on
+ *   the Partners entrance (partners.php, `projectnames`).
  *
- * Legacy prints all of them in English only (`$LNGLIST = array("en")`), and
- * every query names English as the PHP's do.
+ * Legacy prints all of them but the project names in English only
+ * (`$LNGLIST = array("en")`), and those queries name English as the PHP's do.
  */
 import type { MessageCatalogue } from './core/types.js'
 import { entryValue, type StandaloneSite, type TableOutput } from './standalone.js'
@@ -156,6 +158,28 @@ const islamicartSponsors: Builder = async ({ db }) => {
   )
   return { files: { 'data/sponsors.json': composeInternationalSponsors(rows) } }
 }
+
+// ── Discover Islamic Art, Discover Baroque Art: the project's name ─────────
+
+/**
+ * The project's name on its box on the Partners entrance (partners.php:
+ * `projectnames.name` in the page's language, "À" read as "A"), in every
+ * language the site offers.
+ */
+const projectName =
+  (project: string): Builder =>
+  async ({ db, site, namespace }) => {
+    const rows = await db.select<{ lang: string; name: string | null }>(
+      'SELECT lang, name FROM mwnf3.projectnames WHERE project_id = ?',
+      [project]
+    )
+    const entries: MessageCatalogue = {}
+    for (const row of rows) {
+      if (!site.languages.includes(row.lang)) continue
+      ;(entries[row.lang] ??= {})[`${namespace}.partner.projectName`] = text((row.name ?? '').replaceAll('À', 'A'), site)
+    }
+    return { entries }
+  }
 
 // ── Sharing History: the About text ─────────────────────────────────────────
 
@@ -309,7 +333,9 @@ const sharinghistorySponsors: Builder = async ({ db, site, namespace }) => {
 }
 
 export const STANDALONE_TABLES: Record<string, Builder> = {
+  baroqueartProjectName: projectName('BAR'),
   baroqueartSponsors,
+  islamicartProjectName: projectName('ISL'),
   islamicartSponsors,
   sharinghistoryAbout,
   sharinghistoryTeam,
