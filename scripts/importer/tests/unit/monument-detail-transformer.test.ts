@@ -119,6 +119,12 @@ describe('transformMonumentDetail', () => {
     expect(result.data.internal_name).toBe('Chor und Vierung');
     expect(result.warning).toContain('using deu instead');
   });
+
+  it('orders a detail by its number, as legacy lists them', () => {
+    const result = transformMonumentDetail(group([translation({ lang_id: 'en', name: 'Choir' })]), 'eng');
+
+    expect(result.data.display_order).toBe(3);
+  });
 });
 
 describe('transformMonumentDetailTranslation', () => {
