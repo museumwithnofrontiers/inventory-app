@@ -455,6 +455,7 @@ regressions. None of the 14 regressions above is left:
   landscapes and photographs dxa-api answers) were deleted and fetched again; live legacy prints
   the package's spelling.
 
+`baselines/2026-11-03` is the run after reimport 12, on the packages published from it (data-packages#11, 16 changed), with the tool as of #2465: 7 real differences, no regressions. The reimport brought each monument's details in legacy's order (#2452), Sharing History's bibliographies in legacy's order (#2446) and Baroque Art's monument `contact` (#2462). The first run failed the gate on that new field (`item.contact` 0 → 489): the tool had stripped legacy's Contact Details box. It now reads the box's lines and compares them with the package: 488 match, and the one with only a responsible institution draws no box on either site (expected).
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
