@@ -218,7 +218,7 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
     if (page.contact || tr.contact) {
       seen.add('contact');
       const c = tr.contact ?? {};
-      const lines = [c.address, c.phone && `T : ${c.phone}`, c.fax && `F : ${c.fax}`, c.email && `E : ${c.email}`, c.institution && `${c.institution} (Responsible Institution)`];
+      const lines = [c.address, c.phone && `T : ${c.phone}`, c.fax && `F : ${c.fax}`, c.email && `E : ${c.email}`, c.institution && `${c.institution}\u00a0(Responsible Institution)`];
       // Legacy drew the box for an address, a phone, a fax or an e-mail; an institution alone drew
       // none, and the site shows none either.
       const drawn = Boolean(c.address || c.phone || c.fax || c.email);
