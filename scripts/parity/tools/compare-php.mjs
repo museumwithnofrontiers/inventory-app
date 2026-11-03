@@ -213,6 +213,19 @@ for (const rec of new Set([...legacy.keys(), ...items.map((i) => i.backward_comp
         R.field('item', f, pageText.includes(flatten(normalise(tr[f], { from: 'markdown' }))) ? { verdict: 'same' } : { verdict: 'extra-in-package', pkg: tr[f] }, where);
       }
     }
+    // Baroque Art's Contact Details box: after the monument's name, the contact's lines as legacy
+    // prints them ("T : …", "… (Responsible Institution)"), against the package's `contact`.
+    if (page.contact || tr.contact) {
+      seen.add('contact');
+      const c = tr.contact ?? {};
+      const lines = [c.address, c.phone && `T : ${c.phone}`, c.fax && `F : ${c.fax}`, c.email && `E : ${c.email}`, c.institution && `${c.institution}\u00a0(Responsible Institution)`];
+      // Legacy drew the box for an address, a phone, a fax or an e-mail; an institution alone drew
+      // none, and the site shows none either.
+      const drawn = Boolean(c.address || c.phone || c.fax || c.email);
+      R.field('item', 'contact', !page.contact && !drawn
+        ? { verdict: 'expected:a responsible institution alone draws no Contact Details, on either site' }
+        : compare(page.contact?.replace(/^[\s\S]*?<br\s*\/?>/, '') ?? '', lines.filter(Boolean).join('  \n')), where);
+    }
     // Fields the package has for this language and the page does not show. Kept data the site
     // does not display either is not a difference: Sharing History's contact block is commented
     // out in legacy's template, and the structured references of its bibliography module are not

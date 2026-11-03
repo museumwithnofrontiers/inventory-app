@@ -89,6 +89,7 @@ export function parsePage(html, lang, labels) {
   let shortBroken = false;
   let credits = {};
   let creditsShared = [];
+  let contact = null;
   for (const part of parts) {
     const close = part.indexOf('</h3>');
     if (close < 0) continue;
@@ -127,11 +128,15 @@ export function parsePage(html, lang, labels) {
       previous = content;
       content = content.replace(/<!--[\s\S]*?-->/g, '');
     } while (content !== previous);
+    // Baroque Art's Contact Details under the Location (database_item.php's .su_tooltip): the
+    // lines of its box, the monument's name first. Islamic Art and Sharing History comment it out.
+    const tip = content.match(/<span class="su_tooltip-body">([\s\S]*?)<\/span>/);
+    if (tip) contact = tip[1];
     content = content.split(/<div class="(?:specials|su_tooltip|page)/)[0].split(/<\/div>/)[0];
     sections.push({ label, term, html: content, brokenGlossary });
     if (tc) shortBroken = brokenGlossary;
   }
-  return { sections, short, shortBroken, credits, creditsShared, empty: sections.length === 0 };
+  return { sections, short, shortBroken, credits, creditsShared, contact, empty: sections.length === 0 };
 }
 
 // "<p>Prepared by: Name<br/>Copyedited by: <a class="su_tooltip_1">Name<span …>bio</span></a>, …</p>"
