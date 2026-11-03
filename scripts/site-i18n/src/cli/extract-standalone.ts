@@ -15,7 +15,8 @@
  *
  * Output, under --output-dir (default ./output):
  *   <site>/locales/<lang>.json   the site's own viewer-i18n entries, Markdown values
- *   <site>/data/<name>.json      rows a site lists itself (Baroque Art's sponsors)
+ *   <site>/data/<name>.json      rows a site lists itself (Baroque Art's sponsors, its
+ *                                credits' columns)
  */
 
 import dotenv from 'dotenv'
@@ -28,8 +29,8 @@ import { LegacyDatabase } from '../core/database.js'
 import { Logger } from '../core/logger.js'
 import {
   buildStandaloneCatalogue,
-  phpRegionHtml,
   siteGroups,
+  siteRegions,
   siteWordIds,
   STANDALONE_SITES,
 } from '../standalone.js'
@@ -103,10 +104,9 @@ program
     try {
       // The PHP regions first: legacy's code does not change, so a region that
       // can't be read is a wrong marker, and the run stops before the database.
-      const regions: Record<string, string> = {}
-      for (const [entry, region] of Object.entries(site.regions ?? {})) {
-        regions[entry] = phpRegionHtml(readFileSync(join(siteDir, region.file), 'utf8'), region)
-      }
+      const { regions, files: rowsFiles } = siteRegions(site, options.namespace, (region) =>
+        readFileSync(join(siteDir, region.file), 'utf8')
+      )
       logger.info(`Read ${Object.keys(regions).length} regions from the PHP source`)
 
       await db.connect()
@@ -127,7 +127,7 @@ program
         tables.entries
       )
 
-      for (const [path, data] of Object.entries(tables.files)) {
+      for (const [path, data] of Object.entries({ ...tables.files, ...rowsFiles })) {
         const file = join(outputRoot, siteName, path)
         mkdirSync(dirname(file), { recursive: true })
         writeFileSync(file, `${JSON.stringify(data, null, 2)}\n`, 'utf8')

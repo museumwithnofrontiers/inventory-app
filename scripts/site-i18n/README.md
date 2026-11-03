@@ -294,6 +294,14 @@ layout's: `output/<site>/locales/<lang>.json`, Markdown values, never padded
 with English, ready to copy into the site repo. An entry with no English text
 is named in a warning, not written.
 
+A region laid out in Bootstrap's columns (Baroque Art's credits, each role
+beside its people) names a `rows` file. Each column becomes an entry of its
+own, `<entry>01`, `<entry>02`…, its line breaks kept as backslash breaks (they
+set it beside the next column), and `output/<site>/data/<file>.json` lists the
+columns row by row: their `col-md-` and `col-sm-` widths, and `lead`, the
+breaks legacy puts over a column's first paragraph, outside it. The site
+copies that file as it copies `sponsors.json`.
+
 Islamic Art's set covers its header, menu, section banners, home page (the
 side links, today's highlight, the sponsor band), footer, item sheet, the
 Mission Statement and Recommended Links pages and the Sponsors page, in Arabic,

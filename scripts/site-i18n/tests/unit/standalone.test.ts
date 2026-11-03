@@ -12,9 +12,12 @@ import { describe, expect, it } from 'vitest'
 
 import {
   buildStandaloneCatalogue,
+  columnValue,
   phpRegionHtml,
+  phpRegionRows,
   rewriteLinks,
   siteGroups,
+  siteRegions,
   siteWords,
   STANDALONE_SITES,
   type StandaloneSite,
@@ -181,6 +184,70 @@ describe('phpRegionHtml', () => {
   })
 })
 
+describe('phpRegionRows', () => {
+  it("groups a .row's columns, with their widths", () => {
+    const html =
+      '<div class="row"><div class="col-md-6 col-sm-2 col-xs-12"><p>Role</p></div>' +
+      '<div class="col-md-6 col-sm-12 col-xs-12"><p>Person</p></div></div>' +
+      '<div class="row"><div class="col-md-12"><p>Team</p></div></div>'
+    expect(phpRegionRows(html)).toEqual([
+      [
+        { md: 6, sm: 2, html: '<p>Role</p>' },
+        { md: 6, sm: 12, html: '<p>Person</p>' },
+      ],
+      [{ md: 12, sm: 12, html: '<p>Team</p>' }],
+    ])
+  })
+
+  it('keeps a div inside a column, and text outside any column as a row of its own', () => {
+    const html =
+      '<div class="h"><h3>Heading</h3></div></div></div>' +
+      '<div class="row"><div class="col-md-6"><div class="x">A</div></div></div>'
+    expect(phpRegionRows(html)).toEqual([
+      [{ md: 12, sm: 12, html: '<h3>Heading</h3>' }],
+      [{ md: 6, sm: 12, html: '<div class="x">A</div>' }],
+    ])
+  })
+})
+
+describe('siteRegions', () => {
+  const columns = { file: 'c.php', start: '<div class="row">', end: '</section>', language: 'en', rows: 'data/c.json' }
+  const source = '<div class="row"><div class="col-md-6"><p>Role</p></div><div class="col-md-6"> </div></div></section>'
+
+  it('writes each column as an entry and the rows file naming them; an empty column has none', () => {
+    const { regions, files } = siteRegions(site({}, { 'credits.body': columns }), 'baroqueart', () => source)
+    expect(regions).toEqual({ 'credits.body01': '<p>Role</p>' })
+    expect(files).toEqual({
+      'data/c.json': [[{ entry: 'baroqueart.credits.body01', md: 6, sm: 12 }, { md: 6, sm: 12 }]],
+    })
+  })
+
+  it('counts the line breaks over a column’s first paragraph apart from its text', () => {
+    const team = '<div class="row"><div class="col-md-12"><br/>\n<p><strong>Team</strong></p></div></div></section>'
+    const { regions, files } = siteRegions(site({}, { 'credits.body': columns }), 'baroqueart', () => team)
+    expect(regions).toEqual({ 'credits.body01': '<p><strong>Team</strong></p>' })
+    expect(files['data/c.json']).toEqual([[{ entry: 'baroqueart.credits.body01', md: 12, sm: 12, lead: 1 }]])
+  })
+
+  it('keeps every line break of a column, those that open it included', () => {
+    expect(columnValue('<p><br />Ágota Dobó<br/> Terézia Bardi</p>')).toBe('\\\nÁgota Dobó\\\nTerézia Bardi')
+    expect(columnValue('<br/>\n<p><strong>MWNF Project Team</strong></p>')).toBe('\\\n**MWNF Project Team**')
+    expect(columnValue('<p><strong>Hungary</strong><br />Head of Project<br /><br />Curators</p>')).toBe(
+      '**Hungary**\\\nHead of Project\\\n\\\nCurators'
+    )
+    expect(columnValue('<p><br /></p>')).toBe('')
+    expect(columnValue('<h3>MWNF<br />VIRTUAL MUSEUM</h3>')).toBe('### MWNF  \nVIRTUAL MUSEUM')
+  })
+
+  it("writes the columns in the region's language", () => {
+    const fr = site({}, { 'credits.body': { ...columns, language: 'fr' } })
+    const { regions } = siteRegions(fr, 'baroqueart', () => source)
+    const { locales, missingEnglish } = buildStandaloneCatalogue(fr, [], 'baroqueart', regions)
+    expect(locales.fr).toEqual({ 'baroqueart.credits.body01': 'Role' })
+    expect(missingEnglish).toEqual(['baroqueart.credits.body01'])
+  })
+})
+
 describe('STANDALONE_SITES', () => {
   it('reads each site from the groups its pages load', () => {
     expect(siteGroups(STANDALONE_SITES.islamicart!)).toEqual([2, 3, 4, 61])
@@ -215,6 +282,25 @@ describe('STANDALONE_SITES', () => {
     expect(html).not.toContain('GENERAL CREDITS')
     expect(html).not.toContain('history.go(-1)')
     expect(html).not.toContain('hidden_large')
+  })
+
+  it.runIf(existsSync(credits))("sets Baroque Art's roles beside their people", () => {
+    const { regions, files } = siteRegions(STANDALONE_SITES.baroqueart!, 'baroqueart', () => readFileSync(credits, 'utf8'))
+    const rows = files['data/credits.json']!
+    const text = (column: { entry?: string }) => regions[column.entry!.slice('baroqueart.'.length)]!
+    // The heading alone; Austria's roles beside its people; the MWNF team's
+    // two roles and their people in one .row.
+    expect(rows[0]).toEqual([{ entry: 'baroqueart.credits.body01', md: 12, sm: 12 }])
+    expect(text(rows[0]![0]!)).toContain('MUSEUM WITH NO FRONTIERS')
+    const austria = rows.find((row) => text(row[0]!).includes('Austria'))!
+    expect(austria.map(({ md, sm }) => [md, sm])).toEqual([
+      [6, 2],
+      [6, 12],
+    ])
+    expect(text(austria[1]!)).toContain('Innsbruck Tourism')
+    expect(rows.find((row) => text(row[0]!).includes('Overall Coordination'))).toHaveLength(4)
+    expect(rows.find((row) => text(row[0]!).includes('MWNF Project Team'))![0]!.lead).toBe(1)
+    expect(regions).not.toHaveProperty(['credits.body'])
   })
 })
 

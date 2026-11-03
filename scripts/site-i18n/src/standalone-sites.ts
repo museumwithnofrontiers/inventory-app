@@ -406,11 +406,13 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
     regions: {
       // mwnf_credit.php: the page's text, from its heading to the duplicate
       // block legacy keeps for small screens; the back link is above the start.
+      // Each role beside its people, as legacy's columns set them.
       'credits.body': {
         file: 'mwnf_credit.php',
         start: '<div class="short_heading">',
         end: '<!--Mobile Version -->',
         language: 'en',
+        rows: 'data/credits.json',
       },
     },
     links: { 'partners.php': '#/partners' },
