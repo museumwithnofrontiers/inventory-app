@@ -62,6 +62,15 @@ export interface PhpRegion {
   end: string
   language: string
   constants?: Record<string, string>
+  /**
+   * For a region laid out in Bootstrap's columns (Baroque Art's credits, a
+   * role beside its people): the data file its rows are written to. Each
+   * column becomes an entry of its own, the region's name and its number
+   * (`credits.body01`), and the file lists them row by row with their widths,
+   * so the site sets them side by side as legacy did. Without it the region
+   * is one entry.
+   */
+  rows?: string
 }
 
 export interface StandaloneSite {
@@ -154,6 +163,21 @@ export function entryValue(value: string | null, site?: StandaloneSite): string 
 }
 
 /**
+ * A column of a region in columns, as its entry: every line break kept, as a
+ * backslash break. Its breaks set it beside the column next to it — the
+ * people's first line beside the role's second, the blank lines that keep a
+ * role beside its person — where two spaces would let Markdown join blank
+ * lines into one paragraph break, and drop those that open the column. A
+ * heading keeps its two spaces: no Markdown breaks a heading's line, and a
+ * backslash there would be printed.
+ */
+export function columnValue(html: string, site?: StandaloneSite): string {
+  const lead = /^(\s|<p\b[^>]*>|<br\s*\/?>)*/i.exec(html)![0].match(/<br\s*\/?>/gi)?.length ?? 0
+  const text = entryValue(html, site).replace(/^(?!#{1,6} )(.*) {2}$/gm, '$1\\')
+  return text === '' ? '' : '\\\n'.repeat(lead) + text
+}
+
+/**
  * Every `href` of a legacy text, as the new site needs it: a page the site
  * rebuilt (`site.links`) becomes its route; any other page of the legacy site
  * becomes an absolute link to it; anything else (another site, `mailto:`, an
@@ -201,6 +225,136 @@ export function phpRegionHtml(source: string, region: PhpRegion): string {
   return html
     .replace(/(<h[1-6][^>]*>)\s*(<br\s*\/?>\s*)+/gi, '$1')
     .replace(/<a\b[^>]*>[\s\S]*?<\/a>/gi, (link) => link.replace(/<br\s*\/?>/gi, ''))
+}
+
+/** A column of a region: its widths, of 12, from 992px (`col-md-`) and from 768px (`col-sm-`), and its HTML. */
+export interface RegionColumn {
+  md: number
+  sm: number
+  html: string
+}
+
+/**
+ * A region's columns, row by row: each `col-md-N` with the columns that share
+ * its `.row`, as Bootstrap sets them. Text outside any column (a heading
+ * whose column opened before the region) is a row of its own, full width.
+ * Below 768px every column is full width, legacy's `col-xs-12`.
+ */
+export function phpRegionRows(html: string): RegionColumn[][] {
+  const rows: RegionColumn[][] = []
+  // The open divs: a column, a .row (by number), or any other.
+  const stack: { column?: { md: number; sm: number; start: number }; row?: number }[] = []
+  let rowCount = 0
+  // The .row the last row written came from, while nothing came between.
+  let lastRow: number | undefined
+  let loose = ''
+  const flush = () => {
+    if (loose.replace(/<[^>]*>|&nbsp;|\s/g, '') !== '') {
+      rows.push([{ md: 12, sm: 12, html: loose }])
+      lastRow = undefined
+    }
+    loose = ''
+  }
+
+  let pos = 0
+  for (const tag of html.matchAll(/<div\b([^>]*)>|<\/div\s*>/gi)) {
+    const at = tag.index
+    const end = at + tag[0].length
+    const opening = tag[1] !== undefined
+    if (stack.some((frame) => frame.column)) {
+      // Inside a column: only its own end matters.
+      if (opening) stack.push({})
+      else {
+        const frame = stack.pop()!
+        if (frame.column) {
+          const row = [...stack].reverse().find((f) => f.row !== undefined)?.row ?? ++rowCount
+          const column = { md: frame.column.md, sm: frame.column.sm, html: html.slice(frame.column.start, at) }
+          if (row === lastRow) rows[rows.length - 1]!.push(column)
+          else rows.push([column])
+          lastRow = row
+        }
+      }
+      pos = end
+      continue
+    }
+
+    loose += html.slice(pos, at)
+    pos = end
+    // A div's end outside a column: a .row's, another's, or one opened before the region.
+    if (!opening) {
+      stack.pop()
+      continue
+    }
+    const md = /\bcol-md-(\d+)/.exec(tag[1]!)
+    if (md) {
+      flush()
+      const sm = /\bcol-sm-(\d+)/.exec(tag[1]!)
+      stack.push({ column: { md: Number(md[1]), sm: sm ? Number(sm[1]) : 12, start: end } })
+    } else {
+      stack.push(/\brow\b/.test(tag[1]!) ? { row: ++rowCount } : {})
+    }
+  }
+  loose += html.slice(pos)
+  flush()
+  return rows
+}
+
+/**
+ * A column as a rows file lists it: its entry (none when it is empty), its
+ * widths, and `lead`, the line breaks legacy puts over its first paragraph,
+ * outside it, when there are any. Those lines are in the column's own font
+ * (the browser's default on legacy's pages), not the paragraph's, so they
+ * stay out of the text.
+ */
+export interface RowsFileColumn {
+  entry?: string
+  md: number
+  sm: number
+  lead?: number
+}
+
+/**
+ * A site's PHP regions as entries (entry → HTML) and the rows files of those
+ * laid out in columns. `read` gives a region's PHP source.
+ */
+export function siteRegions(
+  site: StandaloneSite,
+  namespace: string,
+  read: (region: PhpRegion) => string
+): { regions: Record<string, string>; files: Record<string, RowsFileColumn[][]> } {
+  const regions: Record<string, string> = {}
+  const files: Record<string, RowsFileColumn[][]> = {}
+  for (const [entry, region] of Object.entries(site.regions ?? {})) {
+    const html = phpRegionHtml(read(region), region)
+    if (!region.rows) {
+      regions[entry] = html
+      continue
+    }
+    let count = 0
+    const rows = phpRegionRows(html)
+    const width = Math.max(2, String(rows.flat().length).length)
+    files[region.rows] = rows.map((row) =>
+      row.map(({ md, sm, html: column }) => {
+        const name = `${entry}${String(++count).padStart(width, '0')}`
+        const opening = /^(?:\s|<br\s*\/?>)*/i.exec(column)![0]
+        const lead = opening.match(/<br\s*\/?>/gi)?.length ?? 0
+        const text = column.slice(opening.length)
+        const layout = { md, sm, ...(lead > 0 ? { lead } : {}) }
+        if (entryValue(text, site) === '') return layout
+        regions[name] = text
+        return { entry: `${namespace}.${name}`, ...layout }
+      })
+    )
+  }
+  return { regions, files }
+}
+
+/** The region an entry is cut from: its own, or the one it is a column of. */
+function regionOf(site: StandaloneSite, entry: string): PhpRegion | undefined {
+  if (site.regions?.[entry]) return site.regions[entry]
+  return Object.entries(site.regions ?? {}).find(
+    ([name, region]) => region.rows && entry.startsWith(name) && /^\d+$/.test(entry.slice(name.length))
+  )?.[1]
 }
 
 /** What a site's table builders produce: entries per language, and data files. */
@@ -260,8 +414,9 @@ export function buildStandaloneCatalogue(
   }
 
   for (const [entry, html] of Object.entries(regions)) {
-    const language = site.regions?.[entry]?.language ?? 'en'
-    const text = entryValue(html, site)
+    const region = regionOf(site, entry)
+    const language = region?.language ?? 'en'
+    const text = region?.rows ? columnValue(html, site) : entryValue(html, site)
     if (text !== '') (locales[language] ??= {})[`${namespace}.${entry}`] = text
   }
 
@@ -280,7 +435,11 @@ export function buildStandaloneCatalogue(
     }
   }
 
-  const keys = [...Object.keys(words), ...Object.keys(site.regions ?? {}).map((entry) => `${namespace}.${entry}`)]
+  // A region in columns is its columns' entries, those that have a text.
+  const regionEntries = Object.entries(site.regions ?? {}).flatMap(([entry, region]) =>
+    region.rows ? Object.keys(regions).filter((name) => regionOf(site, name) === region) : [entry]
+  )
+  const keys = [...Object.keys(words), ...regionEntries.map((entry) => `${namespace}.${entry}`)]
   const missingEnglish = keys.filter((key) => locales.en![key] === undefined).sort()
 
   const sorted: MessageCatalogue = {}
