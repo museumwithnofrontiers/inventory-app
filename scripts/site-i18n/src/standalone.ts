@@ -249,7 +249,7 @@ export function phpRegionRows(html: string): RegionColumn[][] {
   let lastRow: number | undefined
   let loose = ''
   const flush = () => {
-    if (loose.replace(/<[^>]*>|&nbsp;|\s/g, '') !== '') {
+    if (entryValue(loose) !== '') {
       rows.push([{ md: 12, sm: 12, html: loose }])
       lastRow = undefined
     }
