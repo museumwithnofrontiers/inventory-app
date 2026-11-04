@@ -161,6 +161,5 @@ export {
   ExtraBitBufferBackfillImporter,
   MuseumProjectLinkBackfillImporter,
   ExhibitionI18nTextBackfillImporter,
-  ExhibitionLogoExtraBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
 } from './phase-11/index.js';

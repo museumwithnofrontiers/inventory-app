@@ -119,8 +119,8 @@ Site chrome images (`image_path`, `banner_image_path`, `homepage_image_path`)
 and related-content PDFs (`document_path`) are the exception to the absolute-URL
 rule: they live on the legacy media server and were never imported, so the
 package carries the legacy path only and the viewer supplies the host, exactly
-as the legacy client did through `VUE_APP_IMAGES_URL`. Sponsor logos **were**
-imported, so `logos[].image_url` is a resolved absolute URL.
+as the legacy client did through `VUE_APP_IMAGES_URL`. The sponsors' logos are
+not in the package: the website keeps them in its own assets (#2463).
 
 ## Naming
 

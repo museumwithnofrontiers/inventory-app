@@ -21,5 +21,4 @@ export { CollectionPurposeBackfillImporter } from './collection-purpose-backfill
 export { ExtraBitBufferBackfillImporter } from './extra-bit-buffer-backfill-importer.js';
 export { MuseumProjectLinkBackfillImporter } from './museum-project-link-backfill-importer.js';
 export { ExhibitionI18nTextBackfillImporter } from './exhibition-i18n-text-backfill-importer.js';
-export { ExhibitionLogoExtraBackfillImporter } from './exhibition-logo-extra-backfill-importer.js';
 export { ExploreMonumentCountryBackfillImporter } from './explore-monument-country-backfill-importer.js';

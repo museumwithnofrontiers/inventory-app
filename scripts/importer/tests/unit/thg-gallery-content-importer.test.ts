@@ -18,8 +18,7 @@ describe('ThgGalleryContentImporter', () => {
   let writePartnerLogoMock: ReturnType<typeof vi.fn>;
   let writeContributorMock: ReturnType<typeof vi.fn>;
   let attachPartnerToCollectionWithLevelMock: ReturnType<typeof vi.fn>;
-  let writeTagMock: ReturnType<typeof vi.fn>;
-  let attachTagsToCollectionImageMock: ReturnType<typeof vi.fn>;
+  let setCollectionExtraMock: ReturnType<typeof vi.fn>;
 
   const logger: ILogger = {
     info: vi.fn(),
@@ -33,11 +32,13 @@ describe('ThgGalleryContentImporter', () => {
     showSummary: vi.fn(),
   };
 
-  /** The parsed `extra` JSON of the n-th writeCollectionImage call. */
-  const writtenImageExtra = (call = 0): Record<string, unknown> =>
-    JSON.parse(
-      (writeCollectionImageMock.mock.calls[call]![0] as { extra: string }).extra
-    ) as Record<string, unknown>;
+  /** The `logos` the n-th setCollectionExtra call wrote. */
+  const writtenLogos = (call = 0): Array<Record<string, unknown>> =>
+    (
+      JSON.parse(setCollectionExtraMock.mock.calls[call]![1] as string) as {
+        logos: Array<Record<string, unknown>>;
+      }
+    ).logos;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -148,8 +149,7 @@ describe('ThgGalleryContentImporter', () => {
     };
 
     writeCollectionImageMock = vi.fn().mockResolvedValue('collection-image-uuid');
-    writeTagMock = vi.fn().mockResolvedValue('logo-tag-uuid');
-    attachTagsToCollectionImageMock = vi.fn().mockResolvedValue(undefined);
+    setCollectionExtraMock = vi.fn().mockResolvedValue(undefined);
     writeCollectionMediaMock = vi.fn().mockResolvedValue(undefined);
     writePartnerMock = vi.fn().mockResolvedValue('partner-uuid');
     writePartnerTranslationMock = vi.fn().mockResolvedValue(undefined);
@@ -168,8 +168,8 @@ describe('ThgGalleryContentImporter', () => {
       writePartnerLogo: writePartnerLogoMock,
       writeContributor: writeContributorMock,
       attachPartnerToCollectionWithLevel: attachPartnerToCollectionWithLevelMock,
-      writeTag: writeTagMock,
-      attachTagsToCollectionImage: attachTagsToCollectionImageMock,
+      getCollectionExtra: vi.fn().mockResolvedValue({ subtitle: 'kept' }),
+      setCollectionExtra: setCollectionExtraMock,
     } as unknown as IWriteStrategy;
 
     context = {
@@ -195,57 +195,43 @@ describe('ThgGalleryContentImporter', () => {
       expect(sql).not.toContain('path');
     });
 
-    it('writes a collection image using the logo column value as path', async () => {
+    it("keeps the logo in its collection's extra, beside what is there, not as an image", async () => {
       const importer = new ThgGalleryContentImporter(context);
       const result = await importer.import();
 
-      expect(writeCollectionImageMock).toHaveBeenCalledWith({
-        collection_id: 'collection-uuid-5',
-        path: 'logos/gallery5_header.png',
-        original_name: 'gallery5_header.png',
-        mime_type: 'image/png',
-        size: 1,
-        alt_text: null,
-        display_order: 1,
-        extra: JSON.stringify({
-          link: 'https://www.unaoc.org/',
-          category_id: 1,
-          category_name: 'Footer 1',
-          visible: true,
-          labels: { eng: 'United Nations Alliance of Civilizations' },
-          alts: { eng: 'The UNAOC emblem' },
-        }),
-      });
+      expect(writeCollectionImageMock).not.toHaveBeenCalled();
+      expect(setCollectionExtraMock).toHaveBeenCalledWith(
+        'collection-uuid-5',
+        JSON.stringify({
+          subtitle: 'kept',
+          logos: [
+            {
+              file: 'logos/gallery5_header.png',
+              link: 'https://www.unaoc.org/',
+              category_id: 1,
+              category_name: 'Footer 1',
+              visible: true,
+              labels: { eng: 'United Nations Alliance of Civilizations' },
+              alts: { eng: 'The UNAOC emblem' },
+              display_order: 1,
+            },
+          ],
+        })
+      );
       expect(result.errors).toHaveLength(0);
     });
 
     /**
      * The base row carries a short internal label ("UNAOC"); the i18n row
-     * carries the display string the live API actually serves. Shipping the
+     * carries the display string the live API actually serves. Keeping the
      * base row's value would put an acronym on the exhibition banner.
      */
     it('lets the i18n caption win over the base-row label', async () => {
       await new ThgGalleryContentImporter(context).import();
 
-      const extra = writtenImageExtra();
-      expect(extra['labels']).toEqual({ eng: 'United Nations Alliance of Civilizations' });
-    });
-
-    it('tags the logo image with the image-type:logo tag', async () => {
-      await new ThgGalleryContentImporter(context).import();
-
-      // TagHelper owns the key format — never hand-built by the importer.
-      expect(writeTagMock).toHaveBeenCalledWith(
-        expect.objectContaining({
-          internal_name: 'logo',
-          category: 'image-type',
-          language_id: 'eng',
-          backward_compatibility: 'mwnf3:tags:image-type:eng:logo',
-        })
-      );
-      expect(attachTagsToCollectionImageMock).toHaveBeenCalledWith('collection-image-uuid', [
-        'logo-tag-uuid',
-      ]);
+      expect(writtenLogos()[0]!['labels']).toEqual({
+        eng: 'United Nations Alliance of Civilizations',
+      });
     });
 
     /**
@@ -253,7 +239,7 @@ describe('ThgGalleryContentImporter', () => {
      * record — the row is imported anyway and the flag rides along, so
      * filtering stays the viewer's job.
      */
-    it('imports a hidden logo, carrying visible: false', async () => {
+    it('keeps a hidden logo, carrying visible: false', async () => {
       queryMock.mockImplementation(async (sql: string) => {
         if (sql.includes('INNER JOIN mwnf3_thematic_gallery.thg_projects')) {
           return [{ gallery_id: 5, is_gallery: 0, is_exhibition: 1 }];
@@ -281,10 +267,10 @@ describe('ThgGalleryContentImporter', () => {
 
       const result = await new ThgGalleryContentImporter(context).import();
 
-      expect(writeCollectionImageMock).toHaveBeenCalledTimes(1);
-      const extra = writtenImageExtra();
       // Every empty key is omitted; `visible: false` is a value and stays.
-      expect(extra).toEqual({ visible: false });
+      expect(writtenLogos()).toEqual([
+        { file: 'logos/hidden.png', visible: false, display_order: 0 },
+      ]);
       expect(result.errors).toHaveLength(0);
     });
 
@@ -324,12 +310,11 @@ describe('ThgGalleryContentImporter', () => {
 
       const result = await new ThgGalleryContentImporter(context).import();
 
-      expect(writeCollectionImageMock).toHaveBeenCalledTimes(1);
-      const extra = writtenImageExtra();
-      expect(extra['category_id']).toBe(2);
+      const [extra] = writtenLogos();
+      expect(extra!['category_id']).toBe(2);
       expect(extra).not.toHaveProperty('category_name');
       // The base row still seeds the default language.
-      expect(extra['labels']).toEqual({ eng: 'UNAOC' });
+      expect(extra!['labels']).toEqual({ eng: 'UNAOC' });
       expect(result.errors).toHaveLength(0);
     });
   });

@@ -55,20 +55,6 @@ translations/
   "partners": [                            // exhibition_partner: bottom-banner strip
     { "partner_id": "<uuid>", "category": "…", "display_order": 1 }
   ],
-  "logos": [{                              // exhibition_logo: sponsor logos
-    "id": "<collection_image uuid>",
-    "image_url": "https://inventory.metanull.eu/pub/….png",
-    "legacy_path": "unaoc_logo.jpg",       // collection_images.original_name
-    "alt_text": "…|null",                  // the column's single alt — fallback for alt_texts
-    "url": "https://www.unaoc.org/|null",  // exhibition_logo.link: the logo is a hyperlink
-    "labels":    { "en": "United Nations Alliance of Civilizations" },  // the rendered caption
-    "alt_texts": { "en": "…" },
-    "further_readings": { "en": "…" },
-    "category": "Footer 2|null",           // exhibition_logo_category.name
-    "category_id": 2,                      // 0 Header, 1–4 Footer 1–4
-    "visible": true,                       // hidden logos ship too — filtering is the viewer's job
-    "display_order": 1
-  }],
   "hidden_partner_ids": ["<uuid>", …]      // E6: exclude everywhere (Water in Islam: 11, measured)
 }
 ```
@@ -96,30 +82,11 @@ Two things about the language fields, both learned from Colours:
   against a database that predates it should log the shortfall by name rather
   than silently shipping an exhibition with no sub-title.
 
-`logos[]` reads two mechanisms of #1592, and both matter for anyone porting
-this to another exhibition:
-
-- **The entries are the logo-TAGGED collection images**, identified through
-  `collection_image_tag` by the `image-type` / `logo` tag. A collection can own
-  images that are not sponsor logos, so the exporter never exports
-  `collection_images` wholesale. Match the tag on its identity
-  (`internal_name` + `category`), not on its `backward_compatibility`: that
-  string carries a language segment (`mwnf3:tags:image-type:eng:logo`) and the
-  tag table is unique per `(internal_name, category, language_id)`.
-- **Everything besides the image rides in `collection_images.extra`** — `link`,
-  `category_id`, `category_name` (denormalized at import so no exporter needs
-  the legacy database), `visible`, and the `labels` / `alts` /
-  `further_readings` maps merged from `exhibition_logo_i18n`. `labels` is the
-  string the page renders, and it is worth the trip: the base row says "UNAOC"
-  while the i18n row — like the live API — says "United Nations Alliance of
-  Civilizations". In the column those maps are keyed by the inventory's 3-char
-  language id; the package re-keys them to 2-char codes like every other
-  language map here, skipping a language the inventory carries no code for.
-
-Against a database that predates the migration, the backfill or a fresh import,
-no image carries the tag and `logos` ships empty; the exporter warns by name
-when the collection has images but none of them is a logo, so that state is
-visible rather than indistinguishable from a logo-less exhibition.
+The sponsors' logos (`exhibition_logo`) are not in the package. Each website
+keeps the logos it shows in its own assets: the files, and each one's caption,
+link, banner slot and order in its configuration (`sponsorLogos`). The
+inventory keeps legacy's values as data, in the exhibition collection's
+`extra.logos` (#2463).
 
 ## themes.json
 
