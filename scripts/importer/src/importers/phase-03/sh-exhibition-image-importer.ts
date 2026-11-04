@@ -1,11 +1,13 @@
 /**
  * SH Exhibition Image Importer
  *
- * Imports the pictures and logos an SH exhibition row names as the exhibition
- * collection's images:
+ * Imports the pictures an SH exhibition row names as the exhibition
+ * collection's images, and keeps its logos as legacy data:
  * - homeimage, exh_thumb, portal_image: one image each, tagged with its role
- * - logo1..logo3: the partner logos legacy's exhibition home prints, tagged
- *   `logo` like the thematic galleries' logos, each with its url as `extra.link`
+ * - logo1..logo3: the partner logos legacy's exhibition home prints, with
+ *   their urls, in the collection's `extra.logos`. A logo is the site's, not
+ *   the inventory's (#2463, Pascal 2026-11-03): each website keeps the logos
+ *   it shows in its own assets.
  *
  * Legacy schema (mwnf3_sharing_history):
  * - sh_exhibitions (exhibition_id, exh_thumb, logo1, url1, logo2, url2, logo3, url3,
@@ -14,6 +16,7 @@
  * New schema:
  * - collection_images (collection_id, path, original_name, mime_type, size, display_order, extra)
  * - collection_image_tag, with `image-type` tags
+ * - collections.extra.logos ([{ file, link?, display_order }])
  *
  * The files are copied later by image-sync (size 1 marks a row to sync).
  *
@@ -26,12 +29,9 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import type { ShLegacyExhibition } from '../../domain/types/index.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
-import {
-  IMAGE_TYPE_TAG_CATEGORY,
-  LOGO_TAG_NAME,
-} from '../phase-10/thg-gallery-content-importer.js';
 
 const SH_SCHEMA = 'mwnf3_sharing_history';
+const IMAGE_TYPE_TAG_CATEGORY = 'image-type';
 
 const MIME_TYPES: Record<string, string> = {
   '.jpg': 'image/jpeg',
@@ -41,12 +41,17 @@ const MIME_TYPES: Record<string, string> = {
   '.webp': 'image/webp',
 };
 
-/** One image an exhibition row names: its legacy path, role tag, order and extra. */
+/** One picture an exhibition row names: its legacy path and role tag. */
 export interface ShExhibitionImage {
   path: string;
   tag: string;
+}
+
+/** One entry of an exhibition collection's `extra.logos`. */
+export interface ShExhibitionLogo {
+  file: string;
+  link?: string;
   display_order: number;
-  extra: Record<string, unknown> | null;
 }
 
 type ShExhibitionImageRow = Pick<
@@ -65,7 +70,7 @@ type ShExhibitionImageRow = Pick<
 
 const trimToNull = (value: string | null | undefined): string | null => value?.trim() || null;
 
-/** The images a legacy exhibition row names, in the order legacy's columns give them. */
+/** The pictures a legacy exhibition row names, in the order legacy's columns give them. */
 export function exhibitionImages(row: ShExhibitionImageRow): ShExhibitionImage[] {
   const images: ShExhibitionImage[] = [];
   const pictures: [string | null, string][] = [
@@ -75,25 +80,26 @@ export function exhibitionImages(row: ShExhibitionImageRow): ShExhibitionImage[]
   ];
   for (const [legacyPath, tag] of pictures) {
     const imagePath = trimToNull(legacyPath);
-    if (imagePath) images.push({ path: imagePath, tag, display_order: 0, extra: null });
+    if (imagePath) images.push({ path: imagePath, tag });
   }
-  const logos: [string | null, string | null][] = [
+  return images;
+}
+
+/** The logos a legacy exhibition row names (logo1..3), each with its url, in their order. */
+export function exhibitionLogos(row: ShExhibitionImageRow): ShExhibitionLogo[] {
+  const logos: ShExhibitionLogo[] = [];
+  const columns: [string | null, string | null][] = [
     [row.logo1, row.url1],
     [row.logo2, row.url2],
     [row.logo3, row.url3],
   ];
-  logos.forEach(([legacyPath, url], index) => {
-    const imagePath = trimToNull(legacyPath);
-    if (!imagePath) return;
+  columns.forEach(([legacyPath, url], index) => {
+    const file = trimToNull(legacyPath);
+    if (!file) return;
     const link = trimToNull(url);
-    images.push({
-      path: imagePath,
-      tag: LOGO_TAG_NAME,
-      display_order: index + 1,
-      extra: link ? { link } : null,
-    });
+    logos.push({ file, ...(link ? { link } : {}), display_order: index + 1 });
   });
-  return images;
+  return logos;
 }
 
 export class ShExhibitionImageImporter extends BaseImporter {
@@ -129,7 +135,8 @@ export class ShExhibitionImageImporter extends BaseImporter {
 
       for (const row of rows) {
         const images = exhibitionImages(row);
-        if (images.length === 0) continue;
+        const logos = exhibitionLogos(row);
+        if (images.length === 0 && logos.length === 0) continue;
 
         const collectionBackwardCompat = `${SH_SCHEMA}:sh_exhibitions:${row.exhibition_id}`;
         const collectionId = await this.getEntityUuidAsync(collectionBackwardCompat, 'collection');
@@ -138,9 +145,34 @@ export class ShExhibitionImageImporter extends BaseImporter {
           result.warnings.push(
             `Exhibition ${row.exhibition_id}: Collection not found (${collectionBackwardCompat}), images skipped`
           );
-          result.skipped += images.length;
+          result.skipped += images.length + logos.length;
           this.showSkipped();
           continue;
+        }
+
+        if (logos.length > 0) {
+          try {
+            if (this.isDryRun || this.isSampleOnlyMode) {
+              this.logInfo(
+                `[${this.isSampleOnlyMode ? 'SAMPLE' : 'DRY-RUN'}] Would write ${logos.length} logo(s) to exhibition ${row.exhibition_id}`
+              );
+            } else {
+              // Read-modify-write, beside whatever else the exhibition keeps in
+              // `extra`; written whole, so a rerun leaves the same list.
+              const existing = (await this.context.strategy.getCollectionExtra(collectionId)) ?? {};
+              await this.context.strategy.setCollectionExtra(
+                collectionId,
+                JSON.stringify({ ...existing, logos })
+              );
+            }
+            result.imported += logos.length;
+            this.showProgress();
+          } catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            result.errors.push(`Exhibition ${row.exhibition_id} logos: ${message}`);
+            this.logError(`Exhibition ${row.exhibition_id} logos`, message);
+            this.showError();
+          }
         }
 
         for (const image of images) {
@@ -168,8 +200,8 @@ export class ShExhibitionImageImporter extends BaseImporter {
               mime_type: MIME_TYPES[path.extname(image.path).toLowerCase()] ?? 'image/jpeg',
               size: 1,
               alt_text: null,
-              display_order: image.display_order,
-              extra: image.extra ? JSON.stringify(image.extra) : null,
+              display_order: 0,
+              extra: null,
             });
 
             if (!tagIds.has(image.tag)) {
