@@ -330,6 +330,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       // Its page navigation's first and last ways ("<<First", "Last>>").
       'dynasties.first': { word: 'IslDyn_PageNav_First', groups: [61] },
       'dynasties.last': { word: 'IslDyn_PageNav_Last', groups: [61] },
+      // A dynasty's timeline: its columns, and the box with all its events.
+      'dynasties.date': { word: 'gn_databaseSearchFormCriteria_dates', groups: [2, 3, 61] },
+      'dynasties.country': { word: 'Country', groups: [2, 3, 61] },
+      'dynasties.description': { word: 'hcr_description', groups: [2, 3, 61] },
+      'dynasties.download': { word: 'gn_download', groups: [2, 3, 61] },
+      'dynasties.allEvents': { word: 'IslDyn_Timeline_All Events', groups: [61] },
     },
     overrides: {
       // The sheet's toggle (database_item.php's `.tag`), printed by viewer-layout's RecordSheet.
