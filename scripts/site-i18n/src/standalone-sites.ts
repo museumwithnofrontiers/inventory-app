@@ -327,6 +327,9 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'dynasties.startPage': { word: 'IslDyn_return StartPage', groups: [61] },
       'dynasties.relatedObjectsFor': { word: 'islDyn_RelObjFor', groups: [61] },
       'dynasties.relatedMonumentsFor': { word: 'islDyn_relMonFor', groups: [61] },
+      // Its page navigation's first and last ways ("<<First", "Last>>").
+      'dynasties.first': { word: 'IslDyn_PageNav_First', groups: [61] },
+      'dynasties.last': { word: 'IslDyn_PageNav_Last', groups: [61] },
     },
     overrides: {
       // The sheet's toggle (database_item.php's `.tag`), printed by viewer-layout's RecordSheet.
