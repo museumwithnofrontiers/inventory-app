@@ -3,6 +3,7 @@
 namespace Tests\Console;
 
 use App\Models\CollectionTranslation;
+use App\Models\DynastyTranslation;
 use App\Models\GlossarySpelling;
 use App\Models\ItemTranslation;
 use App\Models\Language;
@@ -250,6 +251,28 @@ class GlossaryBulkResyncTest extends TestCase
 
         $this->assertTrue($collectionTranslation->fresh()->spellings->contains($spelling));
         $this->assertTrue($timelineEventTranslation->fresh()->spellings->contains($spelling));
+    }
+
+    public function test_syncs_dynasty_translations_too()
+    {
+        $language = Language::factory()->create();
+        $spelling = GlossarySpelling::factory()->create([
+            'language_id' => $language->id,
+            'spelling' => 'caravanserai',
+        ]);
+        $dynastyTranslation = DynastyTranslation::factory()->create([
+            'language_id' => $language->id,
+            'history' => 'They built a caravanserai on every road.',
+        ]);
+        $unrelated = DynastyTranslation::factory()->create([
+            'language_id' => $language->id,
+            'history' => 'They minted coins.',
+        ]);
+
+        $this->artisan('glossary:bulk-resync')->assertExitCode(0);
+
+        $this->assertTrue($dynastyTranslation->fresh()->spellings->contains($spelling));
+        $this->assertCount(0, $unrelated->fresh()->spellings);
     }
 
     public function test_is_idempotent()

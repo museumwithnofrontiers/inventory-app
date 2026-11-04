@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\DynastyTranslationSaved;
 use App\Traits\HasJsonFields;
 use Database\Factories\DynastyTranslationFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -10,7 +11,9 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 
 /**
  * DynastyTranslation Model
@@ -28,6 +31,54 @@ class DynastyTranslation extends Model
 {
     /** @use HasFactory<DynastyTranslationFactory> */
     use HasFactory, HasJsonFields, HasUuids;
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::saved(function (DynastyTranslation $dynastyTranslation): void {
+            event(new DynastyTranslationSaved($dynastyTranslation));
+        });
+    }
+
+    /**
+     * Delete the model from the database.
+     * Ensures atomic deletion of the DynastyTranslation and its spelling links.
+     *
+     * @return bool|null
+     *
+     * @throws \LogicException
+     */
+    public function delete()
+    {
+        // If the model doesn't exist, nothing to delete
+        if (! $this->exists) {
+            return false;
+        }
+
+        // Fire the deleting event (for other listeners, not for spelling detachment)
+        if ($this->fireModelEvent('deleting') === false) {
+            return false;
+        }
+
+        // Perform atomic deletion: detach spellings AND delete the model in one transaction
+        return DB::transaction(function () {
+            // First, detach all spelling links
+            $this->spellings()->detach();
+
+            // Then perform the actual deletion
+            $this->performDeleteOnModel();
+
+            // Mark the model as non-existing
+            $this->exists = false;
+
+            // Fire the deleted event
+            $this->fireModelEvent('deleted', false);
+
+            return true;
+        });
+    }
 
     /**
      * The table associated with the model.
@@ -147,6 +198,17 @@ class DynastyTranslation extends Model
     public function translationCopyEditor(): BelongsTo
     {
         return $this->belongsTo(Author::class, 'translation_copy_editor_id');
+    }
+
+    /**
+     * Get the glossary spellings linked to this dynasty translation.
+     *
+     * @return BelongsToMany<GlossarySpelling, $this>
+     */
+    public function spellings(): BelongsToMany
+    {
+        return $this->belongsToMany(GlossarySpelling::class, 'dynasty_translation_spelling', 'dynasty_translation_id', 'spelling_id')
+            ->withTimestamps();
     }
 
     /**

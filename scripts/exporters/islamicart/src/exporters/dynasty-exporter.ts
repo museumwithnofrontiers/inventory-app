@@ -21,6 +21,12 @@ interface DynastyTranslationRow {
   date_description_ad: string | null
 }
 
+interface DynastyGlossaryRow {
+  dynasty_id: string
+  language_id: string
+  glossary_id: string
+}
+
 interface DynastyImageRow {
   dynasty_id: string
   item_id: string
@@ -73,8 +79,26 @@ export class DynastyExporter extends BaseExporter {
       dynastyIds
     )
 
+    // The glossary terms each text links, per language, as the collection
+    // texts carry them.
+    const glossaryLinks = await this.db.query<DynastyGlossaryRow>(
+      `SELECT DISTINCT dt.dynasty_id, dt.language_id, gs.glossary_id
+       FROM dynasty_translation_spelling dts
+       JOIN dynasty_translations dt ON dt.id = dts.dynasty_translation_id
+       JOIN glossary_spellings gs ON gs.id = dts.spelling_id
+       WHERE dt.dynasty_id IN (${this.placeholders(dynastyIds.length)})
+       ORDER BY dt.dynasty_id, dt.language_id, gs.glossary_id`,
+      dynastyIds
+    )
+    const glossaryIds = new Map<string, string[]>()
+    for (const link of glossaryLinks) {
+      const key = `${link.dynasty_id} ${link.language_id}`
+      if (!glossaryIds.has(key)) glossaryIds.set(key, [])
+      glossaryIds.get(key)!.push(link.glossary_id)
+    }
+
     // dynasty_id -> lang_code -> translation fields
-    const translationMap = new Map<string, Record<string, Record<string, string | null>>>()
+    const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const t of translations) {
       if (!translationMap.has(t.dynasty_id)) {
         translationMap.set(t.dynasty_id, {})
@@ -88,6 +112,9 @@ export class DynastyExporter extends BaseExporter {
           history: t.history,
           date_description_ah: t.date_description_ah,
           date_description_ad: t.date_description_ad,
+          ...(glossaryIds.has(`${t.dynasty_id} ${t.language_id}`)
+            ? { glossary_ids: glossaryIds.get(`${t.dynasty_id} ${t.language_id}`) }
+            : {}),
         }
       }
     }

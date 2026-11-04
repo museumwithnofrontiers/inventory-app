@@ -410,10 +410,10 @@ push_staged_images() {
 # No glossary resync on OVH: the `staging-glossary-sync` compose service (run
 # against staging-mysql, after `stage` and before `ship`) already computed
 # item_translation_spelling/collection_translation_spelling/
-# timeline_event_translation_spelling as plain data rows, so load_staged_dump's
-# dump already carries them — nothing left to trigger on OVH. Dispatching a
-# resync here would just make inventory-queue.service redo the exact same work
-# a second time.
+# timeline_event_translation_spelling/dynasty_translation_spelling as plain
+# data rows, so load_staged_dump's dump already carries them — nothing left
+# to trigger on OVH. Dispatching a resync here would just make
+# inventory-queue.service redo the exact same work a second time.
 do_ship() {
   prepare_ssh_key
   resolve_image_destinations
