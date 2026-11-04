@@ -457,6 +457,8 @@ regressions. None of the 14 regressions above is left:
 
 `baselines/2026-11-03` is the run after reimport 12, on the packages published from it (data-packages#11, 16 changed), with the tool as of #2465: 7 real differences, no regressions. The reimport brought each monument's details in legacy's order (#2452), Sharing History's bibliographies in legacy's order (#2446) and Baroque Art's monument `contact` (#2462). The first run failed the gate on that new field (`item.contact` 0 → 489): the tool had stripped legacy's Contact Details box. It now reads the box's lines and compares them with the package: 488 match, and the one with only a responsible institution draws no box on either site (expected).
 
+`baselines/2026-11-04` is the run after reimport 13, on the packages published from it (data-packages#12; 13 of its 18 changed packages are published, the five DXA exhibitions' new versions are not yet), with the tool as of #2465: 7 real differences, no regressions. The reimport brought the dynasty texts' glossary links (#2470) and took the sponsor and partner logos out of the exhibition and Sharing History mini-site packages, which the sites now keep themselves (#2471, #2463).
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
