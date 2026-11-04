@@ -12,11 +12,13 @@
  * exhibition. This reads them from legacy as it serves them, and writes:
  *
  *   <site>/src/minisite.json          the exhibition's settings, the parent
- *                                     site's Historical Profiles for the menu
- *                                     and its partner pages for the logos
+ *                                     site's Historical Profiles for the menu,
+ *                                     the partners' logos (each file, its link
+ *                                     and its tooltip) and their partner pages
  *   <site>/theme/tokens.css           its styles, as --sh-* tokens
- *   <site>/theme/assets/legacy/       the frame's pictures and the exhibition's
- *                                     backgrounds, byte for byte, and SOURCES.json
+ *   <site>/theme/assets/legacy/       the frame's pictures, the exhibition's
+ *                                     backgrounds and the partners' logos
+ *                                     (logos/), byte for byte, and SOURCES.json
  *   <site>/README.md                  the site's own
  *   <instances>/<slug>.json           the exporter instance of its data package
  *
@@ -201,6 +203,39 @@ export function partnerLinks(html, partners, parentSite) {
   return links
 }
 
+/** An attribute's or a tooltip's HTML as the text it shows (`&nbsp;` a no-break space). */
+function htmlText(value) {
+  return value
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&quot;/g, '"')
+    .replace(/&#0*39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&amp;/g, '&')
+}
+
+/**
+ * The partners' logos the home page's band prints (#bottomLogoSectionRight_th3),
+ * in its order: each picture's address, the partner page it leads to and the
+ * tooltip it shows (ddrivetip's text). The logos are the site's own
+ * (inventory-app#2463): the site keeps each file and these values.
+ */
+export function partnerLogos(html) {
+  const start = html.indexOf('id="bottomLogoSectionRight_th3"')
+  if (start < 0) return []
+  const band = html.slice(start, html.indexOf('</div>', start))
+  const logos = []
+  for (const [, anchor = '', src] of band.matchAll(/(<a\s[^>]*>)?\s*<img src="([^"]+)"/g)) {
+    if (/\/empty\.gif$/.test(src)) continue
+    const href = anchor.match(/href="([^"]*)"/)?.[1] ?? ''
+    // The attribute holds a JavaScript call whose string is HTML: decoded once
+    // as the attribute, once as the HTML the tooltip shows.
+    const tip = anchor.match(/ddrivetip\('((?:[^'\\]|\\.)*)'/)?.[1] ?? ''
+    logos.push({ src: htmlText(src), link: htmlText(href), tip: htmlText(htmlText(tip.replace(/\\(.)/g, '$1'))).trim() })
+  }
+  return logos
+}
+
 function option(args, name) {
   const at = args.indexOf(name)
   return at >= 0 ? args[at + 1] : undefined
@@ -241,11 +276,14 @@ async function main(args) {
   )
   const { html, css } = await legacyPages(eId)
   const styles = stylesOf(css)
+  // The partners' logos: each file kept under legacy/logos/ by its own name.
+  const logos = partnerLogos(html).map((logo) => ({ ...logo, file: `logos/${logo.src.split('/').pop()}` }))
   const settings = {
     legacy: legacyUrl,
     family: FAMILY.key,
     eId: Number(eId),
     profiles,
+    logos: logos.map(({ file, link, tip }) => ({ image: `legacy/${file}`, link, tip })),
     partnerLinks: partnerLinks(html, readJson('partners.json'), FAMILY.parentSite),
   }
   writeFileSync(join(site, 'src/minisite.json'), `${JSON.stringify(settings, null, 2)}\n`)
@@ -257,10 +295,11 @@ async function main(args) {
   const sources = [
     ...FRAME.map((file) => [file, `${FAMILY.exhibitions}/images/${file}`]),
     ...Object.entries(backgrounds).map(([file, url]) => [file, new URL(url, `${FAMILY.exhibitions}/`).href]),
+    ...logos.map(({ file, src }) => [file, new URL(src, `${FAMILY.exhibitions}/`).href]),
   ].sort(([a], [b]) => a.localeCompare(b, 'en', { sensitivity: 'base' }))
   const assets = join(site, 'theme/assets/legacy')
   rmSync(assets, { recursive: true, force: true })
-  mkdirSync(assets, { recursive: true })
+  mkdirSync(join(assets, 'logos'), { recursive: true })
   const files = {}
   for (const [file, url] of sources) {
     const bytes = Buffer.from(await (await download(url)).arrayBuffer())
@@ -270,11 +309,12 @@ async function main(args) {
   const about =
     `The frame this website takes from legacy Sharing History's virtual exhibition ${name} ` +
     `(exhibitions/AWE/, exhibition ${eId}), each file as legacy serves it, byte for byte: the pages' ` +
-    `icons and strips, and the three pictures behind the exhibition's title (its styles' home_image, ` +
-    `intro_image and exh_image). tests/assets.test.js checks every file against its hash.`
+    `icons and strips, the three pictures behind the exhibition's title (its styles' home_image, ` +
+    `intro_image and exh_image) and the partners' logos on the home page (logos/). ` +
+    `tests/assets.test.js checks every file against its hash.`
   writeFileSync(join(assets, 'SOURCES.json'), `${JSON.stringify({ about, files }, null, 2)}\n`)
   writeFileSync(join(site, 'README.md'), siteReadme({ slug, name, eId }))
-  console.log(`site      ${resolve(site)}: minisite.json (${profiles.length} profiles), tokens.css, ${sources.length} pictures, README.md`)
+  console.log(`site      ${resolve(site)}: minisite.json (${profiles.length} profiles, ${logos.length} logos), tokens.css, ${sources.length} pictures, README.md`)
 }
 
 /** The mini-site's own README: what it is, and how each role works on it. */

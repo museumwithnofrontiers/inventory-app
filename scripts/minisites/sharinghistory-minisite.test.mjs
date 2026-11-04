@@ -2,7 +2,26 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import { deterministicUuid } from './legacy-minisite.mjs'
-import { historicalProfiles, partnerLinks, slugOf, STYLE_RULES, stylesOf, tokensCss } from './sharinghistory-minisite.mjs'
+import { historicalProfiles, partnerLinks, partnerLogos, slugOf, STYLE_RULES, stylesOf, tokensCss } from './sharinghistory-minisite.mjs'
+
+test("reads the home band's partner logos, each with its link and its tooltip", () => {
+  // As legacy's exh_items.php?eId=8 prints its band.
+  const html = `<div id="bottomLogoSectionRight_th2"><img src="images/arrow_curator.gif"></div>
+        <div id="bottomLogoSectionRight_th3" align="center" >
+                    <a href="https://sharinghistory.museumwnf.org/pm_partner.php?id=TN_01;tn&shpro=AWE&"  onmouseover="ddrivetip('Higher Institute, University of Manouba,&amp;nbsp;Tunis, Tunisia', 280);" onMouseout="hideddrivetip();" ><img src="https://images.museumwnf.org/full/sharing_history/sh_exhibitions/exhibitions/AWE/8/item_logo_18.png" height="74" /></a>
+                <img src="images/empty.gif" width="30px" height="74" alt="" />            <img src="https://images.museumwnf.org/full/x/item_logo_28.png" height="74" />
+        </div>
+    </div>`
+  assert.deepEqual(partnerLogos(html), [
+    {
+      src: 'https://images.museumwnf.org/full/sharing_history/sh_exhibitions/exhibitions/AWE/8/item_logo_18.png',
+      link: 'https://sharinghistory.museumwnf.org/pm_partner.php?id=TN_01;tn&shpro=AWE&',
+      tip: 'Higher Institute, University of Manouba, Tunis, Tunisia',
+    },
+    { src: 'https://images.museumwnf.org/full/x/item_logo_28.png', link: '', tip: '' },
+  ])
+  assert.deepEqual(partnerLogos('<div id="bottomLogoSectionRight_th3"></div>'), [])
+})
 
 test("leads a partner logo to the partner's page on the parent site", () => {
   const html = '<a href="https://sharinghistory.museumwnf.org/pm_partner.php?id=AT_01;at&amp;shpro=AWE&amp;"><img></a>'
