@@ -63,6 +63,9 @@ class GlossarySpelling extends Model
             // Detach all timeline event translation links
             $this->timelineEventTranslations()->detach();
 
+            // Detach all dynasty translation links
+            $this->dynastyTranslations()->detach();
+
             // Then perform the actual deletion
             $this->performDeleteOnModel();
 
@@ -154,6 +157,17 @@ class GlossarySpelling extends Model
     public function timelineEventTranslations(): BelongsToMany
     {
         return $this->belongsToMany(TimelineEventTranslation::class, 'timeline_event_translation_spelling', 'spelling_id', 'timeline_event_translation_id')
+            ->withTimestamps();
+    }
+
+    /**
+     * Get the dynasty translations linked to this spelling.
+     *
+     * @return BelongsToMany<DynastyTranslation, $this>
+     */
+    public function dynastyTranslations(): BelongsToMany
+    {
+        return $this->belongsToMany(DynastyTranslation::class, 'dynasty_translation_spelling', 'spelling_id', 'dynasty_translation_id')
             ->withTimestamps();
     }
 

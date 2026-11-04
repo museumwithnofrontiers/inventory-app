@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\CollectionTranslation;
+use App\Models\DynastyTranslation;
 use App\Models\GlossarySpelling;
 use App\Models\ItemTranslation;
 use App\Models\TimelineEventTranslation;
@@ -15,7 +16,7 @@ class GlossaryBulkResync extends Command
      * re-scans every translation of that language — O(spellings x translations).
      * This command inverts the loop: one combined regex per language, one pass
      * over each translation. Produces the same end state (item/collection/
-     * timeline-event <-> spelling links) as glossary:resync, in a fraction of
+     * timeline-event/dynasty <-> spelling links) as glossary:resync, in a fraction of
      * the time, because the per-language pattern is checked once per
      * translation instead of once per spelling per translation.
      *
@@ -38,7 +39,7 @@ class GlossaryBulkResync extends Command
     /**
      * @var string
      */
-    protected $description = 'Bulk-resynchronise glossary spellings to item, collection, and timeline event translations using one combined pattern per language per translation, instead of one queued job per spelling.';
+    protected $description = 'Bulk-resynchronise glossary spellings to item, collection, timeline event, and dynasty translations using one combined pattern per language per translation, instead of one queued job per spelling.';
 
     public function handle(): int
     {
@@ -55,7 +56,7 @@ class GlossaryBulkResync extends Command
 
         $this->info('Bulk-resyncing glossary across '.$languages->count().' language(s)'.($dryRun ? ' (dry run)' : '').'...');
 
-        $totals = ['item' => 0, 'collection' => 0, 'timeline_event' => 0];
+        $totals = ['item' => 0, 'collection' => 0, 'timeline_event' => 0, 'dynasty' => 0];
 
         foreach ($languages as $languageId) {
             [$pattern, $spellingIdsByText] = $this->buildPatternForLanguage($languageId);
@@ -75,14 +76,19 @@ class GlossaryBulkResync extends Command
             $totals['timeline_event'] += $this->syncTimelineEventTranslations(
                 $languageId, $pattern, $spellingIdsByText, $chunkSize, $dryRun
             );
+
+            $totals['dynasty'] += $this->syncDynastyTranslations(
+                $languageId, $pattern, $spellingIdsByText, $chunkSize, $dryRun
+            );
         }
 
         $this->newLine();
         $this->info(sprintf(
-            'Done. Processed %d item, %d collection, %d timeline event translations.',
+            'Done. Processed %d item, %d collection, %d timeline event, %d dynasty translations.',
             $totals['item'],
             $totals['collection'],
-            $totals['timeline_event']
+            $totals['timeline_event'],
+            $totals['dynasty']
         ));
 
         return 0;
@@ -249,6 +255,39 @@ class GlossaryBulkResync extends Command
             });
 
         $this->line("  [timeline event] {$count} translations processed for language {$languageId}");
+
+        return $count;
+    }
+
+    /**
+     * @param  array<string, list<string>>  $spellingIdsByText
+     */
+    private function syncDynastyTranslations(
+        string $languageId,
+        string $pattern,
+        array $spellingIdsByText,
+        int $chunkSize,
+        bool $dryRun
+    ): int {
+        $count = 0;
+
+        DynastyTranslation::query()->where('language_id', $languageId)
+            ->chunk($chunkSize, function ($translations) use (&$count, $pattern, $spellingIdsByText, $dryRun) {
+                foreach ($translations as $translation) {
+                    $text = implode(' ', array_filter([
+                        $translation->name, $translation->also_known_as, $translation->area,
+                        $translation->history, $translation->date_description_ah,
+                        $translation->date_description_ad,
+                    ]));
+
+                    if (! $dryRun) {
+                        $translation->spellings()->sync($this->matchSpellingIds($text, $pattern, $spellingIdsByText));
+                    }
+                    $count++;
+                }
+            });
+
+        $this->line("  [dynasty] {$count} translations processed for language {$languageId}");
 
         return $count;
     }

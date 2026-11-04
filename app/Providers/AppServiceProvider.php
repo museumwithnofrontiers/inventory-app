@@ -4,13 +4,16 @@ namespace App\Providers;
 
 use App\Enums\OAuthScope;
 use App\Events\CollectionTranslationSaved;
+use App\Events\DynastyTranslationSaved;
 use App\Events\ItemTranslationSaved;
 use App\Events\SpellingSaved;
 use App\Events\TimelineEventTranslationSaved;
 use App\Http\Controllers\Pub\PictureController;
 use App\Listeners\DispatchSyncCollectionTranslationSpellings;
+use App\Listeners\DispatchSyncDynastyTranslationSpellings;
 use App\Listeners\DispatchSyncItemTranslationSpellings;
 use App\Listeners\DispatchSyncSpellingToCollectionTranslations;
+use App\Listeners\DispatchSyncSpellingToDynastyTranslations;
 use App\Listeners\DispatchSyncSpellingToItemTranslations;
 use App\Listeners\DispatchSyncSpellingToTimelineEventTranslations;
 use App\Listeners\DispatchSyncTimelineEventTranslationSpellings;
@@ -72,9 +75,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(ItemTranslationSaved::class, DispatchSyncItemTranslationSpellings::class);
         Event::listen(CollectionTranslationSaved::class, DispatchSyncCollectionTranslationSpellings::class);
         Event::listen(TimelineEventTranslationSaved::class, DispatchSyncTimelineEventTranslationSpellings::class);
+        Event::listen(DynastyTranslationSaved::class, DispatchSyncDynastyTranslationSpellings::class);
         Event::listen(SpellingSaved::class, DispatchSyncSpellingToItemTranslations::class);
         Event::listen(SpellingSaved::class, DispatchSyncSpellingToCollectionTranslations::class);
         Event::listen(SpellingSaved::class, DispatchSyncSpellingToTimelineEventTranslations::class);
+        Event::listen(SpellingSaved::class, DispatchSyncSpellingToDynastyTranslations::class);
 
         // Define a Gate for API documentation access
         Gate::define('viewApiDocs', function ($user = null) {

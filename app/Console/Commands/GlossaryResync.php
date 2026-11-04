@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Jobs\SyncSpellingToCollectionTranslations;
+use App\Jobs\SyncSpellingToDynastyTranslations;
 use App\Jobs\SyncSpellingToItemTranslations;
 use App\Jobs\SyncSpellingToTimelineEventTranslations;
 use App\Models\GlossarySpelling;
@@ -28,7 +29,7 @@ class GlossaryResync extends Command
      *
      * @var string
      */
-    protected $description = 'Re-synchronise glossary spellings to item, collection, and timeline event translations (removes existing links optionally and queues sync jobs in chunks). Refer to laravel artisan queue:work for more info how to run the queue.';
+    protected $description = 'Re-synchronise glossary spellings to item, collection, timeline event, and dynasty translations (removes existing links optionally and queues sync jobs in chunks). Refer to laravel artisan queue:work for more info how to run the queue.';
 
     public function handle(): int
     {
@@ -38,7 +39,7 @@ class GlossaryResync extends Command
         $force = $this->option('force');
 
         if ($remove) {
-            if (! $force && ! $this->confirm('This will REMOVE ALL rows from item_translation_spelling, collection_translation_spelling, and timeline_event_translation_spelling. Continue?')) {
+            if (! $force && ! $this->confirm('This will REMOVE ALL rows from item_translation_spelling, collection_translation_spelling, timeline_event_translation_spelling, and dynasty_translation_spelling. Continue?')) {
                 $this->info('Aborted. No changes were made.');
 
                 return 1;
@@ -47,6 +48,7 @@ class GlossaryResync extends Command
             DB::table('item_translation_spelling')->delete();
             DB::table('collection_translation_spelling')->delete();
             DB::table('timeline_event_translation_spelling')->delete();
+            DB::table('dynasty_translation_spelling')->delete();
             $this->info('Removed existing spelling-translation relationships.');
         }
 
@@ -90,6 +92,11 @@ class GlossaryResync extends Command
                     $timelineDispatch = SyncSpellingToTimelineEventTranslations::dispatch($spelling->id);
                     if ($queue) {
                         $timelineDispatch->onQueue($queue);
+                    }
+
+                    $dynastyDispatch = SyncSpellingToDynastyTranslations::dispatch($spelling->id);
+                    if ($queue) {
+                        $dynastyDispatch->onQueue($queue);
                     }
                 }
 

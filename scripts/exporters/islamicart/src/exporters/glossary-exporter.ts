@@ -29,7 +29,7 @@ export class GlossaryExporter extends BaseExporter {
 
     // `glossaries` has no project/context column — it's a single table shared across every
     // imported project's legacy glossary variants. Scope to entries actually referenced (via
-    // a spelling) from this project's items, collection text, or timeline event text; without
+    // a spelling) from this project's items, collection text, timeline event or dynasty text; without
     // this every project's export would ship every other project's glossary too.
     const ph = this.placeholders(this.projectIds.length)
     const scope = this.context.scope
@@ -82,7 +82,18 @@ export class GlossaryExporter extends BaseExporter {
          SELECT c.id FROM collections c
          WHERE c.context_id IN (SELECT p.context_id FROM projects p WHERE p.id IN (${ph}))
        )
-       ${this.context.projectKeys.includes('ISL') ? 'OR t.collection_id IS NULL' : ''}`,
+       ${this.context.projectKeys.includes('ISL') ? 'OR t.collection_id IS NULL' : ''}
+       ${
+         // The dynasties are ISL's own (see dynasty-exporter.ts), and their
+         // pages link the terms their texts hold.
+         this.context.projectKeys.includes('ISL')
+           ? `UNION
+
+       SELECT DISTINCT gs.glossary_id AS id
+       FROM glossary_spellings gs
+       JOIN dynasty_translation_spelling dts ON dts.spelling_id = gs.id`
+           : ''
+       }`,
       [...this.projectIds, ...this.projectIds, ...this.projectIds]
     )
 
