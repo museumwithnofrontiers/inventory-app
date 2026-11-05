@@ -23,6 +23,16 @@ test("reads the home band's partner logos, each with its link and its tooltip", 
   assert.deepEqual(partnerLogos('<div id="bottomLogoSectionRight_th3"></div>'), [])
 })
 
+test("decodes every entity of a logo's tooltip, as legacy's tooltip shows it", () => {
+  // As legacy's exh_items.php?eId=4 prints its first logo.
+  const html = `<div id="bottomLogoSectionRight_th3"><a href="x" onmouseover="ddrivetip('Eszterh&amp;aacute;za Centre, Fert&#337;d, Hungary', 280);"><img src="a.png" /></a>
+    <a href="y" onmouseover="ddrivetip('Ministry, Ankara, T&uuml;rkiye', 280);"><img src="b.png" /></a></div>`
+  assert.deepEqual(
+    partnerLogos(html).map((logo) => logo.tip),
+    ['Eszterháza Centre, Fertőd, Hungary', 'Ministry, Ankara, Türkiye'],
+  )
+})
+
 test("leads a partner logo to the partner's page on the parent site", () => {
   const html = '<a href="https://sharinghistory.museumwnf.org/pm_partner.php?id=AT_01;at&amp;shpro=AWE&amp;"><img></a>'
   const partners = [{ id: 'p-at', backward_compatibility: 'mwnf3_sharing_history:sh_partners:at_01' }]

@@ -33,6 +33,7 @@ import { createHash } from 'node:crypto'
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { decodeEntities } from '../parity/tools/lib/text.mjs'
 import { deterministicUuid } from './legacy-minisite.mjs'
 
 const REPO = resolve(fileURLToPath(new URL('.', import.meta.url)), '../..')
@@ -203,15 +204,13 @@ export function partnerLinks(html, partners, parentSite) {
   return links
 }
 
-/** An attribute's or a tooltip's HTML as the text it shows (`&nbsp;` a no-break space). */
+/**
+ * An attribute's or a tooltip's HTML as the text it shows: every entity
+ * legacy writes (`&aacute;`, `&uuml;` …), `&nbsp;` a no-break space as the
+ * page shows it (the parity decoder reads it as a space, for comparing).
+ */
 function htmlText(value) {
-  return value
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&quot;/g, '"')
-    .replace(/&#0*39;/g, "'")
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&')
+  return decodeEntities(value.replace(/&nbsp;/g, '\u00a0'))
 }
 
 /**
