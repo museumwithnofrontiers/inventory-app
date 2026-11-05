@@ -4,6 +4,7 @@ import type {
   PartnerContactPerson,
   PartnerImage,
   PartnerLogo,
+  PartnerOwnProject,
   PartnerUrl,
 } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
@@ -84,6 +85,17 @@ interface PartnerHeldItemRow {
   partner_id: string
   item_id: string
   project_id: string | null
+}
+
+// The project a partner record belongs to — legacy's partner list badges each
+// row with it (dxa-api's projectName / isPartner / projectSourceIsExhibition).
+interface OwnProjectRow {
+  partner_id: string
+  own_project_id: string
+  name: string
+  backward_compatibility: string | null
+  level: string | null
+  exhibition: number | string
 }
 
 /**
@@ -181,7 +193,7 @@ export class PartnerExporter extends BaseExporter {
     const partnerPh = this.placeholders(partnerIds.length)
     const langCodeMap = await this.buildLangCodeMap()
 
-    const [translations, images, logos, levels, groupMemberships, heldItems] = await Promise.all([
+    const [translations, images, logos, levels, groupMemberships, heldItems, ownProjects] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also makes the "first row wins" extra-fields pick below deterministic).
@@ -245,6 +257,42 @@ export class PartnerExporter extends BaseExporter {
            AND id IN (${itemPh})
          ORDER BY partner_id, project_id`,
         [...partnerIds, ...this.memberItemIds]
+      ),
+      // Each partner's own project: `partners.project_id`, or for a partner
+      // created without one (the Sharing History partners) the project whose
+      // collection lists it. Its tier is its level in that project's
+      // collection. `exhibition`: an exhibition's collection anchors the
+      // project (`extra.thg_gallery.mwnf3_project_id`), which is what legacy's
+      // projectSourceIsExhibition says.
+      this.db.query<OwnProjectRow>(
+        `SELECT p.id AS partner_id, proj.id AS own_project_id, proj.internal_name AS name,
+                proj.backward_compatibility,
+                (SELECT cp.level
+                   FROM collection_partner cp
+                   JOIN collections c ON c.id = cp.collection_id
+                  WHERE cp.partner_id = p.id
+                    AND cp.collection_type = 'project'
+                    AND c.context_id = proj.context_id
+                  ORDER BY cp.level IS NULL, cp.level
+                  LIMIT 1) AS level,
+                EXISTS (SELECT 1
+                          FROM collections x
+                         WHERE x.type = 'exhibition'
+                           AND proj.backward_compatibility = CONCAT('mwnf3:projects:',
+                               JSON_UNQUOTE(JSON_EXTRACT(x.extra, '$.thg_gallery.mwnf3_project_id')))) AS exhibition
+         FROM partners p
+         JOIN projects proj ON proj.id = COALESCE(p.project_id, (
+           SELECT pp.id
+             FROM collection_partner cp
+             JOIN collections c ON c.id = cp.collection_id
+             JOIN projects pp ON pp.context_id = c.context_id
+            WHERE cp.partner_id = p.id
+              AND cp.collection_type = 'project'
+            ORDER BY pp.id
+            LIMIT 1))
+         WHERE p.id IN (${partnerPh})
+         ORDER BY p.id`,
+        partnerIds
       ),
     ])
 
@@ -347,6 +395,17 @@ export class PartnerExporter extends BaseExporter {
       }
     }
 
+    const ownProjectMap = new Map<string, PartnerOwnProject>()
+    for (const row of ownProjects) {
+      ownProjectMap.set(row.partner_id, {
+        id: row.own_project_id,
+        name: row.name,
+        backward_compatibility: row.backward_compatibility,
+        level: row.level,
+        exhibition: Number(row.exhibition) === 1,
+      })
+    }
+
     const output: Partner[] = partners.map(partner => {
       const extra = extraMap.get(partner.id)
       const itemCount = Number(partner.item_count)
@@ -373,6 +432,7 @@ export class PartnerExporter extends BaseExporter {
         level: levelMap.get(partner.id) ?? null,
         parent_id: parentMap.get(partner.id) ?? null,
         project_uuids: projectUuids,
+        own_project: ownProjectMap.get(partner.id) ?? null,
         // Member items held here — the count the partners list prints, and the
         // reason a partner appears at all.
         item_count: itemCount,
