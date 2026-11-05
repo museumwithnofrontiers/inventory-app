@@ -137,6 +137,12 @@ interface OwnProjectRow {
  * not-live-project exclusion, and the hardcoded `uk/Mus51` / `us/Mus51`
  * exclusions. Neither is reproduced; re-check them if a future gallery's
  * partner count looks short.
+ *
+ * MWNF-371 is not a no-op everywhere: it hides a partner reached only through
+ * the project of another gallery whose live date is still ahead, so legacy's
+ * lists leave such a gallery's partners out until it goes live. It depends on
+ * the day the page is read, which a package built once cannot follow; the
+ * package lists them, as legacy does once that gallery is live.
  */
 // dxa-api lists a mwnf3 museum in every language it has a name row in, but a
 // Sharing History partner only in those whose row has a description: a page
