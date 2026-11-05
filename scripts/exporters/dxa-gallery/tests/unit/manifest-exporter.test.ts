@@ -13,6 +13,8 @@ function contextWith(rows: Record<string, unknown[]>): ExportContext {
   const query = vi.fn(async (sql: string) => {
     // collectProjectIds' member-item project lookup.
     if (sql.includes('FROM items')) return rows.memberProjects ?? []
+    // homeSitesByProject's lookup of each site collection's own project.
+    if (sql.includes('FROM collections c')) return rows.siteProjects ?? []
     // The projects-section title lookup (buildProjectsSection) and the
     // gallery-name lookup (siteLanguages/names) both touch
     // collection_translations, but only the former JOINs it from `projects
@@ -41,6 +43,7 @@ function contextWith(rows: Record<string, unknown[]>): ExportContext {
     memberItemIds: ['a', 'b'],
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.org',
     logger: { info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn() } as unknown as ExportContext['logger'],
   }
@@ -185,14 +188,50 @@ describe('ManifestExporter', () => {
         site_url: 'https://carpets.museumwnf.org',
         related_database_url: null,
         artistic_introduction_url: null,
+        home_site: null,
       },
       'isl-uuid': {
         name: {},
         site_url: null,
         related_database_url: null,
         artistic_introduction_url: null,
+        home_site: null,
       },
     })
+  })
+
+  // Legacy's item sheet pointed at the record in its home database: the
+  // standalone site naming the project, else the site whose collection is
+  // the project's own; none for a project with no site of its own.
+  it("names each project's home site", async () => {
+    const context = contextWith({
+      languages: [],
+      translations: [],
+      labels: [],
+      memberProjects: [{ project_id: 'dca-uuid' }, { project_id: 'isl-uuid' }, { project_id: 'galleries-uuid' }],
+      projects: ['dca-uuid', 'galleries-uuid', 'isl-uuid'].map((id) => ({
+        id, backward_compatibility: null, site_url: null, related_database_url: null, artistic_introduction_url: null,
+      })),
+      siteProjects: [{ collection_id: 'carpets-collection', project_id: 'dca-uuid' }],
+    })
+    context.homeSites = {
+      byProject: new Map([['isl-uuid', 'islamicart']]),
+      bySiteCollection: new Map([['carpets-collection', 'carpets']]),
+    }
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { projects: Record<string, { home_site: string | null }> }
+    expect(manifest.projects['isl-uuid']!.home_site).toBe('islamicart')
+    expect(manifest.projects['dca-uuid']!.home_site).toBe('carpets')
+    expect(manifest.projects['galleries-uuid']!.home_site).toBeNull()
   })
 
   // Epic #1727 phase 2 follow-up: manifest.gallery carried only the legacy

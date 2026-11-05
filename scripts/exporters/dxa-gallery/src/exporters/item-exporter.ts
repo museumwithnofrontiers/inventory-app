@@ -678,11 +678,14 @@ export class ItemExporter extends BaseExporter {
     return result
   }
 
-  /** The other thematic galleries/exhibitions featuring an item, as references. */
+  /**
+   * The thematic galleries/exhibitions featuring an item, as references. This
+   * gallery is one of them: legacy's "On display in" named every gallery the
+   * item is in, the one showing it included.
+   */
   private buildGalleryMap(rows: ItemGalleryRow[]): Map<string, unknown[]> {
     const result = new Map<string, unknown[]>()
     for (const row of rows) {
-      if (row.collection_id === this.gallery.id) continue
       const anchor =
         parseJson<{ thg_gallery?: Record<string, unknown> }>(row.extra)?.thg_gallery ?? {}
       // Only a gallery or exhibition that has a website of its own is listed:
@@ -696,6 +699,9 @@ export class ItemExporter extends BaseExporter {
         kind: row.collection_type,
         slug: (anchor['slug'] as string | undefined) ?? null,
         legacy_host: (anchor['host'] as string | undefined) ?? null,
+        // The website's own slug (its instance file's), which a site links to
+        // as a sibling of its own address.
+        site: this.context.homeSites.bySiteCollection.get(row.collection_id) ?? null,
         name: row.title ?? row.internal_name,
       }
       const bucket = result.get(row.item_id)

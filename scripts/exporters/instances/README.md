@@ -51,7 +51,8 @@ specification doc. It is prose for humans, read by nothing at export time.
   `baroqueart`, `sharinghistory`) that predate the instance-file design (see
   the *Why forked per dataset* section of `../README.md`), the galleries
   hub's `galleries`, and `explore`. A `standalone` file
-  carries `slug`, `name`, `exporter` and `package_name` — no `collection_id`,
+  carries `slug`, `name`, `exporter`, `package_name` and, for a site that is
+  home to projects' records, `project_ids` — no `collection_id`,
   since the exporter it names does not take `--instance` at all.
 - `slug` — the site slug (`^[a-z0-9]+(-[a-z0-9]+)*$`). This is deliberately
   a separate field from the collection's own DB slug (see `collection_id`
@@ -69,6 +70,14 @@ specification doc. It is prose for humans, read by nothing at export time.
 - `exporter` — `kind: "standalone"` only: the exporter directory name
   (`islamicart`, `baroqueart` or `sharinghistory`) that `docker-entrypoint.sh
   all` runs for this instance, with no `--instance` argument.
+- `project_ids` — `kind: "standalone"` only, optional: the UUIDs of the
+  projects whose records this site is home to (Discover Islamic Art: ISL and
+  Explore Islamic Art Collections). Legacy's item sheet pointed at a record in
+  its home database; `dxa-gallery` writes the slug into `manifest.projects`'
+  `home_site` so a gallery's sheet points at the record on this site. A
+  gallery or exhibition site needs no such list: it is home to its
+  collection's own project, read from the database. A project may be listed
+  by one site only.
 - `languages_enabled` — `kind: "exhibition"` only, optional: a non-empty array
   of lowercase, de-duplicated 2-char language codes (e.g. `["en", "de"]`).
   When present, it overrides `exhibition.json`'s `languages_enabled` and

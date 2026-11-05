@@ -43,6 +43,7 @@ describe('GalleryExporter — project_id', () => {
     memberItemIds: [],
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
@@ -96,6 +97,7 @@ describe('GalleryExporter — project_id', () => {
     await new GalleryExporter({
       ...context(db),
       siteCollectionIds: new Set(['gallery-uuid', 'glass-uuid']),
+      homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     }).export()
 
     const output = readOutput()

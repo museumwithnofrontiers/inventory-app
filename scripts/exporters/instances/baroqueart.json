@@ -3,5 +3,8 @@
   "slug": "baroqueart",
   "name": "Discover Baroque Art",
   "exporter": "baroqueart",
-  "package_name": "@museumwnf/baroqueart-data"
+  "package_name": "@museumwnf/baroqueart-data",
+  "project_ids": [
+    "76eaf6c2-8025-53bc-9e39-106803a3917e"
+  ]
 }

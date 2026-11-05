@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import { ItemExporter, sharingHistoryArtistNames } from '../../src/exporters/item-exporter.js'
-import { loadSiteCollectionIds } from '../../src/core/instance.js'
+import { loadHomeSites, loadSiteCollectionIds } from '../../src/core/instance.js'
 import type { Database } from '../../src/core/database.js'
 import type { ExportContext, Gallery } from '../../src/core/types.js'
 import type { Logger } from '../../src/core/logger.js'
@@ -107,6 +107,7 @@ describe('ItemExporter — other galleries and Sharing History artists', () => {
     memberItemIds: ['item-a'],
     itemOwnContextIds: new Map([['item-a', 'awe-context-uuid']]),
     siteCollectionIds: new Set([SELF, WITH_SITE]),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
@@ -129,14 +130,24 @@ describe('ItemExporter — other galleries and Sharing History artists', () => {
     rmSync(outputDir, { recursive: true, force: true })
   })
 
-  it('lists another gallery only when it has a website', async () => {
+  it('lists every gallery with a website, this one included, as legacy did', async () => {
     const db = stubDb({
       galleries: [galleryRow(SELF, 'Carpets'), galleryRow(WITH_SITE, 'Glass'), galleryRow(WITHOUT_SITE, 'Doubts')],
     })
     await new ItemExporter(context(db)).export()
 
     const references = readItem().gallery_references as Array<Record<string, unknown>>
-    expect(references.map(r => r.id)).toEqual([WITH_SITE])
+    expect(references.map(r => r.id)).toEqual([SELF, WITH_SITE])
+  })
+
+  it("names each reference's website by its instance slug", async () => {
+    const db = stubDb({ galleries: [galleryRow(SELF, 'Carpets'), galleryRow(WITH_SITE, 'Glass')] })
+    const ctx = context(db)
+    ctx.homeSites = { byProject: new Map(), bySiteCollection: new Map([[SELF, 'carpets'], [WITH_SITE, 'glass']]) }
+    await new ItemExporter(ctx).export()
+
+    const references = readItem().gallery_references as Array<Record<string, unknown>>
+    expect(references.map(r => r.site)).toEqual(['carpets', 'glass'])
   })
 
   it("exports a Sharing History record's artist in each language and on the item", async () => {
@@ -192,5 +203,45 @@ describe('loadSiteCollectionIds', () => {
       collection_id: string
     }
     expect(ids.has(carpets.collection_id)).toBe(true)
+  })
+})
+
+describe('loadHomeSites', () => {
+  const ISL = '61c122ac-ea86-5462-8bab-6b86138c49b2'
+  let dir: string
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'instances-'))
+  })
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true })
+  })
+
+  it("maps a standalone site's projects to it, and each gallery or exhibition collection to its site", () => {
+    writeFileSync(join(dir, 'islamicart.json'), JSON.stringify({ kind: 'standalone', slug: 'islamicart', project_ids: [ISL] }))
+    writeFileSync(join(dir, 'glass.json'), JSON.stringify({ kind: 'gallery', slug: 'glass', collection_id: WITH_SITE }))
+    writeFileSync(join(dir, 'muslim-west.json'), JSON.stringify({ kind: 'minisite', slug: 'muslim-west', collection_id: 'ms-uuid' }))
+
+    const homes = loadHomeSites(dir)
+    expect([...homes.byProject]).toEqual([[ISL, 'islamicart']])
+    expect([...homes.bySiteCollection]).toEqual([[WITH_SITE, 'glass']])
+  })
+
+  it('refuses a project claimed by two sites, and ids that are not UUIDs', () => {
+    writeFileSync(join(dir, 'a.json'), JSON.stringify({ kind: 'standalone', slug: 'a', project_ids: [ISL] }))
+    writeFileSync(join(dir, 'b.json'), JSON.stringify({ kind: 'standalone', slug: 'b', project_ids: [ISL] }))
+    expect(() => loadHomeSites(dir)).toThrow(/already the home of "a"/)
+
+    rmSync(join(dir, 'b.json'))
+    writeFileSync(join(dir, 'c.json'), JSON.stringify({ kind: 'standalone', slug: 'c', project_ids: ['ISL'] }))
+    expect(() => loadHomeSites(dir)).toThrow(/lowercase UUIDs/)
+  })
+
+  it("names the Islamic Art, Baroque Art and Sharing History sites' projects in the repository", () => {
+    const instances = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'instances')
+    const homes = loadHomeSites(instances)
+    expect(homes.byProject.get(ISL)).toBe('islamicart')
+    expect(new Set(homes.byProject.values())).toEqual(new Set(['islamicart', 'baroqueart', 'sharinghistory']))
   })
 })

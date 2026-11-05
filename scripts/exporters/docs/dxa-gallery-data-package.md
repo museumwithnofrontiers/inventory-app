@@ -84,7 +84,8 @@ it happens to hold no member itself, keyed by that UUID:
                                                           // Project itself has none
     "site_url": "https://carpets.museumwnf.org" | null,
     "related_database_url": "https://…" | null,
-    "artistic_introduction_url": "https://…" | null
+    "artistic_introduction_url": "https://…" | null,
+    "home_site": "islamicart" | null
   }
 }
 ```
@@ -92,6 +93,13 @@ it happens to hold no member itself, keyed by that UUID:
 The three URL columns are nullable `projects` columns populated at import
 time from a legacy-key map (epic #1727 phase 1, #1753/#1756) — a project this
 fork has never seen a URL for simply reports `null` for all three.
+
+`home_site` is the slug of the site that is the project's records' home, from
+the instance files: a standalone site's `project_ids`, else the gallery or
+exhibition site whose collection is the project's own. Legacy's item sheet
+pointed at the record in its home database ("Source"); a website points at
+the record on that site, a sibling of its own origin. A project with no site
+of its own (the galleries' common project) has `null` (inventory-app#2423).
 `partners.json` gets the parallel `project_uuids` field described below.
 
 ## gallery.json (new)
@@ -204,9 +212,11 @@ gallery deltas:
   cannot (decision Q3 — the links must not be dropped). Amulets' 45 members
   carry 56 outgoing links, none of them to another member.
 - **`gallery_references`** replaces the legacy `galleries` array of
-  constructed URLs: the other thematic galleries and exhibitions featuring
-  this item, as `{id, backward_compatibility, kind, slug, legacy_host, name}`,
-  with the exporting gallery itself omitted. Only galleries and exhibitions
+  constructed URLs: the thematic galleries and exhibitions featuring this
+  item, as `{id, backward_compatibility, kind, slug, legacy_host, site, name}`
+  (`site`: the website's own slug, from its instance file),
+  the exporting gallery itself included, as legacy's "On display in" named
+  it (inventory-app#2423). Only galleries and exhibitions
   that have a website are listed, i.e. whose collection an instance file in
   `scripts/exporters/instances/` names: a reference to one with none (e.g.
   "Doubts") would lead nowhere. Legacy's live/hidden `status` is not read
