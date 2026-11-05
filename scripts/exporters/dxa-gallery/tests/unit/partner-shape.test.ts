@@ -66,10 +66,12 @@ describe('PartnerExporter — shared partner shape', () => {
     groupMemberships?: unknown[]
     heldItems?: unknown[]
     translations?: unknown[]
+    ownProjects?: unknown[]
   }): Database =>
     ({
       query: async (sql: string, params?: unknown) => {
         queries.push({ sql, params })
+        if (sql.includes('AS own_project_id')) return rows.ownProjects ?? []
         if (sql.includes('FROM partners')) return rows.partners
         if (sql.includes('FROM languages')) {
           return [
@@ -207,7 +209,7 @@ describe('PartnerExporter — shared partner shape', () => {
     const db = stubDb({ partners: [partnerRow('partner-a', 1)] })
     await new PartnerExporter(context(db, 'project-dca-uuid')).export()
 
-    const levelQuery = queries.find(q => q.sql.includes("cp.collection_type = 'project'"))
+    const levelQuery = queries.find(q => q.sql.includes("cp.collection_type = 'project'") && !q.sql.includes('AS own_project_id'))
     expect(levelQuery?.sql).toContain('proj.id = ?')
     expect(levelQuery?.sql).not.toContain('proj.id IN')
   })
@@ -216,7 +218,7 @@ describe('PartnerExporter — shared partner shape', () => {
     const db = stubDb({ partners: [partnerRow('partner-a', 1)] })
     await new PartnerExporter(context(db, null)).export()
 
-    expect(queries.some(q => q.sql.includes("cp.collection_type = 'project'"))).toBe(false)
+    expect(queries.some(q => q.sql.includes("cp.collection_type = 'project'") && !q.sql.includes('AS own_project_id'))).toBe(false)
     expect(queries.some(q => q.sql.includes("cp.collection_type = 'collection'"))).toBe(false)
   })
 
@@ -236,6 +238,39 @@ describe('PartnerExporter — shared partner shape', () => {
       'project-dca-uuid',
       'project-isl-uuid',
     ])
+  })
+
+  // Legacy's partner list badges each partner with its own project and its
+  // tier there (dxa-api projectName / isPartner / projectSourceIsExhibition).
+  it('ships each partner own project with its tier and whether it is an exhibition', async () => {
+    const db = stubDb({
+      partners: [partnerRow('isl', 1), partnerRow('sh', 1), partnerRow('exh', 1), partnerRow('none', 1)],
+      ownProjects: [
+        { partner_id: 'isl', own_project_id: 'p-isl', name: 'Discover Islamic Art', backward_compatibility: 'mwnf3:projects:ISL', level: 'partner', exhibition: 0 },
+        { partner_id: 'sh', own_project_id: 'p-sh', name: 'Sharing History', backward_compatibility: 'mwnf3_sharing_history:sh_projects:awe', level: 'associated_partner', exhibition: 0 },
+        { partner_id: 'exh', own_project_id: 'p-wat', name: 'Water in Islam', backward_compatibility: 'mwnf3:projects:GalEx6', level: null, exhibition: '1' },
+      ],
+    })
+    await new PartnerExporter(context(db, null)).export()
+
+    const output = readOutput()
+    expect(output.find(p => p.id === 'isl')?.own_project).toEqual({
+      id: 'p-isl', name: 'Discover Islamic Art', backward_compatibility: 'mwnf3:projects:ISL', level: 'partner', exhibition: false,
+    })
+    expect(output.find(p => p.id === 'sh')?.own_project).toMatchObject({ level: 'associated_partner', exhibition: false })
+    expect(output.find(p => p.id === 'exh')?.own_project).toMatchObject({ level: null, exhibition: true })
+    // No project: null, never an absent key
+    expect(output.find(p => p.id === 'none')?.own_project).toBeNull()
+  })
+
+  it('reads the own project from partners.project_id, else the project collection listing the partner', async () => {
+    const db = stubDb({ partners: [partnerRow('partner-a', 1)] })
+    await new PartnerExporter(context(db, null)).export()
+
+    const sql = queries.find(q => q.sql.includes('AS own_project_id'))?.sql ?? ''
+    expect(sql).toContain('COALESCE(p.project_id')
+    expect(sql).toContain("cp.collection_type = 'project'")
+    expect(sql).toContain("x.type = 'exhibition'")
   })
 
   it('reports the gallery own project for an MWNF-384 partner holding no item', async () => {
