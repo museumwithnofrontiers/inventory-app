@@ -3,5 +3,8 @@
   "slug": "sharinghistory",
   "name": "Sharing History",
   "exporter": "sharinghistory",
-  "package_name": "@museumwnf/sharinghistory-data"
+  "package_name": "@museumwnf/sharinghistory-data",
+  "project_ids": [
+    "0f031e22-6dc6-5ce6-b94b-9bb88345140c"
+  ]
 }

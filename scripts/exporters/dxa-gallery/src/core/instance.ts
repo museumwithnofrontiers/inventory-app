@@ -72,6 +72,57 @@ export function loadSiteCollectionIds(
 }
 
 /**
+ * Where each project's records live in the new estate, as the instance files
+ * say it: a standalone site lists the projects it is home to (`project_ids`),
+ * and a gallery or exhibition site is home to its collection's own project,
+ * which the exporter reads from the database (`bySiteCollection`). Legacy's
+ * item sheet pointed at the record in its home database; the sheet now points
+ * at the record on that site.
+ */
+export interface HomeSites {
+  /** Project UUID → slug of the standalone site that is its home. */
+  byProject: ReadonlyMap<string, string>
+  /** Collection UUID → slug of the gallery or exhibition site built from it. */
+  bySiteCollection: ReadonlyMap<string, string>
+}
+
+export function loadHomeSites(dir: string = resolve(process.cwd(), '..', 'instances')): HomeSites {
+  const byProject = new Map<string, string>()
+  const bySiteCollection = new Map<string, string>()
+  for (const file of readdirSync(dir).filter(name => name.endsWith('.json')).sort()) {
+    const path = resolve(dir, file)
+    let data: Record<string, unknown>
+    try {
+      data = JSON.parse(readFileSync(path, 'utf-8')) as Record<string, unknown>
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error(`Invalid JSON in instance file ${path}: ${message}`, { cause: err })
+    }
+    const slug = data['slug']
+    if (typeof slug !== 'string') continue
+    const projectIds = data['project_ids']
+    if (projectIds !== undefined) {
+      if (!Array.isArray(projectIds) || projectIds.some(id => typeof id !== 'string' || !UUID_PATTERN.test(id))) {
+        throw new Error(`Instance file ${path}: "project_ids" must be an array of lowercase UUIDs.`)
+      }
+      for (const id of projectIds as string[]) {
+        const other = byProject.get(id)
+        if (other && other !== slug) {
+          throw new Error(`Instance file ${path}: project ${id} is already the home of "${other}".`)
+        }
+        byProject.set(id, slug)
+      }
+    }
+    const kind = data['kind']
+    const collectionId = data['collection_id']
+    if ((kind === 'gallery' || kind === 'exhibition') && typeof collectionId === 'string') {
+      bySiteCollection.set(collectionId, slug)
+    }
+  }
+  return { byProject, bySiteCollection }
+}
+
+/**
  * Load and validate an instance file. Every failure names what was wrong and,
  * where useful, where the loader looked — an instance file is hand-authored,
  * so the error is the whole debugging experience.

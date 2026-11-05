@@ -1,4 +1,5 @@
 import type { Database } from './database.js'
+import type { HomeSites } from './instance.js'
 import type { Logger } from './logger.js'
 
 /**
@@ -75,6 +76,8 @@ export interface ExportContext {
    * they are among them.
    */
   siteCollectionIds: ReadonlySet<string>
+  /** Each project's home site, from the instance files (see `loadHomeSites`). */
+  homeSites: HomeSites
   baseUrl: string
   logger: Logger
 }

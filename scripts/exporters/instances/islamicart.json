@@ -3,5 +3,9 @@
   "slug": "islamicart",
   "name": "Discover Islamic Art",
   "exporter": "islamicart",
-  "package_name": "@museumwnf/islamicart-data"
+  "package_name": "@museumwnf/islamicart-data",
+  "project_ids": [
+    "61c122ac-ea86-5462-8bab-6b86138c49b2",
+    "928f5e0d-53e3-5f53-b9c2-5af389c30dd4"
+  ]
 }
