@@ -1,6 +1,12 @@
 import mysql from 'mysql2/promise'
 import type { Hub } from './types.js'
 
+/** A member item and its project. */
+export interface MemberRow {
+  item_id: string
+  project_id: string | null
+}
+
 export class Database {
   private connection: mysql.Connection | null = null
 
@@ -42,6 +48,68 @@ export class Database {
       )
     }
     return { id: row.id, backwardCompatibility: row.backward_compatibility }
+  }
+
+  /**
+   * The hub's objects: the MWNF Galleries records (the partner project's
+   * objects and monuments) of the hub's partners, the museums legacy's hub
+   * listed with "View objects" (Pascal, 2026-11-06, #2425). Their 'picture'
+   * children ship as `images` on their parent, as in a gallery package.
+   */
+  async resolveHubMembers(projectId: string): Promise<MemberRow[]> {
+    return this.query<MemberRow>(
+      `SELECT i.id AS item_id, i.project_id
+       FROM items i
+       JOIN partners p ON p.id = i.partner_id
+       WHERE i.project_id = ?
+         AND p.project_id = ?
+         AND p.type = 'museum'
+         AND i.type IN ('object', 'monument')
+       ORDER BY i.type, i.display_order, i.internal_name`,
+      [projectId, projectId]
+    )
+  }
+
+  /**
+   * Per-item project key and own-project context, for the member items: the
+   * context selects each record's canonical translation, as in the
+   * dxa-gallery exporter.
+   */
+  async resolveItemProjects(members: MemberRow[]): Promise<{
+    projectKeys: Map<string, string>
+    ownContextIds: Map<string, string>
+  }> {
+    const projectKeys = new Map<string, string>()
+    const ownContextIds = new Map<string, string>()
+
+    const projectIds = [...new Set(members.map(m => m.project_id).filter((p): p is string => !!p))]
+    if (projectIds.length === 0) return { projectKeys, ownContextIds }
+
+    const placeholders = projectIds.map(() => '?').join(', ')
+    const projects = await this.query<{ id: string; backward_compatibility: string | null; context_id: string | null }>(
+      `SELECT id, backward_compatibility, context_id
+       FROM projects
+       WHERE id IN (${placeholders})`,
+      projectIds
+    )
+
+    const keyByProject = new Map<string, string>()
+    const contextByProject = new Map<string, string>()
+    for (const project of projects) {
+      const key = project.backward_compatibility?.split(':').pop()
+      if (key) keyByProject.set(project.id, key)
+      if (project.context_id) contextByProject.set(project.id, project.context_id)
+    }
+
+    for (const member of members) {
+      if (!member.project_id) continue
+      const key = keyByProject.get(member.project_id)
+      if (key) projectKeys.set(member.item_id, key)
+      const contextId = contextByProject.get(member.project_id)
+      if (contextId) ownContextIds.set(member.item_id, contextId)
+    }
+
+    return { projectKeys, ownContextIds }
   }
 
   /** Inventory UUID of a project, by its backward-compatibility key. */

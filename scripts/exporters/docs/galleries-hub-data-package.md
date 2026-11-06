@@ -22,6 +22,30 @@ lists galleries and a handful of partners and ships no items.
   `galleries.museumwnf.org` (checked on 2026-09-28), so nothing is rebuilt for
   it.
 
+## Scope, revised on 2026-11-06 (#2425)
+
+Pascal: the hub's objects are exported in the hub. The package also ships the
+MWNF Galleries objects of the hub's partners (`items.json` and what an object
+sheet needs), so the hub has legacy's "View objects", the partners' object
+pages and the object sheets, as a gallery has them. No model change: the
+objects are already in the inventory.
+
+- **The objects**: the partner project's objects and monuments held by its
+  museums (`Database.resolveHubMembers`), 199 today. Their pictures ship as
+  `images` on them, as in a gallery package.
+- **The item-side files are a gallery package's**: `items.json`, `tags.json`,
+  `dynasties.json`, `glossary.json`, `timelines.json` and
+  `timeline_events.json` with their translations, written by copies of the
+  dxa-gallery exporters (the object sheet's "Timeline for this item" and
+  "Glossary" read the last three).
+- **`gallery.json`**: the hub's own record in a gallery package's shape
+  (legacy's hub is DXA gallery 45): its names, its banner picture and the
+  object the banner shows, whose sheet captions the banner. No siblings: the
+  hub lists its galleries in `galleries.json`.
+- **Partners** gain `item_count` (the objects each holds) and `own_project`
+  (the partner project and the partner's tier in it: legacy's "MWNF Galleries
+  Partner" / "Affiliate" badge).
+
 ## The legacy site
 
 `galleries.museumwnf.org` is a compiled Vue client whose source is not in
@@ -35,7 +59,8 @@ from the live bundle and the live API (`/api/v2`) on 2026-09-28.
 | `/partners` | The partners grouped by country, with an A–Z / Z–A toggle on countries. Each partner shows its name and city, its project and "Partner" or "Affiliate", a logo, "Read more", and "View objects" when it holds objects | `partners` |
 | `/partner/:database/:country/:id/:language` | One partner's profile | `mwnf3/partners/…` |
 | `/about`, `/credits` | Text pages | `i18n` |
-| `/partner-objects/…`, `/database-item/…`, `/timeline-results` | A partner's objects, an item sheet, the timeline | — out of scope |
+| `/partner-objects/…`, `/database-item/…` | A partner's objects, an object sheet | in scope since 2026-11-06 |
+| `/timeline-results` | The timeline | — out of scope |
 
 What the live API answers:
 
@@ -65,13 +90,24 @@ the website (story H.4), not to this package:
 
 ```
 manifest.json
+gallery.json
 galleries.json
 partners.json
 countries.json
 languages.json
+items.json
+tags.json
+dynasties.json
+glossary.json
+timelines.json
+timeline_events.json
 translations/
   partners.<lang>.json
   countries.<lang>.json
+  items.<lang>.json
+  tags.<lang>.json
+  glossary.<lang>.json
+  timeline_events.<lang>.json
 LICENSE.md
 README.md
 ```
@@ -182,9 +218,11 @@ The fields the hub needs:
 - **`featured`:** kept for shape compatibility. The hub's carousel picks 3
   of the 8 at random, as legacy does.
 
-**`item_count` is 0 for every partner.** It counts the exported items a
-partner holds, and the hub exports none. The key stays because the partner
-shape is one shape across every dataset (decision D4, inventory-app#1699).
+**`item_count`** counts the hub's objects a partner holds (since 2026-11-06,
+#2425): every one of the 8 holds some, and the site gives each its "View
+objects". **`own_project`** is the partner project, its name and the
+partner's `level` in it, the shape dxa-gallery's partners carry
+(inventory-app#2476): the badge legacy drew under each partner.
 
 A count of 0 is also what makes viewer-core's partner record
 (`record/partners.js`) omit both the object count and the objects link. So

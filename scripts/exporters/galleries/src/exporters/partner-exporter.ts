@@ -83,9 +83,10 @@ interface GroupMembershipRow {
  * partner at level `partner` is legacy's "Partner", one with no level is
  * legacy's "Affiliate".
  *
- * `item_count` is 0 for every partner: it counts the exported items a partner
- * holds, and the hub exports none. That is also what makes viewer-core's
- * partner record leave out the object count and the objects link.
+ * `item_count` counts the hub's objects a partner holds (`memberItemIds`),
+ * which gives it legacy's "View objects". `own_project` is the partner
+ * project, its name and the partner's tier in it: the badge legacy drew under
+ * each name ("MWNF Galleries Partner" / "Affiliate").
  */
 export class PartnerExporter extends BaseExporter {
   getName(): string {
@@ -114,7 +115,8 @@ export class PartnerExporter extends BaseExporter {
 
     const langCodeMap = await this.buildLangCodeMap()
 
-    const [translations, images, logos, levels, groupMemberships] = await Promise.all([
+    const memberPh = this.placeholders(Math.max(this.memberItemIds.length, 1))
+    const [translations, images, logos, levels, groupMemberships, heldItems, projectRows] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also makes the "first row wins" extra pick deterministic).
@@ -161,6 +163,21 @@ export class PartnerExporter extends BaseExporter {
            AND cp.partner_id IN (${partnerPh})
          ORDER BY cp.collection_id, cp.partner_id`,
         [this.partnerProjectId, ...partnerIds]
+      ),
+      // The hub's objects each partner holds.
+      this.memberItemIds.length > 0
+        ? this.db.query<{ partner_id: string; item_count: number }>(
+            `SELECT partner_id, COUNT(*) AS item_count
+             FROM items
+             WHERE id IN (${memberPh}) AND partner_id IN (${partnerPh})
+             GROUP BY partner_id
+             ORDER BY partner_id`,
+            [...this.memberItemIds, ...partnerIds]
+          )
+        : Promise.resolve([] as { partner_id: string; item_count: number }[]),
+      this.db.query<{ name: string; backward_compatibility: string | null }>(
+        `SELECT internal_name AS name, backward_compatibility FROM projects WHERE id = ?`,
+        [this.partnerProjectId]
       ),
     ])
 
@@ -232,6 +249,8 @@ export class PartnerExporter extends BaseExporter {
       if (row.level) levelMap.set(row.partner_id, row.level)
     }
     const parentMap = groupParents(groupMemberships)
+    const heldMap = new Map(heldItems.map(row => [row.partner_id, Number(row.item_count)]))
+    const project = projectRows[0] ?? null
 
     const output: Partner[] = partners.map(partner => {
       const extra = extraMap.get(partner.id)
@@ -247,7 +266,16 @@ export class PartnerExporter extends BaseExporter {
         level: levelMap.get(partner.id) ?? null,
         parent_id: parentMap.get(partner.id) ?? null,
         project_uuids: [this.partnerProjectId],
-        item_count: 0,
+        item_count: heldMap.get(partner.id) ?? 0,
+        own_project: project
+          ? {
+              id: this.partnerProjectId,
+              name: project.name,
+              backward_compatibility: project.backward_compatibility,
+              level: levelMap.get(partner.id) ?? null,
+              exhibition: false,
+            }
+          : null,
         featured: extra?.portal_display?.toLowerCase() === 'y',
         languages: Object.keys(translationMap.get(partner.id) ?? {}).sort(),
         contact_persons: contactPersons(extra),

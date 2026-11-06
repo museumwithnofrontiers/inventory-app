@@ -29,6 +29,11 @@ export abstract class BaseExporter {
     return this.context.partnerProjectId
   }
 
+  /** The hub's objects. Every item-side exporter scopes its output to them. */
+  protected get memberItemIds() {
+    return this.context.memberItemIds
+  }
+
   protected get baseUrl() {
     return this.context.baseUrl
   }

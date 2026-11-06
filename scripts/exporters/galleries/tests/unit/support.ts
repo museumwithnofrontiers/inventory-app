@@ -56,6 +56,9 @@ export function context(db: Database, outputDir: string): ExportContext {
     siteKey: 'galleries',
     partnerProjectId: 'galleries-project-uuid',
     siteCollectionIds: new Set(['carpets', 'amulets']),
+    memberItemIds: [],
+    itemOwnContextIds: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map(), exhibitionSites: new Map() },
     baseUrl: 'https://example.test',
     logger: silentLogger,
   }
