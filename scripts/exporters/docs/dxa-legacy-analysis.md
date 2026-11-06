@@ -48,8 +48,9 @@ the gallery's membership union — see §4.1):
 - **Banner** — the gallery's `bannerItem`/`homepageItem` (a composite item key
   in `thg_gallery`) + banner image; fetched via `/thg/galleries/self` then the
   item's own endpoint for caption/link.
-- **Featured partners** — `/partners/featured` (partners of member items with
-  `showOnPortal`, random subset, size from config).
+- **Featured partners** — `/partners/featured`: up to
+  `DXA_NUMBER_OF_FEATURED_PARTNERS` (3) of the gallery's partners at random,
+  whatever their `showOnPortal` (checked live on cars.museumwnf.org, 2026-11-06).
 - **Logos** — `/thg/galleries/self` logos (legacy table `thg_gallery_logos`
   has 1 row total across all sites — effectively dead; keep the slot, expect
   empty).
