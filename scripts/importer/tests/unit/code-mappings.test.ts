@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  keyByLanguageId,
   mapLanguageCode,
   mapCountryCode,
   LANGUAGE_CODE_MAP,
@@ -59,5 +60,25 @@ describe('mapCountryCode', () => {
 
   it('should have mappings for all supported countries', () => {
     expect(Object.keys(COUNTRY_CODE_MAP).length).toBeGreaterThan(50);
+  });
+});
+
+describe('keyByLanguageId', () => {
+  it("keys a legacy map by language id, legacy's own codes included", () => {
+    const unknown: string[] = [];
+    expect(keyByLanguageId({ en: 'A', se: 'B', ch: 'C' }, (code) => unknown.push(code))).toEqual({
+      eng: 'A',
+      swe: 'B',
+      zho: 'C',
+    });
+    expect(unknown).toEqual([]);
+  });
+
+  it('leaves out a key with no mapping and reports it', () => {
+    const unknown: string[] = [];
+    expect(keyByLanguageId({ en: 'A', xx: 'B' }, (code) => unknown.push(code))).toEqual({
+      eng: 'A',
+    });
+    expect(unknown).toEqual(['xx']);
   });
 });

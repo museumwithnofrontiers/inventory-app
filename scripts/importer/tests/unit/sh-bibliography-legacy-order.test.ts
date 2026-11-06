@@ -112,8 +112,9 @@ describe('ShBibliographyHbImporter bibliography order', () => {
     context = { legacyDb, strategy, tracker, logger, dryRun: false };
   });
 
+  // Keyed by language id (#2394).
   const markdown = (extra: string | undefined, key: string) =>
-    (JSON.parse(extra ?? '{}')[key]?.en ?? []).map((entry: string) => entry.split(',')[0]);
+    (JSON.parse(extra ?? '{}')[key]?.eng ?? []).map((entry: string) => entry.split(',')[0]);
 
   it("sorts an item's bibliography by its text", async () => {
     exhibitionLinks = [];

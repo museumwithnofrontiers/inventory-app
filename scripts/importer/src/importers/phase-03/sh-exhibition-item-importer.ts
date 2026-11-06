@@ -32,6 +32,7 @@
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
+import { keyByLanguageId } from '../../utils/code-mappings.js';
 import type {
   ShLegacyRelObjectsExhibitions,
   ShLegacyRelObjectsExhibitionsJustification,
@@ -808,7 +809,12 @@ export class ShExhibitionItemImporter extends BaseImporter {
       };
     }
 
-    return { justifications: justificationsByLang };
+    // Keyed by language id in `extra` (#2394).
+    return {
+      justifications: keyByLanguageId(justificationsByLang, (code) =>
+        this.logWarning(`Justification in unknown language '${code}', skipped`)
+      ),
+    };
   }
 }
 

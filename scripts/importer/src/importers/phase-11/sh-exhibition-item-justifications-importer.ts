@@ -28,6 +28,7 @@
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
+import { keyByLanguageId } from '../../utils/code-mappings.js';
 import { sanitizeJsonField } from '../../utils/html-to-markdown.js';
 import { jsonValuesEqual } from '../../utils/json-equal.js';
 
@@ -169,7 +170,12 @@ export class ShExhibitionItemJustificationsImporter extends BaseImporter {
           curator: j.justification_curator || null,
         };
       }
-      fields.justifications = byLang;
+      // Keyed by language id in `extra` (#2394).
+      fields.justifications = keyByLanguageId(byLang, (code) =>
+        this.logWarning(
+          `${source.relationTable} ${relation.id}: justification in unknown language '${code}', skipped`
+        )
+      );
     }
 
     const curatorStatus = relation.curator_status?.trim();

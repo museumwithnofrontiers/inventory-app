@@ -133,6 +133,28 @@ export function mapLanguageCode(legacyCode: string): string {
 }
 
 /**
+ * A language-keyed map from legacy, keyed by language id (`{ en: … }` →
+ * `{ eng: … }`), as every language key inside `extra` is (#2394). A key
+ * with no mapping is left out and passed to `onUnknown`, which warns: the
+ * importers' convention for a language they don't know.
+ */
+export function keyByLanguageId<T>(
+  map: Record<string, T>,
+  onUnknown: (legacyCode: string) => void
+): Record<string, T> {
+  const out: Record<string, T> = {};
+  for (const [legacyCode, value] of Object.entries(map)) {
+    const languageId = LANGUAGE_CODE_MAP[legacyCode];
+    if (!languageId) {
+      onUnknown(legacyCode);
+      continue;
+    }
+    out[languageId] = value;
+  }
+  return out;
+}
+
+/**
  * Map legacy 2-character country code to 3-character ISO 3166-1 alpha-3 code
  * @throws Error if code is not found
  */

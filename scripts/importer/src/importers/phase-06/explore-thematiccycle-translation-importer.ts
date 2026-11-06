@@ -15,6 +15,7 @@
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
+import { LANGUAGE_CODE_MAP } from '../../utils/code-mappings.js';
 
 interface LegacyCycleTranslation {
   cycleId: number;
@@ -169,8 +170,16 @@ export class ExploreThematicCycleTranslationImporter extends BaseImporter {
       >();
       for (const t of countryTexts) {
         if (!t.text) continue;
+        // A language in `extra` is its language id (#2394).
+        const languageId = LANGUAGE_CODE_MAP[t.langId];
+        if (!languageId) {
+          this.logWarning(
+            `Thematic cycle ${t.cycleId} country text: unknown language '${t.langId}', skipping`
+          );
+          continue;
+        }
         const list = textsByCycle.get(t.cycleId) ?? [];
-        list.push({ countryId: t.countryId, langId: t.langId, text: t.text });
+        list.push({ countryId: t.countryId, langId: languageId, text: t.text });
         textsByCycle.set(t.cycleId, list);
       }
 
