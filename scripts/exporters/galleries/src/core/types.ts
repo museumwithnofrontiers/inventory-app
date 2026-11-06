@@ -1,4 +1,5 @@
 import type { Database } from './database.js'
+import type { HomeSites } from './instance.js'
 import type { Logger } from './logger.js'
 
 /**
@@ -25,6 +26,12 @@ export interface ExportContext {
    * from the instance files. The hub lists only those.
    */
   siteCollectionIds: ReadonlySet<string>
+  /** The hub's objects (`Database.resolveHubMembers`): every item-side file is scoped to them. */
+  memberItemIds: string[]
+  /** Member item → its project's context, which selects its canonical translation. */
+  itemOwnContextIds: ReadonlyMap<string, string>
+  /** Where each project's and site collection's records live (`loadHomeSites`). */
+  homeSites: HomeSites
   baseUrl: string
   logger: Logger
 }
@@ -102,8 +109,10 @@ export interface Partner {
   parent_id: string | null
   /** Project UUIDs the partner belongs to. */
   project_uuids: string[]
-  /** Exported items this partner holds — always 0 here: the hub exports no items. */
+  /** The hub's objects this partner holds (legacy's "View objects"). */
   item_count: number
+  /** The partner's own project, the partner project: the badge legacy drew under its name. */
+  own_project: PartnerOwnProject | null
   /** Legacy `portal_display === 'y'`. */
   featured: boolean
   /** Languages the partner has a translation in (codes, sorted). */
@@ -113,4 +122,17 @@ export interface Partner {
   additional_urls: PartnerUrl[]
   images: PartnerImage[]
   logos: PartnerLogo[]
+}
+
+/** A partner's own project, as dxa-gallery's partner export carries it (inventory-app#2476). */
+export interface PartnerOwnProject {
+  id: string
+  /** The project's name, e.g. "MWNF Galleries". */
+  name: string
+  /** The project's legacy key, e.g. `mwnf3:projects:GALLERIES`. */
+  backward_compatibility: string | null
+  /** The partner's tier in that project; `null` where uncurated (legacy's "Affiliate"). */
+  level: string | null
+  /** Whether the project is an online exhibition's: never, for the hub's partners. */
+  exhibition: boolean
 }

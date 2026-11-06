@@ -17,8 +17,8 @@ interface LangTranslationRow {
 
 /**
  * `languages.json` — the languages this package can put on screen: the hub's
- * own UI languages, and every language a gallery name or a partner text is
- * written in. Exporting the whole `languages` table would ship names the site
+ * own UI languages, and every language a gallery name, a partner text or one
+ * of the hub's objects is written in. Exporting the whole `languages` table would ship names the site
  * can never show. The shape is dxa-gallery's; `site_language` marks the hub's
  * own UI languages.
  */
@@ -104,6 +104,12 @@ export class LanguageExporter extends BaseExporter {
         : `UNION
            SELECT DISTINCT language_id FROM partner_translations
            WHERE partner_id IN (${this.placeholders(partnerIds.length)})`
+    const itemBranch =
+      this.memberItemIds.length === 0
+        ? ''
+        : `UNION
+           SELECT DISTINCT language_id FROM item_translations
+           WHERE item_id IN (${this.placeholders(this.memberItemIds.length)})`
 
     const rows = await this.db.query<{ language_id: string }>(
       `SELECT DISTINCT ct.language_id
@@ -111,8 +117,9 @@ export class LanguageExporter extends BaseExporter {
        JOIN collections g ON g.id = ct.collection_id
        JOIN collections root ON root.id = g.parent_id
        WHERE root.purpose = ? AND g.type = 'gallery' AND ct.title IS NOT NULL
-       ${partnerBranch}`,
-      [GALLERIES_ROOT_PURPOSE, ...partnerIds]
+       ${partnerBranch}
+       ${itemBranch}`,
+      [GALLERIES_ROOT_PURPOSE, ...partnerIds, ...this.memberItemIds]
     )
 
     return [...new Set([...hubLanguages, ...rows.map(row => row.language_id)])].sort()

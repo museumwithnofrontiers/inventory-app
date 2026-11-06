@@ -76,11 +76,13 @@ describe('PartnerExporter', () => {
     // Legacy's "Partner" tier; Museu do Caramulo has no level — legacy's "Affiliate".
     [/cp\.collection_type = 'project'/, () => [{ partner_id: 'swiss', level: 'partner' }]],
     [/cp\.collection_type = 'collection'/, () => []],
+    [/FROM projects WHERE id = \?/, () => [{ name: 'MWNF Galleries', backward_compatibility: 'mwnf3:projects:GALLERIES' }]],
+    [/COUNT\(\*\) AS item_count/, () => [{ partner_id: 'swiss', item_count: 12 }]],
   ]
 
-  it("ships the partner project's museums in the shared partner shape, with no item behind them", async () => {
+  it("ships the partner project's museums in the shared partner shape, with the hub's objects each holds", async () => {
     const db = fakeDb(routes())
-    const result = await new PartnerExporter(context(db, out.dir)).export()
+    const result = await new PartnerExporter({ ...context(db, out.dir), memberItemIds: ['item-1', 'item-2'] }).export()
 
     expect(result).toEqual({ file: 'partners.json', count: 2 })
     const partners = out.read('partners.json') as Record<string, unknown>[]
@@ -91,7 +93,15 @@ describe('PartnerExporter', () => {
       level: 'partner',
       parent_id: null,
       project_uuids: ['galleries-project-uuid'],
-      item_count: 0,
+      // Legacy's "View objects" and its "MWNF Galleries Partner" badge.
+      item_count: 12,
+      own_project: {
+        id: 'galleries-project-uuid',
+        name: 'MWNF Galleries',
+        backward_compatibility: 'mwnf3:projects:GALLERIES',
+        level: 'partner',
+        exhibition: false,
+      },
       featured: false,
       languages: ['en', 'fr'],
       contact_persons: [{ name: 'A' }],
@@ -99,7 +109,8 @@ describe('PartnerExporter', () => {
       latitude: 47.3,
       longitude: null,
     })
-    expect(partners[0]).toMatchObject({ level: null, item_count: 0, languages: ['en'] })
+    // Legacy's "Affiliate": no curated level, and no object here.
+    expect(partners[0]).toMatchObject({ level: null, item_count: 0, languages: ['en'], own_project: { level: null } })
   })
 
   it('writes one translation file per language, without the empty fields', async () => {

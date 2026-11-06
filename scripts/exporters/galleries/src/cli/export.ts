@@ -21,7 +21,7 @@ import chalk from 'chalk'
 import { Database } from '../core/database.js'
 import { Logger } from '../core/logger.js'
 import { PublishManager, assertPublishableBaseUrl } from '../core/publish-manager.js'
-import { loadSiteCollectionIds } from '../core/instance.js'
+import { loadHomeSites, loadSiteCollectionIds } from '../core/instance.js'
 import type { ExportContext } from '../core/types.js'
 import {
   ManifestExporter,
@@ -29,6 +29,12 @@ import {
   LanguageExporter,
   CountryExporter,
   PartnerExporter,
+  TagExporter,
+  DynastyExporter,
+  TimelineExporter,
+  ItemExporter,
+  GlossaryExporter,
+  GalleryRecordExporter,
 } from '../exporters/index.js'
 
 dotenv.config({ path: resolve(process.cwd(), '.env') })
@@ -143,6 +149,11 @@ program
         const hub = await db.resolveHub(HUB_COLLECTION)
         const partnerProjectId = await db.resolveProjectId(PARTNER_PROJECT)
         console.log(chalk.green(`  ✓ Hub collection ${hub.id}, partner project ${partnerProjectId}`))
+
+        // The hub's objects, legacy's "View objects" (#2425).
+        const members = await db.resolveHubMembers(partnerProjectId)
+        const { ownContextIds } = await db.resolveItemProjects(members)
+        console.log(chalk.green(`  ✓ ${members.length} objects of the hub's partners`))
         console.log('')
 
         const context: ExportContext = {
@@ -152,6 +163,9 @@ program
           siteKey: SITE_KEY,
           partnerProjectId,
           siteCollectionIds: loadSiteCollectionIds(),
+          memberItemIds: members.map(m => m.item_id),
+          itemOwnContextIds: ownContextIds,
+          homeSites: loadHomeSites(),
           baseUrl: options.baseUrl,
           logger,
         }
@@ -159,9 +173,15 @@ program
         const exporters = [
           new ManifestExporter(context),
           new GalleriesExporter(context),
+          new GalleryRecordExporter(context),
           new LanguageExporter(context),
           new CountryExporter(context),
           new PartnerExporter(context),
+          new TagExporter(context),
+          new DynastyExporter(context),
+          new TimelineExporter(context),
+          new ItemExporter(context),
+          new GlossaryExporter(context),
         ]
 
         const results = []

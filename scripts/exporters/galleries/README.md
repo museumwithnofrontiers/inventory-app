@@ -14,15 +14,18 @@ epic [#1744](https://github.com/museumwithnofrontiers/inventory-app/issues/1744)
 
 ## What it exports
 
-The hub lists galleries and a partner directory, and nothing else: no items,
-no item sheets and no timeline (Pascal, 2026-09-28).
+The hub lists galleries and a partner directory (Pascal, 2026-09-28), and its
+partners' MWNF Galleries objects, with their sheets (Pascal, 2026-11-06,
+#2425). It has no timeline page of its own.
 
 | File | Content |
 |---|---|
 | `manifest.json` | The hub's name and UI languages, from its own collection (legacy gallery 45), and `projects` naming the partners' project |
+| `gallery.json` | The hub's own record in a gallery package's shape: names, banner picture, the object the banner shows |
 | `galleries.json` | Every visible gallery under the galleries root, by English name |
-| `partners.json`, `translations/partners.<lang>.json` | The museums of the `GALLERIES` project, legacy's hub partner list, in the shared partner shape with `item_count: 0` |
+| `partners.json`, `translations/partners.<lang>.json` | The museums of the `GALLERIES` project, legacy's hub partner list, in the shared partner shape, with the objects each holds (`item_count`) and its project badge (`own_project`) |
 | `countries.json`, `translations/countries.<lang>.json` | The partners' countries |
+| `items.json`, `tags.json`, `dynasties.json`, `glossary.json`, `timelines.json`, `timeline_events.json` and their translations | The partners' objects (`Database.resolveHubMembers`), in a gallery package's shape, by copies of the dxa-gallery exporters |
 | `languages.json` | The languages any shipped text uses |
 
 ## Why a standalone exporter
