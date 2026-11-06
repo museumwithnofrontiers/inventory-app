@@ -72,6 +72,7 @@ describe('ExploreItineraryContentImporter', () => {
           {
             description:
               'When Salah al-Din al-Ayyubi had his Citadel built, his desire was for it to be both a defensive fortress and the seat of the Sultanate.',
+            author: 'Travels Author ',
           },
         ];
       }
@@ -233,7 +234,43 @@ describe('ExploreItineraryContentImporter', () => {
       duration: 'One day',
       introd_type: 'ET-short#-',
       et_title: 'IAM;eg;I;en;1',
+      travels_author: 'Travels Author',
     });
+  });
+
+  // Legacy credits a text it takes from a Travels itinerary to that
+  // itinerary's author, and Explore's own text to Explore's.
+  it("keeps the Travels itinerary's author with the text taken from it, apart from Explore's own", async () => {
+    await new ExploreItineraryContentImporter(context).import();
+    const written = writeCollectionTranslationMock.mock.calls.map((c) => c[0]);
+    const seven = written.find((row) => row.collection_id === 'itinerary-7-uuid');
+    expect(JSON.parse(seven.extra)).toMatchObject({ travels_author: 'Travels Author' });
+    expect(JSON.parse(seven.extra)).not.toHaveProperty('author');
+
+    queryMock.mockImplementation(async (sql: string) =>
+      sql.includes('FROM mwnf3_explore.explore_itineraries_langs')
+        ? [
+            {
+              itineraries_id: 7,
+              langId: 'en',
+              title: 'The Seat of the Sultanate',
+              introduction: "Explore's own text.",
+              duration: null,
+              local_team: '',
+              author: 'Explore Author',
+              introd_type: null,
+              et_title: 'IAM;eg;I;en;1',
+              et_introduction: '',
+            },
+          ]
+        : []
+    );
+    writeCollectionTranslationMock.mockClear();
+    await new ExploreItineraryContentImporter(context).import();
+    const own = writeCollectionTranslationMock.mock.calls[0][0];
+    expect(own.description).toBe("Explore's own text.");
+    expect(JSON.parse(own.extra)).toMatchObject({ author: 'Explore Author' });
+    expect(JSON.parse(own.extra)).not.toHaveProperty('travels_author');
   });
 
   it('uses the resolved source item for itinerary membership instead of an Explore shell item', async () => {

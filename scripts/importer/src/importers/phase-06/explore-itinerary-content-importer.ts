@@ -83,6 +83,16 @@ interface LegacyCrossSchemaLink {
 
 interface LegacyTravelsDescription {
   description: string | null;
+  author: string | null;
+}
+
+/**
+ * The text an itinerary shows and, when the text is a Travels itinerary's,
+ * that itinerary's author ('' for none); null for Explore's own text.
+ */
+interface VisibleDescription {
+  text: string;
+  travelsAuthor: string | null;
 }
 
 function parseGeoCoordinates(coords: string | null): [number | null, number | null] {
@@ -214,8 +224,14 @@ export class ExploreItineraryContentImporter extends BaseImporter {
         if (trans.introd_type) extra.introd_type = trans.introd_type;
         if (trans.et_title) extra.et_title = trans.et_title;
         if (trans.et_introduction) extra.et_introduction = trans.et_introduction;
+        const visible = await this.resolveVisibleDescription(trans);
+        const visibleDescription = visible.text;
+        // Legacy credits a text taken from a Travels itinerary to that
+        // itinerary's author (explore-api ExploreItinerary, `author` read with
+        // the description), not to Explore's own: kept as a field of its own,
+        // empty when that itinerary names none (legacy then prints no author).
+        if (visible.travelsAuthor !== null) extra.travels_author = visible.travelsAuthor;
         const extraJson = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
-        const visibleDescription = await this.resolveVisibleDescription(trans);
 
         if (this.isDryRun || this.isSampleOnlyMode) {
           result.imported++;
@@ -668,9 +684,9 @@ export class ExploreItineraryContentImporter extends BaseImporter {
     }
   }
 
-  private async resolveVisibleDescription(trans: LegacyItineraryLang): Promise<string> {
+  private async resolveVisibleDescription(trans: LegacyItineraryLang): Promise<VisibleDescription> {
     if (trans.introduction && trans.introduction.trim() !== '') {
-      return trans.introduction;
+      return { text: trans.introduction, travelsAuthor: null };
     }
 
     const shortDescription = await this.resolveTravelsDescriptionReference(
@@ -689,13 +705,13 @@ export class ExploreItineraryContentImporter extends BaseImporter {
       return longDescription;
     }
 
-    return '';
+    return { text: '', travelsAuthor: null };
   }
 
   private async resolveTravelsDescriptionReference(
     reference: string | null,
     field: 'description' | 'description2'
-  ): Promise<string | null> {
+  ): Promise<VisibleDescription | null> {
     if (!reference || reference.trim() === '') {
       return null;
     }
@@ -712,7 +728,7 @@ export class ExploreItineraryContentImporter extends BaseImporter {
     }
 
     const rows = await this.context.legacyDb.query<LegacyTravelsDescription>(
-      `SELECT ${field} AS description
+      `SELECT ${field} AS description, author
        FROM mwnf3_travels.tr_itineraries
        WHERE project_id = ?
          AND country = ?
@@ -724,6 +740,7 @@ export class ExploreItineraryContentImporter extends BaseImporter {
     );
 
     const description = rows[0]?.description ?? null;
-    return description && description.trim() !== '' ? description : null;
+    if (!description || description.trim() === '') return null;
+    return { text: description, travelsAuthor: rows[0]?.author?.trim() ?? '' };
   }
 }
