@@ -1,5 +1,9 @@
 import type { ExportResult } from '../core/types.js'
+import { languageKeyer, rekeyIfMap } from '../core/language-keys.js'
 import { BaseExporter } from './base-exporter.js'
+
+/** The item texts' `extra` keys whose value is keyed by language. */
+const LANGUAGE_KEYED_EXTRA = new Set(['structured_bibliography', 'disabled_structured_bibliography'])
 
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ". On an Arabic row legacy's sheet prints only the
@@ -172,6 +176,7 @@ export class ItemExporter extends BaseExporter {
     const itemIds = items.map(i => i.id)
     const itemPh = this.placeholders(itemIds.length)
     const langCodeMap = await this.buildLangCodeMap()
+    const languageKey = languageKeyer(langCodeMap)
 
     const contextIds = this.context.contextIds
     const contextPh = this.placeholders(contextIds.length)
@@ -419,7 +424,8 @@ export class ItemExporter extends BaseExporter {
           // The record's own credit columns: legacy's sheet prints the credit
           // table only (the galleries print these).
           if (k === 'credits_as_written') continue
-          if (fields[k] == null) fields[k] = v
+          // The bibliographies are keyed by language, written as the package writes it (#2394).
+          if (fields[k] == null) fields[k] = LANGUAGE_KEYED_EXTRA.has(k) ? rekeyIfMap(v, languageKey) : v
         }
       }
       translationMap.get(itemId)![code] = fields

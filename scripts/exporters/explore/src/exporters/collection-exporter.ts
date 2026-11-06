@@ -1,5 +1,25 @@
 import type { ExportResult } from '../core/types.js'
+import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { BaseExporter } from './base-exporter.js'
+
+/**
+ * A collection text's `extra` with the language of each theme's country text
+ * (`country_texts[].langId`) as the package writes it (#2394). Exported for
+ * unit tests.
+ */
+export function collectionTextExtra(extra: unknown, languageKey: LanguageKey): unknown {
+  if (!extra || typeof extra !== 'object' || Array.isArray(extra)) return extra
+  const texts = (extra as Record<string, unknown>).country_texts
+  if (!Array.isArray(texts)) return extra
+  return {
+    ...(extra as Record<string, unknown>),
+    country_texts: texts.map(entry =>
+      entry && typeof entry === 'object' && typeof (entry as { langId?: unknown }).langId === 'string'
+        ? { ...entry, langId: languageKey((entry as { langId: string }).langId) }
+        : entry
+    ),
+  }
+}
 
 interface CollectionRow {
   id: string
@@ -68,6 +88,7 @@ export class CollectionExporter extends BaseExporter {
     const colPh = this.placeholders(collectionIds.length)
     const itemPh = this.placeholders(this.scope.itemIds.length)
     const langCodeMap = await this.buildLangCodeMap()
+    const languageKey = languageKeyer(langCodeMap)
 
     const [collections, translations, images, itemLinks] = await Promise.all([
       this.db.query<CollectionRow>(
@@ -118,7 +139,7 @@ export class CollectionExporter extends BaseExporter {
         description: t.description,
         quote: t.quote,
         url: t.url,
-        extra: parseJson(t.extra),
+        extra: collectionTextExtra(parseJson(t.extra), languageKey),
       })
     }
     await this.writeTranslationFiles('collections', byLang)

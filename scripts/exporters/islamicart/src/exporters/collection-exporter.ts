@@ -1,4 +1,5 @@
 import type { ExportResult } from '../core/types.js'
+import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
 
@@ -114,6 +115,7 @@ export class CollectionExporter extends BaseExporter {
     const collectionIds = collections.map(c => c.id)
     const colPh = this.placeholders(collectionIds.length)
     const langCodeMap = await this.buildLangCodeMap()
+    const languageKey = languageKeyer(langCodeMap)
 
     const [allTranslations, images, itemLinks, glossaryLinks] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
@@ -266,7 +268,7 @@ export class CollectionExporter extends BaseExporter {
       if (!itemMap.has(link.collection_id)) itemMap.set(link.collection_id, [])
       const entries = itemMap.get(link.collection_id)!
       if (depth === undefined) {
-        entries.push(buildCollectionItemEntry(link, imageUrlFn))
+        entries.push(buildCollectionItemEntry(link, imageUrlFn, languageKey))
       } else if (!entries.some(e => e.id === link.item_id)) {
         entries.push({ id: link.item_id, display_order: link.display_order, variant_order: null })
       }
@@ -366,15 +368,20 @@ export function computeUnpublishedExhibitionSubtree(
  * item_location, item_museum, detail_name, detail_justification — each a
  * language-keyed map) into a per-language caption record.
  */
-function extractCaptions(fields: Record<string, unknown>): Record<string, CollectionItemCaption> {
+function extractCaptions(
+  fields: Record<string, unknown>,
+  languageKey: LanguageKey
+): Record<string, CollectionItemCaption> {
   const caption: Record<string, CollectionItemCaption> = {}
   for (const [legacyField, outField] of Object.entries(CAPTION_FIELD_MAP)) {
     const langMap = fields[legacyField]
     if (!langMap || typeof langMap !== 'object') continue
-    for (const [lang, text] of Object.entries(langMap as Record<string, string>)) {
+    for (const [key, text] of Object.entries(langMap as Record<string, string>)) {
       if (!text) continue
+      // Keyed by language as the package writes it (#2394).
+      const lang = languageKey(key)
       if (!caption[lang]) caption[lang] = {}
-      caption[lang]![outField] = text
+      caption[lang]![outField] ??= text
     }
   }
   return caption
@@ -393,7 +400,8 @@ function extractCaptions(fields: Record<string, unknown>): Record<string, Collec
  */
 export function buildCollectionItemEntry(
   link: CollectionItemRow,
-  imageUrlFn: (path: string) => string
+  imageUrlFn: (path: string) => string,
+  languageKey: LanguageKey = key => key
 ): {
   id: string
   display_order: number | null
@@ -404,13 +412,13 @@ export function buildCollectionItemEntry(
 } {
   const extra = parseJson(link.extra) as Record<string, unknown> | null
   const variantOrder = extra && typeof extra.n2 === 'number' ? extra.n2 : null
-  const caption = extra ? extractCaptions(extra) : {}
+  const caption = extra ? extractCaptions(extra, languageKey) : {}
 
   const details: CollectionItemDetailEntry[] = []
   if (extra && Array.isArray(extra.details)) {
     for (const raw of extra.details as Record<string, unknown>[]) {
       const picture = typeof raw.picture_details === 'string' ? raw.picture_details : null
-      const detailCaption = extractCaptions(raw)
+      const detailCaption = extractCaptions(raw, languageKey)
       details.push({
         image_url: picture ? imageUrlFn(picture) : null,
         ...(Object.keys(detailCaption).length > 0 ? { caption: detailCaption } : {}),
