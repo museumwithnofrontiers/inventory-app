@@ -111,7 +111,6 @@ function creditLine(tr, role) {
     .join(', ');
 }
 const relKey = (href) => lc(dbUidToKey(new URL(href).pathname.replace(/^.*\/api\/v2/, '').replace(/\/[a-z]{2}$/, '')));
-const selfName = L.self?.galleryName;
 const hasArtistLines = Object.values(P.translations.items ?? {}).some((rows) => Object.values(rows ?? {}).some((row) => row?.artist));
 
 for (const s of L.sheets) {
@@ -224,7 +223,9 @@ for (const s of L.sheets) {
     R.field('item', 'tags', tL.length === tP.length && tL.every((t) => tP.includes(t)) ? { verdict: tL.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: tL.sort().join(' '), pkg: tP.sort().join(' ') }, key);
     const pics = sh.pictures ?? [];
     R.field('item', 'image.count', pics.length === shown.length ? { verdict: pics.length ? 'same' : 'both-empty' } : { verdict: pics.length > shown.length ? 'missing-in-package' : 'extra-in-package', legacy: String(pics.length), pkg: String(shown.length) }, key);
-    const gl = (sh.galleries ?? []).map((g) => g.name).filter((n) => n !== selfName).sort();
+    // Both sides list the gallery itself too: legacy's sheet and, since the galleries' "On display
+    // in" (#2423), the package's gallery_references.
+    const gl = (sh.galleries ?? []).map((g) => g.name).sort();
     const gp = (it.gallery_references ?? []).filter((g) => g.kind === 'gallery').map((g) => g.name).sort();
     R.field('item', 'other galleries', gl.join('|') === gp.join('|') ? { verdict: gl.length ? 'same' : 'both-empty' } : { verdict: 'different', legacy: gl.join('; '), pkg: gp.join('; ') }, key);
   }
