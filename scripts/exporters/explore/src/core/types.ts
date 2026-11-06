@@ -14,6 +14,8 @@ export interface ExportContext {
   projectKeys: string[]
   baseUrl: string
   logger: Logger
+  /** Each project's home site, by project UUID (`loadHomeSites`); none where it is left out. */
+  homeSites?: ReadonlyMap<string, string>
 }
 
 export interface ExportResult {

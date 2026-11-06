@@ -73,7 +73,16 @@ with the differences below.
   (G14, #2163).
 - `projects`: the projects the shipped items belong to (Discover Islamic Art,
   Discover Baroque Art, Sharing History). Travels records and native Explore
-  monuments belong to none.
+  monuments belong to none. Each names its `home_site`, the slug of the
+  instance file that lists the project in its `project_ids`, or null: the
+  "MWNF Database Search" opens such a record on that site's item page, as
+  legacy opened it on its own site (#2424).
+- `trail_projects`: the Exhibition Trails projects of the shipped Travels
+  records, keyed by the code their keys carry
+  (`mwnf3_travels:monument:<code>:…`), each with its `name` per language, the
+  translations of the collection named like the project (`mwnf3:projects:<code>`,
+  legacy's `mwnf3.projectnames`). Legacy named a Travels record "In <project>
+  Exhibition Trails" (#2424).
 
 ## collections.json
 
