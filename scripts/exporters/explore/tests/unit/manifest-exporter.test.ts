@@ -21,7 +21,7 @@ function exporterWith(
       return rows.langCodeMap ?? []
     if (sql.includes('lt.name')) return rows.siteLanguages ?? []
     if (sql.includes('FROM items')) return rows.trailKeys ?? []
-    if (sql.includes('p.backward_compatibility IN')) return rows.trailTitles ?? []
+    if (sql.includes('c.backward_compatibility IN')) return rows.trailTitles ?? []
     if (sql.includes('FROM projects p')) return rows.projectTitles ?? []
     if (sql.includes('ct.collection_id = ?')) return rows.names ?? []
     if (sql.includes('FROM projects')) return rows.projects ?? []
@@ -176,7 +176,7 @@ describe('ManifestExporter', () => {
       GPA: { name: { en: 'The Great Patrons of the Arts' } },
       IAM: { name: { en: 'Islamic Art in the Mediterranean', fr: "L'Art Islamique en Méditerranée" } },
     })
-    const titles = query.mock.calls.find(([sql]) => String(sql).includes('p.backward_compatibility IN'))!
+    const titles = query.mock.calls.find(([sql]) => String(sql).includes('c.backward_compatibility IN'))!
     expect(titles[1]).toEqual(['mwnf3:projects:GPA', 'mwnf3:projects:IAM'])
   })
 

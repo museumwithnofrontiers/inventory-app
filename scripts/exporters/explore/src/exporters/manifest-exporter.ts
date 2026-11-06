@@ -216,7 +216,7 @@ export class ManifestExporter extends BaseExporter {
    * Exhibition Trails records (`mwnf3_travels:monument:<code>:…`), its name
    * per language: legacy read it from `mwnf3.projectnames`, which the
    * importer keeps as the translations of the collection named like the
-   * project (`mwnf3:projects:<code>`).
+   * project (`mwnf3:projects:<code>`), with or without a project row.
    */
   protected async buildTrailProjectsSection(): Promise<Record<string, TrailProjectEntry>> {
     const ids = this.scope.itemIds
@@ -233,12 +233,13 @@ export class ManifestExporter extends BaseExporter {
     const titles = await this.db.query<TrailTitleRow>(
       // Row order is unspecified; sorted so the section's key order is
       // byte-identical across two exports of one database.
-      `SELECT p.backward_compatibility, ct.language_id, ct.title
-       FROM projects p
-       JOIN collections c ON c.backward_compatibility = p.backward_compatibility
+      // The collection, not the project: some Travels projects (GPA) have
+      // their collection and its names but no project row.
+      `SELECT c.backward_compatibility, ct.language_id, ct.title
+       FROM collections c
        JOIN collection_translations ct ON ct.collection_id = c.id
-       WHERE p.backward_compatibility IN (${this.placeholders(codes.length)})
-       ORDER BY p.backward_compatibility, ct.language_id`,
+       WHERE c.backward_compatibility IN (${this.placeholders(codes.length)})
+       ORDER BY c.backward_compatibility, ct.language_id`,
       codes.map(code => `mwnf3:projects:${code}`)
     )
     const result: Record<string, TrailProjectEntry> = {}
