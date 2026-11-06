@@ -188,6 +188,9 @@ Gallery package's partners.json section):
   `translations/partners.<lang>.json` it has no row for. Its `languages` stay
   the rows it has, as dxa-api's `i18n` does. A Sharing History partner gets no
   such entry: dxa-api's query for it needs a name row.
+- `own_project` is the Gallery package's field too: the project the partner
+  record belongs to, with its tier there and whether it is an exhibition's,
+  which legacy's partner list badged each partner with (inventory-app#2379).
 
 ## related_content.json
 
