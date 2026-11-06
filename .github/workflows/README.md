@@ -113,7 +113,7 @@ Runs the pull request validation pipeline: an unconditional dependency review, p
 
 10. **parity-validation** *(when `parity=true`)* (*Parity Tool Validation*) - The legacy parity tool
    - Uses the `setup-node-project` composite action with `working-directory: scripts/parity`
-   - Runs `npm run lint:check` and `npm test` (the gate tests)
+   - Runs `npm run lint:check`, installs Playwright's Chromium (the layout rules' tests open small pages in it), and `npm test` (the gate tests)
    - The comparison itself never runs here: it reads the live legacy sites and a local cache of their answers. See [`scripts/parity/README.md`](../../scripts/parity/README.md)
 
 11. **data-packages-mcp-validation** *(when `data-packages-mcp=true`)* (*Data Packages MCP Validation*) - The read-only MCP server over the published data packages

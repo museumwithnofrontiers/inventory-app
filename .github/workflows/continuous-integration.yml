@@ -383,6 +383,12 @@ jobs:
         run: |
           npm run lint:check
 
+      # The layout rules' tests open small pages in Chromium (tests/layout.test.mjs).
+      - name: "Setup > Playwright Chromium (Parity)"
+        working-directory: scripts/parity
+        run: |
+          npx playwright install --with-deps chromium
+
       - name: "Check > npm > Run Tests (Parity)"
         working-directory: scripts/parity
         run: |
