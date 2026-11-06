@@ -13,19 +13,22 @@ import { contextWith, scopeWith } from './support.js'
  */
 function exporterWith(
   rows: Record<string, unknown[]>,
-  scope = scopeWith({ collectionIds: ['root', 'theme-1'] })
+  scope = scopeWith({ collectionIds: ['root', 'theme-1'] }),
+  homeSites?: ReadonlyMap<string, string>
 ) {
   const query = vi.fn(async (sql: string, _params?: unknown[]) => {
     if (sql.startsWith('SELECT id, backward_compatibility FROM languages'))
       return rows.langCodeMap ?? []
     if (sql.includes('lt.name')) return rows.siteLanguages ?? []
+    if (sql.includes('FROM items')) return rows.trailKeys ?? []
+    if (sql.includes('p.backward_compatibility IN')) return rows.trailTitles ?? []
     if (sql.includes('FROM projects p')) return rows.projectTitles ?? []
     if (sql.includes('ct.collection_id = ?')) return rows.names ?? []
     if (sql.includes('FROM projects')) return rows.projects ?? []
     if (sql.includes('FROM languages')) return rows.languages ?? []
     throw new Error(`Unexpected query: ${sql}`)
   })
-  const context = contextWith({ query } as unknown as ExportContext['db'], '/tmp/none', scope)
+  const context = { ...contextWith({ query } as unknown as ExportContext['db'], '/tmp/none', scope), homeSites }
   const exporter = new ManifestExporter(context)
   const written: unknown[] = []
   vi.spyOn(
@@ -99,6 +102,7 @@ describe('ManifestExporter', () => {
         site_url: 'https://baroqueart.museumwnf.org',
         related_database_url: null,
         artistic_introduction_url: null,
+        home_site: null,
       },
     })
   })
@@ -119,5 +123,68 @@ describe('ManifestExporter', () => {
       terms_url: 'https://www.museumwnf.org/about/legal-notice',
       attribution: 'Content © Museum With No Frontiers, used under the MWNF legal notice.',
     })
+  })
+  // Explore's "MWNF Database Search" opens a Virtual Museum or Sharing
+  // History record on its home site, as legacy opened it on its own
+  // (inventory-app#2424).
+  it("names each project's home site, from the instance files", async () => {
+    const { exporter, written } = exporterWith(
+      {
+        projects: [
+          { id: 'isl-uuid', backward_compatibility: 'mwnf3:projects:ISL', site_url: null, related_database_url: null, artistic_introduction_url: null },
+          { id: 'orphan-uuid', backward_compatibility: 'mwnf3:projects:ZZZ', site_url: null, related_database_url: null, artistic_introduction_url: null },
+        ],
+      },
+      scopeWith({ projectIds: ['isl-uuid', 'orphan-uuid'] }),
+      new Map([['isl-uuid', 'islamicart']])
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { projects: Record<string, { home_site: string | null }> }
+    expect(manifest.projects['isl-uuid'].home_site).toBe('islamicart')
+    expect(manifest.projects['orphan-uuid'].home_site).toBeNull()
+  })
+
+  // Legacy named an Exhibition Trails record "In <project> Exhibition
+  // Trails", the project read off its key (inventory-app#2424).
+  it('names the Exhibition Trails projects of the shipped records, by their code', async () => {
+    const { exporter, written, query } = exporterWith(
+      {
+        langCodeMap: [
+          { id: 'eng', backward_compatibility: 'en' },
+          { id: 'fra', backward_compatibility: 'fr' },
+        ],
+        trailKeys: [
+          { backward_compatibility: 'mwnf3_travels:monument:IAM:es:1:IX:1:b' },
+          { backward_compatibility: 'mwnf3_travels:monument:GPA:pt:1:IV:2:a' },
+          { backward_compatibility: 'mwnf3_travels:monument:IAM:tn:1:I:1:a' },
+        ],
+        trailTitles: [
+          { backward_compatibility: 'mwnf3:projects:GPA', language_id: 'eng', title: 'The Great Patrons of the Arts' },
+          { backward_compatibility: 'mwnf3:projects:IAM', language_id: 'eng', title: 'Islamic Art in the Mediterranean' },
+          { backward_compatibility: 'mwnf3:projects:IAM', language_id: 'fra', title: "L'Art Islamique en Méditerranée" },
+        ],
+      },
+      scopeWith({ itemIds: ['item-1', 'item-2'] })
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { trail_projects: Record<string, unknown> }
+    expect(manifest.trail_projects).toEqual({
+      GPA: { name: { en: 'The Great Patrons of the Arts' } },
+      IAM: { name: { en: 'Islamic Art in the Mediterranean', fr: "L'Art Islamique en Méditerranée" } },
+    })
+    const titles = query.mock.calls.find(([sql]) => String(sql).includes('p.backward_compatibility IN'))!
+    expect(titles[1]).toEqual(['mwnf3:projects:GPA', 'mwnf3:projects:IAM'])
+  })
+
+  it('ships no trail projects where no Exhibition Trails record is shipped', async () => {
+    const { exporter, written } = exporterWith({}, scopeWith({ itemIds: ['item-1'] }))
+
+    await exporter.export()
+
+    expect((written[0] as { trail_projects: unknown }).trail_projects).toEqual({})
   })
 })

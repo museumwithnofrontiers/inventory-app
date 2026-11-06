@@ -31,7 +31,23 @@ export interface ProjectEntry {
   site_url: string | null
   related_database_url: string | null
   artistic_introduction_url: string | null
+  /** The slug of the project's home site (`loadHomeSites`); null where no site is home to it. */
+  home_site: string | null
 }
+
+/** One entry of `manifest.trail_projects` — see `ManifestExporter.buildTrailProjectsSection`. */
+export interface TrailProjectEntry {
+  name: Record<string, string>
+}
+
+interface TrailTitleRow {
+  backward_compatibility: string
+  language_id: string
+  title: string | null
+}
+
+// An Exhibition Trails record's key names its project (`mwnf3_travels:monument:IAM:…`).
+const TRAIL_PREFIX = 'mwnf3_travels:'
 
 /**
  * `manifest.json` — what this package is and when it was made, and the one
@@ -77,6 +93,10 @@ export class ManifestExporter extends BaseExporter {
       // Every project the shipped items belong to: Explore's monuments are
       // other databases' records, and a sheet names the project it comes from.
       projects: await this.buildProjectsSection(this.projectIds),
+      // The Exhibition Trails' projects, by the code their records' keys
+      // carry: those records belong to no project row of their own, and
+      // legacy named each by its project, "In <project> Exhibition Trails".
+      trail_projects: await this.buildTrailProjectsSection(),
     }
 
     await this.writeJson('manifest.json', manifest)
@@ -177,6 +197,7 @@ export class ManifestExporter extends BaseExporter {
       namesByProject.get(row.project_id)![code] = row.title
     }
 
+    const homes = this.context.homeSites ?? new Map<string, string>()
     const result: Record<string, ProjectEntry> = {}
     for (const p of projects) {
       result[p.id] = {
@@ -184,7 +205,49 @@ export class ManifestExporter extends BaseExporter {
         site_url: p.site_url,
         related_database_url: p.related_database_url,
         artistic_introduction_url: p.artistic_introduction_url,
+        home_site: homes.get(p.id) ?? null,
       }
+    }
+    return result
+  }
+
+  /**
+   * `manifest.trail_projects` — one entry per project code among the shipped
+   * Exhibition Trails records (`mwnf3_travels:monument:<code>:…`), its name
+   * per language: legacy read it from `mwnf3.projectnames`, which the
+   * importer keeps as the translations of the collection named like the
+   * project (`mwnf3:projects:<code>`).
+   */
+  protected async buildTrailProjectsSection(): Promise<Record<string, TrailProjectEntry>> {
+    const ids = this.scope.itemIds
+    if (ids.length === 0) return {}
+    const keys = await this.db.query<{ backward_compatibility: string }>(
+      `SELECT DISTINCT backward_compatibility FROM items
+       WHERE id IN (${this.placeholders(ids.length)}) AND backward_compatibility LIKE ?`,
+      [...ids, `${TRAIL_PREFIX}%`]
+    )
+    const codes = [...new Set(keys.map(row => row.backward_compatibility.split(':')[2]).filter(Boolean))].sort()
+    if (codes.length === 0) return {}
+
+    const langCodeMap = await this.buildLangCodeMap()
+    const titles = await this.db.query<TrailTitleRow>(
+      // Row order is unspecified; sorted so the section's key order is
+      // byte-identical across two exports of one database.
+      `SELECT p.backward_compatibility, ct.language_id, ct.title
+       FROM projects p
+       JOIN collections c ON c.backward_compatibility = p.backward_compatibility
+       JOIN collection_translations ct ON ct.collection_id = c.id
+       WHERE p.backward_compatibility IN (${this.placeholders(codes.length)})
+       ORDER BY p.backward_compatibility, ct.language_id`,
+      codes.map(code => `mwnf3:projects:${code}`)
+    )
+    const result: Record<string, TrailProjectEntry> = {}
+    for (const code of codes) result[code] = { name: {} }
+    for (const row of titles) {
+      const code = row.backward_compatibility.split(':')[2]
+      const lang = langCodeMap.get(row.language_id)
+      if (!code || !lang || !row.title || !result[code]) continue
+      result[code].name[lang] = row.title
     }
     return result
   }
