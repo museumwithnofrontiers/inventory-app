@@ -495,6 +495,13 @@ regressions. None of the 14 regressions above is left:
 
 `baselines/2026-11-04` is the run after reimport 13, on the packages published from it (data-packages#12; 13 of its 18 changed packages are published, the five DXA exhibitions' new versions are not yet), with the tool as of #2465: 7 real differences, no regressions. The reimport brought the dynasty texts' glossary links (#2470) and took the sponsor and partner logos out of the exhibition and Sharing History mini-site packages, which the sites now keep themselves (#2471, #2463).
 
+`baselines/2026-11-06` is the first run with the Hijaz Railway compared live (#2379), on the packages of Epic C (#2405): the galleries' "On display in" and the exhibitions' `exhibition_references`. 46 real differences: the 7 of 2026-11-04, and Hijaz's 39, the 13 regressions its `diff-runs.md` lists, each a first measurement (Hijaz had no live comparison before). The first full run also failed every gallery's `item.other galleries` (0 → hundreds): since #2423 the package lists the gallery itself among the galleries showing an item, as legacy's sheet does, and the tool still removed it from legacy's list only. It now compares both lists whole, and every gallery is back to 0. Hijaz's 39:
+- **Texts edited on legacy:** legacy's texts now spell "Hijaz" and "kilometre" where the package has "Hejaz" and "kilometer" (`item.description` 21, `item.alternate_name` 3).
+- **`item.catalogue_holding_link` (10):** the double underscores of the Qatar National Library catalogue addresses are gone from the package, read as Markdown emphasis (8 carry the tool's reason `stray or misplaced Markdown emphasis`).
+- **`item.copyright` (9, extra):** the package carries a rights line for nine Qatar records whose legacy sheet prints none.
+- **`site.hidden`:** legacy's `status` hides the exhibition; a gallery with a site is visible (decision of 2026-10-20).
+- **Not investigated yet:** partners (4 only in legacy: the institutions `jo_01`, `lb_01`, `sa_01`, `tr_02`; 8 only in the package, museums among them), members only in the package (2: `mwnf3_explore:monument:1806`, `mwnf3_travels:monument:iam:sy:1:i:1:a`), timeline events only in the package (3), `item.image.photographer` (2), `item.start/end` (1) and `exhibition.related content` (legacy 4, package 3).
+
 ## Known legacy quirks and decided differences
 
 These are not defects of the new sites. The tools mark most of them `expected:` or give them a
