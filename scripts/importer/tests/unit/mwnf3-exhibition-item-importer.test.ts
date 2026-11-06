@@ -195,10 +195,10 @@ describe('Mwnf3ExhibitionItemImporter — story #1225: page image EAV fields', (
 
     expect(writeCollectionItemMock).toHaveBeenCalledTimes(1);
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.item_name).toEqual({ en: 'Golden Vase' });
-    expect(extra.item_date).toEqual({ en: '12th century' });
-    expect(extra.item_dynasty).toEqual({ en: 'Abbasid' });
-    expect(extra.item_location).toEqual({ en: 'Baghdad Museum' });
+    expect(extra.item_name).toEqual({ eng: 'Golden Vase' });
+    expect(extra.item_date).toEqual({ eng: '12th century' });
+    expect(extra.item_dynasty).toEqual({ eng: 'Abbasid' });
+    expect(extra.item_location).toEqual({ eng: 'Baghdad Museum' });
   });
 
   it('stores item_artist, item_material, item_museum on collection_item.extra', async () => {
@@ -218,9 +218,9 @@ describe('Mwnf3ExhibitionItemImporter — story #1225: page image EAV fields', (
     await importer.import();
 
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.item_artist).toEqual({ en: 'Unknown Artist' });
-    expect(extra.item_material).toEqual({ en: 'Ceramic' });
-    expect(extra.item_museum).toEqual({ en: 'Cairo Museum' });
+    expect(extra.item_artist).toEqual({ eng: 'Unknown Artist' });
+    expect(extra.item_material).toEqual({ eng: 'Ceramic' });
+    expect(extra.item_museum).toEqual({ eng: 'Cairo Museum' });
   });
 
   it('regression: detail_justification still lands in collection_item.extra', async () => {
@@ -238,7 +238,7 @@ describe('Mwnf3ExhibitionItemImporter — story #1225: page image EAV fields', (
     await importer.import();
 
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.detail_justification).toEqual({ en: 'The detail text.' });
+    expect(extra.detail_justification).toEqual({ eng: 'The detail text.' });
   });
 
   it('preserves n and n2 alongside new EAV fields, and no picture path', async () => {
@@ -277,7 +277,7 @@ describe('Mwnf3ExhibitionItemImporter — story #1225: page image EAV fields', (
     await importer.import();
 
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.item_name).toEqual({ en: 'Golden Vase', de: 'Goldene Vase' });
+    expect(extra.item_name).toEqual({ eng: 'Golden Vase', deu: 'Goldene Vase' });
   });
 
   it('omits fields whose source values are empty or whitespace-only', async () => {
@@ -366,8 +366,8 @@ describe('Mwnf3ExhibitionItemImporter — detail views are placements of their o
         n2: 3,
         parent_n2: 2,
         detail_n: 1,
-        item_name: { en: 'High altar' },
-        item_artist: { en: 'Gian Lorenzo Bernini' },
+        item_name: { eng: 'High altar' },
+        item_artist: { eng: 'Gian Lorenzo Bernini' },
       },
     });
     expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
@@ -508,10 +508,10 @@ describe('Mwnf3ExhibitionItemImporter — story #1224: exhibition-level image EA
 
     expect(writeCollectionItemMock).toHaveBeenCalledTimes(1);
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.item_name).toEqual({ en: 'Bronze Bowl' });
-    expect(extra.item_date).toEqual({ en: '9th century' });
-    expect(extra.item_dynasty).toEqual({ en: 'Umayyad' });
-    expect(extra.item_location).toEqual({ en: 'Damascus' });
+    expect(extra.item_name).toEqual({ eng: 'Bronze Bowl' });
+    expect(extra.item_date).toEqual({ eng: '9th century' });
+    expect(extra.item_dynasty).toEqual({ eng: 'Umayyad' });
+    expect(extra.item_location).toEqual({ eng: 'Damascus' });
   });
 
   it('stores item_description and item_museum on collection_item.extra', async () => {
@@ -530,8 +530,8 @@ describe('Mwnf3ExhibitionItemImporter — story #1224: exhibition-level image EA
     await importer.import();
 
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.item_description).toEqual({ en: 'A rare example.' });
-    expect(extra.item_museum).toEqual({ en: 'National Museum' });
+    expect(extra.item_description).toEqual({ eng: 'A rare example.' });
+    expect(extra.item_museum).toEqual({ eng: 'National Museum' });
   });
 
   it('writes n and n2 to extra, and a picture that is none of the item’s own as a page image', async () => {
@@ -579,11 +579,13 @@ describe('Mwnf3ExhibitionItemImporter — story #1224: exhibition-level image EA
         context_id: 'bar-context-uuid',
         name: 'Battle between the Turks and Christians',
         dates: 'First half of the 18th century',
+        // Its identity keeps legacy's code while extra moves to the id (#2394).
+        backward_compatibility: 'mwnf3:exhibition_custom_pictures:custom/exhibition/129.jpg:en',
       }),
     ]);
     const placement = writeCollectionItemMock.mock.calls[0][0];
     expect(placement).toMatchObject({ collection_id: 'exh-collection-uuid', item_id: 'custom-picture-uuid', display_order: 3 });
-    expect(placement.extra).toMatchObject({ n: 3, item_museum: { en: 'Pinacoteca Comunale Foresiana' } });
+    expect(placement.extra).toMatchObject({ n: 3, item_museum: { eng: 'Pinacoteca Comunale Foresiana' } });
     expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
   });
 });
@@ -623,10 +625,10 @@ describe('Mwnf3ExhibitionItemImporter — story #1223: artintro page image EAV f
 
     expect(writeCollectionItemMock).toHaveBeenCalledTimes(1);
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.detail_justification).toEqual({ en: 'Context note.' });
-    expect(extra.item_name).toEqual({ en: 'Marble Slab' });
-    expect(extra.item_date).toEqual({ en: '11th century' });
-    expect(extra.item_location).toEqual({ en: 'Jordan' });
+    expect(extra.detail_justification).toEqual({ eng: 'Context note.' });
+    expect(extra.item_name).toEqual({ eng: 'Marble Slab' });
+    expect(extra.item_date).toEqual({ eng: '11th century' });
+    expect(extra.item_location).toEqual({ eng: 'Jordan' });
   });
 
   it('stores detail_name, item_dynasty, item_museum on collection_item.extra', async () => {
@@ -646,9 +648,9 @@ describe('Mwnf3ExhibitionItemImporter — story #1223: artintro page image EAV f
     await importer.import();
 
     const extra = writeCollectionItemMock.mock.calls[0][0].extra as Record<string, unknown>;
-    expect(extra.detail_name).toEqual({ en: 'Detail shot' });
-    expect(extra.item_dynasty).toEqual({ en: 'Ayyubid' });
-    expect(extra.item_museum).toEqual({ en: 'Amman Museum' });
+    expect(extra.detail_name).toEqual({ eng: 'Detail shot' });
+    expect(extra.item_dynasty).toEqual({ eng: 'Ayyubid' });
+    expect(extra.item_museum).toEqual({ eng: 'Amman Museum' });
   });
 
   it('writes n and n2 to extra, and no picture path', async () => {
@@ -785,8 +787,8 @@ describe('Mwnf3ExhibitionItemImporter — placements link picture child items', 
     expect(calls.map((c) => c.item_id)).toEqual(['picture-1-uuid', 'picture-2-uuid']);
     expect(calls.map((c) => c.extra.n2)).toEqual([1, 2]);
     expect(calls.map((c) => c.extra.detail_justification)).toEqual([
-      { en: 'First view.' },
-      { en: 'Second view.' },
+      { eng: 'First view.' },
+      { eng: 'Second view.' },
     ]);
   });
 
@@ -901,7 +903,7 @@ describe('Mwnf3ExhibitionItemImporter — placements link picture child items', 
     ]);
     const placement = writeCollectionItemMock.mock.calls[0][0];
     expect(placement.item_id).toBe('custom-picture-uuid');
-    expect(placement.extra).toMatchObject({ n: row.n, n2: row.n2, item_name: { en: 'Cihanoğlu Mosque', fr: 'Mosquée Cihanoğlu' } });
+    expect(placement.extra).toMatchObject({ n: row.n, n2: row.n2, item_name: { eng: 'Cihanoğlu Mosque', fra: 'Mosquée Cihanoğlu' } });
     expect(ctx.strategy.writeCollectionImage).not.toHaveBeenCalled();
   });
 

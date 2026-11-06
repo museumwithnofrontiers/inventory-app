@@ -47,7 +47,7 @@ import type {
   ShLegacyHistoricalBackgroundMapText,
 } from '../../domain/types/index.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
-import { mapCountryCode } from '../../utils/code-mappings.js';
+import { LANGUAGE_CODE_MAP, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { orderLikeLegacy } from '../../utils/legacy-collation.js';
 
@@ -182,11 +182,17 @@ export class ShBibliographyHbImporter extends BaseImporter {
     // Group langs by biblio_id
     this.biblioEntries = new Map();
     for (const l of langs) {
+      // The bibliographies in `extra` are keyed by language id (#2394).
+      const languageId = LANGUAGE_CODE_MAP[l.lang];
+      if (!languageId) {
+        this.logWarning(`Bibliography ${l.biblio_id}: unknown language '${l.lang}', skipped`);
+        continue;
+      }
       if (!this.biblioEntries.has(l.biblio_id)) {
         this.biblioEntries.set(l.biblio_id, []);
       }
       this.biblioEntries.get(l.biblio_id)!.push({
-        lang: l.lang,
+        lang: languageId,
         desc: convertHtmlToMarkdown(l.desc),
         text: l.desc,
         status: statusMap.get(l.biblio_id) || 'A',
@@ -1028,6 +1034,15 @@ export class ShBibliographyHbImporter extends BaseImporter {
 
         if (Object.keys(captionObj).length === 0) continue;
 
+        // Keyed by language id in `extra` (#2394).
+        const languageId = LANGUAGE_CODE_MAP[caption.lang];
+        if (!languageId) {
+          this.logWarning(
+            `HB caption for image ${caption.hb_img_id}: unknown language '${caption.lang}', skipping`
+          );
+          continue;
+        }
+
         const imageKey = `${SH_SCHEMA}:sh_countries_historicalbackground_images:${caption.hb_img_id}`;
 
         if (!pageCaptions.has(pageId)) {
@@ -1037,7 +1052,7 @@ export class ShBibliographyHbImporter extends BaseImporter {
         if (!pageCap[imageKey]) {
           pageCap[imageKey] = {};
         }
-        pageCap[imageKey]![caption.lang] = captionObj;
+        pageCap[imageKey]![languageId] = captionObj;
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         this.logWarning(`HB caption for image ${caption.hb_img_id}: ${message}`);
@@ -1107,12 +1122,18 @@ export class ShBibliographyHbImporter extends BaseImporter {
     // Group by hb_id
     const byHb = new Map<number, Array<{ map_id: number; lang: string; desc: string }>>();
     for (const t of mapTexts) {
+      // Keyed by language id in `extra` (#2394).
+      const languageId = LANGUAGE_CODE_MAP[t.lang];
+      if (!languageId) {
+        this.logWarning(`HB map desc ${t.map_id}: unknown language '${t.lang}', skipping`);
+        continue;
+      }
       if (!byHb.has(t.hb_id)) {
         byHb.set(t.hb_id, []);
       }
       byHb.get(t.hb_id)!.push({
         map_id: t.map_id,
-        lang: t.lang,
+        lang: languageId,
         desc: convertHtmlToMarkdown(t.desc),
       });
     }

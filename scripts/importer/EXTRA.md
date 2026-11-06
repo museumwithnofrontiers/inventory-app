@@ -134,11 +134,14 @@ To review with the keys above:
 
 - Merged legacy fields, Explore's addresses among them, are registered in
   [MERGE.md](MERGE.md).
-- Language keys inside `extra` are mixed: legacy two-letter codes in the SH
-  bibliography maps, justifications, mwnf3 placement fields and SH image
-  captions; ISO three-letter codes in timelines, THG texts, logo captions and
-  the Explore blocks. The inventory uses three-letter codes only; a two-letter
-  code belongs only in `backward_compatibility`, where it is the legacy id.
+- Every language inside `extra`, as a key or a value, is a language id
+  (`eng`, `swe`, `zho`), never a legacy code (#2394). That includes the SH
+  bibliography maps, the SH and National Context justifications (an
+  exhibition's `{lang: {partner, curator}}`, a National Context's
+  `{lang: text}`), the mwnf3 placement fields, the SH image captions and map
+  texts, and Explore's `country_texts[].langId`. A legacy code belongs only in
+  `backward_compatibility`, where it is the legacy id. The exporters write the
+  packages' legacy codes from the ids (`languages.backward_compatibility`).
 - `monument_contact` has two shapes: `institution` (mwnf3) and
   `responsible_institution` (SH).
 - `mwnf3-exhibition-importer.ts` builds an `extra` (`show`, `portal_image`,

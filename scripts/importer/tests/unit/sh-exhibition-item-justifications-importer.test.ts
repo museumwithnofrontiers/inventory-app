@@ -107,8 +107,8 @@ describe('ShExhibitionItemJustificationsImporter', () => {
     const extra = JSON.parse(setExtraMock.mock.calls[0][2] as string) as Record<string, unknown>;
     expect(extra.curator_status).toBe('Y');
     expect(extra.justifications).toEqual({
-      en: { partner: 'Partner text', curator: 'Curator text' },
-      fr: { partner: null, curator: 'Texte curateur' },
+      eng: { partner: 'Partner text', curator: 'Curator text' },
+      fra: { partner: null, curator: 'Texte curateur' },
     });
     expect(result.imported).toBe(1);
   });
@@ -127,8 +127,8 @@ describe('ShExhibitionItemJustificationsImporter', () => {
   it('is a no-op on a second run (fields already merged)', async () => {
     getExtraMock.mockResolvedValue({
       justifications: {
-        en: { partner: 'Partner text', curator: 'Curator text' },
-        fr: { partner: null, curator: 'Texte curateur' },
+        eng: { partner: 'Partner text', curator: 'Curator text' },
+        fra: { partner: null, curator: 'Texte curateur' },
       },
       curator_status: 'Y',
     });

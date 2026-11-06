@@ -69,7 +69,7 @@ import type {
 } from '../../domain/types/index.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
-import { mapCountryCode, mapLanguageCode } from '../../utils/code-mappings.js';
+import { keyByLanguageId, mapCountryCode, mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import {
   monumentPictureBackwardCompatibility,
@@ -169,6 +169,13 @@ const IMAGE_EAV_FIELDS_ARTINTRO = [
   'item_museum',
   'item_name',
 ] as const;
+
+/** Every EAV field a placement's `extra` can hold, each keyed by language. */
+const IMAGE_EAV_FIELDS: ReadonlySet<string> = new Set([
+  ...IMAGE_EAV_FIELDS_PAGE,
+  ...IMAGE_EAV_FIELDS_EXHIBITION,
+  ...IMAGE_EAV_FIELDS_ARTINTRO,
+]);
 
 type ImageEavFieldName = string;
 
@@ -340,7 +347,7 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             collection_id: collectionId,
             item_id: itemId,
             display_order: img.n,
-            extra,
+            extra: this.withLanguageIds(extra, label),
           });
           result.imported++;
           this.showProgress();
@@ -489,7 +496,7 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
             collection_id: collectionId,
             item_id: itemId,
             display_order: img.n,
-            extra: { n: img.n, n2: img.n2, ...eav },
+            extra: this.withLanguageIds({ n: img.n, n2: img.n2, ...eav }, `Exhibition image ${img.image_id}`),
           });
           result.imported++;
           this.showProgress();
@@ -680,7 +687,7 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
       collection_id: collectionId,
       item_id: linkedId,
       display_order: n,
-      extra,
+      extra: this.withLanguageIds(extra, label),
     });
 
     if (pagePicture && !(await this.imageExistsAsync('collection_images', collectionId, pagePicture))) {
@@ -697,6 +704,23 @@ export class Mwnf3ExhibitionItemImporter extends BaseImporter {
 
     result.imported++;
     this.showProgress();
+  }
+
+  /**
+   * A placement's `extra` with its texts keyed by language id (#2394). Only
+   * what is written into `extra` changes: the caption translations keep
+   * reading the legacy codes, which their `backward_compatibility` carries.
+   */
+  private withLanguageIds(extra: Record<string, unknown>, label: string): Record<string, unknown> {
+    const out = { ...extra };
+    for (const field of IMAGE_EAV_FIELDS) {
+      const map = out[field];
+      if (!map || typeof map !== 'object' || Array.isArray(map)) continue;
+      out[field] = keyByLanguageId(map as Record<string, unknown>, (code) => {
+        this.logWarning(`${label}: ${field} in unknown language '${code}', skipped`);
+      });
+    }
+    return out;
   }
 
   /**

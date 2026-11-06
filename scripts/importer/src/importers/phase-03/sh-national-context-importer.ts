@@ -33,7 +33,7 @@ import type {
   ShLegacyRelMonumentsNCExhibitions,
   ShLegacyRelMonumentsNCExhibitionJustification,
 } from '../../domain/types/index.js';
-import { mapCountryCode } from '../../utils/code-mappings.js';
+import { keyByLanguageId, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 
 const SH_SCHEMA = 'mwnf3_sharing_history';
@@ -423,7 +423,10 @@ export class ShNationalContextImporter extends BaseImporter {
     const extra: Record<string, unknown> = {};
     const justifications = justMap.get(relationId);
     if (justifications) {
-      extra.justifications = justifications;
+      // Keyed by language id in `extra` (#2394).
+      extra.justifications = keyByLanguageId(justifications, (code) =>
+        this.logWarning(`${context}: justification in unknown language '${code}', skipped`)
+      );
     }
 
     if (this.isDryRun || this.isSampleOnlyMode) {
