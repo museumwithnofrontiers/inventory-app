@@ -45,6 +45,7 @@ docker compose run --rm parity --only carpets,islamicart          # two sites
 docker compose run --rm parity --packages local --only carpets    # the export on disk (pre-publish)
 docker compose run --rm parity packages --packages local          # package gates only, no legacy request
 docker compose run --rm parity style assets static                # the browser passes
+docker compose run --rm parity layout                             # the exhibitions' layout rules, gated
 ```
 
 The service mounts three host directories. Each has a default relative to the checkout, and
@@ -82,6 +83,7 @@ mode is `curatorial`.
 | `curatorial` | `sitemap`, then for every site: the records and fields of its package against live legacy. Then the package gates, the overview, and the gate against the baseline |
 | `packages` | `sitemap` and the package gates only. Makes no legacy request: the quick check of an export |
 | `style` | screenshots and style signatures of every home page and of each page type of the representative sites, then the review page (`site/style-parity.html`) |
+| `layout` | every page type of the six exhibitions at 1920, 1366 and 390px, against the [layout rules](#the-layout-gate); gated, with no legacy request and no baseline |
 | `assets` | every non-curatorial image of each page (logos, banners, favicons), matched legacy ↔ new by a difference hash |
 | `static` | the static pages' text, sentence by sentence, and the footer links |
 
@@ -89,8 +91,7 @@ What `curatorial` compares, per family:
 
 | Sites | Legacy source | Tools |
 |---|---|---|
-| 37 galleries, 5 exhibitions | each site's live dxa-api instance (exhibitions per language: `…/<link>/<lang>/api/v2`) | `compare-dxa` |
-| the-hijaz-railway | the dump (its legacy instance answers 403); water-in-islam runs the same comparison to calibrate it | `compare-dump-exh` |
+| 37 galleries, 6 exhibitions | each site's live dxa-api instance (exhibitions per language: `…/<link>/<lang>/api/v2`). An exhibition's address is the one `config/legacy.php` links to (`links.thematic_galleries`), else its link on the dump's host: the Hijaz Railway's is on upgrade-exhibitions | `compare-dxa` |
 | islamicart, baroqueart, sharinghistory | the record list from the dump, each record's live `database_item.php` page (raw HTML) | `compare-php`, `compare-collections`, `compare-partners-php` |
 | explore | its live API | `compare-explore` |
 | galleries (the hub) | its live API | `compare-hub` |
@@ -163,11 +164,13 @@ sitemap still shows the old version, that is npm's lag: wait, and run again.
 
 ## Before a site or platform PR is merged: a preview build
 
-The browser passes (`style`, `assets`, `static`) can measure a site before its PR is merged.
+The browser passes (`style`, `layout`, `assets`, `static`) can measure a site before its PR is merged.
 Build the site with the base path it is published under, serve `dist/` from a plain web server,
 then point the passes at it with `--new-url`. The container reaches the host as
-`host.docker.internal`. `vite preview` won't do: it refuses that host name and answers every
-page with "Blocked request", which the passes would record as the page.
+`host.docker.internal`. `vite preview` won't do as it is: it refuses that host name and answers
+every page with "Blocked request", which the style pass would record as the page (the layout
+pass counts it as a page not opened). Start it with
+`__VITE_ADDITIONAL_SERVER_ALLOWED_HOSTS=host.docker.internal`, or serve `dist/` as below.
 
 ```powershell
 # in the site's repository, after building with BASE_PATH=/islamicart/
@@ -201,7 +204,8 @@ Everything lands in `out/` (`tmp/parity/out` on the host):
 | `sitemap.md` / `.json` | every new site, its legacy site and key, package version, HTTP status of both |
 | `<slug>/report.md` / `.json` | one site: record sets, every field's verdict counts, the known reasons, samples |
 | `<slug>/collections.md`, `partners.md` | the PHP sites' exhibitions, themes and partners |
-| `<slug>/dump.md` | the dump comparison (the-hijaz-railway, water-in-islam) |
+| `<slug>/dump.md` | the dump comparison, when `compare-dump-exh` is run by hand |
+| `layout.md` / `.json` | the layout gate: each finding with its page, place, text and colours |
 | `packages.md` / `.json` | the package gates per site |
 | `overview.md` / `.json` | every site in one table; the causes found; what has no cause yet |
 | `diff-runs.md` / `.json` | the run against the baseline, and the gate's verdict |
@@ -264,6 +268,38 @@ to those places; it does not make the ones already there acceptable. They are li
 A site the baseline doesn't know (a new site) has no field or record-set gate, and its package
 checks are judged strictly: one bad URL or HTML text fails. Fewer than the baseline never fails;
 take a new baseline to lock the improvement in.
+
+### The layout gate
+
+The gate above compares data: a squeezed column or an unreadable colour changes none of its
+counts. The Hijaz review of 2026-10-27 (#2379) found both on every exhibition, with every data
+count green. The `layout` mode looks at the pages themselves. It needs no legacy page and no
+baseline, so it also runs on a preview build before a platform or site PR is merged
+(`--new-url`).
+
+`jobs-layout.mjs` lists every page type of every DXA exhibition (home, about, themes with every
+theme opened, the first sub-theme, its gallery, collection, partners, related content, credits,
+timeline, one item and one partner) at 1920, 1366 and 390px: 216 pages, about six minutes.
+`layout.mjs` opens each, closes the welcome window, reads the page screen by screen down to
+6,000px, and applies three rules (`lib/layout-rules.mjs`):
+
+| Rule | Fails when | Found on 2026-10-27 |
+|---|---|---|
+| `narrow-text` | a block holding more than 20 words is narrower than 200px | the theme text, one word a line in a 52px column |
+| `low-contrast` | visible text is below 3:1 against what is painted under it: the first opaque colour, with every translucent layer laid over it. Text over a picture is not judged | the themes page's black rows |
+| `h-scroll` | the page scrolls sideways (a window whose overflow is hidden does not) | |
+
+It writes `out/layout.md` and `out/layout.json` and exits 1 on any finding outside
+`tools/layout-allow.json`. That list holds what legacy draws the same way, each entry with its
+reason: mostly an exhibition's own colours, such as the contrast colour on white or Arts in
+Dialogue's white on cornflower blue, and legacy's own unreadable white-on-white captions. An entry
+matches by rule and any of site, page, width, a class in the finding's place (`where`), the start
+of its text, and its colours (`pair`). Add one only after checking legacy draws it the same.
+
+Run against the Hijaz site as it was on 2026-10-27 (its commit `ca243a7` built with
+viewer-layout 3.11.2), it fails on the 52px theme text and on the theme gallery's white-on-white
+cards at 390px. Measuring the sites of today, it found Arts in Dialogue's partner location printed
+yellow on white (viewer-layout#200).
 
 ## Baselines
 
@@ -466,11 +502,11 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
 
 **Decisions** (story #2233):
 
-- **D3 / D8: the Hijaz Railway.** Its legacy instance answers 403, and legacy Hijaz is to be
-  republished. It is out of this analysis: it is compared through the dump only (`dump.md`),
-  and the dump is stale for exhibitions (on water-in-islam it lists 167 members where live
-  legacy shows 492). Its record-set numbers are not a verdict. The 228 Hijaz Railway
-  (`GalEx5`) objects shown in the galleries, which legacy hides, are kept.
+- **D3 / D8: the Hijaz Railway** (retired 2026-11-06, #2379). Its link in the dump answered
+  403, so it was compared through the dump only. Its live legacy is on upgrade-exhibitions
+  (`config/legacy.php`), which answers like the other exhibitions, so it is now compared live with
+  `compare-dxa`; `compare-dump-exh` stays for an exhibition whose instance does not answer. The
+  228 Hijaz Railway (`GalEx5`) objects shown in the galleries, which legacy hides, are kept.
 - **Keep all data, display only what legacy displays** (2026-10-21, replacing D6). The import is
   exhaustive; a site shows a value only where legacy shows it, never more. So no fallback to
   English where legacy shows nothing in a language (dynasty names, captions, credits), and data
@@ -582,7 +618,7 @@ paths from `tools/lib/paths.mjs`.
 |---|---|
 | `sitemap.mjs` | legacy roster (dumps, dxa-client `.env`) ↔ exporter instances ↔ npm versions ↔ live sites |
 | `compare-dxa.mjs` | one gallery or exhibition, through `legacy-dxa.mjs` and `exhibition-themes.mjs` |
-| `compare-dump-exh.mjs` | one exhibition through the dump |
+| `compare-dump-exh.mjs` | one exhibition through the dump, for one whose live instance does not answer (none today; not run by `run.mjs`) |
 | `compare-php.mjs`, `compare-collections.mjs`, `compare-partners-php.mjs` | the PHP sites, through `legacy-php.mjs`; `fetch-php.mjs` warms their cache |
 | `compare-explore.mjs`, `compare-hub.mjs` | Explore and the galleries hub |
 | `check-packages.mjs` | the package gates (`lib/gates.mjs`) |
@@ -591,6 +627,7 @@ paths from `tools/lib/paths.mjs`.
 | `jobs-*.mjs`, `capture.mjs`, `compare-style.mjs`, `build-style-page.mjs` | the style pass |
 | `assets.mjs`, `compare-assets.mjs` | the assets pass |
 | `static.mjs`, `compare-static.mjs` | the static pass |
+| `jobs-layout.mjs`, `layout.mjs` | the layout gate: `lib/layout-rules.mjs`, `layout-allow.json` |
 | `shots-check.mjs` | lists captures that failed or look like error pages |
 
 `notes/*.json` holds the hand-written review notes that the style page shows next to each pass.

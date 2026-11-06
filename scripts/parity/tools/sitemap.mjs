@@ -8,6 +8,7 @@ import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'n
 import { get, getJson, mapAll } from './lib/http.mjs';
 import { readTable } from './lib/sqldump.mjs';
 
+import { thematicGalleryLinks } from './lib/legacy-config.mjs';
 import { LEGACY_CODE, OUT } from './lib/paths.mjs';
 import { SOURCE, instances, isLocal, localRoot } from './lib/pkg.mjs';
 mkdirSync(OUT, { recursive: true });
@@ -19,6 +20,7 @@ const galleries = readTable(db, 'thg_gallery');
 const urls = new Map(readTable(db, 'thg_gallery_url').map((r) => [r.gallery_id, r.link]));
 const langs = new Map();
 for (const r of readTable(db, 'thg_gallery_lang')) (langs.get(r.gallery_id) ?? langs.set(r.gallery_id, []).get(r.gallery_id)).push(r.lang_id ?? r.lang);
+const exhibitionLinks = thematicGalleryLinks();
 const thgProjects = new Map(readTable(db, 'thg_projects').map((r) => [r.project_id, r]));
 
 // dxa-client per-site .env: legacy client code ↔ mwnf3 project
@@ -42,8 +44,11 @@ const legacy = galleries
     name: g.name,
     link: g.link,
     status: g.status,
-    // Exhibitions share one host; each lives under its link (see the validation notes).
-    legacyUrl: g.project_id === 'EXH' && urls.get(g.gallery_id) ? `${urls.get(g.gallery_id)}/${encodeURIComponent(g.link)}/en/` : urls.get(g.gallery_id) ?? null,
+    // Exhibitions live where the inventory links to them (config/legacy.php), else under
+    // their link on the dump's host (see the validation notes).
+    legacyUrl: g.project_id === 'EXH' && (exhibitionLinks.get(g.gallery_id) ?? urls.get(g.gallery_id))
+      ? exhibitionLinks.get(g.gallery_id) ?? `${urls.get(g.gallery_id)}/${encodeURIComponent(g.link)}/en/`
+      : urls.get(g.gallery_id) ?? null,
     languages: langs.get(g.gallery_id) ?? [],
     client: clientByProject.get(g.mwnf3_project_id)?.code ?? null,
   }));

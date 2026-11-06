@@ -9,6 +9,8 @@
 //               the overview, and the gate against the baseline
 //   packages    sitemap and the package gates only (no legacy request): the quick pre-publish check
 //   style       screenshots and style signatures of legacy and new pages, and the review page
+//   layout      every page type of the exhibitions at 1920, 1366 and 390px against the layout
+//               rules (narrow text, low contrast, sideways scroll), gated
 //   assets      every non-curatorial image of each page, matched legacy ↔ new
 //   static      the static pages' texts and footer links
 //
@@ -20,7 +22,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const MODES = ['curatorial', 'packages', 'style', 'assets', 'static'];
+const MODES = ['curatorial', 'packages', 'style', 'layout', 'assets', 'static'];
 const USAGE = `usage: node run.mjs [${MODES.join('|')}…] [--only slug,slug] [--packages latest|local|local:<dir>] [--baseline <path>] [--no-gate] [--refresh] [--warm] [--concurrency N] [--new-url slug=url]…`;
 
 const argv = process.argv.slice(2);
@@ -106,15 +108,14 @@ if (opts.only) {
   if (wrong.length) fail(`unknown site: ${wrong.join(', ')}`);
 }
 
-// The legacy instance of the-hijaz-railway answers 403: it is read from the dump instead, and
-// water-in-islam goes through the same comparison to calibrate it (decisions D3/D8).
-const DUMP_EXHIBITIONS = ['the-hijaz-railway', 'water-in-islam'];
+// Every exhibition, the Hijaz Railway included, is compared against its live legacy instance:
+// the sitemap takes Hijaz's address from config/legacy.php (#2379, retiring D3/D8's dump-only
+// comparison). compare-dump-exh stays as a tool for a site whose instance does not answer.
 const PHP = ['islamicart', 'baroqueart', 'sharinghistory'];
 
 if (opts.modes.includes('curatorial')) {
   for (const s of selected(sites())) {
-    if (s.kind === 'gallery' || (s.kind === 'exhibition' && s.slug !== 'the-hijaz-railway')) step('compare-dxa.mjs', [s.slug]);
-    if (DUMP_EXHIBITIONS.includes(s.slug)) step('compare-dump-exh.mjs', [s.slug]);
+    if (s.kind === 'gallery' || s.kind === 'exhibition') step('compare-dxa.mjs', [s.slug]);
     if (PHP.includes(s.slug)) {
       if (opts.warm) step('fetch-php.mjs', [s.slug]);
       step('compare-php.mjs', [s.slug]);
@@ -149,6 +150,11 @@ if (opts.modes.includes('style')) {
   step('compare-style.mjs', ['pages']);
   step('build-style-page.mjs');
 }
+// The layout rules need no legacy page and no baseline: a finding fails the gate unless
+// layout-allow.json accepts it with a reason.
+if (opts.modes.includes('layout')) {
+  if (step('jobs-layout.mjs')) step('layout.mjs', [jobs('jobs-layout.json')], { gate: true });
+}
 if (opts.modes.includes('assets')) {
   if (!existsSync(`${OUT}/jobs-pages.json`)) step('jobs-pages.mjs');
   if (step('jobs-assets.mjs')) step('assets.mjs', [jobs('jobs-assets.json')]);
@@ -161,5 +167,5 @@ if (opts.modes.includes('static')) {
 
 appendFileSync(LOG, `DONE ${new Date().toISOString()}${broken.length ? ` — failed: ${broken.join('; ')}` : ''}${gateFailed ? ' — GATE FAILED' : ''}\n`);
 if (broken.length) console.error(`steps that failed: ${broken.join('; ')}`);
-if (gateFailed && opts.gate) console.error(`GATE FAILED: see ${OUT}/diff-runs.md and ${OUT}/packages.md`);
+if (gateFailed && opts.gate) console.error(`GATE FAILED: see ${OUT}/diff-runs.md, ${OUT}/packages.md and ${OUT}/layout.md`);
 process.exit(broken.length ? 2 : gateFailed && opts.gate ? 1 : 0);

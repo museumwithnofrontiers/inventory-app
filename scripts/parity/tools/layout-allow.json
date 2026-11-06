@@ -1,0 +1,63 @@
+[
+  {
+    "rule": "low-contrast",
+    "where": "mwnf-header__title",
+    "reason": "Legacy prints \"A MWNF Online Exhibition\" in the exhibition's contrast colour on the white header (checked on Hijaz and Arts in Dialogue, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "where": "mwnf-dxa-theme-page__link--current",
+    "reason": "Legacy's theme page names the current sub-theme in the contrast colour on the page (checked on Hijaz and Arts in Dialogue, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "where": "mwnf-dxa-theme-page__related-heading",
+    "reason": "Legacy's \"Related\" heading is in the contrast colour on white (checked on Hijaz, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "where": "mwnf-dxa-themes-page__caption",
+    "reason": "Legacy's themes page prints the cover caption in the main text colour on the white page, which is white on five exhibitions: unreadable on legacy too (checked on Hijaz, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "where": "mwnf-dxa-themes-page__link",
+    "reason": "Legacy's themes page lists the sub-themes in the contrast colour on white."
+  },
+  {
+    "rule": "low-contrast",
+    "where": "mwnf-dxa-grid__link",
+    "width": 390,
+    "reason": "Below 650px legacy's theme gallery prints \"See Database Entry >\" in the main text colour, white on five exhibitions, on the white card (checked on Hijaz at 390px, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "slug": "arts-in-dialogue",
+    "pair": "#ffffff on #6495ed",
+    "reason": "Arts in Dialogue's legacy palette: white on its contrast colour (menu, theme bars, headings), 2.97:1."
+  },
+  {
+    "rule": "low-contrast",
+    "slug": "arts-in-dialogue",
+    "pair": "#6495ed on #ffffff",
+    "reason": "Arts in Dialogue's legacy palette: its contrast colour on white (checked on legacy, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "slug": "arts-in-dialogue",
+    "pair": "#6495ed on #4f7942",
+    "reason": "Arts in Dialogue's legacy palette: its contrast colour on its green page (checked on legacy, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "slug": "arts-in-dialogue",
+    "pair": "#6495ed on #cc7722",
+    "reason": "Arts in Dialogue's legacy palette: its contrast colour on its orange main colour (checked on legacy, 2026-11-06)."
+  },
+  {
+    "rule": "low-contrast",
+    "slug": "arts-in-dialogue",
+    "pair": "#cc7722 on #4f7942",
+    "reason": "Arts in Dialogue's legacy palette: the Back button, its main colour on its green page."
+  }
+]
