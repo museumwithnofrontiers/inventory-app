@@ -84,11 +84,26 @@ export interface HomeSites {
   byProject: ReadonlyMap<string, string>
   /** Collection UUID → slug of the gallery or exhibition site built from it. */
   bySiteCollection: ReadonlyMap<string, string>
+  /**
+   * The root collection of every exhibition that has a site of its own, an
+   * online exhibition's or a mini-site's, with the project a mini-site's
+   * parent site is home to first (legacy named the exhibition's project).
+   */
+  exhibitionSites: ReadonlyMap<string, ExhibitionSite>
+}
+
+export interface ExhibitionSite {
+  slug: string
+  kind: 'exhibition' | 'minisite'
+  /** A mini-site's project: the first its parent site lists; null for an online exhibition. */
+  projectId: string | null
 }
 
 export function loadHomeSites(dir: string = resolve(process.cwd(), '..', 'instances')): HomeSites {
   const byProject = new Map<string, string>()
   const bySiteCollection = new Map<string, string>()
+  const firstProjectBySlug = new Map<string, string>()
+  const exhibitions: { collectionId: string; slug: string; kind: 'exhibition' | 'minisite'; parent: string | null }[] = []
   for (const file of readdirSync(dir).filter(name => name.endsWith('.json')).sort()) {
     const path = resolve(dir, file)
     let data: Record<string, unknown>
@@ -112,14 +127,27 @@ export function loadHomeSites(dir: string = resolve(process.cwd(), '..', 'instan
         }
         byProject.set(id, slug)
       }
+      if (projectIds.length > 0) firstProjectBySlug.set(slug, projectIds[0] as string)
     }
     const kind = data['kind']
     const collectionId = data['collection_id']
     if ((kind === 'gallery' || kind === 'exhibition') && typeof collectionId === 'string') {
       bySiteCollection.set(collectionId, slug)
     }
+    if ((kind === 'exhibition' || kind === 'minisite') && typeof collectionId === 'string') {
+      const parent = data['parent']
+      exhibitions.push({ collectionId, slug, kind, parent: typeof parent === 'string' ? parent : null })
+    }
   }
-  return { byProject, bySiteCollection }
+  const exhibitionSites = new Map<string, ExhibitionSite>()
+  for (const { collectionId, slug, kind, parent } of exhibitions) {
+    exhibitionSites.set(collectionId, {
+      slug,
+      kind,
+      projectId: kind === 'minisite' && parent ? (firstProjectBySlug.get(parent) ?? null) : null,
+    })
+  }
+  return { byProject, bySiteCollection, exhibitionSites }
 }
 
 /**

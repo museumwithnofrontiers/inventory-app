@@ -93,7 +93,7 @@ describe('PartnerExporter — MWNF-384 scope', () => {
     memberItemIds: ['item-a', 'item-b'],
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
-    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
+    homeSites: { byProject: new Map(), bySiteCollection: new Map(), exhibitionSites: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

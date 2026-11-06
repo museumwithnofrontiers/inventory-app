@@ -221,6 +221,21 @@ gallery deltas:
   `scripts/exporters/instances/` names: a reference to one with none (e.g.
   "Doubts") would lead nowhere. Legacy's live/hidden `status` is not read
   here; it is the old sites' runtime state (Pascal, 2026-10-20, #2233 C15).
+- **`exhibition_references`**: the exhibition pages that show the item, as
+  legacy's "On display in → Exhibition(s)" listed them (dxa-api's
+  `exhibitions`, `sharingHistoryExhibitions` and `x_all_exhibitions`), each
+  `{list, site, path, project, exhibition, theme, subtheme, legacy_order}`:
+  `list` says which legacy list (`virtual`: a Discover Islamic Art or Baroque
+  Art mini-site, once per exhibition, on the first page placing the item;
+  `sharing_history`: a Sharing History mini-site, every theme and subtheme
+  whose curator kept the item; `exhibition`: an online exhibition, every
+  sub-theme placing one of the item's pictures, outside the About theme);
+  `site` and `path` are the page on our site (a sibling of the gallery's
+  address); `project` is a mini-site's project `{id, name}`; `exhibition`,
+  `theme` and `subtheme` are `{id, titles}` with a title per language;
+  `legacy_order` is legacy's order inside its list. Only exhibitions with a
+  site of their own (an instance file of kind `exhibition` or `minisite`) are
+  listed (inventory-app#2423).
 - **`artist_names`** comes from the artist entities. A Sharing History record
   has none, so it carries the artist from its English translation (else the
   first language), and each translation carries that language's own spelling
