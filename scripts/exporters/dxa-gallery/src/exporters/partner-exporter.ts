@@ -40,7 +40,7 @@ interface PartnerExtraFields {
   contact_person_1?: PartnerContactPerson
   contact_person_2?: PartnerContactPerson
   urls?: PartnerUrl[]
-  /** Legacy `museums.portal_display` — 'y' drives the home page featured strip. */
+  /** Legacy `museums.portal_display` ('y'): its `showOnPortal`, shipped as `featured`. */
   portal_display?: string
   opening_hours?: string
   how_to_reach?: string
@@ -442,8 +442,8 @@ export class PartnerExporter extends BaseExporter {
         // Member items held here — the count the partners list prints, and the
         // reason a partner appears at all.
         item_count: itemCount,
-        // Legacy `showOnPortal`. The home page shows a random subset of the
-        // featured partners, so the package ships the flag and the viewer picks.
+        // Legacy `showOnPortal`. Not what the home's carousel draws from: legacy
+        // drew three of every partner of the gallery at random, whatever this flag.
         featured: extra?.portal_display?.toLowerCase() === 'y',
         // The languages the partner's page offers, as dxa-api lists them.
         languages: partnerLanguages(partner.backward_compatibility, translationMap.get(partner.id) ?? {}),

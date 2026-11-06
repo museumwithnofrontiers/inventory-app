@@ -314,10 +314,12 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
 
 - **`featured`**: from `partner_translations.extra.portal_display` — legacy's
   `showOnPortal` (`museums.portal_display = 'y'`), verified against
-  `/mwnf3/partners/at/Mus22/en` on the live amulets instance. Legacy's
-  `/partners/featured` returns a *random* subset of these, sized by
-  `config('dxa.API_PAGESIZE')`; the package ships the flag and the viewer does
-  the picking, which is the only way a static site can reproduce that.
+  `/mwnf3/partners/at/Mus22/en` on the live amulets instance. It is not what
+  the home's carousel draws from: legacy's `/partners/featured` takes up to
+  `DXA_NUMBER_OF_FEATURED_PARTNERS` (3) at random from *every* partner of the
+  gallery, whatever this flag (`ApiV2Controller::partnersFeatured`; checked live
+  on cars.museumwnf.org, 2026-11-06). The viewer does that picking over the whole
+  `partners.json` (viewer-layout 3.65.1).
 - **`item_count`**: member items held — the count the partners list prints,
   and the reason most partners appear at all. It is legitimately `0` for an
   MWNF-384 partner.
