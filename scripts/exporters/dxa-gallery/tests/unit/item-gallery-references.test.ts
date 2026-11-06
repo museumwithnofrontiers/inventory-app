@@ -107,7 +107,7 @@ describe('ItemExporter — other galleries and Sharing History artists', () => {
     memberItemIds: ['item-a'],
     itemOwnContextIds: new Map([['item-a', 'awe-context-uuid']]),
     siteCollectionIds: new Set([SELF, WITH_SITE]),
-    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
+    homeSites: { byProject: new Map(), bySiteCollection: new Map(), exhibitionSites: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
@@ -143,7 +143,7 @@ describe('ItemExporter — other galleries and Sharing History artists', () => {
   it("names each reference's website by its instance slug", async () => {
     const db = stubDb({ galleries: [galleryRow(SELF, 'Carpets'), galleryRow(WITH_SITE, 'Glass')] })
     const ctx = context(db)
-    ctx.homeSites = { byProject: new Map(), bySiteCollection: new Map([[SELF, 'carpets'], [WITH_SITE, 'glass']]) }
+    ctx.homeSites = { byProject: new Map(), bySiteCollection: new Map([[SELF, 'carpets'], [WITH_SITE, 'glass']]), exhibitionSites: new Map() }
     await new ItemExporter(ctx).export()
 
     const references = readItem().gallery_references as Array<Record<string, unknown>>
@@ -226,6 +226,19 @@ describe('loadHomeSites', () => {
     const homes = loadHomeSites(dir)
     expect([...homes.byProject]).toEqual([[ISL, 'islamicart']])
     expect([...homes.bySiteCollection]).toEqual([[WITH_SITE, 'glass']])
+  })
+
+  it("maps each exhibition and mini-site to its site, a mini-site to its parent site's first project", () => {
+    writeFileSync(join(dir, 'islamicart.json'), JSON.stringify({ kind: 'standalone', slug: 'islamicart', project_ids: [ISL] }))
+    writeFileSync(join(dir, 'muslim-west.json'), JSON.stringify({ kind: 'minisite', slug: 'muslim-west', parent: 'islamicart', collection_id: 'ms-uuid' }))
+    writeFileSync(join(dir, 'qalam.json'), JSON.stringify({ kind: 'exhibition', slug: 'qalam', collection_id: 'ex-uuid' }))
+    writeFileSync(join(dir, 'glass.json'), JSON.stringify({ kind: 'gallery', slug: 'glass', collection_id: WITH_SITE }))
+
+    const homes = loadHomeSites(dir)
+    expect([...homes.exhibitionSites]).toEqual([
+      ['ms-uuid', { slug: 'muslim-west', kind: 'minisite', projectId: ISL }],
+      ['ex-uuid', { slug: 'qalam', kind: 'exhibition', projectId: null }],
+    ])
   })
 
   it('refuses a project claimed by two sites, and ids that are not UUIDs', () => {

@@ -101,7 +101,7 @@ describe('ItemExporter — credits and Sharing History fields as the galleries p
     memberItemIds,
     itemOwnContextIds: new Map(memberItemIds.map(id => [id, 'own-context-uuid'])),
     siteCollectionIds: new Set(['self-uuid']),
-    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
+    homeSites: { byProject: new Map(), bySiteCollection: new Map(), exhibitionSites: new Map() },
     baseUrl: 'https://example.test',
     logger: { info: () => {}, success: () => {}, warning: () => {}, error: () => {} } as unknown as Logger,
   })

@@ -43,7 +43,7 @@ function contextWith(rows: Record<string, unknown[]>): ExportContext {
     memberItemIds: ['a', 'b'],
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
-    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
+    homeSites: { byProject: new Map(), bySiteCollection: new Map(), exhibitionSites: new Map() },
     baseUrl: 'https://example.org',
     logger: { info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn() } as unknown as ExportContext['logger'],
   }
@@ -217,6 +217,7 @@ describe('ManifestExporter', () => {
     context.homeSites = {
       byProject: new Map([['isl-uuid', 'islamicart']]),
       bySiteCollection: new Map([['carpets-collection', 'carpets']]),
+      exhibitionSites: new Map(),
     }
     const exporter = new ManifestExporter(context)
     const written: unknown[] = []
