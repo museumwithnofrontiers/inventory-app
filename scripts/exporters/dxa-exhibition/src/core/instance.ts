@@ -89,6 +89,61 @@ export function loadSiteCollectionIds(
   return ids
 }
 
+/** An exhibition that has a site of its own, an online exhibition's or a mini-site's. */
+export interface ExhibitionSite {
+  slug: string
+  kind: 'exhibition' | 'minisite'
+  /** A mini-site's project: the first its parent site lists; null for an online exhibition. */
+  projectId: string | null
+}
+
+/**
+ * The root collection of every exhibition that has a site of its own, read
+ * from all the instance files, with the project a mini-site's parent site is
+ * home to first (legacy named the exhibition's project above its lines). The
+ * dxa-gallery exporter's `loadHomeSites` reads the same files the same way.
+ */
+export function loadExhibitionSites(
+  dir: string = resolve(process.cwd(), '..', 'instances')
+): Map<string, ExhibitionSite> {
+  const firstProjectBySlug = new Map<string, string>()
+  const exhibitions: { collectionId: string; slug: string; kind: 'exhibition' | 'minisite'; parent: string | null }[] = []
+  for (const file of readdirSync(dir).filter(name => name.endsWith('.json')).sort()) {
+    const path = resolve(dir, file)
+    let data: Record<string, unknown>
+    try {
+      data = JSON.parse(readFileSync(path, 'utf-8')) as Record<string, unknown>
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      throw new Error(`Invalid JSON in instance file ${path}: ${message}`, { cause: err })
+    }
+    const slug = data['slug']
+    if (typeof slug !== 'string') continue
+    const projectIds = data['project_ids']
+    if (projectIds !== undefined) {
+      if (!Array.isArray(projectIds) || projectIds.some(id => typeof id !== 'string' || !UUID_PATTERN.test(id))) {
+        throw new Error(`Instance file ${path}: "project_ids" must be an array of lowercase UUIDs.`)
+      }
+      if (projectIds.length > 0) firstProjectBySlug.set(slug, projectIds[0] as string)
+    }
+    const kind = data['kind']
+    const collectionId = data['collection_id']
+    if ((kind === 'exhibition' || kind === 'minisite') && typeof collectionId === 'string') {
+      const parent = data['parent']
+      exhibitions.push({ collectionId, slug, kind, parent: typeof parent === 'string' ? parent : null })
+    }
+  }
+  const sites = new Map<string, ExhibitionSite>()
+  for (const { collectionId, slug, kind, parent } of exhibitions) {
+    sites.set(collectionId, {
+      slug,
+      kind,
+      projectId: kind === 'minisite' && parent ? (firstProjectBySlug.get(parent) ?? null) : null,
+    })
+  }
+  return sites
+}
+
 /**
  * Loads and validates an instance file. Every failure — missing file,
  * malformed JSON, wrong kind, a field that fails its shape check, an unknown

@@ -46,6 +46,7 @@ function contextWith(rows: Record<string, unknown[]>, siteKey = 'water-in-islam'
     memberItemIds: ['a'],
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
+    exhibitionSites: new Map(),
     baseUrl: 'https://example.org',
     logger: { info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn() } as unknown as ExportContext['logger'],
     siteKey,

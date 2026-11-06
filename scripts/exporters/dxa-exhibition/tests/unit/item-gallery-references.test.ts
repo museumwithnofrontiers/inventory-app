@@ -109,6 +109,7 @@ describe('ItemExporter — other galleries and Sharing History artists', () => {
     memberItemIds: ['item-a'],
     itemOwnContextIds: new Map([['item-a', 'awe-context-uuid']]),
     siteCollectionIds: new Set([SELF, WITH_SITE]),
+    exhibitionSites: new Map(),
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

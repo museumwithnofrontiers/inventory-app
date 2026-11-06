@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { buildExhibitionReferences } from './exhibition-references.js'
 
 // A Sharing History record shown in a gallery or exhibition: the fields the
 // galleries' sheet (dxa-api) reads from it that a mwnf3 record keeps elsewhere.
@@ -523,6 +524,13 @@ export class ItemExporter extends BaseExporter {
 
     const relatedMap = this.buildRelatedMap(itemItemLinks, langCodeMap)
     const galleryMap = this.buildGalleryMap(galleryLinks)
+    const exhibitionMap = await buildExhibitionReferences(
+      this.db,
+      this.memberItemIds,
+      this.context.exhibitionSites,
+      langCodeMap,
+      count => this.placeholders(count)
+    )
 
     const output = items.map(item => ({
       id: item.id,
@@ -546,6 +554,7 @@ export class ItemExporter extends BaseExporter {
       media: mediaMap.get(item.id) ?? [],
       related_items: relatedMap.get(item.id) ?? [],
       gallery_references: galleryMap.get(item.id) ?? [],
+      exhibition_references: exhibitionMap.get(item.id) ?? [],
       languages: Object.keys(translationMap.get(item.id) ?? {}).sort(),
     }))
 

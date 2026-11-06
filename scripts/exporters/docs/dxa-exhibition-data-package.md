@@ -152,6 +152,11 @@ them from borrowed items so the sheet can suppress the "source database" link
 for purpose-authored records exactly as legacy does
 (`projectSourceIsExhibition` in the API response).
 
+`exhibition_references` is the Gallery package's field too: the exhibition
+pages that show the item, as legacy's exhibitions-client item sheet listed
+them under "On display in → Exhibition(s)", this exhibition's own pages
+among them (inventory-app#2379).
+
 ## partners.json note
 
 Gallery spec plus (including `project_uuids`, epic #1727 phase 2 — see the
