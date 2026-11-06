@@ -70,7 +70,8 @@ const accepted = results.flatMap((r) => r.findings.filter((f) => f.allowed).map(
 const broken = results.filter((r) => r.error);
 writeFileSync(`${OUT}/layout.json`, JSON.stringify({ generatedAt: new Date().toISOString(), rules: LAYOUT_RULES, results }, null, 1));
 
-const cell = (s) => String(s ?? '').replace(/\|/g, '\\|');
+// A table cell: its backslashes, then its pipes, escaped for Markdown.
+const cell = (s) => String(s ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 const detail = (f) => (f.rule === 'low-contrast' ? `${f.color} on ${f.background}, ${f.ratio}:1`
   : f.rule === 'narrow-text' ? `${f.words} words in ${f.width}px` : `${f.scrollWidth}px wide in ${f.clientWidth}px`);
 const md = [
