@@ -152,6 +152,11 @@ them from borrowed items so the sheet can suppress the "source database" link
 for purpose-authored records exactly as legacy does
 (`projectSourceIsExhibition` in the API response).
 
+`exhibition_references` is the Gallery package's field too: the exhibition
+pages that show the item, as legacy's exhibitions-client item sheet listed
+them under "On display in → Exhibition(s)", this exhibition's own pages
+among them (inventory-app#2379).
+
 ## partners.json note
 
 Gallery spec plus (including `project_uuids`, epic #1727 phase 2 — see the
@@ -183,6 +188,9 @@ Gallery package's partners.json section):
   `translations/partners.<lang>.json` it has no row for. Its `languages` stay
   the rows it has, as dxa-api's `i18n` does. A Sharing History partner gets no
   such entry: dxa-api's query for it needs a name row.
+- `own_project` is the Gallery package's field too: the project the partner
+  record belongs to, with its tier there and whether it is an exhibition's,
+  which legacy's partner list badged each partner with (inventory-app#2379).
 
 ## related_content.json
 

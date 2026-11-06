@@ -1,9 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'fs'
 import { tmpdir } from 'os'
-import { join, resolve } from 'path'
+import { dirname, join, resolve } from 'path'
+import { fileURLToPath } from 'url'
 
-import { loadInstance, resolveInstancePath } from '../../src/core/instance.js'
+import { loadExhibitionSites, loadInstance, resolveInstancePath } from '../../src/core/instance.js'
 
 const VALID = {
   kind: 'exhibition',
@@ -178,5 +179,40 @@ describe('loadInstance', () => {
   it('lists languages_enabled in the unknown-field error’s known-field list', () => {
     const path = write({ ...VALID, extra_field: 'nope' })
     expect(() => loadInstance(path)).toThrow('languages_enabled')
+  })
+})
+
+describe('loadExhibitionSites', () => {
+  const ISL = '61c122ac-ea86-5462-8bab-6b86138c49b2'
+  let dir: string
+
+  beforeEach(() => {
+    dir = mkdtempSync(join(tmpdir(), 'instances-'))
+  })
+
+  afterEach(() => {
+    rmSync(dir, { recursive: true, force: true })
+  })
+
+  it("maps each exhibition and mini-site to its site, a mini-site to its parent site's first project", () => {
+    writeFileSync(join(dir, 'islamicart.json'), JSON.stringify({ kind: 'standalone', slug: 'islamicart', project_ids: [ISL] }))
+    writeFileSync(join(dir, 'muslim-west.json'), JSON.stringify({ kind: 'minisite', slug: 'muslim-west', parent: 'islamicart', collection_id: 'ms-uuid' }))
+    writeFileSync(join(dir, 'qalam.json'), JSON.stringify({ kind: 'exhibition', slug: 'qalam', collection_id: 'ex-uuid' }))
+    writeFileSync(join(dir, 'glass.json'), JSON.stringify({ kind: 'gallery', slug: 'glass', collection_id: 'gallery-uuid' }))
+
+    expect([...loadExhibitionSites(dir)]).toEqual([
+      ['ms-uuid', { slug: 'muslim-west', kind: 'minisite', projectId: ISL }],
+      ['ex-uuid', { slug: 'qalam', kind: 'exhibition', projectId: null }],
+    ])
+  })
+
+  it('refuses project ids that are not UUIDs', () => {
+    writeFileSync(join(dir, 'c.json'), JSON.stringify({ kind: 'standalone', slug: 'c', project_ids: ['ISL'] }))
+    expect(() => loadExhibitionSites(dir)).toThrow(/lowercase UUIDs/)
+  })
+
+  it('reads the repository\'s instance files', () => {
+    const sites = loadExhibitionSites(resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'instances'))
+    expect([...sites.values()].some(site => site.kind === 'exhibition' && site.slug === 'with-brush-and-qalam')).toBe(true)
   })
 })

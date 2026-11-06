@@ -1,5 +1,6 @@
 import type { Database } from './database.js'
 import type { Logger } from './logger.js'
+import type { ExhibitionSite } from './instance.js'
 
 /**
  * The site anchor stored on `collections.extra.thg_gallery` by the importer's
@@ -116,6 +117,8 @@ export interface ExportContext {
    * they are among them.
    */
   siteCollectionIds: ReadonlySet<string>
+  /** Every exhibition with a site of its own, from the instance files (see `loadExhibitionSites`). */
+  exhibitionSites: ReadonlyMap<string, ExhibitionSite>
   baseUrl: string
   logger: Logger
   /** The instance's site slug — `manifest.site.key`. Not always `exhibition.slug`. */
@@ -164,6 +167,19 @@ export interface PartnerLogo {
   display_order: number
 }
 
+/** A partner's own project, as legacy's partner list badges it. */
+export interface PartnerOwnProject {
+  id: string
+  /** The project's name, e.g. "Discover Islamic Art". */
+  name: string
+  /** The project's legacy key, e.g. `mwnf3:projects:ISL`. */
+  backward_compatibility: string | null
+  /** The partner's tier in that project (`partner` / `associated_partner` / …); `null` where uncurated. */
+  level: string | null
+  /** Whether the project is an online exhibition's. */
+  exhibition: boolean
+}
+
 /**
  * `partners.json` row — one shape across every dataset (decision D4,
  * museumwithnofrontiers/inventory-app#1699). `level` / `parent_id` come from the curated
@@ -189,6 +205,8 @@ export interface Partner {
   parent_id: string | null
   /** Project UUIDs the partner belongs to. */
   project_uuids: string[]
+  /** The project the partner record belongs to, which legacy's partner list badged it with. */
+  own_project: PartnerOwnProject | null
   /** Exported items this partner holds. */
   item_count: number
   /** Legacy `portal_display === 'y'` — drives the home page featured strip. */
