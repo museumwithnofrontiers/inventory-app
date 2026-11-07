@@ -46,6 +46,7 @@ docker compose run --rm parity --packages local --only carpets    # the export o
 docker compose run --rm parity packages --packages local          # package gates only, no legacy request
 docker compose run --rm parity style assets static                # the browser passes
 docker compose run --rm parity layout                             # the exhibitions' layout rules, gated
+docker compose run --rm parity links                              # links that still go to legacy, gated
 ```
 
 The service mounts three host directories. Each has a default relative to the checkout, and
@@ -86,6 +87,7 @@ mode is `curatorial`.
 | `layout` | every page type of the six exhibitions at 1920, 1366 and 390px, against the [layout rules](#the-layout-gate); gated, with no legacy request and no baseline |
 | `assets` | every non-curatorial image of each page (logos, banners, favicons), matched legacy ↔ new by a difference hash |
 | `static` | the static pages' text, sentence by sentence, and the footer links |
+| `links` | every link of the new pages the style and static passes open; gated on a link that still goes to the legacy address of a site that has a new one (`tools/links-allow.json` keeps one on purpose, with its reason); links to MWNF legacy pages with no new site are reported (inventory-app#2482) |
 
 What `curatorial` compares, per family:
 
@@ -206,6 +208,7 @@ Everything lands in `out/` (`tmp/parity/out` on the host):
 | `<slug>/collections.md`, `partners.md` | the PHP sites' exhibitions, themes and partners |
 | `<slug>/dump.md` | the dump comparison, when `compare-dump-exh` is run by hand |
 | `layout.md` / `.json` | the layout gate: each finding with its page, place, text and colours |
+| `links.md` / `.json` | the links gate: each link to a site with a new address (with that site and the pages it is on), those kept on purpose, and those to legacy pages with no new site |
 | `packages.md` / `.json` | the package gates per site |
 | `overview.md` / `.json` | every site in one table; the causes found; what has no cause yet |
 | `diff-runs.md` / `.json` | the run against the baseline, and the gate's verdict |
