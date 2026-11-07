@@ -45,7 +45,8 @@ const list = (kind) => [...groups[kind].values()].sort((a, b) => b.pages.length 
 const report = { pages: jobs.length, read, failed, anchors, ported: list('ported'), allowed: list('allowed'), legacy: list('legacy') };
 writeFileSync(`${OUT}/links.json`, JSON.stringify(report, null, 1));
 
-const cell = (s) => String(s ?? '').replace(/\|/g, '\\|');
+// A table cell: its backslashes first, then the pipes that would end it.
+const cell = (s) => String(s ?? '').replace(/\\/g, '\\\\').replace(/\|/g, '\\|');
 const pages = (p) => `${p.length}: ${[...new Set(p)].slice(0, 4).join(', ')}${p.length > 4 ? ', …' : ''}`;
 const md = [
   '# Links to legacy',
