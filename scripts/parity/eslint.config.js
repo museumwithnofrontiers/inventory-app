@@ -13,7 +13,7 @@ export default [
   },
   {
     // The browser side of the capture tools runs inside page.evaluate().
-    files: ['tools/capture.mjs', 'tools/assets.mjs', 'tools/static.mjs', 'tools/layout.mjs', 'tools/lib/layout-rules.mjs'],
+    files: ['tools/capture.mjs', 'tools/assets.mjs', 'tools/static.mjs', 'tools/layout.mjs', 'tools/lib/layout-rules.mjs', 'tools/links.mjs'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 ]

@@ -1,0 +1,10 @@
+[
+  {
+    "href": "^https?://(www\\.)?islamicart\\.museumwnf\\.org/mwnf_credit\\.php",
+    "reason": "Legacy Discover Islamic Art's own credits page, which the new site has no counterpart of: legacy linked it from nowhere and sent \"Credits\" to the portal's credits page, as the new site does (#2416). The galleries' Credits texts name it as written."
+  },
+  {
+    "href": "^https?://(www\\.)?islamicart\\.museumwnf\\.org/pm_museum_items\\.php",
+    "reason": "A partner's objects on Discover Islamic Art (an exhibition's Related Content): the new page's address needs that partner's record id in the islamicart package, which the exhibition's package does not carry."
+  }
+]
