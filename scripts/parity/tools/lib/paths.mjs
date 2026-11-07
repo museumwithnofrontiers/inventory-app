@@ -21,6 +21,7 @@ export const PKG = resolve(env.PARITY_PKG ?? `${WORK}/pkg`);
 export const SHOTS = `${WORK}/shots`;
 export const ASSETS = `${WORK}/assets`;
 export const STATIC = `${WORK}/static`;
+export const LINKS = `${WORK}/links`;
 export const SITE = `${WORK}/site`;
 export const LEGACY_DB = resolve(env.LEGACY_DB ?? `${REPO}/.legacy-database`);
 export const LEGACY_CODE = resolve(env.LEGACY_CODE ?? `${REPO}/.legacy-code`);

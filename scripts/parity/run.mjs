@@ -13,6 +13,8 @@
 //               rules (narrow text, low contrast, sideways scroll), gated
 //   assets      every non-curatorial image of each page, matched legacy ↔ new
 //   static      the static pages' texts and footer links
+//   links       every link of the new pages; the gate fails on one that still goes to the
+//               legacy address of a site that has a new one
 //
 // Exit code: 0 when every step ran and the gate passed, 1 when the gate failed, 2 when a step
 // failed to run.
@@ -22,7 +24,7 @@ import { dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const MODES = ['curatorial', 'packages', 'style', 'layout', 'assets', 'static'];
+const MODES = ['curatorial', 'packages', 'style', 'layout', 'assets', 'static', 'links'];
 const USAGE = `usage: node run.mjs [${MODES.join('|')}…] [--only slug,slug] [--packages latest|local|local:<dir>] [--baseline <path>] [--no-gate] [--refresh] [--warm] [--concurrency N] [--new-url slug=url]…`;
 
 const argv = process.argv.slice(2);
@@ -164,8 +166,20 @@ if (opts.modes.includes('static')) {
   if (step('jobs-static.mjs')) step('static.mjs', [jobs('jobs-static.json')]);
   step('compare-static.mjs');
 }
+// The pages the style and static passes open, new side only; their job lists are written here if
+// those passes did not run.
+if (opts.modes.includes('links')) {
+  for (const [file, tool] of [['jobs-home.json', 'jobs-home.mjs'], ['jobs-pages.json', 'jobs-pages.mjs'], ['jobs-static.json', 'jobs-static.mjs']]) {
+    if (!existsSync(`${OUT}/${file}`)) step(tool);
+  }
+  if (step('jobs-links.mjs')) {
+    const list = jobs('jobs-links.json');
+    step('links.mjs', [list]);
+    step('compare-links.mjs', [list], { gate: true });
+  }
+}
 
 appendFileSync(LOG, `DONE ${new Date().toISOString()}${broken.length ? ` — failed: ${broken.join('; ')}` : ''}${gateFailed ? ' — GATE FAILED' : ''}\n`);
 if (broken.length) console.error(`steps that failed: ${broken.join('; ')}`);
-if (gateFailed && opts.gate) console.error(`GATE FAILED: see ${OUT}/diff-runs.md, ${OUT}/packages.md and ${OUT}/layout.md`);
+if (gateFailed && opts.gate) console.error(`GATE FAILED: see ${OUT}/diff-runs.md, ${OUT}/packages.md, ${OUT}/layout.md and ${OUT}/links.md`);
 process.exit(broken.length ? 2 : gateFailed && opts.gate ? 1 : 0);
