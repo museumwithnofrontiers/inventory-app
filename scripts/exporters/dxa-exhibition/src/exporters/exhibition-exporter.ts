@@ -191,6 +191,9 @@ export class ExhibitionExporter extends BaseExporter {
       partners,
       hidden_partner_ids: await this.resolveHiddenPartnerIds(),
       sibling_sites: await this.exportSiblings(langCodeMap),
+      // The exhibition's own audio and video (legacy's theme 0), which legacy
+      // listed on its About page.
+      media: (await this.loadThemeMedia([this.exhibition.id], langCodeMap)).get(this.exhibition.id) ?? [],
     }
 
     await this.writeJson('exhibition.json', output)

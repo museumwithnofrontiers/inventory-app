@@ -108,4 +108,56 @@ export abstract class BaseExporter {
   protected imageUrl(path: string): string {
     return `${this.baseUrl}/pub/${path}`
   }
+
+  /**
+   * The audio and video legacy linked to an exhibition (theme 0) or to a theme
+   * (`exhibition_audio`/`exhibition_video` assigned by `theme_audio`/
+   * `theme_video`), which the importer files in `collection_media` under
+   * `mwnf3_thematic_gallery:theme_<audio|video>:<media>:<gallery>:<theme>`.
+   * Per collection, in item media's shape, in legacy's order: its API listed
+   * each kind by the media's legacy id.
+   */
+  protected async loadThemeMedia(
+    collectionIds: string[],
+    langCodeMap: Map<string, string>
+  ): Promise<Map<string, unknown[]>> {
+    const out = new Map<string, unknown[]>()
+    if (collectionIds.length === 0) return out
+    const rows = await this.db.query<{
+      collection_id: string
+      language_id: string | null
+      type: string
+      title: string | null
+      description: string | null
+      url: string
+      backward_compatibility: string | null
+    }>(
+      `SELECT collection_id, language_id, type, title, description, url, backward_compatibility
+       FROM collection_media
+       WHERE collection_id IN (${this.placeholders(collectionIds.length)})
+         AND backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:theme\\_%'
+       ORDER BY collection_id, type, backward_compatibility`,
+      collectionIds
+    )
+    const legacyId = (key: string | null): number => Number((key ?? '').split(':')[2] ?? 0)
+    rows.sort(
+      (a, b) =>
+        a.collection_id.localeCompare(b.collection_id) ||
+        a.type.localeCompare(b.type) ||
+        legacyId(a.backward_compatibility) - legacyId(b.backward_compatibility)
+    )
+    for (const row of rows) {
+      const entry = {
+        type: row.type,
+        title: row.title,
+        description: row.description,
+        url: row.url,
+        language: row.language_id ? (langCodeMap.get(row.language_id) ?? null) : null,
+      }
+      const bucket = out.get(row.collection_id)
+      if (bucket) bucket.push(entry)
+      else out.set(row.collection_id, [entry])
+    }
+    return out
+  }
 }

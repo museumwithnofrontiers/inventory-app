@@ -118,6 +118,9 @@ export class ThemeExporter extends BaseExporter {
     const { parentByPicture, imageByPicture, backwardCompatibilityByPicture } =
       await this.loadPictures(pictureIds)
     const relatedByPicture = await this.loadRelated(pictureIds, langCodeMap)
+    // Each theme's and sub-theme's audio and video, which legacy listed under
+    // "Related Audio/Videos" on its page.
+    const mediaByTheme = await this.loadThemeMedia(themeIds, langCodeMap)
 
     const memberIds = new Set(this.memberItemIds)
     let orphanParents = 0
@@ -208,6 +211,7 @@ export class ThemeExporter extends BaseExporter {
       display_order: theme.displayOrder,
       cover_picture_item_id: theme.coverPictureItemId,
       pictures: buildPictures(theme.id),
+      media: mediaByTheme.get(theme.id) ?? [],
       ...(includeChildren
         ? {
             sub_themes: (byParent.get(theme.id) ?? [])

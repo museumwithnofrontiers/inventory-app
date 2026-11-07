@@ -202,9 +202,16 @@ Gallery package's partners.json section):
 
 ## media
 
-Exhibition/theme audio+video (`exhibition_audio/video`, `theme_audio/video` →
-collection_media) ride on the existing `media` arrays of `exhibition.json` /
-`themes.json` entries, same shape as item media in current packages.
+Exhibition/theme audio+video (`exhibition_audio/video` assigned by
+`theme_audio/video` → `collection_media`, keyed
+`mwnf3_thematic_gallery:theme_<audio|video>:<media>:<gallery>:<theme>`) ride on
+a `media` array: `exhibition.json`'s for theme 0 (legacy's About page), each
+`themes.json` theme's and sub-theme's for its own. The shape is item media's,
+`{ type, title, description, url, language }`, each kind in legacy's order
+(dxa-api THG Audio/Video: by the media's legacy id). Legacy listed the rows of
+the page's language under "Related Audio/Videos" (exhibitions-client
+ThemeComponent). The related content's rows in `collection_media` are not
+media; they go to `related_content.json`.
 
 ## timelines.json / timeline_events.json
 
