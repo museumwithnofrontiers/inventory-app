@@ -2,7 +2,7 @@
 // every link of the new pages links.mjs read, by tools/lib/links.mjs. Writes out/links.json and
 // out/links.md: the links that still go to a site with a new address (the gate: exit 1 when
 // there is one), those kept on purpose (links-allow.json), and those to legacy pages that have no
-// new site.
+// new site. Exit 2 when a page could not be read: it proves nothing either way.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { LINKS, OUT, TOOLS } from './lib/paths.mjs';
 import { judge, portedTargets } from './lib/links.mjs';
@@ -25,7 +25,10 @@ for (const job of jobs) {
     continue;
   }
   const page = JSON.parse(readFileSync(file, 'utf8'));
-  if (page.error) failed.push(`${job.id}: ${page.error}`);
+  if (page.error) {
+    failed.push(`${job.id}: ${page.error}`);
+    continue;
+  }
   read++;
   for (const a of page.anchors ?? []) {
     anchors++;
@@ -71,4 +74,5 @@ const md = [
 ];
 writeFileSync(`${OUT}/links.md`, md.join('\n'));
 console.log(`links: ${report.ported.length} to a site with a new address, ${report.allowed.length} kept, ${report.legacy.length} to unported legacy pages; ${failed.length} pages not read`);
-process.exit(report.ported.length ? 1 : 0);
+// A page that could not be read proves nothing: the step fails to run (2) rather than pass.
+process.exit(failed.length ? 2 : report.ported.length ? 1 : 0);

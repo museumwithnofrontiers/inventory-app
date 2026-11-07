@@ -166,12 +166,10 @@ if (opts.modes.includes('static')) {
   if (step('jobs-static.mjs')) step('static.mjs', [jobs('jobs-static.json')]);
   step('compare-static.mjs');
 }
-// The pages the style and static passes open, new side only; their job lists are written here if
-// those passes did not run.
+// The pages the style and static passes open, new side only. Their job lists are written afresh
+// from this run's sitemap, so a --new-url or a moved site is what gets read.
 if (opts.modes.includes('links')) {
-  for (const [file, tool] of [['jobs-home.json', 'jobs-home.mjs'], ['jobs-pages.json', 'jobs-pages.mjs'], ['jobs-static.json', 'jobs-static.mjs']]) {
-    if (!existsSync(`${OUT}/${file}`)) step(tool);
-  }
+  for (const tool of ['jobs-home.mjs', 'jobs-pages.mjs', 'jobs-static.mjs']) step(tool);
   if (step('jobs-links.mjs')) {
     const list = jobs('jobs-links.json');
     step('links.mjs', [list]);
