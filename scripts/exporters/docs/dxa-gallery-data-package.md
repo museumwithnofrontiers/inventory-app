@@ -210,7 +210,11 @@ gallery deltas:
   gallery, each with `in_package` saying whether the viewer can open it
   locally, plus `backward_compatibility` and `project_id` for the ones it
   cannot (decision Q3 — the links must not be dropped). Amulets' 45 members
-  carry 56 outgoing links, none of them to another member.
+  carry 56 outgoing links, none of them to another member. A target outside
+  the gallery also carries what legacy's Related Objects showed of it:
+  `names` (its name by language code, its own project's context first),
+  `country_id` (also listed in `countries.json`) and `image` (its first
+  picture's `/pub` address, or null).
 - **`gallery_references`** replaces the legacy `galleries` array of
   constructed URLs: the thematic galleries and exhibitions featuring this
   item, as `{id, backward_compatibility, kind, slug, legacy_host, site, name}`
