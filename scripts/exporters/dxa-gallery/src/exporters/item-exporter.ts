@@ -520,6 +520,7 @@ export class ItemExporter extends BaseExporter {
     }
 
     const relatedMap = this.buildRelatedMap(itemItemLinks, langCodeMap)
+    await this.describeOutsideRelated(relatedMap, langCodeMap)
     const galleryMap = this.buildGalleryMap(galleryLinks)
     const exhibitionMap = await buildExhibitionReferences(
       this.db,
@@ -654,7 +655,7 @@ export class ItemExporter extends BaseExporter {
   private buildRelatedMap(
     links: ItemItemLinkRow[],
     langCodeMap: Map<string, string>
-  ): Map<string, unknown[]> {
+  ): Map<string, RelatedEntry[]> {
     const memberIds = new Set(this.memberItemIds)
     const bySource = new Map<string, Map<string, RelatedEntry>>()
 
@@ -681,11 +682,87 @@ export class ItemExporter extends BaseExporter {
       if (code && link.justification) entry.justifications[code] = link.justification
     }
 
-    const result = new Map<string, unknown[]>()
+    const result = new Map<string, RelatedEntry[]>()
     for (const [sourceId, byTarget] of bySource) {
       result.set(sourceId, [...byTarget.values()])
     }
     return result
+  }
+
+  /**
+   * What legacy's Related Objects showed of a related object outside the
+   * gallery (dxa-api `ObjectsRelatedObjects`): its name in each language (its
+   * own project's context first), its country and its first picture. The
+   * package carries no record of it, so the entry carries them itself.
+   */
+  private async describeOutsideRelated(
+    relatedMap: Map<string, RelatedEntry[]>,
+    langCodeMap: Map<string, string>
+  ): Promise<void> {
+    const outside = new Map<string, RelatedEntry[]>()
+    for (const entries of relatedMap.values()) {
+      for (const entry of entries) {
+        if (entry.in_package) continue
+        const bucket = outside.get(entry.id)
+        if (bucket) bucket.push(entry)
+        else outside.set(entry.id, [entry])
+      }
+    }
+    if (outside.size === 0) return
+
+    const ids = [...outside.keys()].sort()
+    const ph = this.placeholders(ids.length)
+    const [names, targets, pictures] = await Promise.all([
+      this.db.query<{ item_id: string; language_id: string; name: string | null; own: number }>(
+        // Sorted so two exports of one database are byte-identical, and so the
+        // own project's context row comes first in each language.
+        `SELECT it.item_id, it.language_id, it.name,
+                CASE WHEN it.context_id = p.context_id THEN 1 ELSE 0 END AS own
+         FROM item_translations it
+         JOIN items i ON i.id = it.item_id
+         LEFT JOIN projects p ON p.id = i.project_id
+         WHERE it.item_id IN (${ph})
+         ORDER BY it.item_id, it.language_id, own DESC, it.context_id`,
+        ids
+      ),
+      this.db.query<{ id: string; country_id: string | null }>(
+        `SELECT id, country_id FROM items WHERE id IN (${ph}) ORDER BY id`,
+        ids
+      ),
+      this.db.query<{ item_id: string; path: string }>(
+        `SELECT pic.parent_id AS item_id, ii.path
+         FROM items pic
+         JOIN item_images ii ON ii.item_id = pic.id
+         WHERE pic.type = 'picture'
+           AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
+                           WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
+           AND pic.parent_id IN (${ph})
+         ORDER BY pic.parent_id, pic.display_order, pic.id`,
+        ids
+      ),
+    ])
+
+    const nameMap = new Map<string, Record<string, string>>()
+    for (const row of names) {
+      const code = langCodeMap.get(row.language_id)
+      if (!code || !row.name) continue
+      const byLanguage = nameMap.get(row.item_id) ?? {}
+      if (!(code in byLanguage)) byLanguage[code] = row.name
+      nameMap.set(row.item_id, byLanguage)
+    }
+    const countryMap = new Map(targets.map(row => [row.id, row.country_id]))
+    const pictureMap = new Map<string, string>()
+    for (const row of pictures) {
+      if (!pictureMap.has(row.item_id)) pictureMap.set(row.item_id, this.imageUrl(row.path))
+    }
+
+    for (const [id, entries] of outside) {
+      for (const entry of entries) {
+        entry.names = nameMap.get(id) ?? {}
+        entry.country_id = countryMap.get(id) ?? null
+        entry.image = pictureMap.get(id) ?? null
+      }
+    }
   }
 
   /**
@@ -728,6 +805,10 @@ interface RelatedEntry {
   project_id: string | null
   in_package: boolean
   justifications: Record<string, string>
+  /** Outside the gallery only: its name by language, country and first picture. */
+  names?: Record<string, string>
+  country_id?: string | null
+  image?: string | null
 }
 
 /**

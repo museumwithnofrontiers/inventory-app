@@ -74,8 +74,22 @@ export class CountryExporter extends BaseExporter {
 
          UNION
 
+         -- A related object outside the gallery is shown with its country, as
+         -- legacy's Related Objects tooltip did.
+         SELECT DISTINCT tgt.country_id
+         FROM item_item_links iil
+         JOIN items tgt ON tgt.id = iil.target_id
+         WHERE iil.source_id IN (${itemPh}) AND tgt.country_id IS NOT NULL
+
+         UNION
+
          ${timelineBranch}`,
-        [...this.memberItemIds, ...this.memberItemIds, ...GLOBAL_TIMELINE_LIKE_PATTERNS]
+        [
+          ...this.memberItemIds,
+          ...this.memberItemIds,
+          ...this.memberItemIds,
+          ...GLOBAL_TIMELINE_LIKE_PATTERNS,
+        ]
       )
     }
 
