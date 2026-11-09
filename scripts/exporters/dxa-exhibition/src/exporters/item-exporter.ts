@@ -458,6 +458,13 @@ export class ItemExporter extends BaseExporter {
         artist_birthplace: extra?.['artist_birthplace'] ?? null,
         artist_deathdate: extra?.['artist_deathdate'] ?? null,
         artist_deathplace: extra?.['artist_deathplace'] ?? null,
+        // The artist's period of activity, per language, which the sheet
+        // prints on a line of its own under the life data.
+        period_activity: extra?.['period_activity'] ?? null,
+        // A monument's responsible institution as its row writes it, which
+        // legacy's sheet prints in the holding museum's place.
+        institution:
+          (extra?.['monument_contact'] as unknown as Record<string, string> | undefined)?.['institution'] ?? null,
         scriber: extra?.['scriber'] ?? null,
         binding_desc: extra?.['binding_desc'] ?? null,
         // The item's rights statement ("Copyright image: <institution>"), which

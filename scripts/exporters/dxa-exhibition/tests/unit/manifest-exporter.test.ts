@@ -181,12 +181,14 @@ describe('ManifestExporter', () => {
     expect(manifest.projects).toEqual({
       'exhcolour-uuid': {
         name: { en: 'The Use of Colours in Art' },
+        backward_compatibility: 'mwnf3:projects:EXHCOLOUR',
         site_url: 'https://the-use-of-colours-in-art.museumwnf.org',
         related_database_url: null,
         artistic_introduction_url: null,
       },
       'isl-uuid': {
         name: {},
+        backward_compatibility: 'mwnf3:projects:ISL',
         site_url: null,
         related_database_url: null,
         artistic_introduction_url: null,
