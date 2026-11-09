@@ -143,6 +143,10 @@ sibling Collection's translations) and the three nullable URL columns
 (`site_url`, `related_database_url`, `artistic_introduction_url`). Collected
 from the member items' `project_id` (`items.json`) plus the exhibition's own
 native project (`exhibition.projectId`), the same way as the Gallery package.
+An exhibition's entry also carries the project's `backward_compatibility`:
+legacy's item sheet names a monument's architects "Architect(s) /
+Masterbuilder(s)" for a Discover Islamic Art or Explore record and "Artists"
+otherwise, by the project's code.
 
 ## items.json note
 
@@ -151,6 +155,12 @@ items (EXHCOLOUR/GalEx6) are ordinary members; `project_id` distinguishes
 them from borrowed items so the sheet can suppress the "source database" link
 for purpose-authored records exactly as legacy does
 (`projectSourceIsExhibition` in the API response).
+
+Each language's text also carries `period_activity`, the artist's period of
+activity that the sheet prints on a line of its own under the artist, and,
+for an mwnf3 monument, `institution`: the responsible institution as that
+language's row writes it, which legacy's sheet prints instead of a holding
+museum. A Sharing History monument's institution is its `holder`.
 
 `exhibition_references` is the Gallery package's field too: the exhibition
 pages that show the item, as legacy's exhibitions-client item sheet listed

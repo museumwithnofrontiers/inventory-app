@@ -32,6 +32,7 @@ interface ProjectTitleRow {
 /** One entry of `manifest.projects` — see `ManifestExporter.buildProjectsSection`. */
 export interface ProjectEntry {
   name: Record<string, string>
+  backward_compatibility: string | null
   site_url: string | null
   related_database_url: string | null
   artistic_introduction_url: string | null
@@ -197,7 +198,8 @@ export class ManifestExporter extends BaseExporter {
    * translations, joined by matching `backward_compatibility` — `Project`
    * itself carries no translations. The three URL columns come straight off
    * `projects` (nullable, populated at import time — epic #1727 phase 1,
-   * #1753/#1756).
+   * #1753/#1756). `backward_compatibility` is the project's legacy key,
+   * whose code (`ISL`, `EPM`) legacy's item sheet chose some labels by.
    */
   private async buildProjectsSection(projectIds: string[]): Promise<Record<string, ProjectEntry>> {
     if (projectIds.length === 0) return {}
@@ -239,6 +241,7 @@ export class ManifestExporter extends BaseExporter {
     for (const p of projects) {
       result[p.id] = {
         name: namesByProject.get(p.id) ?? {},
+        backward_compatibility: p.backward_compatibility,
         site_url: p.site_url,
         related_database_url: p.related_database_url,
         artistic_introduction_url: p.artistic_introduction_url,

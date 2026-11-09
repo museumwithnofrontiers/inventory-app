@@ -158,6 +158,27 @@ describe('ItemExporter — other galleries and Sharing History artists', () => {
     expect(fr.artist).toBe('Inconnu')
     expect(fr.artist_birthdate).toBe('1850')
   })
+
+  it("exports the artist's period of activity and a monument's responsible institution in each language", async () => {
+    const db = stubDb({
+      translations: [
+        translationRow('eng', {
+          period_activity: 'AH 1316 - 1318 / AD 1898-1940',
+          monument_contact: { institution: 'Directorate General of Antiquities', phone: '+963' },
+          gallery_sheet: { description: 'EN' },
+        }),
+        translationRow('fra', { gallery_sheet: { description: 'FR' } }),
+      ],
+    })
+    await new ItemExporter(context(db)).export()
+
+    const en = readJson('translations/items.en.json')['item-a'] as Record<string, unknown>
+    const fr = readJson('translations/items.fr.json')['item-a'] as Record<string, unknown>
+    expect(en.period_activity).toBe('AH 1316 - 1318 / AD 1898-1940')
+    expect(en.institution).toBe('Directorate General of Antiquities')
+    expect(fr.period_activity ?? null).toBeNull()
+    expect(fr.institution ?? null).toBeNull()
+  })
 })
 
 describe('sharingHistoryArtistNames', () => {
