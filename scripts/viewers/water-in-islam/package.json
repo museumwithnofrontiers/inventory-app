@@ -10,9 +10,9 @@
     "sync-i18n": "node tools/sync-i18n.mjs"
   },
   "dependencies": {
-    "@museumwnf/water-in-islam-data": "^1.0.18",
-    "marked": "^18.0.14",
-    "vue": "^3.5.43",
+    "@museumwnf/water-in-islam-data": "^1.0.32",
+    "marked": "^18.1.3",
+    "vue": "^3.5.45",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {

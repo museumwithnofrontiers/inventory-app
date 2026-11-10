@@ -9,9 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@museumwnf/islamicart-data": "^1.0.47",
-    "marked": "^18.0.14",
-    "vue": "^3.5.43",
+    "@museumwnf/islamicart-data": "^1.0.67",
+    "marked": "^18.1.3",
+    "vue": "^3.5.45",
     "vue-router": "^5.3.1"
   },
   "devDependencies": {
