@@ -10,6 +10,8 @@ import { describe, expect, it } from 'vitest';
 import {
   resolvePictureItemBackwardCompatibility,
   THEME_ITEM_SELECT_COLUMNS,
+  THEME_ITEM_SOURCE_COLUMNS,
+  themeItemSelectColumns,
 } from '../../src/importers/phase-10/thg-theme-item-resolver.js';
 import type { LegacyThemeItem } from '../../src/importers/phase-10/thg-theme-item-resolver.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
@@ -576,5 +578,87 @@ describe('THEME_ITEM_SELECT_COLUMNS', () => {
     expect(THEME_ITEM_SELECT_COLUMNS).toContain('travel_monument_image_id');
     expect(THEME_ITEM_SELECT_COLUMNS).toContain('travel_monument_trail_id');
     expect(THEME_ITEM_SELECT_COLUMNS).toContain('travel_monument_location_id');
+  });
+});
+
+describe('MWNF-635 picture borrowed from the record an Explore monument points to', () => {
+  const borrowed = (
+    sourceType: string,
+    sourceKey: string,
+    itemType: string | null,
+    image: number
+  ): LegacyThemeItem => ({
+    ...NULL_ROW,
+    explore_monument_item_id: 934,
+    explore_monument_source_type: sourceType,
+    explore_monument_source_key: sourceKey,
+    explore_monument_source_item_type: itemType,
+    explore_monument_source_image_id: image,
+  });
+
+  it('links a borrowed Travel picture to the Travels picture item', () => {
+    expect(
+      resolvePictureItemBackwardCompatibility(borrowed('travel', 'IAM;sy;1;I;1;a', '', 3))
+    ).toBe('mwnf3_travels:monument_picture:IAM:sy:1:I:1:a:_:3');
+  });
+
+  it('links a borrowed DIA monument picture to the mwnf3 monument picture item', () => {
+    expect(
+      resolvePictureItemBackwardCompatibility(borrowed('monument', 'ISL;sy;Mon01;12', '', 2))
+    ).toBe('mwnf3:monuments_pictures:ISL:sy:Mon01:12:2');
+  });
+
+  it('keeps a typed DIA monument picture distinct from the default photo', () => {
+    expect(
+      resolvePictureItemBackwardCompatibility(borrowed('monument', 'ISL;sy;Mon01;12', 'plan', 2))
+    ).toBe('mwnf3:monuments_pictures:ISL:sy:Mon01:12:2:plan');
+  });
+
+  it('links a borrowed Sharing History monument picture with lower-cased key parts', () => {
+    expect(
+      resolvePictureItemBackwardCompatibility(borrowed('sh_monument', 'AWE;SY;7', '', 1))
+    ).toBe('mwnf3_sharing_history:sh_monument_images:awe:sy:7:_:1');
+  });
+
+  it('returns null for a borrowed museum picture (museum pictures are partner images, not items)', () => {
+    expect(
+      resolvePictureItemBackwardCompatibility(borrowed('museum', 'sy;Mus01', '', 1))
+    ).toBeNull();
+  });
+
+  it('returns null for a source key with the wrong number of parts', () => {
+    expect(
+      resolvePictureItemBackwardCompatibility(borrowed('travel', 'IAM;sy;1', '', 1))
+    ).toBeNull();
+  });
+
+  it('still resolves an own Explore picture when the source columns are null', () => {
+    const row: LegacyThemeItem = {
+      ...NULL_ROW,
+      explore_monument_item_id: 1806,
+      explore_monument_item_type: '',
+      explore_monument_image_id: 1,
+      explore_monument_source_type: null,
+      explore_monument_source_key: null,
+      explore_monument_source_item_type: null,
+      explore_monument_source_image_id: null,
+    };
+    expect(resolvePictureItemBackwardCompatibility(row)).toBe(
+      'mwnf3_explore:monument_picture:1806:_:1'
+    );
+  });
+});
+
+describe('themeItemSelectColumns', () => {
+  const db = (n: number) => ({ query: async <T>() => [{ n } as unknown as T] });
+
+  it('adds the borrowed-picture columns when the legacy schema has them', async () => {
+    const columns = await themeItemSelectColumns(db(1));
+    expect(columns).toContain(THEME_ITEM_SELECT_COLUMNS);
+    expect(columns).toContain(THEME_ITEM_SOURCE_COLUMNS);
+  });
+
+  it('keeps the original columns on a legacy schema without them', async () => {
+    expect(await themeItemSelectColumns(db(0))).toBe(THEME_ITEM_SELECT_COLUMNS);
   });
 });

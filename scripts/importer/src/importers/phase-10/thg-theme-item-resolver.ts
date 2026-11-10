@@ -17,6 +17,8 @@
  * - SH detail      → mwnf3_sharing_history:sh_monument_detail_pictures:{project}:{country}:{item}:{detail}:{image}
  * - Explore mon.   → mwnf3_explore:monument_picture:{monument}:{type|_}:{image}
  * - Travels mon.   → mwnf3_travels:monument_picture:{project}:{country}:{trail}:{itinerary}:{location}:{number}:{type|_}:{image}
+ * - Explore mon. showing a picture borrowed from the record it points to (MWNF-635, explore_monument_source_*):
+ *   the Travels, mwnf3 monument or SH monument picture key above, built from the source key; null for a museum.
  *
  * The trailing `[:{type}]` on the two mwnf3 picture families is appended only when
  * the legacy type is non-empty — see withPictureType() below.
@@ -94,6 +96,12 @@ export interface LegacyThemeItem {
   explore_monument_item_id: number | null;
   explore_monument_item_type: string | null;
   explore_monument_image_id: number | null;
+  // MWNF-635: a picture borrowed from the record the Explore monument points to. Present only once the legacy
+  // schema has the columns (see themeItemSelectColumns); explore_monument_item_type/_image_id are then null.
+  explore_monument_source_type?: string | null;
+  explore_monument_source_key?: string | null;
+  explore_monument_source_item_type?: string | null;
+  explore_monument_source_image_id?: number | null;
   // THG Travels monument references (item_id is the monument number, a string)
   travel_monument_project_id: string | null;
   travel_monument_country_id: string | null;
@@ -126,6 +134,27 @@ export const THEME_ITEM_SELECT_COLUMNS = `
   travel_monument_project_id, travel_monument_country_id, travel_monument_trail_id,
   travel_monument_itinerary_id, travel_monument_location_id, travel_monument_item_id,
   travel_monument_item_type, travel_monument_image_id`.trim();
+
+/** MWNF-635 borrowed-picture columns of theme_item, added by a legacy schema patch. */
+export const THEME_ITEM_SOURCE_COLUMNS =
+  'explore_monument_source_type, explore_monument_source_key, explore_monument_source_item_type, explore_monument_source_image_id';
+
+/**
+ * The SELECT fragment for theme_item rows: THEME_ITEM_SELECT_COLUMNS, plus the borrowed-picture columns when the
+ * legacy schema has them. A mirror or dump taken before the MWNF-635 patch keeps importing unchanged.
+ */
+export async function themeItemSelectColumns(legacyDb: {
+  query<T>(sql: string, params?: unknown[]): Promise<T[]>;
+}): Promise<string> {
+  const rows = await legacyDb.query<{ n: number | string }>(
+    `SELECT COUNT(*) AS n FROM information_schema.columns
+     WHERE table_schema = 'mwnf3_thematic_gallery' AND table_name = 'theme_item'
+       AND column_name = 'explore_monument_source_type'`
+  );
+  return Number(rows[0]?.n ?? 0) > 0
+    ? `${THEME_ITEM_SELECT_COLUMNS},\n  ${THEME_ITEM_SOURCE_COLUMNS}`
+    : THEME_ITEM_SELECT_COLUMNS;
+}
 
 /**
  * Append a non-empty picture `type` segment, mirroring the `pkValues.push(type)`
@@ -236,6 +265,39 @@ export function resolvePictureItemBackwardCompatibility(legacy: LegacyThemeItem)
     const project = legacy.sh_monument_detail_project_id.toLowerCase();
     const country = legacy.sh_monument_detail_country_id.toLowerCase();
     return `mwnf3_sharing_history:sh_monument_detail_pictures:${project}:${country}:${legacy.sh_monument_detail_item_id}:${legacy.sh_monument_detail_detail_id}:${legacy.sh_monument_detail_image_id}`;
+  }
+
+  // MWNF-635 picture borrowed from the record an Explore monument points to. The key parts of
+  // explore_monument_source_key are separated by ';' (travel: project;country;trail;itinerary;location;number,
+  // monument: project;country;institution;number, sh_monument: project;country;number, museum: country;museum).
+  // The placement links that record's picture item, the same item the Explore monument resolves to. Museum
+  // pictures are partner images, not picture items, so a borrowed museum picture has no item to link (null).
+  if (
+    legacy.explore_monument_item_id !== null &&
+    legacy.explore_monument_source_type &&
+    legacy.explore_monument_source_key &&
+    legacy.explore_monument_source_image_id !== null &&
+    legacy.explore_monument_source_image_id !== undefined
+  ) {
+    const parts = legacy.explore_monument_source_key.split(';');
+    const image = legacy.explore_monument_source_image_id;
+    const pictureType = legacy.explore_monument_source_item_type ?? '';
+    switch (legacy.explore_monument_source_type) {
+      case 'travel':
+        return parts.length === 6
+          ? `mwnf3_travels:monument_picture:${parts.join(':')}:${pictureType || '_'}:${image}`
+          : null;
+      case 'monument':
+        return parts.length === 4
+          ? withPictureType(`mwnf3:monuments_pictures:${parts.join(':')}:${image}`, pictureType)
+          : null;
+      case 'sh_monument':
+        return parts.length === 3
+          ? `mwnf3_sharing_history:sh_monument_images:${parts[0].toLowerCase()}:${parts[1].toLowerCase()}:${parts[2]}:${pictureType ? pictureType.toLowerCase() : '_'}:${image}`
+          : null;
+      default:
+        return null;
+    }
   }
 
   // Explore monument picture

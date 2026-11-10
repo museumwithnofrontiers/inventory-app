@@ -25,7 +25,7 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import {
   resolvePictureItemBackwardCompatibility,
-  THEME_ITEM_SELECT_COLUMNS,
+  themeItemSelectColumns,
 } from './thg-theme-item-resolver.js';
 import type { LegacyThemeItem } from './thg-theme-item-resolver.js';
 
@@ -70,7 +70,7 @@ export class ThgItemRelatedImporter extends BaseImporter {
       try {
         const themeItems = await this.context.legacyDb.query<LegacyThemeItemRow>(
           `SELECT gallery_id, theme_id, item_id,
-                  ${THEME_ITEM_SELECT_COLUMNS}
+                  ${await themeItemSelectColumns(this.context.legacyDb)}
            FROM mwnf3_thematic_gallery.theme_item`
         );
 
