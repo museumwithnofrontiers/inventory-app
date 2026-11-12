@@ -73,8 +73,9 @@ specification doc. It is prose for humans, read by nothing at export time.
 - `project_ids` — `kind: "standalone"` only, optional: the UUIDs of the
   projects whose records this site is home to (Discover Islamic Art: ISL and
   Explore Islamic Art Collections). Legacy's item sheet pointed at a record in
-  its home database; `dxa-gallery` writes the slug into `manifest.projects`'
-  `home_site` so a gallery's sheet points at the record on this site. A
+  its home database; `dxa-gallery` and `dxa-exhibition` write the slug into
+  `manifest.projects`' `home_site`, so a gallery's sheet points at the record
+  on this site and a website derives each project's source chip. A
   gallery or exhibition site needs no such list: it is home to its
   collection's own project, read from the database. A project may be listed
   by one site only.

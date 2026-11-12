@@ -14,6 +14,8 @@ function contextWith(rows: Record<string, unknown[]>, siteKey = 'water-in-islam'
   const query = vi.fn(async (sql: string) => {
     // collectProjectIds' member-item project lookup.
     if (sql.includes('FROM items')) return rows.memberProjects ?? []
+    // homeSitesByProject's lookup of each site collection's own project.
+    if (sql.includes('FROM collections c')) return rows.siteProjects ?? []
     // The projects-section title lookup (buildProjectsSection) and the
     // exhibition-name lookup (the top-level `rows` query) both touch
     // collection_translations, but only the former JOINs it from `projects
@@ -47,6 +49,7 @@ function contextWith(rows: Record<string, unknown[]>, siteKey = 'water-in-islam'
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
     exhibitionSites: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.org',
     logger: { info: vi.fn(), success: vi.fn(), warning: vi.fn(), error: vi.fn() } as unknown as ExportContext['logger'],
     siteKey,
@@ -185,6 +188,7 @@ describe('ManifestExporter', () => {
         site_url: 'https://the-use-of-colours-in-art.museumwnf.org',
         related_database_url: null,
         artistic_introduction_url: null,
+        home_site: null,
       },
       'isl-uuid': {
         name: {},
@@ -192,8 +196,44 @@ describe('ManifestExporter', () => {
         site_url: null,
         related_database_url: null,
         artistic_introduction_url: null,
+        home_site: null,
       },
     })
+  })
+
+  // A website derives each project's source chip from the site that is home
+  // to its records: the standalone site naming the project, else the site
+  // whose collection is the project's own; none for a project with no site
+  // of its own.
+  it("names each project's home site", async () => {
+    const context = contextWith({
+      languages: [],
+      translations: [],
+      labels: [],
+      memberProjects: [{ project_id: 'exhcolour-uuid' }, { project_id: 'isl-uuid' }, { project_id: 'galleries-uuid' }],
+      projects: ['exhcolour-uuid', 'galleries-uuid', 'isl-uuid'].map((id) => ({
+        id, backward_compatibility: null, site_url: null, related_database_url: null, artistic_introduction_url: null,
+      })),
+      siteProjects: [{ collection_id: 'colours-collection', project_id: 'exhcolour-uuid' }],
+    })
+    context.homeSites = {
+      byProject: new Map([['isl-uuid', 'islamicart']]),
+      bySiteCollection: new Map([['colours-collection', 'the-use-of-colours-in-art']]),
+    }
+    const exporter = new ManifestExporter(context)
+    const written: unknown[] = []
+    vi.spyOn(exporter as unknown as { writeJson: (f: string, d: unknown) => Promise<void> }, 'writeJson').mockImplementation(
+      async (_file, data) => {
+        written.push(data)
+      }
+    )
+
+    await exporter.export()
+
+    const manifest = written[0] as { projects: Record<string, { home_site: string | null }> }
+    expect(manifest.projects['isl-uuid']!.home_site).toBe('islamicart')
+    expect(manifest.projects['exhcolour-uuid']!.home_site).toBe('the-use-of-colours-in-art')
+    expect(manifest.projects['galleries-uuid']!.home_site).toBeNull()
   })
 
   // Epic #1727 phase 2 follow-up: manifest.exhibition carried only the legacy

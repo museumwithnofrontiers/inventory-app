@@ -44,7 +44,7 @@ import chalk from 'chalk'
 import { Database } from '../core/database.js'
 import { Logger } from '../core/logger.js'
 import { PublishManager, assertPublishableBaseUrl } from '../core/publish-manager.js'
-import { loadExhibitionSites, loadInstance, loadSiteCollectionIds } from '../core/instance.js'
+import { loadExhibitionSites, loadHomeSites, loadInstance, loadSiteCollectionIds } from '../core/instance.js'
 import type { ExportContext } from '../core/types.js'
 import {
   ManifestExporter,
@@ -214,6 +214,7 @@ program
           itemOwnContextIds: ownContextIds,
           siteCollectionIds: loadSiteCollectionIds(),
           exhibitionSites: loadExhibitionSites(),
+          homeSites: loadHomeSites(),
           baseUrl: options.baseUrl,
           logger,
           siteKey: instance.slug,

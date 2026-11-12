@@ -146,7 +146,11 @@ native project (`exhibition.projectId`), the same way as the Gallery package.
 An exhibition's entry also carries the project's `backward_compatibility`:
 legacy's item sheet names a monument's architects "Architect(s) /
 Masterbuilder(s)" for a Discover Islamic Art or Explore record and "Artists"
-otherwise, by the project's code.
+otherwise, by the project's code. Each entry also carries `home_site`, the
+slug of the site that is home to the project's records, by the Gallery
+package's rule: a website derives each project's source chip from it (an
+exhibition's own project is the exhibition's site, the galleries' common
+project has `null`).
 
 ## items.json note
 

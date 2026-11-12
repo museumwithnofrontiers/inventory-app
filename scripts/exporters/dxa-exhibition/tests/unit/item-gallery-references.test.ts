@@ -110,6 +110,7 @@ describe('ItemExporter — other galleries and Sharing History artists', () => {
     itemOwnContextIds: new Map([['item-a', 'awe-context-uuid']]),
     siteCollectionIds: new Set([SELF, WITH_SITE]),
     exhibitionSites: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
