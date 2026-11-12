@@ -1,0 +1,276 @@
+#!/usr/bin/env node
+/**
+ * Static JSON Exporter CLI — Publications
+ *
+ * Reads the inventory database and writes a set of denormalized JSON files
+ * for the Publications site, which replaces books.museumwnf.org.
+ *
+ * This exporter is single-purpose: it always exports Publications, as
+ * `@museumwnf/publications-data`. Publications is no project: the scope is
+ * every publication, the trails they accompany and, as references only, the
+ * items they cite (see core/scope.ts). The package is specified in
+ * `scripts/exporters/docs/publications-data-package.md`.
+ *
+ * Usage:
+ *   npm run export -- [options]
+ *
+ * Examples:
+ *   # Standard export
+ *   npm run export -- --force
+ *
+ *   # Export and stage the package, with a new version, into a
+ *   # museumwithnofrontiers/data-packages checkout; its release workflow
+ *   # publishes it once the pull request carrying it is merged
+ *   npm run export -- --force --publish --data-packages ../data-packages
+ */
+
+import dotenv from 'dotenv'
+import { resolve } from 'path'
+import { existsSync, mkdirSync, rmSync } from 'fs'
+import { Command } from 'commander'
+import chalk from 'chalk'
+
+import { Database } from '../core/database.js'
+import { Logger } from '../core/logger.js'
+import { PublishManager, assertPublishableBaseUrl } from '../core/publish-manager.js'
+import { resolveScope } from '../core/scope.js'
+import type { ExportContext } from '../core/types.js'
+import { loadSites } from '../../../shared/sites.mjs'
+import { loadHomeSites } from '../core/home-sites.js'
+import {
+  ManifestExporter,
+  LanguageExporter,
+  CountryExporter,
+  PublicationExporter,
+  EditionExporter,
+  TagExporter,
+  ReferenceExporter,
+  TrailExporter,
+} from '../exporters/index.js'
+
+dotenv.config({ path: resolve(process.cwd(), '.env') })
+
+// Dataset identity — hardcoded on purpose. This fork exports exactly one
+// dataset; there are no scope arguments to pass or get wrong.
+const SUBDIRECTORY = 'publications'
+const PROJECT_KEYS = ['publications']
+const PACKAGE_NAME = '@museumwnf/publications-data'
+
+const program = new Command()
+
+program
+  .name('publications-exporter')
+  .description('Static JSON data exporter for the Publications website')
+  .version('1.0.0')
+  .allowExcessArguments(false)
+  .option('--force', 'Overwrite output directory if it already exists', false)
+  .option('--output-dir <path>', 'Base output directory (relative to cwd or absolute)', 'output')
+  .option('--base-url <url>', 'Base URL for media files', process.env['BASE_URL'] ?? './images')
+  .option(
+    '--publish',
+    'Stage the package, with a new version, into the data-packages checkout for its release workflow to publish',
+    false
+  )
+  .option(
+    '--data-packages <path>',
+    'Checkout of museumwithnofrontiers/data-packages (overrides DATA_PACKAGES_DIR env var)',
+    process.env['DATA_PACKAGES_DIR'] ?? ''
+  )
+  .option(
+    '--package-version <semver>',
+    'Set an explicit version instead of auto-incrementing (e.g. 1.0.4)'
+  )
+  .option('--npm-registry <url>', 'npm registry asked for the latest published version (overrides NPM_REGISTRY env var)')
+  .action(
+    async (options: {
+      force: boolean
+      outputDir: string
+      baseUrl: string
+      publish: boolean
+      dataPackages: string
+      packageVersion?: string
+      npmRegistry?: string
+    }) => {
+      const subdirectory = SUBDIRECTORY
+      const projectKeys = PROJECT_KEYS
+      const logger = new Logger('Exporter')
+
+      console.log(chalk.bold('='.repeat(70)))
+      console.log(chalk.bold.cyan('MWNF STATIC DATA EXPORTER'))
+      console.log(chalk.bold('='.repeat(70)))
+      console.log(chalk.gray(`Start time:    ${new Date().toISOString()}`))
+      console.log(chalk.gray(`Project keys:  ${projectKeys.join(', ')}`))
+      console.log(chalk.gray(`Subdirectory:  ${subdirectory}`))
+      console.log(chalk.gray(`Force:         ${options.force ? 'YES' : 'NO'}`))
+      console.log('')
+
+      const outputBaseDir = resolve(process.cwd(), options.outputDir)
+      const outputDir = resolve(outputBaseDir, subdirectory)
+
+      // Guard: fail if output directory exists and --force not given
+      if (existsSync(outputDir)) {
+        if (!options.force) {
+          console.error(chalk.red(`\nOutput directory already exists: ${outputDir}`))
+          console.error(chalk.red('Use --force to overwrite it.\n'))
+          process.exit(1)
+        }
+        logger.warning(`Removing existing output directory (--force): ${outputDir}`)
+        rmSync(outputDir, { recursive: true, force: true })
+      }
+
+      mkdirSync(outputDir, { recursive: true })
+      logger.info(`Output directory: ${outputDir}`)
+
+      // Preflight for --publish: refuse a relative image base URL or a
+      // missing data-packages checkout before spending minutes on the export.
+      if (options.publish) {
+        const registry =
+          options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
+        const preflight = new PublishManager({
+          outputDir,
+          dataPackagesDir: resolve(process.cwd(), options.dataPackages),
+          packageName: PACKAGE_NAME,
+          projectKeys,
+          logger,
+          registry,
+        })
+        try {
+          assertPublishableBaseUrl(options.baseUrl)
+          preflight.assertDataPackagesCheckout()
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          console.error(chalk.red(`\n${message}\n`))
+          process.exit(1)
+        }
+      }
+
+      // Connect to the inventory database
+      const db = new Database()
+
+      try {
+        logger.info('Connecting to database...')
+        await db.connect()
+        console.log(chalk.green('  ✓ Database connected'))
+
+        // Every publication, its trails and the items it references.
+        logger.info('Resolving the publications...')
+        const scope = await resolveScope(db)
+        console.log(
+          chalk.green(
+            `  ✓ ${scope.publicationIds.length} publications, ${scope.trailIds.length} trails, ` +
+              `${scope.referenceIds.length} referenced items`
+          )
+        )
+        console.log('')
+
+        const context: ExportContext = {
+          db,
+          outputDir,
+          scope,
+          projectIds: scope.projectIds,
+          projectKeys,
+          baseUrl: options.baseUrl,
+          logger,
+          homeSites: loadHomeSites(),
+          sites: loadSites(),
+        }
+
+        const exporters = [
+          new ManifestExporter(context),
+          new LanguageExporter(context),
+          new CountryExporter(context),
+          new PublicationExporter(context),
+          new EditionExporter(context),
+          new TagExporter(context),
+          new ReferenceExporter(context),
+          new TrailExporter(context),
+        ]
+
+        const results = []
+        for (const exporter of exporters) {
+          try {
+            const result = await exporter.export()
+            results.push({ name: exporter.getName(), ...result, error: null })
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            logger.error(`${exporter.getName()} failed: ${message}`)
+            results.push({ name: exporter.getName(), file: '', count: 0, error: message })
+          }
+        }
+
+        const hasErrors = results.some(r => r.error !== null)
+
+        // Handle npm package publishing if --publish flag is set
+        if (options.publish && !hasErrors) {
+          console.log('')
+          console.log(chalk.bold('='.repeat(70)))
+          console.log(chalk.bold.cyan('STAGING THE PACKAGE INTO DATA-PACKAGES'))
+          console.log(chalk.bold('='.repeat(70)))
+
+          try {
+            const packageName = PACKAGE_NAME
+            const registry =
+              options.npmRegistry || process.env['NPM_REGISTRY'] || 'https://registry.npmjs.org'
+
+            const publishManager = new PublishManager({
+              outputDir,
+              dataPackagesDir: resolve(process.cwd(), options.dataPackages),
+              packageName,
+              projectKeys,
+              logger,
+              author: process.env['PACKAGE_AUTHOR'],
+              license: process.env['PACKAGE_LICENSE'],
+              registry,
+            })
+            const staged = publishManager.stage(options.packageVersion)
+            if (staged.changed) {
+              console.log(chalk.green(`  ✓ Staged: ${packageName}@${staged.version} in ${staged.packageDir}`))
+              console.log(chalk.gray('    Commit it on a branch of data-packages and open a pull request:'))
+              console.log(chalk.gray('    merging it publishes the version.'))
+            } else {
+              console.log(chalk.green(`  ✓ Unchanged: ${packageName}@${staged.version} — nothing to publish`))
+            }
+            console.log('')
+          } catch (err) {
+            const message = err instanceof Error ? err.message : String(err)
+            console.error(chalk.red(`\nStaging failed: ${message}`))
+            process.exit(1)
+          }
+        }
+
+        console.log('')
+        console.log(chalk.bold('='.repeat(70)))
+        if (hasErrors) {
+          console.log(chalk.bold.red('EXPORT COMPLETED WITH ERRORS'))
+        } else {
+          console.log(chalk.bold.green('EXPORT COMPLETED'))
+        }
+        console.log(chalk.gray(`End time: ${new Date().toISOString()}`))
+        console.log(chalk.gray(`Output:   ${outputDir}`))
+        console.log('')
+
+        for (const r of results) {
+          if (r.error) {
+            console.log(chalk.red(`  ✗ ${r.name}: ${r.error}`))
+          } else {
+            console.log(chalk.green(`  ✓ ${r.file} (${r.count})`))
+          }
+        }
+
+        console.log(chalk.bold('='.repeat(70)))
+
+        process.exit(hasErrors ? 1 : 0)
+      } catch (err) {
+        const message = err instanceof Error ? err.message : String(err)
+        console.error(chalk.red(`\nFatal error: ${message}`))
+        if (err instanceof Error && err.stack) {
+          console.error(chalk.gray(err.stack))
+        }
+        process.exit(1)
+      } finally {
+        await db.disconnect()
+      }
+    }
+  )
+
+program.parse()

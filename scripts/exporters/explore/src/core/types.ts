@@ -1,6 +1,7 @@
 import type { Database } from './database.js'
 import type { Logger } from './logger.js'
 import type { ExploreScope } from './scope.js'
+import type { Site } from '../../../shared/sites.mjs'
 
 export interface ExportContext {
   db: Database
@@ -16,6 +17,8 @@ export interface ExportContext {
   logger: Logger
   /** Each project's home site, by project UUID (`loadHomeSites`); none where it is left out. */
   homeSites?: ReadonlyMap<string, string>
+  /** Every site of the instance files (`shared/sites.mjs`); a Travel Book links to the Publications site's page. */
+  sites?: Site[]
 }
 
 export interface ExportResult {

@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
+import { PUBLICATION_PATH, siteLink, type Site } from '../../../shared/sites.mjs'
 import { BaseExporter } from './base-exporter.js'
 
 /**
@@ -18,6 +19,35 @@ export function collectionTextExtra(extra: unknown, languageKey: LanguageKey): u
         ? { ...entry, langId: languageKey((entry as { langId: string }).langId) }
         : entry
     ),
+  }
+}
+
+/**
+ * The root's `extra` with each Travel Book record (`explore_travel.books`)
+ * that names its publication (`publication_id`, written by the importer)
+ * linked to that publication's page on the Publications site, as
+ * `publication: { site, path, url }` (M14 D5, #2539). The record's legacy
+ * `read_more` address stays as legacy wrote it. The tour teasers
+ * (`explore_travel.tours`) stay as they are while travels.museumwnf.org
+ * serves the tours (D-T4). Exported for unit tests.
+ */
+export function withPublicationLinks(extra: unknown, publications: Site | null): unknown {
+  if (!publications || !extra || typeof extra !== 'object' || Array.isArray(extra)) return extra
+  const travel = (extra as Record<string, unknown>)['explore_travel']
+  if (!travel || typeof travel !== 'object' || Array.isArray(travel)) return extra
+  const books = (travel as Record<string, unknown>)['books']
+  if (!Array.isArray(books)) return extra
+  return {
+    ...(extra as Record<string, unknown>),
+    explore_travel: {
+      ...(travel as Record<string, unknown>),
+      books: books.map(book => {
+        const id = book && typeof book === 'object' ? (book as Record<string, unknown>)['publication_id'] : null
+        return typeof id === 'string' && id !== ''
+          ? { ...(book as Record<string, unknown>), publication: siteLink(publications, PUBLICATION_PATH, id) }
+          : book
+      }),
+    },
   }
 }
 
@@ -89,6 +119,7 @@ export class CollectionExporter extends BaseExporter {
     const itemPh = this.placeholders(this.scope.itemIds.length)
     const langCodeMap = await this.buildLangCodeMap()
     const languageKey = languageKeyer(langCodeMap)
+    const publications = this.context.sites?.find(s => s.slug === 'publications') ?? null
 
     const [collections, translations, images, itemLinks] = await Promise.all([
       this.db.query<CollectionRow>(
@@ -184,7 +215,7 @@ export class CollectionExporter extends BaseExporter {
         latitude: c.latitude !== null ? parseFloat(c.latitude) : null,
         longitude: c.longitude !== null ? parseFloat(c.longitude) : null,
         map_zoom: c.map_zoom,
-        extra: parseJson(c.extra),
+        extra: withPublicationLinks(parseJson(c.extra), publications),
         images: imageMap.get(c.id) ?? [],
         items: itemMap.get(c.id) ?? [],
       }))

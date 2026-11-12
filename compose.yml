@@ -520,6 +520,8 @@ services:
       - exporter-dxa-exhibition-modules:/var/www/app/scripts/exporters/dxa-exhibition/node_modules
       - exporter-galleries-modules:/var/www/app/scripts/exporters/galleries/node_modules
       - exporter-explore-modules:/var/www/app/scripts/exporters/explore/node_modules
+      - exporter-publications-modules:/var/www/app/scripts/exporters/publications/node_modules
+      - exporter-travels-modules:/var/www/app/scripts/exporters/travels/node_modules
     environment:
       # The exporters read DB_* directly. dotenv does not override variables
       # that are already set, so these win over any scripts/exporters/*/.env
@@ -634,6 +636,8 @@ volumes:
   exporter-dxa-exhibition-modules:
   exporter-galleries-modules:
   exporter-explore-modules:
+  exporter-publications-modules:
+  exporter-travels-modules:
   parity-modules:
   # Extracted package versions. Published versions never change, so this only
   # grows; deleting it costs a re-download. Named outside the `inventory_`

@@ -50,7 +50,7 @@ files, written to `output/islamicart/`:
 | `dynasties.json` | `DynastyExporter` | Dynasty reference data + translations |
 | `timelines.json` | `TimelineExporter` | Timelines and their events |
 | `partners.json` | `PartnerExporter` | Museums/institutions + translations + images. One shape across every dataset (museumwithnofrontiers/inventory-app#1699): `level`/`parent_id`/`project_uuids`, plus `item_count`/`featured` |
-| `items.json` | `ItemExporter` | Items (objects/monuments/details), with images, dynasty/tag links, related-item links |
+| `items.json` | `ItemExporter` | Items (objects/monuments/details), with images, dynasty/tag links, related-item links, and legacy's "Related MWNF Travel Book": `travel_book`, the first IAM publication of the item's country with its page on the Publications site (`src/core/travel-books.ts`, D-P10; not in a mini-site package) |
 | `collections.json` | `CollectionExporter` | Collections (exhibitions/themes/galleries), with images and item membership |
 | `glossary.json` | `GlossaryExporter` | Glossary terms + translations |
 | `translations/items.<lang>.json` | `ItemExporter` | Per-language item translation fields, lazy-loadable separately from `items.json`; `credit_ids` lists the credited people's ids per role, in the order their names print |

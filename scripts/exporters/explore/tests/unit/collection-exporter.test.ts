@@ -3,7 +3,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { CollectionExporter } from '../../src/exporters/collection-exporter.js'
+import { CollectionExporter, withPublicationLinks } from '../../src/exporters/collection-exporter.js'
 import type { Database } from '../../src/core/database.js'
 import { contextWith, scopeWith } from './support.js'
 
@@ -99,5 +99,56 @@ describe('CollectionExporter', () => {
       readFileSync(join(outputDir, 'translations', 'collections.en.json'), 'utf-8')
     )
     expect(english).toEqual({ loc: { title: 'Innsbruck', extra: { showOnMonument: true } } })
+  })
+})
+
+/**
+ * D5 (#2539): a Travel Book record that names its publication links to the
+ * publication's page on the Publications site; the tour teasers stay (D-T4).
+ */
+describe('withPublicationLinks', () => {
+  const publications = {
+    slug: 'publications',
+    kind: 'standalone',
+    origin: 'https://example.test/publications',
+    itemPath: '/item/:id',
+    rule: null,
+  }
+  const extra = {
+    explore_home: { banners: [] },
+    explore_travel: {
+      books: [
+        { id: 3, publication_id: 'p7', texts: { en: { read_more: 'https://books.museumwnf.org/book/7/en' } } },
+        { id: 4, publication_id: null },
+      ],
+      tours: [{ id: 1 }],
+    },
+  }
+
+  it('links each Travel Book to its Publications page and keeps the rest as it is', () => {
+    expect(withPublicationLinks(extra, publications)).toEqual({
+      explore_home: { banners: [] },
+      explore_travel: {
+        books: [
+          {
+            id: 3,
+            publication_id: 'p7',
+            texts: { en: { read_more: 'https://books.museumwnf.org/book/7/en' } },
+            publication: {
+              site: 'publications',
+              path: '/publication/p7',
+              url: 'https://example.test/publications/#/publication/p7',
+            },
+          },
+          { id: 4, publication_id: null },
+        ],
+        tours: [{ id: 1 }],
+      },
+    })
+  })
+
+  it('changes nothing without the Publications site or a travel layer', () => {
+    expect(withPublicationLinks(extra, null)).toBe(extra)
+    expect(withPublicationLinks({ historical_background: [] }, publications)).toEqual({ historical_background: [] })
   })
 })
