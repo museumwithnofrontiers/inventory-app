@@ -106,6 +106,10 @@ Collections can form trees. For example, a Travels structure can be represented 
 
 An Item can belong to one primary Collection and also appear in other Collections. This is how the Inventory avoids duplicating the Item when the same content appears in several editorial products.
 
+### Publication
+
+A Publication is a work MWNF or a partner published (the legacy "books"): an exhibition-trail guide, a virtual-museum catalogue, an educational guide, a gallery book. It has translations per language and context (title, subtitle, texts and the credit lines as printed), editions (one language, format, edition number, ISBN, publisher as text), covers and sample pages as images, and links to the Collections it accompanies, the Items it cites and its Tags (subjects, themes, target readers).
+
 ### Project
 
 A Project represents a content initiative or legacy project grouping. During import, a legacy project creates three related Inventory records:

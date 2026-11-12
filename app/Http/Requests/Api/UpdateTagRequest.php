@@ -27,7 +27,7 @@ class UpdateTagRequest extends FormRequest
         return [
             'id' => ['prohibited'],
             'internal_name' => ['required', 'string'],
-            'category' => ['nullable', 'string', 'in:keyword,material,artist,dynasty,subject,type,filter,image-type'],
+            'category' => ['nullable', 'string', 'in:keyword,material,artist,dynasty,subject,theme,audience,type,filter,image-type'],
             'language_id' => ['nullable', 'string', 'size:3', 'exists:languages,id'],
             'backward_compatibility' => ['nullable', 'string'],
             'description' => ['required', 'string'],

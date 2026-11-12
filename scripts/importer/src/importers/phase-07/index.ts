@@ -31,3 +31,7 @@ export { TravelsTrailPictureImporter } from './travels-trail-picture-importer.js
 export { TravelsItineraryPictureImporter } from './travels-itinerary-picture-importer.js';
 export { TravelsLocationPictureImporter } from './travels-location-picture-importer.js';
 export { TravelsMonumentPictureImporter } from './travels-monument-picture-importer.js';
+
+// Relations
+export { TravelsTrailEntryImporter } from './travels-trail-entry-importer.js';
+export { TravelsTrailPartnerImporter } from './travels-trail-partner-importer.js';

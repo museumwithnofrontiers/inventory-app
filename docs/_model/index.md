@@ -10,9 +10,9 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 45
+- ** Total Models:** 55
 - ** Database Connection:** mysql
-- ** Laravel Version:** 12.67.0
+- ** Laravel Version:** 12.72.0
 
 ## Table of Contents
 
@@ -32,6 +32,7 @@ title: Generated Model Documentation
 - [ContributorTranslation](#contributortranslation)
 - [Country](#country)
 - [CountryTranslation](#countrytranslation)
+- [DocumentUpload](#documentupload)
 - [Dynasty](#dynasty)
 - [DynastyTranslation](#dynastytranslation)
 - [Glossary](#glossary)
@@ -45,6 +46,7 @@ title: Generated Model Documentation
 - [ItemItemLinkTranslation](#itemitemlinktranslation)
 - [ItemMedia](#itemmedia)
 - [ItemTranslation](#itemtranslation)
+- [ItemTranslationAuthor](#itemtranslationauthor)
 - [Language](#language)
 - [LanguageTranslation](#languagetranslation)
 - [Partner](#partner)
@@ -53,11 +55,19 @@ title: Generated Model Documentation
 - [PartnerTranslation](#partnertranslation)
 - [PartnerTranslationImage](#partnertranslationimage)
 - [Project](#project)
+- [Publication](#publication)
+- [PublicationCollection](#publicationcollection)
+- [PublicationDocument](#publicationdocument)
+- [PublicationEdition](#publicationedition)
+- [PublicationImage](#publicationimage)
+- [PublicationItem](#publicationitem)
+- [PublicationTranslation](#publicationtranslation)
 - [Setting](#setting)
 - [Tag](#tag)
 - [Timeline](#timeline)
 - [TimelineEvent](#timelineevent)
 - [TimelineEventImage](#timelineeventimage)
+- [TimelineEventItem](#timelineeventitem)
 - [TimelineEventTranslation](#timelineeventtranslation)
 - [User](#user)
 - [Workshop](#workshop)
@@ -258,13 +268,14 @@ const UPDATED_AT = 'updated_at';
 | `mime_type` | varchar | Unknown | Unknown |  |
 | `size` | bigint | Unknown | Unknown |  |
 | `comment` | varchar | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
 
 ### Fillable Fields
 
 ```php
-['path', 'original_name', 'mime_type', 'size', 'comment']
+['path', 'original_name', 'mime_type', 'size', 'comment', 'copyright']
 ```
 
 ### Attribute Casting
@@ -386,6 +397,7 @@ const UPDATED_AT = 'updated_at';
 - **`directPartners()`**: BelongsToMany [Partner](#partner)
 - **`associatedPartners()`**: BelongsToMany [Partner](#partner)
 - **`minorContributors()`**: BelongsToMany [Partner](#partner)
+- **`publications()`**: BelongsToMany [Publication](#publication)
 
 ### Query Scopes
 
@@ -430,6 +442,7 @@ const UPDATED_AT = 'updated_at';
 | `mime_type` | varchar | Unknown | Unknown |  |
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -438,7 +451,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['collection_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'display_order', 'extra']
+['collection_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order', 'extra']
 ```
 
 ### Attribute Casting
@@ -452,6 +465,7 @@ const UPDATED_AT = 'updated_at';
 ### Model Constants
 
 ```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```
@@ -839,6 +853,7 @@ const UPDATED_AT = 'updated_at';
 | `mime_type` | varchar | Unknown | Unknown |  |
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -846,7 +861,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['contributor_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'display_order']
+['contributor_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
 ```
 
 ### Attribute Casting
@@ -859,6 +874,7 @@ const UPDATED_AT = 'updated_at';
 ### Model Constants
 
 ```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```
@@ -1029,6 +1045,70 @@ const UPDATED_AT = 'updated_at';
 - **`forLanguage()`**
 
 
+## DocumentUpload {#documentupload}
+
+**Namespace:** `App\Models\DocumentUpload`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `document_uploads` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `item_id` | char | Unknown | Unknown |  |
+| `publication_id` | char | Unknown | Unknown |  |
+| `publication_edition_id` | char | Unknown | Unknown |  |
+| `kind` | varchar | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `path` | varchar | Unknown | Unknown |  |
+| `original_name` | varchar | Unknown | Unknown |  |
+| `mime_type` | varchar | Unknown | Unknown |  |
+| `size` | bigint | Unknown | Unknown |  |
+| `title` | varchar | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `uploaded_by` | bigint | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['item_id', 'publication_id', 'publication_edition_id', 'kind', 'language_id', 'path', 'original_name', 'mime_type', 'size', 'title', 'display_order', 'uploaded_by']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `size` | `integer` |
+| `display_order` | `integer` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`item()`**: BelongsTo [Item](#item)
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`publicationEdition()`**: BelongsTo [PublicationEdition](#publicationedition)
+- **`language()`**: BelongsTo [Language](#language)
+- **`uploadedByUser()`**: BelongsTo [User](#user)
+
+
 ## Dynasty {#dynasty}
 
 **Namespace:** `App\Models\Dynasty`
@@ -1152,6 +1232,9 @@ const UPDATED_AT = 'updated_at';
 - **`translator()`**: BelongsTo [Author](#author)
 - **`translationCopyEditor()`**: BelongsTo [Author](#author)
 
+#### Belongs To Many
+- **`spellings()`**: BelongsToMany [GlossarySpelling](#glossaryspelling)
+
 ### Query Scopes
 
 - **`forLanguage()`**
@@ -1253,6 +1336,7 @@ const UPDATED_AT = 'updated_at';
 - **`itemTranslations()`**: BelongsToMany [ItemTranslation](#itemtranslation)
 - **`collectionTranslations()`**: BelongsToMany [CollectionTranslation](#collectiontranslation)
 - **`timelineEventTranslations()`**: BelongsToMany [TimelineEventTranslation](#timelineeventtranslation)
+- **`dynastyTranslations()`**: BelongsToMany [DynastyTranslation](#dynastytranslation)
 
 ### Query Scopes
 
@@ -1384,8 +1468,8 @@ const UPDATED_AT = 'updated_at';
 | `collection_id` | char | Unknown | Unknown |  |
 | `owner_reference` | varchar | Unknown | Unknown |  |
 | `mwnf_reference` | varchar | Unknown | Unknown |  |
-| `start_date` | smallint | Unknown | Unknown |  |
-| `end_date` | smallint | Unknown | Unknown |  |
+| `start_date` | int | Unknown | Unknown |  |
+| `end_date` | int | Unknown | Unknown |  |
 | `latitude` | decimal | Unknown | Unknown |  |
 | `longitude` | decimal | Unknown | Unknown |  |
 | `map_zoom` | int | Unknown | Unknown |  |
@@ -1440,6 +1524,7 @@ const UPDATED_AT = 'updated_at';
 - **`dynasties()`**: BelongsToMany [Dynasty](#dynasty)
 - **`timelineEvents()`**: BelongsToMany [TimelineEvent](#timelineevent)
 - **`attachedToCollections()`**: BelongsToMany [Collection](#collection)
+- **`publications()`**: BelongsToMany [Publication](#publication)
 
 ### Query Scopes
 
@@ -1542,6 +1627,7 @@ const UPDATED_AT = 'updated_at';
 | `mime_type` | varchar | Unknown | Unknown |  |
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -1549,7 +1635,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'display_order']
+['item_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
 ```
 
 ### Attribute Casting
@@ -1562,6 +1648,7 @@ const UPDATED_AT = 'updated_at';
 ### Model Constants
 
 ```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```
@@ -1771,9 +1858,9 @@ const UPDATED_AT = 'updated_at';
 | `language_id` | varchar | Unknown | Unknown |  |
 | `context_id` | char | Unknown | Unknown |  |
 | `name` | varchar | Unknown | Unknown |  |
-| `alternate_name` | varchar | Unknown | Unknown |  |
+| `alternate_name` | text | Unknown | Unknown |  |
 | `description` | text | Unknown | Unknown |  |
-| `type` | varchar | Unknown | Unknown |  |
+| `type` | text | Unknown | Unknown |  |
 | `holder` | text | Unknown | Unknown |  |
 | `owner` | text | Unknown | Unknown |  |
 | `initial_owner` | text | Unknown | Unknown |  |
@@ -1829,6 +1916,11 @@ const UPDATED_AT = 'updated_at';
 - **`siblingTranslations()`**: HasMany [ItemTranslation](#itemtranslation)
 
 #### Belongs To Many
+- **`credits()`**: BelongsToMany [Author](#author)
+- **`authorCredits()`**: BelongsToMany [Author](#author)
+- **`textCopyEditorCredits()`**: BelongsToMany [Author](#author)
+- **`translatorCredits()`**: BelongsToMany [Author](#author)
+- **`translationCopyEditorCredits()`**: BelongsToMany [Author](#author)
 - **`spellings()`**: BelongsToMany [GlossarySpelling](#glossaryspelling)
 
 ### Query Scopes
@@ -1836,6 +1928,58 @@ const UPDATED_AT = 'updated_at';
 - **`defaultContext()`**
 - **`forLanguage()`**
 - **`forContext()`**
+
+
+## ItemTranslationAuthor {#itemtranslationauthor}
+
+**Namespace:** `App\Models\ItemTranslationAuthor`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `item_translation_author` |
+| **Primary Key** | `id` |
+| **Key Type** | Auto-incrementing Integer |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `item_translation_id` | char | Unknown | Unknown |  |
+| `role` | varchar | Unknown | Unknown |  |
+| `author_id` | char | Unknown | Unknown |  |
+| `display_order` | smallint | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['item_translation_id', 'author_id', 'role', 'display_order']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `role` | `App\Enums\CreditRole` |
+| `display_order` | `integer` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`itemTranslation()`**: BelongsTo [ItemTranslation](#itemtranslation)
+- **`author()`**: BelongsTo [Author](#author)
 
 
 ## Language {#language}
@@ -2050,6 +2194,7 @@ const UPDATED_AT = 'updated_at';
 | `mime_type` | varchar | Unknown | Unknown |  |
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -2058,7 +2203,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'display_order', 'extra']
+['partner_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order', 'extra']
 ```
 
 ### Attribute Casting
@@ -2072,6 +2217,7 @@ const UPDATED_AT = 'updated_at';
 ### Model Constants
 
 ```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```
@@ -2108,6 +2254,7 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `logo_type` | varchar | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2115,7 +2262,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_id', 'path', 'original_name', 'mime_type', 'size', 'logo_type', 'alt_text', 'display_order']
+['partner_id', 'path', 'original_name', 'mime_type', 'size', 'logo_type', 'alt_text', 'copyright', 'display_order']
 ```
 
 ### Attribute Casting
@@ -2128,6 +2275,7 @@ const UPDATED_AT = 'updated_at';
 ### Model Constants
 
 ```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```
@@ -2176,6 +2324,7 @@ const UPDATED_AT = 'updated_at';
 | `contact_email_general` | varchar | Unknown | Unknown |  |
 | `contact_email_press` | varchar | Unknown | Unknown |  |
 | `contact_phone` | varchar | Unknown | Unknown |  |
+| `contact_fax` | varchar | Unknown | Unknown |  |
 | `contact_website` | varchar | Unknown | Unknown |  |
 | `contact_notes` | text | Unknown | Unknown |  |
 | `contact_emails` | json | Unknown | Unknown |  |
@@ -2188,7 +2337,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_id', 'language_id', 'context_id', 'name', 'description', 'city_display', 'address_line_1', 'address_line_2', 'postal_code', 'address_notes', 'contact_name', 'contact_email_general', 'contact_email_press', 'contact_phone', 'contact_website', 'contact_notes', 'contact_emails', 'contact_phones', 'backward_compatibility', 'extra']
+['partner_id', 'language_id', 'context_id', 'name', 'description', 'city_display', 'address_line_1', 'address_line_2', 'postal_code', 'address_notes', 'contact_name', 'contact_email_general', 'contact_email_press', 'contact_phone', 'contact_fax', 'contact_website', 'contact_notes', 'contact_emails', 'contact_phones', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
@@ -2249,6 +2398,7 @@ const UPDATED_AT = 'updated_at';
 | `mime_type` | varchar | Unknown | Unknown |  |
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2256,7 +2406,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_translation_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'display_order']
+['partner_translation_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
 ```
 
 ### Attribute Casting
@@ -2269,6 +2419,7 @@ const UPDATED_AT = 'updated_at';
 ### Model Constants
 
 ```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```
@@ -2303,6 +2454,10 @@ const UPDATED_AT = 'updated_at';
 | `launch_date` | date | Unknown | Unknown |  |
 | `is_launched` | tinyint | Unknown | Unknown |  |
 | `is_enabled` | tinyint | Unknown | Unknown |  |
+| `site_url` | varchar | Unknown | Unknown |  |
+| `related_database_url` | varchar | Unknown | Unknown |  |
+| `artistic_introduction_url` | varchar | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
 | `context_id` | char | Unknown | Unknown |  |
@@ -2311,7 +2466,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['internal_name', 'backward_compatibility', 'launch_date', 'is_launched', 'is_enabled', 'context_id', 'language_id']
+['internal_name', 'backward_compatibility', 'launch_date', 'is_launched', 'is_enabled', 'site_url', 'related_database_url', 'artistic_introduction_url', 'copyright', 'context_id', 'language_id']
 ```
 
 ### Attribute Casting
@@ -2349,6 +2504,447 @@ const UPDATED_AT = 'updated_at';
 - **`isLaunchDatePassed()`**
 - **`visible()`**
 - **`enabled()`**
+
+
+## Publication {#publication}
+
+**Namespace:** `App\Models\Publication`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publications` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `internal_name` | varchar | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `category` | varchar | Unknown | Unknown |  |
+| `project_id` | char | Unknown | Unknown |  |
+| `country_id` | varchar | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `status` | varchar | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['internal_name', 'backward_compatibility', 'category', 'project_id', 'country_id', 'language_id', 'status', 'display_order', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `category` | `App\Enums\PublicationCategory` |
+| `status` | `App\Enums\PublicationStatus` |
+| `display_order` | `integer` |
+| `extra` | `object` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`project()`**: BelongsTo [Project](#project)
+- **`country()`**: BelongsTo [Country](#country)
+- **`language()`**: BelongsTo [Language](#language)
+
+#### Has Many
+- **`translations()`**: HasMany [PublicationTranslation](#publicationtranslation)
+- **`editions()`**: HasMany [PublicationEdition](#publicationedition)
+- **`publicationImages()`**: HasMany [PublicationImage](#publicationimage)
+- **`documents()`**: HasMany [PublicationDocument](#publicationdocument)
+
+#### Belongs To Many
+- **`collections()`**: BelongsToMany [Collection](#collection)
+- **`items()`**: BelongsToMany [Item](#item)
+- **`tags()`**: BelongsToMany [Tag](#tag)
+
+
+## PublicationCollection {#publicationcollection}
+
+**Namespace:** `App\Models\PublicationCollection`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publication_collection` |
+| **Primary Key** | `id` |
+| **Key Type** | Auto-incrementing Integer |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `publication_id` | char | Unknown | Unknown |  |
+| `collection_id` | char | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['publication_id', 'collection_id', 'display_order', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `display_order` | `integer` |
+| `extra` | `array` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`collection()`**: BelongsTo [Collection](#collection)
+
+
+## PublicationDocument {#publicationdocument}
+
+**Namespace:** `App\Models\PublicationDocument`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publication_documents` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `publication_id` | char | Unknown | Unknown |  |
+| `publication_edition_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `kind` | varchar | Unknown | Unknown |  |
+| `path` | varchar | Unknown | Unknown |  |
+| `original_name` | varchar | Unknown | Unknown |  |
+| `mime_type` | varchar | Unknown | Unknown |  |
+| `size` | bigint | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['publication_id', 'publication_edition_id', 'language_id', 'kind', 'path', 'original_name', 'mime_type', 'size', 'display_order', 'backward_compatibility', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `kind` | `App\Enums\PublicationDocumentKind` |
+| `size` | `integer` |
+| `display_order` | `integer` |
+| `extra` | `object` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`publicationEdition()`**: BelongsTo [PublicationEdition](#publicationedition)
+- **`language()`**: BelongsTo [Language](#language)
+
+
+## PublicationEdition {#publicationedition}
+
+**Namespace:** `App\Models\PublicationEdition`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publication_editions` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `publication_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `format` | varchar | Unknown | Unknown |  |
+| `edition` | int | Unknown | Unknown |  |
+| `publish_year` | smallint | Unknown | Unknown |  |
+| `isbn` | varchar | Unknown | Unknown |  |
+| `publisher` | varchar | Unknown | Unknown |  |
+| `page_count` | int | Unknown | Unknown |  |
+| `image_count` | int | Unknown | Unknown |  |
+| `plan_count` | int | Unknown | Unknown |  |
+| `dimensions` | varchar | Unknown | Unknown |  |
+| `binding` | varchar | Unknown | Unknown |  |
+| `visible` | tinyint | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['publication_id', 'language_id', 'format', 'edition', 'publish_year', 'isbn', 'publisher', 'page_count', 'image_count', 'plan_count', 'dimensions', 'binding', 'visible', 'display_order', 'backward_compatibility', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `format` | `App\Enums\PublicationFormat` |
+| `edition` | `integer` |
+| `publish_year` | `integer` |
+| `page_count` | `integer` |
+| `image_count` | `integer` |
+| `plan_count` | `integer` |
+| `visible` | `boolean` |
+| `display_order` | `integer` |
+| `extra` | `object` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`language()`**: BelongsTo [Language](#language)
+
+#### Has Many
+- **`publicationImages()`**: HasMany [PublicationImage](#publicationimage)
+
+
+## PublicationImage {#publicationimage}
+
+**Namespace:** `App\Models\PublicationImage`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publication_images` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `publication_id` | char | Unknown | Unknown |  |
+| `publication_edition_id` | char | Unknown | Unknown |  |
+| `kind` | varchar | Unknown | Unknown |  |
+| `path` | varchar | Unknown | Unknown |  |
+| `original_name` | varchar | Unknown | Unknown |  |
+| `mime_type` | varchar | Unknown | Unknown |  |
+| `size` | bigint | Unknown | Unknown |  |
+| `alt_text` | varchar | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['publication_id', 'publication_edition_id', 'kind', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `kind` | `App\Enums\PublicationImageKind` |
+| `size` | `integer` |
+| `display_order` | `integer` |
+| `extra` | `array` |
+
+### Model Constants
+
+```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`publicationEdition()`**: BelongsTo [PublicationEdition](#publicationedition)
+
+
+## PublicationItem {#publicationitem}
+
+**Namespace:** `App\Models\PublicationItem`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publication_item` |
+| **Primary Key** | `id` |
+| **Key Type** | Auto-incrementing Integer |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `publication_id` | char | Unknown | Unknown |  |
+| `item_id` | char | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['publication_id', 'item_id', 'display_order', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `display_order` | `integer` |
+| `extra` | `array` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`item()`**: BelongsTo [Item](#item)
+
+
+## PublicationTranslation {#publicationtranslation}
+
+**Namespace:** `App\Models\PublicationTranslation`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publication_translations` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `publication_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `context_id` | char | Unknown | Unknown |  |
+| `title` | varchar | Unknown | Unknown |  |
+| `subtitle` | varchar | Unknown | Unknown |  |
+| `description` | text | Unknown | Unknown |  |
+| `introduction` | text | Unknown | Unknown |  |
+| `author_credit` | text | Unknown | Unknown |  |
+| `photography_credit` | text | Unknown | Unknown |  |
+| `coordination_credit` | text | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['publication_id', 'language_id', 'context_id', 'title', 'subtitle', 'description', 'introduction', 'author_credit', 'photography_credit', 'coordination_credit', 'backward_compatibility', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `extra` | `object` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`language()`**: BelongsTo [Language](#language)
+- **`context()`**: BelongsTo [Context](#context)
+
+#### Has Many
+- **`siblingTranslations()`**: HasMany [PublicationTranslation](#publicationtranslation)
 
 
 ## Setting {#setting}
@@ -2448,6 +3044,7 @@ const UPDATED_AT = 'updated_at';
 - **`items()`**: BelongsToMany [Item](#item)
 - **`collectionImages()`**: BelongsToMany [CollectionImage](#collectionimage)
 - **`itemImages()`**: BelongsToMany [ItemImage](#itemimage)
+- **`publications()`**: BelongsToMany [Publication](#publication)
 
 ### Query Scopes
 
@@ -2610,6 +3207,7 @@ const UPDATED_AT = 'updated_at';
 | `mime_type` | varchar | Unknown | Unknown |  |
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
+| `copyright` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2617,7 +3215,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['timeline_event_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'display_order']
+['timeline_event_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
 ```
 
 ### Attribute Casting
@@ -2630,6 +3228,7 @@ const UPDATED_AT = 'updated_at';
 ### Model Constants
 
 ```php
+const GLOBAL_FALLBACK = '© Museum With No Frontiers';
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```
@@ -2638,6 +3237,59 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To
 - **`timelineEvent()`**: BelongsTo [TimelineEvent](#timelineevent)
+
+
+## TimelineEventItem {#timelineeventitem}
+
+**Namespace:** `App\Models\TimelineEventItem`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `timeline_event_item` |
+| **Primary Key** | `id` |
+| **Key Type** | Auto-incrementing Integer |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `timeline_event_id` | char | Unknown | Unknown |  |
+| `item_id` | char | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['timeline_event_id', 'item_id', 'display_order', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `display_order` | `integer` |
+| `extra` | `array` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`timelineEvent()`**: BelongsTo [TimelineEvent](#timelineevent)
+- **`item()`**: BelongsTo [Item](#item)
 
 
 ## TimelineEventTranslation {#timelineeventtranslation}
@@ -2763,8 +3415,12 @@ const UPDATED_AT = 'updated_at';
 
 ### Relationships
 
+#### Has Many
+- **`clients()`**: HasMany [AuthorizationCodeClient](#authorizationcodeclient)
+- **`tokens()`**: HasMany [Token](#token)
+
 #### Morph Many
-- **`tokens()`**: MorphMany [PersonalAccessToken](#personalaccesstoken)
+- **`oauthApps()`**: MorphMany [AuthorizationCodeClient](#authorizationcodeclient)
 - **`notifications()`**: MorphMany [DatabaseNotification](#databasenotification)
 - **`readNotifications()`**: MorphMany [DatabaseNotification](#databasenotification)
 - **`unreadNotifications()`**: MorphMany [DatabaseNotification](#databasenotification)
@@ -2773,6 +3429,8 @@ const UPDATED_AT = 'updated_at';
 
 - **`role()`**
 - **`withoutRole()`**
+- **`team()`**
+- **`withoutTeam()`**
 - **`permission()`**
 - **`withoutPermission()`**
 

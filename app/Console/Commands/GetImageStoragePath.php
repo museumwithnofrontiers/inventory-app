@@ -14,7 +14,7 @@ class GetImageStoragePath extends Command
      * @var string
      */
     protected $signature = 'storage:image-path 
-                            {type=pictures : The image storage type (uploads, available, or pictures)}
+                            {type=pictures : The storage type (uploads, available, pictures, or documents)}
                             {--json : Output as JSON}';
 
     /**
@@ -32,8 +32,8 @@ class GetImageStoragePath extends Command
         $type = $this->argument('type');
 
         // Validate type
-        if (! in_array($type, ['uploads', 'available', 'pictures'])) {
-            $this->error("Invalid storage type '{$type}'. Valid types are: uploads, available, pictures");
+        if (! in_array($type, ['uploads', 'available', 'pictures', 'documents'])) {
+            $this->error("Invalid storage type '{$type}'. Valid types are: uploads, available, pictures, documents");
 
             return 1;
         }
@@ -87,6 +87,11 @@ class GetImageStoragePath extends Command
             'pictures' => [
                 Config::string('localstorage.pictures.disk'),
                 Config::string('localstorage.pictures.directory'),
+            ],
+            // The private document-originals disk: where ship pushes the staged PDFs (ADR 004).
+            'documents' => [
+                Config::string('localstorage.documents.disk'),
+                Config::string('localstorage.documents.directory'),
             ],
             default => throw new \InvalidArgumentException("Unsupported image storage type: {$type}"),
         };

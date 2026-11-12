@@ -10,6 +10,7 @@ use App\Models\ItemImage;
 use App\Models\PartnerImage;
 use App\Models\PartnerLogo;
 use App\Models\PartnerTranslationImage;
+use App\Models\PublicationImage;
 use App\Models\TimelineEventImage;
 use App\Traits\DeletesImageFilesOnDelete;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,7 @@ class AttachedImageRegistry
         PartnerTranslationImage::class,
         ContributorImage::class,
         TimelineEventImage::class,
+        PublicationImage::class,
         PartnerLogo::class,
     ];
 
@@ -92,7 +94,7 @@ class AttachedImageRegistry
     /**
      * Find the registered model instance owning the given path, checking
      * each registered table in turn. Short-circuits on the first match -
-     * cheap thanks to A0.1's index on path across all 7 registry tables.
+     * cheap thanks to the index on path every registry table has.
      *
      * @return (Model&StreamableImageFile)|null
      */

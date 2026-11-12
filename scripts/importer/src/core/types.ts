@@ -72,7 +72,10 @@ export type EntityType =
   | 'collection_media'
   | 'item_document'
   | 'contributor'
-  | 'contributor_translation';
+  | 'contributor_translation'
+  | 'publication'
+  | 'publication_translation'
+  | 'publication_edition';
 
 /**
  * Imported entity record for tracking
@@ -678,7 +681,7 @@ export interface ContributorImageData {
 }
 
 /**
- * The six tables with no backward_compatibility column. An image row's
+ * The tables with no backward_compatibility column. An image row's
  * identity is (owner id, legacy path) instead — see
  * SqlWriteStrategy.imageExists() / computeImageId().
  */
@@ -688,4 +691,98 @@ export type ImageTable =
   | 'partner_logos'
   | 'collection_images'
   | 'contributor_images'
-  | 'timeline_event_images';
+  | 'timeline_event_images'
+  | 'publication_images';
+
+// ===========================================================================
+// Publications (phase 12)
+// ===========================================================================
+
+/** A publication (legacy bookbase): the work. */
+export interface PublicationData extends BaseEntityData {
+  category: string; // exhibition-trail, virtual-museum, educational, gallery, other
+  project_id: string | null;
+  country_id: string | null;
+  language_id: string; // the work's main language
+  status: string; // published, in-preparation
+  display_order?: number | null;
+  extra?: string | null; // JSON
+}
+
+/** A publication's texts in one language and context. */
+export interface PublicationTranslationData {
+  publication_id: string;
+  language_id: string;
+  context_id: string;
+  backward_compatibility: string;
+  title: string;
+  subtitle?: string | null;
+  description?: string | null;
+  introduction?: string | null;
+  author_credit?: string | null;
+  photography_credit?: string | null;
+  coordination_credit?: string | null;
+  extra?: string | null; // JSON
+}
+
+/** A publication edition (legacy books row): one language, format and edition. */
+export interface PublicationEditionData {
+  publication_id: string;
+  language_id: string;
+  backward_compatibility: string;
+  format: string; // print, print-on-demand, ebook
+  edition: number | null;
+  publish_year: number | null;
+  isbn?: string | null;
+  publisher?: string | null;
+  page_count?: number | null;
+  image_count?: number | null;
+  plan_count?: number | null;
+  dimensions?: string | null;
+  binding?: string | null;
+  visible: boolean;
+  display_order?: number | null;
+  extra?: string | null; // JSON
+}
+
+/** A publication cover or page image (size 1 until image-sync fetches the file). */
+export interface PublicationImageData {
+  id?: string;
+  publication_id: string;
+  publication_edition_id: string | null;
+  kind: 'cover' | 'page';
+  path: string;
+  original_name: string;
+  mime_type: string;
+  size: number;
+  alt_text?: string | null;
+  copyright?: string | null;
+  display_order: number;
+  extra?: string | null; // JSON
+}
+
+/** A row of publication_collection, publication_item or publication_tag. */
+export interface PublicationRelationData {
+  publication_id: string;
+  related_id: string;
+  display_order?: number | null;
+  extra?: Record<string, unknown> | null;
+}
+
+/** A publication's sample or credits PDF (size 1 until document-sync copies the file). */
+export interface PublicationDocumentData {
+  publication_id: string;
+  publication_edition_id: string | null;
+  language_id: string | null;
+  kind: 'sample' | 'credits';
+  path: string;
+  original_name: string;
+  mime_type: string;
+  size: number;
+  display_order: number;
+  backward_compatibility: string;
+  extra?: string | null; // JSON
+}
+
+export type PublicationRelationTable =
+  'publication_collection' | 'publication_item' | 'publication_tag';

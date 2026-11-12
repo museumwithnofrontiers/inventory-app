@@ -153,6 +153,12 @@ describe('LanguageImporter', () => {
       findItemsWithoutCountryByBackwardCompatibilityPrefix: vi.fn().mockResolvedValue([]),
       getCollectionImageExtra: vi.fn().mockResolvedValue(null),
       setCollectionImageExtra: vi.fn(),
+      writePublication: vi.fn(),
+      writePublicationTranslation: vi.fn(),
+      writePublicationEdition: vi.fn(),
+      writePublicationImage: vi.fn(),
+      writePublicationRelation: vi.fn(),
+      writePublicationDocument: vi.fn(),
     };
 
     // Create tracker
@@ -390,6 +396,12 @@ describe('LanguageTranslationImporter', () => {
       findItemsWithoutCountryByBackwardCompatibilityPrefix: vi.fn().mockResolvedValue([]),
       getCollectionImageExtra: vi.fn().mockResolvedValue(null),
       setCollectionImageExtra: vi.fn(),
+      writePublication: vi.fn(),
+      writePublicationTranslation: vi.fn(),
+      writePublicationEdition: vi.fn(),
+      writePublicationImage: vi.fn(),
+      writePublicationRelation: vi.fn(),
+      writePublicationDocument: vi.fn(),
     };
 
     tracker = new UnifiedTracker();

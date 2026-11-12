@@ -40,6 +40,8 @@ class TagResource extends Resource
         'artist' => 'Artist',
         'dynasty' => 'Dynasty',
         'subject' => 'Subject',
+        'theme' => 'Theme',
+        'audience' => 'Audience',
         'type' => 'Type',
         'filter' => 'Filter',
         'image-type' => 'Image type',

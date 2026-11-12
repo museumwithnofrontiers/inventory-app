@@ -8,6 +8,7 @@ use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsR
 use App\Filament\Resources\CollectionResource\RelationManagers\ImagesRelationManager as CollectionImagesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager as CollectionPartnersRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager as CollectionPublicationsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
 use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\RelationManagers\SiblingTranslationsRelationManager as CollectionTranslationSiblingTranslationsRelationManager;
@@ -30,6 +31,7 @@ use App\Filament\Resources\ItemResource\RelationManagers\IncomingLinksRelationMa
 use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationManager;
+use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationManager as ItemPublicationsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
@@ -54,6 +56,16 @@ use App\Filament\Resources\ProjectResource\Pages\EditProject;
 use App\Filament\Resources\ProjectResource\RelationManagers\CollectionsRelationManager as ProjectCollectionsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\ItemsRelationManager as ProjectItemsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager as ProjectPartnersRelationManager;
+use App\Filament\Resources\PublicationResource\Pages\EditPublication;
+use App\Filament\Resources\PublicationResource\RelationManagers\CollectionsRelationManager as PublicationCollectionsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\DocumentsRelationManager as PublicationDocumentsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\EditionsRelationManager as PublicationEditionsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\ImagesRelationManager as PublicationImagesRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\ItemsRelationManager as PublicationItemsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\TagsRelationManager as PublicationTagsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\TranslationsRelationManager as PublicationTranslationsRelationManager;
+use App\Filament\Resources\PublicationTranslationResource\Pages\EditPublicationTranslation;
+use App\Filament\Resources\PublicationTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PublicationTranslationSiblingTranslationsRelationManager;
 use App\Filament\Resources\RoleResource\Pages\EditRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
@@ -75,6 +87,8 @@ use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerTranslation;
 use App\Models\Project;
+use App\Models\Publication;
+use App\Models\PublicationTranslation;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\User;
@@ -206,15 +220,25 @@ class RelationManagerConventionTest extends TestCase
         TextCopyEditorCreditsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'itemtranslation', 'edit' => true],
         TranslatorCreditsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'itemtranslation', 'edit' => true],
         TranslationCopyEditorCreditsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'itemtranslation', 'edit' => true],
+        PublicationCollectionsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'publication', 'edit' => true],
+        PublicationItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'publication', 'edit' => true],
+        PublicationTagsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'publication', 'edit' => false],
+        CollectionPublicationsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true],
+        ItemPublicationsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => true],
 
         // ── translations ──────────────────────────────────────────────
         CollectionTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'collection', 'viewParent' => 'viewParentCollection'],
         ItemTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'item', 'viewParent' => 'viewParentItem'],
         PartnerTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'partner', 'viewParent' => 'viewParentPartner'],
+        PublicationTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'publication', 'viewParent' => 'viewParentPublication'],
 
         // ── inline ────────────────────────────────────────────────────
         MediaRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'media'],
         DocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'documents'],
+        // Editions have no Resource of their own: the inline Create/Edit modal, as Media (#2527)
+        PublicationEditionsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'editions'],
+        // The publication's PDFs, on the item documents' pipeline and convention (#2547)
+        PublicationDocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'documents'],
 
         // ── pinned: the three original Images managers + the two Item Links managers ──
         CollectionImagesRelationManager::class => [
@@ -247,6 +271,10 @@ class RelationManagerConventionTest extends TestCase
             'kind' => self::KIND_PINNED, 'owner' => 'timelineevent',
             'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
         ],
+        PublicationImagesRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'publication',
+            'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
+        ],
 
         // ── pinned: BaseSiblingTranslationsRelationManager — shared base class, its own read-only shape ──
         CollectionTranslationSiblingTranslationsRelationManager::class => [
@@ -259,6 +287,10 @@ class RelationManagerConventionTest extends TestCase
         ],
         PartnerTranslationSiblingTranslationsRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'partnertranslation',
+            'pinnedHeader' => [], 'pinnedRow' => ['viewTranslation', 'editTranslation'], 'pinnedBulk' => [],
+        ],
+        PublicationTranslationSiblingTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'publicationtranslation',
             'pinnedHeader' => [], 'pinnedRow' => ['viewTranslation', 'editTranslation'], 'pinnedBulk' => [],
         ],
 
@@ -507,13 +539,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 7 has-many + 15 pivot + 3 translations + 2 inline + 19 pinned = 46.
+        // 7 has-many + 20 pivot + 4 translations + 4 inline + 21 pinned = 56.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(46, self::allManagers());
+        $this->assertCount(56, self::allManagers());
     }
 
     private function classify(string $class): array
@@ -652,7 +684,7 @@ class RelationManagerConventionTest extends TestCase
     private function assertInlineConvention(string $class, array $config): void
     {
         match ($config['variant']) {
-            'media' => $this->assertMediaConvention($class, $config),
+            'media', 'editions' => $this->assertMediaConvention($class, $config),
             'documents' => $this->assertDocumentsConvention($class, $config),
             default => Assert::fail("{$class}: unknown inline variant [{$config['variant']}] in RelationManagerConventionTest::CLASSIFICATION."),
         };
@@ -1005,6 +1037,8 @@ class RelationManagerConventionTest extends TestCase
             'collectiontranslation' => EditCollectionTranslation::class,
             'itemtranslation' => EditItemTranslation::class,
             'partnertranslation' => EditPartnerTranslation::class,
+            'publication' => EditPublication::class,
+            'publicationtranslation' => EditPublicationTranslation::class,
             default => throw new InvalidArgumentException("Unknown owner resource [{$owner}]."),
         };
 
@@ -1023,6 +1057,8 @@ class RelationManagerConventionTest extends TestCase
             'collectiontranslation' => $this->makeCollectionTranslation(),
             'itemtranslation' => $this->makeItemTranslation(),
             'partnertranslation' => $this->makePartnerTranslation(),
+            'publication' => $this->makePublication(),
+            'publicationtranslation' => $this->makePublicationTranslation(),
         };
 
         return [$this->ownerCache[$owner], $pageClass];
@@ -1126,5 +1162,15 @@ class RelationManagerConventionTest extends TestCase
     private function makePartnerTranslation(): PartnerTranslation
     {
         return PartnerTranslation::factory()->create();
+    }
+
+    private function makePublication(): Publication
+    {
+        return Publication::factory()->create();
+    }
+
+    private function makePublicationTranslation(): PublicationTranslation
+    {
+        return PublicationTranslation::factory()->create();
     }
 }

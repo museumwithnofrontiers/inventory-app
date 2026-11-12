@@ -112,6 +112,18 @@ import {
   TravelsItineraryPictureImporter,
   TravelsLocationPictureImporter,
   TravelsMonumentPictureImporter,
+  TravelsTrailEntryImporter,
+  TravelsTrailPartnerImporter,
+  // Phase 12: Publications
+  PublicationImporter,
+  PublicationTranslationImporter,
+  PublicationEditionImporter,
+  PublicationTagImporter,
+  PublicationCollectionImporter,
+  PublicationItemImporter,
+  PublicationImageImporter,
+  PublicationExploreLinkImporter,
+  PublicationDocumentImporter,
   // Phase 10: Thematic Galleries (runs last, after all other legacy DBs)
   ThgGalleryContextImporter,
   ThgRootCollectionsImporter,
@@ -837,6 +849,20 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: TravelsMonumentPictureImporter,
     dependencies: ['travels-monument'],
   },
+  {
+    key: 'travels-trail-entry',
+    name: 'Travels Trail Entries',
+    description: 'Make the Islamic Art objects and monuments of each exhibition trail its members',
+    importerClass: TravelsTrailEntryImporter,
+    dependencies: ['travels-trail', 'object', 'monument'],
+  },
+  {
+    key: 'travels-trail-partner',
+    name: 'Travels Trail Starting Points',
+    description: "Link each exhibition trail to its 'Starting point' museum",
+    importerClass: TravelsTrailPartnerImporter,
+    dependencies: ['travels-trail', 'partner'],
+  },
   // Phase 10: Thematic Galleries (runs last, after all other legacy DBs are imported)
   {
     key: 'thg-gallery-context',
@@ -1189,12 +1215,76 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: ExploreMonumentCountryBackfillImporter,
     dependencies: ['explore-monument'],
   },
+  // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)
+  {
+    key: 'publication',
+    name: 'Publications',
+    description: 'Import the publications (mwnf3.bookbase) with their category',
+    importerClass: PublicationImporter,
+    dependencies: ['project', 'language'],
+  },
+  {
+    key: 'publication-translation',
+    name: 'Publication Translations',
+    description: "Import each publication's texts per language, from its reference edition",
+    importerClass: PublicationTranslationImporter,
+    dependencies: ['publication'],
+  },
+  {
+    key: 'publication-edition',
+    name: 'Publication Editions',
+    description: 'Import the editions (mwnf3.books): language, format, edition, publisher',
+    importerClass: PublicationEditionImporter,
+    dependencies: ['publication'],
+  },
+  {
+    key: 'publication-tag',
+    name: 'Publication Tags',
+    description: 'Tag the publications with their theme, audience and subjects',
+    importerClass: PublicationTagImporter,
+    dependencies: ['publication'],
+  },
+  {
+    key: 'publication-collection',
+    name: 'Publication Trails',
+    description: 'Link each Travel Book to the exhibition trail it accompanies (ref_trail)',
+    importerClass: PublicationCollectionImporter,
+    dependencies: ['publication', 'travels-trail'],
+  },
+  {
+    key: 'publication-item',
+    name: 'Publication Items',
+    description: 'Link the objects and monuments that cite a trail book they are not an entry of',
+    importerClass: PublicationItemImporter,
+    dependencies: ['publication', 'travels-trail-entry', 'object', 'monument'],
+  },
+  {
+    key: 'publication-image',
+    name: 'Publication Images',
+    description: 'Import the covers and sample pages (mwnf3.books_pictures) for image-sync',
+    importerClass: PublicationImageImporter,
+    dependencies: ['publication-edition'],
+  },
+  {
+    key: 'publication-document',
+    name: 'Publication Documents',
+    description: "Import each edition's sample and credits PDFs for document-sync (ADR 004)",
+    importerClass: PublicationDocumentImporter,
+    dependencies: ['publication-edition'],
+  },
+  {
+    key: 'publication-explore-link',
+    name: "Explore's Travel Books → Publications",
+    description: "Give Explore's Travel Book records the publication their link names",
+    importerClass: PublicationExploreLinkImporter,
+    dependencies: ['publication', 'explore-travel'],
+  },
   {
     key: 'project-cleanup',
     name: 'Project Cleanup',
-    description: 'Remove projects that have no Items (post-import cleanup)',
+    description: 'Remove projects that have neither items nor publications (post-import cleanup)',
     importerClass: ProjectCleanupImporter,
-    dependencies: ['item-item-link'],
+    dependencies: ['item-item-link', 'publication'],
   },
 ];
 
@@ -1826,6 +1916,52 @@ program
     }
   });
 
+program
+  .command('document-sync')
+  .description(
+    'Copy the legacy PDFs of item and publication documents (size=1 placeholder) into the documents directory (ADR 004)'
+  )
+  .requiredOption('--target-dir <path>', 'Target documents directory (the staging documents volume)')
+  .option('--dry-run', 'Simulate synchronization without making changes', false)
+  .action(async (options) => {
+    const logger = new FileLogger('DocumentSync', 'logs');
+    try {
+      const legacyImagesRoot =
+        process.env['LEGACY_IMAGES_ROOT'] || 'C:\\mwnf-server\\pictures\\images';
+      console.log(chalk.bold.cyan('DOCUMENT SYNCHRONIZATION'));
+      console.log(chalk.gray(`Legacy root: ${legacyImagesRoot}`));
+      console.log(chalk.gray(`Target: ${options.targetDir}`));
+      const newDb = await createNewDbConnection();
+      // The PDFs sit on the legacy image share, beside the pictures: the same
+      // copy-and-rename as image-sync, into the documents volume.
+      const tool = new ImageSyncTool(
+        newDb.getConnection(),
+        {
+          useSymlink: false,
+          legacyImagesRoot,
+          newImagesRoot: options.targetDir as string,
+          clearDestination: false,
+          dryRun: options.dryRun === true,
+          tables: ['item_documents', 'publication_documents'],
+        },
+        logger
+      );
+      const result = await tool.run();
+      await newDb.end();
+      console.log(
+        chalk[result.success ? 'green' : 'yellow'](
+          `Document sync: ${result.imported} synchronized, ${result.skipped} skipped, ${result.errors.length} errors`
+        )
+      );
+      for (const err of result.errors) logger.error('DocumentSync', err);
+      result.errors.slice(0, 10).forEach((err) => console.log(chalk.red(`  - ${err}`)));
+      process.exit(result.success ? 0 : 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red(`Document sync failed: ${message}`));
+      process.exit(1);
+    }
+  });
 program
   .command('image-sync')
   .description(

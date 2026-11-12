@@ -9,6 +9,7 @@ use App\Models\ItemImage;
 use App\Models\PartnerImage;
 use App\Models\PartnerLogo;
 use App\Models\PartnerTranslationImage;
+use App\Models\PublicationImage;
 use App\Models\TimelineEventImage;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,6 +33,7 @@ class CopyrightFieldTest extends TestCase
             [PartnerTranslationImage::class],
             [ContributorImage::class],
             [TimelineEventImage::class],
+            [PublicationImage::class],
             [PartnerLogo::class],
         ];
     }

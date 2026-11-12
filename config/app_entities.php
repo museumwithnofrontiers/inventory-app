@@ -18,6 +18,8 @@ return [
         'artist' => 'purple',
         'dynasty' => 'yellow',
         'subject' => 'indigo',
+        'theme' => 'orange',
+        'audience' => 'cyan',
         'type' => 'gray',
         'filter' => 'red',
         'image-type' => 'green',

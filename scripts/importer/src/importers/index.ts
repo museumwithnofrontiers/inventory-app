@@ -138,6 +138,8 @@ export {
   TravelsItineraryPictureImporter,
   TravelsLocationPictureImporter,
   TravelsMonumentPictureImporter,
+  TravelsTrailEntryImporter,
+  TravelsTrailPartnerImporter,
 } from './phase-07/index.js';
 
 // Phase 08: Media & Documents
@@ -163,3 +165,16 @@ export {
   ExhibitionI18nTextBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
 } from './phase-11/index.js';
+
+// Phase 12: Publications
+export {
+  PublicationImporter,
+  PublicationTranslationImporter,
+  PublicationEditionImporter,
+  PublicationTagImporter,
+  PublicationCollectionImporter,
+  PublicationItemImporter,
+  PublicationImageImporter,
+  PublicationExploreLinkImporter,
+  PublicationDocumentImporter,
+} from './phase-12/index.js';

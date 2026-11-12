@@ -38,6 +38,11 @@ use App\Http\Controllers\PartnerLogoController;
 use App\Http\Controllers\PartnerTranslationController;
 use App\Http\Controllers\PartnerTranslationImageController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\PublicationController;
+use App\Http\Controllers\PublicationDocumentController;
+use App\Http\Controllers\PublicationEditionController;
+use App\Http\Controllers\PublicationImageController;
+use App\Http\Controllers\PublicationTranslationController;
 use App\Http\Controllers\TagController;
 use App\Http\Controllers\TimelineController;
 use App\Http\Controllers\TimelineEventController;
@@ -240,6 +245,29 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('collection/{collection}/media', [CollectionMediaController::class, 'index'])->name('collection.media.index');
         Route::get('collection-media/{collectionMedia}', [CollectionMediaController::class, 'show'])->name('collection-media.show');
 
+        // Publication routes (read)
+        Route::get('publication/{publication}', [PublicationController::class, 'show'])->name('publication.show');
+        Route::get('publication', [PublicationController::class, 'index'])->name('publication.index');
+
+        // Publication Translation routes (read)
+        Route::get('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'show'])->name('publication-translation.show');
+        Route::get('publication-translation', [PublicationTranslationController::class, 'index'])->name('publication-translation.index');
+
+        // Publication Edition routes (read)
+        Route::get('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'show'])->name('publication-edition.show');
+        Route::get('publication-edition', [PublicationEditionController::class, 'index'])->name('publication-edition.index');
+
+        // PublicationImage routes (read)
+        Route::get('publication/{publication}/images', [PublicationImageController::class, 'index'])->name('publication.images.index');
+        Route::get('publication-image/{publicationImage}/download', [PublicationImageController::class, 'download'])->name('publication-image.download');
+        Route::get('publication-image/{publicationImage}/view', [PublicationImageController::class, 'view'])->name('publication-image.view');
+        Route::get('publication-image/{publicationImage}', [PublicationImageController::class, 'show'])->name('publication-image.show');
+
+        // PublicationDocument routes (read; the public URL is /doc/{filename})
+        Route::get('publication/{publication}/documents', [PublicationDocumentController::class, 'index'])->name('publication.documents.index');
+        Route::get('publication-document/{publicationDocument}/download', [PublicationDocumentController::class, 'download'])->name('publication-document.download');
+        Route::get('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'show'])->name('publication-document.show');
+
     });
 
     // CREATE operations - require CREATE_DATA permission
@@ -291,6 +319,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('collection/{collection}/images', [CollectionImageController::class, 'store'])->name('collection.images.store');
         Route::post('collection/{collection}/attach-image', [CollectionImageController::class, 'attachFromAvailable'])->name('collection.attachImage');
         Route::post('collection/{collection}/media', [CollectionMediaController::class, 'store'])->name('collection.media.store');
+        Route::post('publication', [PublicationController::class, 'store'])->name('publication.store');
+        Route::post('publication-translation', [PublicationTranslationController::class, 'store'])->name('publication-translation.store');
+        Route::post('publication/{publication}/images', [PublicationImageController::class, 'store'])->name('publication.images.store');
+        Route::post('publication/{publication}/attach-image', [PublicationImageController::class, 'attachFromAvailable'])->name('publication.attachImage');
     });
 
     // UPDATE operations - require UPDATE_DATA permission
@@ -438,6 +470,40 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::patch('collection/{collection}', [CollectionController::class, 'update'])->name('collection.update');
         Route::put('collection/{collection}', [CollectionController::class, 'update']);
+
+        Route::patch('publication/{publication}', [PublicationController::class, 'update'])->name('publication.update');
+        Route::put('publication/{publication}', [PublicationController::class, 'update']);
+
+        // The publication's links: changes to the publication, so update-data
+        Route::post('publication/{publication}/attach-collection', [PublicationController::class, 'attachCollection'])->name('publication.attachCollection');
+        Route::delete('publication/{publication}/detach-collection', [PublicationController::class, 'detachCollection'])->name('publication.detachCollection');
+        Route::post('publication/{publication}/attach-item', [PublicationController::class, 'attachItem'])->name('publication.attachItem');
+        Route::delete('publication/{publication}/detach-item', [PublicationController::class, 'detachItem'])->name('publication.detachItem');
+        Route::post('publication/{publication}/attach-tag', [PublicationController::class, 'attachTag'])->name('publication.attachTag');
+        Route::post('publication/{publication}/attach-tags', [PublicationController::class, 'attachTags'])->name('publication.attachTags');
+        Route::delete('publication/{publication}/detach-tag', [PublicationController::class, 'detachTag'])->name('publication.detachTag');
+        Route::delete('publication/{publication}/detach-tags', [PublicationController::class, 'detachTags'])->name('publication.detachTags');
+
+        Route::patch('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update'])->name('publication-translation.update');
+        Route::put('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update']);
+
+        // Editions have no policy of their own: every mutation is an update of the publication
+        Route::post('publication-edition', [PublicationEditionController::class, 'store'])->name('publication-edition.store');
+        Route::patch('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'update'])->name('publication-edition.update');
+        Route::put('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'update']);
+        Route::delete('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'destroy'])->name('publication-edition.destroy');
+
+        Route::patch('publication-image/{publicationImage}', [PublicationImageController::class, 'update'])->name('publication-image.update');
+        Route::put('publication-image/{publicationImage}', [PublicationImageController::class, 'update']);
+        Route::patch('publication-image/{publicationImage}/move-up', [PublicationImageController::class, 'moveUp'])->name('publication-image.moveUp');
+        Route::patch('publication-image/{publicationImage}/move-down', [PublicationImageController::class, 'moveDown'])->name('publication-image.moveDown');
+        Route::patch('publication-image/{publicationImage}/tighten-ordering', [PublicationImageController::class, 'tightenOrdering'])->name('publication-image.tightenOrdering');
+
+        // Documents have no permission of their own: every change is an update of the publication
+        Route::post('publication/{publication}/documents', [PublicationDocumentController::class, 'store'])->name('publication.documents.store');
+        Route::patch('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'update'])->name('publication-document.update');
+        Route::put('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'update']);
+        Route::delete('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'destroy'])->name('publication-document.destroy');
     });
 
     // DELETE operations - require DELETE_DATA permission
@@ -493,6 +559,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('contributor-translation/{contributorTranslation}', [ContributorTranslationController::class, 'destroy'])->name('contributor-translation.destroy');
         Route::delete('contributor-image/{contributorImage}', [ContributorImageController::class, 'destroy'])->name('contributor-image.destroy');
         Route::post('contributor-image/{contributorImage}/detach', [ContributorImageController::class, 'detachToAvailable'])->name('contributor-image.detach');
+        Route::delete('publication/{publication}', [PublicationController::class, 'destroy'])->name('publication.destroy');
+        Route::delete('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'destroy'])->name('publication-translation.destroy');
+        Route::delete('publication-image/{publicationImage}', [PublicationImageController::class, 'destroy'])->name('publication-image.destroy');
+        Route::post('publication-image/{publicationImage}/detach', [PublicationImageController::class, 'detachToAvailable'])->name('publication-image.detach');
     });
 });
 

@@ -8,6 +8,7 @@ use App\Events\DynastyTranslationSaved;
 use App\Events\ItemTranslationSaved;
 use App\Events\SpellingSaved;
 use App\Events\TimelineEventTranslationSaved;
+use App\Http\Controllers\Doc\DocumentController;
 use App\Http\Controllers\Pub\PictureController;
 use App\Listeners\DispatchSyncCollectionTranslationSpellings;
 use App\Listeners\DispatchSyncDynastyTranslationSpellings;
@@ -69,6 +70,16 @@ class AppServiceProvider extends ServiceProvider
                 ->by($request->ip())
                 ->after(fn (Response $response): bool => $response->getStatusCode() >= 400
                     || $request->attributes->getBoolean(PictureController::BURNED));
+        });
+
+        // Public document endpoint throttle (/doc), configurable via
+        // DOC_DOCUMENTS_THROTTLE. Counts a served file or an error; a 304 is
+        // the cheap revalidation and costs nothing here
+        RateLimiter::for('doc-documents', function (Request $request) {
+            return Limit::perMinute(Config::integer('app.doc_documents_throttle'))
+                ->by($request->ip())
+                ->after(fn (Response $response): bool => $response->getStatusCode() >= 400
+                    || $request->attributes->getBoolean(DocumentController::SERVED));
         });
 
         // Register glossary link maintenance event listeners

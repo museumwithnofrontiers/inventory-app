@@ -42,6 +42,15 @@ interface LegacyItinerary {
   days: number | null;
 }
 
+/** The itinerary's number of days: the first positive value of its language rows. */
+export function itineraryDays(rows: Pick<LegacyItinerary, 'days'>[]): number | null {
+  for (const row of rows) {
+    const days = row.days === null ? null : Number(row.days);
+    if (days !== null && Number.isFinite(days) && days > 0) return days;
+  }
+  return null;
+}
+
 export class TravelsItineraryImporter extends BaseImporter {
   private travelsContextId: string | null = null;
   private defaultLanguageId: string = 'eng';
@@ -140,6 +149,10 @@ export class TravelsItineraryImporter extends BaseImporter {
             continue;
           }
 
+          // The itinerary's length, repeated on each language row in legacy:
+          // stored once, never merged into a description.
+          const days = itineraryDays(itineraryGroup);
+
           // Write collection
           const collectionId = await this.context.strategy.writeCollection({
             internal_name: internalName,
@@ -148,6 +161,7 @@ export class TravelsItineraryImporter extends BaseImporter {
             language_id: this.defaultLanguageId,
             parent_id: trailId,
             type: 'itinerary',
+            extra: days !== null ? JSON.stringify({ days }) : null,
             latitude: null,
             longitude: null,
             map_zoom: null,
