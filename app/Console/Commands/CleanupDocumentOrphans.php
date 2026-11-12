@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Console\Commands\Concerns\CleansOrphanedFiles;
 use App\Models\ItemDocument;
+use App\Models\PublicationDocument;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Config;
 
@@ -34,7 +35,7 @@ class CleanupDocumentOrphans extends Command
                             {--limit= : Maximum number of files to delete in one run}
                             {--json : Output results as JSON}';
 
-    protected $description = 'Identify (and optionally delete) document files under localstorage.documents that no ItemDocument references';
+    protected $description = 'Identify (and optionally delete) document files under localstorage.documents that no ItemDocument or PublicationDocument references';
 
     public function handle(): int
     {
@@ -48,7 +49,8 @@ class CleanupDocumentOrphans extends Command
     }
 
     /**
-     * Build the keep-set: the storage path of every ItemDocument's file.
+     * Build the keep-set: the storage path of every ItemDocument's and
+     * PublicationDocument's file.
      *
      * @return array<string, true>
      */
@@ -57,16 +59,19 @@ class CleanupDocumentOrphans extends Command
         $keepSet = [];
         $directory = trim(Config::string('localstorage.documents.directory'), '/');
 
-        ItemDocument::query()->chunkById(500, function ($records) use (&$keepSet, $directory): void {
-            foreach ($records as $record) {
-                $path = $record->getAttribute('path');
-                if (! is_string($path) || $path === '') {
-                    continue;
-                }
+        // Every model whose file lives on the documents disk
+        foreach ([ItemDocument::class, PublicationDocument::class] as $model) {
+            $model::query()->chunkById(500, function ($records) use (&$keepSet, $directory): void {
+                foreach ($records as $record) {
+                    $path = $record->getAttribute('path');
+                    if (! is_string($path) || $path === '') {
+                        continue;
+                    }
 
-                $keepSet[$directory.'/'.$path] = true;
-            }
-        });
+                    $keepSet[$directory.'/'.$path] = true;
+                }
+            });
+        }
 
         return $keepSet;
     }

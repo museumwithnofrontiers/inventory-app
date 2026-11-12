@@ -19,6 +19,7 @@ use App\Http\Controllers\Filament\ItemDocumentController as FilamentItemDocument
 use App\Http\Controllers\Filament\ItemImageController as FilamentItemImageController;
 use App\Http\Controllers\Filament\PartnerImageController as FilamentPartnerImageController;
 use App\Http\Controllers\Filament\PartnerTranslationImageController as FilamentPartnerTranslationImageController;
+use App\Http\Controllers\Filament\PublicationDocumentController as FilamentPublicationDocumentController;
 use App\Http\Controllers\Filament\PublicationImageController as FilamentPublicationImageController;
 use App\Http\Controllers\Filament\TimelineEventImageController as FilamentTimelineEventImageController;
 use App\Http\Controllers\Filament\VerifyEmailController;
@@ -194,6 +195,9 @@ class AdminPanelProvider extends PanelProvider
                     ->name('publication-image.view');
                 Route::get('/publications/{publication}/images/{publicationImage}/download', [FilamentPublicationImageController::class, 'download'])
                     ->name('publication-image.download');
+
+                Route::get('/publications/{publication}/documents/{publicationDocument}/download', [FilamentPublicationDocumentController::class, 'download'])
+                    ->name('publication-document.download');
             });
 
         if (! $this->shouldUseViteTheme()) {

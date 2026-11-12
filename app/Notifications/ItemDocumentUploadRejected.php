@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Item;
+use App\Models\Publication;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
@@ -21,7 +22,8 @@ class ItemDocumentUploadRejected extends Notification
 {
     public function __construct(
         private readonly string $originalName,
-        private readonly ?Item $item,
+        // The item, or the publication, the upload was for
+        private readonly Item|Publication|null $item,
         private readonly string $reason,
     ) {}
 

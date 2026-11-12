@@ -182,6 +182,7 @@ A **Publication** is a work that MWNF or a partner published: an exhibition-trai
 - **Translations** (`PublicationTranslation`), one per language and context: `title`, `subtitle`, `description`, `introduction`, and three credit lines (`author_credit`, `photography_credit`, `coordination_credit`) kept as printed. Credits are text, never Author records.
 - **Editions** (`PublicationEdition`): each published version, in one language: `format` (`print`, `print-on-demand`, `ebook`), `edition`, `publish_year`, `isbn`, `publisher` (text, never a Partner), page, image and plan counts, `dimensions`, `binding` and `visible`. An edition has no translations and no commercial fields; the legacy shop links and text variants stay in its `extra` (`shop_links`, `legacy_texts`).
 - **Images** (`PublicationImage`): covers and sample pages, through the canonical image pipeline. A cover may name the edition it belongs to.
+- **Documents** (`PublicationDocument`): an edition's sample (`sample`) and credits (`credits`) PDFs, on the document pipeline (upload, validation, the private documents disk). They are public at `/doc/{uuid}.pdf`, streamed as stored (ADR 004).
 
 #### Publication links
 

@@ -138,7 +138,7 @@ class AllowList
                 'contributor', 'language', 'context',
             ],
             'publication' => [
-                'project', 'country', 'language', 'translations', 'editions', 'publicationImages',
+                'project', 'country', 'language', 'translations', 'editions', 'publicationImages', 'documents',
                 'collections', 'items', 'tags',
             ],
             'publication_translation' => [
@@ -149,6 +149,9 @@ class AllowList
             ],
             'publication_image' => [
                 'publication', 'publicationEdition',
+            ],
+            'publication_document' => [
+                'publication', 'publicationEdition', 'language',
             ],
             'contributor_image' => [
                 'contributor',

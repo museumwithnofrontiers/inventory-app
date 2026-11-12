@@ -30,6 +30,12 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->prefix('pub')
                 ->name('pub.')
                 ->group(__DIR__.'/../routes/pub.php');
+
+            // The public document URL, outside the web group too (see routes/doc.php)
+            Route::middleware('throttle:doc-documents')
+                ->prefix('doc')
+                ->name('doc.')
+                ->group(__DIR__.'/../routes/doc.php');
         },
     )
     ->withMiddleware(function (Middleware $middleware) {

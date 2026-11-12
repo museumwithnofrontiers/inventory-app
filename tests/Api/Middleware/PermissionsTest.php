@@ -23,6 +23,7 @@ use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
 use App\Models\Project;
 use App\Models\Publication;
+use App\Models\PublicationDocument;
 use App\Models\PublicationEdition;
 use App\Models\PublicationImage;
 use App\Models\PublicationTranslation;
@@ -268,6 +269,14 @@ class PermissionsTest extends TestCase
             ['GET', 'publication-edition.show', Permission::VIEW_DATA, PublicationEdition::class],
             ['PATCH', 'publication-edition.update', Permission::UPDATE_DATA, PublicationEdition::class],
             ['DELETE', 'publication-edition.destroy', Permission::UPDATE_DATA, PublicationEdition::class],
+
+            // PublicationDocument routes: every change is an update of the publication
+            ['GET', 'publication.documents.index', Permission::VIEW_DATA, Publication::class],
+            ['POST', 'publication.documents.store', Permission::UPDATE_DATA, Publication::class],
+            ['GET', 'publication-document.show', Permission::VIEW_DATA, PublicationDocument::class],
+            ['PATCH', 'publication-document.update', Permission::UPDATE_DATA, PublicationDocument::class],
+            ['DELETE', 'publication-document.destroy', Permission::UPDATE_DATA, PublicationDocument::class],
+            ['GET', 'publication-document.download', Permission::VIEW_DATA, PublicationDocument::class],
 
             // PublicationImage routes
             ['GET', 'publication-image.show', Permission::VIEW_DATA, PublicationImage::class],

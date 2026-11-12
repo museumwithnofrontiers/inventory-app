@@ -128,6 +128,16 @@ class Publication extends Model
     }
 
     /**
+     * The sample and credits PDFs, served publicly at /doc.
+     *
+     * @return HasMany<PublicationDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(PublicationDocument::class);
+    }
+
+    /**
      * The collections this publication accompanies (an exhibition trail,
      * an exhibition, a gallery).
      *

@@ -182,4 +182,17 @@ return [
     */
 
     'pub_pictures_throttle' => (int) env('PUB_PICTURES_THROTTLE', 100),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Public Document Throttle
+    |--------------------------------------------------------------------------
+    |
+    | How many served files and errors one IP address may cause per minute on
+    | /doc/{filename}, the public URL of the publications' PDFs. A 304 doesn't
+    | count.
+    |
+    */
+
+    'doc_documents_throttle' => (int) env('DOC_DOCUMENTS_THROTTLE', 60),
 ];
