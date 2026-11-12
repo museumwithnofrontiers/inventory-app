@@ -176,4 +176,5 @@ export {
   PublicationItemImporter,
   PublicationImageImporter,
   PublicationExploreLinkImporter,
+  PublicationDocumentImporter,
 } from './phase-12/index.js';

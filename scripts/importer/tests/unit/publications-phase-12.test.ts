@@ -23,6 +23,7 @@ import {
   recordBooksId,
 } from '../../src/importers/phase-12/publication-relation-importer.js';
 import { pictureEditionKey } from '../../src/importers/phase-12/publication-image-importer.js';
+import { editionDocuments } from '../../src/importers/phase-12/publication-document-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
 import type { IWriteStrategy } from '../../src/core/strategy.js';
@@ -302,5 +303,27 @@ describe('publication importers', () => {
       display_order: 1,
       extra: { linkcatalogs: ['IAM_PT_EN_001'] },
     });
+  });
+});
+
+describe('publication documents', () => {
+  it("keys an edition's sample and credits PDFs by its edition", () => {
+    expect(
+      editionDocuments({
+        book_id: 51,
+        lang_id: 'it',
+        type: 'ebook',
+        edition: '2',
+        publisher_id: 31,
+        path_catalogue: 'books/51/it/31/ebook/sample.pdf',
+        path_credits: ' ',
+      })
+    ).toEqual([
+      {
+        kind: 'sample',
+        path: 'books/51/it/31/ebook/sample.pdf',
+        backwardCompat: 'mwnf3:books:51:it:31:ebook:2:sample',
+      },
+    ]);
   });
 });

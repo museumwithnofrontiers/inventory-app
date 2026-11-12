@@ -63,6 +63,9 @@ OVH_SHARED_DIR="${OVH_SHARED_DIR:-/opt/inventory/shared}"
 OVH_SSH_KEY_PATH="${OVH_SSH_KEY_PATH:-/run/secrets/deploy_key}"
 
 STAGING_DIR="${IMAGE_STAGING_DIR:-/staging/images}"
+# The staged PDFs of item and publication documents (ADR 004): document-sync
+# writes them in `stage`, `ship` pushes them to the private documents disk.
+DOCUMENT_STAGING_DIR="${DOCUMENT_STAGING_DIR:-/staging/documents}"
 
 # `ship`-only: the LOCAL source DB built by a prior `stage` run. `ship` never
 # connects to OVH's database itself — it hands the dump over and lets OVH load
@@ -262,10 +265,27 @@ do_wipe_and_restore() {
   fi
 }
 
+run_document_sync() {
+  local extra_args=()
+  [ "$DRY_RUN" = "1" ] && extra_args+=(--dry-run)
+
+  log "Running importer: document-sync --target-dir $DOCUMENT_STAGING_DIR ${extra_args[*]}"
+  mkdir -p "$DOCUMENT_STAGING_DIR"
+  local rc=0
+  (cd "$IMPORTER_DIR" && npx tsx src/cli/import.ts document-sync --target-dir "$DOCUMENT_STAGING_DIR" "${extra_args[@]}") || rc=$?
+  if [ "$rc" -ne 0 ]; then
+    # As for images: a PDF legacy lacks is listed in the run's summary and
+    # keeps its placeholder size. Not fatal in stage mode.
+    log "NOTE: document-sync exited non-zero (rc=$rc) — see the run's own summary above for what's missing. Not treated as fatal in stage mode."
+  fi
+  return 0
+}
+
 do_stage() {
   log "Stage mode: writing straight to DB_HOST=${DB_HOST:-<unset>} — no SSH, no OVH contact"
   run_importer_import
   run_image_sync
+  run_document_sync
 }
 
 # Dumps LOCAL_DB_* (staging-mysql, built by a prior `stage` run), excluding
@@ -343,6 +363,7 @@ REMOTE_SCRIPT
 # after its database is gone. Sets ORIGINALS_DIR and PICTURES_DIR.
 ORIGINALS_DIR=""
 PICTURES_DIR=""
+DOCUMENTS_DIR=""
 resolve_image_destinations() {
   ORIGINALS_DIR="$(remote_image_path available)"
   PICTURES_DIR="$(remote_image_path pictures)"
@@ -352,7 +373,14 @@ resolve_image_destinations() {
   case "$PICTURES_DIR/" in
     "$ORIGINALS_DIR"/*) die "the pictures cache ($PICTURES_DIR) resolves inside the originals ($ORIGINALS_DIR) — refusing to ship" ;;
   esac
-  log "Originals go to ${OVH_HOST}:${ORIGINALS_DIR}; the pictures cache at ${PICTURES_DIR} will be emptied"
+  DOCUMENTS_DIR="$(remote_image_path documents)"
+  case "$DOCUMENTS_DIR/" in
+    "$PICTURES_DIR"/*) die "documents ($DOCUMENTS_DIR) resolve inside the pictures cache ($PICTURES_DIR) — refusing to ship" ;;
+  esac
+  case "$DOCUMENTS_DIR" in
+    "$ORIGINALS_DIR") die "documents ($DOCUMENTS_DIR) resolve to the image originals — refusing to ship" ;;
+  esac
+  log "Originals go to ${OVH_HOST}:${ORIGINALS_DIR}, documents to ${DOCUMENTS_DIR}; the pictures cache at ${PICTURES_DIR} will be emptied"
 }
 
 # Pushes images already staged by a prior `stage` run (the staging images
@@ -426,6 +454,29 @@ do_ship() {
   load_staged_dump
 
   push_staged_images
+  push_staged_documents
+}
+
+# Pushes the PDFs `stage` put in the documents volume to the private
+# document-originals disk, with the image originals' rsync rules: --delete is
+# correct because do_wipe_and_restore replaced every document row (ADR 004).
+push_staged_documents() {
+  if [ "$DRY_RUN" = "1" ]; then
+    log "DRY_RUN=1 — skipping the documents push to OVH"
+    return 0
+  fi
+  [ -n "$DOCUMENTS_DIR" ] || die "the documents destination was not resolved before the push"
+  if [ ! -d "$DOCUMENT_STAGING_DIR" ]; then
+    log "No staged documents at $DOCUMENT_STAGING_DIR — skipping the documents push"
+    return 0
+  fi
+  ssh_run "mkdir -p '$DOCUMENTS_DIR'"
+  log "rsync -az --stats --delete --no-owner --no-group --chmod=D2770,F660 $DOCUMENT_STAGING_DIR/ -> ${OVH_HOST}:${DOCUMENTS_DIR}/"
+  rsync -az --stats --delete --no-owner --no-group --chmod=D2770,F660 \
+    -e "ssh ${SSH_OPTS_BASE[*]} -i $SSH_KEY" \
+    "$DOCUMENT_STAGING_DIR"/ \
+    "${OVH_USER}@${OVH_HOST}:${DOCUMENTS_DIR}/" \
+    || die "documents rsync push failed"
 }
 
 do_backup_permissions() {

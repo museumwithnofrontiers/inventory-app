@@ -566,6 +566,7 @@ services:
     volumes:
       - ${LEGACY_IMAGES_HOST_PATH:-/dev/null}:/legacy-images:ro
       - staging-images:/staging/images
+      - staging-documents:/staging/documents
       # The importer writes a timestamped run log next to its own sources.
       # Without this the log dies with the `--rm` container, which is exactly
       # the log you want after a run that reported errors.
@@ -595,6 +596,7 @@ services:
       - ${OVH_SSH_KEY_HOST_PATH:-/dev/null}:/run/secrets/deploy_key:ro
       - ${AUTH_SNAPSHOT_BACKUP_HOST_PATH:-./scripts/import-tool/auth-backups}:/backup
       - staging-images:/staging/images:ro
+      - staging-documents:/staging/documents:ro
     environment:
       DRY_RUN: ${DRY_RUN:-0}
       CONFIRM_WIPE: ${CONFIRM_WIPE:-}
@@ -645,6 +647,7 @@ volumes:
   #
   #   docker volume create inventory-staging-mysql-data
   #   docker volume create inventory-staging-images
+  #   docker volume create inventory-staging-documents
   #
   # The hyphen matters. Compose names the volumes it manages
   # `inventory_<key>`; these two are named `inventory-<key>` precisely because
@@ -657,6 +660,10 @@ volumes:
   staging-images:
     external: true
     name: inventory-staging-images
+  # The staged PDFs of item and publication documents (ADR 004).
+  staging-documents:
+    external: true
+    name: inventory-staging-documents
 
 networks:
   inventory:

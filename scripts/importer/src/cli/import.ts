@@ -123,6 +123,7 @@ import {
   PublicationItemImporter,
   PublicationImageImporter,
   PublicationExploreLinkImporter,
+  PublicationDocumentImporter,
   // Phase 10: Thematic Galleries (runs last, after all other legacy DBs)
   ThgGalleryContextImporter,
   ThgRootCollectionsImporter,
@@ -1265,6 +1266,13 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     dependencies: ['publication-edition'],
   },
   {
+    key: 'publication-document',
+    name: 'Publication Documents',
+    description: "Import each edition's sample and credits PDFs for document-sync (ADR 004)",
+    importerClass: PublicationDocumentImporter,
+    dependencies: ['publication-edition'],
+  },
+  {
     key: 'publication-explore-link',
     name: "Explore's Travel Books → Publications",
     description: "Give Explore's Travel Book records the publication their link names",
@@ -1908,6 +1916,52 @@ program
     }
   });
 
+program
+  .command('document-sync')
+  .description(
+    'Copy the legacy PDFs of item and publication documents (size=1 placeholder) into the documents directory (ADR 004)'
+  )
+  .requiredOption('--target-dir <path>', 'Target documents directory (the staging documents volume)')
+  .option('--dry-run', 'Simulate synchronization without making changes', false)
+  .action(async (options) => {
+    const logger = new FileLogger('DocumentSync', 'logs');
+    try {
+      const legacyImagesRoot =
+        process.env['LEGACY_IMAGES_ROOT'] || 'C:\\mwnf-server\\pictures\\images';
+      console.log(chalk.bold.cyan('DOCUMENT SYNCHRONIZATION'));
+      console.log(chalk.gray(`Legacy root: ${legacyImagesRoot}`));
+      console.log(chalk.gray(`Target: ${options.targetDir}`));
+      const newDb = await createNewDbConnection();
+      // The PDFs sit on the legacy image share, beside the pictures: the same
+      // copy-and-rename as image-sync, into the documents volume.
+      const tool = new ImageSyncTool(
+        newDb.getConnection(),
+        {
+          useSymlink: false,
+          legacyImagesRoot,
+          newImagesRoot: options.targetDir as string,
+          clearDestination: false,
+          dryRun: options.dryRun === true,
+          tables: ['item_documents', 'publication_documents'],
+        },
+        logger
+      );
+      const result = await tool.run();
+      await newDb.end();
+      console.log(
+        chalk[result.success ? 'green' : 'yellow'](
+          `Document sync: ${result.imported} synchronized, ${result.skipped} skipped, ${result.errors.length} errors`
+        )
+      );
+      for (const err of result.errors) logger.error('DocumentSync', err);
+      result.errors.slice(0, 10).forEach((err) => console.log(chalk.red(`  - ${err}`)));
+      process.exit(result.success ? 0 : 1);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error(chalk.red(`Document sync failed: ${message}`));
+      process.exit(1);
+    }
+  });
 program
   .command('image-sync')
   .description(

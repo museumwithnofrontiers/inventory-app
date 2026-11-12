@@ -414,6 +414,7 @@ full stage is hours of importing and several gigabytes of images.
 |---|---|
 | `inventory-staging-mysql-data` | the staged database |
 | `inventory-staging-images` | the staged images (flat `<uuid>.jpg`, ~7.5 GB) |
+| `inventory-staging-documents` | the staged PDFs of item and publication documents (flat `<uuid>.pdf`, written by `document-sync`; ADR 004) |
 
 Because they are external, Compose will not create them either. Once, before
 the first import:
@@ -421,6 +422,7 @@ the first import:
 ```bash
 docker volume create inventory-staging-mysql-data
 docker volume create inventory-staging-images
+docker volume create inventory-staging-documents
 ```
 
 The hyphen distinguishes them on sight: Compose names the volumes it manages
@@ -453,6 +455,7 @@ docker compose --profile staging down
 docker volume rm inventory-staging-mysql-data inventory-staging-images
 docker volume create inventory-staging-mysql-data
 docker volume create inventory-staging-images
+docker volume create inventory-staging-documents
 ```
 
 Then run `stage` again — `staging-migrate` recreates the schema on the way in.
@@ -568,6 +571,7 @@ docker stop inventory-import-stage
 # so Compose will not create them for you.
 docker volume create inventory-staging-mysql-data
 docker volume create inventory-staging-images
+docker volume create inventory-staging-documents
 
 docker compose --profile staging up -d
 docker compose --env-file scripts/import-tool/.env --profile import build stage

@@ -55,6 +55,7 @@ import type {
   PublicationImageData,
   PublicationRelationData,
   PublicationRelationTable,
+  PublicationDocumentData,
   ContributorData,
   ContributorTranslationData,
   ContributorImageData,
@@ -457,6 +458,9 @@ export interface IWriteStrategy {
 
   /** Write a publication image; returns its UUID */
   writePublicationImage(data: PublicationImageData): Promise<string>;
+
+  /** Write a publication document (sample or credits PDF); returns its UUID */
+  writePublicationDocument(data: PublicationDocumentData): Promise<string>;
 
   /** Link a publication to a collection, an item or a tag (idempotent) */
   writePublicationRelation(
