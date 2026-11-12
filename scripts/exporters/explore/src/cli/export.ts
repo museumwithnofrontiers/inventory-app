@@ -36,6 +36,7 @@ import { Logger } from '../core/logger.js'
 import { PublishManager, assertPublishableBaseUrl } from '../core/publish-manager.js'
 import { resolveScope } from '../core/scope.js'
 import type { ExportContext } from '../core/types.js'
+import { loadSites } from '../../../shared/sites.mjs'
 import { loadHomeSites } from '../core/home-sites.js'
 import {
   ManifestExporter,
@@ -172,6 +173,7 @@ program
           baseUrl: options.baseUrl,
           logger,
           homeSites: loadHomeSites(),
+          sites: loadSites(),
         }
 
         // No DynastyExporter and no TimelineExporter: Explore has neither.

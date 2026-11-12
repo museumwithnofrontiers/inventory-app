@@ -98,7 +98,7 @@ there.
 | Where | `extra` key | What it is |
 |---|---|---|
 | the root | `explore_home` | the home banners and the featured partnerships ([Site records](explore-legacy-analysis.md#site-records)) |
-| the root | `explore_travel` | the travel layer: books, tours, accommodations and their categories, guided visits, useful websites |
+| the root | `explore_travel` | the travel layer: books, tours, accommodations and their categories, guided visits, useful websites. A Travel Book (`books[]`) that names its publication (`publication_id`) also carries `publication: { site, path, url }`, the publication's page on the Publications site (M14 D5, #2539; `shared/sites.mjs`). The tour teasers (`tours[]`) stay as legacy has them while travels.museumwnf.org serves the tours (D-T4) |
 | a location | `historical_background` | the keys (`backward_compatibility`) of the Travels locations whose introduction it shows, in order ([Historical background](explore-legacy-analysis.md#historical-background)); each ships after the tree |
 | an itinerary | `explore_itinerary` | legacy's `type` (4 thematic, 1–3 location route), `order`, `location_home_link`, and `countries`: its own `country` list, by which legacy names a thematic itinerary's country (G17, #2171) |
 | a location's membership | `explore_monument_ids` | the Explore monument ids the member stands for |

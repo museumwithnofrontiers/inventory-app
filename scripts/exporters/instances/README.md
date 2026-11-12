@@ -50,10 +50,12 @@ specification doc. It is prose for humans, read by nothing at export time.
   `src/cli/export.ts`. Those are the three forked exporters (`islamicart`,
   `baroqueart`, `sharinghistory`) that predate the instance-file design (see
   the *Why forked per dataset* section of `../README.md`), the galleries
-  hub's `galleries`, and `explore`. A `standalone` file
-  carries `slug`, `name`, `exporter`, `package_name` and, for a site that is
-  home to projects' records, `project_ids` — no `collection_id`,
-  since the exporter it names does not take `--instance` at all.
+  hub's `galleries`, `explore`, and M14's `publications` and `travels`. A
+  `standalone` file carries `slug`, `name`, `exporter`, `package_name` and,
+  for a site that is home to projects' records, `project_ids`, or, for a
+  site whose items are a collection tree's, `item_scope` — no
+  `collection_id`, since the exporter it names does not take `--instance` at
+  all.
 - `slug` — the site slug (`^[a-z0-9]+(-[a-z0-9]+)*$`). This is deliberately
   a separate field from the collection's own DB slug (see `collection_id`
   below): the two can differ, and conflating them would leak a legacy naming
@@ -79,6 +81,30 @@ specification doc. It is prose for humans, read by nothing at export time.
   gallery or exhibition site needs no such list: it is home to its
   collection's own project, read from the database. A project may be listed
   by one site only.
+- `item_scope` — `kind: "standalone"` only, optional, never with
+  `project_ids`: the items of a site that is a collection tree (Explore,
+  Travels), for the shared rule below. `root_purpose` is the purpose of the
+  tree's root collection; `member_of`, optional, the collection types whose
+  members are the site's (Travels: `["location"]`, as a trail's own members
+  are Islamic Art's).
+- `item_path` — `kind: "standalone"` only, optional: the route of an item's
+  page when it is not `/item/:id` (Explore: `/monument/:id`).
+- `origin` — optional: the site's address, `https://…` with no trailing
+  slash, once it has its own domain. Absent, the site is at its GitHub Pages
+  address, `https://museumwithnofrontiers.github.io/<slug>`, which is where
+  every site is served until its cutover. The DXA and mini-site loaders do
+  not take it yet: the first cutover adds it to them.
+
+### Which sites show an item
+
+[`../shared/sites.mjs`](../shared/sites.mjs) (M14 D1, #2535) reads these files
+to say which sites show an item, and at which address, for the packages that
+reference another site's item instead of copying it (Publications, Travels)
+and the coming search exporter. Each kind has its rule: a standalone site's
+`project_ids` (its projects' objects and monuments, the item's home, listed
+first) or `item_scope`; a gallery's or an exhibition's collection members; a
+mini-site's subtree placements. A site with neither (the galleries hub,
+Publications) shows no item.
 - `languages_enabled` — `kind: "exhibition"` only, optional: a non-empty array
   of lowercase, de-duplicated 2-char language codes (e.g. `["en", "de"]`).
   When present, it overrides `exhibition.json`'s `languages_enabled` and

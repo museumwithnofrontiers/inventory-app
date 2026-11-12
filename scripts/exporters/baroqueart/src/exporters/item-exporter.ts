@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { trailsByItem } from '../core/exhibition-trails.js'
 
 const CONTACT_LINES = ['address', 'phone', 'fax', 'email', 'institution'] as const
 
@@ -726,6 +727,10 @@ export class ItemExporter extends BaseExporter {
       )
     }
 
+    // Legacy's "Related exhibition trails", on the Baroque Art site's own
+    // sheet: a mini-site's package has none.
+    const exhibitionTrails = scope ? null : await trailsByItem(this.db, itemIds)
+
     const output = items.map(item => ({
       id: item.id,
       type: item.type,
@@ -754,6 +759,7 @@ export class ItemExporter extends BaseExporter {
       media: mediaMap.get(item.id) ?? [],
       details: detailEntryMap.get(item.id) ?? [],
       languages: Object.keys(translationMap.get(item.id) ?? {}).sort(),
+      ...(exhibitionTrails ? { exhibition_trails: exhibitionTrails.get(item.id) ?? [] } : {}),
     }))
 
     await this.writeJson('items.json', output)

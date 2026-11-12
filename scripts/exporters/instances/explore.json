@@ -3,5 +3,7 @@
   "slug": "explore",
   "name": "Explore with MWNF",
   "exporter": "explore",
-  "package_name": "@museumwnf/explore-data"
+  "package_name": "@museumwnf/explore-data",
+  "item_scope": { "root_purpose": "explore-root" },
+  "item_path": "/monument/:id"
 }

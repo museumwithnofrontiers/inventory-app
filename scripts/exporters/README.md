@@ -27,6 +27,8 @@ legacy DBs ──(importer, run once)──▶ inventory-app DB ──(exporter,
 | [`dxa-gallery/`](dxa-gallery/README.md) | any THG gallery, scoped per run by `--instance`: [`carpets`](instances/carpets.md) (gallery 9, membership union, DCA-native + borrowed), [`amulets`](instances/amulets.md) (gallery 4, membership union) | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/carpets`, `scripts/viewers/amulets` |
 | [`galleries/`](galleries/README.md) | the galleries hub: every gallery under the galleries root, and the museums of project `GALLERIES` ([`galleries`](instances/galleries.md)) | `@museumwnf/galleries-data` | the galleries hub website |
 | [`explore/`](explore/README.md) | Explore: the collection tree under the Explore root and the records it holds, whatever their project ([`explore`](instances/explore.md)) | `@museumwnf/explore-data` | the Explore website |
+| [`publications/`](publications/README.md) | every publication (legacy `bookbase`), its editions and the trails it accompanies; the items it cites as references only ([`publications`](instances/publications.md)) | `@museumwnf/publications-data` | the Publications website (books.museumwnf.org) |
+| [`travels/`](travels/README.md) | the Exhibition Trails: the collection tree under the Travels root and its monuments; the trails' entries as references only ([`travels`](instances/travels.md)) | `@museumwnf/travels-data` | the Travels website (travels.museumwnf.org) |
 | [`dxa-exhibition/`](dxa-exhibition/README.md) | any THG exhibition, scoped per run by `--instance`: [`the-use-of-colours-in-art`](instances/the-use-of-colours-in-art.md) (exhibition 47), [`water-in-islam`](instances/water-in-islam.md) (exhibition 56) — both membership union + curated theme tree | `@museumwnf/<slug>-data`, per instance | `scripts/viewers/the-use-of-colours-in-art` *(water viewer not built yet)* |
 
 Each directory is a **self-contained Node/TypeScript project** (own
@@ -142,6 +144,29 @@ directory, no items), built from `dxa-gallery`'s core.
 **2026-09-28.** [`explore`](explore/README.md), Explore's exporter (epic
 #1745), is a fork of `sharinghistory`. Explore is no project, so its scope is
 a collection tree and the records it holds, not a project key.
+
+**2026-11-12.** M14 (epic [#2514](https://github.com/museumwithnofrontiers/inventory-app/issues/2514))
+adds two standalone exporters: [`publications`](publications/README.md),
+whose exporters are its own on `explore`'s skeleton, and
+[`travels`](travels/README.md), a fork of `explore` (the same tree walk,
+rooted at the Travels root, without Explore's rules for hidden collections).
+
+## Shared modules
+
+The forks share no code, with one exception: what must be the same in every
+package that points at another site. [`shared/`](shared/) holds plain
+JavaScript modules with no dependency (types in `.d.mts` files beside them),
+imported by relative path:
+
+- [`sites.mjs`](shared/sites.mjs) — which sites show an item, and the
+  address of a site's page, from the instance files (M14 D1, #2535; see
+  [`instances/README.md`](instances/README.md#which-sites-show-an-item));
+- [`references.mjs`](shared/references.mjs) — an item as a reference (id,
+  names, first picture, sites), never a copy of its sheet;
+- [`links.mjs`](shared/links.mjs) — a link to a publication on the
+  Publications site or a trail on the Travels site.
+
+Their tests run in the `publications` exporter's suite.
 
 ## Package layout
 

@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { travelBooksByCountry } from '../core/travel-books.js'
 
 // The monument's address, which the importer files with its visitor contact
 // details (extra.monument_contact.address).
@@ -660,6 +661,10 @@ export class ItemExporter extends BaseExporter {
       )
     }
 
+    // Legacy's "Related MWNF Travel Book", on the Islamic Art site's own
+    // sheet: a mini-site's package has none.
+    const travelBooks = scope ? null : await travelBooksByCountry(this.db)
+
     const output = items.map(item => ({
       id: item.id,
       type: item.type,
@@ -687,6 +692,7 @@ export class ItemExporter extends BaseExporter {
       thg_galleries: thgGalleryMap.get(item.id) ?? [],
       media: mediaMap.get(item.id) ?? [],
       languages: Object.keys(translationMap.get(item.id) ?? {}).sort(),
+      ...(travelBooks ? { travel_book: (item.country_id ? travelBooks.get(item.country_id) : undefined) ?? null } : {}),
     }))
 
     await this.writeJson('items.json', output)
