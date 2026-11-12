@@ -10,6 +10,7 @@ use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse as FilamentLoginResponse;
 use Filament\Models\Contracts\FilamentUser;
+use Illuminate\Auth\SessionGuard;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\HtmlString;
@@ -39,6 +40,13 @@ class Login extends \Filament\Pages\Auth\Login
         $data = $this->form->getState();
 
         $guard = Filament::auth();
+
+        // The panel signs in through its session guard (fortify.guard), the
+        // one that has a user provider to check the credentials against
+        if (! $guard instanceof SessionGuard) {
+            $this->throwFailureValidationException();
+        }
+
         $provider = $guard->getProvider();
 
         $user = $provider->retrieveByCredentials(['email' => $data['email']]);

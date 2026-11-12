@@ -20,6 +20,8 @@ use App\Filament\Resources\LanguageResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Resources\PartnerTranslationResource;
 use App\Filament\Resources\ProjectResource;
+use App\Filament\Resources\PublicationResource;
+use App\Filament\Resources\PublicationTranslationResource;
 use App\Filament\Resources\RoleResource;
 use App\Filament\Resources\TagResource;
 use App\Filament\Resources\TimelineEventResource;
@@ -83,6 +85,7 @@ class NavigationConsistencyTest extends TestCase
             'ItemItemLink → Inventory' => [ItemItemLinkResource::class, 'Inventory'],
             'Timeline → Inventory' => [TimelineResource::class, 'Inventory'],
             'TimelineEvent → Inventory' => [TimelineEventResource::class, 'Inventory'],
+            'Publication → Inventory' => [PublicationResource::class, 'Inventory'],
             'Context → Shared Data' => [ContextResource::class, 'Shared Data'],
             'Tag → Shared Data' => [TagResource::class, 'Shared Data'],
             'Author → Shared Data' => [AuthorResource::class, 'Shared Data'],
@@ -91,6 +94,7 @@ class NavigationConsistencyTest extends TestCase
             'ItemTranslation → Translations' => [ItemTranslationResource::class, 'Translations'],
             'CollectionTranslation → Translations' => [CollectionTranslationResource::class, 'Translations'],
             'PartnerTranslation → Translations' => [PartnerTranslationResource::class, 'Translations'],
+            'PublicationTranslation → Translations' => [PublicationTranslationResource::class, 'Translations'],
             'Language → Reference Data' => [LanguageResource::class, 'Reference Data'],
             'Country → Reference Data' => [CountryResource::class, 'Reference Data'],
             'Role → Administration' => [RoleResource::class, 'Administration'],

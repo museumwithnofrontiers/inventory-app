@@ -137,6 +137,19 @@ class AllowList
             'contributor_translation' => [
                 'contributor', 'language', 'context',
             ],
+            'publication' => [
+                'project', 'country', 'language', 'translations', 'editions', 'publicationImages',
+                'collections', 'items', 'tags',
+            ],
+            'publication_translation' => [
+                'publication', 'language', 'context',
+            ],
+            'publication_edition' => [
+                'publication', 'language', 'publicationImages',
+            ],
+            'publication_image' => [
+                'publication', 'publicationEdition',
+            ],
             'contributor_image' => [
                 'contributor',
             ],

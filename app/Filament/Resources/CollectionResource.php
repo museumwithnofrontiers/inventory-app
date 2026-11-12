@@ -18,6 +18,7 @@ use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsR
 use App\Filament\Resources\CollectionResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ExtraJsonField;
@@ -465,6 +466,7 @@ class CollectionResource extends Resource
             ItemsRelationManager::class,
             PartnersRelationManager::class,
             ImagesRelationManager::class,
+            PublicationsRelationManager::class,
         ];
     }
 

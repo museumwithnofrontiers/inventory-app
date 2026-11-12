@@ -26,6 +26,13 @@ use App\Filament\Resources\PartnerTranslationResource\RelationManagers\ImagesRel
 use App\Filament\Resources\ProjectResource\Pages\ViewProject;
 use App\Filament\Resources\ProjectResource\RelationManagers\CollectionsRelationManager as ProjectCollectionsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\ItemsRelationManager as ProjectItemsRelationManager;
+use App\Filament\Resources\PublicationResource\Pages\EditPublication;
+use App\Filament\Resources\PublicationResource\RelationManagers\CollectionsRelationManager as PublicationCollectionsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\EditionsRelationManager as PublicationEditionsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\ImagesRelationManager as PublicationImagesRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\ItemsRelationManager as PublicationItemsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\TagsRelationManager as PublicationTagsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\TranslationsRelationManager as PublicationTranslationsRelationManager;
 use App\Filament\Resources\RoleResource\Pages\EditRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
@@ -36,6 +43,7 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\Project;
+use App\Models\Publication;
 use App\Models\Tag;
 use App\Models\User;
 use Filament\Tables\Columns\TextColumn;
@@ -744,5 +752,108 @@ class RelationManagerUxConventionTest extends TestCase
                 'pageClass' => EditPartner::class,
             ])
             ->assertTableActionHasLabel('delete', 'Delete permanently');
+    }
+
+    // ── Publications (M14 story B5, #2527) ────────────────────────────────────
+
+    public function test_publication_images_relation_manager_follows_the_image_conventions(): void
+    {
+        $user = $this->createCrudUser();
+        $publication = Publication::factory()->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PublicationImagesRelationManager::class, [
+                'ownerRecord' => $publication,
+                'pageClass' => EditPublication::class,
+            ])
+            ->assertTableColumnExists('mime_type', fn (TextColumn $column): bool => $column->isToggledHiddenByDefault())
+            ->assertTableColumnExists('size', fn (TextColumn $column): bool => $column->isToggledHiddenByDefault())
+            ->assertTableColumnExists('created_at', fn (TextColumn $column): bool => $column->isToggledHiddenByDefault())
+            ->assertTableActionsExistInOrder(['view_image', 'download', 'edit', 'detach', 'delete'])
+            ->assertTableActionHasLabel('delete', 'Delete permanently');
+    }
+
+    public function test_publication_translations_relation_manager_follows_the_translation_conventions(): void
+    {
+        $user = $this->createCrudUser();
+        $publication = Publication::factory()->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PublicationTranslationsRelationManager::class, [
+                'ownerRecord' => $publication,
+                'pageClass' => EditPublication::class,
+            ])
+            ->assertTableColumnExists('created_at', fn (TextColumn $column): bool => $column->isToggledHiddenByDefault())
+            ->assertTableColumnExists('updated_at', fn (TextColumn $column): bool => $column->isToggledHiddenByDefault())
+            ->assertTableActionsExistInOrder(['viewTranslation', 'editTranslation', 'viewParentPublication', 'delete']);
+    }
+
+    public function test_publication_editions_relation_manager_hides_its_metadata_columns(): void
+    {
+        $user = $this->createCrudUser();
+        $publication = Publication::factory()->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PublicationEditionsRelationManager::class, [
+                'ownerRecord' => $publication,
+                'pageClass' => EditPublication::class,
+            ])
+            ->assertTableColumnExists('backward_compatibility', fn (TextColumn $column): bool => $column->isToggledHiddenByDefault())
+            ->assertTableColumnExists('created_at', fn (TextColumn $column): bool => $column->isToggledHiddenByDefault())
+            ->assertTableActionsExistInOrder(['edit', 'delete']);
+    }
+
+    public function test_publication_pivot_relation_managers_have_searchable_primary_columns_and_ordered_rows(): void
+    {
+        $user = $this->createCrudUser();
+        $publication = Publication::factory()->create();
+
+        $this->setCurrentPanel();
+
+        foreach ([PublicationCollectionsRelationManager::class, PublicationItemsRelationManager::class] as $manager) {
+            Livewire::actingAs($user)
+                ->test($manager, [
+                    'ownerRecord' => $publication,
+                    'pageClass' => EditPublication::class,
+                ])
+                ->assertTableColumnExists('internal_name', fn (TextColumn $column): bool => $column->isSearchable())
+                ->assertTableActionsExistInOrder(['view', 'edit', 'detach']);
+        }
+
+        Livewire::actingAs($user)
+            ->test(PublicationTagsRelationManager::class, [
+                'ownerRecord' => $publication,
+                'pageClass' => EditPublication::class,
+            ])
+            ->assertTableColumnExists('internal_name', fn (TextColumn $column): bool => $column->isSearchable())
+            ->assertTableActionsExistInOrder(['view', 'detach']);
+    }
+
+    public function test_publication_tags_relation_manager_attach_action_uses_bounded_search(): void
+    {
+        $user = $this->createCrudUser();
+        $publication = Publication::factory()->create();
+        $tag = Tag::factory()->create(['internal_name' => 'young readers', 'category' => 'audience']);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PublicationTagsRelationManager::class, [
+                'ownerRecord' => $publication,
+                'pageClass' => EditPublication::class,
+            ])
+            ->callTableAction('attach', data: ['recordId' => $tag->id])
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('publication_tag', [
+            'publication_id' => $publication->id,
+            'tag_id' => $tag->id,
+        ]);
     }
 }

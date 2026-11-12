@@ -53,7 +53,7 @@ claude mcp add mwnf-inventory-local -- docker compose exec -T -e MCP_LOCAL_USER=
 | Tool | What it returns |
 | --- | --- |
 | `whoami` | The user the session acts as, their roles and permissions, the connection (HTTP client and scopes, or local), and the tools they may use |
-| `list_entity_types` | The entity types (items, collections, partners, their translations and images, reference data…) and whether you may read each |
+| `list_entity_types` | The entity types (items, collections, partners, publications and their editions, their translations and images, reference data…) and whether you may read each |
 | `describe_entity` | A type's fields (usable as filters), searched fields, includes, and whether it has translations, `extra` or a legacy key |
 | `search` | Records of one type: free text over id, internal name, legacy key and name; exact-match filters; paginated like the API |
 | `get` | One record by id, shaped like the API's, with the includes asked for |

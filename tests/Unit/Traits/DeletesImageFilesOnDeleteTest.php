@@ -13,6 +13,8 @@ use App\Models\PartnerImage;
 use App\Models\PartnerLogo;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
+use App\Models\Publication;
+use App\Models\PublicationImage;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventImage;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +39,7 @@ class DeletesImageFilesOnDeleteTest extends TestCase
             [PartnerTranslationImage::class],
             [ContributorImage::class],
             [TimelineEventImage::class],
+            [PublicationImage::class],
             [PartnerLogo::class],
         ];
     }
@@ -91,6 +94,7 @@ class DeletesImageFilesOnDeleteTest extends TestCase
             PartnerTranslationImage::class => PartnerTranslationImage::factory()->create(['partner_translation_id' => PartnerTranslation::factory()->create()->id, 'path' => $path]),
             ContributorImage::class => ContributorImage::factory()->create(['contributor_id' => Contributor::factory()->create()->id, 'path' => $path]),
             TimelineEventImage::class => TimelineEventImage::factory()->create(['timeline_event_id' => TimelineEvent::factory()->create()->id, 'path' => $path]),
+            PublicationImage::class => PublicationImage::factory()->create(['publication_id' => Publication::factory()->create()->id, 'path' => $path]),
             PartnerLogo::class => PartnerLogo::factory()->create(['partner_id' => Partner::factory()->create()->id, 'path' => $path]),
             default => throw new \InvalidArgumentException("Unhandled class: {$class}"),
         };

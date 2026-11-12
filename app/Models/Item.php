@@ -607,4 +607,17 @@ class Item extends Model
 
         return $query->whereNotIn('id', $excludeIds);
     }
+
+    /**
+     * The publications that cite this item outside the collections they accompany.
+     *
+     * @return BelongsToMany<Publication, $this, PublicationItem>
+     */
+    public function publications(): BelongsToMany
+    {
+        return $this->belongsToMany(Publication::class, 'publication_item')
+            ->using(PublicationItem::class)
+            ->withPivot('display_order', 'extra')
+            ->withTimestamps();
+    }
 }

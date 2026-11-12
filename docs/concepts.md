@@ -162,6 +162,37 @@ Partners can be associated with a collection at one of three contribution levels
 
 ---
 
+### Publication
+
+A **Publication** is a work that MWNF or a partner published: an exhibition-trail guide, a virtual-museum catalogue, an educational guide, a gallery book. The legacy "books" become publications; the legacy word survives only in the legacy keys (`mwnf3:bookbase:*`, `mwnf3:books:*`).
+
+#### Publication key attributes
+
+| Field                    | Description                                                                  |
+| ------------------------ | ---------------------------------------------------------------------------- |
+| `category`               | `exhibition-trail`, `virtual-museum`, `educational`, `gallery` or `other`    |
+| `status`                 | `published` or `in-preparation`                                              |
+| `project_id`             | The project the work belongs to, if any (its copyright and its context)      |
+| `country_id`             | The country the work is about, if any                                        |
+| `language_id`            | The work's main language                                                     |
+| `backward_compatibility` | The legacy key, `mwnf3:bookbase:{id}`                                        |
+
+#### Publication content
+
+- **Translations** (`PublicationTranslation`), one per language and context: `title`, `subtitle`, `description`, `introduction`, and three credit lines (`author_credit`, `photography_credit`, `coordination_credit`) kept as printed. Credits are text, never Author records.
+- **Editions** (`PublicationEdition`): each published version, in one language: `format` (`print`, `print-on-demand`, `ebook`), `edition`, `publish_year`, `isbn`, `publisher` (text, never a Partner), page, image and plan counts, `dimensions`, `binding` and `visible`. An edition has no translations and no commercial fields; the legacy shop links and text variants stay in its `extra` (`shop_links`, `legacy_texts`).
+- **Images** (`PublicationImage`): covers and sample pages, through the canonical image pipeline. A cover may name the edition it belongs to.
+
+#### Publication links
+
+- **Collections** it accompanies (`publication_collection`, with `display_order` and `extra`): the exhibition trail of a travel guide, later an exhibition or a gallery.
+- **Items** it cites outside those collections (`publication_item`, with `display_order` and `extra`). An item reached through a linked collection is not stored twice.
+- **Tags**: subjects (`subject`), themes (`theme`) and target readers (`audience`).
+
+Reading a publication needs `view data`; changing it, or any of its editions, images and links, needs `update` on the publication (`PublicationPolicy`).
+
+---
+
 ### Project
 
 A **Project** represents a campaign or initiative under which content (items and collections) is created and published. It provides a way to group content that was produced as part of a specific effort and to control its public availability.
@@ -319,6 +350,7 @@ Images in the system follow a two-stage workflow:
    - `PartnerLogo` — a logo attached to a Partner.
    - `PartnerTranslationImage` — an image attached to a specific partner translation (language-specific partner imagery).
    - `CollectionImage` — attached to a Collection.
+   - `PublicationImage` — a cover or a sample page of a Publication, optionally the cover of one of its editions.
 
 ### Display ordering
 
