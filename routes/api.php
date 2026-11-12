@@ -39,6 +39,7 @@ use App\Http\Controllers\PartnerTranslationController;
 use App\Http\Controllers\PartnerTranslationImageController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\PublicationController;
+use App\Http\Controllers\PublicationDocumentController;
 use App\Http\Controllers\PublicationEditionController;
 use App\Http\Controllers\PublicationImageController;
 use App\Http\Controllers\PublicationTranslationController;
@@ -261,6 +262,11 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('publication-image/{publicationImage}/download', [PublicationImageController::class, 'download'])->name('publication-image.download');
         Route::get('publication-image/{publicationImage}/view', [PublicationImageController::class, 'view'])->name('publication-image.view');
         Route::get('publication-image/{publicationImage}', [PublicationImageController::class, 'show'])->name('publication-image.show');
+
+        // PublicationDocument routes (read; the public URL is /doc/{filename})
+        Route::get('publication/{publication}/documents', [PublicationDocumentController::class, 'index'])->name('publication.documents.index');
+        Route::get('publication-document/{publicationDocument}/download', [PublicationDocumentController::class, 'download'])->name('publication-document.download');
+        Route::get('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'show'])->name('publication-document.show');
 
     });
 
@@ -492,6 +498,12 @@ Route::middleware(['auth:api'])->group(function () {
         Route::patch('publication-image/{publicationImage}/move-up', [PublicationImageController::class, 'moveUp'])->name('publication-image.moveUp');
         Route::patch('publication-image/{publicationImage}/move-down', [PublicationImageController::class, 'moveDown'])->name('publication-image.moveDown');
         Route::patch('publication-image/{publicationImage}/tighten-ordering', [PublicationImageController::class, 'tightenOrdering'])->name('publication-image.tightenOrdering');
+
+        // Documents have no permission of their own: every change is an update of the publication
+        Route::post('publication/{publication}/documents', [PublicationDocumentController::class, 'store'])->name('publication.documents.store');
+        Route::patch('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'update'])->name('publication-document.update');
+        Route::put('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'update']);
+        Route::delete('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'destroy'])->name('publication-document.destroy');
     });
 
     // DELETE operations - require DELETE_DATA permission

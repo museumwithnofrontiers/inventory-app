@@ -58,6 +58,7 @@ use App\Filament\Resources\ProjectResource\RelationManagers\ItemsRelationManager
 use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager as ProjectPartnersRelationManager;
 use App\Filament\Resources\PublicationResource\Pages\EditPublication;
 use App\Filament\Resources\PublicationResource\RelationManagers\CollectionsRelationManager as PublicationCollectionsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\DocumentsRelationManager as PublicationDocumentsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\EditionsRelationManager as PublicationEditionsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\ImagesRelationManager as PublicationImagesRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\ItemsRelationManager as PublicationItemsRelationManager;
@@ -236,6 +237,8 @@ class RelationManagerConventionTest extends TestCase
         DocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'documents'],
         // Editions have no Resource of their own: the inline Create/Edit modal, as Media (#2527)
         PublicationEditionsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'editions'],
+        // The publication's PDFs, on the item documents' pipeline and convention (#2547)
+        PublicationDocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'documents'],
 
         // ── pinned: the three original Images managers + the two Item Links managers ──
         CollectionImagesRelationManager::class => [
@@ -536,13 +539,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 7 has-many + 20 pivot + 4 translations + 3 inline + 21 pinned = 55.
+        // 7 has-many + 20 pivot + 4 translations + 4 inline + 21 pinned = 56.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(55, self::allManagers());
+        $this->assertCount(56, self::allManagers());
     }
 
     private function classify(string $class): array

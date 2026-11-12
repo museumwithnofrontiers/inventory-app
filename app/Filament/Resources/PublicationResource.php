@@ -15,6 +15,7 @@ use App\Filament\Resources\PublicationResource\Pages\EditPublication;
 use App\Filament\Resources\PublicationResource\Pages\ListPublication;
 use App\Filament\Resources\PublicationResource\Pages\ViewPublication;
 use App\Filament\Resources\PublicationResource\RelationManagers\CollectionsRelationManager;
+use App\Filament\Resources\PublicationResource\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\EditionsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\ItemsRelationManager;
@@ -283,6 +284,7 @@ class PublicationResource extends Resource
                 TranslationsRelationManager::class,
                 EditionsRelationManager::class,
                 ImagesRelationManager::class,
+                DocumentsRelationManager::class,
             ]),
             RelationGroup::make('Links', [
                 CollectionsRelationManager::class,

@@ -33,6 +33,7 @@ final class EntityRegistry
         'partner', 'partner_translation', 'partner_image', 'partner_logo', 'partner_translation_image',
         'contributor', 'contributor_translation', 'contributor_image',
         'publication', 'publication_translation', 'publication_edition', 'publication_image',
+        'publication_document',
         'timeline', 'timeline_event', 'timeline_event_translation', 'timeline_event_image',
         'glossary', 'glossary_translation', 'glossary_spelling',
         'author', 'author_translation', 'artist', 'workshop', 'dynasty', 'dynasty_translation', 'tag',

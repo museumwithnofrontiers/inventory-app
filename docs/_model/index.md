@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 54
+- ** Total Models:** 55
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
@@ -57,6 +57,7 @@ title: Generated Model Documentation
 - [Project](#project)
 - [Publication](#publication)
 - [PublicationCollection](#publicationcollection)
+- [PublicationDocument](#publicationdocument)
 - [PublicationEdition](#publicationedition)
 - [PublicationImage](#publicationimage)
 - [PublicationItem](#publicationitem)
@@ -1064,6 +1065,9 @@ const UPDATED_AT = 'updated_at';
 |--------|------|----------|---------|-------|
 | `id` | char | Unknown | Unknown |  |
 | `item_id` | char | Unknown | Unknown |  |
+| `publication_id` | char | Unknown | Unknown |  |
+| `publication_edition_id` | char | Unknown | Unknown |  |
+| `kind` | varchar | Unknown | Unknown |  |
 | `language_id` | varchar | Unknown | Unknown |  |
 | `path` | varchar | Unknown | Unknown |  |
 | `original_name` | varchar | Unknown | Unknown |  |
@@ -1078,7 +1082,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'path', 'original_name', 'mime_type', 'size', 'title', 'display_order', 'uploaded_by']
+['item_id', 'publication_id', 'publication_edition_id', 'kind', 'language_id', 'path', 'original_name', 'mime_type', 'size', 'title', 'display_order', 'uploaded_by']
 ```
 
 ### Attribute Casting
@@ -1099,6 +1103,8 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To
 - **`item()`**: BelongsTo [Item](#item)
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`publicationEdition()`**: BelongsTo [PublicationEdition](#publicationedition)
 - **`language()`**: BelongsTo [Language](#language)
 - **`uploadedByUser()`**: BelongsTo [User](#user)
 
@@ -2564,6 +2570,7 @@ const UPDATED_AT = 'updated_at';
 - **`translations()`**: HasMany [PublicationTranslation](#publicationtranslation)
 - **`editions()`**: HasMany [PublicationEdition](#publicationedition)
 - **`publicationImages()`**: HasMany [PublicationImage](#publicationimage)
+- **`documents()`**: HasMany [PublicationDocument](#publicationdocument)
 
 #### Belongs To Many
 - **`collections()`**: BelongsToMany [Collection](#collection)
@@ -2621,6 +2628,69 @@ const UPDATED_AT = 'updated_at';
 #### Belongs To
 - **`publication()`**: BelongsTo [Publication](#publication)
 - **`collection()`**: BelongsTo [Collection](#collection)
+
+
+## PublicationDocument {#publicationdocument}
+
+**Namespace:** `App\Models\PublicationDocument`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `publication_documents` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `publication_id` | char | Unknown | Unknown |  |
+| `publication_edition_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `kind` | varchar | Unknown | Unknown |  |
+| `path` | varchar | Unknown | Unknown |  |
+| `original_name` | varchar | Unknown | Unknown |  |
+| `mime_type` | varchar | Unknown | Unknown |  |
+| `size` | bigint | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['publication_id', 'publication_edition_id', 'language_id', 'kind', 'path', 'original_name', 'mime_type', 'size', 'display_order', 'backward_compatibility', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `kind` | `App\Enums\PublicationDocumentKind` |
+| `size` | `integer` |
+| `display_order` | `integer` |
+| `extra` | `object` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`publication()`**: BelongsTo [Publication](#publication)
+- **`publicationEdition()`**: BelongsTo [PublicationEdition](#publicationedition)
+- **`language()`**: BelongsTo [Language](#language)
 
 
 ## PublicationEdition {#publicationedition}

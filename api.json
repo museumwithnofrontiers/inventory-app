@@ -159,7 +159,7 @@
                 }
             },
             "put": {
-                "operationId": "author.update_201",
+                "operationId": "author.update_204",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Author"
@@ -610,7 +610,7 @@
                 }
             },
             "put": {
-                "operationId": "authorTranslation.update_203",
+                "operationId": "authorTranslation.update_206",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AuthorTranslation"
@@ -1153,7 +1153,7 @@
                 }
             },
             "put": {
-                "operationId": "availableImage.update_339",
+                "operationId": "availableImage.update_346",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AvailableImage"
@@ -1604,7 +1604,7 @@
                 }
             },
             "put": {
-                "operationId": "collection.update_276",
+                "operationId": "collection.update_279",
                 "summary": "Update the specified collection in storage",
                 "tags": [
                     "Collection"
@@ -2352,7 +2352,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionTranslation.update_274",
+                "operationId": "collectionTranslation.update_277",
                 "summary": "Update the specified collection translation",
                 "tags": [
                     "Collection Translations",
@@ -3068,7 +3068,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionImage.update_254",
+                "operationId": "collectionImage.update_257",
                 "summary": "Update the specified collection image",
                 "tags": [
                     "CollectionImage"
@@ -3627,7 +3627,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionMedia.update_259",
+                "operationId": "collectionMedia.update_262",
                 "summary": "Update the specified collection media",
                 "tags": [
                     "CollectionMedia"
@@ -4023,7 +4023,7 @@
                 }
             },
             "put": {
-                "operationId": "context.update_173",
+                "operationId": "context.update_176",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Context"
@@ -4534,7 +4534,7 @@
                 }
             },
             "put": {
-                "operationId": "contributor.update_263",
+                "operationId": "contributor.update_266",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Contributor"
@@ -5063,7 +5063,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorImage.update_267",
+                "operationId": "contributorImage.update_270",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorImage"
@@ -5765,7 +5765,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorTranslation.update_265",
+                "operationId": "contributorTranslation.update_268",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorTranslation"
@@ -6214,7 +6214,7 @@
                 }
             },
             "put": {
-                "operationId": "country.update_191",
+                "operationId": "country.update_194",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Country"
@@ -6662,7 +6662,7 @@
                 }
             },
             "put": {
-                "operationId": "countryTranslation.update_193",
+                "operationId": "countryTranslation.update_196",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CountryTranslation"
@@ -7111,7 +7111,7 @@
                 }
             },
             "put": {
-                "operationId": "dynasty.update_197",
+                "operationId": "dynasty.update_200",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Dynasty"
@@ -7560,7 +7560,7 @@
                 }
             },
             "put": {
-                "operationId": "dynastyTranslation.update_199",
+                "operationId": "dynastyTranslation.update_202",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "DynastyTranslation"
@@ -8011,7 +8011,7 @@
                 }
             },
             "put": {
-                "operationId": "glossary.update_181",
+                "operationId": "glossary.update_184",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Glossary"
@@ -8606,7 +8606,7 @@
                 }
             },
             "put": {
-                "operationId": "glossarySpelling.update_185",
+                "operationId": "glossarySpelling.update_188",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossarySpelling"
@@ -9055,7 +9055,7 @@
                 }
             },
             "put": {
-                "operationId": "glossaryTranslation.update_183",
+                "operationId": "glossaryTranslation.update_186",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossaryTranslation"
@@ -10158,7 +10158,7 @@
                 }
             },
             "put": {
-                "operationId": "item.update_235",
+                "operationId": "item.update_238",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Item"
@@ -10958,7 +10958,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLinkTranslation.update_252",
+                "operationId": "itemItemLinkTranslation.update_255",
                 "summary": "Update the specified item-item link translation",
                 "tags": [
                     "Item Item Link Translations",
@@ -11469,7 +11469,7 @@
                 }
             },
             "put": {
-                "operationId": "itemTranslation.update_272",
+                "operationId": "itemTranslation.update_275",
                 "summary": "Update the specified item translation",
                 "tags": [
                     "Item Translations",
@@ -12125,7 +12125,7 @@
                 }
             },
             "put": {
-                "operationId": "itemDocument.update_246",
+                "operationId": "itemDocument.update_249",
                 "summary": "Update the specified item document",
                 "tags": [
                     "ItemDocument"
@@ -12639,7 +12639,7 @@
                 }
             },
             "put": {
-                "operationId": "itemImage.update_237",
+                "operationId": "itemImage.update_240",
                 "summary": "Update the specified item image",
                 "tags": [
                     "ItemImage"
@@ -13078,7 +13078,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLink.update_250",
+                "operationId": "itemItemLink.update_253",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ItemItemLink"
@@ -13633,7 +13633,7 @@
                 }
             },
             "put": {
-                "operationId": "itemMedia.update_242",
+                "operationId": "itemMedia.update_245",
                 "summary": "Update the specified item media",
                 "tags": [
                     "ItemMedia"
@@ -14079,7 +14079,7 @@
                 }
             },
             "put": {
-                "operationId": "language.update_177",
+                "operationId": "language.update_180",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Language"
@@ -14578,7 +14578,7 @@
                 }
             },
             "put": {
-                "operationId": "languageTranslation.update_179",
+                "operationId": "languageTranslation.update_182",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "LanguageTranslation"
@@ -15288,7 +15288,7 @@
                 }
             },
             "put": {
-                "operationId": "partner.update_215",
+                "operationId": "partner.update_218",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Partner"
@@ -15817,7 +15817,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerImage.update_219",
+                "operationId": "partnerImage.update_222",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerImage"
@@ -16599,7 +16599,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerLogo.update_224",
+                "operationId": "partnerLogo.update_227",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerLogo"
@@ -17191,7 +17191,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslation.update_217",
+                "operationId": "partnerTranslation.update_220",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslation"
@@ -17720,7 +17720,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslationImage.update_229",
+                "operationId": "partnerTranslationImage.update_232",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslationImage"
@@ -18460,7 +18460,7 @@
                 }
             },
             "put": {
-                "operationId": "project.update_189",
+                "operationId": "project.update_192",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Project"
@@ -18933,7 +18933,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -19036,7 +19036,7 @@
                 }
             },
             "put": {
-                "operationId": "publication.update_278",
+                "operationId": "publication.update_281",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Publication"
@@ -19154,7 +19154,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -19454,7 +19454,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -19590,7 +19590,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -19789,7 +19789,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -19865,7 +19865,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -19892,6 +19892,546 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/publication/{publication}/documents": {
+            "get": {
+                "operationId": "publication.documents.index",
+                "summary": "Display a listing of the documents of a publication",
+                "tags": [
+                    "PublicationDocument"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `publicationEdition`, `language`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "publication,publicationEdition,language"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `PublicationDocumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/PublicationDocumentResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "publication.documents.store",
+                "summary": "Record a document whose file is on the private documents disk",
+                "tags": [
+                    "PublicationDocument"
+                ],
+                "parameters": [
+                    {
+                        "name": "publication",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StorePublicationDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PublicationDocumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PublicationDocumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/publication-document/{publicationDocument}/download": {
+            "get": {
+                "operationId": "publication-document.download",
+                "summary": "Returns the document file for download, to a signed-in user",
+                "tags": [
+                    "PublicationDocument"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicationDocument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication document ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `publicationEdition`, `language`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "publication,publicationEdition,language"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/octet-stream": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/publication-document/{publicationDocument}": {
+            "get": {
+                "operationId": "publication-document.show",
+                "summary": "Display the specified document",
+                "tags": [
+                    "PublicationDocument"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicationDocument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication document ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `publicationEdition`, `language`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "publication,publicationEdition,language"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`PublicationDocumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PublicationDocumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "publication-document.update",
+                "summary": "Update the specified document's metadata",
+                "tags": [
+                    "PublicationDocument"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicationDocument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication document ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePublicationDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PublicationDocumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PublicationDocumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "publicationDocument.update_303",
+                "summary": "Update the specified document's metadata",
+                "tags": [
+                    "PublicationDocument"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicationDocument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication document ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePublicationDocumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`PublicationDocumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PublicationDocumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "publication-document.destroy",
+                "summary": "Remove the specified document and its file",
+                "tags": [
+                    "PublicationDocument"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicationDocument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication document ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -20032,7 +20572,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationEdition.update_291",
+                "operationId": "publicationEdition.update_294",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationEdition"
@@ -20836,7 +21376,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationImage.update_294",
+                "operationId": "publicationImage.update_297",
                 "summary": "Update the specified publication image",
                 "tags": [
                     "PublicationImage"
@@ -21301,7 +21841,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationTranslation.update_288",
+                "operationId": "publicationTranslation.update_291",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationTranslation"
@@ -21956,7 +22496,7 @@
                 }
             },
             "put": {
-                "operationId": "tag.update_195",
+                "operationId": "tag.update_198",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Tag"
@@ -22395,7 +22935,7 @@
                 }
             },
             "put": {
-                "operationId": "timeline.update_205",
+                "operationId": "timeline.update_208",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Timeline"
@@ -22844,7 +23384,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEvent.update_207",
+                "operationId": "timelineEvent.update_210",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEvent"
@@ -23282,7 +23822,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventImage.update_211",
+                "operationId": "timelineEventImage.update_214",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventImage"
@@ -23579,7 +24119,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventTranslation.update_209",
+                "operationId": "timelineEventTranslation.update_212",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventTranslation"
@@ -23897,7 +24437,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "examples": [
                             "project,country,language"
                         ]
@@ -24133,7 +24673,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "examples": [
                             "project,country,language"
                         ]
@@ -24197,7 +24737,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "examples": [
                             "project,country,language"
                         ]
@@ -24245,7 +24785,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "examples": [
                             "project,country,language"
                         ]
@@ -27565,6 +28105,141 @@
                 ],
                 "title": "PublicationCategory"
             },
+            "PublicationDocumentKind": {
+                "type": "string",
+                "description": "What a PublicationDocument is: an edition's sample pages or its credits (legacy books.path_catalogue and books.path_credits).\n",
+                "enum": [
+                    "sample",
+                    "credits"
+                ],
+                "title": "PublicationDocumentKind"
+            },
+            "PublicationDocumentResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique identifier (GUID)"
+                    },
+                    "publication_id": {
+                        "type": "string",
+                        "description": "The publication this document belongs to"
+                    },
+                    "publication_edition_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The edition this document belongs to, if any"
+                    },
+                    "language_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The language of the document, if any"
+                    },
+                    "kind": {
+                        "description": "sample or credits",
+                        "$ref": "#/components/schemas/PublicationDocumentKind"
+                    },
+                    "path": {
+                        "type": "string",
+                        "description": "The stored filename on the private documents disk"
+                    },
+                    "original_name": {
+                        "type": "string",
+                        "description": "The original filename when uploaded"
+                    },
+                    "mime_type": {
+                        "type": "string",
+                        "description": "The MIME type of the document"
+                    },
+                    "size": {
+                        "type": "integer",
+                        "description": "The file size in bytes"
+                    },
+                    "display_order": {
+                        "type": "integer",
+                        "description": "Display order among the publication's documents"
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The Id(s) of matching resource in the legacy system (if any)."
+                    },
+                    "extra": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Residual legacy values (holding area)"
+                    },
+                    "public_url": {
+                        "type": "string",
+                        "description": "The public URL the sites link to (/doc/{path})"
+                    },
+                    "publication": {
+                        "$ref": "#/components/schemas/PublicationResource"
+                    },
+                    "publicationEdition": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PublicationEditionResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "language": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of creation of the resource (managed by the system)"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of last modification of the resource (managed by the system)"
+                    }
+                },
+                "required": [
+                    "id",
+                    "publication_id",
+                    "publication_edition_id",
+                    "language_id",
+                    "kind",
+                    "path",
+                    "original_name",
+                    "mime_type",
+                    "size",
+                    "display_order",
+                    "backward_compatibility",
+                    "extra",
+                    "public_url",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "PublicationDocumentResource"
+            },
             "PublicationEditionResource": {
                 "type": "object",
                 "properties": {
@@ -27972,6 +28647,13 @@
                         "description": "The covers and sample pages (PublicationImageResource[])",
                         "items": {
                             "$ref": "#/components/schemas/PublicationImageResource"
+                        }
+                    },
+                    "documents": {
+                        "type": "array",
+                        "description": "The sample and credits PDFs (PublicationDocumentResource[])",
+                        "items": {
+                            "$ref": "#/components/schemas/PublicationDocumentResource"
                         }
                     },
                     "collections": {
@@ -30083,6 +30765,83 @@
                 ],
                 "title": "StoreProjectRequest"
             },
+            "StorePublicationDocumentRequest": {
+                "type": "object",
+                "description": "Records a document whose file is already on the private documents disk\n(as the ItemDocument API does). A document is part of its publication:\nrecording one requires `update` on the publication.",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "kind": {
+                        "$ref": "#/components/schemas/PublicationDocumentKind"
+                    },
+                    "publication_edition_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "language_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "path": {
+                        "type": "string",
+                        "description": "The stored name /doc serves: a UUID and .pdf",
+                        "pattern": "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.pdf$"
+                    },
+                    "original_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "mime_type": {
+                        "type": "string",
+                        "enum": [
+                            "application/pdf"
+                        ]
+                    },
+                    "size": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "display_order": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "extra": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "kind",
+                    "path",
+                    "original_name",
+                    "mime_type",
+                    "size"
+                ],
+                "title": "StorePublicationDocumentRequest"
+            },
             "StorePublicationEditionRequest": {
                 "type": "object",
                 "description": "An edition has no policy of its own: creating one is a change to its\npublication, so it requires `update` on that publication.",
@@ -30329,7 +31088,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "examples": [
                             "project,country,language"
                         ]
@@ -32915,6 +33674,54 @@
                 ],
                 "title": "UpdateProjectRequest"
             },
+            "UpdatePublicationDocumentRequest": {
+                "type": "object",
+                "description": "Changes a document's metadata. The file, its name and its publication\nnever change.",
+                "properties": {
+                    "kind": {
+                        "$ref": "#/components/schemas/PublicationDocumentKind"
+                    },
+                    "publication_edition_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "language_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "display_order": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "extra": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "title": "UpdatePublicationDocumentRequest"
+            },
             "UpdatePublicationEditionRequest": {
                 "type": "object",
                 "description": "Changing an edition requires `update` on its publication, and on the\npublication it is moved to, if any.",
@@ -33153,7 +33960,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `collections`, `items`, `tags`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `project`, `country`, `language`, `translations`, `editions`, `publicationImages`, `documents`, `collections`, `items`, `tags`.",
                         "examples": [
                             "project,country,language"
                         ]

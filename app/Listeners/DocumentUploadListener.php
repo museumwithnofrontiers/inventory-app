@@ -2,10 +2,13 @@
 
 namespace App\Listeners;
 
+use App\Enums\PublicationDocumentKind;
 use App\Events\DocumentUploadEvent;
 use App\Models\DocumentUpload;
 use App\Models\Item;
 use App\Models\ItemDocument;
+use App\Models\Publication;
+use App\Models\PublicationDocument;
 use App\Models\User;
 use App\Notifications\ItemDocumentUploadRejected;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -27,8 +30,10 @@ use Throwable;
  * declared/guessed MIME allow-list. No content parsing, no virus scanning.
  *
  * On success, moves the file from the pending disk to the private documents
- * disk, creates the `ItemDocument` (attach is implicit — there is no reuse
- * pool for documents, unlike images), and deletes the `DocumentUpload` row.
+ * disk, creates the `ItemDocument` or, for a publication, the
+ * `PublicationDocument` stored as `{id}.pdf` (attach is implicit — there is
+ * no reuse pool for documents, unlike images), and deletes the
+ * `DocumentUpload` row.
  *
  * On failure — a bad file, a missing/unreadable pending file, or any
  * unexpected exception — this is one unified "rejected" path: the pending
@@ -137,6 +142,13 @@ class DocumentUploadListener implements ShouldQueue
     {
         $finalDisk = Config::string('localstorage.documents.disk');
         $finalDirectory = trim(Config::string('localstorage.documents.directory'), '/');
+
+        // A publication document is public at /doc/{uuid}.pdf (ADR 004): it is
+        // stored under its own id. An item document keeps the upload's name.
+        if ($documentUpload->isForPublication()) {
+            $filename = $documentUpload->id.'.pdf';
+        }
+
         $finalPath = $finalDirectory === '' ? $filename : $finalDirectory.'/'.$filename;
 
         $readStream = Storage::disk($pendingDisk)->readStream($pendingPath);
@@ -163,22 +175,11 @@ class DocumentUploadListener implements ShouldQueue
         }
 
         try {
-            // Recommended by the design: give the ItemDocument the same id as
-            // the DocumentUpload it came from, mirroring how AvailableImage
-            // preserves ImageUpload's id.
-            $itemDocument = new ItemDocument([
-                'item_id' => $documentUpload->item_id,
-                'language_id' => $documentUpload->language_id,
-                'path' => $filename,
-                'original_name' => $documentUpload->original_name,
-                'mime_type' => $documentUpload->mime_type,
-                'size' => $documentUpload->size,
-                'title' => $documentUpload->title,
-                'display_order' => $documentUpload->display_order
-                    ?? ItemDocument::getNextDisplayOrderFor(['item_id' => $documentUpload->item_id]),
-            ]);
-            $itemDocument->id = $documentUpload->id;
-            $itemDocument->save();
+            if ($documentUpload->isForPublication()) {
+                $this->createPublicationDocument($documentUpload, $filename);
+            } else {
+                $this->createItemDocument($documentUpload, $filename);
+            }
         } catch (Throwable $e) {
             Storage::disk($finalDisk)->delete($finalPath);
 
@@ -187,6 +188,48 @@ class DocumentUploadListener implements ShouldQueue
 
         Storage::disk($pendingDisk)->delete($pendingPath);
         $documentUpload->delete();
+    }
+
+    /**
+     * The PublicationDocument, with the same id as the DocumentUpload it came
+     * from, like the ItemDocument below.
+     */
+    private function createPublicationDocument(DocumentUpload $documentUpload, string $filename): void
+    {
+        $publicationDocument = new PublicationDocument([
+            'publication_id' => $documentUpload->publication_id,
+            'publication_edition_id' => $documentUpload->publication_edition_id,
+            'language_id' => $documentUpload->language_id,
+            'kind' => $documentUpload->kind ?? PublicationDocumentKind::SAMPLE->value,
+            'path' => $filename,
+            'original_name' => $documentUpload->original_name,
+            'mime_type' => $documentUpload->mime_type,
+            'size' => $documentUpload->size,
+            'display_order' => $documentUpload->display_order
+                ?? PublicationDocument::getNextDisplayOrderFor(['publication_id' => $documentUpload->publication_id]),
+        ]);
+        $publicationDocument->id = $documentUpload->id;
+        $publicationDocument->save();
+    }
+
+    private function createItemDocument(DocumentUpload $documentUpload, string $filename): void
+    {
+        // Recommended by the design: give the ItemDocument the same id as
+        // the DocumentUpload it came from, mirroring how AvailableImage
+        // preserves ImageUpload's id.
+        $itemDocument = new ItemDocument([
+            'item_id' => $documentUpload->item_id,
+            'language_id' => $documentUpload->language_id,
+            'path' => $filename,
+            'original_name' => $documentUpload->original_name,
+            'mime_type' => $documentUpload->mime_type,
+            'size' => $documentUpload->size,
+            'title' => $documentUpload->title,
+            'display_order' => $documentUpload->display_order
+                ?? ItemDocument::getNextDisplayOrderFor(['item_id' => $documentUpload->item_id]),
+        ]);
+        $itemDocument->id = $documentUpload->id;
+        $itemDocument->save();
     }
 
     /**
@@ -209,7 +252,9 @@ class DocumentUploadListener implements ShouldQueue
         }
 
         $uploadedBy = $documentUpload->uploaded_by;
-        $item = Item::find($documentUpload->item_id);
+        $owner = $documentUpload->isForPublication()
+            ? Publication::query()->whereKey($documentUpload->publication_id)->first()
+            : Item::query()->whereKey($documentUpload->item_id)->first();
         $originalName = $documentUpload->original_name;
 
         $documentUpload->delete();
@@ -226,6 +271,6 @@ class DocumentUploadListener implements ShouldQueue
             return;
         }
 
-        Notification::send($user, new ItemDocumentUploadRejected($originalName, $item, $reason));
+        Notification::send($user, new ItemDocumentUploadRejected($originalName, $owner, $reason));
     }
 }

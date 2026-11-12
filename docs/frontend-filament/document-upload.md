@@ -10,6 +10,9 @@ parent: Filament Admin Frontend
 {: .important }
 > This is a **design document**. It specifies the pipeline that [M7 Story A4.2](https://github.com/museumwithnofrontiers/inventory-app/issues/1906) and [M7 Story A4.3](https://github.com/museumwithnofrontiers/inventory-app/issues/1907) implement. It contains no application code, no migration file and no config change of its own. The one schema change it needs, the [`document_uploads` migration](#approved-migration), was approved by Pascal on 2026-09-26 ([#1905](https://github.com/museumwithnofrontiers/inventory-app/issues/1905)), together with the [decisions](#decisions-2026-09-26) below.
 
+{: .note }
+> **Publication documents (M14, [ADR 004](../adr/004-public-publication-documents.md)).** The same pipeline now also takes a publication's sample and credits PDFs: a `DocumentUpload` is for exactly one item (`item_id`) or one publication (`publication_id`, with its `publication_edition_id` and `kind`), and `DocumentUploadListener` promotes the latter into a `PublicationDocument` stored as `{id}.pdf`. Unlike an `ItemDocument`, a `PublicationDocument` is public: `/doc/{uuid}.pdf` streams it from the private documents disk, unstamped, outside the web group, with its own throttle. `ItemDocument` stays private, and `documents:cleanup-orphans` covers both.
+
 ## Decisions (2026-09-26)
 
 Pascal took three decisions on this design ([#1905](https://github.com/museumwithnofrontiers/inventory-app/issues/1905)):

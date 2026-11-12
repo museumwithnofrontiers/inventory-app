@@ -53,6 +53,8 @@ class PublicationResource extends BaseJsonResource
             'editions' => PublicationEditionResource::collection($this->whenLoaded('editions')),
             // The covers and sample pages (PublicationImageResource[])
             'publicationImages' => PublicationImageResource::collection($this->whenLoaded('publicationImages')),
+            // The sample and credits PDFs (PublicationDocumentResource[])
+            'documents' => PublicationDocumentResource::collection($this->whenLoaded('documents')),
             // The collections the publication accompanies (CollectionResource[])
             'collections' => CollectionResource::collection($this->whenLoaded('collections')),
             // The items the publication cites (ItemResource[])

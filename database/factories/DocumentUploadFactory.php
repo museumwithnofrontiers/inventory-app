@@ -4,6 +4,7 @@ namespace Database\Factories;
 
 use App\Models\DocumentUpload;
 use App\Models\Item;
+use App\Models\Publication;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -42,6 +43,18 @@ class DocumentUploadFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'item_id' => $item->id,
+        ]);
+    }
+
+    /**
+     * A pending publication document: for the publication, not an item.
+     */
+    public function forPublication(Publication $publication, string $kind = 'sample'): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'item_id' => null,
+            'publication_id' => $publication->id,
+            'kind' => $kind,
         ]);
     }
 }

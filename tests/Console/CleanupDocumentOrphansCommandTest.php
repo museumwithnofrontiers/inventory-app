@@ -4,6 +4,8 @@ namespace Tests\Console;
 
 use App\Models\Item;
 use App\Models\ItemDocument;
+use App\Models\Publication;
+use App\Models\PublicationDocument;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
@@ -49,6 +51,35 @@ class CleanupDocumentOrphansCommandTest extends TestCase
 
         Storage::disk($this->disk)->assertExists($this->directory.'/attached.pdf');
         Storage::disk($this->disk)->assertMissing($this->directory.'/orphan.pdf');
+    }
+
+    public function test_files_referenced_by_a_publication_document_are_kept(): void
+    {
+        PublicationDocument::factory()->create(['path' => 'publication.pdf']);
+        foreach (['publication.pdf', 'orphan.pdf'] as $file) {
+            Storage::disk($this->disk)->put($this->directory.'/'.$file, 'data');
+        }
+
+        $this->artisan('documents:cleanup-orphans', ['--delete' => true, '--force' => true, '--older-than' => '0m'])
+            ->assertExitCode(0);
+
+        Storage::disk($this->disk)->assertExists($this->directory.'/publication.pdf');
+        Storage::disk($this->disk)->assertMissing($this->directory.'/orphan.pdf');
+    }
+
+    public function test_publication_documents_left_behind_by_a_database_cascade_are_deleted(): void
+    {
+        $publication = Publication::factory()->create();
+        PublicationDocument::factory()->forPublication($publication)->create(['path' => 'cascaded-publication.pdf']);
+        Storage::disk($this->disk)->put($this->directory.'/cascaded-publication.pdf', 'data');
+
+        Publication::query()->whereKey($publication->id)->delete();
+        $this->assertDatabaseMissing('publication_documents', ['path' => 'cascaded-publication.pdf']);
+
+        $this->artisan('documents:cleanup-orphans', ['--delete' => true, '--force' => true, '--older-than' => '0m'])
+            ->assertExitCode(0);
+
+        Storage::disk($this->disk)->assertMissing($this->directory.'/cascaded-publication.pdf');
     }
 
     public function test_documents_left_behind_by_a_database_cascade_are_found_and_deleted(): void
