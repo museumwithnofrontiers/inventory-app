@@ -155,6 +155,9 @@ export class UnifiedTracker implements ITracker {
       item_document: 0,
       contributor: 0,
       contributor_translation: 0,
+      publication: 0,
+      publication_translation: 0,
+      publication_edition: 0,
     };
 
     for (const entity of this.entities.values()) {

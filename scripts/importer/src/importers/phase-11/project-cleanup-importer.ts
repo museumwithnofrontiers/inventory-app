@@ -10,7 +10,7 @@ export class ProjectCleanupImporter extends BaseImporter {
     const result = this.createResult();
 
     try {
-      this.logInfo('Removing projects that have no items...');
+      this.logInfo('Removing projects that have neither items nor publications...');
 
       const dry = this.isDryRun || this.isSampleOnlyMode;
 
@@ -22,7 +22,7 @@ export class ProjectCleanupImporter extends BaseImporter {
         return result;
       }
 
-      this.logInfo(`Found ${projects.length} project(s) with no items`);
+      this.logInfo(`Found ${projects.length} project(s) with neither items nor publications`);
 
       let deletedCount = 0;
 
