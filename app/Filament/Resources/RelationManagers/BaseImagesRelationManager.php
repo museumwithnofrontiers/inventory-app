@@ -6,6 +6,7 @@ use App\Contracts\DetachableImage;
 use App\Contracts\StreamableImageFile;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Models\AvailableImage;
+use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -13,6 +14,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -48,6 +50,43 @@ abstract class BaseImagesRelationManager extends RelationManager
 
     abstract protected function imageDownloadRouteName(): string;
 
+    /**
+     * Fields an image model needs on top of the shared ones, appended to
+     * both the attach and the edit form (PublicationImage: its kind and
+     * edition). None by default.
+     *
+     * @return array<int, Component>
+     */
+    protected function extraImageFormFields(): array
+    {
+        return [];
+    }
+
+    /**
+     * Columns an image model shows on top of the shared ones, after the
+     * filename. None by default.
+     *
+     * @return array<int, Column>
+     */
+    protected function extraImageColumns(): array
+    {
+        return [];
+    }
+
+    /**
+     * Attaches the chosen AvailableImage through the model's own
+     * attachFromAvailableImage() row swap. A model whose attach takes more
+     * than the owner and the alt text (PublicationImage) reads the rest
+     * from the attach form's $data.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function attachAvailableImage(AvailableImage $availableImage, string $ownerKey, ?string $altText, array $data): void
+    {
+        $modelClass = $this->imageModelClass();
+        $modelClass::attachFromAvailableImage($availableImage, $ownerKey, $altText);
+    }
+
     public function table(Table $table): Table
     {
         return $table
@@ -66,6 +105,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                     ->label('Filename')
                     ->searchable()
                     ->sortable(),
+                ...$this->extraImageColumns(),
                 TextColumn::make('alt_text')
                     ->label('Alt text')
                     ->limit(50)
@@ -113,6 +153,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->label('Alt text')
                             ->maxLength(255)
                             ->nullable(),
+                        ...$this->extraImageFormFields(),
                     ])
                     ->action(function (array $data): void {
                         $availableImage = AvailableImage::find($data['available_image_id']);
@@ -127,13 +168,14 @@ abstract class BaseImagesRelationManager extends RelationManager
                             return;
                         }
 
-                        $modelClass = $this->imageModelClass();
                         $ownerKey = $this->getOwnerRecord()->getKey();
                         $altTextRaw = $data['alt_text'] ?? null;
-                        $modelClass::attachFromAvailableImage(
+                        /** @var array<string, mixed> $data */
+                        $this->attachAvailableImage(
                             $availableImage,
                             is_scalar($ownerKey) ? (string) $ownerKey : '',
-                            is_string($altTextRaw) ? $altTextRaw : null
+                            is_string($altTextRaw) ? $altTextRaw : null,
+                            $data
                         );
 
                         Notification::make()
@@ -171,6 +213,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->maxLength(500)
                             ->nullable()
                             ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
+                        ...$this->extraImageFormFields(),
                     ]),
                 Action::make('detach')
                     ->label('Detach')

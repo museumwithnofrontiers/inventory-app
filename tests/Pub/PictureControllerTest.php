@@ -13,6 +13,8 @@ use App\Models\PartnerImage;
 use App\Models\PartnerLogo;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
+use App\Models\Publication;
+use App\Models\PublicationImage;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventImage;
 use App\Support\Images\ImageBurner;
@@ -95,6 +97,7 @@ class PictureControllerTest extends TestCase
             PartnerTranslationImage::class => PartnerTranslationImage::factory()->create($attributes + ['partner_translation_id' => PartnerTranslation::factory()->create()->id]),
             ContributorImage::class => ContributorImage::factory()->create($attributes + ['contributor_id' => Contributor::factory()->create()->id]),
             TimelineEventImage::class => TimelineEventImage::factory()->create($attributes + ['timeline_event_id' => TimelineEvent::factory()->create()->id]),
+            PublicationImage::class => PublicationImage::factory()->create($attributes + ['publication_id' => Publication::factory()->create()->id]),
             PartnerLogo::class => PartnerLogo::factory()->create($attributes + ['partner_id' => Partner::factory()->create()->id]),
             default => throw new \InvalidArgumentException("Unhandled class: {$class}"),
         };
@@ -453,6 +456,7 @@ class PictureControllerTest extends TestCase
             'PartnerTranslationImage' => [PartnerTranslationImage::class],
             'ContributorImage' => [ContributorImage::class],
             'TimelineEventImage' => [TimelineEventImage::class],
+            'PublicationImage' => [PublicationImage::class],
         ];
     }
 

@@ -14,6 +14,8 @@ use App\Models\PartnerLogo;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
 use App\Models\Project;
+use App\Models\Publication;
+use App\Models\PublicationImage;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventImage;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -111,5 +113,22 @@ class CopyrightResolutionTest extends TestCase
         $image = TimelineEventImage::factory()->create(['timeline_event_id' => $timelineEvent->id, 'copyright' => null]);
 
         $this->assertSame(TimelineEventImage::GLOBAL_FALLBACK, $image->resolveCopyright());
+    }
+
+    public function test_publication_image_falls_back_to_its_publications_project(): void
+    {
+        $project = Project::factory()->create(['copyright' => '© Islamic Art in the Mediterranean']);
+        $publication = Publication::factory()->forProject($project)->create();
+        $image = PublicationImage::factory()->forPublication($publication)->create(['copyright' => null]);
+
+        $this->assertSame('© Islamic Art in the Mediterranean', $image->resolveCopyright());
+        $this->assertSame('project', $image->copyrightSource());
+    }
+
+    public function test_publication_image_without_a_project_takes_the_global_fallback(): void
+    {
+        $image = PublicationImage::factory()->forPublication(Publication::factory()->create())->create(['copyright' => null]);
+
+        $this->assertSame(PublicationImage::GLOBAL_FALLBACK, $image->resolveCopyright());
     }
 }

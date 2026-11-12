@@ -25,6 +25,7 @@ use App\Filament\Resources\ItemResource\RelationManagers\IncomingLinksRelationMa
 use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationManager;
+use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
@@ -533,6 +534,7 @@ class ItemResource extends Resource
                 PictureItemsRelationManager::class,
                 CollectionAppearancesRelationManager::class,
                 TagsRelationManager::class,
+                PublicationsRelationManager::class,
             ]),
             RelationGroup::make('Media', [
                 ImagesRelationManager::class,

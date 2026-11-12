@@ -632,4 +632,17 @@ class Collection extends Model
 
         return $query->whereNotIn('id', $excludeIds);
     }
+
+    /**
+     * The publications that accompany this collection.
+     *
+     * @return BelongsToMany<Publication, $this, PublicationCollection>
+     */
+    public function publications(): BelongsToMany
+    {
+        return $this->belongsToMany(Publication::class, 'publication_collection')
+            ->using(PublicationCollection::class)
+            ->withPivot('display_order', 'extra')
+            ->withTimestamps();
+    }
 }

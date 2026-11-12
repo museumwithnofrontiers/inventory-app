@@ -9,6 +9,7 @@ use App\Models\Dynasty;
 use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\Partner;
+use App\Models\Publication;
 use App\Models\Tag;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
@@ -32,11 +33,12 @@ use Spatie\Permission\Models\Permission;
  * exists, ordered, capped at {@see self::RESULT_LIMIT} results, and never
  * preloaded.
  *
- * Tag, Artist, Author, Workshop, Glossary and Timeline have no `*DisplayLabel`
- * helper. Their label is the model's own natural name column:
+ * Tag, Artist, Author, Workshop, Glossary, Timeline and Publication have no
+ * `*DisplayLabel` helper. Their label is the model's own natural name column:
  * Tag::description (TagResource's own `$recordTitleAttribute`),
  * Artist::name, Author::name, Workshop::name, Glossary::internal_name,
- * Timeline::internal_name — suffixed with the legacy `backward_compatibility`
+ * Timeline::internal_name, Publication::internal_name — suffixed with the
+ * legacy `backward_compatibility`
  * code the same way the display-label entities are, via
  * {@see self::legacyLabel()}.
  *
@@ -86,6 +88,8 @@ class RecordSelect
     public const GLOSSARIES = 'glossaries';
 
     public const PERMISSIONS = 'permissions';
+
+    public const PUBLICATIONS = 'publications';
 
     private const RESULT_LIMIT = 50;
 
@@ -259,6 +263,28 @@ class RecordSelect
 
                 return $timeline instanceof Timeline
                     ? self::legacyLabel($timeline->internal_name, $timeline->backward_compatibility)
+                    : (is_scalar($value) ? (string) $value : '');
+            });
+
+        return self::requiredOrNullable($select, $required);
+    }
+
+    public static function forPublications(string $name = 'publication_id', string $label = 'Publication', bool $required = true): Select
+    {
+        $select = Select::make($name)
+            ->label($label)
+            ->searchable()
+            ->getSearchResultsUsing(fn (string $search): array => self::applyBoundedSearch(Publication::query(), $search)
+                ->get()
+                ->mapWithKeys(fn (Publication $publication): array => [
+                    $publication->id => self::legacyLabel($publication->internal_name, $publication->backward_compatibility),
+                ])
+                ->all())
+            ->getOptionLabelUsing(function (mixed $value): string {
+                $publication = Publication::query()->whereKey($value)->first();
+
+                return $publication instanceof Publication
+                    ? self::legacyLabel($publication->internal_name, $publication->backward_compatibility)
                     : (is_scalar($value) ? (string) $value : '');
             });
 
@@ -444,6 +470,11 @@ class RecordSelect
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
                 ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('internal_name'), $scope))
                 ->recordTitle(fn (Glossary $record): string => self::legacyLabel($record->internal_name, $record->backward_compatibility)),
+
+            self::PUBLICATIONS => $action
+                ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('internal_name'), $scope))
+                ->recordTitle(fn (Publication $record): string => self::legacyLabel($record->internal_name, $record->backward_compatibility)),
 
             self::PERMISSIONS => $action
                 ->recordSelectSearchColumns(self::NAME_GUARD)

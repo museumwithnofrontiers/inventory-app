@@ -22,6 +22,10 @@ use App\Models\PartnerImage;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
 use App\Models\Project;
+use App\Models\Publication;
+use App\Models\PublicationEdition;
+use App\Models\PublicationImage;
+use App\Models\PublicationTranslation;
 use App\Models\Tag;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -232,6 +236,49 @@ class PermissionsTest extends TestCase
             ['DELETE', 'project.destroy', Permission::DELETE_DATA, Project::class],
             ['PATCH', 'project.setEnabled', Permission::UPDATE_DATA, Project::class],
             ['PATCH', 'project.setLaunched', Permission::UPDATE_DATA, Project::class],
+
+            // Publication routes
+            ['GET', 'publication.index', Permission::VIEW_DATA, null],
+            ['POST', 'publication.store', Permission::CREATE_DATA, null],
+            ['GET', 'publication.show', Permission::VIEW_DATA, Publication::class],
+            ['PATCH', 'publication.update', Permission::UPDATE_DATA, Publication::class],
+            ['DELETE', 'publication.destroy', Permission::DELETE_DATA, Publication::class],
+            ['POST', 'publication.attachCollection', Permission::UPDATE_DATA, Publication::class],
+            ['DELETE', 'publication.detachCollection', Permission::UPDATE_DATA, Publication::class],
+            ['POST', 'publication.attachItem', Permission::UPDATE_DATA, Publication::class],
+            ['DELETE', 'publication.detachItem', Permission::UPDATE_DATA, Publication::class],
+            ['POST', 'publication.attachTag', Permission::UPDATE_DATA, Publication::class],
+            ['POST', 'publication.attachTags', Permission::UPDATE_DATA, Publication::class],
+            ['DELETE', 'publication.detachTag', Permission::UPDATE_DATA, Publication::class],
+            ['DELETE', 'publication.detachTags', Permission::UPDATE_DATA, Publication::class],
+            ['POST', 'publication.attachImage', Permission::CREATE_DATA, Publication::class],
+            ['GET', 'publication.images.index', Permission::VIEW_DATA, Publication::class],
+            ['POST', 'publication.images.store', Permission::CREATE_DATA, Publication::class],
+
+            // PublicationTranslation routes
+            ['GET', 'publication-translation.index', Permission::VIEW_DATA, null],
+            ['POST', 'publication-translation.store', Permission::CREATE_DATA, null],
+            ['GET', 'publication-translation.show', Permission::VIEW_DATA, PublicationTranslation::class],
+            ['PATCH', 'publication-translation.update', Permission::UPDATE_DATA, PublicationTranslation::class],
+            ['DELETE', 'publication-translation.destroy', Permission::DELETE_DATA, PublicationTranslation::class],
+
+            // PublicationEdition routes: every change is an update of the publication
+            ['GET', 'publication-edition.index', Permission::VIEW_DATA, null],
+            ['POST', 'publication-edition.store', Permission::UPDATE_DATA, null],
+            ['GET', 'publication-edition.show', Permission::VIEW_DATA, PublicationEdition::class],
+            ['PATCH', 'publication-edition.update', Permission::UPDATE_DATA, PublicationEdition::class],
+            ['DELETE', 'publication-edition.destroy', Permission::UPDATE_DATA, PublicationEdition::class],
+
+            // PublicationImage routes
+            ['GET', 'publication-image.show', Permission::VIEW_DATA, PublicationImage::class],
+            ['PATCH', 'publication-image.update', Permission::UPDATE_DATA, PublicationImage::class],
+            ['DELETE', 'publication-image.destroy', Permission::DELETE_DATA, PublicationImage::class],
+            ['POST', 'publication-image.detach', Permission::DELETE_DATA, PublicationImage::class],
+            ['GET', 'publication-image.download', Permission::VIEW_DATA, PublicationImage::class],
+            ['GET', 'publication-image.view', Permission::VIEW_DATA, PublicationImage::class],
+            ['PATCH', 'publication-image.moveUp', Permission::UPDATE_DATA, PublicationImage::class],
+            ['PATCH', 'publication-image.moveDown', Permission::UPDATE_DATA, PublicationImage::class],
+            ['PATCH', 'publication-image.tightenOrdering', Permission::UPDATE_DATA, PublicationImage::class],
 
             // Tag routes
             ['GET', 'tag.index', Permission::VIEW_DATA, null],

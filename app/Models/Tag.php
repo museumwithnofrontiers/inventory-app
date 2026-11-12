@@ -124,4 +124,15 @@ class Tag extends Model
     {
         return ['id'];
     }
+
+    /**
+     * The publications that carry this tag.
+     *
+     * @return BelongsToMany<Publication, $this>
+     */
+    public function publications(): BelongsToMany
+    {
+        return $this->belongsToMany(Publication::class, 'publication_tag')
+            ->withTimestamps();
+    }
 }

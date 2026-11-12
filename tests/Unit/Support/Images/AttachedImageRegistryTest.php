@@ -13,6 +13,7 @@ use App\Models\ItemImage;
 use App\Models\PartnerImage;
 use App\Models\PartnerLogo;
 use App\Models\PartnerTranslationImage;
+use App\Models\PublicationImage;
 use App\Models\TimelineEventImage;
 use App\Support\Images\AttachedImageRegistry;
 use App\Traits\DeletesImageFilesOnDelete;
@@ -33,17 +34,18 @@ class AttachedImageRegistryTest extends TestCase
         $this->addToAssertionCount(1);
     }
 
-    public function test_model_classes_returns_all_seven_models(): void
+    public function test_model_classes_returns_all_eight_models(): void
     {
         $classes = AttachedImageRegistry::modelClasses();
 
-        $this->assertCount(7, $classes);
+        $this->assertCount(8, $classes);
         $this->assertContains(ItemImage::class, $classes);
         $this->assertContains(CollectionImage::class, $classes);
         $this->assertContains(PartnerImage::class, $classes);
         $this->assertContains(PartnerTranslationImage::class, $classes);
         $this->assertContains(ContributorImage::class, $classes);
         $this->assertContains(TimelineEventImage::class, $classes);
+        $this->assertContains(PublicationImage::class, $classes);
         $this->assertContains(PartnerLogo::class, $classes);
     }
 
@@ -171,8 +173,9 @@ class AttachedImageRegistryTest extends TestCase
         $this->assertContains('partner_translation_images', $tables);
         $this->assertContains('contributor_images', $tables);
         $this->assertContains('timeline_event_images', $tables);
+        $this->assertContains('publication_images', $tables);
         $this->assertContains('partner_logos', $tables);
-        $this->assertCount(7, $tables);
+        $this->assertCount(8, $tables);
     }
 
     public function test_table_names_excludes_available_images_table(): void
