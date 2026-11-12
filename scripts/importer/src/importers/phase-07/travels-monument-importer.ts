@@ -151,12 +151,22 @@ export class TravelsMonumentImporter extends BaseImporter {
             continue;
           }
 
+          // The legacy project (IAM, GPA) keeps the project alive through the
+          // project cleanup and gives the pictures their copyright line.
+          const projectBackwardCompat = `mwnf3:projects:${group.project_id}`;
+          const projectId = await this.getEntityUuidAsync(projectBackwardCompat, 'project');
+          if (!projectId) {
+            this.logWarning(`Project not found for monument: ${backwardCompat}`, {
+              projectBackwardCompat,
+            });
+          }
+
           // Write Item
           const itemId = await this.context.strategy.writeItem({
             ...transformed.data,
             partner_id: null, // Travel monuments don't have a specific partner
             collection_id: locationId, // Primary collection is the location
-            project_id: null, // No project association
+            project_id: projectId,
           });
 
           this.registerEntity(itemId, backwardCompat, 'item');

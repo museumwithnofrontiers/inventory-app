@@ -8,7 +8,13 @@
  *   - One row per language
  *
  * New schema:
- * - collection_translations (collection_id, language_id, context_id, title, description, ...)
+ * - collection_translations (collection_id, language_id, context_id, title, description, extra, ...)
+ *
+ * Mapping:
+ * - description → description (that column only; the itinerary's days are
+ *   stored once, on the collection's extra.days, by TravelsItineraryImporter)
+ * - description2, author, introduction, prepared_by → extra (description_2,
+ *   author, introduction, prepared_by), each only when set
  *
  * Dependencies:
  * - TravelsContextImporter
@@ -30,7 +36,31 @@ interface LegacyItineraryTranslation {
   trail_id: number;
   title: string;
   description: string | null;
-  days: number | null;
+  description2: string | null;
+  author: string | null;
+  introduction: string | null;
+  prepared_by: string | null;
+}
+
+/** The itinerary's text besides its title and description: each legacy column under its own key. */
+export function itineraryTextExtra(
+  legacy: Pick<
+    LegacyItineraryTranslation,
+    'description2' | 'author' | 'introduction' | 'prepared_by'
+  >
+): Record<string, string> | null {
+  const fields = {
+    description_2: legacy.description2,
+    author: legacy.author,
+    introduction: legacy.introduction,
+    prepared_by: legacy.prepared_by,
+  };
+  const extra: Record<string, string> = {};
+  for (const [key, raw] of Object.entries(fields)) {
+    const value = raw?.trim();
+    if (value) extra[key] = value;
+  }
+  return Object.keys(extra).length > 0 ? extra : null;
 }
 
 export class TravelsItineraryTranslationImporter extends BaseImporter {
@@ -64,7 +94,8 @@ export class TravelsItineraryTranslationImporter extends BaseImporter {
 
       // Query all itinerary translations
       const translations = await this.context.legacyDb.query<LegacyItineraryTranslation>(
-        `SELECT project_id, country, number, lang, trail_id, title, description, days
+        `SELECT project_id, country, number, lang, trail_id, title, description,
+                description2, author, introduction, prepared_by
         FROM mwnf3_travels.tr_itineraries 
          ORDER BY project_id, country, trail_id, number, lang`
       );
@@ -107,11 +138,7 @@ export class TravelsItineraryTranslationImporter extends BaseImporter {
             continue;
           }
 
-          // Build description with days info
-          let fullDescription = legacy.description || '';
-          if (legacy.days && legacy.days > 0) {
-            fullDescription += `\n\n**Duration:** ${legacy.days} day${legacy.days > 1 ? 's' : ''}`;
-          }
+          const extra = itineraryTextExtra(legacy);
 
           // Collect sample
           this.collectSample(
@@ -138,7 +165,8 @@ export class TravelsItineraryTranslationImporter extends BaseImporter {
             context_id: this.travelsContextId,
             backward_compatibility: translationBackwardCompat,
             title: legacy.title || '',
-            description: fullDescription.trim() || null,
+            description: legacy.description?.trim() || null,
+            extra: extra ? JSON.stringify(extra) : null,
           });
 
           result.imported++;

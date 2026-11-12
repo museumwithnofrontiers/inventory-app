@@ -138,6 +138,8 @@ export {
   TravelsItineraryPictureImporter,
   TravelsLocationPictureImporter,
   TravelsMonumentPictureImporter,
+  TravelsTrailEntryImporter,
+  TravelsTrailPartnerImporter,
 } from './phase-07/index.js';
 
 // Phase 08: Media & Documents

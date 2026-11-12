@@ -282,6 +282,12 @@ export class TravelsMonumentPictureImporter extends BaseImporter {
       ? convertHtmlToMarkdown(group.translations[0].caption)
       : `Picture ${group.image_number}`;
 
+    // The picture carries its monument's legacy project, like every picture item.
+    const projectId = await this.getEntityUuidAsync(
+      `mwnf3:projects:${group.project_id}`,
+      'project'
+    );
+
     const itemData: ItemData = {
       type: 'picture',
       internal_name: internalName,
@@ -289,7 +295,7 @@ export class TravelsMonumentPictureImporter extends BaseImporter {
       partner_id: null,
       parent_id: parentItemId,
       country_id: null,
-      project_id: null,
+      project_id: projectId,
       owner_reference: null,
       mwnf_reference: null,
       display_order: group.image_number,

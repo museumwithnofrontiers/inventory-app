@@ -141,7 +141,11 @@ describe.each(cases)('$name: image copyright', ({ create, parent, row }) => {
 
     rows = [];
     const legacyDb: ILegacyDatabase = {
-      query: vi.fn(async () => rows) as ILegacyDatabase['query'],
+      // The picture tables answer; the itinerary table itself (whose main
+      // pictures carry no copyright) has none here.
+      query: vi.fn(async (sql: string) =>
+        /FROM mwnf3_travels\.tr_itineraries\s/.test(sql) ? [] : rows
+      ) as ILegacyDatabase['query'],
       execute: vi.fn(),
       connect: vi.fn(),
       disconnect: vi.fn(),

@@ -54,6 +54,34 @@ interface PictureGroup {
   translations: LegacyItineraryPicture[];
 }
 
+/** A language row of tr_itineraries that carries a main picture. */
+export interface MainPictureRow {
+  project_id: string;
+  country: string;
+  trail_id: number;
+  number: string;
+  lang: string;
+  path: string;
+}
+
+/**
+ * One main picture per distinct (itinerary, path): the language rows repeat
+ * the same file, so each file is imported once, in the rows' order.
+ */
+export function itineraryMainPictures(rows: MainPictureRow[]): MainPictureRow[] {
+  const seen = new Set<string>();
+  const out: MainPictureRow[] = [];
+  for (const row of rows) {
+    const trimmed = row.path?.trim();
+    if (!trimmed) continue;
+    const key = `${row.project_id}:${row.country}:${row.trail_id}:${row.number}:${trimmed.toLowerCase()}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push({ ...row, path: trimmed });
+  }
+  return out;
+}
+
 export class TravelsItineraryPictureImporter extends BaseImporter {
   getName(): string {
     return 'TravelsItineraryPictureImporter';
@@ -63,6 +91,9 @@ export class TravelsItineraryPictureImporter extends BaseImporter {
     const result = this.createResult();
 
     try {
+      // The itinerary's main picture comes first, so it takes display order 1.
+      await this.importMainPictures(result);
+
       this.logInfo('Importing travel itinerary pictures...');
 
       // Query all itinerary pictures
@@ -212,6 +243,69 @@ export class TravelsItineraryPictureImporter extends BaseImporter {
     this.registerEntity(backwardCompat, imageKey, 'image');
 
     return true;
+  }
+
+  /**
+   * The itinerary's main picture, `tr_itineraries.path`: one per itinerary,
+   * repeated on its language rows, and never listed in tr_itineraries_pictures.
+   * It becomes the itinerary's first CollectionImage; image-sync then takes the
+   * file through the upload pipeline like every other legacy picture.
+   */
+  private async importMainPictures(result: ImportResult): Promise<void> {
+    this.logInfo('Importing travel itinerary main pictures...');
+    const rows = await this.context.legacyDb.query<MainPictureRow>(
+      `SELECT project_id, country, trail_id, number, lang, path
+         FROM mwnf3_travels.tr_itineraries
+        WHERE path IS NOT NULL AND TRIM(path) <> ''
+        ORDER BY project_id, country, trail_id, number, lang`
+    );
+
+    for (const main of itineraryMainPictures(rows)) {
+      const itineraryBackwardCompat = `mwnf3_travels:itinerary:${main.project_id}:${main.country}:${main.trail_id}:${main.number}`;
+      try {
+        const collectionId = await this.getEntityUuidAsync(itineraryBackwardCompat, 'collection');
+        if (!collectionId) {
+          throw new Error(`Parent itinerary collection not found: ${itineraryBackwardCompat}`);
+        }
+        if (await this.imageExistsAsync('collection_images', collectionId, main.path)) {
+          result.skipped++;
+          this.showSkipped();
+          continue;
+        }
+        if (this.isDryRun || this.isSampleOnlyMode) {
+          this.logInfo(
+            `[${this.isSampleOnlyMode ? 'SAMPLE' : 'DRY-RUN'}] Would import itinerary main picture: ${itineraryBackwardCompat}`
+          );
+          result.imported++;
+          this.showProgress();
+          continue;
+        }
+
+        const displayOrderKey = `itinerary_picture_order:${collectionId}`;
+        const currentOrder = this.context.tracker.getMetadata(displayOrderKey);
+        const displayOrder = currentOrder ? parseInt(currentOrder, 10) + 1 : 1;
+        this.context.tracker.setMetadata(displayOrderKey, String(displayOrder));
+
+        await this.context.strategy.writeCollectionImage({
+          collection_id: collectionId,
+          path: main.path,
+          original_name: path.basename(main.path),
+          mime_type: this.getMimeType(main.path),
+          size: 1, // Placeholder: image-sync fetches the file
+          alt_text: null,
+          copyright: null,
+          display_order: displayOrder,
+        });
+        this.registerEntity(`${itineraryBackwardCompat}:main`, main.path.toLowerCase(), 'image');
+        result.imported++;
+        this.showProgress();
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        result.errors.push(`${itineraryBackwardCompat} main picture: ${message}`);
+        this.logError(`Itinerary main picture ${itineraryBackwardCompat}`, message);
+        this.showError();
+      }
+    }
   }
 
   private pickBestCaption(

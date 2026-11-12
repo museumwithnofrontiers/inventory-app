@@ -112,6 +112,8 @@ import {
   TravelsItineraryPictureImporter,
   TravelsLocationPictureImporter,
   TravelsMonumentPictureImporter,
+  TravelsTrailEntryImporter,
+  TravelsTrailPartnerImporter,
   // Phase 10: Thematic Galleries (runs last, after all other legacy DBs)
   ThgGalleryContextImporter,
   ThgRootCollectionsImporter,
@@ -836,6 +838,20 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description: 'Import travel monument pictures',
     importerClass: TravelsMonumentPictureImporter,
     dependencies: ['travels-monument'],
+  },
+  {
+    key: 'travels-trail-entry',
+    name: 'Travels Trail Entries',
+    description: 'Make the Islamic Art objects and monuments of each exhibition trail its members',
+    importerClass: TravelsTrailEntryImporter,
+    dependencies: ['travels-trail', 'object', 'monument'],
+  },
+  {
+    key: 'travels-trail-partner',
+    name: 'Travels Trail Starting Points',
+    description: "Link each exhibition trail to its 'Starting point' museum",
+    importerClass: TravelsTrailPartnerImporter,
+    dependencies: ['travels-trail', 'partner'],
   },
   // Phase 10: Thematic Galleries (runs last, after all other legacy DBs are imported)
   {
