@@ -101,6 +101,7 @@ describe('PartnerExporter — shared partner shape', () => {
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
     exhibitionSites: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

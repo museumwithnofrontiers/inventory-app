@@ -71,6 +71,7 @@ describe('ItemExporter — project_id', () => {
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
     exhibitionSites: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},

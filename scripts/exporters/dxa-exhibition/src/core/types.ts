@@ -1,6 +1,6 @@
 import type { Database } from './database.js'
 import type { Logger } from './logger.js'
-import type { ExhibitionSite } from './instance.js'
+import type { ExhibitionSite, HomeSites } from './instance.js'
 
 /**
  * The site anchor stored on `collections.extra.thg_gallery` by the importer's
@@ -119,6 +119,8 @@ export interface ExportContext {
   siteCollectionIds: ReadonlySet<string>
   /** Every exhibition with a site of its own, from the instance files (see `loadExhibitionSites`). */
   exhibitionSites: ReadonlyMap<string, ExhibitionSite>
+  /** Each project's home site, from the instance files (see `loadHomeSites`). */
+  homeSites: HomeSites
   baseUrl: string
   logger: Logger
   /** The instance's site slug — `manifest.site.key`. Not always `exhibition.slug`. */

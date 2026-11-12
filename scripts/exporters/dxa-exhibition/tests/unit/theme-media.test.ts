@@ -53,6 +53,7 @@ describe('ThemeExporter — a theme\'s audio and video', () => {
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
     exhibitionSites: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: { info: () => {}, success: () => {}, warning: () => {}, error: () => {} } as unknown as Logger,
     siteKey: 'the-table-is-set',

@@ -23,6 +23,11 @@ interface ProjectRow {
   artistic_introduction_url: string | null
 }
 
+interface SiteProjectRow {
+  collection_id: string
+  project_id: string
+}
+
 interface ProjectTitleRow {
   project_id: string
   language_id: string
@@ -36,6 +41,8 @@ export interface ProjectEntry {
   site_url: string | null
   related_database_url: string | null
   artistic_introduction_url: string | null
+  /** Slug of the site that is home to the project's records, or null. */
+  home_site: string | null
 }
 
 /**
@@ -237,6 +244,7 @@ export class ManifestExporter extends BaseExporter {
       namesByProject.get(row.project_id)![code] = row.title
     }
 
+    const homes = await this.homeSitesByProject()
     const result: Record<string, ProjectEntry> = {}
     for (const p of projects) {
       result[p.id] = {
@@ -245,8 +253,40 @@ export class ManifestExporter extends BaseExporter {
         site_url: p.site_url,
         related_database_url: p.related_database_url,
         artistic_introduction_url: p.artistic_introduction_url,
+        home_site: homes.get(p.id) ?? null,
       }
     }
     return result
+  }
+
+  /**
+   * Project UUID → the slug of the site that is its records' home: a
+   * standalone site's own `project_ids`, else the gallery or exhibition site
+   * whose collection belongs to the project (its anchor's mwnf3 project).
+   * A website derives each project's source chip from it; a project with no
+   * site of its own (the galleries' common one) has none. The same rule as
+   * the dxa-gallery exporter's.
+   */
+  private async homeSitesByProject(): Promise<Map<string, string>> {
+    const { byProject, bySiteCollection } = this.context.homeSites
+    const homes = new Map(byProject)
+    const collectionIds = [...bySiteCollection.keys()]
+    if (collectionIds.length === 0) return homes
+    const rows = await this.db.query<SiteProjectRow>(
+      // Sorted so the first site wins, the same way on every export, should
+      // two sites ever share a project.
+      `SELECT c.id AS collection_id, p.id AS project_id
+       FROM collections c
+       JOIN projects p ON p.backward_compatibility =
+         CONCAT('mwnf3:projects:', JSON_UNQUOTE(JSON_EXTRACT(c.extra, '$.thg_gallery.mwnf3_project_id')))
+       WHERE c.id IN (${this.placeholders(collectionIds.length)})
+       ORDER BY c.id`,
+      collectionIds
+    )
+    for (const row of rows) {
+      const slug = bySiteCollection.get(row.collection_id)
+      if (slug && !homes.has(row.project_id)) homes.set(row.project_id, slug)
+    }
+    return homes
   }
 }

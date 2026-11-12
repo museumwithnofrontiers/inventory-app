@@ -45,6 +45,7 @@ describe('ExhibitionExporter — project_id', () => {
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
     exhibitionSites: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
@@ -104,6 +105,7 @@ describe('ExhibitionExporter — project_id', () => {
       ...context(db),
       siteCollectionIds: new Set(['exhibition-uuid', 'arts-in-dialogue-uuid']),
       exhibitionSites: new Map(),
+      homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     }).export()
 
     const output = readOutput()
@@ -165,6 +167,7 @@ describe('ExhibitionExporter — languages_enabled override', () => {
     itemOwnContextIds: new Map(),
     siteCollectionIds: new Set(),
     exhibitionSites: new Map(),
+    homeSites: { byProject: new Map(), bySiteCollection: new Map() },
     baseUrl: 'https://example.test',
     logger: {
       info: () => {},
