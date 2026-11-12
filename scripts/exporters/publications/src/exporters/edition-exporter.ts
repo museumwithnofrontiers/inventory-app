@@ -73,7 +73,9 @@ export class EditionExporter extends BaseExporter {
       this.db.query<DocumentRow>(
         `SELECT id, publication_id, publication_edition_id, language_id, kind, path
          FROM publication_documents
-         WHERE publication_id IN (${ph}) AND publication_edition_id IS NOT NULL
+         -- A document whose file never synced keeps the size placeholder 1 (legacy
+         -- names files that do not exist): /doc has nothing to serve for it.
+         WHERE publication_id IN (${ph}) AND publication_edition_id IS NOT NULL AND size <> 1
          ORDER BY publication_edition_id, display_order, kind, id`,
         ids
       ),

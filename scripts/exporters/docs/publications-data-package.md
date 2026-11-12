@@ -75,9 +75,11 @@ One record per work:
 | `languages` | the codes it has a translation in |
 
 Renditions are `/pub/{path}` URLs on the image base URL, burned like every
-attached image (D-P5). Documents are `/doc/{uuid}.pdf` URLs (ADR 004); a
-document whose file is not yet stored under that name is left out, with a
-warning.
+attached image (D-P5). Documents are `/doc/{uuid}.pdf` URLs (ADR 004). A
+document whose file never synced (it keeps the size placeholder 1: legacy
+names some files that do not exist) is left out, as is one not yet stored
+under its `/doc` name, with a warning. Images follow the other exporters,
+which ship every attached image row.
 
 ## translations/publications.\<lang\>.json
 

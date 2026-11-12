@@ -208,3 +208,26 @@ describe('pickCover and isServableDocument', () => {
     expect(isServableDocument('books/7/sample.pdf')).toBe(false)
   })
 })
+
+describe('unsynced documents', () => {
+  it('reads only the documents whose file synced (no size placeholder)', async () => {
+    const outputDir = mkdtempSync(join(tmpdir(), 'publications-docs-'))
+    try {
+      const asked: string[] = []
+      const db = {
+        query: async (sql: string) => {
+          asked.push(sql)
+          return []
+        },
+      } as unknown as Parameters<typeof contextWith>[0]
+      const scope = scopeWith({ publicationIds: ['p1'] })
+      await new PublicationExporter(contextWith(db, outputDir, scope)).export()
+      await new EditionExporter(contextWith(db, outputDir, scope)).export()
+      const documentQueries = asked.filter(sql => sql.includes('FROM publication_documents'))
+      expect(documentQueries).toHaveLength(2)
+      for (const sql of documentQueries) expect(sql).toContain('size <> 1')
+    } finally {
+      rmSync(outputDir, { recursive: true, force: true })
+    }
+  })
+})
