@@ -433,6 +433,9 @@ export abstract class BaseImporter {
       item_document: 'item_documents',
       contributor: 'contributors',
       contributor_translation: 'contributor_translations',
+      publication: 'publications',
+      publication_translation: 'publication_translations',
+      publication_edition: 'publication_editions',
     };
     return mapping[entityType];
   }

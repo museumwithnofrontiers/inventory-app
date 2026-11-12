@@ -97,6 +97,7 @@ export class ImageSyncTool {
         'collection_images',
         'contributor_images',
         'timeline_event_images',
+        'publication_images',
       ];
 
       for (const table of tables) {

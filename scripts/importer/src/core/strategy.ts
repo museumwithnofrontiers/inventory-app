@@ -49,6 +49,12 @@ import type {
   ItemMediaData,
   CollectionMediaData,
   ItemDocumentData,
+  PublicationData,
+  PublicationTranslationData,
+  PublicationEditionData,
+  PublicationImageData,
+  PublicationRelationData,
+  PublicationRelationTable,
   ContributorData,
   ContributorTranslationData,
   ContributorImageData,
@@ -436,6 +442,27 @@ export interface IWriteStrategy {
    */
   writeItemDocument(data: ItemDocumentData): Promise<string>;
 
+  // =========================================================================
+  // Publications
+  // =========================================================================
+
+  /** Write a publication; returns its UUID */
+  writePublication(data: PublicationData): Promise<string>;
+
+  /** Write a publication translation */
+  writePublicationTranslation(data: PublicationTranslationData): Promise<void>;
+
+  /** Write a publication edition; returns its UUID */
+  writePublicationEdition(data: PublicationEditionData): Promise<string>;
+
+  /** Write a publication image; returns its UUID */
+  writePublicationImage(data: PublicationImageData): Promise<string>;
+
+  /** Link a publication to a collection, an item or a tag (idempotent) */
+  writePublicationRelation(
+    table: PublicationRelationTable,
+    data: PublicationRelationData
+  ): Promise<void>;
   // =========================================================================
   // Contributors
   // =========================================================================

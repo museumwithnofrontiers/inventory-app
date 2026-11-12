@@ -59,6 +59,12 @@ import type {
   ContributorTranslationData,
   ContributorImageData,
   ImageTable,
+  PublicationData,
+  PublicationTranslationData,
+  PublicationEditionData,
+  PublicationImageData,
+  PublicationRelationData,
+  PublicationRelationTable,
 } from '../core/types.js';
 import { sanitizeAllStrings, sanitizeJsonField } from '../utils/html-to-markdown.js';
 
@@ -91,6 +97,9 @@ const tableEntityMap: Record<string, EntityType> = {
   item_documents: 'item_document',
   contributors: 'contributor',
   contributor_translations: 'contributor_translation',
+  publications: 'publication',
+  publication_translations: 'publication_translation',
+  publication_editions: 'publication_edition',
 };
 
 function mapTableToEntityType(table: string): EntityType | null {
@@ -396,10 +405,13 @@ export class SqlWriteStrategy implements IWriteStrategy {
     await this.db.beginTransaction();
     try {
       const [rows] = await this.db.execute<import('mysql2').RowDataPacket[]>(
+        // A project is kept while an item or a publication refers to it: a
+        // publication's project (AMA) may have no item at all (M14, #2532).
         `SELECT p.id, p.backward_compatibility, p.internal_name
          FROM projects p
          LEFT JOIN items i ON i.project_id = p.id
-         WHERE i.id IS NULL`
+         WHERE i.id IS NULL
+           AND NOT EXISTS (SELECT 1 FROM publications pu WHERE pu.project_id = p.id)`
       );
 
       const projects = (rows as RowDataPacket[]).map((r) => ({
@@ -1401,6 +1413,158 @@ export class SqlWriteStrategy implements IWriteStrategy {
     return id;
   }
 
+  // =========================================================================
+  // Publications
+  // =========================================================================
+
+  async writePublication(data: PublicationData): Promise<string> {
+    const sanitized = sanitizeAllStrings(data);
+    const id = deterministicUuid(`publication:${sanitized.backward_compatibility.toLowerCase()}`);
+    await this.db.execute(
+      `INSERT INTO publications (id, internal_name, backward_compatibility, category, project_id, country_id, language_id, status, display_order, extra, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        sanitized.internal_name,
+        sanitized.backward_compatibility,
+        sanitized.category,
+        sanitized.project_id ?? null,
+        sanitized.country_id ?? null,
+        sanitized.language_id,
+        sanitized.status,
+        data.display_order ?? null,
+        sanitized.extra ?? null,
+        this.now,
+        this.now,
+      ]
+    );
+    this.tracker.set(sanitized.backward_compatibility, id, 'publication');
+    return id;
+  }
+
+  async writePublicationTranslation(data: PublicationTranslationData): Promise<void> {
+    const sanitized = sanitizeAllStrings(data);
+    const id = deterministicUuid(
+      `publication_translation:${sanitized.backward_compatibility.toLowerCase()}:${sanitized.context_id}`
+    );
+    await this.db.execute(
+      `INSERT INTO publication_translations (id, publication_id, language_id, context_id, title, subtitle, description, introduction, author_credit, photography_credit, coordination_credit, backward_compatibility, extra, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        sanitized.publication_id,
+        sanitized.language_id,
+        sanitized.context_id,
+        sanitized.title,
+        sanitized.subtitle ?? null,
+        sanitized.description ?? null,
+        sanitized.introduction ?? null,
+        sanitized.author_credit ?? null,
+        sanitized.photography_credit ?? null,
+        sanitized.coordination_credit ?? null,
+        sanitized.backward_compatibility,
+        sanitized.extra ?? null,
+        this.now,
+        this.now,
+      ]
+    );
+    this.tracker.set(sanitized.backward_compatibility, id, 'publication_translation');
+  }
+
+  async writePublicationEdition(data: PublicationEditionData): Promise<string> {
+    const sanitized = sanitizeAllStrings(data);
+    const id = deterministicUuid(
+      `publication_edition:${sanitized.backward_compatibility.toLowerCase()}`
+    );
+    await this.db.execute(
+      `INSERT INTO publication_editions (id, publication_id, language_id, format, edition, publish_year, isbn, publisher, page_count, image_count, plan_count, dimensions, binding, visible, display_order, backward_compatibility, extra, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        sanitized.publication_id,
+        sanitized.language_id,
+        sanitized.format,
+        data.edition ?? null,
+        data.publish_year ?? null,
+        sanitized.isbn ?? null,
+        sanitized.publisher ?? null,
+        data.page_count ?? null,
+        data.image_count ?? null,
+        data.plan_count ?? null,
+        sanitized.dimensions ?? null,
+        sanitized.binding ?? null,
+        data.visible ? 1 : 0,
+        data.display_order ?? null,
+        sanitized.backward_compatibility,
+        sanitized.extra ?? null,
+        this.now,
+        this.now,
+      ]
+    );
+    this.tracker.set(sanitized.backward_compatibility, id, 'publication_edition');
+    return id;
+  }
+
+  async writePublicationImage(data: PublicationImageData): Promise<string> {
+    const sanitized = sanitizeAllStrings(data);
+    const id =
+      sanitized.id ||
+      this.computeImageId('publication_images', sanitized.publication_id, sanitized.path);
+    try {
+      await this.db.execute(
+        `INSERT INTO publication_images (id, publication_id, publication_edition_id, kind, path, original_name, mime_type, size, alt_text, copyright, display_order, extra, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          sanitized.publication_id,
+          sanitized.publication_edition_id ?? null,
+          sanitized.kind,
+          sanitized.path,
+          sanitized.original_name,
+          sanitized.mime_type,
+          data.size,
+          sanitized.alt_text ?? null,
+          sanitized.copyright ?? null,
+          data.display_order,
+          sanitized.extra ?? null,
+          this.now,
+          this.now,
+        ]
+      );
+    } catch (error) {
+      if (!isDuplicateKeyError(error)) throw error;
+    }
+    this.tracker.set(`${sanitized.publication_id}:${sanitized.path.toLowerCase()}`, id, 'image');
+    return id;
+  }
+
+  async writePublicationRelation(
+    table: PublicationRelationTable,
+    data: PublicationRelationData
+  ): Promise<void> {
+    const column =
+      table === 'publication_collection'
+        ? 'collection_id'
+        : table === 'publication_item'
+          ? 'item_id'
+          : 'tag_id';
+    if (table === 'publication_tag') {
+      await this.db.execute(
+        `INSERT IGNORE INTO publication_tag (publication_id, tag_id, created_at, updated_at)
+         VALUES (?, ?, ?, ?)`,
+        [data.publication_id, data.related_id, this.now, this.now]
+      );
+      return;
+    }
+    const sanitized = sanitizeAllStrings(data);
+    const extra = sanitized.extra ? JSON.stringify(sanitized.extra) : null;
+    await this.db.execute(
+      `INSERT INTO ${table} (publication_id, ${column}, display_order, extra, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE display_order = VALUES(display_order), extra = VALUES(extra), updated_at = VALUES(updated_at)`,
+      [data.publication_id, data.related_id, data.display_order ?? null, extra, this.now, this.now]
+    );
+  }
   async writeItemDocument(data: ItemDocumentData): Promise<string> {
     const sanitized = sanitizeAllStrings(data);
     const id = sanitized.backward_compatibility
@@ -1529,6 +1693,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
     'collection_images',
     'contributor_images',
     'timeline_event_images',
+    'publication_images',
   ]);
 
   /**
@@ -1935,7 +2100,9 @@ export class SqlWriteStrategy implements IWriteStrategy {
     return rows.length > 0;
   }
 
-  async getCollectionImageExtra(collectionImageId: string): Promise<Record<string, unknown> | null> {
+  async getCollectionImageExtra(
+    collectionImageId: string
+  ): Promise<Record<string, unknown> | null> {
     const [rows] = await this.db.execute<RowDataPacket[]>(
       `SELECT extra FROM collection_images WHERE id = ? LIMIT 1`,
       [collectionImageId]
@@ -1946,10 +2113,11 @@ export class SqlWriteStrategy implements IWriteStrategy {
   }
 
   async setCollectionImageExtra(collectionImageId: string, extraJson: string): Promise<void> {
-    await this.db.execute(
-      `UPDATE collection_images SET extra = ?, updated_at = ? WHERE id = ?`,
-      [sanitizeJsonField(extraJson), this.now, collectionImageId]
-    );
+    await this.db.execute(`UPDATE collection_images SET extra = ?, updated_at = ? WHERE id = ?`, [
+      sanitizeJsonField(extraJson),
+      this.now,
+      collectionImageId,
+    ]);
   }
 
   async attachTagsToCollectionImage(collectionImageId: string, tagIds: string[]): Promise<void> {
