@@ -7,7 +7,7 @@ nav_order: 4
 
 # ADR 004 — Publication PDFs on the document pipeline, served at /doc
 
-- **Status:** Proposed (Pascal validates it before any code: #2547)
+- **Status:** Accepted (Pascal, 2026-11-12)
 - **Date:** 2026-11-12
 - **Milestone:** M14 — Include Books and Travels legacy sites in the inventory (#2512 B7 #2547, #2513 C7 #2548)
 
