@@ -12,7 +12,9 @@
  *
  * Mapping:
  * - title → title
- * - description (with subtitle prepended) → description
+ * - description → description (that column only: nothing is merged into it)
+ * - subtitle, curated_by, local_coordinator, photo_by, region_territory → extra,
+ *   one key per legacy column, each only when set
  * - lang → language_id (via legacy code lookup)
  *
  * Dependencies:
@@ -38,6 +40,27 @@ interface LegacyTrailTranslation {
   curated_by: string | null;
   local_coordinator: string | null;
   photo_by: string | null;
+  region_territory: string | null;
+}
+
+const TRAIL_EXTRA_FIELDS = [
+  'subtitle',
+  'curated_by',
+  'local_coordinator',
+  'photo_by',
+  'region_territory',
+] as const;
+
+/** The trail's text besides its title and description: each legacy column under its own key. */
+export function trailTextExtra(
+  legacy: Pick<LegacyTrailTranslation, (typeof TRAIL_EXTRA_FIELDS)[number]>
+): Record<string, string> | null {
+  const extra: Record<string, string> = {};
+  for (const field of TRAIL_EXTRA_FIELDS) {
+    const value = legacy[field]?.trim();
+    if (value) extra[field] = value;
+  }
+  return Object.keys(extra).length > 0 ? extra : null;
 }
 
 export class TravelsTrailTranslationImporter extends BaseImporter {
@@ -72,7 +95,7 @@ export class TravelsTrailTranslationImporter extends BaseImporter {
       // Query all trail translations (all languages)
       const translations = await this.context.legacyDb.query<LegacyTrailTranslation>(
         `SELECT project_id, country, lang, number, title, subtitle, description, 
-                curated_by, local_coordinator, photo_by
+                curated_by, local_coordinator, photo_by, region_territory
          FROM mwnf3_travels.trails 
          ORDER BY project_id, country, number, lang`
       );
@@ -115,23 +138,7 @@ export class TravelsTrailTranslationImporter extends BaseImporter {
             continue;
           }
 
-          // Build description with subtitle and credits
-          let fullDescription = '';
-          if (legacy.subtitle) {
-            fullDescription += `**${legacy.subtitle}**\n\n`;
-          }
-          if (legacy.description) {
-            fullDescription += legacy.description;
-          }
-          if (legacy.curated_by) {
-            fullDescription += `\n\n**Curated by:** ${legacy.curated_by}`;
-          }
-          if (legacy.local_coordinator) {
-            fullDescription += `\n\n**Local coordinator:** ${legacy.local_coordinator}`;
-          }
-          if (legacy.photo_by) {
-            fullDescription += `\n\n**Photography:** ${legacy.photo_by}`;
-          }
+          const extra = trailTextExtra(legacy);
 
           // Collect sample
           this.collectSample(
@@ -158,7 +165,8 @@ export class TravelsTrailTranslationImporter extends BaseImporter {
             context_id: this.travelsContextId,
             backward_compatibility: translationBackwardCompat,
             title: legacy.title || '',
-            description: fullDescription.trim() || null,
+            description: legacy.description?.trim() || null,
+            extra: extra ? JSON.stringify(extra) : null,
           });
 
           result.imported++;
