@@ -68,7 +68,7 @@ Never propose shortcuts or alternative flows.
 2. ImageUploadEvent
 3. ImageUploadListener → validates, resizes, creates AvailableImage, deletes ImageUpload, dispatches AvailableImageEvent
 4. AvailableImageListener → moves the file from the uploads disk to the private originals disk
-5. Entities attach images with `attachFromAvailableImage()` and detach them with `detachToAvailableImage()`. Both exist on every `*Image` model: ItemImage, CollectionImage, PartnerImage, PartnerTranslationImage, ContributorImage and TimelineEventImage (DetachableImage).
+5. Entities attach images with `attachFromAvailableImage()` and detach them with `detachToAvailableImage()`. Both exist on every `*Image` model: ItemImage, CollectionImage, PartnerImage, PartnerTranslationImage, ContributorImage, TimelineEventImage and PublicationImage (DetachableImage).
    - Both are row swaps: the id, path and copyright carry over, and the original never moves.
    - Detaching also removes the burned rendition from the pictures cache.
 6. Deleting an attached image removes its original and its burned rendition (DeletesImageFilesOnDelete).
@@ -101,6 +101,14 @@ Never propose shortcuts or alternative flows.
   - `Storage::fake('public')` for pictures.
 - tests/bootstrap.php and phpunit.xml pin the image disk variables, so a developer's environment can't change the disks tests use
 - Dispatch real events
+
+## Document Pipeline
+
+PDFs follow their own pipeline (ADR 004, docs/adr/004-public-publication-documents.md).
+- Uploads: `localstorage.uploads.documents` (private `local` disk, `document_uploads/`). A `DocumentUpload` belongs to exactly one item or one publication; `DocumentUploadListener` validates it on the queue.
+- Originals: `localstorage.documents` (private `document-originals` disk, `documents/`). Never web-reachable.
+- Serving: an `ItemDocument` is never served publicly. `/doc/{uuid}.pdf` serves `PublicationDocument` files only, streamed unstamped.
+- Never write a document to the public disk.
 
 ## Attached Image Contract & Registry
 
