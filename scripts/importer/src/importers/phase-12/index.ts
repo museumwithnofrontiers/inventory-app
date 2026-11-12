@@ -19,3 +19,4 @@ export {
   PublicationExploreLinkImporter,
 } from './publication-relation-importer.js';
 export { PublicationImageImporter } from './publication-image-importer.js';
+export { PublicationDocumentImporter } from './publication-document-importer.js';

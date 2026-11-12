@@ -29,9 +29,6 @@ interface ImageRecord {
   id: string;
   path: string;
   size: number;
-  original_name: string | null;
-  alt_text: string | null;
-  mime_type: string;
 }
 
 export interface ImageSyncOptions {
@@ -40,6 +37,11 @@ export interface ImageSyncOptions {
   newImagesRoot: string;
   clearDestination?: boolean;
   dryRun?: boolean;
+  /**
+   * The tables to sync, each with id, path and size columns. Defaults to the
+   * image tables; `document-sync` passes the document tables (ADR 004).
+   */
+  tables?: string[];
 }
 
 export interface ImageSyncResult {
@@ -90,7 +92,7 @@ export class ImageSyncTool {
         }
       }
 
-      const tables = [
+      const tables = this.options.tables ?? [
         'item_images',
         'partner_images',
         'partner_logos',
@@ -178,7 +180,7 @@ export class ImageSyncTool {
 
   private async queryImages(tableName: string): Promise<ImageRecord[]> {
     const query = `
-      SELECT id, path, size, original_name, alt_text, mime_type
+      SELECT id, path, size
       FROM ${tableName}
       WHERE size = 1
       ORDER BY id

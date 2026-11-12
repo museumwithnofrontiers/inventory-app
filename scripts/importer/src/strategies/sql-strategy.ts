@@ -65,6 +65,7 @@ import type {
   PublicationImageData,
   PublicationRelationData,
   PublicationRelationTable,
+  PublicationDocumentData,
 } from '../core/types.js';
 import { sanitizeAllStrings, sanitizeJsonField } from '../utils/html-to-markdown.js';
 
@@ -1535,6 +1536,34 @@ export class SqlWriteStrategy implements IWriteStrategy {
       if (!isDuplicateKeyError(error)) throw error;
     }
     this.tracker.set(`${sanitized.publication_id}:${sanitized.path.toLowerCase()}`, id, 'image');
+    return id;
+  }
+
+  async writePublicationDocument(data: PublicationDocumentData): Promise<string> {
+    const sanitized = sanitizeAllStrings(data);
+    const id = deterministicUuid(
+      `publication_document:${sanitized.backward_compatibility.toLowerCase()}`
+    );
+    await this.db.execute(
+      `INSERT INTO publication_documents (id, publication_id, publication_edition_id, language_id, kind, path, original_name, mime_type, size, display_order, backward_compatibility, extra, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        id,
+        sanitized.publication_id,
+        sanitized.publication_edition_id ?? null,
+        sanitized.language_id ?? null,
+        sanitized.kind,
+        sanitized.path,
+        sanitized.original_name,
+        sanitized.mime_type,
+        data.size,
+        data.display_order,
+        sanitized.backward_compatibility,
+        sanitized.extra ?? null,
+        this.now,
+        this.now,
+      ]
+    );
     return id;
   }
 

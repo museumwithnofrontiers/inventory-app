@@ -769,5 +769,20 @@ export interface PublicationRelationData {
   extra?: Record<string, unknown> | null;
 }
 
+/** A publication's sample or credits PDF (size 1 until document-sync copies the file). */
+export interface PublicationDocumentData {
+  publication_id: string;
+  publication_edition_id: string | null;
+  language_id: string | null;
+  kind: 'sample' | 'credits';
+  path: string;
+  original_name: string;
+  mime_type: string;
+  size: number;
+  display_order: number;
+  backward_compatibility: string;
+  extra?: string | null; // JSON
+}
+
 export type PublicationRelationTable =
   'publication_collection' | 'publication_item' | 'publication_tag';

@@ -158,6 +158,7 @@ describe('LanguageImporter', () => {
       writePublicationEdition: vi.fn(),
       writePublicationImage: vi.fn(),
       writePublicationRelation: vi.fn(),
+      writePublicationDocument: vi.fn(),
     };
 
     // Create tracker
@@ -400,6 +401,7 @@ describe('LanguageTranslationImporter', () => {
       writePublicationEdition: vi.fn(),
       writePublicationImage: vi.fn(),
       writePublicationRelation: vi.fn(),
+      writePublicationDocument: vi.fn(),
     };
 
     tracker = new UnifiedTracker();

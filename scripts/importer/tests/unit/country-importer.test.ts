@@ -158,6 +158,7 @@ describe('CountryImporter', () => {
       writePublicationEdition: vi.fn(),
       writePublicationImage: vi.fn(),
       writePublicationRelation: vi.fn(),
+      writePublicationDocument: vi.fn(),
     };
 
     // Create tracker
@@ -398,6 +399,7 @@ describe('CountryTranslationImporter', () => {
       writePublicationEdition: vi.fn(),
       writePublicationImage: vi.fn(),
       writePublicationRelation: vi.fn(),
+      writePublicationDocument: vi.fn(),
     };
 
     tracker = new UnifiedTracker();
