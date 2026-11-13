@@ -84,7 +84,8 @@ context's row gives only `short_description`.
 
 The trail entries, in the shape of the Publications package's
 `references.json`: `{ id, type, backward_compatibility, names, picture,
-sites }`, the home site (Islamic Art) first.
+sites }`, the home site (Islamic Art) first, each link the page that opens
+the item on that site (no mini-site).
 
 ## partners.json, glossary.json, countries.json, languages.json
 
