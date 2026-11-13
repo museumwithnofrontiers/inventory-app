@@ -149,6 +149,53 @@ The importer ends one of three ways, and `stage` follows it:
   exits non-zero. The staged copy is incomplete: do not ship it. Reset staging
   and stage again.
 
+#### Reading the local mwnf-env copy instead of live legacy
+
+`stage` can read the Docker copy of SVR-MWNF ("mwnf-env",
+`server-maintenance/environment`) instead of the legacy server, for one run,
+without editing `LEGACY_DB_*` in `.env`:
+
+```powershell
+$env:LEGACY_SOURCE = 'mwnf-env'
+docker compose --env-file scripts/import-tool/.env --profile import run -d --name inventory-import-stage stage
+Remove-Item Env:LEGACY_SOURCE
+```
+
+The run's first lines name the source (`Legacy source: mwnf-env
+(host.docker.internal:3307, …)`). It reads `LEGACY_ENV_DB_*` from `.env`
+(see `.env.example`; the password is mwnf-env's `DB_USER_PASSWORD`). The
+pictures still come from `LEGACY_IMAGES_HOST_PATH`.
+
+Before relying on it, know what that copy is:
+
+- **As old as its last dump.** Refresh it first, in `server-maintenance/environment`:
+  `.\Update-DatabaseDumps.ps1 -Commit -Push -Load` (dump, both database
+  repositories, reload: about 20 minutes).
+- **Its stored URLs are local.** Its loader rewrites the sites' addresses to
+  `*.museumwnf.localhost`, and the importer reads one of those columns:
+  `thg_gallery_url.link`, the 45 gallery hosts. A stage from mwnf-env as it
+  is loaded today writes `http://<gallery>.museumwnf.localhost` where a live
+  stage writes the production host (45 gallery collections' `extra`, and the
+  links derived from them). Do not ship such a stage.
+
+Measured on 2026-11-13, same machine and code, one run after the other into an
+empty staging database whose commits were not flushed one by one (A/B only):
+
+| | live (VPN) | mwnf-env |
+|---|---|---|
+| importer | 24 min 40 s | 20 min 42 s |
+| image-sync + document-sync | 20 min 52 s | 19 min 52 s |
+| whole `stage` | 45 min 32 s | 40 min 34 s |
+| rows staged (84 tables) | 394,962 | 394,962, every table equal |
+| imported / per-row errors | 178,120 / 21 | 178,120 / 21 |
+
+The saving is almost all in the picture steps, which look rows up one at a
+time (Object Pictures 258 s → 97 s, Monument Pictures 119 s → 73 s,
+SH Object Pictures 93 s → 52 s); bulk steps take the same time from either
+source. What makes a full stage take 1h40 is not the source but the staging
+database's commits: with MySQL's default (every commit flushed to Docker's
+disk), the same morning's live importer took 1 h 47 min.
+
 ### 2. Re-run image-sync until it stops failing
 
 **One `stage` run is not enough**, at least on a host whose legacy images live
