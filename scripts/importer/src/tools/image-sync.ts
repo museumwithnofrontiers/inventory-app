@@ -16,11 +16,11 @@ import type { ILogger } from '../core/base-importer.js';
 import {
   getFileExtension,
   getLegacyImagePath,
+  resolveLegacyFile,
   getNewImagePath,
   copyFile,
   symlinkFile,
   getFileSize,
-  fileExists,
   ensureDirectory,
   clearDirectory,
 } from '../utils/image-sync.js';
@@ -196,12 +196,12 @@ export class ImageSyncTool {
       return true;
     }
 
-    // Get legacy image path
-    const legacyPath = getLegacyImagePath(this.options.legacyImagesRoot, image.path);
-
-    // Check if legacy image exists
-    if (!(await fileExists(legacyPath))) {
-      throw new Error(`Legacy image not found: ${legacyPath}`);
+    // Legacy paths ignore letter case (Windows); the mirror is read on Linux.
+    const legacyPath = await resolveLegacyFile(this.options.legacyImagesRoot, image.path);
+    if (legacyPath === null) {
+      throw new Error(
+        `Legacy image not found: ${getLegacyImagePath(this.options.legacyImagesRoot, image.path)}`
+      );
     }
 
     // Get file extension
