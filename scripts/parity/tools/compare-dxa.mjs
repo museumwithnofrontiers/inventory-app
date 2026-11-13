@@ -274,7 +274,12 @@ await mapAll(L.partners.rows, async (row) => {
   // A row without the key (an exhibition's /institutions) is read in English.
   const offered = 'i18n' in row ? String(row.i18n ?? '').split(',').map((x) => x.trim()).filter(Boolean) : ['en'];
   R.field('partner', 'languages', offered.sort().join(',') === [...p.languages].sort().join(',') ? { verdict: 'same' } : { verdict: 'different', legacy: offered.join(','), pkg: p.languages.join(',') }, key);
-  if (row.hasObjects !== undefined) R.field('partner', 'holds items', (row.hasObjects ? 1 : 0) === (p.item_count > 0 ? 1 : 0) ? { verdict: 'same' } : { verdict: 'different', legacy: String(row.hasObjects), pkg: String(p.item_count) }, key);
+  // Since MWNF-653 legacy links a partner's items when it holds objects OR monuments (an
+  // institution's are monuments, which hasObjects does not count).
+  if (row.hasObjects !== undefined || row.hasMonuments !== undefined) {
+    const held = Number(row.hasObjects ?? 0) + Number(row.hasMonuments ?? 0);
+    R.field('partner', 'holds items', (held > 0 ? 1 : 0) === (p.item_count > 0 ? 1 : 0) ? { verdict: 'same' } : { verdict: 'different', legacy: String(held), pkg: String(p.item_count) }, key);
+  }
   const href = link(row, 'partner');
   for (const lang of offered.length ? offered : ['en']) {
     const d = href ? (await getJson(`${href}/${lang}`)).json : null;
@@ -297,7 +302,10 @@ await mapAll(L.partners.rows, async (row) => {
 const countryIds = (x) => (x?.items ? asList(x.items).map((c) => c.countryId) : Object.keys(x ?? {}));
 const partnerCountries = new Set(L.partners.rows.map((r) => r.countryId));
 const legacyCountries = new Set([...countryIds(L.itemCountries), ...countryIds(L.eventCountries)]);
-R.set('countries (items ∪ timeline ∪ partners)', [...legacyCountries, ...partnerCountries], countries.map((c) => c.code));
+// The package's countries.json also names the countries of related objects outside the gallery
+// (their name on a sheet), so the package side is the countries its own records use.
+const pkgCountryIds = new Set([...items, ...pkgPartners, ...(P.read('timeline_events.json') ?? [])].map((r) => r.country_id).filter(Boolean));
+R.set('countries (items ∪ timeline ∪ partners)', [...legacyCountries, ...partnerCountries], [...pkgCountryIds].map((id) => countryCode.get(id) ?? id));
 const legacyTags = Object.keys(L.tags ?? {});
 R.set('facet tags', legacyTags, [...tags.values()].map((t) => t.legacy_tag_id));
 for (const t of tags.values()) if (L.tags?.[t.legacy_tag_id] !== undefined) R.field('tag', 'label.en', compare(L.tags[t.legacy_tag_id], t.label), t.legacy_tag_id);
