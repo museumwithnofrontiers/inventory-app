@@ -591,6 +591,10 @@ services:
       # The import target, set here rather than in .env — the importer's own
       # configuration has no route to a production database at all.
       # LEGACY_DB_* comes from .env unchanged: reading legacy is this mode's job.
+      # Which copy of legacy it reads: live (default, LEGACY_DB_*) or mwnf-env
+      # (the local Docker copy of SVR-MWNF, LEGACY_ENV_DB_*). Set it for one run
+      # from the shell; .env keeps the live setting. See the entrypoint.
+      LEGACY_SOURCE: ${LEGACY_SOURCE:-live}
       DB_HOST: staging-mysql
       DB_PORT: "3306"
       DB_USERNAME: inventory
@@ -631,6 +635,10 @@ services:
       LEGACY_DB_USER: ""
       LEGACY_DB_PASSWORD: ""
       LEGACY_DB_DATABASE: ""
+      LEGACY_ENV_DB_HOST: ""
+      LEGACY_ENV_DB_PORT: ""
+      LEGACY_ENV_DB_USER: ""
+      LEGACY_ENV_DB_PASSWORD: ""
     depends_on:
       staging-mysql:
         condition: service_healthy
