@@ -47,6 +47,17 @@ test('relative or foreign image URLs fail (the 2026-10-19 regression)', () => {
   assert.match(r.images.samples[0].where, /^items\.json: \[0\]\.images\[0\]\.url$/);
 });
 
+test('a publication PDF at its /doc/<uuid>.pdf route is no image, and passes', () => {
+  const root = pkg(
+    [{ id: 'a', documents: [{ url: 'https://inventory.metanull.eu/doc/1a09aa8c-4532-5830-8ecb-07d68f9a5b4c.pdf' }, { url: 'https://inventory.metanull.eu/doc/books/1/sample.pdf' }] }],
+    {},
+  );
+  const r = scanPackage(root);
+  // The /doc route passes; a document under any other inventory path still fails.
+  assert.equal(r.images.total, 1);
+  assert.equal(r.images.bad, 1);
+});
+
 test('raw HTML tags in texts fail, wherever they sit', () => {
   const root = pkg([{ id: 'a', extra: { justification: 'On <i>The Book</i>' } }], { a: { bibliography: 'Line one<br/>line two', description: '<p style="x">Text</p>' } });
   const r = scanPackage(root);
