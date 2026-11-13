@@ -55,6 +55,40 @@ describe('resolveReferences', () => {
     ])
   })
 
+  it('links each site to the page that opens the item, and leaves out a mini-site', async () => {
+    const collections = [
+      { id: 'root-t', parent_id: null, type: 'collection', purpose: 'travels-root' },
+      { id: 'trail', parent_id: 'root-t', type: 'exhibition trail', purpose: null },
+      { id: 'itin', parent_id: 'trail', type: 'itinerary', purpose: null },
+      { id: 'tloc', parent_id: 'itin', type: 'location', purpose: null },
+      { id: 'mini', parent_id: null, type: 'exhibition', purpose: null },
+    ]
+    const monumentQuery = async (sql: string, params: unknown[] = []) => {
+      if (sql.includes('FROM items WHERE id IN') && sql.includes('backward_compatibility')) {
+        return [{ id: 'm1', type: 'monument', backward_compatibility: 'mwnf3_travels:monument:IAM:jo:1', parent_id: null }]
+      }
+      if (sql.includes('FROM items WHERE id IN')) return [{ id: 'm1', type: 'monument', project_id: null }]
+      if (sql.includes('UNION ALL')) {
+        return [
+          { item_id: 'm1', collection_id: 'mini', via_picture: 0 },
+          { item_id: 'm1', collection_id: 'tloc', via_picture: 0 },
+        ]
+      }
+      if (sql.includes('FROM collections WHERE id IN')) return collections.filter(c => params.includes(c.id))
+      if (sql.includes('FROM collections ORDER BY id')) return collections
+      if (sql.includes('SELECT ci.item_id, ci.collection_id')) return [{ item_id: 'm1', collection_id: 'tloc' }]
+      return []
+    }
+    const sites = [
+      ...SITES,
+      { slug: 'mini', kind: 'minisite', origin: 'https://example.test/mini', itemPath: '/item/:id', rule: { type: 'subtree' as const, collectionId: 'mini' } },
+    ]
+    const [ref] = await resolveReferences(monumentQuery, ['m1'], { baseUrl: 'https://inv.test', sites })
+    expect(ref.sites).toEqual([
+      { site: 'travels', path: '/itinerary/itin?tab=vl', url: 'https://example.test/travels/#/itinerary/itin?tab=vl' },
+    ])
+  })
+
   it('reads nothing for no item', async () => {
     expect(await resolveReferences(async () => { throw new Error('no query') }, [], { baseUrl: 'x', sites: SITES })).toEqual([])
   })

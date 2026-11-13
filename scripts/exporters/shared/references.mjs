@@ -9,9 +9,15 @@
  * texts, pictures and relations stay on its own site (My Collection v3,
  * 2026-11-12: references, never copies).
  *
+ * Each site link is the page that opens the item there (`pages.mjs`): an
+ * Explore record opens on its monument, a Travels one in its itinerary's
+ * gallery, and a mini-site, which has no item page, is left out. A link
+ * never leads to "This page does not exist".
+ *
  * Types are in `references.d.mts`.
  */
 
+import { resolveItemPages } from './pages.mjs'
 import { resolveItemSites, loadSites } from './sites.mjs'
 
 const CHUNK = 500
@@ -72,7 +78,7 @@ export async function resolveReferences(query, itemIds, options) {
   if (ids.length === 0) return []
   const sites = options.sites ?? loadSites()
 
-  /** @type {Map<string, { id: string, type: string, backward_compatibility: string | null }>} */
+  /** @type {Map<string, { id: string, type: string, backward_compatibility: string | null, parent_id: string | null }>} */
   const items = new Map()
   /** @type {{ item_id: string, language: string, context_id: string, own_context_id: string | null, name: string | null }[]} */
   const nameRows = []
@@ -80,8 +86,8 @@ export async function resolveReferences(query, itemIds, options) {
   const pictures = new Map()
 
   for (const part of chunks([...ids].sort())) {
-    const rows = /** @type {{ id: string, type: string, backward_compatibility: string | null }[]} */ (
-      await query(`SELECT id, type, backward_compatibility FROM items WHERE id IN (${marks(part)}) ORDER BY id`, part)
+    const rows = /** @type {{ id: string, type: string, backward_compatibility: string | null, parent_id: string | null }[]} */ (
+      await query(`SELECT id, type, backward_compatibility, parent_id FROM items WHERE id IN (${marks(part)}) ORDER BY id`, part)
     )
     for (const row of rows) items.set(row.id, row)
 
@@ -121,11 +127,13 @@ export async function resolveReferences(query, itemIds, options) {
   }
 
   const names = namesByItem(nameRows)
-  const siteLinks = await resolveItemSites(query, ids, sites)
+  // A detail opens on its monument's page.
+  const parents = new Map([...items.values()].map(item => [item.id, item.parent_id]))
+  const siteLinks = await resolveItemPages(query, await resolveItemSites(query, ids, sites), sites, parents)
   return ids
     .filter(id => items.has(id))
     .map(id => {
-      const item = /** @type {{ id: string, type: string, backward_compatibility: string | null }} */ (items.get(id))
+      const item = /** @type {{ id: string, type: string, backward_compatibility: string | null, parent_id: string | null }} */ (items.get(id))
       const path = pictures.get(id)
       return {
         id,
