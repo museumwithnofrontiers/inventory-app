@@ -1,0 +1,67 @@
+# The search edge, server context (M15 B6, ADR 005): included by the vhost
+# (OVH) or the local container. Only two routes reach Meilisearch; every
+# other path answers 404. The search key is added here, from
+# search-key.conf, which keys.mjs writes: no browser ever holds a key.
+
+server_tokens off;
+client_max_body_size 16k;
+limit_req_status 429;
+limit_conn_status 429;
+
+# A location that adds a header drops these: the search location repeats them.
+# Browsers ignore HSTS over plain HTTP, so the local edge can send it too.
+add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header Referrer-Policy "no-referrer" always;
+add_header X-Frame-Options "DENY" always;
+
+location = /health {
+    limit_req zone=search_per_ip burst=20 nodelay;
+    limit_except GET { deny all; }
+    proxy_set_header Authorization "";
+    proxy_pass http://search_meilisearch/health;
+}
+
+location = /indexes/items/search {
+    limit_req zone=search_per_ip burst=20 nodelay;
+    limit_conn search_conn_per_ip 10;
+
+    # Preflight, answered here.
+    if ($request_method = OPTIONS) {
+        add_header Access-Control-Allow-Origin $search_cors_origin always;
+        add_header Access-Control-Allow-Methods "POST" always;
+        add_header Access-Control-Allow-Headers "Content-Type" always;
+        add_header Access-Control-Max-Age "86400" always;
+        add_header Vary "Origin" always;
+        return 204;
+    }
+    limit_except POST { deny all; }
+
+    include ${SEARCH_EDGE_DIR}/search-key.conf;
+    proxy_http_version 1.1;
+    proxy_set_header Connection "";
+    proxy_set_header Host $proxy_host;
+    proxy_set_header X-Forwarded-For $remote_addr;
+    proxy_read_timeout 10s;
+    proxy_connect_timeout 2s;
+
+    # Meilisearch answers every origin; the edge decides instead.
+    proxy_hide_header Access-Control-Allow-Origin;
+    proxy_hide_header Access-Control-Allow-Methods;
+    proxy_hide_header Access-Control-Allow-Headers;
+    proxy_hide_header Access-Control-Expose-Headers;
+    proxy_hide_header Access-Control-Max-Age;
+    proxy_hide_header Vary;
+    add_header Access-Control-Allow-Origin $search_cors_origin always;
+    add_header Vary "Origin" always;
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "no-referrer" always;
+    add_header X-Frame-Options "DENY" always;
+
+    proxy_pass http://search_meilisearch;
+}
+
+location / {
+    return 404;
+}

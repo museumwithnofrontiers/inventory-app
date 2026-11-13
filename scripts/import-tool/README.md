@@ -363,6 +363,15 @@ merge commit has succeeded (`gh run list --workflow deploy.yml --commit
 <sha>` in the site's repository). Deploys queue for runners when many sites
 merge at once, so a pending run is not yet a failure.
 
+**The global search (M15, ADR 005)** follows the same run when step 7
+published a new `search-data`. Propagate then opens two more pull requests:
+- one bumping the pin in this repository's `scripts/search`: merging it runs
+  `deploy-search-ovh.yml`, which loads that version into Meilisearch;
+- one in the search site, for its `sites.json`.
+
+A load that fails its checks or probes leaves the live index as it was. See
+[`scripts/search/README.md`](../search/README.md).
+
 ### 9. Record the site commits in this repository
 
 `.new-architecture/` tracks every platform repository as a submodule, so this

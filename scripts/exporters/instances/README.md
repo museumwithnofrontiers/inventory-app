@@ -43,6 +43,11 @@ specification doc. It is prose for humans, read by nothing at export time.
   that should be used instead — a copy-pasted instance file must fail loudly,
   not export the wrong shape.
 
+  `"search"` is the global search site (`search.json`, M15, ADR 005): like a
+  standalone file it names its `exporter` (`search`, which writes
+  `@museumwnf/search-data` from every other site's items). It shows no item
+  itself, and the org site lists it alone, in a group of its own.
+
   `"standalone"` is a third kind, read only by `docker-entrypoint.sh all`
   (never by `dxa-gallery` or `dxa-exhibition`, which know only `gallery` and
   `exhibition` — see below): it names a standalone exporter, one that makes

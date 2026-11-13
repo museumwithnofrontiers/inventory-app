@@ -6,6 +6,8 @@
 #   (default)   development: mysql, valkey, mailpit, app, worker, web
 #   docs        Jekyll documentation site
 #   staging     the real dataset served on :8020, and its database
+#   search      the global search (M15, ADR 005): Meilisearch, its keys and
+#               the public edge on :8091; load it with `run --rm search-loader`
 #
 # One-shot — you `run --rm` these, and never `up` them:
 #
@@ -623,6 +625,84 @@ services:
       staging-mysql:
         condition: service_healthy
 
+  # ---------------------------------------------------------------------------
+  # search — the global search, as on the server (M15, ADR 005, scripts/search).
+  #
+  #   docker compose --profile search up -d
+  #   docker compose run --rm search-loader --from-dir ../exporters/search/output/search
+  #   docker compose run --rm search-loader            # the pinned package
+  #   curl -X POST localhost:8091/indexes/items/search -H 'Content-Type: application/json' -d '{"q":"mihrab"}'
+  #
+  # Meilisearch listens on the compose network only. The edge on :8091 is the
+  # same configuration as search.metanull.eu, plus localhost on its CORS list.
+  # ---------------------------------------------------------------------------
+  meilisearch:
+    # The same version as the server: scripts/search/meilisearch.version (a test checks they match).
+    image: getmeili/meilisearch:v1.56.2
+    profiles: [search]
+    environment:
+      MEILI_ENV: production
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-local-search-master-key-for-docker-only}
+      MEILI_NO_ANALYTICS: "true"
+    volumes:
+      - search-meili-data:/meili_data
+    networks: [inventory]
+
+  search-keys:
+    image: node:24-alpine
+    profiles: [search]
+    working_dir: /var/www/app/scripts/search
+    command:
+      - sh
+      - -c
+      - >-
+        node keys.mjs --loader-key /run/search/loader.key --edge-include /run/search/search-key.conf &&
+        printf '"http://localhost:5173" $$http_origin;\n"http://localhost:4173" $$http_origin;\n' > /run/search/cors-extra.conf
+    environment:
+      MEILI_URL: http://meilisearch:7700
+      MEILI_MASTER_KEY: ${MEILI_MASTER_KEY:-local-search-master-key-for-docker-only}
+    volumes:
+      - ./scripts:/var/www/app/scripts:ro
+      - search-secrets:/run/search
+    depends_on: [meilisearch]
+    networks: [inventory]
+
+  search-edge:
+    image: nginx:alpine
+    profiles: [search]
+    environment:
+      MEILI_UPSTREAM: meilisearch:7700
+      SEARCH_EDGE_DIR: /run/search
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/search
+    volumes:
+      - ./scripts/search/edge/http.conf.template:/etc/nginx/templates/http.conf.template:ro
+      - ./scripts/search/edge/server.conf.template:/etc/nginx/templates/server.conf.template:ro
+      - ./scripts/search/edge/local.conf:/etc/nginx/conf.d/default.conf:ro
+      - search-secrets:/run/search:ro
+    # Where the entrypoint renders the two templates.
+    tmpfs:
+      - /etc/nginx/search
+    ports:
+      - "127.0.0.1:8091:80"
+    depends_on:
+      search-keys:
+        condition: service_completed_successfully
+    networks: [inventory]
+
+  search-loader:
+    image: node:24-alpine
+    profiles: [search]
+    working_dir: /var/www/app/scripts/search
+    entrypoint: ["/bin/sh", "/var/www/app/scripts/search/docker-loader.sh"]
+    environment:
+      MEILI_URL: http://meilisearch:7700
+      MEILI_KEY_FILE: /run/search/loader.key
+    volumes:
+      - .:/var/www/app
+      - search-loader-modules:/var/www/app/scripts/search/node_modules
+      - search-secrets:/run/search:ro
+    networks: [inventory]
+
 volumes:
   # Disposable: `docker compose down -v` and re-run, migrations rebuild them.
   dev-mysql-data:
@@ -639,6 +719,10 @@ volumes:
   exporter-publications-modules:
   exporter-travels-modules:
   parity-modules:
+  # The global search (M15): rebuilt by the next load, keys re-created by search-keys.
+  search-meili-data:
+  search-secrets:
+  search-loader-modules:
   # Extracted package versions. Published versions never change, so this only
   # grows; deleting it costs a re-download. Named outside the `inventory_`
   # prefix so a plain `docker run -v mwnf-pkg-cache:/cache` shares it.

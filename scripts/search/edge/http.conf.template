@@ -1,0 +1,21 @@
+# The search edge, http context (M15 B6, ADR 005). Rendered with envsubst:
+# only ${MEILI_UPSTREAM} and ${SEARCH_EDGE_DIR} are replaced, nginx's own
+# variables stay as they are.
+
+upstream search_meilisearch {
+    server ${MEILI_UPSTREAM};
+    keepalive 8;
+}
+
+# CORS: only the sites' origin. An origin not listed gets no
+# Access-Control-Allow-Origin header at all. cors-extra.conf may add lines of
+# the form `"<origin>" $http_origin;` (local Docker adds localhost).
+map $http_origin $search_cors_origin {
+    default "";
+    "https://museumwithnofrontiers.github.io" $http_origin;
+    include ${SEARCH_EDGE_DIR}/cors-extra.conf;
+}
+
+# 10 requests/s per address with a burst of 20 (Pascal, 2026-11-13).
+limit_req_zone $binary_remote_addr zone=search_per_ip:10m rate=10r/s;
+limit_conn_zone $binary_remote_addr zone=search_conn_per_ip:10m;

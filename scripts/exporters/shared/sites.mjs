@@ -23,6 +23,8 @@
  * - `minisite`: the items its collection and the collections below it place;
  *   a placement of a picture counts as the picture's item.
  * - any other `standalone` (the galleries hub, Publications): no item.
+ * - `search` (the global search site, M15): no item. It is the site that
+ *   links to the others, never one an item lives on.
  *
  * Explore shows fewer collections than its tree holds (its exporter's
  * `isShown`), so the tree rule can name Explore for an item of a collection
@@ -58,6 +60,8 @@ export const PUBLICATION_PATH = '/publication/:id'
 export const TRAIL_PATH = '/trail/:id'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+/** A site's slug: lowercase letters and digits, in words joined by single hyphens. */
+export const SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const SHEET_TYPES = ['object', 'monument']
 const TREE_TYPES = ['object', 'monument', 'detail']
 // Bound on the length of one `IN (…)` list.
@@ -78,6 +82,7 @@ function ruleOf(path, data) {
     }
     return kind === 'minisite' ? { type: 'subtree', collectionId } : { type: 'collection', collectionId }
   }
+  if (kind === 'search') return null
   if (kind !== 'standalone') throw new Error(`Instance file ${path}: unknown "kind" ${JSON.stringify(kind)}.`)
 
   const projectIds = record['project_ids']
@@ -124,7 +129,12 @@ export function loadSites(dir = INSTANCES_DIR) {
       throw new Error(`Invalid JSON in instance file ${path}: ${message}`, { cause: err })
     }
     const slug = data?.slug
-    if (typeof slug !== 'string' || slug === '') throw new Error(`Instance file ${path}: "slug" must be a non-empty string.`)
+    // The global search site takes a slug from its address and looks it up
+    // in the list built from these files (M15): a slug of this shape is the
+    // only thing it can ever turn into a link, so the shape is enforced here.
+    if (typeof slug !== 'string' || !SLUG.test(slug)) {
+      throw new Error(`Instance file ${path}: "slug" must be lowercase words joined by single hyphens.`)
+    }
     const origin = data.origin ?? `${DEMO_ORIGIN}/${slug}`
     if (typeof origin !== 'string' || !/^https:\/\/[^/]+(\/[^/]+)*$/.test(origin)) {
       throw new Error(`Instance file ${path}: "origin" must be an https address with no trailing slash.`)
@@ -133,7 +143,9 @@ export function loadSites(dir = INSTANCES_DIR) {
     if (typeof itemPath !== 'string' || !itemPath.startsWith('/') || !itemPath.includes(':id')) {
       throw new Error(`Instance file ${path}: "item_path" must be a route with ":id".`)
     }
-    sites.push({ slug, kind: data.kind, origin, itemPath, rule: ruleOf(path, data) })
+    const name = typeof data.name === 'string' && data.name !== '' ? data.name : slug
+    const parent = typeof data.parent === 'string' && data.parent !== '' ? data.parent : null
+    sites.push({ slug, kind: data.kind, name, parent, origin, itemPath, rule: ruleOf(path, data) })
   }
   return sites
 }
