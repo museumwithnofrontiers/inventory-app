@@ -131,6 +131,14 @@ The catalogue items and the trail entries, as references only:
 picture; `sites` the sites that show it, its home site first, from the
 shared rule (`shared/sites.mjs`, D1). The item's sheet stays on its own site.
 
+Each link is the page that opens the item on that site (`shared/pages.mjs`):
+on Explore, the monument's main record in its location
+(`/monument/<main>?location=<location>`); on Travels, the gallery of the
+itinerary that holds it (`/itinerary/<itinerary>?tab=vl`); a detail opens on
+its monument's page. A mini-site has no item page, so it is never listed, and
+a site with no page for the item is left out: no link leads to "This page
+does not exist".
+
 ## trails.json
 
 The trails the publications accompany: `{ id, backward_compatibility,

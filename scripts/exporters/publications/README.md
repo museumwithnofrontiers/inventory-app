@@ -17,8 +17,9 @@ the site's note is [`../instances/publications.md`](../instances/publications.md
 - **References, never sheets.** The items a publication catalogues and its
   trail's entries ship as references (`references.json`): id, name, first
   picture and the sites that show the item, from the shared rule in
-  [`../shared/sites.mjs`](../shared/sites.mjs). The item's own site keeps its
-  sheet.
+  [`../shared/sites.mjs`](../shared/sites.mjs), each linked to the page that
+  opens it there ([`../shared/pages.mjs`](../shared/pages.mjs)). The item's
+  own site keeps its sheet.
 - **Documents.** The sample and credits PDFs ship at their public `/doc`
   URL (ADR 004); the covers and sample pages as `/pub` renditions, like every
   picture.
