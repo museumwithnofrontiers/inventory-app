@@ -1,7 +1,7 @@
 {
   "kind": "standalone",
   "slug": "travels",
-  "name": "MWNF Travels",
+  "name": "MWNF Travel",
   "exporter": "travels",
   "package_name": "@museumwnf/travels-data",
   "item_scope": { "root_purpose": "travels-root", "member_of": ["location"] }

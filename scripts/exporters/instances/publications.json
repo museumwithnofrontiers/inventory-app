@@ -1,7 +1,7 @@
 {
   "kind": "standalone",
   "slug": "publications",
-  "name": "MWNF Publications",
+  "name": "MWNF Books",
   "exporter": "publications",
   "package_name": "@museumwnf/publications-data"
 }
