@@ -35,7 +35,9 @@ location = /indexes/items/search {
         add_header Vary "Origin" always;
         return 204;
     }
-    limit_except POST { deny all; }
+    # OPTIONS too: a method limit_except refuses never reaches the `if` above,
+    # so the preflight would get 403 instead of its 204.
+    limit_except POST OPTIONS { deny all; }
 
     include ${SEARCH_EDGE_DIR}/search-key.conf;
     proxy_http_version 1.1;
