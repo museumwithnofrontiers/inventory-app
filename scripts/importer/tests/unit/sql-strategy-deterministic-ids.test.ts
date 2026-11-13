@@ -248,6 +248,26 @@ describe('SqlWriteStrategy — deterministic IDs are stable across separate runs
     expect(idRun1).toBe(idRun2);
   });
 
+  it('writeAuthor: a free-text author (no legacy id) gets the same id at every import, from its name', async () => {
+    const author = {
+      name: 'Qaisra Khan',
+      internal_name: 'Qaisra Khan',
+      backward_compatibility: '',
+    };
+
+    const idRun1 = await makeStrategy().writeAuthor(author);
+    const idRun2 = await makeStrategy().writeAuthor({ ...author, name: ' qaisra khan ' });
+    const other = await makeStrategy().writeAuthor({ ...author, name: 'Nahla Nassar' });
+    const keyed = await makeStrategy().writeAuthor({
+      ...author,
+      backward_compatibility: 'mwnf3:authors:12',
+    });
+
+    expect(idRun1).toBe(idRun2);
+    expect(idRun1).not.toBe(other);
+    expect(idRun1).not.toBe(keyed);
+  });
+
   it('writeItemImage: an explicit id (e.g. preserved from AvailableImage) always wins', async () => {
     const strategy = makeStrategy();
     const id = await strategy.writeItemImage({
