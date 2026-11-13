@@ -4,6 +4,7 @@
  */
 
 import { resolveItemSites, type Query, type Site } from '../../../shared/sites.mjs'
+import { resolveItemPages } from '../../../shared/pages.mjs'
 import type { BuildInput, ItemRow, NameRow, TagRow, TranslationRow } from './documents.js'
 
 /** The item types that have a page of their own on a site. Pictures are an item's images, not results. */
@@ -91,6 +92,10 @@ export async function readInput(query: Query, sites: Site[], baseUrl: string): P
      ORDER BY ct.country_id, l.backward_compatibility, ct.id`
   )
 
-  const siteLinks = await resolveItemSites(query, ids, sites)
+  // Which sites show each item, then which page of each opens it: Explore opens
+  // a monument on its main record, Travels on its itinerary's gallery.
+  const shown = await resolveItemSites(query, ids, sites)
+  const parents = new Map(items.map(i => [i.id, i.parent_id]))
+  const siteLinks = await resolveItemPages(query, shown, sites, parents)
   return { items, translations, tags, partners, countries, pictures, sites: siteLinks, baseUrl }
 }
