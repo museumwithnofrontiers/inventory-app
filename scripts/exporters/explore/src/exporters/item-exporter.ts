@@ -260,18 +260,36 @@ export class ItemExporter extends BaseExporter {
     //   - item_images.path     → the file path
     //   - item_translations.description (caption, per language)
     //   - item_translations.extra JSON { photographer, copyright }
-    const pictureItems = await this.db.query<PictureItemRow>(
+    const allPictureItems = await this.db.query<
+      PictureItemRow & { explore_picture: number }
+    >(
       `SELECT pic.id AS picture_id, pic.parent_id AS item_id,
-              pic.display_order, ii.path, ii.alt_text
+              pic.display_order, ii.path, ii.alt_text,
+              pic.project_id IS NULL AS explore_picture
        FROM items pic
        JOIN item_images ii ON ii.item_id = pic.id
        WHERE pic.type = 'picture'
          -- A custom exhibition photo is the exhibition's picture, not one of the item's own.
          AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
                          WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
+         -- A picture legacy names without a file: its gallery shows nothing for it.
+         AND ii.path <> ''
          AND pic.parent_id IN (${itemPh})
        ORDER BY pic.parent_id, pic.display_order`,
       itemIds,
+    );
+    // Legacy Explore shows a monument's Explore pictures (Explore has no project), and
+    // only when it has none, the pictures of the record it points to (Monument::
+    // getAllImages: Travels, then DIA, museums, SH). A record merged into the Travels
+    // or DIA monument it points to carries both sets: it keeps Explore's alone.
+    const withExplorePictures = new Set(
+      allPictureItems
+        .filter((p) => Number(p.explore_picture) === 1)
+        .map((p) => p.item_id),
+    );
+    const pictureItems = allPictureItems.filter(
+      (p) =>
+        !withExplorePictures.has(p.item_id) || Number(p.explore_picture) === 1,
     );
 
     let pictureTranslations: PictureTranslationRow[] = [];
