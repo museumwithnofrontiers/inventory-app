@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { get, stats } from './lib/http.mjs';
 import { loadPackage } from './lib/pkg.mjs';
 import { Report } from './lib/report.mjs';
-import { compare, decodeEntities } from './lib/text.mjs';
+import { compare, decodeEntities, normalise } from './lib/text.mjs';
 import { checkImageUrls } from './lib/images.mjs';
 import { OUT } from './lib/paths.mjs';
 
@@ -47,18 +47,6 @@ const pkgTrails = collections.filter((c) => c.type === 'exhibition trail');
 R.set('trails legacy lists', [...trails.keys()].map((k) => `mwnf3_travels:trail:${k}`), pkgTrails.filter((c) => c.backward_compatibility.split(':')[2] !== 'GPA').map((c) => c.backward_compatibility));
 R.note('Legacy lists no GPA trail ("Comment for avoiding display GPA"), and neither does the site (viewer-layout HIDDEN_PROJECTS); its pages answer at their address, so they are compared below.');
 // A trail no list names, whose pages legacy still serves at their address.
-const headerLinesOf = (html) => [...(html.split('id="exDetailsmenuListing">')[1] ?? '').split("<div id='exDetails'>")[0].split('<div id="exDetails">')[0].matchAll(/class=['"]exDetailsmainLinks['"]>([\s\S]*?)<\/div>/g)].map((m) => m[1]);
-for (const c of pkgTrails) {
-  const key = c.backward_compatibility.replace('mwnf3_travels:trail:', '');
-  if (trails.has(key)) continue;
-  const [proj, cid, n] = key.split(':');
-  for (const lang of ['en', 'fr', 'es', 'it', 'de', 'pt', 'tr', 'ar'].filter((l) => P.tr('collections', l, c.id))) {
-    const html = await page(`travel_et_trailDetail.php?id=${encodeURIComponent(`${proj};${cid};${n};${lang}`)}&fl=desc`);
-    if (headerLinesOf(html)[0]?.replace(/<[^>]*>/g, '').trim()) addTrail(key, lang);
-  }
-}
-R.set('trails', [...trails.keys()].map((k) => `mwnf3_travels:trail:${k}`), pkgTrails.map((c) => c.backward_compatibility));
-
 const between = (html, start, end) => {
   const i = html.indexOf(start);
   if (i < 0) return '';
@@ -66,7 +54,29 @@ const between = (html, start, end) => {
   return html.slice(i + start.length, j < 0 ? undefined : j);
 };
 const descContent = (html) => between(html, '<div id="descContent">', '</div>');
-const headerLines = (html) => [...between(html, 'id="exDetailsmenuListing">', '<div id=\'exDetails\'>').matchAll(/class=['"]exDetailsmainLinks['"]>([\s\S]*?)<\/div>/g)].map((m) => m[1]);
+// The header's lines: title, subtitle, region (the trail pages quote the next div with ' or ").
+const headerLines = (html) => [...between(html, 'id="exDetailsmenuListing">', 'id=\'exDetails\'').split('id="exDetails"')[0].matchAll(/class=['"]exDetailsmainLinks['"]>([\s\S]*?)<\/div>/g)].map((m) => m[1]);
+
+for (const c of pkgTrails) {
+  const key = c.backward_compatibility.replace('mwnf3_travels:trail:', '');
+  if (trails.has(key)) continue;
+  const [proj, cid, n] = key.split(':');
+  for (const lang of ['en', 'fr', 'es', 'it', 'de', 'pt', 'tr', 'ar'].filter((l) => P.tr('collections', l, c.id))) {
+    const html = await page(`travel_et_trailDetail.php?id=${encodeURIComponent(`${proj};${cid};${n};${lang}`)}&fl=desc`);
+    if (normalise(headerLines(html)[0])) addTrail(key, lang);
+  }
+}
+R.set('trails', [...trails.keys()].map((k) => `mwnf3_travels:trail:${k}`), pkgTrails.map((c) => c.backward_compatibility));
+
+// The Publications work a page links to: legacy's https://books.museumwnf.org/book/<id>/<lang>.
+const bookIds = (html) => unique([...html.matchAll(/href="([^"]+)"/g)].map((m) => {
+  try {
+    const u = new URL(m[1].trim());
+    return u.hostname === 'books.museumwnf.org' ? u.pathname.match(/^\/book\/(\d+)\//)?.[1] : null;
+  } catch {
+    return null;
+  }
+}).filter(Boolean));
 
 for (const [key, langs] of trails) {
   const trail = C.get(`mwnf3_travels:trail:${key}`);
@@ -92,7 +102,7 @@ for (const [key, langs] of trails) {
     R.field('trail', 'curated_by', compare(parts[0], t.curated_by), where);
     R.field('trail', 'photo_by', compare(parts[1], t.photo_by), where);
     if (lang === [...langs][0] || lang === 'en') {
-      const books = unique([...desc.matchAll(/books\.museumwnf\.org\/book\/(\d+)\//g)].map((m) => `mwnf3:bookbase:${m[1]}`));
+      const books = bookIds(desc).map((id) => `mwnf3:bookbase:${id}`);
       const pkgBooks = (trail.publications ?? []).map((p) => p.backward_compatibility);
       R.field('trail', 'travel book', books.sort().join(' ') === pkgBooks.sort().join(' ') ? { verdict: books.length ? 'same' : 'both-empty' } : { verdict: !pkgBooks.length ? 'missing-in-package' : 'different', legacy: books.join(' '), pkg: pkgBooks.join(' ') }, key);
     }
