@@ -6,6 +6,8 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 // The stable public route: the npm packages bake it in, so it never changes.
 export const GOOD_IMAGE_URL = /^https:\/\/inventory\.metanull\.eu\/pub\/[0-9a-f-]{36}\.(jpe?g|png|gif|webp)$/i;
 const IMAGE_EXT = /\.(jpe?g|png|gif|webp|svg)$/i;
+// A publication's PDF: its own stable route (ADR 004), never an image.
+export const GOOD_DOCUMENT_URL = /^https:\/\/inventory\.metanull\.eu\/doc\/[0-9a-f-]{36}\.pdf$/i;
 
 // Legacy markup the importer converts to Markdown. Only real tag shapes count, so "< 5 cm" or a
 // Markdown autolink (<https://…>) is not a hit.
@@ -39,6 +41,7 @@ export function scanPackage(root, { max = 20 } = {}) {
   for (const file of jsonFiles(root)) {
     const data = JSON.parse(readFileSync(`${root}/${file}`, 'utf8'));
     for (const { path, key, value } of strings(data)) {
+      if (GOOD_DOCUMENT_URL.test(value)) continue;
       if (isImageRef(key, value)) {
         images.total++;
         if (!GOOD_IMAGE_URL.test(value)) {
