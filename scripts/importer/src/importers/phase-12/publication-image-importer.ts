@@ -117,13 +117,15 @@ export class PublicationImageImporter extends BaseImporter {
           // The file's first row keeps the id its path gives (the /pub URLs the packages
           // carry); another version's row of the same file gets an id of its own.
           const another = filesWritten.has(file);
-          if (
+          // A row no version shows writes nothing, so it claims no file: the version
+          // that shows the file still takes the path's id.
+          const skip =
             (!editionKey && shownByVersion.has(file)) ||
             rowsWritten.has(row) ||
             (!another &&
-              (await this.imageExistsAsync('publication_images', publicationId, legacyPath)))
-          ) {
-            if (!another) filesWritten.add(file);
+              (await this.imageExistsAsync('publication_images', publicationId, legacyPath)) &&
+              (filesWritten.add(file), true));
+          if (skip) {
             rowsWritten.add(row);
             result.skipped++;
             this.showSkipped();
