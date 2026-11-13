@@ -96,6 +96,16 @@ for (const file of files) {
     }
     exporterDir = exporterField
     args = []
+  } else if (kind === 'search') {
+    // The global search site (M15): its exporter writes @museumwnf/search-data,
+    // the payload every search host loads, from every other site's items.
+    const exporterField = data.exporter
+    if (typeof exporterField !== 'string' || exporterField.trim() === '') {
+      errors.push(`${path}: kind "search" requires a non-empty "exporter" field naming the exporter directory`)
+      continue
+    }
+    exporterDir = exporterField
+    args = []
   } else if (kind === 'minisite') {
     // A mini-site's package is exported from the database by the exporter of
     // the project it belongs to, narrowed to its own collection subtree.
@@ -108,7 +118,7 @@ for (const file of files) {
     args = ['--minisite', slug]
   } else {
     errors.push(
-      `${path}: unknown "kind" ${JSON.stringify(kind)} (expected "gallery", "exhibition", "standalone" or "minisite")`
+      `${path}: unknown "kind" ${JSON.stringify(kind)} (expected "gallery", "exhibition", "standalone", "minisite" or "search")`
     )
     continue
   }

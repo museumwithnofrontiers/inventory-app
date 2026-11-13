@@ -12,6 +12,10 @@ export type SiteRule =
 export interface Site {
   slug: string
   kind: string
+  /** The site's name from its instance file, or its slug when it has none (always set by `loadSites`). */
+  name?: string
+  /** A mini-site's parent site slug; null for every other site (always set by `loadSites`). */
+  parent?: string | null
   /** The site's address, no trailing slash. */
   origin: string
   /** The route of an item's page, with `:id`. */
@@ -46,6 +50,7 @@ export interface CollectionFacts {
 }
 
 export const INSTANCES_DIR: string
+export const SLUG: RegExp
 export const DEMO_ORIGIN: string
 export const DEFAULT_ITEM_PATH: string
 export const PUBLICATION_PATH: string

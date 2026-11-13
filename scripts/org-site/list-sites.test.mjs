@@ -85,3 +85,10 @@ test('every exporter instance has the title and kind the page needs', () => {
     assert.ok(kind, `${slug} has no kind`)
   }
 })
+
+test('lists the search site alone, in a group of its own, before the others', () => {
+  const withSearch = new Map([...instances, ['search', { title: 'Search', kind: 'search' }]])
+  const repos = ['carpets', 'islamicart', 'search'].map((n) => site(n))
+  const sites = buildSiteList(OWNER, repos, withSearch)
+  assert.deepEqual(sites.map((s) => [s.slug, s.kind]), [['search', 'search'], ['islamicart', 'standalone'], ['carpets', 'gallery']])
+})

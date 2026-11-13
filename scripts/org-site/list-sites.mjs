@@ -37,7 +37,8 @@ const INSTANCES_DIR = resolve(HERE, '../exporters/instances')
 const DEFAULT_OUT = resolve(HERE, '../../.new-architecture/museumwithnofrontiers.github.io/sites.json')
 
 // Order of the groups on the page; a kind not listed here goes last.
-export const KIND_ORDER = ['standalone', 'exhibition', 'gallery', 'minisite']
+// The global search (M15) is a site like the others, alone in a group of its own, first.
+export const KIND_ORDER = ['search', 'standalone', 'exhibition', 'gallery', 'minisite']
 
 /** Slug → { title, kind } from every exporter instance file. */
 export function readInstances(dir = INSTANCES_DIR) {

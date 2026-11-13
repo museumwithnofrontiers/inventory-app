@@ -1,0 +1,135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/museumwithnofrontiers/inventory-app/scripts/exporters/search/schema/mwnf.search-1.schema.json",
+  "title": "mwnf.search/1",
+  "description": "The files of @museumwnf/search-data (ADR 005). A breaking change is mwnf.search/2.",
+  "$defs": {
+    "uuid": { "type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" },
+    "slug": { "type": "string", "pattern": "^[a-z0-9]+(-[a-z0-9]+)*$" },
+    "language": { "type": "string", "pattern": "^[a-z]{2}$" },
+    "strings": { "type": "array", "items": { "type": "string", "minLength": 1 } },
+    "nullableString": { "type": ["string", "null"] },
+    "texts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name", "names", "short_description", "description", "type", "holder", "dates", "place",
+        "dynasty", "artist", "history", "keywords", "materials", "tags", "partner", "country"
+      ],
+      "properties": {
+        "name": { "type": "string", "description": "The name the item's own site gives it in this language." },
+        "names": { "$ref": "#/$defs/strings", "description": "Other contexts' names, alternate, second and third names." },
+        "short_description": { "$ref": "#/$defs/strings" },
+        "description": { "$ref": "#/$defs/strings" },
+        "type": { "$ref": "#/$defs/strings" },
+        "holder": { "$ref": "#/$defs/strings" },
+        "dates": { "$ref": "#/$defs/strings" },
+        "place": { "$ref": "#/$defs/strings" },
+        "dynasty": { "$ref": "#/$defs/strings" },
+        "artist": { "$ref": "#/$defs/strings" },
+        "history": { "$ref": "#/$defs/strings" },
+        "keywords": { "$ref": "#/$defs/strings" },
+        "materials": { "$ref": "#/$defs/strings" },
+        "tags": { "$ref": "#/$defs/strings" },
+        "partner": { "$ref": "#/$defs/strings" },
+        "country": { "$ref": "#/$defs/nullableString" }
+      }
+    },
+    "document": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id", "type", "parent_id", "backward_compatibility", "mwnf_reference", "owner_reference",
+        "start_date", "end_date", "partner_id", "country_id", "picture", "sites", "languages", "tags", "texts"
+      ],
+      "properties": {
+        "id": { "$ref": "#/$defs/uuid" },
+        "type": { "enum": ["object", "monument", "detail"] },
+        "parent_id": { "anyOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }] },
+        "backward_compatibility": { "$ref": "#/$defs/nullableString" },
+        "mwnf_reference": { "$ref": "#/$defs/nullableString" },
+        "owner_reference": { "$ref": "#/$defs/nullableString" },
+        "start_date": { "type": ["integer", "null"] },
+        "end_date": { "type": ["integer", "null"] },
+        "partner_id": { "anyOf": [{ "$ref": "#/$defs/uuid" }, { "type": "null" }] },
+        "country_id": { "$ref": "#/$defs/nullableString" },
+        "picture": { "type": ["string", "null"], "pattern": "^https://" },
+        "sites": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["site", "path"],
+            "properties": {
+              "site": { "$ref": "#/$defs/slug" },
+              "path": { "type": "string", "pattern": "^/" }
+            }
+          }
+        },
+        "languages": { "type": "array", "items": { "$ref": "#/$defs/language" } },
+        "tags": { "$ref": "#/$defs/strings" },
+        "texts": { "type": "object", "propertyNames": { "$ref": "#/$defs/language" }, "additionalProperties": { "$ref": "#/$defs/texts" } }
+      }
+    },
+    "sites": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "sites"],
+      "properties": {
+        "schema": { "const": "mwnf.search/1" },
+        "sites": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["slug", "name", "kind", "parent", "origin", "item_path"],
+            "properties": {
+              "slug": { "$ref": "#/$defs/slug" },
+              "name": { "type": "string", "minLength": 1 },
+              "kind": { "type": "string" },
+              "parent": { "anyOf": [{ "$ref": "#/$defs/slug" }, { "type": "null" }] },
+              "origin": { "type": "string", "pattern": "^https://[^/?#@]+(/[^/?#]+)*$" },
+              "item_path": { "type": "string", "pattern": "^/.*:id" }
+            }
+          }
+        }
+      }
+    },
+    "manifest": {
+      "type": "object",
+      "required": ["schema", "name", "languages", "counts", "shards"],
+      "properties": {
+        "schema": { "const": "mwnf.search/1" },
+        "name": { "const": "@museumwnf/search-data" },
+        "generatedAt": { "type": "string" },
+        "languages": { "type": "array", "items": { "$ref": "#/$defs/language" } },
+        "counts": {
+          "type": "object",
+          "required": ["documents", "excluded_no_site", "by_type", "by_language", "sites"],
+          "properties": {
+            "documents": { "type": "integer", "minimum": 0 },
+            "excluded_no_site": { "type": "integer", "minimum": 0 },
+            "by_type": { "type": "object", "additionalProperties": { "type": "integer" } },
+            "by_language": { "type": "object", "additionalProperties": { "type": "integer" } },
+            "sites": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "shards": {
+          "type": "array",
+          "minItems": 16,
+          "maxItems": 16,
+          "items": {
+            "type": "object",
+            "required": ["file", "documents", "sha256"],
+            "properties": {
+              "file": { "type": "string", "pattern": "^documents/[0-9a-f]\\.ndjson$" },
+              "documents": { "type": "integer", "minimum": 0 },
+              "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+            }
+          }
+        }
+      }
+    }
+  }
+}

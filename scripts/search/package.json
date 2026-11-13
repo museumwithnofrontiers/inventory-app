@@ -1,0 +1,17 @@
+{
+  "name": "mwnf-search-service",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The global search service (M15, ADR 005): loads the pinned @museumwnf/search-data into Meilisearch",
+  "scripts": {
+    "load": "node loader.mjs",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@museumwnf/search-data": "1.0.1"
+  }
+}
