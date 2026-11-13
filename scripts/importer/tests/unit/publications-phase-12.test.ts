@@ -321,6 +321,8 @@ describe('publication importers', () => {
       ['books/11/de/31/book/1.jpg', 'ed-book-1'],
       ['books/11/de/31/book/2.jpg', 'ed-digp-2'],
     ]);
+    // The skipped row of no version claims nothing: the file's only row keeps the path's id.
+    expect(write.mock.calls.map(([data]) => data.id)).toEqual([undefined, undefined]);
   });
 
   it('gives a second version of a shared page file a row of its own, the first keeping its id', async () => {
