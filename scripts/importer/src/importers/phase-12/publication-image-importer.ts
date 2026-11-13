@@ -22,6 +22,7 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { editionBackwardCompat } from '../../domain/transformers/publication-transformer.js';
+import { deterministicUuid } from '../../utils/deterministic-uuid.js';
 
 interface LegacyPicture {
   book_id: number;
@@ -113,18 +114,28 @@ export class PublicationImageImporter extends BaseImporter {
           const legacyPath = picture.path.trim();
           const file = fileOf(picture);
           const row = `${file}|${editionKey ?? ''}`;
+          // The file's first row keeps the id its path gives (the /pub URLs the packages
+          // carry); another version's row of the same file gets an id of its own.
+          const another = filesWritten.has(file);
           if (
             (!editionKey && shownByVersion.has(file)) ||
             rowsWritten.has(row) ||
-            (!filesWritten.has(file) &&
+            (!another &&
               (await this.imageExistsAsync('publication_images', publicationId, legacyPath)))
           ) {
+            if (!another) filesWritten.add(file);
+            rowsWritten.add(row);
             result.skipped++;
             this.showSkipped();
             continue;
           }
           rowsWritten.add(row);
           filesWritten.add(file);
+          const id = another
+            ? deterministicUuid(
+                `image:${publicationId}:${legacyPath.toLowerCase()}#${editionKey ?? ''}`
+              )
+            : undefined;
           const editionId = editionKey
             ? await this.getEntityUuidAsync(editionKey, 'publication_edition')
             : null;
@@ -142,6 +153,7 @@ export class PublicationImageImporter extends BaseImporter {
             continue;
           }
           await this.context.strategy.writePublicationImage({
+            ...(id ? { id } : {}),
             publication_id: publicationId,
             publication_edition_id: editionId,
             kind: picture.type,

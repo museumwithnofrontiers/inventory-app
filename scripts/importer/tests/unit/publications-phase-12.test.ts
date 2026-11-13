@@ -323,6 +323,43 @@ describe('publication importers', () => {
     ]);
   });
 
+  it('gives a second version of a shared page file a row of its own, the first keeping its id', async () => {
+    const tracker = new UnifiedTracker();
+    tracker.set('mwnf3:bookbase:1', 'pub-1', 'publication');
+    tracker.set('mwnf3:books:1:fr:31:book:1', 'ed-book-1', 'publication_edition');
+    tracker.set('mwnf3:books:1:fr:31:digp:2', 'ed-digp-2', 'publication_edition');
+    const write = vi.fn();
+    const page = (booktype: string) => ({
+      book_id: 1,
+      lang_id: 'fr',
+      booktype,
+      image_number: 8,
+      path: 'books/1/fr/31/book/pages/8.jpg',
+      caption: null,
+      photographer: null,
+      copyright: null,
+      type: 'page',
+      publisher_id: 31,
+    });
+    const context = makeContext(
+      tracker,
+      (sql) =>
+        sql.includes('books_pictures')
+          ? [page('book'), page('digp')]
+          : [
+              { book_id: 1, lang_id: 'fr', type: 'book', edition: '1', publisher_id: 31 },
+              { book_id: 1, lang_id: 'fr', type: 'digp', edition: '2', publisher_id: 31 },
+            ],
+      { writePublicationImage: write, imageExists: vi.fn().mockResolvedValue(null) }
+    );
+    const result = await new PublicationImageImporter(context).import();
+    expect(result.errors).toEqual([]);
+    const rows = write.mock.calls.map(([data]) => data);
+    expect(rows.map((r) => r.publication_edition_id)).toEqual(['ed-book-1', 'ed-digp-2']);
+    expect(rows[0].id).toBeUndefined();
+    expect(rows[1].id).toMatch(/^[0-9a-f-]{36}$/);
+  });
+
   it('links only the cited items that are not entries of the cited trail', async () => {
     expect(
       citations([{ item_key: 'o1', linkcatalogs: 'IAM_PT_EN_001; IAM_PT_FR_001' }]).cited.get(
