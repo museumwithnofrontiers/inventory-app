@@ -10,5 +10,8 @@
   },
   "engines": {
     "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@museumwnf/search-data": "1.0.1"
   }
 }
