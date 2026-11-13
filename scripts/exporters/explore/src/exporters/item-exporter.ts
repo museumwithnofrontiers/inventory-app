@@ -1,9 +1,12 @@
-import type { ExportResult } from '../core/types.js'
-import { languageKeyer, rekeyIfMap } from '../core/language-keys.js'
-import { BaseExporter } from './base-exporter.js'
+import type { ExportResult } from "../core/types.js";
+import { languageKeyer, rekeyIfMap } from "../core/language-keys.js";
+import { BaseExporter } from "./base-exporter.js";
 
 /** The item texts' `extra` keys whose value is keyed by language. */
-const LANGUAGE_KEYED_EXTRA = new Set(['structured_bibliography', 'disabled_structured_bibliography'])
+const LANGUAGE_KEYED_EXTRA = new Set([
+  "structured_bibliography",
+  "disabled_structured_bibliography",
+]);
 
 // Every person credited in one role on a translation row, in order, as legacy
 // prints them: joined with ", ", each in Arabic script on an Arabic row when
@@ -15,123 +18,123 @@ function creditList(role: string, fallback: string): string {
               ORDER BY ita.display_order, a.name SEPARATOR ', ')
             FROM item_translation_author ita
             JOIN authors a ON a.id = ita.author_id
-            WHERE ita.item_translation_id = it.id AND ita.role = '${role}'), ${fallback}.name)`
+            WHERE ita.item_translation_id = it.id AND ita.role = '${role}'), ${fallback}.name)`;
 }
 interface ItemRow {
-  id: string
-  type: string
-  internal_name: string
-  backward_compatibility: string | null
-  parent_id: string | null
-  partner_id: string | null
-  country_id: string | null
-  collection_id: string | null
-  project_id: string | null
-  owner_reference: string | null
-  mwnf_reference: string | null
-  start_date: number | null
-  end_date: number | null
-  display_order: number | null
-  latitude: string | null
-  longitude: string | null
+  id: string;
+  type: string;
+  internal_name: string;
+  backward_compatibility: string | null;
+  parent_id: string | null;
+  partner_id: string | null;
+  country_id: string | null;
+  collection_id: string | null;
+  project_id: string | null;
+  owner_reference: string | null;
+  mwnf_reference: string | null;
+  start_date: number | null;
+  end_date: number | null;
+  display_order: number | null;
+  latitude: string | null;
+  longitude: string | null;
 }
 
 interface ItemTranslationRow {
-  item_id: string
-  language_id: string
-  context_id: string
-  name: string
-  alternate_name: string | null
-  description: string | null
-  type: string | null
-  holder: string | null
-  owner: string | null
-  initial_owner: string | null
-  dates: string | null
-  location: string | null
-  dimensions: string | null
-  place_of_production: string | null
-  method_for_datation: string | null
-  method_for_provenance: string | null
-  provenance: string | null
-  obtention: string | null
-  bibliography: string | null
-  extra: unknown
-  author_name: string | null
-  copy_editor_name: string | null
-  translator_name: string | null
-  translation_copy_editor_name: string | null
+  item_id: string;
+  language_id: string;
+  context_id: string;
+  name: string;
+  alternate_name: string | null;
+  description: string | null;
+  type: string | null;
+  holder: string | null;
+  owner: string | null;
+  initial_owner: string | null;
+  dates: string | null;
+  location: string | null;
+  dimensions: string | null;
+  place_of_production: string | null;
+  method_for_datation: string | null;
+  method_for_provenance: string | null;
+  provenance: string | null;
+  obtention: string | null;
+  bibliography: string | null;
+  extra: unknown;
+  author_name: string | null;
+  copy_editor_name: string | null;
+  translator_name: string | null;
+  translation_copy_editor_name: string | null;
 }
 
 interface PictureItemRow {
-  picture_id: string
-  item_id: string // parent_id
-  display_order: number | null
-  path: string
-  alt_text: string | null
+  picture_id: string;
+  item_id: string; // parent_id
+  display_order: number | null;
+  path: string;
+  alt_text: string | null;
 }
 
 interface PictureTranslationRow {
-  picture_id: string
-  language_id: string
-  caption: string | null // description field on picture item translations
-  extra: unknown // JSON: { photographer, copyright }
+  picture_id: string;
+  language_id: string;
+  caption: string | null; // description field on picture item translations
+  extra: unknown; // JSON: { photographer, copyright }
 }
 
 interface ItemDynastyRow {
-  item_id: string
-  dynasty_id: string
+  item_id: string;
+  dynasty_id: string;
 }
 
 interface ItemItemLinkRow {
-  source_id: string
-  target_id: string
-  language_id: string
-  justification: string | null
+  source_id: string;
+  target_id: string;
+  language_id: string;
+  justification: string | null;
 }
 
 interface ItemTagRow {
-  item_id: string
-  tag: string
-  category: string | null
+  item_id: string;
+  tag: string;
+  category: string | null;
 }
 
 interface ItemGlossaryRow {
-  item_id: string
-  glossary_id: string
+  item_id: string;
+  glossary_id: string;
 }
 
 interface ItemArtistRow {
-  item_id: string
-  name: string
+  item_id: string;
+  name: string;
 }
 
 interface ItemMediaRow {
-  item_id: string
-  language_id: string | null
-  type: string
-  title: string
-  description: string | null
-  url: string
+  item_id: string;
+  language_id: string | null;
+  type: string;
+  title: string;
+  description: string | null;
+  url: string;
 }
 
 interface ItemThgGalleryRow {
-  item_id: string
-  name: string | null
-  internal_name: string
+  item_id: string;
+  name: string | null;
+  internal_name: string;
 }
 
 export class ItemExporter extends BaseExporter {
   getName(): string {
-    return 'Items'
+    return "Items";
   }
 
   async export(): Promise<ExportResult> {
-    this.logger.info('Exporting items.json...')
+    this.logger.info("Exporting items.json...");
 
     // The members of the shipped collections (core/scope.ts); pictures are
     // exported as images on their parent, never as items.
-    const scopeItemIds = this.scope.itemIds
+    const scopeItemIds = this.scope.itemIds;
     const items =
       scopeItemIds.length === 0
         ? []
@@ -144,22 +147,22 @@ export class ItemExporter extends BaseExporter {
              WHERE id IN (${this.placeholders(scopeItemIds.length)})
                AND type IN ('object', 'monument', 'detail')
              ORDER BY type, display_order, internal_name, id`,
-            scopeItemIds
-          )
+            scopeItemIds,
+          );
 
     if (items.length === 0) {
-      await this.writeJson('items.json', [])
-      this.logger.warning('items.json (0 items)')
-      return { file: 'items.json', count: 0 }
+      await this.writeJson("items.json", []);
+      this.logger.warning("items.json (0 items)");
+      return { file: "items.json", count: 0 };
     }
 
-    const itemIds = items.map(i => i.id)
-    const itemPh = this.placeholders(itemIds.length)
-    const langCodeMap = await this.buildLangCodeMap()
-    const languageKey = languageKeyer(langCodeMap)
+    const itemIds = items.map((i) => i.id);
+    const itemPh = this.placeholders(itemIds.length);
+    const langCodeMap = await this.buildLangCodeMap();
+    const languageKey = languageKeyer(langCodeMap);
 
-    const contextIds = this.context.contextIds
-    const contextPh = this.placeholders(contextIds.length)
+    const contextIds = this.context.contextIds;
+    const contextPh = this.placeholders(contextIds.length);
 
     // Each item's "own" context — resolved via its project's context_id.
     // An item can have item_translations rows in more than one context (e.g. a
@@ -168,20 +171,29 @@ export class ItemExporter extends BaseExporter {
     // duplicates). Used below to know which row is the item's primary
     // translation vs. a secondary one (see short_description handling).
     const itemProjectIds = [
-      ...new Set(items.map(i => i.project_id).filter((p): p is string => !!p)),
-    ]
-    const itemOwnContext = new Map<string, string>()
+      ...new Set(
+        items.map((i) => i.project_id).filter((p): p is string => !!p),
+      ),
+    ];
+    const itemOwnContext = new Map<string, string>();
     if (itemProjectIds.length > 0) {
-      const projectRows = await this.db.query<{ id: string; context_id: string | null }>(
+      const projectRows = await this.db.query<{
+        id: string;
+        context_id: string | null;
+      }>(
         `SELECT id, context_id FROM projects WHERE id IN (${this.placeholders(itemProjectIds.length)})`,
-        itemProjectIds
-      )
+        itemProjectIds,
+      );
       const projectContextMap = new Map(
-        projectRows.filter(p => p.context_id).map(p => [p.id, p.context_id as string])
-      )
+        projectRows
+          .filter((p) => p.context_id)
+          .map((p) => [p.id, p.context_id as string]),
+      );
       for (const item of items) {
-        const ctx = item.project_id ? projectContextMap.get(item.project_id) : undefined
-        if (ctx) itemOwnContext.set(item.id, ctx)
+        const ctx = item.project_id
+          ? projectContextMap.get(item.project_id)
+          : undefined;
+        if (ctx) itemOwnContext.set(item.id, ctx);
       }
     }
 
@@ -198,10 +210,10 @@ export class ItemExporter extends BaseExporter {
               it.location, it.dimensions, it.place_of_production,
               it.method_for_datation, it.method_for_provenance,
               it.provenance, it.obtention, it.bibliography, it.extra,
-              ${creditList('author', 'a1')} AS author_name,
-              ${creditList('text_copy_editor', 'a2')} AS copy_editor_name,
-              ${creditList('translator', 'a3')} AS translator_name,
-              ${creditList('translation_copy_editor', 'a4')} AS translation_copy_editor_name
+              ${creditList("author", "a1")} AS author_name,
+              ${creditList("text_copy_editor", "a2")} AS copy_editor_name,
+              ${creditList("translator", "a3")} AS translator_name,
+              ${creditList("translation_copy_editor", "a4")} AS translation_copy_editor_name
        FROM item_translations it
        LEFT JOIN authors a1 ON a1.id = it.author_id
        LEFT JOIN authors a2 ON a2.id = it.text_copy_editor_id
@@ -210,22 +222,35 @@ export class ItemExporter extends BaseExporter {
        WHERE it.item_id IN (${itemPh})
          AND it.context_id IN (${contextPh})
        ORDER BY it.item_id, it.context_id`,
-      [...itemIds, ...contextIds]
-    )
+      [...itemIds, ...contextIds],
+    );
 
     // An item with no project is a Travels record or a monument native to
     // Explore: its own context is the one it is translated in besides
-    // Explore's (Travels'), or Explore's when it has no other.
-    const exploreContextId = this.scope.exploreContextId
-    const otherContexts = new Map<string, string>()
+    // Explore's (Travels'), or Explore's when it has no other. So is an item
+    // whose project's context holds none of its texts: a Travels record
+    // carries its project (IAM, GPA) but is written in the Travels context.
+    const exploreContextId = this.scope.exploreContextId;
+    const otherContexts = new Map<string, string>();
+    const translatedContexts = new Map<string, Set<string>>();
     for (const t of translations) {
       if (t.context_id !== exploreContextId && !otherContexts.has(t.item_id)) {
-        otherContexts.set(t.item_id, t.context_id)
+        otherContexts.set(t.item_id, t.context_id);
       }
+      if (!translatedContexts.has(t.item_id))
+        translatedContexts.set(t.item_id, new Set());
+      translatedContexts.get(t.item_id)!.add(t.context_id);
     }
     for (const item of items) {
-      if (!itemOwnContext.has(item.id)) {
-        itemOwnContext.set(item.id, otherContexts.get(item.id) ?? exploreContextId)
+      const projectContext = itemOwnContext.get(item.id);
+      if (
+        !projectContext ||
+        !translatedContexts.get(item.id)?.has(projectContext)
+      ) {
+        itemOwnContext.set(
+          item.id,
+          otherContexts.get(item.id) ?? exploreContextId,
+        );
       }
     }
 
@@ -246,12 +271,12 @@ export class ItemExporter extends BaseExporter {
                          WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
          AND pic.parent_id IN (${itemPh})
        ORDER BY pic.parent_id, pic.display_order`,
-      itemIds
-    )
+      itemIds,
+    );
 
-    let pictureTranslations: PictureTranslationRow[] = []
+    let pictureTranslations: PictureTranslationRow[] = [];
     if (pictureItems.length > 0) {
-      const pictureIds = [...new Set(pictureItems.map(p => p.picture_id))]
+      const pictureIds = [...new Set(pictureItems.map((p) => p.picture_id))];
       pictureTranslations = await this.db.query<PictureTranslationRow>(
         // Row order is unspecified; sorted so the `captions` key order below is
         // byte-identical across two exports of one database.
@@ -259,8 +284,8 @@ export class ItemExporter extends BaseExporter {
          FROM item_translations
          WHERE item_id IN (${this.placeholders(pictureIds.length)})
          ORDER BY picture_id, language_id`,
-        pictureIds
-      )
+        pictureIds,
+      );
     }
 
     // ── 3. Dynasty, tag, glossary, artist, THG gallery, media, and item-item links ──
@@ -277,7 +302,7 @@ export class ItemExporter extends BaseExporter {
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
         `SELECT item_id, dynasty_id FROM item_dynasty WHERE item_id IN (${itemPh})
          ORDER BY item_id, dynasty_id`,
-        itemIds
+        itemIds,
       ),
       this.db.query<ItemTagRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
@@ -287,7 +312,7 @@ export class ItemExporter extends BaseExporter {
          JOIN tags t ON t.id = it2.tag_id
          WHERE it2.item_id IN (${itemPh})
          ORDER BY it2.item_id, t.description, t.description COLLATE utf8mb4_bin`,
-        itemIds
+        itemIds,
       ),
       // Glossary terms used anywhere in this item's translations (any language),
       // via item_translations -> item_translation_spelling -> glossary_spellings.
@@ -299,7 +324,7 @@ export class ItemExporter extends BaseExporter {
          JOIN glossary_spellings gs ON gs.id = its.spelling_id
          WHERE it3.item_id IN (${itemPh})
          ORDER BY it3.item_id, gs.glossary_id`,
-        itemIds
+        itemIds,
       ),
       // Object artists (legacy `artist_` text, parsed into structured Artist
       // entities by the importer). Language-independent — `artists.name` has
@@ -311,7 +336,7 @@ export class ItemExporter extends BaseExporter {
          JOIN artists a ON a.id = ai.artist_id
          WHERE ai.item_id IN (${itemPh})
          ORDER BY ai.item_id, a.name`,
-        itemIds
+        itemIds,
       ),
       // THG (Thematic Gallery) cross-references — a separate legacy project's
       // galleries that also feature this item, already linked via
@@ -328,7 +353,7 @@ export class ItemExporter extends BaseExporter {
          WHERE ci.item_id IN (${itemPh})
            AND c.backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:thg\\_gallery:%'
          ORDER BY ci.item_id, c.internal_name, c.id`,
-        itemIds
+        itemIds,
       ),
       // Audio/video media attached to items (item_media table) — legacy
       // objects_video/monuments_video, already imported via ItemMediaImporter.
@@ -337,7 +362,7 @@ export class ItemExporter extends BaseExporter {
          FROM item_media
          WHERE item_id IN (${itemPh})
          ORDER BY item_id, display_order`,
-        itemIds
+        itemIds,
       ),
       // Outgoing links only (source_id IN items). The legacy data model stores
       // directed links; fetching both directions and reversing doubles the list.
@@ -352,9 +377,9 @@ export class ItemExporter extends BaseExporter {
          LEFT JOIN item_item_link_translations iilt ON iilt.item_item_link_id = iil.id
          WHERE iil.source_id IN (${itemPh})
          ORDER BY iil.source_id, iil.target_id, iilt.language_id`,
-        itemIds
+        itemIds,
       ),
-    ])
+    ]);
 
     // ── Build maps ───────────────────────────────────────────────────────────
 
@@ -367,33 +392,38 @@ export class ItemExporter extends BaseExporter {
     // convention: the primary/own context holds the long description, a
     // secondary context like EPM holds the short one). See Epic 11 in the
     // islamicart parity backlog / memory `project_context_semantics`.
-    const translationsByItemLang = new Map<string, ItemTranslationRow[]>()
+    const translationsByItemLang = new Map<string, ItemTranslationRow[]>();
     for (const t of translations) {
-      const code = langCodeMap.get(t.language_id)
-      if (!code) continue
-      const key = `${t.item_id}\u0000${code}`
-      if (!translationsByItemLang.has(key)) translationsByItemLang.set(key, [])
-      translationsByItemLang.get(key)!.push(t)
+      const code = langCodeMap.get(t.language_id);
+      if (!code) continue;
+      const key = `${t.item_id}\u0000${code}`;
+      if (!translationsByItemLang.has(key)) translationsByItemLang.set(key, []);
+      translationsByItemLang.get(key)!.push(t);
     }
 
-    const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
+    const translationMap = new Map<
+      string,
+      Record<string, Record<string, unknown>>
+    >();
     for (const [key, rows] of translationsByItemLang) {
-      const sep = key.indexOf('\u0000')
-      const itemId = key.slice(0, sep)
-      const code = key.slice(sep + 1)
+      const sep = key.indexOf("\u0000");
+      const itemId = key.slice(0, sep);
+      const code = key.slice(sep + 1);
 
       // The item's own row carries its content: a resolved monument's is its
       // source database's. Explore's row, when it is not the own one, is
       // Explore's name for it and, now and then, Explore's own texts: it is
       // shipped apart, as `explore`, and never counts as a second source.
-      const ownContext = itemOwnContext.get(itemId)
+      const ownContext = itemOwnContext.get(itemId);
       const ownRow =
-        (ownContext ? rows.find(r => r.context_id === ownContext) : undefined) ?? rows[0]!
+        (ownContext
+          ? rows.find((r) => r.context_id === ownContext)
+          : undefined) ?? rows[0]!;
       const exploreRow =
         ownRow.context_id === exploreContextId
           ? undefined
-          : rows.find(r => r.context_id === exploreContextId)
-      const otherRow = rows.find(r => r !== ownRow && r !== exploreRow)
+          : rows.find((r) => r.context_id === exploreContextId);
+      const otherRow = rows.find((r) => r !== ownRow && r !== exploreRow);
 
       // Fields without a dedicated column live in item_translations.extra
       // JSON; the importers store an item-type-dependent set there. Spread
@@ -401,9 +431,9 @@ export class ItemExporter extends BaseExporter {
       // columns win on collision.
       const extra = ownRow.extra
         ? (parseJson(ownRow.extra) as Record<string, unknown> | null)
-        : null
+        : null;
 
-      if (!translationMap.has(itemId)) translationMap.set(itemId, {})
+      if (!translationMap.has(itemId)) translationMap.set(itemId, {});
       const fields: Record<string, unknown> = {
         name: ownRow.name,
         alternate_name: ownRow.alternate_name,
@@ -426,75 +456,83 @@ export class ItemExporter extends BaseExporter {
         copy_editor: ownRow.copy_editor_name,
         translator: ownRow.translator_name,
         translation_copy_editor: ownRow.translation_copy_editor_name,
-      }
+      };
       if (extra) {
         for (const [k, v] of Object.entries(extra)) {
           // The record's own credit columns, which only the galleries print.
-          if (k === 'credits_as_written') continue
+          if (k === "credits_as_written") continue;
           // The bibliographies are keyed by language, written as the package writes it (#2394).
-          if (fields[k] == null) fields[k] = LANGUAGE_KEYED_EXTRA.has(k) ? rekeyIfMap(v, languageKey) : v
+          if (fields[k] == null)
+            fields[k] = LANGUAGE_KEYED_EXTRA.has(k)
+              ? rekeyIfMap(v, languageKey)
+              : v;
         }
       }
       if (exploreRow) {
         const explore = this.stripNulls({
           name: exploreRow.name,
           description: exploreRow.description,
-          ...((parseJson(exploreRow.extra) as Record<string, unknown> | null) ?? {}),
-        })
-        if (Object.keys(explore).length > 0) fields['explore'] = explore
+          ...((parseJson(exploreRow.extra) as Record<string, unknown> | null) ??
+            {}),
+        });
+        if (Object.keys(explore).length > 0) fields["explore"] = explore;
       }
-      translationMap.get(itemId)![code] = fields
+      translationMap.get(itemId)![code] = fields;
     }
 
     // Write one translations/items.{lang}.json per language (null fields omitted)
-    const byLang = new Map<string, Record<string, unknown>>()
+    const byLang = new Map<string, Record<string, unknown>>();
     for (const [itemId, langMap] of translationMap) {
       for (const [langCode, fields] of Object.entries(langMap)) {
-        if (!byLang.has(langCode)) byLang.set(langCode, {})
-        byLang.get(langCode)![itemId] = this.stripNulls(fields)
+        if (!byLang.has(langCode)) byLang.set(langCode, {});
+        byLang.get(langCode)![itemId] = this.stripNulls(fields);
       }
     }
-    await this.writeTranslationFiles('items', byLang)
+    await this.writeTranslationFiles("items", byLang);
 
     // picture_id -> lang_code -> { caption, photographer, copyright }
     const picTransMap = new Map<
       string,
       Record<
         string,
-        { caption: string | null; photographer: string | null; copyright: string | null }
+        {
+          caption: string | null;
+          photographer: string | null;
+          copyright: string | null;
+        }
       >
-    >()
+    >();
     for (const t of pictureTranslations) {
-      if (!picTransMap.has(t.picture_id)) picTransMap.set(t.picture_id, {})
-      const code = langCodeMap.get(t.language_id)
-      if (!code) continue
-      const extra = parseJson(t.extra) as Record<string, string> | null
+      if (!picTransMap.has(t.picture_id)) picTransMap.set(t.picture_id, {});
+      const code = langCodeMap.get(t.language_id);
+      if (!code) continue;
+      const extra = parseJson(t.extra) as Record<string, string> | null;
       picTransMap.get(t.picture_id)![code] = {
         caption: t.caption,
         photographer: extra?.photographer ?? null,
         copyright: extra?.copyright ?? null,
-      }
+      };
     }
 
     // item_id -> images[] (built from picture children)
-    const imageMap = new Map<string, ImageEntry[]>()
+    const imageMap = new Map<string, ImageEntry[]>();
     for (const pic of pictureItems) {
-      if (!imageMap.has(pic.item_id)) imageMap.set(pic.item_id, [])
-      const perLang = picTransMap.get(pic.picture_id) ?? {}
+      if (!imageMap.has(pic.item_id)) imageMap.set(pic.item_id, []);
+      const perLang = picTransMap.get(pic.picture_id) ?? {};
 
       // Legacy keeps a picture's credits per language, like its caption, and prints only the
       // page language's. The flat photographer/copyright (first language found) stay for the
       // viewers that don't read the per-language maps yet.
-      const firstLang = Object.values(perLang)[0]
+      const firstLang = Object.values(perLang)[0];
 
       // Captions and credits keyed by lang code — skip langs with no text
-      const captions: Record<string, string> = {}
-      const photographers: Record<string, string> = {}
-      const copyrights: Record<string, string> = {}
+      const captions: Record<string, string> = {};
+      const photographers: Record<string, string> = {};
+      const copyrights: Record<string, string> = {};
       for (const [lang, t] of Object.entries(perLang)) {
-        if (t.caption) captions[lang] = t.caption
-        if (t.photographer) photographers[lang] = t.photographer
-        if (t.copyright) copyrights[lang] = t.copyright
+        if (t.caption) captions[lang] = t.caption;
+        if (t.photographer) photographers[lang] = t.photographer;
+        if (t.copyright) copyrights[lang] = t.copyright;
       }
 
       imageMap.get(pic.item_id)!.push({
@@ -505,84 +543,92 @@ export class ItemExporter extends BaseExporter {
         copyrights,
         photographer: firstLang?.photographer ?? null,
         copyright: firstLang?.copyright ?? null,
-      })
+      });
     }
 
     // item_id -> dynasty_ids[]
-    const dynastyMap = new Map<string, string[]>()
+    const dynastyMap = new Map<string, string[]>();
     for (const link of dynastyLinks) {
-      if (!dynastyMap.has(link.item_id)) dynastyMap.set(link.item_id, [])
-      dynastyMap.get(link.item_id)!.push(link.dynasty_id)
+      if (!dynastyMap.has(link.item_id)) dynastyMap.set(link.item_id, []);
+      dynastyMap.get(link.item_id)!.push(link.dynasty_id);
     }
 
     // item_id -> tags[], and the Explore filters among them (category
     // `filter`): the by-country page narrows a country's monuments by those.
-    const tagMap = new Map<string, string[]>()
-    const filterMap = new Map<string, string[]>()
+    const tagMap = new Map<string, string[]>();
+    const filterMap = new Map<string, string[]>();
     for (const link of tagLinks) {
-      if (!tagMap.has(link.item_id)) tagMap.set(link.item_id, [])
-      tagMap.get(link.item_id)!.push(link.tag)
-      if (link.category === 'filter') {
-        if (!filterMap.has(link.item_id)) filterMap.set(link.item_id, [])
-        filterMap.get(link.item_id)!.push(link.tag)
+      if (!tagMap.has(link.item_id)) tagMap.set(link.item_id, []);
+      tagMap.get(link.item_id)!.push(link.tag);
+      if (link.category === "filter") {
+        if (!filterMap.has(link.item_id)) filterMap.set(link.item_id, []);
+        filterMap.get(link.item_id)!.push(link.tag);
       }
     }
 
     // item_id -> glossary_ids[]
-    const glossaryMap = new Map<string, string[]>()
+    const glossaryMap = new Map<string, string[]>();
     for (const link of glossaryLinks) {
-      if (!glossaryMap.has(link.item_id)) glossaryMap.set(link.item_id, [])
-      glossaryMap.get(link.item_id)!.push(link.glossary_id)
+      if (!glossaryMap.has(link.item_id)) glossaryMap.set(link.item_id, []);
+      glossaryMap.get(link.item_id)!.push(link.glossary_id);
     }
 
     // item_id -> artist_names[]
-    const artistMap = new Map<string, string[]>()
+    const artistMap = new Map<string, string[]>();
     for (const link of artistLinks) {
-      if (!artistMap.has(link.item_id)) artistMap.set(link.item_id, [])
-      artistMap.get(link.item_id)!.push(link.name)
+      if (!artistMap.has(link.item_id)) artistMap.set(link.item_id, []);
+      artistMap.get(link.item_id)!.push(link.name);
     }
 
     // item_id -> thg_galleries[]
-    const thgGalleryMap = new Map<string, { name: string }[]>()
+    const thgGalleryMap = new Map<string, { name: string }[]>();
     for (const row of thgGalleryLinks) {
-      if (!thgGalleryMap.has(row.item_id)) thgGalleryMap.set(row.item_id, [])
-      thgGalleryMap.get(row.item_id)!.push({ name: row.name ?? row.internal_name })
+      if (!thgGalleryMap.has(row.item_id)) thgGalleryMap.set(row.item_id, []);
+      thgGalleryMap
+        .get(row.item_id)!
+        .push({ name: row.name ?? row.internal_name });
     }
 
     // item_id -> media[] (audio/video)
-    const mediaMap = new Map<string, MediaEntry[]>()
+    const mediaMap = new Map<string, MediaEntry[]>();
     for (const m of mediaRows) {
-      if (!mediaMap.has(m.item_id)) mediaMap.set(m.item_id, [])
+      if (!mediaMap.has(m.item_id)) mediaMap.set(m.item_id, []);
       mediaMap.get(m.item_id)!.push({
         type: m.type,
         title: m.title,
         description: m.description,
         url: m.url,
-        language: m.language_id ? (langCodeMap.get(m.language_id) ?? null) : null,
-      })
+        language: m.language_id
+          ? (langCodeMap.get(m.language_id) ?? null)
+          : null,
+      });
     }
 
     // item_id -> related item entries (outgoing links only; only targets present in this export)
     // source_id -> target_id -> lang_code -> justification text
-    const itemIdSet = new Set(itemIds)
-    const relatedMap = new Map<string, string[]>()
-    const justificationMap = new Map<string, Map<string, Record<string, string>>>()
+    const itemIdSet = new Set(itemIds);
+    const relatedMap = new Map<string, string[]>();
+    const justificationMap = new Map<
+      string,
+      Map<string, Record<string, string>>
+    >();
     for (const link of itemItemLinks) {
-      if (!itemIdSet.has(link.target_id)) continue
-      if (!relatedMap.has(link.source_id)) relatedMap.set(link.source_id, [])
-      const existing = relatedMap.get(link.source_id)!
-      if (!existing.includes(link.target_id)) existing.push(link.target_id)
+      if (!itemIdSet.has(link.target_id)) continue;
+      if (!relatedMap.has(link.source_id)) relatedMap.set(link.source_id, []);
+      const existing = relatedMap.get(link.source_id)!;
+      if (!existing.includes(link.target_id)) existing.push(link.target_id);
 
-      const code = langCodeMap.get(link.language_id)
+      const code = langCodeMap.get(link.language_id);
       if (code && link.justification) {
-        if (!justificationMap.has(link.source_id)) justificationMap.set(link.source_id, new Map())
-        const tgtMap = justificationMap.get(link.source_id)!
-        if (!tgtMap.has(link.target_id)) tgtMap.set(link.target_id, {})
-        tgtMap.get(link.target_id)![code] = link.justification
+        if (!justificationMap.has(link.source_id))
+          justificationMap.set(link.source_id, new Map());
+        const tgtMap = justificationMap.get(link.source_id)!;
+        if (!tgtMap.has(link.target_id)) tgtMap.set(link.target_id, {});
+        tgtMap.get(link.target_id)![code] = link.justification;
       }
     }
 
-    const output = items.map(item => ({
+    const output = items.map((item) => ({
       id: item.id,
       type: item.type,
       internal_name: item.internal_name,
@@ -599,7 +645,7 @@ export class ItemExporter extends BaseExporter {
       longitude: item.longitude !== null ? parseFloat(item.longitude) : null,
       images: imageMap.get(item.id) ?? [],
       dynasty_ids: dynastyMap.get(item.id) ?? [],
-      related_items: (relatedMap.get(item.id) ?? []).map(targetId => ({
+      related_items: (relatedMap.get(item.id) ?? []).map((targetId) => ({
         id: targetId,
         justifications: justificationMap.get(item.id)?.get(targetId) ?? {},
       })),
@@ -610,31 +656,31 @@ export class ItemExporter extends BaseExporter {
       thg_galleries: thgGalleryMap.get(item.id) ?? [],
       media: mediaMap.get(item.id) ?? [],
       languages: Object.keys(translationMap.get(item.id) ?? {}).sort(),
-    }))
+    }));
 
-    await this.writeJson('items.json', output)
-    this.logger.success(`items.json (${output.length} items)`)
+    await this.writeJson("items.json", output);
+    this.logger.success(`items.json (${output.length} items)`);
 
-    return { file: 'items.json', count: output.length }
+    return { file: "items.json", count: output.length };
   }
 }
 
 interface ImageEntry {
-  url: string
-  display_order: number | null
-  captions: Record<string, string>
-  photographers: Record<string, string>
-  copyrights: Record<string, string>
-  photographer: string | null
-  copyright: string | null
+  url: string;
+  display_order: number | null;
+  captions: Record<string, string>;
+  photographers: Record<string, string>;
+  copyrights: Record<string, string>;
+  photographer: string | null;
+  copyright: string | null;
 }
 
 interface MediaEntry {
-  type: string
-  title: string
-  description: string | null
-  url: string
-  language: string | null
+  type: string;
+  title: string;
+  description: string | null;
+  url: string;
+  language: string | null;
 }
 
 /**
@@ -643,11 +689,11 @@ interface MediaEntry {
  * — only fall back to JSON.parse for the (defensive) string case.
  */
 function parseJson(raw: unknown): unknown | null {
-  if (raw == null) return null
-  if (typeof raw === 'object') return raw
+  if (raw == null) return null;
+  if (typeof raw === "object") return raw;
   try {
-    return JSON.parse(raw as string) as unknown
+    return JSON.parse(raw as string) as unknown;
   } catch {
-    return null
+    return null;
   }
 }
