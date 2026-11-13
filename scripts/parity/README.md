@@ -97,6 +97,7 @@ What `curatorial` compares, per family:
 | islamicart, baroqueart, sharinghistory | the record list from the dump, each record's live `database_item.php` page (raw HTML) | `compare-php`, `compare-collections`, `compare-partners-php` |
 | explore | its live API | `compare-explore` |
 | galleries (the hub) | its live API | `compare-hub` |
+| publications, travels | no record comparison yet: the sitemap (legacy books.museumwnf.org, and travels.museumwnf.org's `travel_et_home.php`), the package gates, the home captures and the links gate, where Travels is only the `travel_et_*` pages of its host | — |
 
 | Option | Meaning |
 |---|---|

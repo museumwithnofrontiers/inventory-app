@@ -12,6 +12,11 @@ const ALIASES = {
   'sharinghistory.org': 'sharinghistory',
 };
 
+// A standalone site that took over only part of its legacy host: the legacy pages it replaced,
+// by their path's start. Travels is legacy's Exhibition Trails (`travel_et_*.php`); the rest of
+// travels.museumwnf.org (the tours, the booking form) has no new site.
+const PORTED_PATHS = { travels: '/travel_et_' };
+
 export const bareHost = (host) => host.toLowerCase().replace(/^www\./, '');
 
 export function isMwnfHost(host) {
@@ -30,7 +35,7 @@ export function portedTargets(sites) {
     if (!s.legacyUrl || !s.newUrl) continue;
     const url = new URL(s.legacyUrl);
     const first = url.pathname.split('/').filter(Boolean)[0];
-    const path = s.kind === 'exhibition' && first ? `/${first.toLowerCase()}/` : '/';
+    const path = PORTED_PATHS[s.slug] ?? (s.kind === 'exhibition' && first ? `/${first.toLowerCase()}/` : '/');
     targets.push({ host: bareHost(url.host), path, slug: s.slug, newUrl: s.newUrl });
   }
   for (const [host, slug] of Object.entries(ALIASES)) {

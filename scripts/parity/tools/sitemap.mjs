@@ -58,6 +58,10 @@ const standaloneLegacy = {
   sharinghistory: envUrl('VUE_APP_SHARING_HISTORY_URL'),
   galleries: envUrl('VUE_APP_GALLERIES_URL'),
   explore: 'https://explore.museumwnf.org',
+  // Legacy book-client, and the Exhibition Trails of legacy travels.museumwnf.org, whose own
+  // home is the Travel portal's (inventory-app#2544).
+  publications: 'https://books.museumwnf.org',
+  travels: 'https://travels.museumwnf.org/travel_et_home.php',
 };
 
 // ---- new roster

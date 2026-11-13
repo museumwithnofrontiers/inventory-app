@@ -9,6 +9,8 @@ const sites = [
   { slug: 'islamicart', kind: 'standalone', legacyUrl: 'https://islamicart.museumwnf.org', newUrl: 'https://museumwithnofrontiers.github.io/islamicart/' },
   { slug: 'galleries', kind: 'standalone', legacyUrl: 'https://galleries.museumwnf.org', newUrl: 'https://museumwithnofrontiers.github.io/galleries/' },
   { slug: 'islamicart-the-abbasids', kind: 'minisite', legacyUrl: null, newUrl: 'https://museumwithnofrontiers.github.io/islamicart-the-abbasids/' },
+  { slug: 'publications', kind: 'standalone', legacyUrl: 'https://books.museumwnf.org', newUrl: 'https://museumwithnofrontiers.github.io/publications/' },
+  { slug: 'travels', kind: 'standalone', legacyUrl: 'https://travels.museumwnf.org/travel_et_home.php', newUrl: 'https://museumwithnofrontiers.github.io/travels/' },
 ];
 const targets = portedTargets(sites);
 
@@ -19,6 +21,14 @@ test('a link to a ported legacy site fails the gate, with the site it should go 
   );
   assert.equal(judge('https://galleries.museumwnf.org/list', targets).target.slug, 'galleries');
   assert.equal(judge('http://www.islamicart.museumwnf.org/database.php', targets).target.slug, 'islamicart');
+});
+
+test('legacy books are Publications; only the Exhibition Trails of travels are Travels', () => {
+  assert.equal(judge('https://books.museumwnf.org/book/5/en', targets).target.slug, 'publications');
+  assert.equal(judge('https://travels.museumwnf.org/travel_et_trailDetail.php?id=IAM;tn;1;en&fl=its', targets).target.slug, 'travels');
+  assert.equal(judge('https://travels.museumwnf.org/travel_et_home.php', targets).kind, 'ported');
+  assert.equal(judge('https://travels.museumwnf.org/booking_form.php', targets).kind, 'legacy');
+  assert.equal(judge('https://travels.museumwnf.org/', targets).kind, 'legacy');
 });
 
 test("legacy's own domains count as their site's", () => {

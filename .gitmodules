@@ -310,3 +310,9 @@
 [submodule ".new-architecture/sharinghistory-travelling"]
 	path = .new-architecture/sharinghistory-travelling
 	url = https://github.com/museumwithnofrontiers/sharinghistory-travelling
+[submodule ".new-architecture/publications"]
+	path = .new-architecture/publications
+	url = https://github.com/museumwithnofrontiers/publications
+[submodule ".new-architecture/travels"]
+	path = .new-architecture/travels
+	url = https://github.com/museumwithnofrontiers/travels
