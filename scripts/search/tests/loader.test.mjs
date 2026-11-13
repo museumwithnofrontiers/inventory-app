@@ -178,5 +178,5 @@ test('the public key can only search the items index', () => {
 test('the local compose stack runs the same Meilisearch as the server', () => {
   const version = readFileSync(join(HERE, '../meilisearch.version'), 'utf-8').trim()
   const compose = readFileSync(join(HERE, '../../../compose.yml'), 'utf-8')
-  assert.match(compose, new RegExp(`image: getmeili/meilisearch:${version.replace(/\./g, '\\.')}\\n`))
+  assert.ok(compose.includes(`image: getmeili/meilisearch:${version}\n`), `compose.yml pins Meilisearch ${version}`)
 })

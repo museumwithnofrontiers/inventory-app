@@ -50,7 +50,8 @@ id "${DEPLOY_USER}" >/dev/null 2>&1 || error "The ${DEPLOY_USER} user is missing
 # =============================================================================
 if ! command -v node >/dev/null 2>&1; then
     info "Installing Node from the Ubuntu archive..."
-    apt-get install -y -qq nodejs npm
+    # Node only: the deploy workflow installs the package (npm ci) before uploading.
+    apt-get install -y -qq nodejs
 fi
 NODE_MAJOR="$(node -p 'process.versions.node.split(".")[0]')"
 (( NODE_MAJOR >= 22 )) || error "Node ${NODE_MAJOR} is too old for the loader (needs 22 or later)."
@@ -198,13 +199,20 @@ EOF
 }
 
 if [[ ! -f "${CERT_DIR}/fullchain.pem" ]]; then
-    [[ -n "${ADMIN_EMAIL}" ]] || error "Set SEARCH_ADMIN_EMAIL (or INVENTORY_ADMIN_EMAIL) for the certificate."
+    # The server's existing Let's Encrypt account is reused; an e-mail is
+    # needed only when there is none yet.
+    EMAIL_ARGS=()
+    if [[ -n "${ADMIN_EMAIL}" ]]; then
+        EMAIL_ARGS=(-m "${ADMIN_EMAIL}")
+    elif ! compgen -G "/etc/letsencrypt/accounts/*/directory/*" >/dev/null; then
+        error "No Let's Encrypt account yet: set SEARCH_ADMIN_EMAIL (or INVENTORY_ADMIN_EMAIL)."
+    fi
     info "Requesting a certificate for ${DOMAIN} (webroot, nginx keeps serving)..."
     write_http_vhost
     ln -sf "${VHOST}" /etc/nginx/sites-enabled/search
     nginx -t && systemctl reload nginx
     certbot certonly --webroot -w "${ACME_DIR}" -d "${DOMAIN}" \
-        --agree-tos -m "${ADMIN_EMAIL}" --non-interactive
+        --agree-tos "${EMAIL_ARGS[@]}" --non-interactive
 fi
 
 write_http_vhost

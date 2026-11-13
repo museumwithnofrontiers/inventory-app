@@ -48,7 +48,9 @@ export const STATE = 'search_state'
  */
 export function expandSettings(template, languages) {
   /** @param {string[]} fields */
-  const expand = fields => fields.flatMap(f => (f.startsWith('texts.*.') ? languages.map(l => f.replace('*', l)) : [f]))
+  const PATTERN = 'texts.*.'
+  const expand = fields =>
+    fields.flatMap(f => (f.startsWith(PATTERN) ? languages.map(l => `texts.${l}.${f.slice(PATTERN.length)}`) : [f]))
   const localizedAttributes = languages
     .filter(l => template.locales[l])
     .map(l => ({ attributePatterns: [`texts.${l}.*`], locales: [template.locales[l]] }))
