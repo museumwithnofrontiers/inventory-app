@@ -334,7 +334,19 @@ services:
     # MySQL 8.4 disables mysql_native_password server-side by default. The
     # Alpine/MariaDB client that `ship` uses for mysqldump cannot authenticate
     # without it — see scripts/import-tool/mysql/init.sql.
-    command: ["--mysql-native-password=ON"]
+    #
+    # Commits are written at once but flushed to disk about once a second
+    # (innodb-flush-log-at-trx-commit=2, sync-binlog=0), not one by one.
+    # `stage` commits every row on its own, and a flush on Docker Desktop's
+    # disk costs milliseconds: with MySQL's default, flushing was most of a
+    # stage's time (the importer 1 h 47 min, against 24 min 40 s with this,
+    # 2026-11-13). Only a crash of Docker's VM itself could lose the last
+    # second of commits, and this copy is disposable: a run cut short is staged
+    # again anyway.
+    command:
+      - --mysql-native-password=ON
+      - --innodb-flush-log-at-trx-commit=2
+      - --sync-binlog=0
     profiles: [staging, import, jobs]
     environment:
       MYSQL_ROOT_PASSWORD: rootsecret
