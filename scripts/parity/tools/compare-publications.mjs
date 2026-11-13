@@ -98,7 +98,8 @@ for (const w of works) {
     const [, , , lang, , type, edition] = e.backward_compatibility.split(':');
     return [edKey(lang, type, edition, e.publisher), e];
   }));
-  const legacyVersions = Object.entries(w.versions ?? {}).flatMap(([lang, vs]) => vs.map((v) => ({ lang, v, k: edKey(lang, v.type, v.edition, v.publisher) })));
+  // The versions legacy marks display = n ship nowhere (D-P2, #2517); its API still lists them.
+  const legacyVersions = Object.entries(w.versions ?? {}).flatMap(([lang, vs]) => vs.filter((v) => v.display !== false).map((v) => ({ lang, v, k: edKey(lang, v.type, v.edition, v.publisher) })));
   R.set(`versions of ${key}`, legacyVersions.map((x) => x.k), [...pkgEd.keys()]);
 
   for (const { lang, v, k } of legacyVersions) {
@@ -112,7 +113,9 @@ for (const w of works) {
       if (v[lf] || t[pf]) R.field('version', pf, compare(v[lf], t[pf]), where);
     }
     for (const [lf, pf] of [['isbn', 'isbn'], ['publish_year', 'publish_year'], ['count_pages', 'page_count'], ['count_images', 'image_count'], ['count_plans', 'plan_count'], ['size', 'dimensions'], ['format', 'binding']]) {
-      R.field('version', pf, same(str(v[lf]) === '0' ? '' : str(v[lf]), str(e[pf]) === '0' ? '' : str(e[pf])), where);
+      // A count legacy wrote as more than a number is kept whole in texts, which the site prints.
+      const pkgValue = str(e.texts?.[lf] ?? e[pf]);
+      R.field('version', pf, same(str(v[lf]) === '0' ? '' : str(v[lf]), pkgValue === '0' ? '' : pkgValue), where);
     }
     // Legacy's images: { cover_: one picture, page_: [the sample pages] }.
     const images = Object.values(v.images ?? {}).flat();
