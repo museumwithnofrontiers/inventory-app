@@ -19,7 +19,8 @@ site's note is [`../instances/travels.md`](../instances/travels.md).
 - **Its own items are the locations' monuments.** A trail's own members, its
   entries, are Islamic Art's records: they ship as references
   (`references.json`) from the shared rule in
-  [`../shared/sites.mjs`](../shared/sites.mjs), never as items.
+  [`../shared/sites.mjs`](../shared/sites.mjs), each linked to the page that
+  opens it ([`../shared/pages.mjs`](../shared/pages.mjs)), never as items.
 - **Links out.** Each trail carries its "Starting point" partner and its
   publications, each with its page on the Publications site.
 

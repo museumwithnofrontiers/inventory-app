@@ -117,9 +117,13 @@ full pass takes about 40 minutes, most of it comparing unchanged files.
 
 ### 1. Build the local copy from legacy
 
-VPN up; no contact with the server. Around 1h40m for the full dataset, so run
-it **detached and named** — an attached run dies with the terminal that started
-it.
+VPN up; no contact with the server. Around 45 minutes for the full dataset
+(the importer about 25, image-sync and document-sync about 20; measured on
+2026-11-13), so run it **detached and named** — an attached run dies with the
+terminal that started it. It took 1h40m and more while `staging-mysql` flushed
+every commit to disk on its own; `compose.yml` now lets it flush about once a
+second (an existing container picks that up when it is recreated:
+`docker compose --profile staging up -d staging-mysql`).
 
 ```bash
 docker compose --env-file scripts/import-tool/.env --profile import run -d --name inventory-import-stage stage
@@ -410,6 +414,15 @@ merge commit has succeeded (`gh run list --workflow deploy.yml --commit
 <sha>` in the site's repository). Deploys queue for runners when many sites
 merge at once, so a pending run is not yet a failure.
 
+**The global search (M15, ADR 005)** follows the same run when step 7
+published a new `search-data`. Propagate then opens two more pull requests:
+- one bumping the pin in this repository's `scripts/search`: merging it runs
+  `deploy-search-ovh.yml`, which loads that version into Meilisearch;
+- one in the search site, for its `sites.json`.
+
+A load that fails its checks or probes leaves the live index as it was. See
+[`scripts/search/README.md`](../search/README.md).
+
 ### 9. Record the site commits in this repository
 
 `.new-architecture/` tracks every platform repository as a submodule, so this
@@ -625,7 +638,7 @@ docker compose --env-file scripts/import-tool/.env --profile import build stage
 
 # ── 2. PRE-FLIGHT ────────────────────────────────────────────────────────────
 # Confirms the VPN reaches legacy and staging-mysql answers, before you commit
-# an hour and a half to a run that would fail at the first query.
+# three quarters of an hour to a run that would fail at the first query.
 docker compose --env-file scripts/import-tool/.env --profile import run --rm --entrypoint sh stage -c "cd /opt/import-tool/importer && npx tsx src/cli/import.ts validate"
 
 # Mirror legacy's image tree into LEGACY_IMAGES_HOST_PATH (~40 min). Without
@@ -636,7 +649,7 @@ docker compose --env-file scripts/import-tool/.env --profile import run --rm --e
 # never updated, so without this a fix or a legacy edit never reaches it.
 docker compose run --rm staging-migrate php artisan migrate:fresh --force
 
-# ── 3. STAGE (~1h40m) ────────────────────────────────────────────────────────
+# ── 3. STAGE (~45 min) ───────────────────────────────────────────────────────
 # Detached and named on purpose: an attached run dies with its terminal.
 docker compose --env-file scripts/import-tool/.env --profile import run -d --name inventory-import-stage stage
 

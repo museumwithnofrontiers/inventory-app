@@ -1,0 +1,7 @@
+{
+  "kind": "search",
+  "slug": "search",
+  "name": "Search",
+  "exporter": "search",
+  "package_name": "@museumwnf/search-data"
+}

@@ -11,6 +11,7 @@ This monorepo contains the backend and frontend for the Museum With No Frontiers
 - Laravel 12 backend + API
 - Filament 3 admin panel (/admin), the application's only UI
 - Read-only inventory MCP server (app/Mcp/, routes/ai.php): see docs/mcp.md
+- Global search service (scripts/search/) and its exporter (scripts/exporters/search/): see docs/adr/005-global-search.md
 - Data importer scripts (scripts/importer/)
 - Documentation site (docs/, Jekyll)
 
@@ -53,6 +54,14 @@ You must respect the 3-tier permission system:
 - Tools act as the signed-in user (OAuth over HTTP, `MCP_LOCAL_USER` over Artisan) and authorize through the existing policies and permissions.
 - Images: only burned renditions through `PublicRenditions`, never originals.
    
+## Global Search (Meilisearch, ADR 005)
+
+- Meilisearch never reads the database. The only feed is the pinned `@museumwnf/search-data` (scripts/search/package.json and its lockfile), which the search exporter writes in the export batch and data-packages releases.
+- Only the loader (scripts/search/loader.mjs) writes to Meilisearch, with its restricted key. The master key never leaves the host.
+- Only `POST /indexes/items/search` and `GET /health` are public, through the edge (scripts/search/edge/), which adds the search key itself. No inventory route serves search.
+- The search site takes site slugs from `sites.json`, never addresses.
+- Items no site shows are left out of the payload.
+
 ## Image Upload Pipeline (Extremely Strict)
 
 This is a security boundary.

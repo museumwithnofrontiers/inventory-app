@@ -9,7 +9,7 @@ export interface ItemReference {
   names: Record<string, string>
   /** The item's first picture, a `/pub` rendition URL; null when it has none. */
   picture: string | null
-  /** The sites that show the item, its home site first. */
+  /** The page that opens the item on each site that has one (`pages.mjs`), its home site first. */
   sites: SiteLink[]
 }
 

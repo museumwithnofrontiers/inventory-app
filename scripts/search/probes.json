@@ -1,0 +1,25 @@
+{
+  "$comment": "Run by the loader against every new index before the swap (M15 E1). A probe passes when one of the first `top` (5) results has `name` in its title in that language, or is the item `id`. Taken from the 2026-11-13 spike; a failing probe keeps the live index as it is.",
+  "probes": [
+    { "why": "Arabic: the definite article", "lang": "ar", "q": "المحراب", "name": "محراب" },
+    { "why": "Arabic: alef without hamza", "lang": "ar", "q": "اسطرلاب", "name": "سطرلاب" },
+    { "why": "Arabic: alef with hamza", "lang": "ar", "q": "إسطرلاب", "name": "سطرلاب" },
+    { "why": "Arabic: ta marbuta written as ha", "lang": "ar", "q": "قرطبه", "name": "قرطبة" },
+    { "why": "Arabic: diacritics in the query", "lang": "ar", "q": "تعدَّدت", "name": "أقراط" },
+    { "why": "Arabic: a prefix", "lang": "ar", "q": "محرا", "name": "محراب" },
+    { "why": "Arabic: a typo", "lang": "ar", "q": "قرطبا", "name": "قرطبة" },
+    { "why": "French: no accents typed", "lang": "fr", "q": "ceramique", "name": "céramique" },
+    { "why": "French: no accents typed", "lang": "fr", "q": "mosquee", "name": "Mosquée" },
+    { "why": "Spanish: no accents typed", "lang": "es", "q": "ceramica", "name": "erámica" },
+    { "why": "English: a typo", "lang": "en", "q": "calligrapy", "name": "Calligraph" },
+    { "why": "English: a spelling variant", "lang": "en", "q": "luster", "name": "Lustre" },
+    { "why": "English: a tag", "lang": "en", "q": "Terracotta" },
+    { "why": "German", "lang": "de", "q": "Moschee", "name": "Moschee" },
+    { "why": "Italian", "lang": "it", "q": "moschea", "name": "Moschea" },
+    { "why": "Portuguese", "lang": "pt", "q": "mesquita", "name": "Mesquita" },
+    { "why": "MWNF reference number", "lang": "en", "q": "UK 163", "id": "000c7f50-ff95-5a24-b26f-2c2401107ffd" },
+    { "why": "Holder's inventory number", "lang": "en", "q": "E.208:3926-1994", "id": "000c7f50-ff95-5a24-b26f-2c2401107ffd" },
+    { "why": "Legacy key", "lang": "en", "q": "mwnf3_sharing_history:sh_objects:awe:uk:163", "id": "000c7f50-ff95-5a24-b26f-2c2401107ffd" },
+    { "why": "Inventory UUID", "lang": "en", "q": "000c7f50-ff95-5a24-b26f-2c2401107ffd", "id": "000c7f50-ff95-5a24-b26f-2c2401107ffd" }
+  ]
+}

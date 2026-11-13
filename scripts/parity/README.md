@@ -27,6 +27,7 @@ legacy servers for nothing they already answered.
 - [Reading the reports](#reading-the-reports)
 - [The gate](#the-gate)
 - [Baselines](#baselines)
+- [The global search box](#the-global-search-box)
 - [Known legacy quirks and decided differences](#known-legacy-quirks-and-decided-differences)
 - [The cache](#the-cache)
 - [Investigating a field](#investigating-a-field)
@@ -506,6 +507,21 @@ regressions. None of the 14 regressions above is left:
 - **`item.copyright` (9, extra):** the package carries a rights line for nine Qatar records whose legacy sheet prints none.
 - **`site.hidden`:** legacy's `status` hides the exhibition; a gallery with a site is visible (decision of 2026-10-20).
 - **Not investigated yet:** partners (4 only in legacy: the institutions `jo_01`, `lb_01`, `sa_01`, `tr_02`; 8 only in the package, museums among them), members only in the package (2: `mwnf3_explore:monument:1806`, `mwnf3_travels:monument:iam:sy:1:i:1:a`), timeline events only in the package (3), `item.image.photographer` (2), `item.start/end` (1) and `exhibition.related content` (legacy 4, package 3).
+
+## The global search box
+
+Legacy sites that link to the overall database search (legacy's `goToFullSearch`, "Search Overall MWNF Database", or
+the portal's database search form) get the new global search (M15, ADR 005). The parity check finds those sites, and
+turns the box on in each one's `src/dataset.config.js`:
+
+```js
+globalSearch: true,
+```
+
+It is off by default. viewer-core (2.23.0 or later) builds the link, and viewer-layout (3.75.0 or later) draws the box in
+the header, with the texts `layout.globalSearch.*` of viewer-i18n 6.18.0. A site that draws its own header places
+viewer-layout's `GlobalSearchBox` where legacy's link was. The box opens `museumwithnofrontiers.github.io/search` with
+the site's slug as `from`, so the search site offers "Back to <site>". M15 itself turned it on for no site.
 
 ## Known legacy quirks and decided differences
 

@@ -1,0 +1,106 @@
+# Loads the pinned @museumwnf/search-data into the server's Meilisearch
+# (M15 B7, ADR 005). The pin is scripts/search/package.json and its lockfile:
+# propagate bumps it after a publish, and merging that PR runs this. A failed
+# load leaves the live index as it was; reverting the PR loads the previous
+# version again.
+#
+# No Meilisearch key passes through here: the loader reads its own key on the
+# server (/home/deploy/.search-loader-key, written by provision-search.sh).
+name: Deploy search to OVH
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/search/**'
+      - 'scripts/exporters/search/schema/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-search-ovh
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  load:
+    name: Load the pinned search payload
+    runs-on: ubuntu-24.04
+    environment:
+      name: inventory.metanull.eu
+      url: https://search.metanull.eu
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Read the pin
+        id: pin
+        working-directory: scripts/search
+        run: |
+          version=$(node -p "require('./package.json').dependencies?.['@museumwnf/search-data'] ?? ''")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          if [[ -z "$version" ]]; then
+            echo "::notice::No @museumwnf/search-data is pinned yet: nothing to load."
+          else
+            echo "Pinned: @museumwnf/search-data@${version}"
+          fi
+
+      # npm ci refuses a tarball whose integrity differs from the lockfile;
+      # audit signatures checks the registry signature and the provenance
+      # attestation (data-packages' release.yml) of what was installed.
+      - name: Install and check the pinned package
+        if: steps.pin.outputs.version != ''
+        working-directory: scripts/search
+        run: |
+          npm ci --no-fund --no-audit
+          npm audit signatures
+          npm test
+
+      - name: Bundle the loader with its package
+        if: steps.pin.outputs.version != ''
+        run: |
+          tar -czf search-release.tar.gz scripts/search scripts/exporters/search/schema
+          echo "Bundle size: $(du -h search-release.tar.gz | cut -f1)"
+
+      - name: Setup SSH
+        if: steps.pin.outputs.version != ''
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Upload and load on the server
+        if: steps.pin.outputs.version != ''
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_SSH_USER }}
+          RELEASE: ${{ github.sha }}
+        run: |
+          scp -i ~/.ssh/deploy_key -o ConnectTimeout=30 search-release.tar.gz "${VPS_USER}@${VPS_HOST}:/tmp/search-release-${RELEASE}.tar.gz"
+          ssh -i ~/.ssh/deploy_key -o ConnectTimeout=30 -o BatchMode=yes "${VPS_USER}@${VPS_HOST}" \
+            "RELEASE=${RELEASE} bash -s" <<'REMOTE'
+          set -euo pipefail
+          dir="/opt/search/releases/${RELEASE}"
+          rm -rf "$dir"
+          mkdir -p "$dir"
+          tar -xzf "/tmp/search-release-${RELEASE}.tar.gz" -C "$dir"
+          rm -f "/tmp/search-release-${RELEASE}.tar.gz"
+          cd "$dir/scripts/search"
+          MEILI_URL=http://127.0.0.1:7700 MEILI_KEY_FILE="$HOME/.search-loader-key" node loader.mjs
+          ln -sfn "$dir" /opt/search/current
+          # Keep the three newest releases.
+          ls -1dt /opt/search/releases/*/ | tail -n +4 | xargs -r rm -rf
+          REMOTE
+
+      - name: Check the public edge
+        if: steps.pin.outputs.version != ''
+        run: |
+          curl -fsS https://search.metanull.eu/health
+          code=$(curl -s -o /dev/null -w '%{http_code}' https://search.metanull.eu/keys)
+          [[ "$code" == "404" ]] || { echo "::error::/keys answered ${code}, expected 404"; exit 1; }
