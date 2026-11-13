@@ -224,6 +224,78 @@ describe('ImageSyncTool destination clearing', () => {
     }
   });
 
+  it('finds a legacy file whose path differs from the disk in letter case', async () => {
+    const legacyRoot = await createTempDir('importer-legacy-case-');
+    const newRoot = await createTempDir('importer-new-case-');
+
+    // Legacy ran on Windows: the database says awe/, the folder is AWE/.
+    await fs.mkdir(path.join(legacyRoot, 'documents', 'AWE'), { recursive: true });
+    await fs.writeFile(path.join(legacyRoot, 'documents', 'AWE', 'Guide.PDF'), 'pdf');
+
+    const id = '123e4567-e89b-12d3-a456-426614174002';
+    const fake = new FakeConnection([
+      {
+        id,
+        path: 'documents/awe/guide.pdf',
+        size: 1,
+        original_name: 'guide.pdf',
+        alt_text: null,
+        mime_type: 'application/pdf',
+      },
+    ]);
+    const logger = new FakeLogger();
+
+    const tool = new ImageSyncTool(
+      fake as unknown as Connection,
+      createOptions({
+        useSymlink: false,
+        legacyImagesRoot: legacyRoot,
+        newImagesRoot: newRoot,
+        tables: ['item_documents'],
+      }),
+      logger
+    );
+
+    const result = await tool.run();
+
+    expect(result.success).toBe(true);
+    expect(logger.errors).toEqual([]);
+    expect(await fs.readFile(path.join(newRoot, `${id}.pdf`), 'utf-8')).toBe('pdf');
+  });
+
+  it('still reports a legacy file missing under any letter case', async () => {
+    const legacyRoot = await createTempDir('importer-legacy-missing-');
+    const newRoot = await createTempDir('importer-new-missing-');
+    await fs.mkdir(path.join(legacyRoot, 'AWE'), { recursive: true });
+
+    const fake = new FakeConnection([
+      {
+        id: '123e4567-e89b-12d3-a456-426614174003',
+        path: 'awe/absent.pdf',
+        size: 1,
+        original_name: 'absent.pdf',
+        alt_text: null,
+        mime_type: 'application/pdf',
+      },
+    ]);
+
+    const tool = new ImageSyncTool(
+      fake as unknown as Connection,
+      createOptions({
+        useSymlink: false,
+        legacyImagesRoot: legacyRoot,
+        newImagesRoot: newRoot,
+        tables: ['item_documents'],
+      }),
+      new FakeLogger()
+    );
+
+    const result = await tool.run();
+
+    expect(result.errors.length).toBe(1);
+    expect(fake.updates).toEqual([]);
+  });
+
   it('includes timeline_event_images in the sync table list', async () => {
     const db = new FakeConnection([]) as unknown as Connection;
     const logger = new FakeLogger();

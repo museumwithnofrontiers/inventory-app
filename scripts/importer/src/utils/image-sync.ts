@@ -33,6 +33,63 @@ export function getLegacyImagePath(legacyRoot: string, relativePath: string): st
 }
 
 /**
+ * Find a legacy file whatever the letter case of its path. Legacy ran on
+ * Windows, where `awe/x.pdf` and `AWE/x.pdf` are the same file, so its
+ * database never had to agree with the disk on case; the mirror is read on
+ * Linux. The exact path wins; otherwise each segment is matched without regard
+ * to case. Returns null when no file matches.
+ */
+export async function resolveLegacyFile(
+  legacyRoot: string,
+  relativePath: string
+): Promise<string | null> {
+  const exact = getLegacyImagePath(legacyRoot, relativePath);
+  if (await fileExists(exact)) {
+    return exact;
+  }
+
+  const segments = normalizePath(relativePath)
+    .split(/[/\\]+/)
+    .filter((segment) => segment !== '');
+  if (segments.length === 0) {
+    return null;
+  }
+  let current = legacyRoot;
+  for (const segment of segments) {
+    const direct = path.join(current, segment);
+    if (await fileExists(direct)) {
+      current = direct;
+      continue;
+    }
+    let entries: string[];
+    try {
+      entries = await readDirectoryCached(current);
+    } catch {
+      return null;
+    }
+    const wanted = segment.toLowerCase();
+    const match = entries.find((entry) => entry.toLowerCase() === wanted);
+    if (match === undefined) {
+      return null;
+    }
+    current = path.join(current, match);
+  }
+  return current;
+}
+
+const directoryListings = new Map<string, string[]>();
+
+/** Directory listings, kept for the run: the legacy mirror doesn't change while it is read. */
+async function readDirectoryCached(dirPath: string): Promise<string[]> {
+  let entries = directoryListings.get(dirPath);
+  if (entries === undefined) {
+    entries = await fs.readdir(dirPath);
+    directoryListings.set(dirPath, entries);
+  }
+  return entries;
+}
+
+/**
  * Build the new storage path using UUID
  */
 export function getNewImagePath(storageRoot: string, uuid: string, extension: string): string {
