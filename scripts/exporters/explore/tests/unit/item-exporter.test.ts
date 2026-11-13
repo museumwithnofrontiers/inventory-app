@@ -220,6 +220,65 @@ describe("ItemExporter — Explore translations", () => {
     });
   });
 
+  it("shows a merged monument's Explore pictures alone, as legacy's getAllImages did", async () => {
+    const picture = (
+      item_id: string,
+      picture_id: string,
+      order: number,
+      explore: number,
+    ) => ({
+      picture_id,
+      item_id,
+      display_order: order,
+      path: `${picture_id}.jpg`,
+      alt_text: null,
+      explore_picture: explore,
+    });
+    const withPictures = {
+      query: async (sql: string, params?: unknown[]) => {
+        if (sql.includes("pic.type = 'picture'")) {
+          return [
+            // A Travels monument an Explore record was merged into: both sets.
+            picture("trail-monument", "travels-1", 1, 0),
+            picture("trail-monument", "explore-1", 1, 1),
+            // A Travels record with no Explore picture keeps its own.
+            picture("travels", "travels-2", 1, 0),
+          ];
+        }
+        return db.query(sql, params as never);
+      },
+    } as unknown as Database;
+
+    await new ItemExporter(
+      contextWith(
+        withPictures,
+        outputDir,
+        scopeWith({
+          itemIds: ["baroque", "travels", "native", "trail-monument"],
+          projectIds: ["bar", "iam"],
+          contextIds: [
+            "explore-context",
+            "bar-context",
+            "travels-context",
+            "iam-context",
+          ],
+        }),
+      ),
+    ).export();
+
+    const items = JSON.parse(
+      readFileSync(join(outputDir, "items.json"), "utf-8"),
+    );
+    const urls = (id: string) =>
+      items
+        .find((i: { id: string }) => i.id === id)
+        .images.map((im: { url: string }) => im.url);
+    expect(urls("trail-monument")).toEqual([
+      expect.stringContaining("explore-1.jpg"),
+    ]);
+    expect(urls("travels")).toEqual([expect.stringContaining("travels-2.jpg")]);
+  });
+
   it("ships the Explore filters apart from the other tags", async () => {
     await new ItemExporter(
       contextWith(

@@ -149,17 +149,27 @@ export function translationExtra(reference: LegacyEdition): Record<string, strin
 
 /**
  * An edition's texts that differ from its translation's reference edition
- * (D-P9: kept in extra.legacy_texts), keyed by legacy column.
+ * (D-P9: kept in extra.legacy_texts), keyed by legacy column. A column the
+ * edition leaves empty where the reference has a text is kept as '': legacy
+ * prints the version's own row, so that version shows nothing there.
  */
 export function legacyTexts(
   edition: LegacyEdition,
   reference: LegacyEdition
 ): Record<string, string> | null {
-  if (edition === reference) return null;
   const out: Record<string, string> = {};
-  for (const column of TEXT_COLUMNS) {
-    const mine = text(edition[column]);
-    if (mine !== text(reference[column]) && mine !== null) out[column] = mine;
+  if (edition !== reference) {
+    for (const column of TEXT_COLUMNS) {
+      const mine = text(edition[column]);
+      if (mine !== text(reference[column])) out[column] = mine ?? '';
+    }
+  }
+  // The counts legacy keeps as text: the edition stores the number, and a value
+  // that is more than a number ("868 + a DVD with 55,000 supplementary digital
+  // images") is also kept whole, as legacy prints it.
+  for (const column of ['count_pages', 'count_images', 'count_plans']) {
+    const raw = text(edition[column]);
+    if (raw !== null && !/^\d+$/.test(raw)) out[column] = raw;
   }
   return Object.keys(out).length > 0 ? out : null;
 }

@@ -48,8 +48,11 @@ export class PublicationTagImporter extends BaseImporter {
         `SELECT b.book_id, t.name, 'theme' AS category
            FROM mwnf3.bookbase b JOIN mwnf3.books_themes t ON t.theme_id = b.theme_id
          UNION ALL
-         SELECT b.book_id, r.type AS name, 'audience' AS category
+         -- Legacy prints a target reader's English name (books_targetreaders_names),
+         -- "Scholars" where its type says "Teachers & Scholars".
+         SELECT b.book_id, COALESCE(NULLIF(TRIM(rn.name), ''), r.type) AS name, 'audience' AS category
            FROM mwnf3.bookbase b JOIN mwnf3.books_targetreaders r ON r.target_id = b.target_id
+           LEFT JOIN mwnf3.books_targetreaders_names rn ON rn.target_id = r.target_id AND rn.lang_id = 'en'
          UNION ALL
          SELECT s.book_id, n.name, 'subject' AS category
            FROM mwnf3.books_books_subjects s JOIN mwnf3.books_subjects n ON n.subject_id = s.subject_id

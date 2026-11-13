@@ -26,6 +26,7 @@ import { objectPictureBackwardCompatibility } from '../../utils/picture-backward
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { pickImageCopyright } from '../../utils/image-copyright.js';
+import { legacyKey } from '../../utils/legacy-key.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
 
@@ -129,7 +130,14 @@ export class ObjectPictureImporter extends BaseImporter {
     const groups = new Map<string, PictureGroup>();
 
     for (const pic of pictures) {
-      const key = `${pic.project_id}:${pic.country}:${pic.museum_id}:${pic.number}:${pic.type}:${pic.image_number}`;
+      const key = legacyKey(
+        pic.project_id,
+        pic.country,
+        pic.museum_id,
+        pic.number,
+        pic.type,
+        pic.image_number
+      );
 
       if (!groups.has(key)) {
         groups.set(key, {

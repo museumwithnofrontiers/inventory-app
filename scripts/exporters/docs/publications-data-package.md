@@ -97,7 +97,11 @@ One record per shown version (one language × publisher × format × edition):
 `dimensions`, `binding`, `display_order`, `cover` (its cover rendition, or
 null), `documents` (its sample and credits PDFs) and `texts`: the edition's
 own texts where they differ from the publication's (`extra.legacy_texts`,
-D-P9), or null.
+D-P9), keyed by legacy column (`description2` is legacy's "About this book",
+`description1` its "More about this book", `local_coordinator` its editors),
+`''` where the edition has none of a text the publication has, and a count
+legacy wrote as more than a number (`count_images`: "868 + a DVD with 55,000
+supplementary digital images") whole; or null.
 
 ## tags.json
 
@@ -139,7 +143,5 @@ Every link to another site's page carries `site` (its slug), `path` (the
 route) and `url` (`<origin>/#<path>`): a website can use the address as it is,
 or rebuild it from the slug and path as viewer-core's `siblingSiteUrl` does.
 A site's origin is its instance file's `origin`, or its GitHub Pages address
-(`https://museumwithnofrontiers.github.io/<slug>`) until its domain cutover;
-Publications and Travels keep books.museumwnf.org and travels.museumwnf.org
-when they move. The routes are `/item/:id` (Explore: `/monument/:id`),
+(`https://museumwithnofrontiers.github.io/<slug>`). The routes are `/item/:id` (Explore: `/monument/:id`),
 `/publication/:id` on Publications and `/trail/:id` on Travels.

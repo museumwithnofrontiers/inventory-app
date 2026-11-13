@@ -23,6 +23,7 @@ import { formatShBackwardCompatibility } from '../../domain/transformers/index.j
 import { mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { pickImageCopyright } from '../../utils/image-copyright.js';
+import { legacyKey } from '../../utils/legacy-key.js';
 import path from 'path';
 
 interface ShDetailPictureGroup {
@@ -110,7 +111,13 @@ export class ShMonumentDetailPictureImporter extends BaseImporter {
     // Create text map
     const textMap = new Map<string, ShLegacyMonumentDetailPictureText[]>();
     for (const text of pictureTexts) {
-      const key = `${text.project_id}:${text.country}:${text.number}:${text.detail_id}:${text.picture_id}`;
+      const key = legacyKey(
+        text.project_id,
+        text.country,
+        text.number,
+        text.detail_id,
+        text.picture_id
+      );
       if (!textMap.has(key)) {
         textMap.set(key, []);
       }
@@ -119,7 +126,7 @@ export class ShMonumentDetailPictureImporter extends BaseImporter {
 
     // Group pictures with their texts
     return pictures.map((pic) => {
-      const key = `${pic.project_id}:${pic.country}:${pic.number}:${pic.detail_id}:${pic.picture_id}`;
+      const key = legacyKey(pic.project_id, pic.country, pic.number, pic.detail_id, pic.picture_id);
       return {
         project_id: pic.project_id,
         country: pic.country,
@@ -316,7 +323,9 @@ export class ShMonumentDetailPictureImporter extends BaseImporter {
         text.lang
       );
       const parentTitle = parentName ? convertHtmlToMarkdown(parentName) : null;
-      let name = parentTitle ? `${parentTitle} (${group.picture_id})` : `Picture ${group.picture_id}`;
+      let name = parentTitle
+        ? `${parentTitle} (${group.picture_id})`
+        : `Picture ${group.picture_id}`;
 
       const MAX_NAME_LENGTH = 255;
       if (name.length > MAX_NAME_LENGTH) {

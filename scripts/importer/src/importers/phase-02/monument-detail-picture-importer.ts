@@ -25,6 +25,7 @@ import { formatBackwardCompatibility } from '../../utils/backward-compatibility.
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { pickImageCopyright } from '../../utils/image-copyright.js';
+import { legacyKey } from '../../utils/legacy-key.js';
 import path from 'path';
 
 interface PictureGroup {
@@ -104,7 +105,14 @@ export class MonumentDetailPictureImporter extends BaseImporter {
     const groups = new Map<string, PictureGroup>();
 
     for (const pic of pictures) {
-      const key = `${pic.project_id}:${pic.country_id}:${pic.institution_id}:${pic.monument_id}:${pic.detail_id}:${pic.picture_id}`;
+      const key = legacyKey(
+        pic.project_id,
+        pic.country_id,
+        pic.institution_id,
+        pic.monument_id,
+        pic.detail_id,
+        pic.picture_id
+      );
 
       if (!groups.has(key)) {
         groups.set(key, {
@@ -436,7 +444,14 @@ export class MonumentDetailPictureImporter extends BaseImporter {
     if (!this.parentNameCache.has(key)) {
       this.parentNameCache.set(
         key,
-        await this.getParentItemName(projectId, countryId, institutionId, monumentId, detailId, langId)
+        await this.getParentItemName(
+          projectId,
+          countryId,
+          institutionId,
+          monumentId,
+          detailId,
+          langId
+        )
       );
     }
     return this.parentNameCache.get(key)!;

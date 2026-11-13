@@ -22,7 +22,10 @@ import {
   citations,
   recordBooksId,
 } from '../../src/importers/phase-12/publication-relation-importer.js';
-import { pictureEditionKey } from '../../src/importers/phase-12/publication-image-importer.js';
+import {
+  PublicationImageImporter,
+  pictureEditionKey,
+} from '../../src/importers/phase-12/publication-image-importer.js';
 import { editionDocuments } from '../../src/importers/phase-12/publication-document-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
@@ -126,9 +129,20 @@ describe('publication mappings', () => {
       description2: 'Old',
       title: 'Islamic Art in Portugal',
     });
-    expect(legacyTexts(other, reference)).toEqual({ description2: 'Old' });
+    // remarks1: empty on this version, so it shows none (legacy prints the version's row).
+    expect(legacyTexts(other, reference)).toEqual({ description2: 'Old', remarks1: '' });
     expect(legacyTexts(reference, reference)).toBeNull();
     expect(translationExtra(reference)).toEqual({ remarks_1: 'r' });
+  });
+
+  it('keeps a count legacy wrote as more than a number, whole', () => {
+    const reference = edition({
+      count_images: '868 + a DVD with 55,000 supplementary digital images',
+      count_pages: '288',
+    });
+    expect(legacyTexts(reference, reference)).toEqual({
+      count_images: '868 + a DVD with 55,000 supplementary digital images',
+    });
   });
 
   it('keeps the shop links as name and URL pairs', () => {
@@ -264,6 +278,49 @@ describe('publication importers', () => {
     expect(JSON.parse(data.extra)).toEqual({
       shop_links: [{ name: 'Shop', url: 'https://shop.example' }],
     });
+  });
+
+  it('gives each version its own row of a file two versions share, and drops a row of no version', async () => {
+    const tracker = new UnifiedTracker();
+    tracker.set('mwnf3:bookbase:11', 'pub-11', 'publication');
+    tracker.set('mwnf3:books:11:de:31:book:1', 'ed-book-1', 'publication_edition');
+    tracker.set('mwnf3:books:11:de:31:digp:2', 'ed-digp-2', 'publication_edition');
+    const write = vi.fn();
+    const picture = (booktype: string, n: number, path: string) => ({
+      book_id: 11,
+      lang_id: 'de',
+      booktype,
+      image_number: n,
+      path,
+      caption: null,
+      photographer: null,
+      copyright: null,
+      type: 'cover',
+      publisher_id: 31,
+    });
+    const context = makeContext(
+      tracker,
+      (sql) =>
+        sql.includes('books_pictures')
+          ? [
+              picture('book', 1, 'books/11/de/31/book/1.jpg'),
+              // Legacy's own row for a version de has no print edition 2 of: no version shows it…
+              picture('book', 2, 'books/11/de/31/book/2.jpg'),
+              // …and the print-on-demand edition 2 shows that same file as its cover.
+              picture('digp', 2, 'books/11/de/31/book/2.jpg'),
+            ]
+          : [
+              { book_id: 11, lang_id: 'de', type: 'book', edition: '1', publisher_id: 31 },
+              { book_id: 11, lang_id: 'de', type: 'digp', edition: '2', publisher_id: 31 },
+            ],
+      { writePublicationImage: write, imageExists: vi.fn().mockResolvedValue(null) }
+    );
+    const result = await new PublicationImageImporter(context).import();
+    expect(result.errors).toEqual([]);
+    expect(write.mock.calls.map(([data]) => [data.path, data.publication_edition_id])).toEqual([
+      ['books/11/de/31/book/1.jpg', 'ed-book-1'],
+      ['books/11/de/31/book/2.jpg', 'ed-digp-2'],
+    ]);
   });
 
   it('links only the cited items that are not entries of the cited trail', async () => {
