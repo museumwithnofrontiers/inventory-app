@@ -756,9 +756,12 @@ export class SqlWriteStrategy implements IWriteStrategy {
   async writeAuthor(data: AuthorData): Promise<string> {
     const sanitized = sanitizeAllStrings(data);
     const bc = sanitized.backward_compatibility || null;
-    // Free-text authors (no legacy ID) have no natural key — keep them
-    // random; AuthorHelper dedupes those by name lookup instead.
-    const id = bc ? deterministicUuid(`author:${bc.toLowerCase()}`) : uuidv4();
+    // A free-text author (no legacy ID) is keyed by its name: AuthorHelper
+    // dedupes those by name, so the name gives the same id at every import
+    // (a random one changed every credit pointing at it in the packages).
+    const id = bc
+      ? deterministicUuid(`author:${bc.toLowerCase()}`)
+      : deterministicUuid(`author:name:${sanitized.name.trim().toLowerCase()}`);
     try {
       await this.db.execute(
         `INSERT INTO authors (id, name, firstname, lastname, givenname, originalname, internal_name, backward_compatibility, created_at, updated_at)
