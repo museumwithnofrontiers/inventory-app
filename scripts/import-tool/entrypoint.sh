@@ -281,8 +281,33 @@ run_document_sync() {
   return 0
 }
 
+# Which copy of legacy `stage` reads. LEGACY_SOURCE=live (the default) keeps
+# LEGACY_DB_* as .env has them: the legacy server, over the VPN.
+# LEGACY_SOURCE=mwnf-env reads the local Docker copy of SVR-MWNF instead
+# (server-maintenance/environment, its `db` service, rebuilt from the
+# database-content dumps): LEGACY_DB_* is replaced, for this run only, by
+# LEGACY_ENV_DB_*, so the live setting in .env never has to be edited. That
+# copy is only as recent as its last dump, and it stores the sites' URLs
+# rewritten to its local domain (e.g. thg_gallery_url.link) — see README.md.
+select_legacy_source() {
+  case "${LEGACY_SOURCE:-live}" in
+  live) ;;
+  mwnf-env)
+    [ -n "${LEGACY_ENV_DB_PASSWORD:-}" ] || die "LEGACY_SOURCE=mwnf-env needs LEGACY_ENV_DB_PASSWORD (the mwnf-env copy's DB_USER_PASSWORD) in .env"
+    LEGACY_DB_HOST="${LEGACY_ENV_DB_HOST:-host.docker.internal}"
+    LEGACY_DB_PORT="${LEGACY_ENV_DB_PORT:-3307}"
+    LEGACY_DB_USER="${LEGACY_ENV_DB_USER:-mwnf_ro}"
+    LEGACY_DB_PASSWORD="$LEGACY_ENV_DB_PASSWORD"
+    export LEGACY_DB_HOST LEGACY_DB_PORT LEGACY_DB_USER LEGACY_DB_PASSWORD
+    ;;
+  *) die "unknown LEGACY_SOURCE '${LEGACY_SOURCE}' (expected: live | mwnf-env)" ;;
+  esac
+  log "Legacy source: ${LEGACY_SOURCE:-live} (${LEGACY_DB_HOST:-<unset>}:${LEGACY_DB_PORT:-3306}, database ${LEGACY_DB_DATABASE:-mwnf3})"
+}
+
 do_stage() {
   log "Stage mode: writing straight to DB_HOST=${DB_HOST:-<unset>} — no SSH, no OVH contact"
+  select_legacy_source
   run_importer_import
   run_image_sync
   run_document_sync
