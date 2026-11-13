@@ -6,10 +6,9 @@ specification is
 [`../docs/publications-data-package.md`](../docs/publications-data-package.md).
 This note keeps what is specific to this site.
 
-It replaces <https://books.museumwnf.org> (book-client on the book-api), and
-keeps that domain when it moves (D-E1; the cutover comes when parity passes).
-Until then it is served on GitHub Pages, as every site, and its instance file
-names no `origin`. Epic
+It rebuilds <https://books.museumwnf.org> (book-client on the book-api), which
+stays as it is: the site is served on GitHub Pages, as every new site, and its
+instance file names no `origin`. Epic
 [#2514](https://github.com/museumwithnofrontiers/inventory-app/issues/2514).
 
 ## Membership

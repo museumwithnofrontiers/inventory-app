@@ -97,7 +97,8 @@ What `curatorial` compares, per family:
 | islamicart, baroqueart, sharinghistory | the record list from the dump, each record's live `database_item.php` page (raw HTML) | `compare-php`, `compare-collections`, `compare-partners-php` |
 | explore | its live API | `compare-explore` |
 | galleries (the hub) | its live API | `compare-hub` |
-| publications, travels | no record comparison yet: the sitemap (legacy books.museumwnf.org, and travels.museumwnf.org's `travel_et_home.php`), the package gates, the home captures and the links gate, where Travels is only the `travel_et_*` pages of its host | — |
+| publications | legacy MWNF Books' API (`books.museumwnf.org/api`): the works and their four category lists, each work's country, project, trail, languages, subjects, theme and target reader, and each version (language × legacy type × edition × publisher) with its texts, counts, cover, sample pages and sample/credits PDFs | `compare-publications` |
+| travels | legacy MWNF Travel's Exhibition Trails pages (`travel_et_*.php`, raw HTML): the trails its lists name, and those whose pages still answer at their address (the GPA trail); each trail's header, description, curators and Travel Book; its itineraries' names, main locations and descriptions; each itinerary's gallery, its monuments, their pictures and captions | `compare-travels` |
 
 | Option | Meaning |
 |---|---|
@@ -591,6 +592,19 @@ reason. The ones that stay real are in the baseline, so they do not fail the gat
   the second is `description2`.
 - Explore names a country from the country reference, as its site does, never from the
   country's collection title.
+- Publications: legacy's book API prints each version's own row (BookDetailResource):
+  `about_this_book` is `description2`, `more_about_this_book` `description1`, the editors
+  `local_coordinator`. The package keeps a work's text per language and an edition's own texts
+  where its row differs, under the legacy column (`texts`, D-P9; `''` where the version has none);
+  the tool compares what the version shows. Works 48 and 53, in two legacy categories each, are
+  compared in the one Pascal gave them (D-P3). A sample or credits PDF legacy names but its image
+  host doesn't have is `expected:`, and the package leaves it out.
+- Travels: legacy lists no GPA trail ("Comment for avoiding display GPA"), and neither does the
+  site; its pages answer at their address and are compared. Legacy's hand-written menu names no
+  Algeria, while its home's select and the IAM page list that trail; the site's menu follows the
+  menu. A monument's pictures are matched by their number in legacy's path
+  (`…/<itinerary>/<location>/<letter>/<n>.jpg`); a monument with no picture is not in legacy's
+  gallery, so the monument sets count only the pictured ones on both sides.
 
 ## The cache
 

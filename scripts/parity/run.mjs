@@ -126,6 +126,8 @@ if (opts.modes.includes('curatorial')) {
     }
     if (s.slug === 'explore') step('compare-explore.mjs');
     if (s.slug === 'galleries') step('compare-hub.mjs');
+    if (s.slug === 'publications') step('compare-publications.mjs');
+    if (s.slug === 'travels') step('compare-travels.mjs');
   }
 }
 // The package checks report; diff-runs judges them, and the comparison, against the baseline.

@@ -20,6 +20,7 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult, CollectionImageData } from '../../core/types.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { pickImageCopyright } from '../../utils/image-copyright.js';
+import { legacyKey } from '../../utils/legacy-key.js';
 import path from 'path';
 
 /**
@@ -114,7 +115,7 @@ export class TravelsTrailPictureImporter extends BaseImporter {
     const groups = new Map<string, PictureGroup>();
 
     for (const pic of pictures) {
-      const key = `${pic.project_id}:${pic.country}:${pic.trail_id}:${pic.type}:${pic.image_number}`;
+      const key = legacyKey(pic.project_id, pic.country, pic.trail_id, pic.type, pic.image_number);
 
       if (!groups.has(key)) {
         groups.set(key, {

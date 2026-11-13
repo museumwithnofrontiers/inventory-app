@@ -87,8 +87,22 @@ export class PublicationImageImporter extends BaseImporter {
       );
       this.logInfo(`Found ${pictures.length} publication pictures`);
 
+      // Legacy gives two versions one file (a print-on-demand version shows its print
+      // version's cover, book/2.jpg): each version gets its own row, so neither loses
+      // its picture. A row that names no version is left out when a version shows its file.
+      const plan = pictures.map((picture) => ({
+        picture,
+        editionKey: pictureEditionKey(picture, editions),
+      }));
+      const fileOf = (picture: LegacyPicture) => `${picture.book_id}|${picture.path.trim()}`;
+      const shownByVersion = new Set(
+        plan.filter((p) => p.editionKey).map((p) => fileOf(p.picture))
+      );
+      const filesWritten = new Set<string>();
+      const rowsWritten = new Set<string>();
+
       const orderByPublication = new Map<string, number>();
-      for (const picture of pictures) {
+      for (const { picture, editionKey } of plan) {
         const label = `${picture.book_id}/${picture.lang_id}/${picture.booktype}/${picture.type}/${picture.image_number}`;
         try {
           const publicationId = await this.getEntityUuidAsync(
@@ -97,12 +111,20 @@ export class PublicationImageImporter extends BaseImporter {
           );
           if (!publicationId) throw new Error('publication not found');
           const legacyPath = picture.path.trim();
-          if (await this.imageExistsAsync('publication_images', publicationId, legacyPath)) {
+          const file = fileOf(picture);
+          const row = `${file}|${editionKey ?? ''}`;
+          if (
+            (!editionKey && shownByVersion.has(file)) ||
+            rowsWritten.has(row) ||
+            (!filesWritten.has(file) &&
+              (await this.imageExistsAsync('publication_images', publicationId, legacyPath)))
+          ) {
             result.skipped++;
             this.showSkipped();
             continue;
           }
-          const editionKey = pictureEditionKey(picture, editions);
+          rowsWritten.add(row);
+          filesWritten.add(file);
           const editionId = editionKey
             ? await this.getEntityUuidAsync(editionKey, 'publication_edition')
             : null;

@@ -24,6 +24,7 @@ import { formatShBackwardCompatibility } from '../../domain/transformers/index.j
 import { mapCountryCode, mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { pickImageCopyright } from '../../utils/image-copyright.js';
+import { legacyKey } from '../../utils/legacy-key.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
 
@@ -122,7 +123,13 @@ export class ShObjectPictureImporter extends BaseImporter {
     // Create text map
     const textMap = new Map<string, ShLegacyObjectImageText[]>();
     for (const text of pictureTexts) {
-      const key = `${text.project_id}:${text.country}:${text.number}:${text.type}:${text.image_number}`;
+      const key = legacyKey(
+        text.project_id,
+        text.country,
+        text.number,
+        text.type,
+        text.image_number
+      );
       if (!textMap.has(key)) {
         textMap.set(key, []);
       }
@@ -131,7 +138,7 @@ export class ShObjectPictureImporter extends BaseImporter {
 
     // Group pictures with their texts
     return pictures.map((pic) => {
-      const key = `${pic.project_id}:${pic.country}:${pic.number}:${pic.type}:${pic.image_number}`;
+      const key = legacyKey(pic.project_id, pic.country, pic.number, pic.type, pic.image_number);
       return {
         project_id: pic.project_id,
         country: pic.country,
@@ -341,7 +348,9 @@ export class ShObjectPictureImporter extends BaseImporter {
         text.lang
       );
       const parentTitle = parentName ? convertHtmlToMarkdown(parentName) : null;
-      let name = parentTitle ? `${parentTitle} (${group.image_number})` : `Picture ${group.image_number}`;
+      let name = parentTitle
+        ? `${parentTitle} (${group.image_number})`
+        : `Picture ${group.image_number}`;
 
       const MAX_NAME_LENGTH = 255;
       if (name.length > MAX_NAME_LENGTH) {
@@ -407,7 +416,10 @@ export class ShObjectPictureImporter extends BaseImporter {
   ): Promise<string | null> {
     const key = `${projectId}:${country}:${number}:${lang}`;
     if (!this.parentNameCache.has(key)) {
-      this.parentNameCache.set(key, await this.getParentObjectName(projectId, country, number, lang));
+      this.parentNameCache.set(
+        key,
+        await this.getParentObjectName(projectId, country, number, lang)
+      );
     }
     return this.parentNameCache.get(key)!;
   }

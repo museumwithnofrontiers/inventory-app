@@ -232,7 +232,13 @@ export class ItemExporter extends BaseExporter {
               pic.display_order, ii.path, ii.alt_text
        FROM items pic
        JOIN item_images ii ON ii.item_id = pic.id
+       JOIN items parent ON parent.id = pic.parent_id
        WHERE pic.type = 'picture'
+         -- The monument's own pictures, which carry its project. Explore's pictures
+         -- of the same monument (its record merged into this one) are Explore's.
+         AND pic.project_id <=> parent.project_id
+         -- A picture legacy names without a file: its gallery shows nothing for it.
+         AND ii.path <> ''
          -- A custom exhibition photo is the exhibition's picture, not one of the item's own.
          AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
                          WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
