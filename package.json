@@ -14,20 +14,20 @@
         "glob": "^13.0.6"
     },
     "devDependencies": {
-        "@tailwindcss/postcss": "^4.3.3",
-        "@tailwindcss/upgrade": "^4.3.3",
+        "@tailwindcss/postcss": "^4.3.5",
+        "@tailwindcss/upgrade": "^4.3.5",
         "@types/node": "^26.6.6",
         "autoprefixer": "^10.6.2",
-        "baseline-browser-mapping": "^2.11.34",
-        "concurrently": "^10.0.5",
+        "baseline-browser-mapping": "^2.11.35",
+        "concurrently": "^10.0.7",
         "form-data": "^4.0.6",
-        "laravel-vite-plugin": "^3.2.0",
+        "laravel-vite-plugin": "^3.2.1",
         "postcss": "^8.5.32",
         "prettier": "^3.9.9",
-        "stylelint": "^17.15.0",
-        "stylelint-config-standard": "^40.0.0",
+        "stylelint": "^18.0.0",
+        "stylelint-config-standard": "^41.0.0",
         "tailwindcss": "^4.3.3",
-        "vite": "^8.3.1"
+        "vite": "^8.3.6"
     },
     "packageManager": "npm@12.0.2",
     "engines": {
