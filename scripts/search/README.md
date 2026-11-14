@@ -14,7 +14,7 @@ search exporter (export batch) → data-packages → npm @museumwnf/search-data@
 |---|---|
 | `package.json`, `package-lock.json` | The **pin**: the exact `@museumwnf/search-data` version the server holds. |
 | `loader.mjs` | Loads the pinned package (or `--from-dir` a local export) into a new index, checks it, and swaps it in. `--rollback` swaps the previous version back. |
-| `settings.json` | The index settings; every `texts.*.` field is expanded to the package's languages. |
+| `settings.json` | The index settings; every `texts.*.` field is expanded to the package's languages. A change here alone loads the pinned version again on the next deploy: the live state records a fingerprint of these settings. |
 | `probes.json` | The searches every new index must pass before it goes live (Arabic, accents, typos, reference numbers). |
 | `keys.mjs` | Creates the loader key and the search-only key from the master key. |
 | `edge/` | nginx: `http.conf.template`, `server.conf.template` (rendered with `envsubst`), and `local.conf` for Docker. |
