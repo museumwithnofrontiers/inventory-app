@@ -7,7 +7,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { BUILD, LIVE, Meili, PREVIOUS, expandSettings, load, rollback } from '../loader.mjs'
+import { BUILD, LIVE, Meili, PREVIOUS, expandSettings, load, rollback, settingsFingerprint } from '../loader.mjs'
 import { LOADER_KEY, SEARCH_KEY } from '../keys.mjs'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -110,6 +110,26 @@ test('loads a version, keeps the previous one, and does nothing when it is alrea
   const state = await meili.state()
   assert.equal(state.live.version, '1.0.2')
   assert.equal(state.previous.version, '1.0.1')
+})
+
+test('a change of settings alone loads the live version again, with the new settings', async () => {
+  const { meili, indexes } = fakeMeili()
+  await load({ meili, dir: writePackage('1.0.1', ['Bowl']), settings: SETTINGS, probes: probe('Bowl'), log: quiet })
+  const changed = { ...SETTINGS, filterable: [...SETTINGS.filterable, 'extra_field'] }
+  const again = await load({ meili, dir: writePackage('1.0.1', ['Bowl']), settings: changed, probes: probe('Bowl'), log: quiet })
+  assert.equal(again.changed, true)
+  assert.deepEqual(indexes.get(LIVE).settings.filterableAttributes, changed.filterable)
+  const state = await meili.state()
+  assert.equal(state.live.settings, settingsFingerprint(changed))
+  assert.equal(state.previous.settings, settingsFingerprint(SETTINGS))
+
+  const unchanged = await load({ meili, dir: writePackage('1.0.1', ['Bowl']), settings: changed, probes: probe('Bowl'), log: quiet })
+  assert.equal(unchanged.changed, false)
+})
+
+test('the dates are filterable, for the search site\'s From/To years', () => {
+  assert.ok(SETTINGS.filterable.includes('start_date'))
+  assert.ok(SETTINGS.filterable.includes('end_date'))
 })
 
 test('a failing probe leaves the live index as it was', async () => {

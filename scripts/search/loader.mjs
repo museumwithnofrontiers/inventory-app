@@ -4,7 +4,8 @@
  * The search loader (M15 B3, ADR 005): loads one version of
  * @museumwnf/search-data into Meilisearch, and nothing else ever writes to it.
  *
- *   node loader.mjs                 load the pinned package (node_modules), unless it is live
+ *   node loader.mjs                 load the pinned package (node_modules), unless it is
+ *                                   live with the same settings.json
  *   node loader.mjs --from-dir <d>  load a local export instead (local Docker only)
  *   node loader.mjs --force         load even when that version is live
  *   node loader.mjs --rollback      swap back to the previous version
@@ -64,6 +65,17 @@ export function expandSettings(template, languages) {
     typoTolerance: { disableOnAttributes: template.exact },
     pagination: { maxTotalHits: template.maxTotalHits },
   }
+}
+
+/**
+ * A short fingerprint of settings.json. The live state records it, so a
+ * change of settings alone (a new filterable field, say) loads the same
+ * version again: settings are only ever set on items_build.
+ *
+ * @param {any} settings settings.json
+ */
+export function settingsFingerprint(settings) {
+  return createHash('sha256').update(JSON.stringify(settings)).digest('hex').slice(0, 12)
 }
 
 /** A minimal Meilisearch client: JSON in and out, every task awaited. */
@@ -206,8 +218,11 @@ export async function load({ meili, dir, settings, probes, force = false, log = 
   const manifest = JSON.parse(readFileSync(join(dir, 'manifest.json'), 'utf-8'))
   const version = versionOf(dir)
 
+  const fingerprint = settingsFingerprint(settings)
   const state = await meili.state()
-  if (!force && state.live?.version === version && (await meili.exists(LIVE))) {
+  const sameVersion = state.live?.version === version
+  const sameSettings = state.live?.settings === fingerprint
+  if (!force && sameVersion && sameSettings && (await meili.exists(LIVE))) {
     const stats = await meili.request('GET', `/indexes/${LIVE}/stats`)
     if (stats.numberOfDocuments === documents) {
       log(`${version} is already live (${documents} documents): nothing to load`)
@@ -215,7 +230,8 @@ export async function load({ meili, dir, settings, probes, force = false, log = 
     }
   }
 
-  log(`loading ${version}: ${documents} documents in ${manifest.languages.length} languages`)
+  const why = sameVersion && !sameSettings ? ' again, with changed settings' : ''
+  log(`loading ${version}${why}: ${documents} documents in ${manifest.languages.length} languages`)
   await meili.drop(BUILD)
   await meili.create(BUILD)
   await meili.wait(await meili.request('PATCH', `/indexes/${BUILD}/settings`, expandSettings(settings, manifest.languages)))
@@ -244,7 +260,7 @@ export async function load({ meili, dir, settings, probes, force = false, log = 
   await meili.swap(BUILD, PREVIOUS)
   await meili.drop(BUILD)
   await meili.saveState({
-    live: { version, documents, loaded_at: new Date().toISOString() },
+    live: { version, documents, settings: fingerprint, loaded_at: new Date().toISOString() },
     previous: state.live,
   })
   log(`${version} is live${state.live ? `; ${state.live.version} kept as the previous version` : ''}`)
