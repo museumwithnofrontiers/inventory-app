@@ -10,10 +10,17 @@ limit_conn_status 429;
 
 # A location that adds a header drops these: the search location repeats them.
 # Browsers ignore HSTS over plain HTTP, so the local edge can send it too.
+# The edge serves JSON only: no page may load anything from it or frame it,
+# no browser feature is granted, and nothing is stored (E2, the ZAP baseline
+# of 2026-11-14). Cross-Origin-Resource-Policy lets the search site read it.
 add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
 add_header X-Content-Type-Options "nosniff" always;
 add_header Referrer-Policy "no-referrer" always;
 add_header X-Frame-Options "DENY" always;
+add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'" always;
+add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()" always;
+add_header Cross-Origin-Resource-Policy "cross-origin" always;
+add_header Cache-Control "no-store" always;
 
 location = /health {
     limit_req zone=search_per_ip burst=20 nodelay;
@@ -60,6 +67,11 @@ location = /indexes/items/search {
     add_header X-Content-Type-Options "nosniff" always;
     add_header Referrer-Policy "no-referrer" always;
     add_header X-Frame-Options "DENY" always;
+    add_header Content-Security-Policy "default-src 'none'; frame-ancestors 'none'" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()" always;
+    add_header Cross-Origin-Resource-Policy "cross-origin" always;
+    add_header Cache-Control "no-store" always;
+    proxy_hide_header Cache-Control;
 
     proxy_pass http://search_meilisearch;
 }
