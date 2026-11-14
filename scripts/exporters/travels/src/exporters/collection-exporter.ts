@@ -127,11 +127,16 @@ export class CollectionExporter extends BaseExporter {
         this.scope.itemIds.length === 0
           ? Promise.resolve([] as CollectionItemRow[])
           : this.db.query<CollectionItemRow>(
-              `SELECT collection_id, item_id, display_order, extra
-               FROM collection_item
-               WHERE collection_id IN (${colPh})
-                 AND item_id IN (${itemPh})
-               ORDER BY collection_id, display_order IS NULL, display_order, item_id`,
+              // A location's monuments carry no display order: legacy listed
+              // them by their number (tr_monuments ORDER BY number, a varchar:
+              // a, b, c…), the last part of their legacy key, so the key orders
+              // them as legacy's itinerary gallery did.
+              `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra
+               FROM collection_item ci
+               JOIN items i ON i.id = ci.item_id
+               WHERE ci.collection_id IN (${colPh})
+                 AND ci.item_id IN (${itemPh})
+               ORDER BY ci.collection_id, ci.display_order IS NULL, ci.display_order, i.backward_compatibility, ci.item_id`,
               [...collectionIds, ...this.scope.itemIds]
             ),
         this.scope.entryIds.length === 0
