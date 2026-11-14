@@ -1,5 +1,5 @@
 {
-  "$comment": "Meilisearch settings of the items index (ADR 005, M15 B2). The loader expands every 'texts.*.' field to each language of the package's manifest, in this order. Reference numbers match exactly: no typo tolerance on them.",
+  "$comment": "Meilisearch settings of the items index (ADR 005, M15 B2). The loader expands every 'texts.*.' field to each language of the package's manifest, in this order. Reference numbers match exactly: no typo tolerance on them. The dates are filterable for the search site's From/To years. A change here loads the pinned version again (the loader's settings fingerprint).",
   "locales": {
     "ar": "ara",
     "ch": "cmn",
@@ -57,7 +57,7 @@
     "texts.*.dates",
     "texts.*.country"
   ],
-  "filterable": ["type", "languages", "sites.site"],
+  "filterable": ["type", "languages", "sites.site", "start_date", "end_date"],
   "sortable": ["start_date"],
   "exact": ["mwnf_reference", "owner_reference", "backward_compatibility", "id"],
   "synonyms": {
