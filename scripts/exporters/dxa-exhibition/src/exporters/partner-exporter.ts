@@ -288,8 +288,10 @@ export class PartnerExporter extends BaseExporter {
         [...partnerIds, ...this.memberItemIds]
       ),
       // Each partner's own project: `partners.project_id`, or for a partner
-      // created without one (the Sharing History partners) the project whose
-      // collection lists it. Its tier is its level in that project's
+      // created without one (the Sharing History partners, the Discover Islamic
+      // Art institutions) the project whose collection lists it, an exhibition's
+      // only when no other project lists it: a partner that lends to an
+      // exhibition still belongs to its own project, as legacy's chip shows. Its tier is its level in that project's
       // collection. `exhibition`: an exhibition's collection anchors the
       // project (`extra.thg_gallery.mwnf3_project_id`), which is what legacy's
       // projectSourceIsExhibition says.
@@ -317,7 +319,12 @@ export class PartnerExporter extends BaseExporter {
              JOIN projects pp ON pp.context_id = c.context_id
             WHERE cp.partner_id = p.id
               AND cp.collection_type = 'project'
-            ORDER BY pp.id
+            ORDER BY EXISTS (SELECT 1
+                               FROM collections x
+                              WHERE x.type = 'exhibition'
+                                AND pp.backward_compatibility = CONCAT('mwnf3:projects:',
+                                    JSON_UNQUOTE(JSON_EXTRACT(x.extra, '$.thg_gallery.mwnf3_project_id')))),
+                     pp.id
             LIMIT 1))
          WHERE p.id IN (${partnerPh})
          ORDER BY p.id`,

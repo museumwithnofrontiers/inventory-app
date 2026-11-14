@@ -133,6 +133,19 @@ describe('the Travels exporters', () => {
     })
   })
 
+  it("lists a location's monuments by their legacy number, as legacy's itinerary gallery did", async () => {
+    const asked: string[] = []
+    const db = fakeDb(sql => {
+      asked.push(sql)
+      if (sql.includes('FROM languages')) return [{ id: 'eng', backward_compatibility: 'en' }]
+      return undefined
+    })
+    const scope = scopeWith({ collectionIds: ['location'], itemIds: ['monument-b', 'monument-a'] })
+    await new CollectionExporter(contextWith(db, outputDir, scope)).export()
+    // tr_monuments ORDER BY number: the number ends the monument's legacy key.
+    const members = asked.find(sql => sql.includes('JOIN items i ON i.id = ci.item_id')) ?? ''
+    expect(members).toMatch(/ORDER BY ci\.collection_id, ci\.display_order IS NULL, ci\.display_order, i\.backward_compatibility, ci\.item_id/)
+  })
   it("reads a monument's texts from its Travels row, whatever its project", async () => {
     const translation = (context_id: string, name: string) => ({
       item_id: 'monument',

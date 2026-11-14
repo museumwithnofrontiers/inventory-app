@@ -306,6 +306,9 @@ describe('PartnerExporter — shared partner shape', () => {
     const sql = queries.find(q => q.sql.includes('AS own_project_id'))?.sql ?? ''
     expect(sql).toContain('COALESCE(p.project_id')
     expect(sql).toContain("cp.collection_type = 'project'")
+    // An exhibition's project is the fallback only when no other project lists
+    // the partner: lending to an exhibition does not change whose partner it is.
+    expect(sql).toMatch(/ORDER BY EXISTS \(SELECT 1\s+FROM collections x\s+WHERE x.type = 'exhibition'\s+AND pp.backward_compatibility/)
     expect(sql).toContain("x.type = 'exhibition'")
   })
 })
