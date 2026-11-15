@@ -154,7 +154,9 @@ project has `null`).
 
 ## items.json note
 
-Identical spec to the Gallery package. The exhibition's own pseudo-project
+Identical spec to the Gallery package, `related_items` included: an entry
+outside the exhibition carries `names`, `country_id` and `image` too, and
+every entry its `type`. The exhibition's own pseudo-project
 items (EXHCOLOUR/GalEx6) are ordinary members; `project_id` distinguishes
 them from borrowed items so the sheet can suppress the "source database" link
 for purpose-authored records exactly as legacy does

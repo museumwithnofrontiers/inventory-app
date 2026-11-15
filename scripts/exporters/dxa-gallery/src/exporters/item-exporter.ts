@@ -166,6 +166,7 @@ interface ItemMediaRow {
 interface ItemItemLinkRow {
   source_id: string
   target_id: string
+  target_type: string
   target_backward_compatibility: string | null
   target_project_id: string | null
   language_id: string | null
@@ -319,7 +320,7 @@ export class ItemExporter extends BaseExporter {
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical — both the target order within `related_items` and the
         // language-key order within each target's `justifications`.
-        `SELECT iil.source_id, iil.target_id,
+        `SELECT iil.source_id, iil.target_id, tgt.type AS target_type,
                 tgt.backward_compatibility AS target_backward_compatibility,
                 tgt.project_id AS target_project_id,
                 iilt.language_id, iilt.description AS justification
@@ -674,6 +675,9 @@ export class ItemExporter extends BaseExporter {
       if (!entry) {
         entry = {
           id: link.target_id,
+          // Legacy drew a sheet's related objects and its related monuments
+          // apart; the type lets the viewer do the same.
+          type: link.target_type,
           backward_compatibility: link.target_backward_compatibility,
           project_id: link.target_project_id,
           in_package: memberIds.has(link.target_id),
@@ -688,7 +692,7 @@ export class ItemExporter extends BaseExporter {
 
     const result = new Map<string, RelatedEntry[]>()
     for (const [sourceId, byTarget] of bySource) {
-      result.set(sourceId, [...byTarget.values()])
+      result.set(sourceId, [...byTarget.values()].sort(byLegacyOrder))
     }
     return result
   }
@@ -809,6 +813,7 @@ export class ItemExporter extends BaseExporter {
 
 interface RelatedEntry {
   id: string
+  type: string
   backward_compatibility: string | null
   project_id: string | null
   in_package: boolean
@@ -817,6 +822,29 @@ interface RelatedEntry {
   names?: Record<string, string>
   country_id?: string | null
   image?: string | null
+}
+
+/**
+ * Legacy's order of a sheet's related items: by the related item's own legacy
+ * key (project, country, partner, number), numbers as numbers. dxa-api's query
+ * had no ORDER BY and its rows came in that order; the inventory's links keep
+ * no legacy row id to sort by instead.
+ */
+export function byLegacyOrder(
+  a: { id: string; backward_compatibility: string | null },
+  b: { id: string; backward_compatibility: string | null }
+): number {
+  const left = (a.backward_compatibility ?? '').split(':')
+  const right = (b.backward_compatibility ?? '').split(':')
+  for (let i = 0; i < Math.min(left.length, right.length); i++) {
+    const x = left[i]!
+    const y = right[i]!
+    if (x === y) continue
+    if (/^\d+$/.test(x) && /^\d+$/.test(y)) return Number(x) - Number(y)
+    return x < y ? -1 : 1
+  }
+  if (left.length !== right.length) return left.length - right.length
+  return a.id < b.id ? -1 : a.id > b.id ? 1 : 0
 }
 
 /**
