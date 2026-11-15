@@ -214,7 +214,12 @@ gallery deltas:
   the gallery also carries what legacy's Related Objects showed of it:
   `names` (its name by language code, its own project's context first),
   `country_id` (also listed in `countries.json`) and `image` (its first
-  picture's `/pub` address, or null).
+  picture's `/pub` address, or null). Every entry carries the target's
+  `type` (`object` or `monument`): legacy's Related Objects showed only the
+  object targets, and Discover Islamic Art's sheet drew the monuments apart
+  under "Related monuments". Entries come in the target's legacy-key order
+  (project, country, partner, number, numbers as numbers), the order legacy
+  listed them in.
 - **`gallery_references`** replaces the legacy `galleries` array of
   constructed URLs: the thematic galleries and exhibitions featuring this
   item, as `{id, backward_compatibility, kind, slug, legacy_host, site, name}`

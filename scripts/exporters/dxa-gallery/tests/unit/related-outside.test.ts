@@ -48,6 +48,7 @@ describe('ItemExporter — related objects outside the gallery', () => {
   const link = (target: string) => ({
     source_id: 'item-a',
     target_id: target,
+    target_type: 'object',
     target_backward_compatibility: `mwnf3:objects:ISL:dz:Mus01:${target}`,
     target_project_id: 'isl-project-uuid',
     language_id: null,
@@ -120,5 +121,35 @@ describe('ItemExporter — related objects outside the gallery', () => {
     expect(member?.in_package).toBe(true)
     expect(member).not.toHaveProperty('names')
     expect(member).not.toHaveProperty('image')
+    expect(outside?.type).toBe('object')
+  })
+
+  it('orders related items by their legacy key, numbers as numbers, and types each', async () => {
+    const target = (id: string, type: string, bc: string) => ({
+      source_id: 'item-a', target_id: id, target_type: type, target_backward_compatibility: bc,
+      target_project_id: 'isl-project-uuid', language_id: null, justification: null,
+    })
+    const db = {
+      query: async (sql: string) => {
+        if (sql.includes('ORDER BY type, display_order, internal_name')) return [itemRow('item-a')]
+        // The query's own order is by target id, as an export of the database gives it.
+        if (sql.includes('FROM item_item_links')) {
+          return [
+            target('a1', 'object', 'mwnf3:objects:ISL:jo:Mus01_H:34'),
+            target('b2', 'monument', 'mwnf3:monuments:ISL:jo:Mon01:5'),
+            target('c3', 'object', 'mwnf3:objects:ISL:jo:Mus01:9'),
+            target('d4', 'object', 'mwnf3:objects:ISL:sy:Mus01:5'),
+            target('e5', 'object', 'mwnf3:objects:ISL:jo:Mus01:10'),
+          ]
+        }
+        return []
+      },
+    } as unknown as Database
+    await new ItemExporter(context(db)).export()
+    const items = JSON.parse(readFileSync(join(outputDir, 'items.json'), 'utf-8')) as Array<Record<string, unknown>>
+    const related = items.find(item => item.id === 'item-a')?.related_items as Array<Record<string, unknown>>
+
+    expect(related.map(entry => entry.id)).toEqual(['b2', 'c3', 'e5', 'a1', 'd4'])
+    expect(related.map(entry => entry.type)).toEqual(['monument', 'object', 'object', 'object', 'object'])
   })
 })
