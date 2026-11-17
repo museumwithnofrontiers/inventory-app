@@ -9,6 +9,15 @@ test('the same position and zoom match', () => {
   assert.equal(compareMap(legacy, { latitude: 33.525749, longitude: 36.311855, map_zoom: 17 }).verdict, 'same');
 });
 
+test('the inventory rounding a position to 8 decimals still matches', () => {
+  const full = { mapCoordinates: '23.779081747110133, 90.41801990795764', mapZoom: '16' };
+  assert.equal(compareMap(full, { latitude: 23.77908175, longitude: 90.41801991, map_zoom: 16 }).verdict, 'same');
+});
+
+test('another place differs', () => {
+  assert.equal(compareMap(legacy, { latitude: 33.5258, longitude: 36.311855, map_zoom: 17 }).verdict, 'different');
+});
+
 test('a position legacy draws and the package lacks is missing', () => {
   const r = compareMap(legacy, { latitude: null, longitude: null, map_zoom: 16 });
   assert.equal(r.verdict, 'missing-in-package');
