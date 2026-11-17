@@ -10,6 +10,7 @@ import type { PartnerData, PartnerTranslationData } from '../../core/types.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { parseMapPosition } from '../../utils/map-position.js';
 
 /**
  * Contact person data structure
@@ -79,13 +80,17 @@ export function transformInstitution(legacy: LegacyInstitution): TransformedInst
     (l): l is string => !!l && l.trim() !== ''
   );
 
+  // An institution has no coordinates of its own: the importer's query brings
+  // them from its "All Partners" record, as dxa-api does since MWNF-656.
+  const { latitude, longitude, mapZoom } = parseMapPosition(legacy.geoCoordinates, legacy.zoom);
+
   const data: PartnerData = {
     type: 'institution',
     internal_name: internalName,
     backward_compatibility: backwardCompatibility,
-    latitude: null, // Institutions don't have geocoordinates in legacy data
-    longitude: null,
-    map_zoom: 16, // default zoom
+    latitude,
+    longitude,
+    map_zoom: mapZoom,
     country_id: legacy.country ? mapCountryCode(legacy.country) : null,
     project_id: null,
     monument_item_id: null,

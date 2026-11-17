@@ -41,6 +41,10 @@ generic exporter would have had to guess:
 
 ### Hidden museums are real here
 
+> **2026-11-16:** legacy now hides six museums and, since MWNF-655, two
+> monument institutions (es/Mon01, pa/Mon81) here; the figures below are the
+> 2026-08-29 measurement.
+
 `extra.thg_gallery.hidden_partners` holds eleven entries for this exhibition and
 none for Colours, so `exhibition.json.hidden_partner_ids` ships non-empty for
 the first time. It is legacy's E6 rule and the polarity matters: the **museum**

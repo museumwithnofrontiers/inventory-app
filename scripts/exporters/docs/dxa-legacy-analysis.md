@@ -148,6 +148,8 @@ object-holder (museum → partner pages) vs monument-owner (institution pages).
 **Hidden museums** (`exhibition_hidden_mwnf3_museums`, galleries 54/56 → E6,
 imported into `collections.extra.thg_gallery.hidden_partners`) must be
 excluded from all partner/institution lists — Water in Islam is affected.
+Since MWNF-655 (2026-11-16) `exhibition_hidden_mwnf3_institutions` does the
+same for monument institutions; the importer adds them to the same list.
 
 ### 3.4 Related content `/related`
 `exhibition_related_content` (32 rows, categorized external links) — imported
