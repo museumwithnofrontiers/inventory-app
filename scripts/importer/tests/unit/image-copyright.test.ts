@@ -5,7 +5,14 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { pickImageCopyright, toImageCopyright } from '../../src/utils/image-copyright.js';
+import {
+  mwnf3ProjectCopyright,
+  pickImageCopyright,
+  pickMwnf3PictureCopyright,
+  SHARING_HISTORY_COPYRIGHT,
+  toImageCopyright,
+} from '../../src/utils/image-copyright.js';
+import { sanitizeAllStrings } from '../../src/utils/html-to-markdown.js';
 
 describe('toImageCopyright', () => {
   it('adds the copyright mark to a bare rights holder', () => {
@@ -71,5 +78,41 @@ describe('pickImageCopyright', () => {
       ])
     ).toBeNull();
     expect(pickImageCopyright([])).toBeNull();
+  });
+});
+
+describe('mwnf3ProjectCopyright', () => {
+  it.each([
+    ['ISL', '© Discover Islamic Art (MWNF)'],
+    ['isl', '© Discover Islamic Art (MWNF)'],
+    ['IAM', '© Islamic Art in the Mediterranean (MWNF)'],
+  ])('gives %s the line legacy printed on its pictures', (projectId, line) => {
+    expect(mwnf3ProjectCopyright(projectId)).toBe(line);
+  });
+
+  it.each(['BAR', 'EPM', 'DCA', 'GALLERIES'])(
+    'leaves %s to the global fallback',
+    (projectId) => {
+      expect(mwnf3ProjectCopyright(projectId)).toBeNull();
+    }
+  );
+});
+
+describe('pickMwnf3PictureCopyright', () => {
+  const rows = [{ lang: 'en', copyright: 'Museo Arqueológico Nacional' }];
+
+  it('drops the picture text of a project whose line legacy always printed', () => {
+    expect(pickMwnf3PictureCopyright('ISL', rows)).toBeNull();
+    expect(pickMwnf3PictureCopyright('iam', rows)).toBeNull();
+  });
+
+  it('keeps the picture text elsewhere', () => {
+    expect(pickMwnf3PictureCopyright('BAR', rows)).toBe('© Museo Arqueológico Nacional');
+  });
+});
+
+describe('project credit lines survive the string sanitizer', () => {
+  it.each(['© Discover Islamic Art (MWNF)', SHARING_HISTORY_COPYRIGHT])('%s', (line) => {
+    expect(sanitizeAllStrings({ copyright: line }).copyright).toBe(line);
   });
 });

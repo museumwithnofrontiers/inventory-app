@@ -19,6 +19,7 @@ import { mapLanguageCode } from '../../utils/code-mappings.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { convertHtmlToMarkdown, sanitizeDateValue } from '../../utils/html-to-markdown.js';
 import { lookupProjectUrls } from '../../utils/project-urls.js';
+import { mwnf3ProjectCopyright } from '../../utils/image-copyright.js';
 
 /**
  * Transformed project bundle (context + collection + project)
@@ -97,6 +98,7 @@ export function transformProject(
     launch_date: sanitizeDateValue(legacy.launchdate),
     is_launched: legacy.active === 1 || legacy.active === true,
     ...projectUrls,
+    copyright: mwnf3ProjectCopyright(legacy.project_id),
   };
 
   return {

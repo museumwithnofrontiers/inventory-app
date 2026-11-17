@@ -59,3 +59,11 @@ describe('transformShProject - project URL fields', () => {
     expect(bundle.project.data.artistic_introduction_url).toBeNull();
   });
 });
+
+describe('transformShProject - copyright', () => {
+  it("gives every Sharing History project legacy's credit line", () => {
+    const bundle = transformShProject(makeShLegacyProject(), 'eng', 'A World of Encounters');
+
+    expect(bundle.project.data.copyright).toBe('© MWNF | Sharing History');
+  });
+});
