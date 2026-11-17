@@ -17,6 +17,7 @@ import type {
 import { mapLanguageCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown, sanitizeDateValue } from '../../utils/html-to-markdown.js';
 import { lookupProjectUrls } from '../../utils/project-urls.js';
+import { SHARING_HISTORY_COPYRIGHT } from '../../utils/image-copyright.js';
 
 const SH_SCHEMA = 'mwnf3_sharing_history';
 const SH_PROJECTS_TABLE = 'sh_projects';
@@ -111,6 +112,7 @@ export function transformShProject(
     launch_date: sanitizeDateValue(legacy.addeddate),
     is_launched: legacy.show === 'Y',
     ...projectUrls,
+    copyright: SHARING_HISTORY_COPYRIGHT,
   };
 
   return {

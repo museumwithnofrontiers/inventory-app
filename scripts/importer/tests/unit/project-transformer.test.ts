@@ -83,3 +83,17 @@ describe('transformProject - project URL fields', () => {
     expect(bundle.project.data.artistic_introduction_url).toBeNull();
   });
 });
+
+describe('transformProject - copyright', () => {
+  it("gives ISL legacy's Discover Islamic Art credit line", () => {
+    const bundle = transformProject(makeLegacyProject({ project_id: 'ISL' }), 'eng', 'Islamic Art');
+
+    expect(bundle.project.data.copyright).toBe('© Discover Islamic Art (MWNF)');
+  });
+
+  it('leaves BAR to the global fallback', () => {
+    const bundle = transformProject(makeLegacyProject({ project_id: 'BAR' }), 'eng', 'Baroque Art');
+
+    expect(bundle.project.data.copyright).toBeNull();
+  });
+});

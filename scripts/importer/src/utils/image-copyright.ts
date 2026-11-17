@@ -38,6 +38,55 @@ export function pickImageCopyright(
   return toImageCopyright(chosen?.copyright);
 }
 
+/**
+ * The credit line legacy's image server (images.museumwnf.org, cache.php)
+ * printed on a project's pictures when it did not print the picture's own
+ * copyright. It becomes the Project's `copyright`, which inventory-app burns
+ * on every image of the project that has none of its own.
+ *
+ * Projects missing here keep inventory-app's global fallback, which is what
+ * legacy printed for them too ("© Museum With No Frontiers"), except Baroque
+ * Art, where legacy printed a bare "©".
+ */
+const MWNF3_PROJECT_COPYRIGHT: Readonly<Record<string, string>> = {
+  ISL: '© Discover Islamic Art (MWNF)',
+  IAM: '© Islamic Art in the Mediterranean (MWNF)',
+};
+
+/**
+ * Legacy printed these projects' line on every picture and never read the
+ * picture's own copyright.
+ */
+const PROJECTS_OVERRIDING_PICTURES: ReadonlySet<string> = new Set(['ISL', 'IAM']);
+
+/** Legacy's line for a Sharing History picture with no copyright of its own. */
+export const SHARING_HISTORY_COPYRIGHT = '© MWNF | Sharing History';
+
+/**
+ * The copyright of the Project imported from an mwnf3 project, or null for
+ * the global fallback.
+ */
+export function mwnf3ProjectCopyright(projectId: string): string | null {
+  return MWNF3_PROJECT_COPYRIGHT[projectId.trim().toUpperCase()] ?? null;
+}
+
+/**
+ * The copyright an mwnf3 picture's image row carries: null for a project
+ * whose line legacy printed instead of the picture's own (the image then
+ * burns its Project's), otherwise as pickImageCopyright(). The legacy text
+ * still reaches the picture translations' `extra.copyright` either way.
+ */
+export function pickMwnf3PictureCopyright(
+  projectId: string,
+  rows: ReadonlyArray<{ lang: string | null | undefined; copyright: string | null | undefined }>
+): string | null {
+  if (PROJECTS_OVERRIDING_PICTURES.has(projectId.trim().toUpperCase())) {
+    return null;
+  }
+
+  return pickImageCopyright(rows);
+}
+
 function isEnglish(lang: string | null | undefined): boolean {
   const code = lang?.trim().toLowerCase();
 
