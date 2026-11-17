@@ -1,40 +1,50 @@
 /**
  * THG Hidden Museum Importer
  *
- * Imports the museums an exhibition's curators explicitly suppressed from its
- * partner pages.
+ * Imports the partners an exhibition's curators explicitly suppressed from its
+ * partner pages: museums and, since MWNF-655, the monument institutions.
  *
  * Partner lists are not stored: the exporter derives them from the exhibition's
  * membership (the partners of the items it shows). Legacy does the same and then
- * subtracts this table, so without it a rebuilt site would display museums the
- * curators deliberately hid.
+ * subtracts these tables, so without them a rebuilt site would display partners
+ * the curators deliberately hid.
  *
  * Legacy schema:
  * - mwnf3_thematic_gallery.exhibition_hidden_mwnf3_museums (gallery_id, museum_id, country_id)
- *   - the sibling exhibition_hidden_sh_museums table is empty and is not imported
+ * - mwnf3_thematic_gallery.exhibition_hidden_mwnf3_institutions (gallery_id, institution_id, country_id)
+ *   - newer than the museums table: a legacy copy without it hides no institution
+ * - the sibling exhibition_hidden_sh_museums table is empty and is not imported
  *
  * New schema:
  * - collections.extra.thg_gallery.hidden_partners on the exhibition collection:
- *     [ { "backward_compatibility": "mwnf3:museums:Mus52:uk", "partner_id": "<uuid>" }, … ]
+ *     [ { "backward_compatibility": "mwnf3:museums:Mus52:uk", "partner_id": "<uuid>" },
+ *       { "backward_compatibility": "mwnf3:institutions:Mon01:es", "partner_id": "<uuid>" }, … ]
  *
  * Both the key and the resolved id are stored: the key keeps the entry readable
- * and diffable against legacy, the id spares the exporter a lookup. A museum
- * that never resolved to a partner is kept with a null partner_id rather than
- * dropped — an unresolvable exclusion still has to be honoured.
+ * and diffable against legacy, the id spares the exporter a lookup. A partner
+ * that never resolved is kept with a null partner_id rather than dropped — an
+ * unresolvable exclusion still has to be honoured.
+ *
+ * Both tables are written in one pass, because the list is replaced as a whole
+ * per exhibition: a second step writing the institutions would erase the museums.
  *
  * Dependencies:
  * - ThgGalleryImporter (exhibition collections)
- * - PartnerImporter (museums as partners)
+ * - PartnerImporter (museums and institutions as partners)
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 
-interface LegacyHiddenMuseum {
+interface LegacyHiddenRow {
   gallery_id: number;
-  museum_id: string;
+  partner_id: string;
   country_id: string;
+}
+
+interface HiddenRow extends LegacyHiddenRow {
+  table: 'museums' | 'institutions';
 }
 
 interface HiddenPartner {
@@ -51,35 +61,30 @@ export class ThgHiddenMuseumImporter extends BaseImporter {
     const result = this.createResult();
 
     try {
-      this.logInfo('Importing hidden-museum exclusions for exhibitions...');
+      this.logInfo('Importing hidden-partner exclusions for exhibitions...');
 
-      let hidden: LegacyHiddenMuseum[];
-      try {
-        hidden = await this.context.legacyDb.query<LegacyHiddenMuseum>(
-          `SELECT gallery_id, museum_id, country_id
-           FROM mwnf3_thematic_gallery.exhibition_hidden_mwnf3_museums
-           ORDER BY gallery_id, country_id, museum_id`
-        );
-      } catch (queryError) {
-        const message = queryError instanceof Error ? queryError.message : String(queryError);
-        if (message.includes("doesn't exist") || message.includes('Unknown column')) {
-          this.logInfo(
-            `⚠️ Skipping: Legacy exhibition_hidden_mwnf3_museums table not available (${message})`
-          );
-          result.warnings = result.warnings || [];
-          result.warnings.push(
-            `Legacy exhibition_hidden_mwnf3_museums table not available: ${message}`
-          );
-          return result;
-        }
-        throw queryError;
-      }
+      const museums = await this.readTable(
+        result,
+        'exhibition_hidden_mwnf3_museums',
+        'museum_id',
+        'museums'
+      );
+      if (museums === null) return result;
+      const institutions =
+        (await this.readTable(
+          result,
+          'exhibition_hidden_mwnf3_institutions',
+          'institution_id',
+          'institutions'
+        )) ?? [];
 
-      this.logInfo(`Found ${hidden.length} hidden-museum rows to process`);
+      this.logInfo(
+        `Found ${museums.length} hidden-museum and ${institutions.length} hidden-institution rows to process`
+      );
 
       // One write per gallery, so the exclusion list is replaced as a whole
-      const byGallery = new Map<number, LegacyHiddenMuseum[]>();
-      for (const row of hidden) {
+      const byGallery = new Map<number, HiddenRow[]>();
+      for (const row of [...museums, ...institutions]) {
         const existing = byGallery.get(row.gallery_id);
         if (existing) {
           existing.push(row);
@@ -95,7 +100,7 @@ export class ThgHiddenMuseumImporter extends BaseImporter {
           if (!collectionId) {
             result.warnings = result.warnings || [];
             result.warnings.push(
-              `Hidden museums for gallery ${galleryId}: collection not found (${galleryBackwardCompat}), skipping`
+              `Hidden partners for gallery ${galleryId}: collection not found (${galleryBackwardCompat}), skipping`
             );
             result.skipped += rows.length;
             this.showSkipped();
@@ -106,15 +111,15 @@ export class ThgHiddenMuseumImporter extends BaseImporter {
           for (const row of rows) {
             const partnerBackwardCompat = formatBackwardCompatibility({
               schema: 'mwnf3',
-              table: 'museums',
-              pkValues: [row.museum_id, row.country_id],
+              table: row.table,
+              pkValues: [row.partner_id, row.country_id],
             });
 
             const partnerId = await this.getEntityUuidAsync(partnerBackwardCompat, 'partner');
             if (!partnerId) {
               result.warnings = result.warnings || [];
               result.warnings.push(
-                `Hidden museum ${partnerBackwardCompat} (gallery ${galleryId}): partner not found, kept as an unresolved exclusion`
+                `Hidden partner ${partnerBackwardCompat} (gallery ${galleryId}): partner not found, kept as an unresolved exclusion`
               );
             }
 
@@ -124,7 +129,9 @@ export class ThgHiddenMuseumImporter extends BaseImporter {
             });
 
             this.collectSample(
-              'thg_exhibition_hidden_museum',
+              row.table === 'museums'
+                ? 'thg_exhibition_hidden_museum'
+                : 'thg_exhibition_hidden_institution',
               { ...row, resolved_partner_backward_compat: partnerBackwardCompat },
               'success'
             );
@@ -153,8 +160,8 @@ export class ThgHiddenMuseumImporter extends BaseImporter {
           );
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
-          result.errors.push(`Hidden museums for gallery ${galleryId}: ${message}`);
-          this.logError(`Hidden museums for gallery ${galleryId}`, message);
+          result.errors.push(`Hidden partners for gallery ${galleryId}: ${message}`);
+          this.logError(`Hidden partners for gallery ${galleryId}`, message);
           this.showError();
         }
       }
@@ -168,5 +175,35 @@ export class ThgHiddenMuseumImporter extends BaseImporter {
     }
 
     return result;
+  }
+
+  /**
+   * One hidden-partner table, or null when the legacy copy lacks it (with a
+   * warning). Rows come in gallery, country, partner order, so two imports of
+   * one legacy database write the same list.
+   */
+  private async readTable(
+    result: ImportResult,
+    tableName: string,
+    idColumn: 'museum_id' | 'institution_id',
+    partnerTable: HiddenRow['table']
+  ): Promise<HiddenRow[] | null> {
+    try {
+      const rows = await this.context.legacyDb.query<LegacyHiddenRow>(
+        `SELECT gallery_id, ${idColumn} AS partner_id, country_id
+         FROM mwnf3_thematic_gallery.${tableName}
+         ORDER BY gallery_id, country_id, ${idColumn}`
+      );
+      return rows.map((row) => ({ ...row, table: partnerTable }));
+    } catch (queryError) {
+      const message = queryError instanceof Error ? queryError.message : String(queryError);
+      if (message.includes("doesn't exist") || message.includes('Unknown column')) {
+        this.logInfo(`⚠️ Skipping: Legacy ${tableName} table not available (${message})`);
+        result.warnings = result.warnings || [];
+        result.warnings.push(`Legacy ${tableName} table not available: ${message}`);
+        return null;
+      }
+      throw queryError;
+    }
   }
 }

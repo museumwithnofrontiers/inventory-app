@@ -55,7 +55,7 @@ translations/
   "partners": [                            // exhibition_partner: bottom-banner strip
     { "partner_id": "<uuid>", "category": "…", "display_order": 1 }
   ],
-  "hidden_partner_ids": ["<uuid>", …]      // E6: exclude everywhere (Water in Islam: 11, measured)
+  "hidden_partner_ids": ["<uuid>", …]      // E6: exclude everywhere (museums and, since MWNF-655, institutions)
 }
 ```
 
@@ -195,7 +195,13 @@ Gallery package's partners.json section):
 - Entries listed in `exhibition.json.hidden_partner_ids` are exported but
   flagged — the viewer must exclude them from every list/profile page while
   their items still render (legacy behaviour: the museum is hidden, the item
-  is not).
+  is not). The list holds museums (`exhibition_hidden_mwnf3_museums`) and,
+  since MWNF-655 (2026-11-16), monument institutions
+  (`exhibition_hidden_mwnf3_institutions`), both ticked in the Virtual Office.
+- **A partner's map** is its `latitude` / `longitude` / `map_zoom`. A museum
+  carries them itself; an institution has none of its own, and the importer
+  takes them from its Virtual Office "All Partners" record, as dxa-api does
+  since MWNF-656 (2026-11-16).
 - **A mwnf3 museum is named in every language.** dxa-api names it
   `nvl(museumnames.name, museums.name)` in the language asked, so a museum with
   no name row in a language (MATHAF, `Mus51;qt`, has none at all) is listed

@@ -286,9 +286,22 @@ export class PartnerImporter extends BaseImporter {
   private async importInstitutions(): Promise<ImportResult> {
     const result = this.createResult();
 
-    // Query legacy institutions
+    // Query legacy institutions. An institution keeps no map position of its
+    // own: like dxa-api since MWNF-656, take it from its Virtual Office "All
+    // Partners" record, the first by id when it is linked to several.
+    const allPartnersPosition = (column: 'geoCoordinates' | 'zoom') =>
+      `(SELECT NULLIF(ap.${column}, '')
+         FROM mwnf3.partner_mwnf3_institutions pl
+         INNER JOIN mwnf3.all_partners ap ON ap.all_partners_id = pl.all_partners_id
+         WHERE pl.country = i.country AND pl.institution_id = i.institution_id
+         ORDER BY pl.all_partners_id
+         LIMIT 1)`;
     const institutions = await this.context.legacyDb.query<LegacyInstitution>(
-      'SELECT * FROM mwnf3.institutions ORDER BY institution_id, country'
+      `SELECT i.*,
+         ${allPartnersPosition('geoCoordinates')} AS geoCoordinates,
+         ${allPartnersPosition('zoom')} AS zoom
+       FROM mwnf3.institutions i
+       ORDER BY i.institution_id, i.country`
     );
 
     const institutionNames = await this.context.legacyDb.query<LegacyInstitutionName>(

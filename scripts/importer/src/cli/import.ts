@@ -1070,7 +1070,8 @@ const ALL_IMPORTERS: ImporterConfig[] = [
   {
     key: 'thg-hidden-museum',
     name: 'THG Hidden Museums',
-    description: "Import the museums curators suppressed from an exhibition's partner pages",
+    description:
+      "Import the museums and institutions curators suppressed from an exhibition's partner pages",
     importerClass: ThgHiddenMuseumImporter,
     dependencies: ['thg-gallery', 'partner'],
   },

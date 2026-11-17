@@ -3,6 +3,7 @@
 import { readFileSync } from 'node:fs';
 import { getJson, mapAll, stats } from './lib/http.mjs';
 import { loadPackage } from './lib/pkg.mjs';
+import { compareMap } from './lib/map.mjs';
 import { Report } from './lib/report.mjs';
 import { checkImageUrls } from './lib/images.mjs';
 import { compareExhibition } from './exhibition-themes.mjs';
@@ -294,8 +295,14 @@ await mapAll(L.partners.rows, async (row) => {
       if (['different', 'missing-in-package'].includes(r.verdict) && lang !== 'en' && compare(rec[lf], en[pf]).verdict === 'same') r.verdict = 'expected:legacy API answers in English';
       R.field('partner', pf, r, `${key}|${lang}`);
     }
-    if (d) for (const [k, v] of Object.entries(d)) if (!(k in PTR) && v && typeof v !== 'object' && !/Id$|^has|^is|Name$|^logo$|^i18n$|^languageId$|^lat|^lon|^zoom/.test(k)) R.unmapped('partner', k, `${key}|${lang}`);
+    if (d) for (const [k, v] of Object.entries(d)) if (!(k in PTR) && v && typeof v !== 'object' && !/Id$|^has|^is|Name$|^logo$|^i18n$|^languageId$|^lat|^lon|^zoom|^map(Coordinates|Zoom)$/.test(k)) R.unmapped('partner', k, `${key}|${lang}`);
   }
+  // The partner page's map, once per partner (the detail answer is the cached first-language one).
+  // A detail answer without the key (an instance older than MWNF-656 answering for an institution)
+  // says nothing either way.
+  const detail = href ? (await getJson(`${href}/${offered[0] ?? 'en'}`)).json : null;
+  const mapRec = Array.isArray(detail) ? detail[0] : detail;
+  if (mapRec && 'mapCoordinates' in mapRec) R.field('partner', 'map', compareMap(mapRec, p), key);
 });
 
 // ---------- countries, tags, years

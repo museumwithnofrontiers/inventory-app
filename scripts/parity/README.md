@@ -665,7 +665,7 @@ paths from `tools/lib/paths.mjs`.
 | Tool | Role |
 |---|---|
 | `sitemap.mjs` | legacy roster (dumps, dxa-client `.env`) ↔ exporter instances ↔ npm versions ↔ live sites |
-| `compare-dxa.mjs` | one gallery or exhibition, through `legacy-dxa.mjs` and `exhibition-themes.mjs` |
+| `compare-dxa.mjs` | one gallery or exhibition, through `legacy-dxa.mjs` and `exhibition-themes.mjs`. A partner's `map` field compares dxa-api's `mapCoordinates` / `mapZoom` with the package's `latitude` / `longitude` / `map_zoom` (`lib/map.mjs`); institutions answer them since MWNF-656 (2026-11-16) |
 | `compare-dump-exh.mjs` | one exhibition through the dump, for one whose live instance does not answer (none today; not run by `run.mjs`) |
 | `compare-php.mjs`, `compare-collections.mjs`, `compare-partners-php.mjs` | the PHP sites, through `legacy-php.mjs`; `fetch-php.mjs` warms their cache |
 | `compare-explore.mjs`, `compare-hub.mjs` | Explore and the galleries hub |

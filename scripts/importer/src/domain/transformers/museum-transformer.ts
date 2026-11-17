@@ -10,6 +10,7 @@ import type { PartnerData, PartnerTranslationData } from '../../core/types.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { parseMapPosition } from '../../utils/map-position.js';
 
 /**
  * Monument reference for deferred resolution
@@ -92,26 +93,7 @@ export function transformMuseum(legacy: LegacyMuseum): TransformedMuseum {
   }
   const internalName = convertHtmlToMarkdown(legacy.name);
 
-  // Parse geoCoordinates if available (format: "lat,long" or "lat,long,zoom")
-  let latitude: number | null = null;
-  let longitude: number | null = null;
-  let mapZoom: number | null = 16; // default zoom
-
-  if (legacy.geoCoordinates) {
-    const parts = legacy.geoCoordinates.split(',').map((p) => p.trim());
-    if (parts.length >= 2) {
-      latitude = parseFloat(parts[0]) || null;
-      longitude = parseFloat(parts[1]) || null;
-      if (parts.length >= 3) {
-        mapZoom = parseInt(parts[2], 10) || 16;
-      }
-    }
-  }
-
-  // Also check zoom field if geoCoordinates didn't have zoom
-  if (legacy.zoom && mapZoom === 16) {
-    mapZoom = parseInt(legacy.zoom, 10) || 16;
-  }
+  const { latitude, longitude, mapZoom } = parseMapPosition(legacy.geoCoordinates, legacy.zoom);
 
   // Extract monument reference for deferred resolution
   let monumentReference: MuseumMonumentReference | null = null;

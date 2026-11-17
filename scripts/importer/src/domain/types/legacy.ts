@@ -162,6 +162,11 @@ export interface LegacyInstitution {
   logo?: string;
   logo1?: string;
   logo2?: string;
+  // Map position, not a column of institutions: the importer's query takes it
+  // from the institution's "All Partners" record (all_partners through
+  // partner_mwnf3_institutions), the first one when there are several
+  geoCoordinates?: string | null;
+  zoom?: string | null;
 }
 
 export interface LegacyInstitutionName {

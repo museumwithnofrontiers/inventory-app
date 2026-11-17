@@ -66,9 +66,9 @@ https://inventory.metanull.eu`)
   mask a future legacy regression. `languages.json` still carries 8
   languages overall (carried by borrowed records and partners), with
   `site_language: true` on `en`.
-- **No hidden museums.** `exhibition.json.hidden_partner_ids` is empty;
-  `collections.extra.thg_gallery.hidden_partners` carries nothing for this
-  exhibition, unlike [Arts in Dialogue](arts-in-dialogue.md).
+- **Hidden museums** (2026-11-16): legacy hides five (de/Mus91, de/Mus92,
+  jo/Mus93, us/Mus92, us/Mus93), and `exhibition.json.hidden_partner_ids`
+  ships all five. At the first measurement it hid none.
 - **Exhibition-local timeline present, `has_timeline` still false.**
   `timelines.json` ships 38 timelines (26 countries + **1
   exhibition-local**), 1,393 events — 3 more than the 1,390-event
