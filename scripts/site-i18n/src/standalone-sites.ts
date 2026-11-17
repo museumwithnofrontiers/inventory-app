@@ -409,6 +409,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       // The Sponsors page (atrium_sponsor_detail.php?flg=local).
       'sponsors.title': 'submenu1_4',
       'sponsors.localHeading': 'local_Sponsors',
+      // The virtual exhibitions' landing page (exhibitions/BAR/index.php),
+      // which reads the exhibition pages' group 6: its title (the second
+      // line legacy prints in other languages only) and the heading over the
+      // list.
+      'exhibitions.title': { word: 've_bar_hometitle1', groups: [2, 3, 6] },
+      'exhibitions.welcome': { word: 've_dba_home_menu_title', groups: [2, 3, 6] },
     },
     overrides: {
       // The footer's links (includes/footer.php), in legacy's words.
@@ -430,8 +436,23 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
         language: 'en',
         rows: 'data/credits.json',
       },
+      // The exhibitions landing page's two credits under its picture,
+      // written into the page in English.
+      'exhibitions.cooperation': {
+        file: 'exhibitions/BAR/index.php',
+        start: 'In cooperation with',
+        end: '</div>',
+        language: 'en',
+        constants: { DISCOVERBAROQUEART_WEBSITE_URL: 'https://baroqueart.museumwnf.org' },
+      },
+      'exhibitions.design': {
+        file: 'exhibitions/BAR/index.php',
+        start: 'Exhibition Design',
+        end: '</div>',
+        language: 'en',
+      },
     },
-    links: { 'partners.php': '#/partners' },
+    links: { 'partners.php': '#/partners', 'pm_partner_list.php': '#/partners/results?type=museum' },
     tables: ['baroqueartSponsors', 'baroqueartProjectName'],
   },
 
