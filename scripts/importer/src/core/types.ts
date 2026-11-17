@@ -198,6 +198,8 @@ export interface ProjectData extends BaseEntityData {
   site_url?: string | null;
   related_database_url?: string | null;
   artistic_introduction_url?: string | null;
+  /** Burned on the project's images that have no copyright of their own */
+  copyright?: string | null;
 }
 
 /**
