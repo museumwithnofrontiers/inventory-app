@@ -470,6 +470,11 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'identity.pageTitle': 'sh_gn_meta_title',
       'identity.heading': 'sh_home_heading1',
       'identity.subheading': 'sh_home_heading2',
+      // The virtual exhibitions' landing page (exhibitions/AWE/index.php),
+      // which reads groups 13 and 2: the title over its picture and the
+      // heading over the list (its line between them is the subheading).
+      'exhibitions.title': 'sh_Title',
+      'exhibitions.welcome': 'sh_listing_heading3',
       // The header's links (shTemplates/header.php, includes/header_bottom.php).
       'nav.portal': 'portal_link',
       'nav.home': 'back_to_section',
