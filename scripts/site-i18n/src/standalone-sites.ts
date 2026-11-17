@@ -336,6 +336,13 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'dynasties.description': { word: 'hcr_description', groups: [2, 3, 61] },
       'dynasties.download': { word: 'gn_download', groups: [2, 3, 61] },
       'dynasties.allEvents': { word: 'IslDyn_Timeline_All Events', groups: [61] },
+      // The virtual exhibitions' landing page (exhibitions/ISL/index.php),
+      // which reads the exhibition pages' group 6: its title's two lines, the
+      // heading over the list, and the European Union's line under its logos.
+      'exhibitions.title': { word: 've_isl_hometitle1', groups: [2, 3, 6] },
+      'exhibitions.subtitle': { word: 've_isl_hometitle2', groups: [2, 3, 6] },
+      'exhibitions.welcome': { word: 've_isl_home_menu_title', groups: [2, 3, 6] },
+      'exhibitions.europeanUnion': { word: 'index_EU', groups: [2, 3, 6] },
     },
     overrides: {
       // The sheet's toggle (database_item.php's `.tag`), printed by viewer-layout's RecordSheet.
@@ -402,6 +409,12 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       // The Sponsors page (atrium_sponsor_detail.php?flg=local).
       'sponsors.title': 'submenu1_4',
       'sponsors.localHeading': 'local_Sponsors',
+      // The virtual exhibitions' landing page (exhibitions/BAR/index.php),
+      // which reads the exhibition pages' group 6: its title (the second
+      // line legacy prints in other languages only) and the heading over the
+      // list.
+      'exhibitions.title': { word: 've_bar_hometitle1', groups: [2, 3, 6] },
+      'exhibitions.welcome': { word: 've_dba_home_menu_title', groups: [2, 3, 6] },
     },
     overrides: {
       // The footer's links (includes/footer.php), in legacy's words.
@@ -423,8 +436,23 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
         language: 'en',
         rows: 'data/credits.json',
       },
+      // The exhibitions landing page's two credits under its picture,
+      // written into the page in English.
+      'exhibitions.cooperation': {
+        file: 'exhibitions/BAR/index.php',
+        start: 'In cooperation with',
+        end: '</div>',
+        language: 'en',
+        constants: { DISCOVERBAROQUEART_WEBSITE_URL: 'https://baroqueart.museumwnf.org' },
+      },
+      'exhibitions.design': {
+        file: 'exhibitions/BAR/index.php',
+        start: 'Exhibition Design',
+        end: '</div>',
+        language: 'en',
+      },
     },
-    links: { 'partners.php': '#/partners' },
+    links: { 'partners.php': '#/partners', 'pm_partner_list.php': '#/partners/results?type=museum' },
     tables: ['baroqueartSponsors', 'baroqueartProjectName'],
   },
 
@@ -442,6 +470,11 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'identity.pageTitle': 'sh_gn_meta_title',
       'identity.heading': 'sh_home_heading1',
       'identity.subheading': 'sh_home_heading2',
+      // The virtual exhibitions' landing page (exhibitions/AWE/index.php),
+      // which reads groups 13 and 2: the title over its picture and the
+      // heading over the list (its line between them is the subheading).
+      'exhibitions.title': 'sh_Title',
+      'exhibitions.welcome': 'sh_listing_heading3',
       // The header's links (shTemplates/header.php, includes/header_bottom.php).
       'nav.portal': 'portal_link',
       'nav.home': 'back_to_section',

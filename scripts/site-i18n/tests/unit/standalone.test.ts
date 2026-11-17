@@ -250,8 +250,9 @@ describe('siteRegions', () => {
 
 describe('STANDALONE_SITES', () => {
   it('reads each site from the groups its pages load', () => {
-    expect(siteGroups(STANDALONE_SITES.islamicart!)).toEqual([2, 3, 4, 61])
-    expect(siteGroups(STANDALONE_SITES.baroqueart!)).toEqual([2, 3, 4])
+    // Group 6 is the virtual exhibitions' own, read by their landing pages.
+    expect(siteGroups(STANDALONE_SITES.islamicart!)).toEqual([2, 3, 4, 6, 61])
+    expect(siteGroups(STANDALONE_SITES.baroqueart!)).toEqual([2, 3, 4, 6])
     expect(siteGroups(STANDALONE_SITES.sharinghistory!)).toEqual([2, 3, 13])
     expect(siteWords(STANDALONE_SITES.islamicart!, 'islamicart')['islamicart.missionStatement.body']).toEqual({
       words: ['mission_statement_text'],
