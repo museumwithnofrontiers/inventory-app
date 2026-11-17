@@ -2,7 +2,9 @@
 // package's latitude / longitude / map_zoom. A museum carries its own; an institution takes them from
 // its "All Partners" record since MWNF-656.
 const show = (m) => `${m.lat}, ${m.lon} z${m.zoom ?? '-'}`;
-const near = (a, b) => Math.abs(a - b) < 1e-9;
+// The inventory keeps a position to 8 decimals while legacy keeps what Google gave it (up to 15), so
+// the same place differs in the last digits; a millionth of a degree is about 10 cm.
+const near = (a, b) => Math.abs(a - b) < 1e-6;
 
 export function compareMap(rec, p) {
   const [lat, lon] = String(rec?.mapCoordinates ?? '').split(',').map((x) => Number.parseFloat(x));
