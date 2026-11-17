@@ -25,7 +25,7 @@ import { formatBackwardCompatibility } from '../../utils/backward-compatibility.
 import { monumentPictureBackwardCompatibility } from '../../utils/picture-backward-compatibility.js';
 import { mapLanguageCode, mapCountryCode } from '../../utils/code-mappings.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
-import { pickImageCopyright } from '../../utils/image-copyright.js';
+import { pickMwnf3PictureCopyright } from '../../utils/image-copyright.js';
 import { legacyKey } from '../../utils/legacy-key.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
@@ -191,9 +191,11 @@ export class MonumentPictureImporter extends BaseImporter {
     );
     const captionText = bestCaption ? convertHtmlToMarkdown(bestCaption) : null;
 
-    // The image rows carry one burn-ready copyright; each language's own text
-    // still goes to its picture translation's extra.copyright.
-    const copyright = pickImageCopyright(
+    // The image rows carry one burn-ready copyright (none where legacy printed
+    // the project's line instead); each language's own text still goes to its
+    // picture translation's extra.copyright.
+    const copyright = pickMwnf3PictureCopyright(
+      group.project_id,
       group.translations.map((t) => ({ lang: t.lang, copyright: t.copyright }))
     );
 
