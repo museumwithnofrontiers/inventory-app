@@ -336,6 +336,13 @@ export const STANDALONE_SITES: Record<string, StandaloneSite> = {
       'dynasties.description': { word: 'hcr_description', groups: [2, 3, 61] },
       'dynasties.download': { word: 'gn_download', groups: [2, 3, 61] },
       'dynasties.allEvents': { word: 'IslDyn_Timeline_All Events', groups: [61] },
+      // The virtual exhibitions' landing page (exhibitions/ISL/index.php),
+      // which reads the exhibition pages' group 6: its title's two lines, the
+      // heading over the list, and the European Union's line under its logos.
+      'exhibitions.title': { word: 've_isl_hometitle1', groups: [2, 3, 6] },
+      'exhibitions.subtitle': { word: 've_isl_hometitle2', groups: [2, 3, 6] },
+      'exhibitions.welcome': { word: 've_isl_home_menu_title', groups: [2, 3, 6] },
+      'exhibitions.europeanUnion': { word: 'index_EU', groups: [2, 3, 6] },
     },
     overrides: {
       // The sheet's toggle (database_item.php's `.tag`), printed by viewer-layout's RecordSheet.
