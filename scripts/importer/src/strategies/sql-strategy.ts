@@ -2027,6 +2027,75 @@ export class SqlWriteStrategy implements IWriteStrategy {
     );
   }
 
+  async findCollectionTranslationsWithExtraKeys(keys: readonly string[]): Promise<
+    Array<{
+      id: string;
+      collection_id: string;
+      collection_backward_compatibility: string | null;
+      language_id: string;
+      context_id: string;
+      extra: Record<string, unknown>;
+    }>
+  > {
+    if (keys.length === 0) return [];
+    const paths = keys.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT ct.id, ct.collection_id, c.backward_compatibility AS collection_backward_compatibility,
+              ct.language_id, ct.context_id, ct.extra
+       FROM collection_translations ct
+       JOIN collections c ON c.id = ct.collection_id
+       WHERE ct.extra IS NOT NULL AND JSON_CONTAINS_PATH(ct.extra, 'one', ${paths})
+       ORDER BY ct.collection_id, ct.language_id, ct.context_id`,
+      keys.map((key) => `$.${key}`)
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        collection_id: row.collection_id as string,
+        collection_backward_compatibility:
+          (row.collection_backward_compatibility as string | null) ?? null,
+        language_id: row.language_id as string,
+        context_id: row.context_id as string,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async setCollectionTranslationExtraAsStoredById(id: string, extra: string | null): Promise<void> {
+    await this.db.execute(
+      `UPDATE collection_translations SET extra = ?, updated_at = ? WHERE id = ?`,
+      [extra, this.now, id]
+    );
+  }
+
+  async upsertContributorTranslationAsStored(data: {
+    id: string;
+    contributor_id: string;
+    language_id: string;
+    context_id: string;
+    name: string | null;
+    description: string | null;
+    backward_compatibility: string | null;
+  }): Promise<void> {
+    await this.db.execute(
+      `INSERT INTO contributor_translations (id, contributor_id, language_id, context_id, name, description, backward_compatibility, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE name = VALUES(name), description = VALUES(description), updated_at = VALUES(updated_at)`,
+      [
+        data.id,
+        data.contributor_id,
+        data.language_id,
+        data.context_id,
+        data.name,
+        data.description,
+        data.backward_compatibility,
+        this.now,
+        this.now,
+      ]
+    );
+  }
+
   async getItemTranslationExtra(
     itemId: string,
     languageId: string

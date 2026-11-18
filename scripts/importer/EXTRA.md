@@ -55,6 +55,13 @@ Paths are relative to `src/`; `T:` is `domain/transformers/`.
 
 ## collection_translations.extra
 
+The collection credits below (`author`, `travels_author`, `prepared_by`, `curated_by`, `credits`,
+`local_coordinator`, `local_team`, `photo_by`) are written here first, then moved to Contributors of the
+collection by `importers/phase-11/collection-credits-importer.ts` (M16 I5, #2648), the key as the
+Contributor's `category` and the text as written in its translation. None stays after a full import. After
+re-running one of their writers on its own, run `--only collection-credits` again. The exporters give the
+keys back to the packages (`scripts/exporters/shared/credits.mjs`).
+
 | Key                                                                                                                                                                                                          | Legacy source                                                                                  | Written by                                                                                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `credits`, `intro_header`, `intro_text`, `subtitle`                                                                                                                                                          | mwnf3 exhibition_fields `exh_*`, artintro_fields `art_*`                                       | importers/phase-01/mwnf3-exhibition-translation-importer.ts                                                |

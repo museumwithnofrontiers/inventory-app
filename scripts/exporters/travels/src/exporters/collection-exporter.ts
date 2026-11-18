@@ -1,4 +1,5 @@
 import { publicationLinks } from '../../../shared/links.mjs'
+import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import type { PageLink } from '../../../shared/links.mjs'
 import type { ExportResult } from '../core/types.js'
 import { type LanguageKey, languageKeyer, rekeyIfMap } from '../core/language-keys.js'
@@ -23,6 +24,7 @@ interface CollectionRow {
 interface CollectionTranslationRow {
   collection_id: string
   language_id: string
+  context_id: string
   title: string
   description: string | null
   quote: string | null
@@ -111,7 +113,7 @@ export class CollectionExporter extends BaseExporter {
         ),
         this.db.query<CollectionTranslationRow>(
           // Row order is unspecified; sorted so two exports of one database are byte-identical.
-          `SELECT collection_id, language_id, title, description, quote, url, extra
+          `SELECT collection_id, language_id, context_id, title, description, quote, url, extra
            FROM collection_translations
            WHERE collection_id IN (${colPh})
            ORDER BY collection_id, language_id, context_id`,
@@ -169,10 +171,17 @@ export class CollectionExporter extends BaseExporter {
             ),
       ])
 
+    // The collection credits are Contributors now (M16 I5); each translation's
+    // `extra` gets them back under their keys, as the packages ship them.
+    const credits = await loadCollectionCredits((sql, params) => this.db.query(sql, params), collectionIds)
     // collection_id -> lang_code -> fields. A collection translated in two
     // contexts keeps the first row, the sort above deciding.
     const byLang = new Map<string, Record<string, unknown>>()
     for (const t of translations) {
+      const extra = withCollectionCredits(
+        parseJson(t.extra),
+        credits.get(creditKey(t.collection_id, t.language_id, t.context_id))
+      )
       const code = langCodeMap.get(t.language_id)
       if (!code) continue
       if (!byLang.has(code)) byLang.set(code, {})
@@ -183,7 +192,7 @@ export class CollectionExporter extends BaseExporter {
         description: t.description,
         quote: t.quote,
         url: t.url,
-        extra: parseJson(t.extra),
+        extra,
       })
     }
     await this.writeTranslationFiles('collections', byLang)

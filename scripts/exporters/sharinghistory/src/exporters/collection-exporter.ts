@@ -1,4 +1,5 @@
 import type { ExportResult } from '../core/types.js'
+import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { type LanguageKey, languageKeyer, rekeyIfMap, rekeyLanguages, rekeyNested } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
@@ -48,6 +49,7 @@ interface CollectionItemDetailEntry {
 interface CollectionTranslationRow {
   collection_id: string
   language_id: string
+  context_id: string
   title: string
   description: string | null
   quote: string | null
@@ -120,7 +122,7 @@ export class CollectionExporter extends BaseExporter {
     const [allTranslations, images, imageTypes, itemLinks] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
-        `SELECT collection_id, language_id, title, description, quote, url, extra
+        `SELECT collection_id, language_id, context_id, title, description, quote, url, extra
          FROM collection_translations
          WHERE collection_id IN (${colPh})
          ORDER BY collection_id, language_id`,
@@ -204,8 +206,15 @@ export class CollectionExporter extends BaseExporter {
     }
 
     // collection_id -> lang_code -> fields
+    // The collection credits are Contributors now (M16 I5); each translation's
+    // `extra` gets them back under their keys, as the packages ship them.
+    const credits = await loadCollectionCredits((sql, params) => this.db.query(sql, params), collectionIds)
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const t of translations) {
+      const extra = withCollectionCredits(
+        parseJson(t.extra),
+        credits.get(creditKey(t.collection_id, t.language_id, t.context_id))
+      )
       if (!translationMap.has(t.collection_id)) translationMap.set(t.collection_id, {})
       const code = langCodeMap.get(t.language_id)
       if (!code) continue
@@ -218,7 +227,7 @@ export class CollectionExporter extends BaseExporter {
         description: t.description,
         quote: t.quote,
         url: t.url,
-        ...(t.extra ? { extra: collectionTextExtra(parseJson(t.extra), languageKey) } : {}),
+        ...(extra ? { extra: collectionTextExtra(extra, languageKey) } : {}),
       }
     }
 

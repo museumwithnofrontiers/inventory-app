@@ -161,6 +161,7 @@ import {
   MuseumProjectLinkBackfillImporter,
   ExhibitionI18nTextBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
+  CollectionCreditsImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1215,6 +1216,13 @@ const ALL_IMPORTERS: ImporterConfig[] = [
       'Backfill items.country_id on natively-imported Explore monuments from mwnf3_explore.locations.countryId, where it is still null (#1593)',
     importerClass: ExploreMonumentCountryBackfillImporter,
     dependencies: ['explore-monument'],
+  },
+  {
+    key: 'collection-credits',
+    name: 'Collection Credits',
+    description:
+      'Move the collection credits (author, curated_by, credits, …) from collection_translations.extra to Contributors, after every importer that writes them (M16 I5, #2648)',
+    importerClass: CollectionCreditsImporter,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)
   {

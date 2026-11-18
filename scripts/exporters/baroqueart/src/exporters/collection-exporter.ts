@@ -1,4 +1,5 @@
 import type { ExportResult } from '../core/types.js'
+import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
@@ -56,6 +57,7 @@ interface CollectionItemDetailEntry {
 interface CollectionTranslationRow {
   collection_id: string
   language_id: string
+  context_id: string
   title: string
   description: string | null
   quote: string | null
@@ -144,7 +146,7 @@ export class CollectionExporter extends BaseExporter {
     const [allTranslations, images, itemLinks, detailViews, glossaryLinks] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
-        `SELECT collection_id, language_id, title, description, quote, url, extra
+        `SELECT collection_id, language_id, context_id, title, description, quote, url, extra
          FROM collection_translations
          WHERE collection_id IN (${colPh})
          ORDER BY collection_id, language_id`,
@@ -259,8 +261,15 @@ export class CollectionExporter extends BaseExporter {
     }
 
     // collection_id -> lang_code -> fields
+    // The collection credits are Contributors now (M16 I5); each translation's
+    // `extra` gets them back under their keys, as the packages ship them.
+    const credits = await loadCollectionCredits((sql, params) => this.db.query(sql, params), collectionIds)
     const translationMap = new Map<string, Record<string, Record<string, unknown>>>()
     for (const t of translations) {
+      const extra = withCollectionCredits(
+        parseJson(t.extra),
+        credits.get(creditKey(t.collection_id, t.language_id, t.context_id))
+      )
       const depth = minisite.get(t.collection_id)
       if (depth !== undefined) {
         // A page's title is the mini-site's: the link names the exhibition and the theme.
@@ -279,7 +288,7 @@ export class CollectionExporter extends BaseExporter {
         description: t.description,
         quote: t.quote,
         url: t.url,
-        ...(t.extra ? { extra: parseJson(t.extra) } : {}),
+        ...(extra ? { extra } : {}),
         ...(glossaryIds.has(`${t.collection_id} ${t.language_id}`)
           ? { glossary_ids: glossaryIds.get(`${t.collection_id} ${t.language_id}`) }
           : {}),

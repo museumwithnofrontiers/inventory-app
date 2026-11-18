@@ -22,3 +22,4 @@ export { ExtraBitBufferBackfillImporter } from './extra-bit-buffer-backfill-impo
 export { MuseumProjectLinkBackfillImporter } from './museum-project-link-backfill-importer.js';
 export { ExhibitionI18nTextBackfillImporter } from './exhibition-i18n-text-backfill-importer.js';
 export { ExploreMonumentCountryBackfillImporter } from './explore-monument-country-backfill-importer.js';
+export { CollectionCreditsImporter } from './collection-credits-importer.js';
