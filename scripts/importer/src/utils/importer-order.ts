@@ -1,6 +1,13 @@
 export interface DependentConfig {
   key: string;
   dependencies?: string[];
+  /**
+   * Runs after every other selected step, in its own declared order among
+   * the steps that also run last. For a post-pass over what many steps write
+   * (M16 I5: the collection credits), where listing each writer as a
+   * dependency would miss the next one added. No other step may depend on it.
+   */
+  runsLast?: boolean;
 }
 
 /**
@@ -57,7 +64,20 @@ export function orderConfigsByDependencies<T extends DependentConfig>(configs: T
     throw new Error(`Circular importer dependencies detected: ${unresolved}`);
   }
 
-  return orderedKeys.map((key) => {
+  const lastKeys = new Set(configs.filter((config) => config.runsLast).map((config) => config.key));
+  for (const config of configs) {
+    if (config.runsLast) continue;
+    const blocked = (config.dependencies ?? []).filter((dependency) => lastKeys.has(dependency));
+    if (blocked.length > 0) {
+      throw new Error(`Importer ${config.key} depends on ${blocked.join(', ')}, which runs last`);
+    }
+  }
+  const finalKeys = [
+    ...orderedKeys.filter((key) => !lastKeys.has(key)),
+    ...orderedKeys.filter((key) => lastKeys.has(key)),
+  ];
+
+  return finalKeys.map((key) => {
     const config = configMap.get(key);
     if (!config) {
       throw new Error(`Importer config not found for key: ${key}`);
