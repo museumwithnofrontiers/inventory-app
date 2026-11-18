@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { trailsByItem } from '../core/exhibition-trails.js'
+import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs'
 
 const CONTACT_LINES = ['address', 'phone', 'fax', 'email', 'institution'] as const
 
@@ -260,17 +261,17 @@ export class ItemExporter extends BaseExporter {
         `SELECT id FROM contexts WHERE is_default = 1`
       )
       const detailContextIds = [...new Set([...contextIds, ...defaultContextRows.map(r => r.id)])]
-      detailTranslations = await this.db.query<DetailTranslationRow>(
+      detailTranslations = restoreItemColumns(await this.db.query<DetailTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also fixes which row `rows[0]` picks when neither
         // context wins during the merge below).
-        `SELECT item_id, language_id, context_id, name, description, dates, location, extra
+        `SELECT item_id, language_id, context_id, name, description, dates, location, extra, ${itemColumnsSelect('item_translations')}
          FROM item_translations
          WHERE item_id IN (${this.placeholders(detailIds.length)})
            AND context_id IN (${this.placeholders(detailContextIds.length)})
          ORDER BY item_id, context_id`,
         [...detailIds, ...detailContextIds]
-      )
+      ))
     }
 
     // detail_id -> lang_code -> fields (project-context row wins over default)
@@ -302,7 +303,7 @@ export class ItemExporter extends BaseExporter {
     const epmContextId = await this.resolveEpmContextId()
     const translationContextIds =
       epmContextId && !contextIds.includes(epmContextId) ? [...contextIds, epmContextId] : contextIds
-    const translations = await this.db.query<ItemTranslationRow>(
+    const translations = restoreItemColumns(await this.db.query<ItemTranslationRow>(
       // Row order is unspecified; sorted so two exports of one database are
       // byte-identical (also fixes which row `rows[0]` picks below when an
       // item's own context is not among its translation rows).
@@ -311,7 +312,7 @@ export class ItemExporter extends BaseExporter {
               it.type, it.holder, it.owner, it.initial_owner, it.dates,
               it.location, it.dimensions, it.place_of_production,
               it.method_for_datation, it.method_for_provenance,
-              it.provenance, it.obtention, it.bibliography, it.extra,
+              it.provenance, it.obtention, it.bibliography, it.extra, ${itemColumnsSelect('it')},
               ${creditList('author')} AS author_name,
               ${creditList('text_copy_editor')} AS copy_editor_name,
               ${creditList('translator')} AS translator_name,
@@ -321,7 +322,7 @@ export class ItemExporter extends BaseExporter {
          AND it.context_id IN (${this.placeholders(translationContextIds.length)})
        ORDER BY it.item_id, it.context_id`,
       [...itemIds, ...translationContextIds]
-    )
+    ))
 
     // ── 2. Images via picture child items ────────────────────────────────────
     // Each image is a child item of type 'picture'. It carries:
@@ -354,15 +355,15 @@ export class ItemExporter extends BaseExporter {
     let pictureTranslations: PictureTranslationRow[] = []
     if (pictureItems.length > 0) {
       const pictureIds = [...new Set(pictureItems.map(p => p.picture_id))]
-      pictureTranslations = await this.db.query<PictureTranslationRow>(
+      pictureTranslations = restoreItemColumns(await this.db.query<PictureTranslationRow>(
         // Row order is unspecified; sorted so the `captions` key order below is
         // byte-identical across two exports of one database.
-        `SELECT item_id AS picture_id, language_id, description AS caption, extra
+        `SELECT item_id AS picture_id, language_id, description AS caption, extra, ${itemColumnsSelect('item_translations')}
          FROM item_translations
          WHERE item_id IN (${this.placeholders(pictureIds.length)})
          ORDER BY picture_id, language_id`,
         pictureIds
-      )
+      ))
     }
 
     // ── 3. Dynasty, tag, glossary, artist, THG gallery, media, and item-item links ──

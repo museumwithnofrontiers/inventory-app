@@ -36,6 +36,8 @@ class ItemTranslationResource extends JsonResource
             'alternate_name' => $this->alternate_name,
             // The description of the item translation
             'description' => $this->description,
+            // A short description, as written (legacy description2)
+            'short_description' => $this->short_description,
             // The type of the item translation
             'type' => $this->type,
             // The holder of the item
@@ -48,8 +50,14 @@ class ItemTranslationResource extends JsonResource
             'dates' => $this->dates,
             // The location associated with the item
             'location' => $this->location,
+            // The region, as written (legacy province)
+            'region' => $this->region,
             // The dimensions of the item
             'dimensions' => $this->dimensions,
+            // The materials, as written
+            'materials' => $this->materials,
+            // The dynasty, as written (the Dynasty links are on the item)
+            'dynasty' => $this->dynasty,
             // The place of production of the item
             'place_of_production' => $this->place_of_production,
             // The method for datation of the item
@@ -62,6 +70,8 @@ class ItemTranslationResource extends JsonResource
             'obtention' => $this->obtention,
             // The bibliography for the item
             'bibliography' => $this->bibliography,
+            // A monument's history, as written
+            'history' => $this->history,
             // The author of the item (AuthorResource id)
             'author_id' => $this->author_id,
             // The copy-editor of the item (AuthorResource id)

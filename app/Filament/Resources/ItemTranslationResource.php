@@ -103,6 +103,11 @@ class ItemTranslationResource extends Resource
                         Textarea::make('description')
                             ->rows(4)
                             ->columnSpanFull(),
+                        Textarea::make('short_description')
+                            ->label('Short description')
+                            ->helperText('A second, shorter text, as legacy wrote it')
+                            ->rows(3)
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
@@ -120,6 +125,15 @@ class ItemTranslationResource extends Resource
                         TextInput::make('dimensions')
                             ->placeholder('e.g., 100×80 cm, 2 m height')
                             ->maxLength(255),
+                        Textarea::make('materials')
+                            ->placeholder('e.g., Bronze, cast and engraved')
+                            ->rows(2),
+                        Textarea::make('dynasty')
+                            ->helperText('As the sheet prints it. The Dynasty links are on the item.')
+                            ->rows(2),
+                        Textarea::make('region')
+                            ->placeholder('Region or province')
+                            ->rows(2),
                         TextInput::make('place_of_production')
                             ->label('Place of production')
                             ->placeholder('Where the item was created')
@@ -161,6 +175,16 @@ class ItemTranslationResource extends Resource
                             ->columnSpanFull(),
                     ])
                     ->columns(2)
+                    ->collapsible()
+                    ->collapsed(),
+
+                Section::make('Monument')
+                    ->schema([
+                        Textarea::make('history')
+                            ->placeholder('The history of the monument')
+                            ->rows(5)
+                            ->columnSpanFull(),
+                    ])
                     ->collapsible()
                     ->collapsed(),
 
@@ -216,6 +240,7 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::rtlTextEntry('name'),
                         TranslationInfolistSchema::rtlTextEntry('alternate_name', 'Alternate name'),
                         TranslationInfolistSchema::markdownEntry('description', columnSpanFull: true),
+                        TranslationInfolistSchema::markdownEntry('short_description', 'Short description', columnSpanFull: true),
                     ])
                     ->columns(2),
 
@@ -225,6 +250,9 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::rtlTextEntry('dates'),
                         TranslationInfolistSchema::rtlTextEntry('location'),
                         TranslationInfolistSchema::rtlTextEntry('dimensions'),
+                        TranslationInfolistSchema::markdownEntry('materials'),
+                        TranslationInfolistSchema::markdownEntry('dynasty'),
+                        TranslationInfolistSchema::markdownEntry('region'),
                         TranslationInfolistSchema::rtlTextEntry('place_of_production', 'Place of production'),
                         TranslationInfolistSchema::markdownEntry('holder'),
                         TranslationInfolistSchema::markdownEntry('owner'),
@@ -243,6 +271,13 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::markdownEntry('bibliography', columnSpanFull: true),
                     ])
                     ->columns(2)
+                    ->collapsible()
+                    ->collapsed(),
+
+                InfolistSection::make('Monument')
+                    ->schema([
+                        TranslationInfolistSchema::markdownEntry('history', columnSpanFull: true),
+                    ])
                     ->collapsible()
                     ->collapsed(),
 

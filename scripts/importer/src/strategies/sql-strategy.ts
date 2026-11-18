@@ -12,6 +12,7 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { deterministicUuid } from '../utils/deterministic-uuid.js';
+import { ITEM_TRANSLATION_COLUMNS } from '../utils/item-translation-columns.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { IWriteStrategy } from '../core/strategy.js';
 import type {
@@ -2066,6 +2067,44 @@ export class SqlWriteStrategy implements IWriteStrategy {
     await this.db.execute(
       `UPDATE collection_translations SET extra = ?, updated_at = ? WHERE id = ?`,
       [extra, this.now, id]
+    );
+  }
+
+  async findItemTranslationsWithExtraKeys(
+    keys: readonly string[]
+  ): Promise<Array<{ id: string; extra: Record<string, unknown> }>> {
+    if (keys.length === 0) return [];
+    const paths = keys.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, extra FROM item_translations
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', ${paths})
+       ORDER BY id`,
+      keys.map((key) => `$.${key}`)
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async setItemTranslationColumnsAsStoredById(
+    id: string,
+    columns: Record<string, string>,
+    extra: string | null
+  ): Promise<void> {
+    const allowed = new Set(ITEM_TRANSLATION_COLUMNS.map((entry) => entry.column));
+    const names = Object.keys(columns);
+    const unknown = names.filter((name) => !allowed.has(name));
+    if (unknown.length > 0) {
+      throw new Error(`Not an item translation column of ADR 006: ${unknown.join(', ')}`);
+    }
+    const sets = names.map((name) => `\`${name}\` = ?`).join(', ');
+    await this.db.execute(
+      `UPDATE item_translations SET ${sets}${sets ? ', ' : ''}extra = ?, updated_at = ? WHERE id = ?`,
+      [...names.map((name) => columns[name]!), extra, this.now, id]
     );
   }
 

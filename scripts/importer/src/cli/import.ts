@@ -162,6 +162,7 @@ import {
   ExhibitionI18nTextBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
   CollectionCreditsImporter,
+  ItemTranslationColumnsImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1227,6 +1228,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: CollectionCreditsImporter,
     // Seven importers write these keys and later steps move translations
     // between contexts; with no dependency of its own it would run first.
+    runsLast: true,
+  },
+  {
+    key: 'item-translation-columns',
+    name: 'Item Translation Columns',
+    description:
+      'Move the item translation texts that have a column (materials, short description, dynasty, region, history) out of item_translations.extra, after every importer that writes them (M16 B1, #2635)',
+    importerClass: ItemTranslationColumnsImporter,
+    // The object and monument importers of four databases write these keys,
+    // and later steps move translations between contexts.
     runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)

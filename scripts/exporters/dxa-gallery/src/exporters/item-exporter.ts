@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { buildExhibitionReferences } from './exhibition-references.js'
+import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs'
 
 // A Sharing History record shown in a gallery or exhibition: the fields the
 // galleries' sheet (dxa-api) reads from it that a mwnf3 record keeps elsewhere.
@@ -246,12 +247,12 @@ export class ItemExporter extends BaseExporter {
                 it.type, it.holder, it.owner, it.initial_owner, it.dates,
                 it.location, it.dimensions, it.place_of_production,
                 it.method_for_datation, it.method_for_provenance,
-                it.provenance, it.obtention, it.bibliography, it.extra
+                it.provenance, it.obtention, it.bibliography, it.extra, ${itemColumnsSelect('it')}
          FROM item_translations it
          WHERE it.item_id IN (${itemPh})
          ORDER BY it.item_id, it.context_id`,
         this.memberItemIds
-      ),
+      ).then(restoreItemColumns),
       this.db.query<PictureItemRow>(
         `SELECT pic.id AS picture_id, pic.parent_id AS item_id,
                 pic.display_order, ii.path, ii.alt_text
@@ -583,15 +584,15 @@ export class ItemExporter extends BaseExporter {
     if (pictureItems.length === 0) return imageMap
 
     const pictureIds = [...new Set(pictureItems.map(p => p.picture_id))]
-    const pictureTranslations = await this.db.query<PictureTranslationRow>(
+    const pictureTranslations = restoreItemColumns(await this.db.query<PictureTranslationRow>(
       // Row order is unspecified; sorted so the `captions` key order below is
       // byte-identical across two exports of one database.
-      `SELECT item_id AS picture_id, language_id, description AS caption, extra
+      `SELECT item_id AS picture_id, language_id, description AS caption, extra, ${itemColumnsSelect('item_translations')}
        FROM item_translations
        WHERE item_id IN (${this.placeholders(pictureIds.length)})
        ORDER BY picture_id, language_id`,
       pictureIds
-    )
+    ))
 
     const byPicture = new Map<
       string,
