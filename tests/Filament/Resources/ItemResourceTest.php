@@ -147,6 +147,34 @@ class ItemResourceTest extends TestCase
         ]);
     }
 
+    public function test_authorized_users_can_edit_an_items_map_position(): void
+    {
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Monument()->create(['internal_name' => 'Castle of Mértola']);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(EditItem::class, ['record' => $item->getRouteKey()])
+            ->fillForm([
+                'latitude' => 37.6408,
+                'longitude' => -7.6611,
+                'map_zoom' => 16,
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $item->refresh();
+        $this->assertEqualsWithDelta(37.6408, (float) $item->latitude, 0.00001);
+        $this->assertEqualsWithDelta(-7.6611, (float) $item->longitude, 0.00001);
+        $this->assertSame(16, $item->map_zoom);
+
+        Livewire::actingAs($user)
+            ->test(ViewItem::class, ['record' => $item->getRouteKey()])
+            ->assertSee('Map zoom')
+            ->assertSee('37.64080000');
+    }
+
     public function test_authorized_users_can_change_item_parent(): void
     {
         $user = $this->createCrudUser();

@@ -206,6 +206,17 @@ class ItemResource extends Resource
                             ->numeric()
                             ->integer()
                             ->nullable(),
+                        TextInput::make('latitude')
+                            ->numeric()
+                            ->nullable(),
+                        TextInput::make('longitude')
+                            ->numeric()
+                            ->nullable(),
+                        TextInput::make('map_zoom')
+                            ->label('Map zoom')
+                            ->numeric()
+                            ->integer()
+                            ->nullable(),
                     ])
                     ->columns(2),
                 FiltersSection::make('Technical identification')
@@ -507,6 +518,10 @@ class ItemResource extends Resource
                                 : null),
                         TextEntry::make('display_order')
                             ->label('Display order'),
+                        TextEntry::make('latitude'),
+                        TextEntry::make('longitude'),
+                        TextEntry::make('map_zoom')
+                            ->label('Map zoom'),
                     ])
                     ->columns(2),
                 InfolistSection::make('System Information')
