@@ -15,7 +15,10 @@
  * - title → name
  * - description → description: the monument's text, which Explore shows on
  *   the sheet of a monument that resolves to it
- * - how_to_reach, info, contact, prepared_by → extra, each only when set
+ * - how_to_reach, info, contact → extra, each only when set
+ * - prepared_by → author_id when it is a plain name an author can hold exactly
+ *   as written (M16 I1, #2657); otherwise (role labels, or a name an existing
+ *   author spells with other accents) it stays in extra, as written
  *
  * A translation imported before its text was carried keeps its row: the text is
  * filled in on it rather than skipped.
@@ -28,6 +31,8 @@
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
+import { AuthorHelper } from '../../helpers/author-helper.js';
+import { parseExplorePreparedBy } from '../../helpers/explore-prepared-by-parser.js';
 
 /**
  * Legacy travel monument translation structure
@@ -48,15 +53,31 @@ interface LegacyTravelMonumentTranslation {
   prepared_by: string | null;
 }
 
-/** The monument's visitor texts and author, each only when set. */
+/**
+ * The author `prepared_by` names, when it is a plain name: a text with role
+ * labels ("Author:", "Translator:") is not one, and stays as written.
+ */
+export function plainAuthorName(preparedBy: string | null | undefined): string | null {
+  const raw = preparedBy?.trim();
+  if (!raw) return null;
+  return parseExplorePreparedBy(raw) ? null : raw;
+}
+
+/**
+ * The monument's visitor texts, each only when set, and `prepared_by` unless
+ * the translation's author column holds it (`creditedAuthor`).
+ */
 export function monumentTextExtra(
-  legacy: Pick<LegacyTravelMonumentTranslation, 'how_to_reach' | 'info' | 'contact' | 'prepared_by'>
+  legacy: Pick<LegacyTravelMonumentTranslation, 'how_to_reach' | 'info' | 'contact' | 'prepared_by'>,
+  creditedAuthor = false
 ): Record<string, string> | null {
   const extra: Record<string, string> = {};
-  for (const field of ['how_to_reach', 'info', 'contact', 'prepared_by'] as const) {
+  for (const field of ['how_to_reach', 'info', 'contact'] as const) {
     const value = legacy[field]?.trim();
     if (value) extra[field] = value;
   }
+  const preparedBy = legacy.prepared_by?.trim();
+  if (preparedBy && !creditedAuthor) extra.prepared_by = preparedBy;
   return Object.keys(extra).length > 0 ? extra : null;
 }
 
@@ -66,6 +87,7 @@ function monumentDescription(legacy: LegacyTravelMonumentTranslation): string | 
 
 export class TravelsMonumentTranslationImporter extends BaseImporter {
   private travelsContextId!: string;
+  private authorHelper!: AuthorHelper;
 
   getName(): string {
     return 'TravelsMonumentTranslationImporter';
@@ -90,6 +112,11 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
         );
       }
       this.travelsContextId = travelsContextId;
+      this.authorHelper = new AuthorHelper(
+        this.context.strategy,
+        this.context.tracker,
+        this.logger
+      );
 
       this.logInfo('Importing travel monument translations...');
 
@@ -160,7 +187,9 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
             continue;
           }
 
-          const extra = monumentTextExtra(legacy);
+          const authorName = plainAuthorName(legacy.prepared_by);
+          const authorId = authorName ? await this.authorHelper.findOrCreateAsWritten(authorName) : null;
+          const extra = monumentTextExtra(legacy, authorId !== null);
           await this.context.strategy.writeItemTranslation({
             item_id: monumentId,
             language_id: languageId,
@@ -168,6 +197,7 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
             backward_compatibility: translationBackwardCompat,
             name: legacy.title || '',
             description: monumentDescription(legacy) ?? '',
+            author_id: authorId,
             extra: extra ? JSON.stringify(extra) : null,
           });
 

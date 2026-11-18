@@ -178,7 +178,6 @@ export function transformShObjectTranslation(
   // The free-text Period / Dynasty line legacy prints on the sheet (its own
   // line, not part of the dates). The linked dynasties are a separate index.
   if (text.dynasty) extra.dynasty = convertHtmlToMarkdown(text.dynasty);
-  if (text.dimensions) extra.dimensions = convertHtmlToMarkdown(text.dimensions);
   if (text.materials) extra.materials = convertHtmlToMarkdown(text.materials);
   if (text.artist) extra.artist = convertHtmlToMarkdown(text.artist);
   if (text.birthdate) extra.artist_birthdate = text.birthdate;
@@ -188,7 +187,6 @@ export function transformShObjectTranslation(
   if (text.period_activity) extra.period_activity = convertHtmlToMarkdown(text.period_activity);
   if (text.production_place) extra.production_place = convertHtmlToMarkdown(text.production_place);
   if (text.workshop) extra.workshop = convertHtmlToMarkdown(text.workshop);
-  if (text.datationmethod) extra.datation_method = convertHtmlToMarkdown(text.datationmethod);
   if (text.provenancemethod) extra.provenance_method = convertHtmlToMarkdown(text.provenancemethod);
   if (text.obtentionmethod) extra.obtention_method = convertHtmlToMarkdown(text.obtentionmethod);
   // Legacy prints the holding institution's name in its own language as a
@@ -227,6 +225,9 @@ export function transformShObjectTranslation(
     location,
     bibliography: text.bibliography ? convertHtmlToMarkdown(text.bibliography) : null,
     provenance,
+    // The columns the model has for them (M16 I1, #2657); they used to sit in extra.
+    dimensions: text.dimensions ? convertHtmlToMarkdown(text.dimensions) : null,
+    method_for_datation: text.datationmethod ? convertHtmlToMarkdown(text.datationmethod) : null,
     extra: extraField,
   };
 

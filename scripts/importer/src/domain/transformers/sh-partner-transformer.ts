@@ -17,7 +17,6 @@ const SH_PARTNERS_TABLE = 'sh_partners';
  * Extra fields stored in partner translation's extra JSON column
  */
 export interface ShPartnerExtraFields {
-  source: 'mwnf3_sharing_history';
   partner_category?: string;
   contact_person_1?: {
     name?: string;
@@ -106,8 +105,9 @@ export function transformShPartner(legacy: ShLegacyPartner): TransformedShPartne
     : 'institution';
 
   // Build extra fields
+  // No `source` (M16 I4, #2659): the row's backward_compatibility already names
+  // the legacy database.
   const extra: ShPartnerExtraFields = {
-    source: 'mwnf3_sharing_history',
     partner_category: legacy.partner_category,
   };
 
@@ -211,8 +211,7 @@ export function transformShPartnerTranslation(
     descriptionParts.push(`Opening hours: ${convertHtmlToMarkdown(legacy.opening_hours)}`);
   }
 
-  // Serialize extra to JSON (only if we have more than just source)
-  const extraJson = Object.keys(extra).length > 1 ? JSON.stringify(extra) : null;
+  const extraJson = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
   // Map contact fields from partner data:
   // - contact_website: primary URL

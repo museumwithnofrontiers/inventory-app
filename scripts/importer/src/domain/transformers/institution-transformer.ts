@@ -45,7 +45,6 @@ export interface TransformedInstitutionTranslation {
  * Extra fields extracted from institution data
  */
 export interface InstitutionExtraFields {
-  source?: 'mwnf3';
   region_id?: string;
   /** The region's name in this translation's language (mwnf3.regionnames) */
   region?: string;
@@ -134,9 +133,9 @@ export function transformInstitutionTranslation(
   });
 
   // Build extra field with structured data
-  const extra: InstitutionExtraFields = {
-    source: 'mwnf3',
-  };
+  // No `source` (M16 I4, #2659): the row's backward_compatibility already names
+  // the legacy database.
+  const extra: InstitutionExtraFields = {};
 
   // Other institution fields
   if (institution.region_id) extra.region_id = institution.region_id;
@@ -179,8 +178,7 @@ export function transformInstitutionTranslation(
   if (institution.url2) urls.push({ url: institution.url2 });
   if (urls.length > 0) extra.urls = urls;
 
-  // Only stringify if we have more than just the source field
-  const extraJson = Object.keys(extra).length > 1 ? JSON.stringify(extra) : null;
+  const extraJson = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
   // Map contact fields:
   // - contact_email_general: institution email

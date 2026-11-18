@@ -9,7 +9,8 @@ import { describe, it, expect } from 'vitest';
 import { transformMuseumTranslation } from '../../src/domain/transformers/museum-transformer.js';
 import { transformInstitutionTranslation } from '../../src/domain/transformers/institution-transformer.js';
 import { transformShPartnerTranslation } from '../../src/domain/transformers/sh-partner-transformer.js';
-import type { LegacyInstitution, LegacyMuseum } from '../../src/domain/types/legacy.js';
+import { transformSchoolTranslation } from '../../src/domain/transformers/school-transformer.js';
+import type { LegacyInstitution, LegacyMuseum, LegacySchool } from '../../src/domain/types/legacy.js';
 import type { ShLegacyPartner } from '../../src/domain/types/sh-legacy.js';
 
 const museum = (overrides: Partial<LegacyMuseum> = {}): LegacyMuseum => ({
@@ -36,6 +37,25 @@ const shPartner = (overrides: Partial<ShLegacyPartner> = {}): ShLegacyPartner =>
 });
 
 describe('partner-level fax', () => {
+  it('carries a school fax into contact_fax, not extra (M16 I4)', () => {
+    const school = { school_id: 'Sch01', country: 'tn', name: 'Mediatheque Ariana', fax: '+216 71 709 699' } as LegacySchool;
+    const { data } = transformSchoolTranslation(school, { school_id: 'Sch01', country: 'tn', lang: 'fr', name: 'Médiathèque Ariana' } as never);
+
+    expect(data.contact_fax).toBe('+216 71 709 699');
+    expect(data.extra).toBeNull();
+  });
+
+  it('keeps no source key in any partner extra (M16 I4)', () => {
+    const { data } = transformMuseumTranslation(museum({ postal_address: 'Calle Serrano 13' }), {
+      museum_id: 'Mus01',
+      country: 'es',
+      lang: 'en',
+      name: 'National Archaeological Museum',
+    });
+
+    expect(JSON.parse(data.extra!)).toEqual({ postal_address: 'Calle Serrano 13' });
+  });
+
   it('carries a museum fax into contact_fax, next to its phone', () => {
     const { data } = transformMuseumTranslation(museum({ phone: '+34 91 577 79 12', fax: '+34 91 431 68 40' }), {
       museum_id: 'Mus01',
@@ -63,7 +83,7 @@ describe('partner-level fax', () => {
     const { data } = transformShPartnerTranslation(
       shPartner({ fax: '+34 950 17 55 10' }),
       { partners_id: 'SHP01', lang: 'en', name: 'Museum of Almería' },
-      { source: 'mwnf3_sharing_history' }
+      {}
     );
 
     expect(data.contact_fax).toBe('+34 950 17 55 10');
@@ -79,7 +99,7 @@ describe('partner-level fax', () => {
     const { data: shData } = transformShPartnerTranslation(
       shPartner({ fax: '' }),
       { partners_id: 'SHP01', lang: 'en', name: 'Museum of Almería' },
-      { source: 'mwnf3_sharing_history' }
+      {}
     );
 
     expect(museumData.contact_fax).toBeNull();

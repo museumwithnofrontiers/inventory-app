@@ -15,7 +15,7 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult, PartnerImageData } from '../../core/types.js';
 import type { LegacyMuseumPicture, LegacyInstitutionPicture } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
-import { toImageCopyright } from '../../utils/image-copyright.js';
+import { copyrightNotInColumn, toImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 export class PartnerPictureImporter extends BaseImporter {
@@ -151,9 +151,8 @@ export class PartnerPictureImporter extends BaseImporter {
     if (picture.photographer && picture.photographer.trim()) {
       extra.photographer = picture.photographer.trim();
     }
-    if (picture.copyright && picture.copyright.trim()) {
-      extra.copyright = picture.copyright.trim();
-    }
+    const legacyCopyright = copyrightNotInColumn(picture.copyright);
+    if (legacyCopyright) extra.copyright = legacyCopyright;
     const extraField = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
     // Create PartnerImage
@@ -275,9 +274,8 @@ export class PartnerPictureImporter extends BaseImporter {
     if (picture.photographer && picture.photographer.trim()) {
       extra.photographer = picture.photographer.trim();
     }
-    if (picture.copyright && picture.copyright.trim()) {
-      extra.copyright = picture.copyright.trim();
-    }
+    const legacyCopyright = copyrightNotInColumn(picture.copyright);
+    if (legacyCopyright) extra.copyright = legacyCopyright;
     const extraField = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
     // Create PartnerImage

@@ -177,8 +177,9 @@ describe('ItemExporter — credits and Sharing History fields as the galleries p
           'tr-en',
           'item-c',
           'eng',
-          { description: 'The museum of Ancient Egyptian Agriculture…', alternate_name: 'Agricultural Museum' },
-          { description2: 'A short text.', history: 'King Fu`ad I chose the palace…', dimensions: '47 x 30cm' }
+          // Its dimensions are in the column since M16 I1 (#2657), like a mwnf3 record's.
+          { description: 'The museum of Ancient Egyptian Agriculture…', alternate_name: 'Agricultural Museum', dimensions: '47 x 30cm' },
+          { description2: 'A short text.', history: 'King Fu`ad I chose the palace…' }
         ),
       ],
     })

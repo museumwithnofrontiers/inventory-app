@@ -59,7 +59,6 @@ export interface TransformedMuseumTranslation {
  * Extra fields extracted from museum data
  */
 export interface MuseumExtraFields {
-  source?: 'mwnf3';
   postal_address?: string;
   ex_name?: string;
   ex_description?: string;
@@ -171,9 +170,9 @@ export function transformMuseumTranslation(
   });
 
   // Build extra field with structured data
-  const extra: MuseumExtraFields = {
-    source: 'mwnf3',
-  };
+  // No `source` (M16 I4, #2659): the row's backward_compatibility already names
+  // the legacy database.
+  const extra: MuseumExtraFields = {};
 
   // Postal address (separate from physical address)
   if (museum.postal_address) extra.postal_address = museum.postal_address;
@@ -219,8 +218,7 @@ export function transformMuseumTranslation(
   if (museum.url5) urls.push({ url: museum.url5, title: museum.title5 || undefined });
   if (urls.length > 0) extra.urls = urls;
 
-  // Only stringify if we have more than just the source field
-  const extraJson = Object.keys(extra).length > 1 ? JSON.stringify(extra) : null;
+  const extraJson = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
   // Map contact fields:
   // - contact_name: cp1_name (primary contact person)

@@ -54,6 +54,7 @@ interface PartnerImageRow {
   path: string
   alt_text: string | null
   display_order: number
+  copyright: string | null
   extra: unknown
 }
 
@@ -168,7 +169,7 @@ export class PartnerExporter extends BaseExporter {
         partnerIds
       ),
       this.db.query<PartnerImageRow>(
-        `SELECT partner_id, path, alt_text, display_order, extra
+        `SELECT partner_id, path, alt_text, display_order, copyright, extra
          FROM partner_images
          WHERE partner_id IN (${partnerPh})
          ORDER BY partner_id, display_order`,
@@ -282,7 +283,8 @@ export class PartnerExporter extends BaseExporter {
         alt_text: img.alt_text,
         display_order: img.display_order,
         photographer: extra?.photographer ?? null,
-        copyright: extra?.copyright ?? null,
+        // The column holds legacy's text with the mark the burn adds (M16 I4, #2659).
+        copyright: extra?.copyright ?? withoutCopyrightMark(img.copyright),
       })
     }
 
@@ -387,4 +389,13 @@ function contactPersons(extra: PartnerExtraFields | undefined): PartnerContactPe
   return [extra?.contact_person_1, extra?.contact_person_2].filter(
     (person): person is PartnerContactPerson => person != null
   )
+}
+
+/**
+ * A partner picture's copyright as legacy wrote it: the image row's column
+ * holds it with the "© " the importer adds for the burn (toImageCopyright).
+ */
+export function withoutCopyrightMark(copyright: string | null | undefined): string | null {
+  if (!copyright) return null
+  return copyright.startsWith('© ') ? copyright.slice(2) : copyright
 }

@@ -169,11 +169,9 @@ describe('publication mappings', () => {
     expect(unparsed).toEqual(['IAM_X']);
   });
 
-  it('records a work’s region, date and legacy category apart', () => {
-    expect(publicationExtra({ region: ' North ', date: '0000-00-00', category: 'other' })).toEqual({
-      region: 'North',
-      legacy_category: 'other',
-    });
+  it('records a work’s region, and neither its record date nor its legacy category (M16 I6)', () => {
+    expect(publicationExtra({ region: ' North ' })).toEqual({ region: 'North' });
+    expect(publicationExtra({ region: null })).toBeNull();
   });
 
   it('links a cover to the edition its number names, a page only when one edition fits', () => {
@@ -246,7 +244,7 @@ describe('publication importers', () => {
       project_id: 'project-iam',
       language_id: 'eng',
       status: 'published',
-      extra: JSON.stringify({ legacy_category: 'mwnf' }),
+      extra: null,
     });
   });
 

@@ -1,0 +1,33 @@
+{
+    "tables": {
+        "collection_item": {
+            "keys": {
+                "mn_order": 0
+            }
+        },
+        "item_translations": {
+            "keys": {
+                "datation_method": 0,
+                "dimensions": 0,
+                "prepared_by": 302
+            }
+        },
+        "partner_images": {
+            "keys": {
+                "copyright": 0
+            }
+        },
+        "partner_translations": {
+            "keys": {
+                "fax": 0,
+                "source": 0
+            }
+        },
+        "publications": {
+            "keys": {
+                "date": 0,
+                "legacy_category": 0
+            }
+        }
+    }
+}

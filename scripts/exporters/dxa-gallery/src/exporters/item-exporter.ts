@@ -4,8 +4,8 @@ import { buildExhibitionReferences } from './exhibition-references.js'
 
 // A Sharing History record shown in a gallery or exhibition: the fields the
 // galleries' sheet (dxa-api) reads from it that a mwnf3 record keeps elsewhere.
-// Its second description is the sheet's short description; its dimensions,
-// materials and artist line sit in extra.
+// Its second description is the sheet's short description; its materials and
+// artist line sit in extra. Its dimensions are in the column, like a mwnf3 record's.
 function sharingHistorySheet(extra: Record<string, unknown> | null): Record<string, unknown> {
   const text = (key: string) => (typeof extra?.[key] === 'string' ? (extra[key] as string) : null)
   return {
@@ -13,7 +13,6 @@ function sharingHistorySheet(extra: Record<string, unknown> | null): Record<stri
     // The artist as this language writes it ("Unknown", "Inconnu"). The
     // record has no artist entity, so the name lives on the translation.
     artist: text('artist'),
-    dimensions: text('dimensions'),
     materials: text('materials') ? [text('materials')] : [],
   }
 }

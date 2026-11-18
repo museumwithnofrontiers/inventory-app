@@ -169,14 +169,14 @@ describe('ShPartnerPictureImporter', () => {
     );
   });
 
-  it('includes photographer and copyright in extra JSON', async () => {
+  it('keeps the photographer in extra, and not the copyright the column gives back (M16 I4)', async () => {
     const importer = new ShPartnerPictureImporter(context);
     await importer.import();
 
     expect(writePartnerImageMock).toHaveBeenCalledWith(
       expect.objectContaining({
         path: 'sharing_history/sh_partners/at_01/1.jpg',
-        extra: JSON.stringify({ photographer: 'John Doe', copyright: '2023 Museum' }),
+        extra: JSON.stringify({ photographer: 'John Doe' }),
       })
     );
   });
@@ -194,7 +194,7 @@ describe('ShPartnerPictureImporter', () => {
     );
   });
 
-  it('includes only copyright in extra when photographer is absent', async () => {
+  it('leaves extra empty when the copyright is the column without its mark', async () => {
     const importer = new ShPartnerPictureImporter(context);
     await importer.import();
 
@@ -202,7 +202,7 @@ describe('ShPartnerPictureImporter', () => {
     expect(writePartnerImageMock).toHaveBeenCalledWith(
       expect.objectContaining({
         path: 'sharing_history/sh_partners/dz_01/1.jpg',
-        extra: JSON.stringify({ copyright: 'DZ Museum' }),
+        extra: null,
       })
     );
   });
@@ -215,7 +215,7 @@ describe('ShPartnerPictureImporter', () => {
       expect.objectContaining({
         path: 'sharing_history/sh_partners/dz_01/1.jpg',
         copyright: '© DZ Museum',
-        extra: JSON.stringify({ copyright: 'DZ Museum' }),
+        extra: null,
       })
     );
   });

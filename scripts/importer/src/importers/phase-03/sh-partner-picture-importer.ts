@@ -11,14 +11,15 @@
  * - Partner is resolved by SH backward_compatibility key (already imported by ShPartnerImporter)
  * - path is required; rows with null/empty path are skipped with a warning
  * - alt_text: trimmed caption when present and non-empty; otherwise null
- * - extra: JSON containing photographer and copyright when present
+ * - extra: JSON containing the photographer, and the copyright only when the
+ *   column cannot give it back (copyrightNotInColumn)
  * - copyright: the same copyright, burn-ready ("© " + text), on the image row
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult, PartnerImageData } from '../../core/types.js';
 import { formatShBackwardCompatibility } from '../../domain/transformers/index.js';
-import { toImageCopyright } from '../../utils/image-copyright.js';
+import { copyrightNotInColumn, toImageCopyright } from '../../utils/image-copyright.js';
 import path from 'path';
 
 const SH_PARTNERS_TABLE = 'sh_partners';
@@ -121,9 +122,8 @@ export class ShPartnerPictureImporter extends BaseImporter {
           if (picture.photographer && picture.photographer.trim()) {
             extra.photographer = picture.photographer.trim();
           }
-          if (picture.copyright && picture.copyright.trim()) {
-            extra.copyright = picture.copyright.trim();
-          }
+          const legacyCopyright = copyrightNotInColumn(picture.copyright);
+          if (legacyCopyright) extra.copyright = legacyCopyright;
 
           const imageData: PartnerImageData = {
             id: undefined,

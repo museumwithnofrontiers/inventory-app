@@ -295,7 +295,7 @@ describe('ExploreItineraryContentImporter', () => {
     expect(writeCollectionItemMock).toHaveBeenCalledWith(
       expect.objectContaining({
         collection_id: 'itinerary-7-uuid',
-        extra: { explore_monument_id: 150, location_id: 2, mn_order: 6 },
+        extra: { explore_monument_id: 150, location_id: 2 },
       })
     );
   });
@@ -342,7 +342,7 @@ describe('ExploreItineraryContentImporter', () => {
       expect.objectContaining({
         collection_id: 'itinerary-7-uuid',
         item_id: 'vm-record-uuid',
-        extra: { explore_monument_id: 54, location_id: 79, mn_order: 1 },
+        extra: { explore_monument_id: 54, location_id: 79 },
       })
     );
   });

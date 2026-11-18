@@ -191,7 +191,7 @@ export class CollectionExporter extends BaseExporter {
     const itemMap = new Map<string, Record<string, unknown>[]>()
     for (const link of itemLinks) {
       if (!itemMap.has(link.collection_id)) itemMap.set(link.collection_id, [])
-      const extra = parseJson(link.extra)
+      const extra = withItineraryOrder(parseJson(link.extra) as Record<string, unknown> | null, link.display_order)
       itemMap.get(link.collection_id)!.push({
         id: link.item_id,
         display_order: link.display_order,
@@ -240,4 +240,34 @@ function parseJson(raw: unknown): unknown | null {
   } catch {
     return null
   }
+}
+
+/**
+ * A monument's place in an Explore itinerary. The importer kept legacy's
+ * `mn_order` on the membership, a copy of its `display_order` (M16 I2, #2658);
+ * the package still ships it there, where the site sorts by it. An itinerary
+ * membership is the one that names its Explore monument (`explore_monument_id`).
+ */
+export function withItineraryOrder(
+  extra: Record<string, unknown> | null,
+  displayOrder: number | null
+): Record<string, unknown> | null {
+  if (!extra || !('explore_monument_id' in extra) || 'mn_order' in extra || displayOrder === null) {
+    return extra
+  }
+  return mysqlJsonOrder({ ...extra, mn_order: displayOrder })
+}
+
+/**
+ * The key order a MySQL JSON column gives an object (shorter keys first, then
+ * by their bytes), so a rebuilt object reads as the stored one did.
+ */
+export function mysqlJsonOrder(object: Record<string, unknown>): Record<string, unknown> {
+  const bytes = (key: string) => Buffer.from(key, 'utf8')
+  const keys = Object.keys(object).sort((a, b) => {
+    const ab = bytes(a)
+    const bb = bytes(b)
+    return ab.length - bb.length || Buffer.compare(ab, bb)
+  })
+  return Object.fromEntries(keys.map(key => [key, object[key]]))
 }

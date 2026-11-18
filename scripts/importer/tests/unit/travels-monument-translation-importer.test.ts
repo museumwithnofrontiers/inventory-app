@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   TravelsMonumentTranslationImporter,
   monumentTextExtra,
+  plainAuthorName,
 } from '../../src/importers/phase-07/travels-monument-translation-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
@@ -24,6 +25,24 @@ describe('monumentTextExtra', () => {
     expect(
       monumentTextExtra({ how_to_reach: '', info: null, contact: null, prepared_by: '' })
     ).toBeNull();
+  });
+});
+
+describe('plainAuthorName (M16 I1)', () => {
+  it('reads a plain name as written', () => {
+    expect(plainAuthorName('  Yusuf Natsheh ')).toBe('Yusuf Natsheh');
+  });
+
+  it('reads no author in a text with role labels, or in no text', () => {
+    expect(plainAuthorName('Author: Comité scientifique<br>Translator: Jane Doe')).toBeNull();
+    expect(plainAuthorName('  ')).toBeNull();
+    expect(plainAuthorName(null)).toBeNull();
+  });
+
+  it('keeps prepared_by in extra unless the author column holds it', () => {
+    const legacy = { how_to_reach: null, info: null, contact: null, prepared_by: 'Yusuf Natsheh' };
+    expect(monumentTextExtra(legacy)).toEqual({ prepared_by: 'Yusuf Natsheh' });
+    expect(monumentTextExtra(legacy, true)).toBeNull();
   });
 });
 
@@ -76,6 +95,8 @@ describe('TravelsMonumentTranslationImporter', () => {
       setItemTranslationDescriptionByContext: vi.fn().mockResolvedValue(undefined),
       getItemTranslationExtraByContext: vi.fn().mockResolvedValue({ note: 'kept' }),
       setItemTranslationExtraByContext: vi.fn().mockResolvedValue(undefined),
+      findAuthorByName: vi.fn().mockResolvedValue(null),
+      writeAuthor: vi.fn(async (data: { name: string }) => `author:${data.name}`),
     } as unknown as IWriteStrategy;
 
     context = {
@@ -105,6 +126,44 @@ describe('TravelsMonumentTranslationImporter', () => {
         name: 'Castle',
         description: castle.description,
         extra: JSON.stringify({ how_to_reach: castle.how_to_reach, info: castle.info }),
+      })
+    );
+  });
+
+  it('writes a plain prepared_by as the author, not into extra', async () => {
+    (context.legacyDb.query as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      { ...castle, prepared_by: 'Mário Pereira' },
+    ]);
+
+    await new TravelsMonumentTranslationImporter(context).import();
+
+    expect(strategy.writeItemTranslation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        author_id: 'author:Mário Pereira',
+        extra: JSON.stringify({ how_to_reach: castle.how_to_reach, info: castle.info }),
+      })
+    );
+  });
+
+  it('keeps prepared_by as written when an author spells the name with other accents', async () => {
+    (context.legacyDb.query as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      { ...castle, prepared_by: 'Comité cientifico' },
+    ]);
+    (strategy.findAuthorByName as ReturnType<typeof vi.fn>).mockImplementation(
+      async (_name: string, exact?: boolean) => (exact ? null : 'comite-cientifico-uuid')
+    );
+
+    await new TravelsMonumentTranslationImporter(context).import();
+
+    expect(strategy.writeAuthor).not.toHaveBeenCalled();
+    expect(strategy.writeItemTranslation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        author_id: null,
+        extra: JSON.stringify({
+          how_to_reach: castle.how_to_reach,
+          info: castle.info,
+          prepared_by: 'Comité cientifico',
+        }),
       })
     );
   });
