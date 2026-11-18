@@ -343,7 +343,8 @@ export class ExploreItineraryContentImporter extends BaseImporter {
           explore_monument_id: link.monumentId,
         };
         if (link.locationId) extra.location_id = link.locationId;
-        if (link.mn_order !== null) extra.mn_order = link.mn_order;
+        // mn_order is the membership's display_order, nothing more (M16 I2,
+        // #2658): the Explore exporter writes it back into the package.
         if (link.desc_types) extra.desc_types = link.desc_types;
         if (link.explore_mn_desc) extra.explore_mn_desc = link.explore_mn_desc;
         if (link.tr_mn_desc) extra.tr_mn_desc = link.tr_mn_desc;
