@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   TravelsMonumentTranslationImporter,
-  monumentCredits,
   monumentTextExtra,
+  plainAuthorName,
 } from '../../src/importers/phase-07/travels-monument-translation-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
@@ -28,33 +28,21 @@ describe('monumentTextExtra', () => {
   });
 });
 
-describe('monumentCredits (M16 I1)', () => {
-  it('reads a plain name as the author, as written, and keeps nothing raw', () => {
-    expect(monumentCredits('  Yusuf Natsheh ')).toEqual({
-      authorName: 'Yusuf Natsheh',
-      textCopyEditorName: null,
-      translatorName: null,
-      translationCopyEditorName: null,
-      keepRaw: false,
-    });
-    expect(monumentTextExtra({ how_to_reach: null, info: null, contact: null, prepared_by: 'Yusuf Natsheh' })).toBeNull();
+describe('plainAuthorName (M16 I1)', () => {
+  it('reads a plain name as written', () => {
+    expect(plainAuthorName('  Yusuf Natsheh ')).toBe('Yusuf Natsheh');
   });
 
-  it('splits a text with role labels and keeps it raw', () => {
-    const text = 'Author: Comité scientifique<br>Translator: Jane Doe';
-    expect(monumentCredits(text)).toMatchObject({
-      authorName: 'Comité scientifique',
-      translatorName: 'Jane Doe',
-      keepRaw: true,
-    });
-    expect(monumentTextExtra({ how_to_reach: null, info: null, contact: null, prepared_by: text })).toEqual({
-      prepared_by: text,
-    });
+  it('reads no author in a text with role labels, or in no text', () => {
+    expect(plainAuthorName('Author: Comité scientifique<br>Translator: Jane Doe')).toBeNull();
+    expect(plainAuthorName('  ')).toBeNull();
+    expect(plainAuthorName(null)).toBeNull();
   });
 
-  it('has nothing to credit without a text', () => {
-    expect(monumentCredits(null)).toBeNull();
-    expect(monumentCredits('  ')).toBeNull();
+  it('keeps prepared_by in extra unless the author column holds it', () => {
+    const legacy = { how_to_reach: null, info: null, contact: null, prepared_by: 'Yusuf Natsheh' };
+    expect(monumentTextExtra(legacy)).toEqual({ prepared_by: 'Yusuf Natsheh' });
+    expect(monumentTextExtra(legacy, true)).toBeNull();
   });
 });
 
@@ -152,8 +140,30 @@ describe('TravelsMonumentTranslationImporter', () => {
     expect(strategy.writeItemTranslation).toHaveBeenCalledWith(
       expect.objectContaining({
         author_id: 'author:Mário Pereira',
-        translator_id: null,
         extra: JSON.stringify({ how_to_reach: castle.how_to_reach, info: castle.info }),
+      })
+    );
+  });
+
+  it('keeps prepared_by as written when an author spells the name with other accents', async () => {
+    (context.legacyDb.query as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      { ...castle, prepared_by: 'Comité cientifico' },
+    ]);
+    (strategy.findAuthorByName as ReturnType<typeof vi.fn>).mockImplementation(
+      async (_name: string, exact?: boolean) => (exact ? null : 'comite-cientifico-uuid')
+    );
+
+    await new TravelsMonumentTranslationImporter(context).import();
+
+    expect(strategy.writeAuthor).not.toHaveBeenCalled();
+    expect(strategy.writeItemTranslation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        author_id: null,
+        extra: JSON.stringify({
+          how_to_reach: castle.how_to_reach,
+          info: castle.info,
+          prepared_by: 'Comité cientifico',
+        }),
       })
     );
   });

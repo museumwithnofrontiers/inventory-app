@@ -828,9 +828,11 @@ export class SqlWriteStrategy implements IWriteStrategy {
     }
   }
 
-  async findAuthorByName(name: string): Promise<string | null> {
+  async findAuthorByName(name: string, exact = false): Promise<string | null> {
     const [rows] = await this.db.execute<RowDataPacket[]>(
-      'SELECT id FROM authors WHERE name = ? LIMIT 1',
+      exact
+        ? 'SELECT id FROM authors WHERE BINARY name = ? LIMIT 1'
+        : 'SELECT id FROM authors WHERE name = ? LIMIT 1',
       [name]
     );
     return rows.length > 0 ? (rows[0].id as string) : null;

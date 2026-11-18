@@ -78,4 +78,38 @@ export class AuthorHelper {
       return retryResult;
     }
   }
+
+  /**
+   * The author whose name is exactly `name`, created when no author has a name
+   * like it; null when the name cannot be kept as written. The authors' names
+   * are unique without regard to accents or case, so "Comité cientifico"
+   * cannot sit next to an existing "Comité científico": that text has no
+   * author of its own, and the caller keeps it where it was (M16 I1, #2657).
+   */
+  async findOrCreateAsWritten(name: string): Promise<string | null> {
+    const trimmedName = name?.trim() ?? '';
+    if (trimmedName === '' || this.normalizeName(trimmedName) !== trimmedName) {
+      return null;
+    }
+
+    const exact = await this.strategy.findAuthorByName(trimmedName, true);
+    if (exact) {
+      return exact;
+    }
+    if (await this.strategy.findAuthorByName(trimmedName)) {
+      return null;
+    }
+
+    try {
+      return await this.strategy.writeAuthor({
+        name: trimmedName,
+        internal_name: trimmedName,
+        backward_compatibility: '',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.warning(`Author write failed for '${trimmedName}': ${message}`);
+      return this.strategy.findAuthorByName(trimmedName, true);
+    }
+  }
 }

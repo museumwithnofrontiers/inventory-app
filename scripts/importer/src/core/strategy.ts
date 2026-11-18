@@ -282,7 +282,8 @@ export interface IWriteStrategy {
    * Used by AuthorHelper for free-text author references that have no legacy ID.
    * @returns The author UUID or null if not found
    */
-  findAuthorByName(name: string): Promise<string | null>;
+  /** With `exact`, only a name equal byte for byte: the column's collation ignores accents and case. */
+  findAuthorByName(name: string, exact?: boolean): Promise<string | null>;
 
   /**
    * Write an author translation record

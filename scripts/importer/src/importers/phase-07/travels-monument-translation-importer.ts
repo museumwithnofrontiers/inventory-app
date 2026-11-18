@@ -16,10 +16,9 @@
  * - description → description: the monument's text, which Explore shows on
  *   the sheet of a monument that resolves to it
  * - how_to_reach, info, contact → extra, each only when set
- * - prepared_by → the credit columns (M16 I1, #2657): a plain name is the
- *   author, kept as written; a text with role labels ("Author:", "Translator:",
- *   "Copy-editor (English):") fills each role, as Explore's importer does, and
- *   keeps its raw text in extra, since the columns cannot rebuild it
+ * - prepared_by → author_id when it is a plain name an author can hold exactly
+ *   as written (M16 I1, #2657); otherwise (role labels, or a name an existing
+ *   author spells with other accents) it stays in extra, as written
  *
  * A translation imported before its text was carried keeps its row: the text is
  * filled in on it rather than skipped.
@@ -54,53 +53,23 @@ interface LegacyTravelMonumentTranslation {
   prepared_by: string | null;
 }
 
-/** The people `prepared_by` credits, one name per role. */
-export interface MonumentCredits {
-  authorName: string | null;
-  textCopyEditorName: string | null;
-  translatorName: string | null;
-  translationCopyEditorName: string | null;
-  /** The text has role labels the columns cannot rebuild: extra keeps it as written. */
-  keepRaw: boolean;
-}
-
 /**
- * Reads `prepared_by` into the credit roles. A plain name is the author, as
- * written; a text with role labels is split by them.
+ * The author `prepared_by` names, when it is a plain name: a text with role
+ * labels ("Author:", "Translator:") is not one, and stays as written.
  */
-export function monumentCredits(preparedBy: string | null | undefined): MonumentCredits | null {
+export function plainAuthorName(preparedBy: string | null | undefined): string | null {
   const raw = preparedBy?.trim();
   if (!raw) return null;
-
-  const parsed = parseExplorePreparedBy(raw);
-  if (!parsed) {
-    return {
-      authorName: raw,
-      textCopyEditorName: null,
-      translatorName: null,
-      translationCopyEditorName: null,
-      keepRaw: false,
-    };
-  }
-
-  return {
-    authorName: parsed.authorName,
-    textCopyEditorName: parsed.textCopyEditorName,
-    translatorName: parsed.translatorName,
-    translationCopyEditorName: parsed.translationCopyEditorName,
-    keepRaw: parsed.preserveRawInExtra,
-  };
+  return parseExplorePreparedBy(raw) ? null : raw;
 }
 
 /**
- * The monument's visitor texts, each only when set, and `prepared_by` when its
- * credits need the raw text (see monumentCredits). With `keepPreparedBy`, the
- * author line always stays: a row that is filled in afterwards has no way to
- * write its credit columns.
+ * The monument's visitor texts, each only when set, and `prepared_by` unless
+ * the translation's author column holds it (`creditedAuthor`).
  */
 export function monumentTextExtra(
   legacy: Pick<LegacyTravelMonumentTranslation, 'how_to_reach' | 'info' | 'contact' | 'prepared_by'>,
-  keepPreparedBy = false
+  creditedAuthor = false
 ): Record<string, string> | null {
   const extra: Record<string, string> = {};
   for (const field of ['how_to_reach', 'info', 'contact'] as const) {
@@ -108,9 +77,7 @@ export function monumentTextExtra(
     if (value) extra[field] = value;
   }
   const preparedBy = legacy.prepared_by?.trim();
-  if (preparedBy && (keepPreparedBy || monumentCredits(preparedBy)?.keepRaw)) {
-    extra.prepared_by = preparedBy;
-  }
+  if (preparedBy && !creditedAuthor) extra.prepared_by = preparedBy;
   return Object.keys(extra).length > 0 ? extra : null;
 }
 
@@ -220,8 +187,9 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
             continue;
           }
 
-          const extra = monumentTextExtra(legacy);
-          const credits = monumentCredits(legacy.prepared_by);
+          const authorName = plainAuthorName(legacy.prepared_by);
+          const authorId = authorName ? await this.authorHelper.findOrCreateAsWritten(authorName) : null;
+          const extra = monumentTextExtra(legacy, authorId !== null);
           await this.context.strategy.writeItemTranslation({
             item_id: monumentId,
             language_id: languageId,
@@ -229,10 +197,7 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
             backward_compatibility: translationBackwardCompat,
             name: legacy.title || '',
             description: monumentDescription(legacy) ?? '',
-            author_id: await this.author(credits?.authorName),
-            text_copy_editor_id: await this.author(credits?.textCopyEditorName),
-            translator_id: await this.author(credits?.translatorName),
-            translation_copy_editor_id: await this.author(credits?.translationCopyEditorName),
+            author_id: authorId,
             extra: extra ? JSON.stringify(extra) : null,
           });
 
@@ -267,10 +232,6 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
     return result;
   }
 
-  private async author(name: string | null | undefined): Promise<string | null> {
-    return name ? this.authorHelper.findOrCreate(name) : null;
-  }
-
   /**
    * Brings the text onto a translation written before it was imported. Its
    * `extra` is merged, not replaced, so whatever else it holds stays; the
@@ -282,7 +243,7 @@ export class TravelsMonumentTranslationImporter extends BaseImporter {
     legacy: LegacyTravelMonumentTranslation
   ): Promise<void> {
     const description = monumentDescription(legacy);
-    const text = monumentTextExtra(legacy, true);
+    const text = monumentTextExtra(legacy);
     if (description) {
       await this.context.strategy.setItemTranslationDescriptionByContext(
         itemId,
