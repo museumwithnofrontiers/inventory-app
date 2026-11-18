@@ -1,0 +1,376 @@
+{
+    "total_rows": 72145,
+    "tables": {
+        "author_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "collection_images": {
+            "rows": 0,
+            "keys": {}
+        },
+        "collection_item": {
+            "rows": 14014,
+            "keys": {
+                "n": 6004,
+                "n2": 5417,
+                "curator_status": 3499,
+                "detail_justification": 2671,
+                "justifications": 2428,
+                "explore_monument_ids": 1978,
+                "explore_geo": 1966,
+                "item_location": 1710,
+                "item_name": 1696,
+                "item_date": 1689,
+                "item_dynasty": 1549,
+                "source_bc_by_language": 1218,
+                "contextual_descriptions": 1214,
+                "explore_monument_id": 1060,
+                "location_id": 1060,
+                "mn_order": 1060,
+                "desc_types": 1058,
+                "tr_mn_desc": 1007,
+                "item_museum": 916,
+                "detail_n": 280,
+                "parent_n2": 280,
+                "picture": 128,
+                "item_artist": 120,
+                "detail_name": 66,
+                "membership": 58,
+                "explore_museums": 54,
+                "explore_mn_desc": 52,
+                "vm_mn_desc": 26,
+                "item_material": 12,
+                "image_captions": 7
+            }
+        },
+        "collection_media": {
+            "rows": 51,
+            "keys": {
+                "category_id": 32,
+                "overview_page": 19,
+                "type_resource": 18,
+                "entity_location": 17,
+                "authors": 10,
+                "entity_country": 9,
+                "further_reading": 1
+            }
+        },
+        "collection_translations": {
+            "rows": 1509,
+            "keys": {
+                "author": 479,
+                "introd_type": 248,
+                "showOnMonument": 235,
+                "description_2": 233,
+                "duration": 232,
+                "travels_author": 208,
+                "legacy_exhibition": 191,
+                "et_title": 177,
+                "credits": 174,
+                "intro_text": 171,
+                "thg_gallery": 158,
+                "country_ids": 120,
+                "location_ids": 115,
+                "subtitle": 62,
+                "curated_by": 55,
+                "photo_by": 45,
+                "how_to_reach": 43,
+                "local_coordinator": 39,
+                "et_introduction": 31,
+                "info": 25,
+                "territory_ids": 24,
+                "hb_type": 21,
+                "prepared_by": 18,
+                "territory_level": 18,
+                "theme_ids": 17,
+                "introduction": 14,
+                "local_team": 14,
+                "bibliography": 13,
+                "hb_general_type": 13,
+                "about": 11,
+                "legacy_status": 11,
+                "region_territory": 11,
+                "contact": 10,
+                "cover_images": 10,
+                "additional_regions": 9,
+                "map_descriptions": 9,
+                "exhibition_i18n": 7,
+                "image_captions": 6,
+                "country_texts": 3,
+                "disabled_bibliography": 3,
+                "remark": 3,
+                "contacts": 1
+            }
+        },
+        "collections": {
+            "rows": 467,
+            "keys": {
+                "historical_background": 136,
+                "explore_itinerary": 129,
+                "days": 109,
+                "thg_gallery": 48,
+                "thg_theme": 34,
+                "logos": 16,
+                "further_readings": 3,
+                "explore_home": 1,
+                "explore_travel": 1
+            }
+        },
+        "contributor_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "country_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "dynasty_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "item_documents": {
+            "rows": 23,
+            "keys": {
+                "img_count": 23
+            }
+        },
+        "item_media": {
+            "rows": 0,
+            "keys": {}
+        },
+        "item_translations": {
+            "rows": 54605,
+            "keys": {
+                "copyright": 18123,
+                "keywords": 17118,
+                "photographer": 16663,
+                "dynasty": 13665,
+                "materials": 13373,
+                "credits_as_written": 8453,
+                "artist": 5366,
+                "linkcatalogs": 4529,
+                "province": 4527,
+                "patrons": 3298,
+                "monument_contact": 2393,
+                "description2": 2227,
+                "prepared_by": 2226,
+                "architects": 1873,
+                "history": 1607,
+                "artist_birthdate": 1378,
+                "legacy_type": 1354,
+                "artist_deathdate": 1183,
+                "how_to_reach": 1160,
+                "info": 1023,
+                "artist_birthplace": 974,
+                "artist_deathplace": 868,
+                "workshop": 820,
+                "dimensions": 814,
+                "archival": 764,
+                "holding_institution_org": 586,
+                "third_name": 543,
+                "period_activity": 501,
+                "legacy_display_status": 466,
+                "catalogue_holding_link": 328,
+                "contact": 302,
+                "second_name": 298,
+                "notice_c": 197,
+                "notice": 149,
+                "structured_bibliography": 98,
+                "binding_desc": 72,
+                "scriber": 52,
+                "further_readings": 42,
+                "responsible_institution_org": 38,
+                "country_id_present_days": 22,
+                "external_sources": 12,
+                "datation_method": 2,
+                "note": 1
+            },
+            "by_item_type": {
+                "detail": {
+                    "rows": 2060,
+                    "keys": {
+                        "artist": 2060
+                    }
+                },
+                "monument": {
+                    "rows": 6701,
+                    "keys": {
+                        "keywords": 4159,
+                        "patrons": 3298,
+                        "dynasty": 3144,
+                        "monument_contact": 2393,
+                        "credits_as_written": 2324,
+                        "prepared_by": 2226,
+                        "architects": 1873,
+                        "linkcatalogs": 1625,
+                        "province": 1617,
+                        "history": 1607,
+                        "how_to_reach": 1160,
+                        "info": 1023,
+                        "contact": 302,
+                        "copyright": 228,
+                        "description2": 200,
+                        "further_readings": 42,
+                        "third_name": 40,
+                        "responsible_institution_org": 38,
+                        "second_name": 26,
+                        "notice": 16,
+                        "external_sources": 12,
+                        "legacy_display_status": 11,
+                        "structured_bibliography": 3,
+                        "country_id_present_days": 2,
+                        "note": 1
+                    }
+                },
+                "object": {
+                    "rows": 15346,
+                    "keys": {
+                        "materials": 13373,
+                        "keywords": 12959,
+                        "dynasty": 10077,
+                        "credits_as_written": 6129,
+                        "artist": 3306,
+                        "province": 2910,
+                        "linkcatalogs": 2904,
+                        "description2": 2027,
+                        "artist_birthdate": 1378,
+                        "artist_deathdate": 1183,
+                        "artist_birthplace": 974,
+                        "artist_deathplace": 868,
+                        "workshop": 820,
+                        "dimensions": 814,
+                        "archival": 764,
+                        "holding_institution_org": 586,
+                        "copyright": 557,
+                        "third_name": 503,
+                        "period_activity": 501,
+                        "legacy_display_status": 455,
+                        "catalogue_holding_link": 328,
+                        "second_name": 272,
+                        "notice_c": 197,
+                        "notice": 133,
+                        "structured_bibliography": 95,
+                        "binding_desc": 72,
+                        "scriber": 52,
+                        "country_id_present_days": 20,
+                        "datation_method": 2
+                    }
+                },
+                "picture": {
+                    "rows": 30498,
+                    "keys": {
+                        "copyright": 17338,
+                        "photographer": 16663,
+                        "legacy_type": 1354,
+                        "dynasty": 444
+                    }
+                }
+            }
+        },
+        "language_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "partner_images": {
+            "rows": 398,
+            "keys": {
+                "copyright": 398,
+                "photographer": 19
+            }
+        },
+        "partner_translations": {
+            "rows": 666,
+            "keys": {
+                "source": 666,
+                "portal_display": 615,
+                "contact_person_1": 499,
+                "contact_person_2": 169,
+                "partner_category": 140,
+                "city": 136,
+                "urls": 111,
+                "region_id": 21,
+                "how_to_reach": 16,
+                "opening_hours": 12,
+                "ex_name": 8,
+                "region": 7,
+                "fax": 4,
+                "ex_description": 2
+            }
+        },
+        "publication_collection": {
+            "rows": 0,
+            "keys": {}
+        },
+        "publication_documents": {
+            "rows": 0,
+            "keys": {}
+        },
+        "publication_editions": {
+            "rows": 176,
+            "keys": {
+                "shop_links": 134,
+                "legacy_texts": 76
+            }
+        },
+        "publication_images": {
+            "rows": 0,
+            "keys": {}
+        },
+        "publication_item": {
+            "rows": 156,
+            "keys": {
+                "linkcatalogs": 156
+            }
+        },
+        "publication_translations": {
+            "rows": 2,
+            "keys": {
+                "remarks_1": 2
+            }
+        },
+        "publications": {
+            "rows": 28,
+            "keys": {
+                "date": 28,
+                "legacy_category": 28,
+                "region": 3
+            }
+        },
+        "timeline_event_item": {
+            "rows": 16,
+            "keys": {
+                "texts": 16
+            }
+        },
+        "timeline_event_translations": {
+            "rows": 8,
+            "keys": {
+                "organisers": 8,
+                "rea_cities": 8,
+                "rea_countries": 8,
+                "remarks": 1
+            }
+        },
+        "timeline_events": {
+            "rows": 8,
+            "keys": {
+                "ongoing": 8
+            }
+        },
+        "timelines": {
+            "rows": 18,
+            "keys": {
+                "bibliography": 16,
+                "description": 1,
+                "disabled_bibliography": 1,
+                "organisers": 1,
+                "rea_countries": 1,
+                "rea_from_year": 1,
+                "rea_to_year": 1,
+                "sponsors": 1,
+                "title": 1
+            }
+        }
+    }
+}
