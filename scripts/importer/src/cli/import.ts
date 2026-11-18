@@ -200,6 +200,8 @@ interface ImporterConfig {
     getName(): string;
   };
   dependencies?: string[];
+  /** After every other selected step (see orderConfigsByDependencies). */
+  runsLast?: boolean;
 }
 
 const ALL_IMPORTERS: ImporterConfig[] = [
@@ -1223,6 +1225,9 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description:
       'Move the collection credits (author, curated_by, credits, …) from collection_translations.extra to Contributors, after every importer that writes them (M16 I5, #2648)',
     importerClass: CollectionCreditsImporter,
+    // Seven importers write these keys and later steps move translations
+    // between contexts; with no dependency of its own it would run first.
+    runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)
   {

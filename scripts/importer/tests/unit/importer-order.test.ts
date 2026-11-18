@@ -39,4 +39,30 @@ describe('orderConfigsByDependencies', () => {
       ])
     ).toThrow('Circular importer dependencies detected');
   });
+  it('runs a runsLast step after every other one, whatever its place in the list', () => {
+    const ordered = orderConfigsByDependencies([
+      { key: 'default-context', dependencies: [] },
+      { key: 'collection-credits', runsLast: true },
+      { key: 'travels-trail', dependencies: ['default-context'] },
+      { key: 'travels-trail-translation', dependencies: ['travels-trail'] },
+      { key: 'project-cleanup', dependencies: [] },
+    ]);
+
+    expect(ordered.map((config) => config.key)).toEqual([
+      'default-context',
+      'project-cleanup',
+      'travels-trail',
+      'travels-trail-translation',
+      'collection-credits',
+    ]);
+  });
+
+  it('refuses a step that depends on one that runs last', () => {
+    expect(() =>
+      orderConfigsByDependencies([
+        { key: 'collection-credits', runsLast: true },
+        { key: 'exporter-prep', dependencies: ['collection-credits'] },
+      ])
+    ).toThrow('which runs last');
+  });
 });
