@@ -106,6 +106,24 @@ describe('Sharing History fields kept apart', () => {
     expect(extraOf(result).gallery_sheet).toBeUndefined();
   });
 
+  it('puts an object’s dimensions and datation method in their columns, not in extra (M16 I1)', () => {
+    const result = transformShObjectTranslation({
+      project_id: 'AWE',
+      country: 'pt',
+      number: 96,
+      lang: 'en',
+      name: 'Tile panel',
+      description: 'A panel.',
+      dimensions: '47,5 x 34 cm',
+      datationmethod: '-',
+    } as ShLegacyObjectText);
+
+    expect(result?.data.dimensions).toBe('47,5 x 34 cm');
+    expect(result?.data.method_for_datation).toBe('-');
+    expect(extraOf(result).dimensions).toBeUndefined();
+    expect(extraOf(result).datation_method).toBeUndefined();
+  });
+
   it('keeps a monument’s history out of its description', () => {
     const result = transformShMonumentTranslation({
       project_id: 'AWE',

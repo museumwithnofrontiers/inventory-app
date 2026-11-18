@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   TravelsMonumentTranslationImporter,
+  monumentCredits,
   monumentTextExtra,
 } from '../../src/importers/phase-07/travels-monument-translation-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
@@ -24,6 +25,36 @@ describe('monumentTextExtra', () => {
     expect(
       monumentTextExtra({ how_to_reach: '', info: null, contact: null, prepared_by: '' })
     ).toBeNull();
+  });
+});
+
+describe('monumentCredits (M16 I1)', () => {
+  it('reads a plain name as the author, as written, and keeps nothing raw', () => {
+    expect(monumentCredits('  Yusuf Natsheh ')).toEqual({
+      authorName: 'Yusuf Natsheh',
+      textCopyEditorName: null,
+      translatorName: null,
+      translationCopyEditorName: null,
+      keepRaw: false,
+    });
+    expect(monumentTextExtra({ how_to_reach: null, info: null, contact: null, prepared_by: 'Yusuf Natsheh' })).toBeNull();
+  });
+
+  it('splits a text with role labels and keeps it raw', () => {
+    const text = 'Author: Comité scientifique<br>Translator: Jane Doe';
+    expect(monumentCredits(text)).toMatchObject({
+      authorName: 'Comité scientifique',
+      translatorName: 'Jane Doe',
+      keepRaw: true,
+    });
+    expect(monumentTextExtra({ how_to_reach: null, info: null, contact: null, prepared_by: text })).toEqual({
+      prepared_by: text,
+    });
+  });
+
+  it('has nothing to credit without a text', () => {
+    expect(monumentCredits(null)).toBeNull();
+    expect(monumentCredits('  ')).toBeNull();
   });
 });
 
@@ -76,6 +107,8 @@ describe('TravelsMonumentTranslationImporter', () => {
       setItemTranslationDescriptionByContext: vi.fn().mockResolvedValue(undefined),
       getItemTranslationExtraByContext: vi.fn().mockResolvedValue({ note: 'kept' }),
       setItemTranslationExtraByContext: vi.fn().mockResolvedValue(undefined),
+      findAuthorByName: vi.fn().mockResolvedValue(null),
+      writeAuthor: vi.fn(async (data: { name: string }) => `author:${data.name}`),
     } as unknown as IWriteStrategy;
 
     context = {
@@ -104,6 +137,22 @@ describe('TravelsMonumentTranslationImporter', () => {
         context_id: 'travels-context-uuid',
         name: 'Castle',
         description: castle.description,
+        extra: JSON.stringify({ how_to_reach: castle.how_to_reach, info: castle.info }),
+      })
+    );
+  });
+
+  it('writes a plain prepared_by as the author, not into extra', async () => {
+    (context.legacyDb.query as ReturnType<typeof vi.fn>).mockResolvedValueOnce([
+      { ...castle, prepared_by: 'Mário Pereira' },
+    ]);
+
+    await new TravelsMonumentTranslationImporter(context).import();
+
+    expect(strategy.writeItemTranslation).toHaveBeenCalledWith(
+      expect.objectContaining({
+        author_id: 'author:Mário Pereira',
+        translator_id: null,
         extra: JSON.stringify({ how_to_reach: castle.how_to_reach, info: castle.info }),
       })
     );
