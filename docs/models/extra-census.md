@@ -12,7 +12,7 @@ Several tables keep content the model has no column for in an `extra` JSON colum
 ```bash
 php artisan inventory:extra-census            # a table per table, keys by count
 php artisan inventory:extra-census --json     # the same as JSON
-php artisan inventory:extra-census --expect docs/models/extra-census-expected.json
+php artisan inventory:extra-census --expect docs/models/extra-census-m16-epic-i.json
 ```
 
 - The tables come from the schema: every table with an `extra` column is measured.
@@ -38,3 +38,5 @@ php artisan inventory:extra-census --expect docs/models/extra-census-expected.js
 ```
 
 Keys the file doesn't list are not checked.
+
+[`extra-census-m16-epic-i.json`](extra-census-m16-epic-i.json) holds what M16's Epic I removed: the keys it took out are at 0, and the 302 Travels `prepared_by` texts that stay as written (role labels, or a name an existing author spells with other accents) are the ceiling for that key.
