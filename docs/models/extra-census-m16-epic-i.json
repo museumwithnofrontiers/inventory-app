@@ -5,6 +5,18 @@
                 "mn_order": 0
             }
         },
+        "collection_translations": {
+            "keys": {
+                "author": 0,
+                "credits": 0,
+                "curated_by": 0,
+                "local_coordinator": 0,
+                "local_team": 0,
+                "photo_by": 0,
+                "prepared_by": 0,
+                "travels_author": 0
+            }
+        },
         "item_translations": {
             "keys": {
                 "datation_method": 0,

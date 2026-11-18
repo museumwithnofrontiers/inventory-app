@@ -164,6 +164,7 @@ export {
   MuseumProjectLinkBackfillImporter,
   ExhibitionI18nTextBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
+  CollectionCreditsImporter,
 } from './phase-11/index.js';
 
 // Phase 12: Publications

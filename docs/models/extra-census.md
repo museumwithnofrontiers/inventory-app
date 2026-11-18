@@ -39,4 +39,4 @@ php artisan inventory:extra-census --expect docs/models/extra-census-m16-epic-i.
 
 Keys the file doesn't list are not checked.
 
-[`extra-census-m16-epic-i.json`](extra-census-m16-epic-i.json) holds what M16's Epic I removed: the keys it took out are at 0, and the 302 Travels `prepared_by` texts that stay as written (role labels, or a name an existing author spells with other accents) are the ceiling for that key.
+[`extra-census-m16-epic-i.json`](extra-census-m16-epic-i.json) holds what M16's Epic I removed: the keys it took out are at 0, and the 302 Travels `prepared_by` texts that stay as written (role labels, or a name an existing author spells with other accents) are the ceiling for that key. I5 added the eight collection credits of `collection_translations`, at 0: they are Contributors now.

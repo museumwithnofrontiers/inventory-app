@@ -673,6 +673,44 @@ export interface IWriteStrategy {
   setCollectionTranslationExtraById(id: string, extra: string): Promise<void>;
 
   /**
+   * Find collection_translations rows whose `extra` holds any of `keys` at
+   * its top level, with their collection's backward_compatibility.
+   * Used by CollectionCreditsImporter.
+   */
+  findCollectionTranslationsWithExtraKeys(keys: readonly string[]): Promise<
+    Array<{
+      id: string;
+      collection_id: string;
+      collection_backward_compatibility: string | null;
+      language_id: string;
+      context_id: string;
+      extra: Record<string, unknown>;
+    }>
+  >;
+
+  /**
+   * Set (or clear, with null) the extra JSON on a collection_translations row,
+   * as given: the values were sanitized when they were first written, so they
+   * are not converted again.
+   */
+  setCollectionTranslationExtraAsStoredById(id: string, extra: string | null): Promise<void>;
+
+  /**
+   * Insert a contributor translation, or replace the name and description of
+   * the one that exists for (contributor, language, context). The texts are
+   * written as given, already sanitized where they came from.
+   */
+  upsertContributorTranslationAsStored(data: {
+    id: string;
+    contributor_id: string;
+    language_id: string;
+    context_id: string;
+    name: string | null;
+    description: string | null;
+    backward_compatibility: string | null;
+  }): Promise<void>;
+
+  /**
    * Read the extra JSON from an item_translations row.
    * Returns null if no matching row or if extra is null.
    */
