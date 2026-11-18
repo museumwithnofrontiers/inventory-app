@@ -6,6 +6,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
+  copyrightNotInColumn,
   mwnf3ProjectCopyright,
   pickImageCopyright,
   pickMwnf3PictureCopyright,
@@ -29,6 +30,18 @@ describe('toImageCopyright', () => {
 
   it.each([null, undefined, '', '   '])('returns null for a blank value (%j)', (value) => {
     expect(toImageCopyright(value)).toBeNull();
+  });
+});
+
+describe('copyrightNotInColumn (M16 I4)', () => {
+  it('keeps nothing when the column, without its mark, is the legacy text', () => {
+    expect(copyrightNotInColumn('  Moravská galerie v Brně ')).toBeNull();
+    expect(copyrightNotInColumn('')).toBeNull();
+    expect(copyrightNotInColumn(null)).toBeNull();
+  });
+
+  it('keeps a legacy text that already carries the mark', () => {
+    expect(copyrightNotInColumn('© The Museum')).toBe('© The Museum');
   });
 });
 

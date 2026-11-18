@@ -44,9 +44,7 @@ export interface TransformedSchoolTranslation {
  * Extra fields extracted from school data
  */
 export interface SchoolExtraFields {
-  source?: 'mwnf3';
   postal_address?: string;
-  fax?: string;
   region_id?: string;
   /** The region's name in this translation's language (mwnf3.regionnames) */
   region?: string;
@@ -129,12 +127,11 @@ export function transformSchoolTranslation(
   });
 
   // Build extra field with structured data
-  const extra: SchoolExtraFields = {
-    source: 'mwnf3',
-  };
+  // No `source` (M16 I4, #2659): the row's backward_compatibility already names
+  // the legacy database.
+  const extra: SchoolExtraFields = {};
 
   if (school.postal_address) extra.postal_address = school.postal_address;
-  if (school.fax) extra.fax = school.fax;
   if (school.region_id) extra.region_id = school.region_id;
   if (regionName) extra.region = regionName;
 
@@ -160,7 +157,7 @@ export function transformSchoolTranslation(
     };
   }
 
-  const hasExtra = Object.keys(extra).length > 1; // more than just 'source'
+  const hasExtra = Object.keys(extra).length > 0;
 
   const data: Omit<PartnerTranslationData, 'partner_id' | 'context_id'> = {
     language_id: languageId,
@@ -169,6 +166,7 @@ export function transformSchoolTranslation(
     city_display: school.city || null,
     address: school.address || null,
     contact_phone: school.phone || null,
+    contact_fax: school.fax || null,
     contact_email_general: school.email || null,
     contact_website: school.url || null,
     extra: hasExtra ? JSON.stringify(extra) : null,

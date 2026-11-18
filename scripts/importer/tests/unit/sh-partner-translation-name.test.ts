@@ -20,7 +20,7 @@ describe('SH partner translation name', () => {
     const { data } = transformShPartnerTranslation(
       partner,
       { partners_id: 'ES_01_A', lang: 'en', name: 'National Museum of Anthropology' },
-      { source: 'mwnf3_sharing_history' }
+      {}
     );
 
     expect(data.name).toBe('National Museum of Anthropology');
@@ -36,7 +36,7 @@ describe('SH partner translation name', () => {
           name,
           description: 'El Museo Nacional de Antropología…',
         },
-        { source: 'mwnf3_sharing_history' }
+        {}
       )
     ).toThrow('SH partner translation missing name: ES_01_A:es');
   });

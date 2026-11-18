@@ -4,9 +4,9 @@
  *
  * inventory-app burns that column verbatim, whereas legacy stored the bare
  * rights holder ("Moravská galerie v Brně") and its watermark added the mark
- * itself. The mark is therefore added here, once. The same legacy value keeps
- * reaching `extra.copyright` untouched; this is an additional field, not a
- * replacement.
+ * itself. The mark is therefore added here, once. The exporters give legacy's
+ * text back by dropping it; `extra.copyright` keeps only a value they could
+ * not (copyrightNotInColumn).
  */
 
 const COPYRIGHT_MARK = '©';
@@ -21,6 +21,20 @@ export function toImageCopyright(value: string | null | undefined): string | nul
   }
 
   return text.startsWith(COPYRIGHT_MARK) ? text : `${COPYRIGHT_MARK} ${text}`;
+}
+
+/**
+ * The legacy copyright a partner picture still keeps in `extra`: only one the
+ * image row's column cannot give back by dropping its leading "© " (M16 I4,
+ * #2659), that is one legacy already wrote with the mark. Null otherwise.
+ */
+export function copyrightNotInColumn(value: string | null | undefined): string | null {
+  const text = value?.trim();
+  if (!text) {
+    return null;
+  }
+
+  return toImageCopyright(text) === `${COPYRIGHT_MARK} ${text}` ? null : text;
 }
 
 /**
