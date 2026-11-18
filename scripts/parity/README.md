@@ -523,6 +523,11 @@ regressions. None of the 14 regressions above is left:
   - Sharing History `partner.name` (2) and `partner.description` (1): `compare-partners-php` reads `.legacy-database`, the dump of 2026-11-13, while the package comes from the live database. ET_03 and MA_01 were renamed on legacy since then, and the live API prints MA_01's new name. These go when the dumps are refreshed.
   - The package image URLs that are no `/pub` file (Hijaz 4 → 5, The Table Is Set 2 → 4): each is a file legacy's image host lacks too (`monuments/isl/pa/1/23/2.jpg`, `monuments/isl/tr/1/29/6.jpg`, the `TR_02` logo). The rows stay as on legacy (decision of 2026-10-24).
 
+`baselines/2026-11-18` is the run after reimport 17 (data-packages#35, 7 packages) and its propagation to the sites. That reimport brought the first M16 changes: the Epic I keys moved into the model's own columns (#2661), and the collection credits moved to Contributors (#2662, #2664). It counts 26 real differences, up from 25. What moved:
+- **Gone:** Sharing History's `item.datation_method` (2). The two objects now ship `method_for_datation: "-"`, as legacy's sheet prints it (I1, #2657).
+- **The tool:** the Books' legacy record date (`work.date`, 28) is no longer shipped (I6, #2654). No site shows it, including legacy's Books client, so the comparer now counts its absence as expected. The first run of this reimport listed all 28 as regressions.
+- **Accepted, its 1 regression:** The Hijaz Railway `site.liveDate`. Legacy's API now gives the gallery 2026-11-18, the day of this run. The package has 2026-11-16, which the inventory copied from the legacy mirror before legacy changed it. The Water gallery's date flips between the same two days (E4, #2650).
+
 ## The global search box
 
 Legacy sites that link to the overall database search (legacy's `goToFullSearch`, "Search Overall MWNF Database", or

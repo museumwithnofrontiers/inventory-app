@@ -86,8 +86,11 @@ for (const w of works) {
   R.field('work', 'subjects', same(list(w.subjects), list(tagsOf('subject'))), key);
   R.field('work', 'theme', same(list([w.theme]), list(tagsOf('theme'))), key);
   R.field('work', 'target reader', same(list([w.target]), list(tagsOf('audience'))), key);
+  // Legacy's record date, not a publication date. No site shows it (legacy's Books client
+  // included), so M16 I6 (#2654) stopped shipping it.
   const [d, m, y] = str(w.date).split('/');
-  R.field('work', 'date', same(y ? `${y}-${m}-${d}` : '', str(p.extra?.date)), key);
+  const legacyDate = y ? `${y}-${m}-${d}` : '';
+  R.field('work', 'date', p.extra?.date === undefined && legacyDate ? { verdict: 'expected:the record date leaves the package (M16 I6, #2654)', legacy: legacyDate, pkg: '' } : same(legacyDate, str(p.extra?.date)), key);
   R.field('work', 'region', same(str(w.region), str(p.extra?.region)), key);
   if (w.new) R.unmapped('work', 'new', key);
 
