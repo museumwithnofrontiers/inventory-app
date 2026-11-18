@@ -15,6 +15,7 @@ use App\Filament\Pages\ProfilePage;
 use App\Filament\Pages\ViewCollectionItemAppearance;
 use App\Http\Controllers\Filament\AvailableImageController as FilamentAvailableImageController;
 use App\Http\Controllers\Filament\CollectionImageController as FilamentCollectionImageController;
+use App\Http\Controllers\Filament\ContributorImageController as FilamentContributorImageController;
 use App\Http\Controllers\Filament\ItemDocumentController as FilamentItemDocumentController;
 use App\Http\Controllers\Filament\ItemImageController as FilamentItemImageController;
 use App\Http\Controllers\Filament\PartnerImageController as FilamentPartnerImageController;
@@ -190,6 +191,11 @@ class AdminPanelProvider extends PanelProvider
                     ->name('timeline-event-image.view');
                 Route::get('/timeline-events/{timelineEvent}/images/{timelineEventImage}/download', [FilamentTimelineEventImageController::class, 'download'])
                     ->name('timeline-event-image.download');
+
+                Route::get('/contributors/{contributor}/images/{contributorImage}/view', [FilamentContributorImageController::class, 'view'])
+                    ->name('contributor-image.view');
+                Route::get('/contributors/{contributor}/images/{contributorImage}/download', [FilamentContributorImageController::class, 'download'])
+                    ->name('contributor-image.download');
 
                 Route::get('/publications/{publication}/images/{publicationImage}/view', [FilamentPublicationImageController::class, 'view'])
                     ->name('publication-image.view');

@@ -5,6 +5,7 @@ namespace Tests\Filament;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\ContributorsRelationManager as CollectionContributorsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ImagesRelationManager as CollectionImagesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager as CollectionPartnersRelationManager;
@@ -12,6 +13,9 @@ use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelat
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
 use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\RelationManagers\SiblingTranslationsRelationManager as CollectionTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\ContributorResource\Pages\EditContributor;
+use App\Filament\Resources\ContributorResource\RelationManagers\ImagesRelationManager as ContributorImagesRelationManager;
+use App\Filament\Resources\ContributorResource\RelationManagers\TranslationsRelationManager as ContributorTranslationsRelationManager;
 use App\Filament\Resources\CountryResource\Pages\EditCountry;
 use App\Filament\Resources\CountryResource\RelationManagers\TranslationsRelationManager as CountryTranslationsRelationManager;
 use App\Filament\Resources\GlossaryResource\Pages\EditGlossary;
@@ -78,6 +82,7 @@ use App\Filament\Resources\TimelineResource\RelationManagers\EventsRelationManag
 use App\Models\Collection;
 use App\Models\CollectionTranslation;
 use App\Models\Context;
+use App\Models\Contributor;
 use App\Models\Country;
 use App\Models\Glossary;
 use App\Models\Item;
@@ -203,6 +208,8 @@ class RelationManagerConventionTest extends TestCase
         ProjectPartnersRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'project'],
         // required parent: timeline_events.timeline_id is NOT NULL, so no Attach existing/Detach (Pascal, 2026-09-27)
         TimelineEventsRelationManagerForTimeline::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'timeline', 'required' => true],
+        // required parent: contributors.collection_id is NOT NULL, as for timeline events (M16 I5, #2648)
+        CollectionContributorsRelationManager::class => ['kind' => self::KIND_HAS_MANY, 'owner' => 'collection', 'required' => true],
 
         // ── pivot ─────────────────────────────────────────────────────
         CollectionItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true, 'extraRow' => ['view_appearance']],
@@ -275,6 +282,10 @@ class RelationManagerConventionTest extends TestCase
             'kind' => self::KIND_PINNED, 'owner' => 'publication',
             'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
         ],
+        ContributorImagesRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'contributor',
+            'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
+        ],
 
         // ── pinned: BaseSiblingTranslationsRelationManager — shared base class, its own read-only shape ──
         CollectionTranslationSiblingTranslationsRelationManager::class => [
@@ -317,6 +328,10 @@ class RelationManagerConventionTest extends TestCase
         ],
         TimelineEventTranslationsRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'timelineevent',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
+        ContributorTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'contributor',
             'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
         ],
 
@@ -539,13 +554,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 7 has-many + 20 pivot + 4 translations + 4 inline + 21 pinned = 56.
+        // 8 has-many + 20 pivot + 4 translations + 4 inline + 23 pinned = 59.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(56, self::allManagers());
+        $this->assertCount(59, self::allManagers());
     }
 
     private function classify(string $class): array
@@ -1029,6 +1044,7 @@ class RelationManagerConventionTest extends TestCase
             'project' => EditProject::class,
             'timeline' => EditTimeline::class,
             'timelineevent' => EditTimelineEvent::class,
+            'contributor' => EditContributor::class,
             'country' => EditCountry::class,
             'language' => EditLanguage::class,
             'glossary' => EditGlossary::class,
@@ -1049,6 +1065,7 @@ class RelationManagerConventionTest extends TestCase
             'project' => $this->makeProject(),
             'timeline' => $this->makeTimeline(),
             'timelineevent' => $this->makeTimelineEvent(),
+            'contributor' => $this->makeContributor(),
             'country' => $this->makeCountry(),
             'language' => $this->makeLanguage(),
             'glossary' => $this->makeGlossary(),
@@ -1116,6 +1133,11 @@ class RelationManagerConventionTest extends TestCase
     private function makeTimelineEvent(): TimelineEvent
     {
         return TimelineEvent::factory()->create();
+    }
+
+    private function makeContributor(): Contributor
+    {
+        return Contributor::factory()->create();
     }
 
     private function makeCountry(): Country
