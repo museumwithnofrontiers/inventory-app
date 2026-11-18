@@ -6,7 +6,7 @@
  *
  * - bookbase.name → internal_name; mwnf3:bookbase:{book_id} → backward_compatibility
  * - project_id → mwnf3:projects:{project}; country; display_lang_id → language_id
- * - region, date, category (mwnf / other) → extra, one key per legacy column
+ * - region → extra; legacy's date and category are not kept (M16 I6, #2654)
  * - status is published: legacy has no work in preparation (`new` is a promotional flag and is
  *   not imported, as on the editions)
  *
@@ -29,20 +29,15 @@ interface LegacyWork {
   date: string | Date | null;
 }
 
-export function publicationExtra(
-  work: Pick<LegacyWork, 'region' | 'date' | 'category'>
-): Record<string, string> | null {
-  const extra: Record<string, string> = {};
+/**
+ * A work's legacy fields that have no column: its region. Legacy's category is
+ * already the publication's `category`, and its date is the legacy record's
+ * date, not a publication date (the editions' `publish_year` holds that), so
+ * neither is kept (M16 I6, #2654).
+ */
+export function publicationExtra(work: Pick<LegacyWork, 'region'>): Record<string, string> | null {
   const region = work.region?.trim();
-  if (region) extra.region = region;
-  if (work.date) {
-    const date =
-      work.date instanceof Date ? work.date.toISOString().slice(0, 10) : String(work.date);
-    if (date && !date.startsWith('0000')) extra.date = date;
-  }
-  const category = work.category?.trim();
-  if (category) extra.legacy_category = category;
-  return Object.keys(extra).length > 0 ? extra : null;
+  return region ? { region } : null;
 }
 
 export class PublicationImporter extends BaseImporter {
