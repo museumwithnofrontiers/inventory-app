@@ -125,6 +125,16 @@ class CollectionItem extends Pivot
     }
 
     /**
+     * The Explore monuments the placement stands for, in order (M16 C4).
+     *
+     * @return HasMany<CollectionItemExploreMonument, $this>
+     */
+    public function exploreMonuments(): HasMany
+    {
+        return $this->hasMany(CollectionItemExploreMonument::class, 'collection_item_id')->orderBy('position');
+    }
+
+    /**
      * The placement's texts, one per language (M16 C2).
      *
      * @return HasMany<CollectionItemTranslation, $this>

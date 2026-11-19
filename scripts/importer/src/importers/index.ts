@@ -170,6 +170,7 @@ export {
   VisitInformationImporter,
   CollectionItemTranslationsImporter,
   PartnerColumnsImporter,
+  CollectionItemExploreMonumentsImporter,
   PictureCreditsImporter,
   ImageTextsImporter,
   CollectionRelationsImporter,

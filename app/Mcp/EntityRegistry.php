@@ -30,6 +30,7 @@ final class EntityRegistry
         'item', 'item_translation', 'item_image', 'item_item_link', 'item_item_link_translation',
         'item_document',
         'collection', 'collection_translation', 'collection_image', 'collection_item_translation',
+        'collection_item_explore_monument',
         'partner', 'partner_translation', 'partner_image', 'partner_logo', 'partner_translation_image', 'partner_contact',
         'contributor', 'contributor_translation', 'contributor_image',
         'publication', 'publication_translation', 'publication_edition', 'publication_image',

@@ -71,6 +71,7 @@ import type { CatalogueRow, LinkData, PartnerUrlRow, ShopLinkRow } from '../util
 import type { CollectionItemColumns } from '../utils/collection-item-columns.js';
 import type { VisitInformationFields, VisitOwner } from '../utils/visit-information.js';
 import type { CollectionItemTranslationColumns } from '../utils/collection-item-translations.js';
+import type { ExploreMonumentPlan } from '../utils/explore-monuments.js';
 
 /**
  * Strategy interface for writing entities to the target system
@@ -1030,6 +1031,18 @@ export interface IWriteStrategy {
     id: string,
     alsoKnownAs: string | null,
     extra: string | null
+  ): Promise<void>;
+
+  /**
+   * Replace a placement's Explore monuments (M16 C4) with these rows and their
+   * museums, in order; each row's id derives from the placement and its
+   * position.
+   */
+  replaceCollectionItemExploreMonuments(
+    placementId: string,
+    monuments: Array<
+      ExploreMonumentPlan & { location_collection_id: string | null; partner_ids: string[] }
+    >
   ): Promise<void>;
 
   /**

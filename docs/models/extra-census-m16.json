@@ -4,9 +4,15 @@
             "keys": {
                 "contextual_descriptions": 0,
                 "curator_status": 0,
+                "desc_types": 0,
                 "detail_justification": 0,
                 "detail_n": 0,
                 "detail_name": 0,
+                "explore_geo": 0,
+                "explore_mn_desc": 0,
+                "explore_monument_id": 0,
+                "explore_monument_ids": 0,
+                "explore_museums": 0,
                 "image_captions": 0,
                 "item_artist": 0,
                 "item_date": 0,
@@ -16,12 +22,15 @@
                 "item_museum": 0,
                 "item_name": 0,
                 "justifications": 0,
+                "location_id": 0,
                 "mn_order": 0,
                 "n": 0,
                 "n2": 0,
                 "parent_n2": 0,
                 "picture": 0,
-                "source_bc_by_language": 0
+                "source_bc_by_language": 0,
+                "tr_mn_desc": 0,
+                "vm_mn_desc": 0
             }
         },
         "collection_translations": {

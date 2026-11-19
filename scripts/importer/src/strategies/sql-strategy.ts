@@ -89,6 +89,8 @@ import {
   COLLECTION_ITEM_TRANSLATION_COLUMNS,
   placementTranslationUuidName,
 } from '../utils/collection-item-translations.js';
+import type { ExploreMonumentPlan } from '../utils/explore-monuments.js';
+import { exploreMonumentUuidName } from '../utils/explore-monuments.js';
 
 const tableEntityMap: Record<string, EntityType> = {
   languages: 'language',
@@ -2842,6 +2844,52 @@ export class SqlWriteStrategy implements IWriteStrategy {
       `UPDATE partner_translations SET also_known_as = COALESCE(?, also_known_as), extra = ?, updated_at = ? WHERE id = ?`,
       [alsoKnownAs, extra, this.now, id]
     );
+  }
+
+  async replaceCollectionItemExploreMonuments(
+    placementId: string,
+    monuments: Array<
+      ExploreMonumentPlan & { location_collection_id: string | null; partner_ids: string[] }
+    >
+  ): Promise<void> {
+    // The values were sanitized when they were first written: copied as stored.
+    await this.db.execute('DELETE FROM collection_item_explore_monuments WHERE collection_item_id = ?', [
+      placementId,
+    ]);
+    for (const monument of monuments) {
+      const id = deterministicUuid(exploreMonumentUuidName(placementId, monument.position));
+      await this.db.execute(
+        `INSERT INTO collection_item_explore_monuments
+           (id, collection_item_id, position, backward_compatibility, latitude, longitude, map_zoom,
+            location_collection_id, description_types, travels_description_ref, explore_description_ref,
+            virtual_museum_description_ref, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [
+          id,
+          placementId,
+          monument.position,
+          monument.backward_compatibility,
+          monument.latitude,
+          monument.longitude,
+          monument.map_zoom,
+          monument.location_collection_id,
+          monument.description_types,
+          monument.travels_description_ref,
+          monument.explore_description_ref,
+          monument.virtual_museum_description_ref,
+          this.now,
+          this.now,
+        ]
+      );
+      for (const [index, partnerId] of monument.partner_ids.entries()) {
+        await this.db.execute(
+          `INSERT INTO collection_item_explore_monument_partner
+             (collection_item_explore_monument_id, partner_id, display_order, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)`,
+          [id, partnerId, index + 1, this.now, this.now]
+        );
+      }
+    }
   }
 
   async getCollectionItemExtra(

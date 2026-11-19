@@ -10,6 +10,7 @@ use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\CollectionAppearancesRelationManager;
 use App\Models\Collection;
 use App\Models\CollectionItem;
+use App\Models\CollectionItemExploreMonument;
 use App\Models\CollectionItemTranslation;
 use App\Models\Context;
 use App\Models\Item;
@@ -462,7 +463,53 @@ class CollectionItemAppearanceTest extends TestCase
             ->assertTableActionHidden('create')
             ->assertTableActionHidden('edit', $translation)
             ->assertTableActionHidden('delete', $translation)
-            ->assertTableActionVisible('view', $translation);
+            ->assertTableActionVisible('view', $translation)
+            ->assertActionHidden('exploreMonuments');
+    }
+
+    // -------------------------------------------------------------------------
+    // Appearance detail page — the Explore monuments (M16 C4)
+    // -------------------------------------------------------------------------
+
+    public function test_appearance_page_lists_and_edits_the_explore_monuments(): void
+    {
+        $user = $this->createCrudUser();
+        $collection = Collection::factory()->create();
+        $item = Item::factory()->Object()->create();
+        $collection->attachedItems()->attach($item->id);
+        $placement = CollectionItem::query()->where('collection_id', $collection->id)->firstOrFail();
+        $monument = CollectionItemExploreMonument::factory()->forPlacement($placement)->create([
+            'backward_compatibility' => 'mwnf3_explore:monument:1275',
+            'latitude' => 34.030727,
+            'longitude' => -6.835677,
+        ]);
+
+        $this->setCurrentPanel();
+
+        $this->actingAs($user)
+            ->get(ViewCollectionItemAppearance::getAppearanceUrl($collection, $item))
+            ->assertSuccessful()
+            ->assertSee('mwnf3_explore:monument:1275 · 34.030727, -6.835677');
+
+        Livewire::actingAs($user)
+            ->test(ViewCollectionItemAppearance::class, ['collection' => $collection, 'item' => $item])
+            ->assertActionVisible('exploreMonuments')
+            ->callAction('exploreMonuments', data: [
+                'exploreMonuments' => [
+                    'record-'.$monument->id => [
+                        'backward_compatibility' => 'mwnf3_explore:monument:1275',
+                        'latitude' => 34.5,
+                        'longitude' => -6.835677,
+                        'map_zoom' => 15,
+                        'location_collection_id' => null,
+                        'partners' => [],
+                    ],
+                ],
+            ])
+            ->assertHasNoActionErrors();
+
+        $this->assertSame(34.5, $monument->refresh()->latitude);
+        $this->assertSame(15, $monument->map_zoom);
     }
 
     /**
