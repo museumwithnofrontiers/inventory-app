@@ -100,7 +100,9 @@ describe('ExploreItineraryImporter', () => {
       disconnect: vi.fn(),
     };
 
-    writeCollection = vi.fn(async (data: { backward_compatibility: string }) => `${data.backward_compatibility}-uuid`);
+    writeCollection = vi.fn(
+      async (data: { backward_compatibility: string }) => `${data.backward_compatibility}-uuid`
+    );
     getCollectionExtra = vi.fn().mockResolvedValue(null);
     setCollectionExtra = vi.fn().mockResolvedValue(undefined);
 
@@ -121,32 +123,64 @@ describe('ExploreItineraryImporter', () => {
       .map(([data]) => data)
       .find((data) => data.backward_compatibility === `mwnf3_explore:itinerary:${id}`);
 
-  it("keeps each itinerary's legacy kind, order and home-link flag on the collection", async () => {
+  it('files each itinerary under its parent, with no extra', async () => {
     const result = await new ExploreItineraryImporter(context).import();
 
     expect(result.success).toBe(true);
-    expect(JSON.parse(written(1).extra)).toEqual({
-      explore_itinerary: { type: '4', order: 9, location_home_link: 'N', countries: ['tn'] },
+    expect(written(1)).toMatchObject({
+      type: 'itinerary',
+      parent_id: 'itinerary-root-uuid',
+      extra: null,
     });
-    // A top-level route of another kind stays top-level, as in legacy: only its
-    // kind tells the exporter that the itineraries page does not list it.
-    expect(written(113)).toMatchObject({ type: 'itinerary', parent_id: 'itinerary-root-uuid' });
-    expect(JSON.parse(written(113).extra).explore_itinerary.type).toBe('1');
-    expect(written(3)).toMatchObject({ type: 'exhibition trail', parent_id: 'mwnf3_explore:itinerary:1-uuid' });
-    expect(JSON.parse(written(3).extra).explore_itinerary.order).toBe(1);
+    // A top-level route of another kind stays top-level, as in legacy.
+    expect(written(113)).toMatchObject({
+      type: 'itinerary',
+      parent_id: 'itinerary-root-uuid',
+      extra: null,
+    });
+    expect(written(3)).toMatchObject({
+      type: 'exhibition trail',
+      parent_id: 'mwnf3_explore:itinerary:1-uuid',
+      extra: null,
+    });
+  });
+
+  it("builds each itinerary's legacy kind, order and home-link flag for the site", async () => {
+    const entries = await new ExploreItineraryImporter(context).siteConfiguration();
+
+    expect(entries).toEqual([
+      {
+        collection: 'mwnf3_explore:itinerary:1',
+        extra: {
+          explore_itinerary: { type: '4', order: 9, location_home_link: 'N', countries: ['tn'] },
+        },
+      },
+      // Only its kind tells the exporter that the itineraries page does not list it.
+      {
+        collection: 'mwnf3_explore:itinerary:113',
+        extra: {
+          explore_itinerary: { type: '1', order: 12, location_home_link: 'N', countries: [] },
+        },
+      },
+      {
+        collection: 'mwnf3_explore:itinerary:3',
+        extra: {
+          explore_itinerary: { type: '4', order: 1, location_home_link: 'N', countries: ['tn'] },
+        },
+      },
+    ]);
   });
 
   // Legacy's API names a thematic itinerary's country from its own `country`
   // list; a route has none.
-  it("keeps the itinerary's own countries", async () => {
-    await new ExploreItineraryImporter(context).import();
-
-    expect(JSON.parse(written(1).extra).explore_itinerary.countries).toEqual(['tn']);
-    expect(JSON.parse(written(113).extra).explore_itinerary.countries).toEqual([]);
-    expect(itineraryExtra({ type: '4', itinorder: 1, location_home_link: 'N', country: 'es, pt' }).countries).toEqual([
-      'es',
-      'pt',
-    ]);
+  it("reads the itinerary's own countries", () => {
+    expect(
+      itineraryExtra({ type: '4', itinorder: 1, location_home_link: 'N', country: 'es, pt' })
+        .countries
+    ).toEqual(['es', 'pt']);
+    expect(
+      itineraryExtra({ type: '1', itinorder: 1, location_home_link: 'N', country: '' }).countries
+    ).toEqual([]);
   });
 
   // The title it derives from the theme's name is not legacy's: every
@@ -157,27 +191,14 @@ describe('ExploreItineraryImporter', () => {
     expect(context.strategy.writeCollectionTranslation).not.toHaveBeenCalled();
   });
 
-  it('adds the legacy fields to an itinerary imported before they were kept, keeping its other extra', async () => {
+  it('skips an itinerary already imported, without touching its extra', async () => {
     tracker.set('mwnf3_explore:itinerary:1', 'existing-itinerary-uuid', 'collection');
-    getCollectionExtra.mockImplementation(async (id: string) =>
-      id === 'existing-itinerary-uuid' ? { note: 'kept' } : null
-    );
 
-    await new ExploreItineraryImporter(context).import();
+    const result = await new ExploreItineraryImporter(context).import();
 
     expect(written(1)).toBeUndefined();
-    expect(setCollectionExtra).toHaveBeenCalledWith(
-      'existing-itinerary-uuid',
-      JSON.stringify({ note: 'kept', explore_itinerary: { type: '4', order: 9, location_home_link: 'N', countries: ['tn'] } })
-    );
-  });
-
-  it('writes nothing to an itinerary that already carries them', async () => {
-    tracker.set('mwnf3_explore:itinerary:1', 'existing-itinerary-uuid', 'collection');
-    getCollectionExtra.mockResolvedValue({ explore_itinerary: itineraryExtra(ROWS[0]!) });
-
-    await new ExploreItineraryImporter(context).import();
-
-    expect(setCollectionExtra).not.toHaveBeenCalledWith('existing-itinerary-uuid', expect.anything());
+    expect(result.skipped).toBe(1);
+    expect(getCollectionExtra).not.toHaveBeenCalled();
+    expect(setCollectionExtra).not.toHaveBeenCalled();
   });
 });

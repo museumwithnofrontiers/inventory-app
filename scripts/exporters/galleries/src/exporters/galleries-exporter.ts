@@ -2,6 +2,7 @@ import type { ExportResult, GalleryAnchor, GalleryChrome } from '../core/types.j
 import { parseJson } from '../core/database.js'
 import { BaseExporter } from './base-exporter.js'
 import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
+import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 
 /** The purpose that marks the root every gallery hangs under (importer phase 10). */
 export const GALLERIES_ROOT_PURPOSE = 'galleries-root'
@@ -78,7 +79,9 @@ export class GalleriesExporter extends BaseExporter {
        WHERE collection_id IN (${this.placeholders(ids.length)})
        ORDER BY collection_id, language_id`,
       ids
-    ).then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows))
+    )
+      .then(restoreSiteTranslations)
+      .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows))
 
     const langCodeMap = await this.buildLangCodeMap()
     const namesById = new Map<string, Record<string, string>>()
@@ -98,7 +101,7 @@ export class GalleriesExporter extends BaseExporter {
 
     const output = listedGalleries(
       galleries.map(gallery => {
-        const anchor = parseJson<{ thg_gallery?: GalleryAnchor }>(gallery.extra)?.thg_gallery ?? {}
+        const anchor = parseJson<{ thg_gallery?: GalleryAnchor }>(withSiteCollectionExtra(gallery.extra, gallery.id))?.thg_gallery ?? {}
         const chrome = chromeById.get(gallery.id) ?? {}
         const names = namesById.get(gallery.id) ?? {}
         return {

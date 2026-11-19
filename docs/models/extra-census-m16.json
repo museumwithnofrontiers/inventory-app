@@ -16,11 +16,13 @@
                 "duration": 0,
                 "et_introduction": 0,
                 "et_title": 0,
+                "exhibition_i18n": 0,
                 "hb_general_type": 0,
                 "hb_type": 0,
                 "intro_text": 0,
                 "introd_type": 0,
                 "introduction": 0,
+                "legacy_exhibition": 0,
                 "legacy_status": 0,
                 "local_coordinator": 0,
                 "local_team": 0,
@@ -31,6 +33,8 @@
                 "subtitle": 0,
                 "territory_ids": 0,
                 "territory_level": 0,
+                "thg_gallery": 0,
+                "thg_gallery_lang": 0,
                 "theme_ids": 0,
                 "travels_author": 0
             }
@@ -38,9 +42,13 @@
         "collections": {
             "keys": {
                 "days": 0,
+                "explore_home": 0,
+                "explore_itinerary": 0,
+                "explore_travel": 0,
                 "further_readings": 3,
                 "historical_background": 0,
-                "logos": 16,
+                "logos": 0,
+                "thg_gallery": 0,
                 "thg_theme": 0
             }
         },

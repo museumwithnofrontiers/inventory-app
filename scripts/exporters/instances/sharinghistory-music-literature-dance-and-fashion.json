@@ -7,5 +7,34 @@
   "collection_id": "c9335788-c5e2-5748-8aca-0d5e79500ab0",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-music-literature-dance-and-fashion-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=9"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=9",
+  "collections": {
+    "c9335788-c5e2-5748-8aca-0d5e79500ab0": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/9/item_logo_19.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=JO_01;jo&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/9/item_logo_29.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=TR_02;tr&shpro=AWE&",
+            "display_order": 2
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/9/item_logo_39.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=ES_01;es&shpro=AWE&",
+            "display_order": 3
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

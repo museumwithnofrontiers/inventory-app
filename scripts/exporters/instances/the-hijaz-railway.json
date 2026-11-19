@@ -4,5 +4,76 @@
   "name": "The Hijaz Railway",
   "collection_id": "9884c4d0-416a-5d95-8365-a92d158c2065",
   "package_name": "@museumwnf/the-hijaz-railway-data",
-  "languages_enabled": ["en"]
+  "languages_enabled": ["en"],
+  "collections": {
+    "9884c4d0-416a-5d95-8365-a92d158c2065": {
+      "extra": {
+        "logos": [
+          {
+            "file": "thematic_gallery/thg_galleries/55/logo/41/1.jpg",
+            "link": "https://www.unaoc.org/",
+            "labels": {
+              "eng": "United Nations Alliance of Civilizations"
+            },
+            "visible": true,
+            "category_id": 1,
+            "category_name": "Footer 1",
+            "display_order": 1
+          }
+        ],
+        "thg_gallery": {
+          "host": "https://exhibitions.museumwnf.org",
+          "slug": "the_hijaz_railway",
+          "i18n_group_id": 74,
+          "hidden_partners": [
+            {
+              "partner_id": "9191d124-5250-5ce2-bd6f-5cfd57bd7081",
+              "backward_compatibility": "mwnf3:museums:Mus91:de"
+            },
+            {
+              "partner_id": "88ef2396-b04a-5474-818e-0303794b950c",
+              "backward_compatibility": "mwnf3:museums:Mus92:de"
+            },
+            {
+              "partner_id": "9d377e3c-69b8-5ebd-8865-fca9c8cb75d2",
+              "backward_compatibility": "mwnf3:museums:Mus93:jo"
+            },
+            {
+              "partner_id": "f61576e8-42c0-5ee1-ac85-8b8e8aa2470b",
+              "backward_compatibility": "mwnf3:museums:Mus92:us"
+            },
+            {
+              "partner_id": "6d8c4dc4-54ae-5214-a4a9-732b5b04658e",
+              "backward_compatibility": "mwnf3:museums:Mus93:us"
+            }
+          ],
+          "mwnf3_project_id": "GalEx5",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "link": "the_hijaz_railway",
+          "banner_item": "mwnf#obj#GalEx5;jo;Mus92;4",
+          "banner_image": "thematic_gallery/thg_galleries/55/banner.jpg",
+          "has_timeline": false,
+          "homepage_item": "mwnf#obj#GalEx5;jo;Mus92;4",
+          "homepage_image": "thematic_gallery/thg_galleries/55/home_image.jpg",
+          "mwnf3_project_id": "GalEx5",
+          "has_country_timeline": false
+        }
+      },
+      "translations": {
+        "eng": {
+          "exhibition_i18n": {
+            "enabled": "Y",
+            "heading": "This exhibition revisits one of the most ambitious projects of the late Ottoman Empire. By 1908 the Hijaz Railway connected Damascus to Medina, modernising the Hajj for pilgrims while providing political, strategic, and economic advantages to the empire across diverse territories. The significance of the railway and its effects on culture and trade are revealed in photographs, objects, documents, and personal accounts. Though the railway's operation fell victim to the conflicts of World War I, its influence continues to resonate through the region.",
+            "subtitle": "Memories and Visions",
+            "popup_logo": "**Welcome to THE HIJAZ RAILWAY: Memories and Visions**  \n  \nYou are free to explore at your own pace, though we recommend following our curatorial path:  \n  \nStart with **ABOUT** for an introduction, then head to **THEMES** and begin with Theme I.  \n  \n**Read the Overview** for each Theme before diving into its **Subthemes** (chapters). Use the PREVIOUS and NEXT arrows to move between them.  \n  \n**Browse all exhibits**—listed \"at a glance\" as main or related at the top of each page—before moving to the next Subtheme.  \n  \nEnjoy your visit!\n\n*Your MWNF Team*",
+            "popup_logo_show": "Y"
+          }
+        }
+      }
+    }
+  }
 }

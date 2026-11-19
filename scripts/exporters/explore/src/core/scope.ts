@@ -5,6 +5,7 @@ import {
   withTranslationRelations,
 } from '../../../shared/collection-relations.mjs'
 import { loadCollectionFlags, withCollectionFlags } from '../../../shared/collection-flags.mjs'
+import { withSiteCollectionExtra, withSiteTranslationExtra } from '../../../shared/site-configuration.mjs'
 
 /**
  * What the Explore package ships, resolved once and shared by every exporter.
@@ -215,13 +216,13 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
         purpose: r.purpose,
         display_order: r.display_order,
         internal_name: r.internal_name,
-        extra: parse(withCollectionRelations(r.extra, own)),
+        extra: parse(withCollectionRelations(withSiteCollectionExtra(r.extra, r.id), own)),
         english_extra:
           r.english_id === null
             ? null
             : parse(
                 withTranslationRelations(
-                  withCollectionFlags(r.english_extra, flags.get(r.id), english),
+                  withCollectionFlags(withSiteTranslationExtra(r.english_extra, r.id, 'eng'), flags.get(r.id), english),
                   own,
                   english
                 )

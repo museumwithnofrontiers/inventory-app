@@ -159,7 +159,6 @@ import {
   CollectionPurposeBackfillImporter,
   ExtraBitBufferBackfillImporter,
   MuseumProjectLinkBackfillImporter,
-  ExhibitionI18nTextBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
   CollectionCreditsImporter,
   ItemTranslationColumnsImporter,
@@ -167,6 +166,7 @@ import {
   PictureCreditsImporter,
   CollectionRelationsImporter,
   CollectionFlagsImporter,
+  SiteConfigurationOutImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1215,14 +1215,6 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     dependencies: ['project', 'partner'],
   },
   {
-    key: 'exhibition-i18n-text-backfill',
-    name: 'Exhibition i18n Text Backfill',
-    description:
-      'Backfill exhibition_i18n subtitle/heading/about into collection_translations.extra on an already-populated database, so exhibition exporters can render the three separately',
-    importerClass: ExhibitionI18nTextBackfillImporter,
-    dependencies: ['thg-gallery-translation'],
-  },
-  {
     key: 'explore-monument-country-backfill',
     name: 'Explore Monument Country Backfill',
     description:
@@ -1286,6 +1278,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
       'Move the collection flags (exhibition show, Explore theme status, gallery featured and live date) out of collection_translations.extra to visible, featured and published_at, and drop the legacy codes nothing reads (M16 E4a, #2650)',
     importerClass: CollectionFlagsImporter,
     // The exhibition, gallery and Explore importers write these keys.
+    runsLast: true,
+  },
+  {
+    key: 'site-configuration-out',
+    name: 'Site Configuration Out',
+    description:
+      "Take the sites' configuration (thg_gallery, legacy_exhibition, exhibition_i18n, Explore's home and itinerary records, logos) out of an inventory imported before it moved to the instance files (M16 E4b, #2673); a fresh import holds none",
+    importerClass: SiteConfigurationOutImporter,
+    // After collection-flags, so the flags an older import left in these
+    // blocks have reached their columns.
     runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)

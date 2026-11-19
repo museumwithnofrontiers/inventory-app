@@ -3,5 +3,27 @@
   "slug": "gold-silver",
   "name": "Gold and Silver",
   "collection_id": "811a0bf9-c44b-5000-bc70-749a8f69ab02",
-  "package_name": "@museumwnf/gold-silver-data"
+  "package_name": "@museumwnf/gold-silver-data",
+  "collections": {
+    "811a0bf9-c44b-5000-bc70-749a8f69ab02": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://gold-silver.museumwnf.org",
+          "slug": "gold_and_silver",
+          "i18n_group_id": 33,
+          "mwnf3_project_id": "GOL",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/19/1.jpg",
+          "banner_item": "mwnf#obj#BAR;cz;Mus11;17",
+          "banner_image": "thematic_gallery/thg_galleries/19/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

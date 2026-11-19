@@ -3,5 +3,27 @@
   "slug": "woodwork",
   "name": "Furniture and Woodwork",
   "collection_id": "9c91beb2-7546-52ba-b5a0-4bcb9c406959",
-  "package_name": "@museumwnf/woodwork-data"
+  "package_name": "@museumwnf/woodwork-data",
+  "collections": {
+    "9c91beb2-7546-52ba-b5a0-4bcb9c406959": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://woodwork.museumwnf.org",
+          "slug": "furniture_and_woodwork",
+          "i18n_group_id": 32,
+          "mwnf3_project_id": "WOO",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/17/1.jpg",
+          "banner_item": "mwnf#obj#EPM;dn;Mus21;31",
+          "banner_image": "thematic_gallery/thg_galleries/17/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

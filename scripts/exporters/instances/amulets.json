@@ -3,5 +3,27 @@
   "slug": "amulets",
   "name": "Amulets and Talismans",
   "collection_id": "724c4930-fdcb-5974-af95-67e81de0d3b3",
-  "package_name": "@museumwnf/amulets-data"
+  "package_name": "@museumwnf/amulets-data",
+  "collections": {
+    "724c4930-fdcb-5974-af95-67e81de0d3b3": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://amulets.museumwnf.org",
+          "slug": "amulets_and_talismans",
+          "i18n_group_id": 21,
+          "mwnf3_project_id": "AMU",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/4/1.jpg",
+          "banner_item": "mwnf#obj#EPM;at;Mus22;51",
+          "banner_image": "thematic_gallery/thg_galleries/4/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

@@ -77,8 +77,32 @@ export async function buildSiteConfiguration(
   return { records: mergeEntries(entries), keys };
 }
 
-/** Writes the records into the instance files; throws when one has no file. */
+/**
+ * The galleries whose host is not a public https museumwnf address: a local
+ * copy of legacy rewrites them (`*.museumwnf.localhost`), and such a copy must
+ * never write an instance file.
+ */
+export function localGalleryHosts(records: Map<string, SiteConfigRecord>, keys: Map<string, string>): string[] {
+  const bad: string[] = [];
+  for (const [uuid, record] of records) {
+    const gallery = record.extra?.['thg_gallery'] as Record<string, unknown> | undefined;
+    const host = gallery?.['host'];
+    if (host === undefined) continue;
+    const ok =
+      typeof host === 'string' && /^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)*\.museumwnf\.org\/?$/i.test(host);
+    if (!ok) bad.push(`${keys.get(uuid) ?? uuid}: ${String(host)}`);
+  }
+  return bad;
+}
+
+/** Writes the records into the instance files; throws when one has no file or a local host. */
 export function writeSiteConfiguration(result: SiteConfigResult, instancesDirectory: string): string[] {
+  const local = localGalleryHosts(result.records, result.keys);
+  if (local.length > 0) {
+    throw new Error(
+      `${local.length} gallery host(s) are no public https museumwnf address — is this a local copy of legacy? ${local.slice(0, 5).join('; ')}`
+    );
+  }
   const files = readInstanceFiles(instancesDirectory);
   const { bySlug, unrouted } = routeRecords(result.records, result.keys, files);
   if (unrouted.length > 0) {

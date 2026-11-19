@@ -3,5 +3,27 @@
   "slug": "portraits",
   "name": "Portraits",
   "collection_id": "cccc9580-27c1-5e98-bb29-1bc60602153f",
-  "package_name": "@museumwnf/portraits-data"
+  "package_name": "@museumwnf/portraits-data",
+  "collections": {
+    "cccc9580-27c1-5e98-bb29-1bc60602153f": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://portraits.museumwnf.org",
+          "slug": "portraits",
+          "i18n_group_id": 63,
+          "mwnf3_project_id": "POT",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/31/1.jpg",
+          "banner_item": "mwnf#obj#BAR;pt;Mus11_A;13",
+          "banner_image": "thematic_gallery/thg_galleries/31/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

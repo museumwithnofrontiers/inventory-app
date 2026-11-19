@@ -1,5 +1,6 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { setSiteConfiguration } from '../../../shared/site-configuration.mjs'
 import { Database, legacyProjectKey } from '../../src/core/database.js'
 
 /**
@@ -29,6 +30,10 @@ describe('legacyProjectKey', () => {
 })
 
 describe('Database.resolveGallery', () => {
+  // The anchor comes from the row here, not from the instance files.
+  beforeEach(() => setSiteConfiguration(new Map()))
+  afterEach(() => setSiteConfiguration(null))
+
   const collectionId = '743fd119-f663-54ae-b92a-933fc1fdbfd8'
   const galleryRow = {
     id: collectionId,

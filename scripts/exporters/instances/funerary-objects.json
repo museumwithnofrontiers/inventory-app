@@ -3,5 +3,27 @@
   "slug": "funerary-objects",
   "name": "Funerary Objects",
   "collection_id": "05deed77-faa1-5204-91d5-d10a4868760c",
-  "package_name": "@museumwnf/funerary-objects-data"
+  "package_name": "@museumwnf/funerary-objects-data",
+  "collections": {
+    "05deed77-faa1-5204-91d5-d10a4868760c": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://funerary-objects.museumwnf.org",
+          "slug": "funerary_objects",
+          "i18n_group_id": 31,
+          "mwnf3_project_id": "FUN",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/16/1.jpg",
+          "banner_item": "mwnf#obj#ISL;it;Mus01_C;34",
+          "banner_image": "thematic_gallery/thg_galleries/16/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

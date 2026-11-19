@@ -3,5 +3,27 @@
   "slug": "clothing",
   "name": "Clothing and Costume",
   "collection_id": "24616116-1d35-5080-afbf-90e072c4aea5",
-  "package_name": "@museumwnf/clothing-data"
+  "package_name": "@museumwnf/clothing-data",
+  "collections": {
+    "24616116-1d35-5080-afbf-90e072c4aea5": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://clothing.museumwnf.org",
+          "slug": "clothing_and_costume",
+          "i18n_group_id": 28,
+          "mwnf3_project_id": "CLO",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/12/1.jpg",
+          "banner_item": "mwnf#obj#EPM;at;Mus21;38",
+          "banner_image": "thematic_gallery/thg_galleries/12/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

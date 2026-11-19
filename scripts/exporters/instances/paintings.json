@@ -3,5 +3,27 @@
   "slug": "paintings",
   "name": "Paintings",
   "collection_id": "1fc8e6d4-c8c9-55d3-9f11-5d456fadc8df",
-  "package_name": "@museumwnf/paintings-data"
+  "package_name": "@museumwnf/paintings-data",
+  "collections": {
+    "1fc8e6d4-c8c9-55d3-9f11-5d456fadc8df": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://paintings.museumwnf.org",
+          "slug": "paintings",
+          "i18n_group_id": 42,
+          "mwnf3_project_id": "PAI",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/28/1.jpg",
+          "banner_item": "mwnf#obj#BAR;it;Mus11;18",
+          "banner_image": "thematic_gallery/thg_galleries/28/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

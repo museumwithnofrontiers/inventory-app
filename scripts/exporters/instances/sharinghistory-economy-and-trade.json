@@ -7,5 +7,29 @@
   "collection_id": "8bebd45c-0749-50b8-ad43-dc6cb58c395b",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-economy-and-trade-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=6"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=6",
+  "collections": {
+    "8bebd45c-0749-50b8-ad43-dc6cb58c395b": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/6/item_logo_16.jpg",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=UA_01;ua&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/6/item_logo_26.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=RM_01;rm&shpro=AWE&",
+            "display_order": 2
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

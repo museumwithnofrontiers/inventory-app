@@ -3,5 +3,27 @@
   "slug": "manuscripts",
   "name": "Manuscripts",
   "collection_id": "c8032017-c33f-55e1-a151-e29f5fc4d134",
-  "package_name": "@museumwnf/manuscripts-data"
+  "package_name": "@museumwnf/manuscripts-data",
+  "collections": {
+    "c8032017-c33f-55e1-a151-e29f5fc4d134": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://manuscripts.museumwnf.org",
+          "slug": "manuscripts",
+          "i18n_group_id": 38,
+          "mwnf3_project_id": "MAN",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/24/1.jpg",
+          "banner_item": "mwnf#obj#EPM;ir;Mus21;19",
+          "banner_image": "thematic_gallery/thg_galleries/24/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

@@ -10,5 +10,18 @@
     "3b73a306-1129-5c8d-acba-8e34a39e132f"
   ],
   "package_name": "@museumwnf/islamicart-the-ayyubids-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ayyubids/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ayyubids/",
+  "collections": {
+    "28d9a4d3-c0f4-52e4-b504-b865ba01f483": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ayyubids/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/15/portal_image/1.jpg",
+          "display_order": 4
+        }
+      }
+    }
+  }
 }

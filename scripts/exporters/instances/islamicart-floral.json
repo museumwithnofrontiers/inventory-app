@@ -11,5 +11,18 @@
     "5db20458-bdcf-5050-98fb-3fb2d1392a0a"
   ],
   "package_name": "@museumwnf/islamicart-floral-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/floral/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/floral/",
+  "collections": {
+    "12faaae8-0400-53bd-ba84-f5e66e0027ef": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/floral/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/28/portal_image/1.jpg",
+          "display_order": 13
+        }
+      }
+    }
+  }
 }

@@ -141,21 +141,30 @@ describe('ShExhibitionImageImporter', () => {
     expect(attachTagsToCollectionImage).toHaveBeenCalledTimes(3);
   });
 
-  it("keeps the logos in the collection's extra, beside what is there, not as images", async () => {
+  it('imports the logos neither as images nor into the collection extra', async () => {
     await new ShExhibitionImageImporter(context).import();
 
     expect(writeCollectionImage).not.toHaveBeenCalledWith(
       expect.objectContaining({ path: expect.stringContaining('item_logo') })
     );
-    expect(setCollectionExtra).toHaveBeenCalledWith(
-      'exh-11',
-      JSON.stringify({
-        subtitle: 'kept',
-        logos: [
-          { file: `${DIR}/item_logo_111.png`, link: travelling.url1, display_order: 1 },
-          { file: `${DIR}/item_logo_211.png`, display_order: 2 },
-        ],
-      })
-    );
+    expect(setCollectionExtra).not.toHaveBeenCalled();
+  });
+
+  it('builds the logos for the exhibition, and nothing for one without logos', async () => {
+    vi.mocked(context.legacyDb.query).mockResolvedValue([travelling, empty]);
+
+    const entries = await new ShExhibitionImageImporter(context).siteConfiguration();
+
+    expect(entries).toEqual([
+      {
+        collection: 'mwnf3_sharing_history:sh_exhibitions:11',
+        extra: {
+          logos: [
+            { file: `${DIR}/item_logo_111.png`, link: travelling.url1, display_order: 1 },
+            { file: `${DIR}/item_logo_211.png`, display_order: 2 },
+          ],
+        },
+      },
+    ]);
   });
 });

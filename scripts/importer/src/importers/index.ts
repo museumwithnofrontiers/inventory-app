@@ -162,7 +162,6 @@ export {
   CollectionPurposeBackfillImporter,
   ExtraBitBufferBackfillImporter,
   MuseumProjectLinkBackfillImporter,
-  ExhibitionI18nTextBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
   CollectionCreditsImporter,
   ItemTranslationColumnsImporter,
@@ -170,6 +169,7 @@ export {
   PictureCreditsImporter,
   CollectionRelationsImporter,
   CollectionFlagsImporter,
+  SiteConfigurationOutImporter,
 } from './phase-11/index.js';
 
 // Phase 12: Publications

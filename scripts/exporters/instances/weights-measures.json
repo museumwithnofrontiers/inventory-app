@@ -3,5 +3,27 @@
   "slug": "weights-measures",
   "name": "Weights and Measures",
   "collection_id": "911715e0-bf81-5aa4-b8f0-ba3b59c392bd",
-  "package_name": "@museumwnf/weights-measures-data"
+  "package_name": "@museumwnf/weights-measures-data",
+  "collections": {
+    "911715e0-bf81-5aa4-b8f0-ba3b59c392bd": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://weights-measures.museumwnf.org",
+          "slug": "weights_and_measures",
+          "i18n_group_id": 55,
+          "mwnf3_project_id": "WEI",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/41/1.jpg",
+          "banner_item": "sh#obj#AWE;ua;41",
+          "banner_image": "thematic_gallery/thg_galleries/41/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

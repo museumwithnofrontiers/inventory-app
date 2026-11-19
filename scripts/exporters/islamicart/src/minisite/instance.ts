@@ -23,6 +23,7 @@ export interface MinisiteInstance {
 
 const KNOWN_FIELDS = new Set([
   'kind', 'slug', 'name', 'exporter', 'parent', 'collection_id', 'partner_ids', 'package_name', 'legacy_url',
+  'collections',
 ])
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const PACKAGE_NAME_PATTERN = /^@museumwnf\/[a-z0-9-]+-data$/

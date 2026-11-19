@@ -3,5 +3,92 @@
   "slug": "galleries",
   "name": "MWNF Galleries",
   "exporter": "galleries",
-  "package_name": "@museumwnf/galleries-data"
+  "package_name": "@museumwnf/galleries-data",
+  "collections": {
+    "0f1ef31f-a917-5b2f-a526-928ef270163d": {
+      "extra": {
+        "thg_gallery": {
+          "slug": "unclear",
+          "i18n_group_id": 56,
+          "mwnf3_project_id": "UNC",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    },
+    "227b976a-d5af-5019-99df-c8752e2f20e0": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://unclear-doubts-excluded.museumwnf.org",
+          "slug": "doubts",
+          "i18n_group_id": 56,
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    },
+    "462b108b-3d1a-577a-b09c-04f55e1e036c": {
+      "extra": {
+        "thg_gallery": {
+          "slug": "curiosities",
+          "i18n_group_id": 69,
+          "mwnf3_project_id": "CUR",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/15/1.jpg",
+          "banner_item": "mwnf#obj#BAR;pt;Mus11_A;23",
+          "banner_image": "thematic_gallery/thg_galleries/15/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    },
+    "8abc7a74-d3f9-5a04-a174-0bca33464d80": {
+      "extra": {
+        "thg_gallery": {
+          "slug": "excluded",
+          "i18n_group_id": 56,
+          "mwnf3_project_id": "EXC",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    },
+    "8c8fbadc-b7ac-5ffc-8285-4c1ebb23dd98": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://gallery-partners.museumwnf.org",
+          "slug": "galleries",
+          "i18n_group_id": 58,
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "banner_item": "mwnf#obj#GALLERIES;sw;Mus01;42",
+          "banner_image": "thematic_gallery/thg_galleries/45/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

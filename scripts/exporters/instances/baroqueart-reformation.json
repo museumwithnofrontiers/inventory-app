@@ -9,5 +9,18 @@
     "fae81dae-0250-52ec-acc1-171da28b9eef"
   ],
   "package_name": "@museumwnf/baroqueart-reformation-data",
-  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/reformation/"
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/reformation/",
+  "collections": {
+    "371247bc-5f01-5a23-98c8-7d4ce55b2551": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://baroqueart.museumwnf.org/exhibitions/BAR/Reformation/",
+          "new_status": "N",
+          "project_id": "BAR",
+          "portal_image": "database/exhibitions/51/portal_image/1.jpg",
+          "display_order": 8
+        }
+      }
+    }
+  }
 }

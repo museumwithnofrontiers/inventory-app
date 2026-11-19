@@ -7,5 +7,18 @@
   "collection_id": "504a47df-11ce-5a98-8680-243fd198e8df",
   "partner_ids": [],
   "package_name": "@museumwnf/baroqueart-enlightenment-data",
-  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/enlightenment/"
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/enlightenment/",
+  "collections": {
+    "504a47df-11ce-5a98-8680-243fd198e8df": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://baroqueart.museumwnf.org/exhibitions/BAR/enlightenment/",
+          "new_status": "N",
+          "project_id": "BAR",
+          "portal_image": "database/exhibitions/45/portal_image/1.jpg",
+          "display_order": 6
+        }
+      }
+    }
+  }
 }

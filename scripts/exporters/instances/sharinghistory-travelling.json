@@ -7,5 +7,34 @@
   "collection_id": "77fd6ce2-6118-5d1c-a682-046646e098fb",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-travelling-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=11"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=11",
+  "collections": {
+    "77fd6ce2-6118-5d1c-a682-046646e098fb": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/11/item_logo_111.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=AT_01;at&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/11/item_logo_211.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=QT_01;qt&shpro=AWE&",
+            "display_order": 2
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/11/item_logo_311.jpg",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=UA_01;ua&shpro=AWE&",
+            "display_order": 3
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

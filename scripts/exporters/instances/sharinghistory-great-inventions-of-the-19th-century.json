@@ -7,5 +7,34 @@
   "collection_id": "1f123df9-1e8c-522c-833c-709f517c53f5",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-great-inventions-of-the-19th-century-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=4"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=4",
+  "collections": {
+    "1f123df9-1e8c-522c-833c-709f517c53f5": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/4/item_logo_14.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=JO_01;jo&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/4/item_logo_24.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=ET_01;eg&shpro=AWE&",
+            "display_order": 2
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/4/item_logo_34.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=SA_01;sa&shpro=AWE&",
+            "display_order": 3
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

@@ -3,5 +3,27 @@
   "slug": "photographs",
   "name": "Photographs",
   "collection_id": "a2ec5a6a-948f-53c6-b330-02eac4cab1c2",
-  "package_name": "@museumwnf/photographs-data"
+  "package_name": "@museumwnf/photographs-data",
+  "collections": {
+    "a2ec5a6a-948f-53c6-b330-02eac4cab1c2": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://photographs.museumwnf.org",
+          "slug": "photographs",
+          "i18n_group_id": 43,
+          "mwnf3_project_id": "PHO",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/29/1.jpg",
+          "banner_item": "sh#obj#AWE;tr;28",
+          "banner_image": "thematic_gallery/thg_galleries/29/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

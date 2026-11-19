@@ -12,5 +12,18 @@
     "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
   ],
   "package_name": "@museumwnf/islamicart-fatimids-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/fatimids/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/fatimids/",
+  "collections": {
+    "35beb34a-375b-5bd2-98d3-523a97e96b21": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/fatimids/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/16/portal_image/1.jpg",
+          "display_order": 3
+        }
+      }
+    }
+  }
 }

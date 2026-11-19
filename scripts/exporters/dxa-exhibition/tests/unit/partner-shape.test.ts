@@ -308,7 +308,9 @@ describe('PartnerExporter — shared partner shape', () => {
     expect(sql).toContain("cp.collection_type = 'project'")
     // An exhibition's project is the fallback only when no other project lists
     // the partner: lending to an exhibition does not change whose partner it is.
-    expect(sql).toMatch(/ORDER BY EXISTS \(SELECT 1\s+FROM collections x\s+WHERE x.type = 'exhibition'\s+AND pp.backward_compatibility/)
-    expect(sql).toContain("x.type = 'exhibition'")
+    // The projects an exhibition anchors come from the site configuration
+    // (M16 E4b): none here, so the fallback order is plain.
+    expect(sql).toMatch(/ORDER BY (FALSE|pp\.backward_compatibility IN \([?, ]+\)),\s+pp\.id/)
+    expect(queries.some(q => q.sql.includes("FROM collections WHERE type = 'exhibition'"))).toBe(true)
   })
 })

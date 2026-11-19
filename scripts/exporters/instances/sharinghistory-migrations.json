@@ -7,5 +7,29 @@
   "collection_id": "2353a4ff-1dd5-5807-9b96-c146b09485c2",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-migrations-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=8"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=8",
+  "collections": {
+    "2353a4ff-1dd5-5807-9b96-c146b09485c2": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/8/item_logo_18.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=TN_01;tn&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/8/item_logo_28.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=IT_01;it&shpro=AWE&",
+            "display_order": 2
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

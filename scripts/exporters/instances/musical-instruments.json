@@ -3,5 +3,27 @@
   "slug": "musical-instruments",
   "name": "Musical Instruments",
   "collection_id": "c6c119d5-13c9-58c9-b0c4-fb412854b0f2",
-  "package_name": "@museumwnf/musical-instruments-data"
+  "package_name": "@museumwnf/musical-instruments-data",
+  "collections": {
+    "c6c119d5-13c9-58c9-b0c4-fb412854b0f2": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://musical-instruments.museumwnf.org",
+          "slug": "musical_instruments",
+          "i18n_group_id": 41,
+          "mwnf3_project_id": "MUS",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/27/1.jpg",
+          "banner_item": "mwnf#obj#EPM;at;Mus22;48",
+          "banner_image": "thematic_gallery/thg_galleries/27/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

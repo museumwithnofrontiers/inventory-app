@@ -2,6 +2,7 @@ import { publicationLinks } from '../../../shared/links.mjs'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
 import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
+import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 import { loadCollectionRelations, withCollectionRelations, withTranslationRelations } from '../../../shared/collection-relations.mjs'
 import type { PageLink } from '../../../shared/links.mjs'
 import type { ExportResult } from '../core/types.js'
@@ -123,6 +124,7 @@ export class CollectionExporter extends BaseExporter {
            ORDER BY collection_id, language_id, context_id`,
           collectionIds
         ).then(restoreCollectionColumns)
+        .then(restoreSiteTranslations)
         .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows)),
         this.db.query<CollectionImageRow>(
           `SELECT collection_id, path, alt_text, display_order
@@ -265,7 +267,7 @@ export class CollectionExporter extends BaseExporter {
         latitude: c.latitude !== null ? parseFloat(c.latitude) : null,
         longitude: c.longitude !== null ? parseFloat(c.longitude) : null,
         map_zoom: c.map_zoom,
-        extra: withCollectionRelations(parseJson(c.extra), relations.get(c.id)),
+        extra: withCollectionRelations(withSiteCollectionExtra(parseJson(c.extra), c.id), relations.get(c.id)),
         images: imageMap.get(c.id) ?? [],
         items: itemMap.get(c.id) ?? [],
         ...(c.type === TRAIL_TYPE

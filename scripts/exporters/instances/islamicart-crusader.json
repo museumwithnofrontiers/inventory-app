@@ -12,5 +12,18 @@
     "3b73a306-1129-5c8d-acba-8e34a39e132f"
   ],
   "package_name": "@museumwnf/islamicart-crusader-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/crusader/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/crusader/",
+  "collections": {
+    "4c126e80-2567-5abd-9191-3d40f380e81f": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/crusader/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/24/portal_image/1.jpg",
+          "display_order": 15
+        }
+      }
+    }
+  }
 }

@@ -6,5 +6,16 @@
   "package_name": "@museumwnf/baroqueart-data",
   "project_ids": [
     "76eaf6c2-8025-53bc-9e39-106803a3917e"
-  ]
+  ],
+  "collections": {
+    "11fbffb6-9a72-51af-8ad6-9aaacba82cb0": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "BAR",
+          "display_order": 2
+        }
+      }
+    }
+  }
 }

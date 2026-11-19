@@ -91,7 +91,7 @@ describe('ExhibitionExporter — project_id', () => {
             sibling('arts-in-dialogue-uuid', 54, 'exhibition'),
           ]
         }
-        if (sql.includes('extra IS NOT NULL')) {
+        if (sql.includes('SELECT collection_id, extra')) {
           // A database imported before status was dropped still holds it: not read.
           return [
             { collection_id: 'doubts-uuid', extra: { thg_gallery: { status: 'A' } } },

@@ -11,5 +11,18 @@
     "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
   ],
   "package_name": "@museumwnf/islamicart-the-abbasids-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_abbasids/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_abbasids/",
+  "collections": {
+    "da493358-92ba-5a20-8866-fa30fb03bfb2": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/the_abbasids/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/13/portal_image/1.jpg",
+          "display_order": 2
+        }
+      }
+    }
+  }
 }

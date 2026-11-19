@@ -11,5 +11,18 @@
     "71715b75-3521-53ee-8c85-91fca0b977d0"
   ],
   "package_name": "@museumwnf/islamicart-pilgrimage-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/pilgrimage/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/pilgrimage/",
+  "collections": {
+    "e0fad146-3560-5ca0-86d7-06707053fbef": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/pilgrimage/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/29/portal_image/1.jpg",
+          "display_order": 8
+        }
+      }
+    }
+  }
 }

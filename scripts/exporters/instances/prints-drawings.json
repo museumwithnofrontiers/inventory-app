@@ -3,5 +3,27 @@
   "slug": "prints-drawings",
   "name": "Prints and Drawings",
   "collection_id": "c8d09b12-07f0-5cb6-830f-c358b43751be",
-  "package_name": "@museumwnf/prints-drawings-data"
+  "package_name": "@museumwnf/prints-drawings-data",
+  "collections": {
+    "c8d09b12-07f0-5cb6-830f-c358b43751be": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://prints-drawings.museumwnf.org",
+          "slug": "prints_and_drawings",
+          "i18n_group_id": 46,
+          "mwnf3_project_id": "PRI",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/32/1.jpg",
+          "banner_item": "mwnf#obj#BAR;hu;Mus11_A;44",
+          "banner_image": "thematic_gallery/thg_galleries/32/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

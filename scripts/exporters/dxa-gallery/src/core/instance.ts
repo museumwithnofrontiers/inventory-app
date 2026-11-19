@@ -20,7 +20,7 @@ export interface Instance {
   packageName: string
 }
 
-const KNOWN_FIELDS = new Set(['kind', 'slug', 'name', 'collection_id', 'package_name'])
+const KNOWN_FIELDS = new Set(['kind', 'slug', 'name', 'collection_id', 'package_name', 'collections'])
 
 const SLUG_PATTERN = /^[a-z0-9]+(-[a-z0-9]+)*$/
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/

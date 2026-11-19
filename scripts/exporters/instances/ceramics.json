@@ -3,5 +3,27 @@
   "slug": "ceramics",
   "name": "Ceramics",
   "collection_id": "2d8735bb-4fae-5cce-ac94-058edd1c9b0e",
-  "package_name": "@museumwnf/ceramics-data"
+  "package_name": "@museumwnf/ceramics-data",
+  "collections": {
+    "2d8735bb-4fae-5cce-ac94-058edd1c9b0e": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://ceramics.museumwnf.org",
+          "slug": "ceramics",
+          "i18n_group_id": 27,
+          "mwnf3_project_id": "CER",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/11/1.jpg",
+          "banner_item": "mwnf#obj#EPM;dn;Mus21;34",
+          "banner_image": "thematic_gallery/thg_galleries/11/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

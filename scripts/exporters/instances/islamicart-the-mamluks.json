@@ -11,5 +11,18 @@
     "71715b75-3521-53ee-8c85-91fca0b977d0"
   ],
   "package_name": "@museumwnf/islamicart-the-mamluks-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_mamluks/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_mamluks/",
+  "collections": {
+    "217482b1-7626-531f-8ca9-51c2f680fe3d": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/the_mamluks/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/17/portal_image/1.jpg",
+          "display_order": 5
+        }
+      }
+    }
+  }
 }

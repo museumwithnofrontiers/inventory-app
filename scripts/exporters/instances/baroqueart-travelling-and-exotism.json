@@ -9,5 +9,18 @@
     "4df52263-9f4f-577a-8758-36bd2784101b"
   ],
   "package_name": "@museumwnf/baroqueart-travelling-and-exotism-data",
-  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/travelling_and_exotism/"
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/travelling_and_exotism/",
+  "collections": {
+    "fb21ee03-874b-5ba1-95d5-bde929f2762d": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://baroqueart.museumwnf.org/exhibitions/BAR/travelling_and_exotism/",
+          "new_status": "N",
+          "project_id": "BAR",
+          "portal_image": "database/exhibitions/44/portal_image/1.jpg",
+          "display_order": 9
+        }
+      }
+    }
+  }
 }

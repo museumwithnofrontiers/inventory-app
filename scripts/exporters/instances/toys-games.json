@@ -3,5 +3,27 @@
   "slug": "toys-games",
   "name": "Toys and Games",
   "collection_id": "8b4360a6-1411-52d0-b673-7295e3c3fed6",
-  "package_name": "@museumwnf/toys-games-data"
+  "package_name": "@museumwnf/toys-games-data",
+  "collections": {
+    "8b4360a6-1411-52d0-b673-7295e3c3fed6": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://toys-games.museumwnf.org",
+          "slug": "toys",
+          "i18n_group_id": 53,
+          "mwnf3_project_id": "TOY",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/39/1.jpg",
+          "banner_item": "sh#obj#AWE;tr;206",
+          "banner_image": "thematic_gallery/thg_galleries/39/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

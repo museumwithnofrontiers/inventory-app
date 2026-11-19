@@ -3,5 +3,27 @@
   "slug": "arms-armoury",
   "name": "Arms and Armoury",
   "collection_id": "8e300d79-4817-50a1-b165-8b85dbc28a20",
-  "package_name": "@museumwnf/arms-armoury-data"
+  "package_name": "@museumwnf/arms-armoury-data",
+  "collections": {
+    "8e300d79-4817-50a1-b165-8b85dbc28a20": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://arms-armoury.museumwnf.org",
+          "slug": "arms_and_armoury",
+          "i18n_group_id": 24,
+          "mwnf3_project_id": "ARM",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/7/1.jpg",
+          "banner_item": "mwnf#obj#EPM;us;Mus23;45",
+          "banner_image": "thematic_gallery/thg_galleries/7/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

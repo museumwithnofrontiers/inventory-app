@@ -3,5 +3,27 @@
   "slug": "metalwork",
   "name": "Metalwork",
   "collection_id": "7a233a08-8cc7-5372-98a7-a3ba85059928",
-  "package_name": "@museumwnf/metalwork-data"
+  "package_name": "@museumwnf/metalwork-data",
+  "collections": {
+    "7a233a08-8cc7-5372-98a7-a3ba85059928": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://metalwork.museumwnf.org",
+          "slug": "metalwork",
+          "i18n_group_id": 39,
+          "mwnf3_project_id": "MET",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/25/1.jpg",
+          "banner_item": "mwnf#obj#EPM;dn;Mus21;29",
+          "banner_image": "thematic_gallery/thg_galleries/25/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

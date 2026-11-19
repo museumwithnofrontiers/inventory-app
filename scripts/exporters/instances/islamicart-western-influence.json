@@ -14,5 +14,18 @@
     "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
   ],
   "package_name": "@museumwnf/islamicart-western-influence-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/western_influence/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/western_influence/",
+  "collections": {
+    "2c60ed37-eb2d-5736-98a0-24252466e0a4": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/western_influence/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/42/portal_image/1.jpg",
+          "display_order": 18
+        }
+      }
+    }
+  }
 }

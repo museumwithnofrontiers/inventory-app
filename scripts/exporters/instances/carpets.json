@@ -3,5 +3,27 @@
   "slug": "carpets",
   "name": "Carpets",
   "collection_id": "743fd119-f663-54ae-b92a-933fc1fdbfd8",
-  "package_name": "@museumwnf/carpets-data"
+  "package_name": "@museumwnf/carpets-data",
+  "collections": {
+    "743fd119-f663-54ae-b92a-933fc1fdbfd8": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://carpets.museumwnf.org",
+          "slug": "carpets",
+          "i18n_group_id": 18,
+          "mwnf3_project_id": "DCA",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/9/1.jpg",
+          "banner_item": "mwnf#obj#DCA;uk;Mus31;19",
+          "banner_image": "thematic_gallery/thg_galleries/9/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

@@ -3,5 +3,27 @@
   "slug": "mosaics",
   "name": "Mosaics",
   "collection_id": "37b58be3-f63e-515f-b0e6-1bdfa27095a4",
-  "package_name": "@museumwnf/mosaics-data"
+  "package_name": "@museumwnf/mosaics-data",
+  "collections": {
+    "37b58be3-f63e-515f-b0e6-1bdfa27095a4": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://mosaics.museumwnf.org",
+          "slug": "mosaics",
+          "i18n_group_id": 40,
+          "mwnf3_project_id": "MOS",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/26/1.jpg",
+          "banner_item": "mwnf#obj#EPM;us;Mus23;20",
+          "banner_image": "thematic_gallery/thg_galleries/26/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

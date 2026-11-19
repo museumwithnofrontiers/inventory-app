@@ -101,6 +101,7 @@ describe('ThgGalleryImporter', () => {
       writeCollection: writeCollectionMock,
       getCollectionExtra: vi.fn().mockResolvedValue(null),
       setCollectionExtra: setCollectionExtraMock,
+      setCollectionFlags: vi.fn().mockResolvedValue(undefined),
     } as unknown as IWriteStrategy;
 
     context = {
@@ -260,21 +261,24 @@ describe('ThgGalleryImporter', () => {
     expect(result.skipped).toBe(1);
   });
 
-  describe('gallery anchor', () => {
-    it('writes project code, slug, host and i18n groups to collections.extra', async () => {
-      const importer = new ThgGalleryImporter(context);
-      await importer.import();
+  describe('gallery anchor (site configuration, M16 E4b)', () => {
+    it('builds project code, slug, host and i18n groups for the instance file', async () => {
+      const entries = await new ThgGalleryImporter(context).siteConfiguration();
 
-      const call = writeCollectionMock.mock.calls[0][0] as Record<string, unknown>;
-      const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-
-      expect(extra.thg_gallery).toEqual({
-        mwnf3_project_id: 'ISL',
-        slug: 'islamic-art',
-        host: 'https://islamic-art.museumwnf.org',
-        i18n_group_id: 21,
-        i18n_common_group_id: 59,
-      });
+      expect(entries).toEqual([
+        {
+          collection: 'mwnf3_thematic_gallery:thg_gallery:10',
+          extra: {
+            thg_gallery: {
+              mwnf3_project_id: 'ISL',
+              slug: 'islamic-art',
+              host: 'https://islamic-art.museumwnf.org',
+              i18n_group_id: 21,
+              i18n_common_group_id: 59,
+            },
+          },
+        },
+      ]);
     });
 
     it('omits the host for exhibitions, which have no thg_gallery_url row', async () => {
@@ -296,56 +300,32 @@ describe('ThgGalleryImporter', () => {
         exhibitionI18nGalleryIds: [20],
         galleryUrls: [],
       });
-      tracker.set('mwnf3_thematic_gallery:thg_gallery:20', 'context-uuid-20', 'context');
       context = { ...context, legacyDb: { ...legacyDb, query: queryMock as ILegacyDatabase['query'] } };
 
-      const importer = new ThgGalleryImporter(context);
-      await importer.import();
-
-      const call = writeCollectionMock.mock.calls[0][0] as Record<string, unknown>;
-      const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-      const anchor = extra.thg_gallery as Record<string, unknown>;
+      const [entry] = await new ThgGalleryImporter(context).siteConfiguration();
+      const anchor = entry!.extra!['thg_gallery'] as Record<string, unknown>;
 
       expect(anchor.host).toBeUndefined();
       // The slug is load-bearing for exhibitions: it IS the public URL segment
       expect(anchor.slug).toBe('the_use_of_colours_in_art');
     });
 
-    it('refreshes the anchor of an already-imported gallery, preserving other extra keys', async () => {
-      tracker.set('mwnf3_thematic_gallery:thg_gallery:10', 'existing-uuid', 'collection');
-      strategy = {
-        ...strategy,
-        getCollectionExtra: vi.fn().mockResolvedValue({ unrelated: 'keep me' }),
-        setCollectionExtra: setCollectionExtraMock,
-      } as unknown as IWriteStrategy;
-      context = { ...context, tracker, strategy };
+    it('writes no anchor to the inventory', async () => {
+      await new ThgGalleryImporter(context).import();
 
-      const importer = new ThgGalleryImporter(context);
-      await importer.import();
-
-      expect(setCollectionExtraMock).toHaveBeenCalledTimes(1);
-      const [collectionId, serialized] = setCollectionExtraMock.mock.calls[0] as [string, string];
-      expect(collectionId).toBe('existing-uuid');
-      expect(JSON.parse(serialized)).toEqual({
-        unrelated: 'keep me',
-        thg_gallery: {
-          mwnf3_project_id: 'ISL',
-          slug: 'islamic-art',
-          host: 'https://islamic-art.museumwnf.org',
-          i18n_group_id: 21,
-          i18n_common_group_id: 59,
-        },
-      });
+      const call = writeCollectionMock.mock.calls[0][0] as Record<string, unknown>;
+      expect(call.extra).toBeNull();
+      expect(setCollectionExtraMock).not.toHaveBeenCalled();
     });
 
-    it('does not touch the anchor in dry-run mode', async () => {
+    it("sets an already-imported gallery's flags, not its extra", async () => {
       tracker.set('mwnf3_thematic_gallery:thg_gallery:10', 'existing-uuid', 'collection');
-      context = { ...context, tracker, dryRun: true };
+      context = { ...context, tracker };
 
-      const importer = new ThgGalleryImporter(context);
-      await importer.import();
+      await new ThgGalleryImporter(context).import();
 
       expect(setCollectionExtraMock).not.toHaveBeenCalled();
+      expect(strategy.setCollectionFlags).toHaveBeenCalledWith('existing-uuid', expect.any(Object));
     });
   });
 });

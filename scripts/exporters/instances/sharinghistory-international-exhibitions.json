@@ -7,5 +7,24 @@
   "collection_id": "c3a68819-dcf2-5be4-8f9b-dcc45c8848e4",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-international-exhibitions-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=7"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=7",
+  "collections": {
+    "c3a68819-dcf2-5be4-8f9b-dcc45c8848e4": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/7/item_logo_17.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=IT_02;it&shpro=AWE&",
+            "display_order": 1
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

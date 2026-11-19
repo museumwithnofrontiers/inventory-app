@@ -2,6 +2,7 @@ import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { buildExhibitionReferences } from './exhibition-references.js'
 import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs'
+import { withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 
 // A Sharing History record shown in a gallery or exhibition: the fields the
 // galleries' sheet (dxa-api) reads from it that a mwnf3 record keeps elsewhere.
@@ -792,7 +793,8 @@ export class ItemExporter extends BaseExporter {
     for (const row of rows) {
       if (row.collection_id === this.exhibition.id) continue
       const anchor =
-        parseJson<{ thg_gallery?: Record<string, unknown> }>(row.extra)?.thg_gallery ?? {}
+        parseJson<{ thg_gallery?: Record<string, unknown> }>(withSiteCollectionExtra(row.extra, row.collection_id))
+          ?.thg_gallery ?? {}
       // Only a gallery or exhibition that has a website of its own is listed:
       // a link to one that has none (e.g. Carpets' "Doubts") leads nowhere.
       // Legacy's live/hidden status is the old sites' runtime state, which the

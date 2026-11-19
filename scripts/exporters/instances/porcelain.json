@@ -3,5 +3,27 @@
   "slug": "porcelain",
   "name": "Porcelain",
   "collection_id": "ff6e14b8-4eba-5b13-b61f-b5cf68dba1c1",
-  "package_name": "@museumwnf/porcelain-data"
+  "package_name": "@museumwnf/porcelain-data",
+  "collections": {
+    "ff6e14b8-4eba-5b13-b61f-b5cf68dba1c1": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://porcelain.museumwnf.org",
+          "slug": "porcelain",
+          "i18n_group_id": 44,
+          "mwnf3_project_id": "POR",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/30/1.jpg",
+          "banner_item": "mwnf#obj#BAR;hr;Mus11;27",
+          "banner_image": "thematic_gallery/thg_galleries/30/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

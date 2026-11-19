@@ -32,13 +32,14 @@ describe('ThgGalleryContentImporter', () => {
     showSummary: vi.fn(),
   };
 
-  /** The `logos` the n-th setCollectionExtra call wrote. */
-  const writtenLogos = (call = 0): Array<Record<string, unknown>> =>
-    (
-      JSON.parse(setCollectionExtraMock.mock.calls[call]![1] as string) as {
-        logos: Array<Record<string, unknown>>;
-      }
-    ).logos;
+  /** The `logos` siteConfiguration() builds for gallery 5. */
+  const builtLogos = async (): Promise<Array<Record<string, unknown>>> => {
+    const entries = await new ThgGalleryContentImporter(context).siteConfiguration();
+    const entry = entries.find(
+      (candidate) => candidate.collection === 'mwnf3_thematic_gallery:thg_gallery:5'
+    );
+    return (entry?.extra as { logos: Array<Record<string, unknown>> }).logos;
+  };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -183,8 +184,7 @@ describe('ThgGalleryContentImporter', () => {
 
   describe('exhibition logos', () => {
     it('logo query selects logo column — not path', async () => {
-      const importer = new ThgGalleryContentImporter(context);
-      await importer.import();
+      await new ThgGalleryContentImporter(context).siteConfiguration();
 
       const logoCall = queryMock.mock.calls.find((args: unknown[]) =>
         (args[0] as string).includes('FROM mwnf3_thematic_gallery.exhibition_logo')
@@ -195,29 +195,40 @@ describe('ThgGalleryContentImporter', () => {
       expect(sql).not.toContain('path');
     });
 
-    it("keeps the logo in its collection's extra, beside what is there, not as an image", async () => {
-      const importer = new ThgGalleryContentImporter(context);
-      const result = await importer.import();
+    it('builds the logos for the gallery', async () => {
+      const entries = await new ThgGalleryContentImporter(context).siteConfiguration();
+
+      expect(entries).toEqual([
+        {
+          collection: 'mwnf3_thematic_gallery:thg_gallery:5',
+          extra: {
+            logos: [
+              {
+                file: 'logos/gallery5_header.png',
+                link: 'https://www.unaoc.org/',
+                category_id: 1,
+                category_name: 'Footer 1',
+                visible: true,
+                labels: { eng: 'United Nations Alliance of Civilizations' },
+                alts: { eng: 'The UNAOC emblem' },
+                display_order: 1,
+              },
+            ],
+          },
+        },
+      ]);
+    });
+
+    it('no longer imports the logos, neither as images nor into the collection extra', async () => {
+      const result = await new ThgGalleryContentImporter(context).import();
 
       expect(writeCollectionImageMock).not.toHaveBeenCalled();
-      expect(setCollectionExtraMock).toHaveBeenCalledWith(
-        'collection-uuid-5',
-        JSON.stringify({
-          subtitle: 'kept',
-          logos: [
-            {
-              file: 'logos/gallery5_header.png',
-              link: 'https://www.unaoc.org/',
-              category_id: 1,
-              category_name: 'Footer 1',
-              visible: true,
-              labels: { eng: 'United Nations Alliance of Civilizations' },
-              alts: { eng: 'The UNAOC emblem' },
-              display_order: 1,
-            },
-          ],
-        })
-      );
+      expect(setCollectionExtraMock).not.toHaveBeenCalled();
+      expect(
+        queryMock.mock.calls.some((args: unknown[]) =>
+          (args[0] as string).includes('FROM mwnf3_thematic_gallery.exhibition_logo')
+        )
+      ).toBe(false);
       expect(result.errors).toHaveLength(0);
     });
 
@@ -227,17 +238,14 @@ describe('ThgGalleryContentImporter', () => {
      * base row's value would put an acronym on the exhibition banner.
      */
     it('lets the i18n caption win over the base-row label', async () => {
-      await new ThgGalleryContentImporter(context).import();
-
-      expect(writtenLogos()[0]!['labels']).toEqual({
+      expect((await builtLogos())[0]!['labels']).toEqual({
         eng: 'United Nations Alliance of Civilizations',
       });
     });
 
     /**
-     * Legacy hides a logo with visible='N'. The inventory is the system of
-     * record — the row is imported anyway and the flag rides along, so
-     * filtering stays the viewer's job.
+     * Legacy hides a logo with visible='N'. The row is kept anyway and the
+     * flag rides along, so filtering stays the viewer's job.
      */
     it('keeps a hidden logo, carrying visible: false', async () => {
       queryMock.mockImplementation(async (sql: string) => {
@@ -265,20 +273,17 @@ describe('ThgGalleryContentImporter', () => {
         return [];
       });
 
-      const result = await new ThgGalleryContentImporter(context).import();
-
       // Every empty key is omitted; `visible: false` is a value and stays.
-      expect(writtenLogos()).toEqual([
+      expect(await builtLogos()).toEqual([
         { file: 'logos/hidden.png', visible: false, display_order: 0 },
       ]);
-      expect(result.errors).toHaveLength(0);
     });
 
     /**
      * The legacy schema drifts. Losing the caption tables must degrade the
      * payload, not lose the logos.
      */
-    it('still imports logos when the i18n and category tables are missing', async () => {
+    it('still builds the logos when the i18n and category tables are missing', async () => {
       queryMock.mockImplementation(async (sql: string) => {
         if (sql.includes('INNER JOIN mwnf3_thematic_gallery.thg_projects')) {
           return [{ gallery_id: 5, is_gallery: 0, is_exhibition: 1 }];
@@ -308,14 +313,11 @@ describe('ThgGalleryContentImporter', () => {
         return [];
       });
 
-      const result = await new ThgGalleryContentImporter(context).import();
-
-      const [extra] = writtenLogos();
-      expect(extra!['category_id']).toBe(2);
-      expect(extra).not.toHaveProperty('category_name');
+      const [logo] = await builtLogos();
+      expect(logo!['category_id']).toBe(2);
+      expect(logo).not.toHaveProperty('category_name');
       // The base row still seeds the default language.
-      expect(extra!['labels']).toEqual({ eng: 'UNAOC' });
-      expect(result.errors).toHaveLength(0);
+      expect(logo!['labels']).toEqual({ eng: 'UNAOC' });
     });
   });
 

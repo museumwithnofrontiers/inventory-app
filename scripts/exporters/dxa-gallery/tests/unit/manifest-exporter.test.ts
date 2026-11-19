@@ -1,4 +1,7 @@
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { setSiteConfiguration } from '../../../shared/site-configuration.mjs'
+
+afterEach(() => setSiteConfiguration(null))
 
 import { ManifestExporter } from '../../src/exporters/manifest-exporter.js'
 import type { ExportContext } from '../../src/core/types.js'
@@ -210,10 +213,15 @@ describe('ManifestExporter', () => {
       labels: [],
       memberProjects: [{ project_id: 'dca-uuid' }, { project_id: 'isl-uuid' }, { project_id: 'galleries-uuid' }],
       projects: ['dca-uuid', 'galleries-uuid', 'isl-uuid'].map((id) => ({
-        id, backward_compatibility: null, site_url: null, related_database_url: null, artistic_introduction_url: null,
+        id,
+        backward_compatibility: id === 'dca-uuid' ? 'mwnf3:projects:DCA' : null,
+        site_url: null,
+        related_database_url: null,
+        artistic_introduction_url: null,
       })),
-      siteProjects: [{ collection_id: 'carpets-collection', project_id: 'dca-uuid' }],
     })
+    // The site's project is its gallery's mwnf3 project, site configuration (M16 E4b).
+    setSiteConfiguration(new Map([['carpets-collection', { extra: { thg_gallery: { mwnf3_project_id: 'DCA' } } }]]))
     context.homeSites = {
       byProject: new Map([['isl-uuid', 'islamicart']]),
       bySiteCollection: new Map([['carpets-collection', 'carpets']]),
