@@ -247,6 +247,9 @@ class ItemTranslationResource extends Resource
                         Textarea::make('image_rights')
                             ->label('Image rights')
                             ->rows(2),
+                        Textarea::make('external_sources')
+                            ->label('External sources')
+                            ->rows(3),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -386,6 +389,7 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::markdownEntry('notice'),
                         TranslationInfolistSchema::markdownEntry('external_notice', 'External notice'),
                         TranslationInfolistSchema::markdownEntry('image_rights', 'Image rights'),
+                        TranslationInfolistSchema::markdownEntry('external_sources', 'External sources'),
                     ])
                     ->columns(2)
                     ->collapsible()

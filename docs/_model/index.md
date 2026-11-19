@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 55
+- ** Total Models:** 54
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
@@ -23,7 +23,6 @@ title: Generated Model Documentation
 - [Collection](#collection)
 - [CollectionImage](#collectionimage)
 - [CollectionItem](#collectionitem)
-- [CollectionMedia](#collectionmedia)
 - [CollectionPartner](#collectionpartner)
 - [CollectionTranslation](#collectiontranslation)
 - [Context](#context)
@@ -45,11 +44,11 @@ title: Generated Model Documentation
 - [ItemImage](#itemimage)
 - [ItemItemLink](#itemitemlink)
 - [ItemItemLinkTranslation](#itemitemlinktranslation)
-- [ItemMedia](#itemmedia)
 - [ItemTranslation](#itemtranslation)
 - [ItemTranslationAuthor](#itemtranslationauthor)
 - [Language](#language)
 - [LanguageTranslation](#languagetranslation)
+- [Link](#link)
 - [Partner](#partner)
 - [PartnerImage](#partnerimage)
 - [PartnerLogo](#partnerlogo)
@@ -403,7 +402,6 @@ const UPDATED_AT = 'updated_at';
 - **`children()`**: HasMany [Collection](#collection)
 - **`items()`**: HasMany [Item](#item)
 - **`collectionImages()`**: HasMany [CollectionImage](#collectionimage)
-- **`collectionMedia()`**: HasMany [CollectionMedia](#collectionmedia)
 - **`contributors()`**: HasMany [Contributor](#contributor)
 
 #### Belongs To Many
@@ -416,6 +414,9 @@ const UPDATED_AT = 'updated_at';
 - **`associatedPartners()`**: BelongsToMany [Partner](#partner)
 - **`minorContributors()`**: BelongsToMany [Partner](#partner)
 - **`publications()`**: BelongsToMany [Publication](#publication)
+
+#### Morph Many
+- **`links()`**: MorphMany [Link](#link)
 
 ### Query Scopes
 
@@ -557,65 +558,6 @@ const UPDATED_AT = 'updated_at';
 #### Belongs To
 - **`collection()`**: BelongsTo [Collection](#collection)
 - **`item()`**: BelongsTo [Item](#item)
-
-
-## CollectionMedia {#collectionmedia}
-
-**Namespace:** `App\Models\CollectionMedia`
-
-### Database Table
-
-| Property | Value |
-|----------|-------|
-| **Table Name** | `collection_media` |
-| **Primary Key** | `id` |
-| **Key Type** | String (UUID) |
-| **Incrementing** | No |
-| **Timestamps** | Yes (`created_at`, `updated_at`) |
-
-### Database Schema
-
-| Column | Type | Nullable | Default | Extra |
-|--------|------|----------|---------|-------|
-| `id` | char | Unknown | Unknown |  |
-| `collection_id` | char | Unknown | Unknown |  |
-| `language_id` | varchar | Unknown | Unknown |  |
-| `type` | enum | Unknown | Unknown |  |
-| `title` | varchar | Unknown | Unknown |  |
-| `description` | text | Unknown | Unknown |  |
-| `url` | varchar | Unknown | Unknown |  |
-| `display_order` | int | Unknown | Unknown |  |
-| `extra` | json | Unknown | Unknown |  |
-| `backward_compatibility` | varchar | Unknown | Unknown |  |
-| `created_at` | timestamp | Unknown | Unknown |  |
-| `updated_at` | timestamp | Unknown | Unknown |  |
-
-### Fillable Fields
-
-```php
-['collection_id', 'language_id', 'type', 'title', 'description', 'url', 'display_order', 'extra', 'backward_compatibility']
-```
-
-### Attribute Casting
-
-| Attribute | Cast Type |
-|-----------|-----------|
-| `type` | `App\Enums\MediaType` |
-| `display_order` | `integer` |
-| `extra` | `object` |
-
-### Model Constants
-
-```php
-const CREATED_AT = 'created_at';
-const UPDATED_AT = 'updated_at';
-```
-
-### Relationships
-
-#### Belongs To
-- **`collection()`**: BelongsTo [Collection](#collection)
-- **`language()`**: BelongsTo [Language](#language)
 
 
 ## CollectionPartner {#collectionpartner}
@@ -1596,7 +1538,6 @@ const UPDATED_AT = 'updated_at';
 #### Has Many
 - **`children()`**: HasMany [Item](#item)
 - **`itemImages()`**: HasMany [ItemImage](#itemimage)
-- **`itemMedia()`**: HasMany [ItemMedia](#itemmedia)
 - **`itemDocuments()`**: HasMany [ItemDocument](#itemdocument)
 - **`translations()`**: HasMany [ItemTranslation](#itemtranslation)
 - **`outgoingLinks()`**: HasMany [ItemItemLink](#itemitemlink)
@@ -1609,6 +1550,9 @@ const UPDATED_AT = 'updated_at';
 - **`timelineEvents()`**: BelongsToMany [TimelineEvent](#timelineevent)
 - **`attachedToCollections()`**: BelongsToMany [Collection](#collection)
 - **`publications()`**: BelongsToMany [Publication](#publication)
+
+#### Morph Many
+- **`links()`**: MorphMany [Link](#link)
 
 ### Query Scopes
 
@@ -1865,65 +1809,6 @@ const UPDATED_AT = 'updated_at';
 - **`forLanguage()`**
 
 
-## ItemMedia {#itemmedia}
-
-**Namespace:** `App\Models\ItemMedia`
-
-### Database Table
-
-| Property | Value |
-|----------|-------|
-| **Table Name** | `item_media` |
-| **Primary Key** | `id` |
-| **Key Type** | String (UUID) |
-| **Incrementing** | No |
-| **Timestamps** | Yes (`created_at`, `updated_at`) |
-
-### Database Schema
-
-| Column | Type | Nullable | Default | Extra |
-|--------|------|----------|---------|-------|
-| `id` | char | Unknown | Unknown |  |
-| `item_id` | char | Unknown | Unknown |  |
-| `language_id` | varchar | Unknown | Unknown |  |
-| `type` | enum | Unknown | Unknown |  |
-| `title` | varchar | Unknown | Unknown |  |
-| `description` | text | Unknown | Unknown |  |
-| `url` | varchar | Unknown | Unknown |  |
-| `display_order` | int | Unknown | Unknown |  |
-| `extra` | json | Unknown | Unknown |  |
-| `backward_compatibility` | varchar | Unknown | Unknown |  |
-| `created_at` | timestamp | Unknown | Unknown |  |
-| `updated_at` | timestamp | Unknown | Unknown |  |
-
-### Fillable Fields
-
-```php
-['item_id', 'language_id', 'type', 'title', 'description', 'url', 'display_order', 'extra', 'backward_compatibility']
-```
-
-### Attribute Casting
-
-| Attribute | Cast Type |
-|-----------|-----------|
-| `type` | `App\Enums\MediaType` |
-| `display_order` | `integer` |
-| `extra` | `object` |
-
-### Model Constants
-
-```php
-const CREATED_AT = 'created_at';
-const UPDATED_AT = 'updated_at';
-```
-
-### Relationships
-
-#### Belongs To
-- **`item()`**: BelongsTo [Item](#item)
-- **`language()`**: BelongsTo [Language](#language)
-
-
 ## ItemTranslation {#itemtranslation}
 
 **Namespace:** `App\Models\ItemTranslation`
@@ -1973,6 +1858,7 @@ const UPDATED_AT = 'updated_at';
 | `patrons` | text | Unknown | Unknown |  |
 | `architects` | text | Unknown | Unknown |  |
 | `image_rights` | text | Unknown | Unknown |  |
+| `external_sources` | text | Unknown | Unknown |  |
 | `place_of_production` | text | Unknown | Unknown |  |
 | `method_for_datation` | text | Unknown | Unknown |  |
 | `method_for_provenance` | text | Unknown | Unknown |  |
@@ -1999,7 +1885,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'status', 'catalogue_references', 'notice', 'external_notice', 'image_rights', 'backward_compatibility', 'extra']
+['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'status', 'catalogue_references', 'notice', 'external_notice', 'image_rights', 'external_sources', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
@@ -2209,6 +2095,76 @@ const UPDATED_AT = 'updated_at';
 - **`forDisplayLanguage()`**
 
 
+## Link {#link}
+
+**Namespace:** `App\Models\Link`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `links` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `linkable_type` | varchar | Unknown | Unknown |  |
+| `linkable_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `type` | varchar | Unknown | Unknown |  |
+| `title` | varchar | Unknown | Unknown |  |
+| `url` | varchar | Unknown | Unknown |  |
+| `description` | text | Unknown | Unknown |  |
+| `authors` | text | Unknown | Unknown |  |
+| `category` | tinyint | Unknown | Unknown |  |
+| `resource_type` | varchar | Unknown | Unknown |  |
+| `location` | varchar | Unknown | Unknown |  |
+| `country_code` | varchar | Unknown | Unknown |  |
+| `further_reading` | text | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['language_id', 'type', 'title', 'url', 'description', 'authors', 'category', 'resource_type', 'location', 'country_code', 'further_reading', 'display_order', 'extra', 'backward_compatibility']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `type` | `App\Enums\LinkType` |
+| `category` | `integer` |
+| `display_order` | `integer` |
+| `extra` | `object` |
+
+### Model Constants
+
+```php
+const OWNERS = null;
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`language()`**: BelongsTo [Language](#language)
+
+#### Morph To
+- **`linkable()`**: MorphTo [Link](#link)
+
+
 ## Partner {#partner}
 
 **Namespace:** `App\Models\Partner`
@@ -2278,6 +2234,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To Many
 - **`collections()`**: BelongsToMany [Collection](#collection)
+
+#### Morph Many
+- **`links()`**: MorphMany [Link](#link)
 
 ### Query Scopes
 
@@ -2896,6 +2855,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Has Many
 - **`publicationImages()`**: HasMany [PublicationImage](#publicationimage)
+
+#### Morph Many
+- **`links()`**: MorphMany [Link](#link)
 
 
 ## PublicationImage {#publicationimage}

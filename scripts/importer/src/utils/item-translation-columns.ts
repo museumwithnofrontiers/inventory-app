@@ -63,6 +63,7 @@ export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
   { key: 'notice', column: 'notice' },
   { key: 'notice_c', column: 'external_notice' },
   { key: 'legacy_display_status', column: 'status', values: { N: 'hidden' } },
+  { key: 'external_sources', column: 'external_sources' },
 ];
 
 /** The top-level `extra` keys that hold a mapped text, for finding the rows. */

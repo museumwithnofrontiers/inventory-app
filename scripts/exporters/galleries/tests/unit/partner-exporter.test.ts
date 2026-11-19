@@ -72,6 +72,7 @@ describe('PartnerExporter', () => {
       ],
     ],
     [/FROM partner_images/, () => []],
+    [/FROM links\s+WHERE linkable_type = 'partner'/, () => []],
     [/FROM partner_logos/, () => [{ partner_id: 'swiss', path: 'logo.jpg', logo_type: 'primary', alt_text: null, display_order: 1 }]],
     // Legacy's "Partner" tier; Museu do Caramulo has no level — legacy's "Affiliate".
     [/cp\.collection_type = 'project'/, () => [{ partner_id: 'swiss', level: 'partner' }]],

@@ -34,7 +34,6 @@ use App\Filament\Resources\ItemResource\RelationManagers\DocumentsRelationManage
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\ImagesRelationManager as ItemImagesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\IncomingLinksRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationManager as ItemPublicationsRelationManager;
@@ -72,6 +71,7 @@ use App\Filament\Resources\PublicationResource\RelationManagers\TagsRelationMana
 use App\Filament\Resources\PublicationResource\RelationManagers\TranslationsRelationManager as PublicationTranslationsRelationManager;
 use App\Filament\Resources\PublicationTranslationResource\Pages\EditPublicationTranslation;
 use App\Filament\Resources\PublicationTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PublicationTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Resources\RoleResource\Pages\EditRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
@@ -244,7 +244,8 @@ class RelationManagerConventionTest extends TestCase
         PublicationTranslationsRelationManager::class => ['kind' => self::KIND_TRANSLATIONS, 'owner' => 'publication', 'viewParent' => 'viewParentPublication'],
 
         // ── inline ────────────────────────────────────────────────────
-        MediaRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'media'],
+        // One Links manager on items, collections, partners and editions (M16 F3), on the media's convention
+        LinksRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'media'],
         DocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'item', 'variant' => 'documents'],
         // Editions have no Resource of their own: the inline Create/Edit modal, as Media (#2527)
         PublicationEditionsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'editions'],
@@ -727,8 +728,10 @@ class RelationManagerConventionTest extends TestCase
         $header = $this->flattenActions($table->getHeaderActions());
         $this->assertSame(['create'], $this->namesOf($header), "{$class}: header actions must be exactly [create] (inline modal — no Resource to navigate to).");
 
+        // An edition's own page holds its links (M16 F3): its row opens it first.
+        $expectedRow = $config['variant'] === 'editions' ? ['links', 'edit', 'delete'] : ['edit', 'delete'];
         $row = $this->flattenActions($table->getActions());
-        $this->assertSame(['edit', 'delete'], $this->namesOf($row), "{$class}: row actions must be exactly [edit, delete].");
+        $this->assertSame($expectedRow, $this->namesOf($row), "{$class}: row actions must be exactly [".implode(', ', $expectedRow).'].');
 
         $fields = $this->mountedActionFieldNames($component, 'create');
         $this->assertContains('language_id', $fields, "{$class}: the inline Create/Edit form must include a language field, 'language_id' (#1908).");

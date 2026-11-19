@@ -2,26 +2,32 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\MediaType;
+use App\Enums\LinkType;
+use App\Filament\Resources\CollectionResource\Pages\ViewCollection;
 use App\Filament\Resources\ItemResource\Pages\ViewItem;
-use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
+use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
+use App\Filament\Resources\PublicationEditionResource;
+use App\Filament\Resources\PublicationEditionResource\Pages\ViewPublicationEdition;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
+use App\Models\Collection;
 use App\Models\Item;
-use App\Models\ItemMedia;
 use App\Models\Language;
+use App\Models\Link;
+use App\Models\Partner;
+use App\Models\PublicationEdition;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
- * M7 Story A4.4 (#1908): MediaRelationManager keeps its inline Create/Edit
- * (no Resource exists for Media), gains `language` and `extra` fields, and
- * closes the view-only mutation gap #1864 flagged (AuthorizesRelationMutations,
- * added in A0.1, already gates the built-in Create/Edit/Delete actions here —
- * these tests are the story's own verification of that, mounted on ViewItem
- * where AuthorizesRelationMutations also makes the manager editable, per A0.6).
+ * M16 F3 (#2653): one Links manager on items, collections, partners and
+ * publication editions. It keeps what M7 A4.4 (#1908) gave the Media
+ * manager: inline Create/Edit with language and extra, every mutation gated
+ * on the host record's update ability (AuthorizesRelationMutations). A
+ * publication edition has no policy: its publication's governs it.
  */
-class MediaRelationManagerTest extends TestCase
+class LinksRelationManagerTest extends TestCase
 {
     use InteractsWithAdminPanel;
     use RefreshDatabase;
@@ -34,7 +40,7 @@ class MediaRelationManagerTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
@@ -47,12 +53,12 @@ class MediaRelationManagerTest extends TestCase
     {
         $viewer = $this->createViewOnlyUser();
         $item = Item::factory()->Object()->create();
-        $media = ItemMedia::factory()->forItem($item)->create();
+        $media = Link::factory()->ownedBy($item)->create();
 
         $this->setCurrentPanel();
 
         Livewire::actingAs($viewer)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
@@ -65,12 +71,12 @@ class MediaRelationManagerTest extends TestCase
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
-        $media = ItemMedia::factory()->forItem($item)->create();
+        $media = Link::factory()->ownedBy($item)->create();
 
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
@@ -90,13 +96,13 @@ class MediaRelationManagerTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
             ->mountTableAction('create')
             ->setTableActionData([
-                'type' => MediaType::VIDEO->value,
+                'type' => LinkType::VIDEO->value,
                 'url' => 'https://www.youtube.com/watch?v=abc123',
                 'title' => 'Conservation video',
                 'language_id' => $language->id,
@@ -105,7 +111,7 @@ class MediaRelationManagerTest extends TestCase
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors();
 
-        $media = ItemMedia::where('item_id', $item->id)->first();
+        $media = Link::where('linkable_type', 'item')->where('linkable_id', $item->id)->first();
         $this->assertNotNull($media);
         $this->assertSame('Conservation video', $media->title);
         $this->assertSame($language->id, $media->language_id);
@@ -120,13 +126,13 @@ class MediaRelationManagerTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($viewer)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
             ->assertTableActionHidden('create');
 
-        $this->assertDatabaseCount('item_media', 0);
+        $this->assertDatabaseCount('links', 0);
     }
 
     // ── Edit ─────────────────────────────────────────────────────────────────
@@ -137,7 +143,7 @@ class MediaRelationManagerTest extends TestCase
         $item = Item::factory()->Object()->create();
         $originalLanguage = Language::factory()->create();
         $newLanguage = Language::factory()->create();
-        $media = ItemMedia::factory()->forItem($item)->create([
+        $media = Link::factory()->ownedBy($item)->create([
             'language_id' => $originalLanguage->id,
             'extra' => ['source' => 'legacy'],
         ]);
@@ -145,7 +151,7 @@ class MediaRelationManagerTest extends TestCase
         $this->setCurrentPanel();
 
         $component = Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ]);
@@ -178,18 +184,97 @@ class MediaRelationManagerTest extends TestCase
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
-        $media = ItemMedia::factory()->forItem($item)->create();
+        $media = Link::factory()->ownedBy($item)->create();
 
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
             ->callTableAction('delete', $media)
             ->assertHasNoTableActionErrors();
 
-        $this->assertDatabaseMissing('item_media', ['id' => $media->id]);
+        $this->assertDatabaseMissing('links', ['id' => $media->id]);
+    }
+
+    // ── Other owners ─────────────────────────────────────────────────────────
+
+    public function test_collection_and_partner_links_are_listed_and_created(): void
+    {
+        $user = $this->createCrudUser();
+        $collection = Collection::factory()->create();
+        $partner = Partner::factory()->create();
+        $document = Link::factory()->forCollection($collection)->create();
+        $website = Link::factory()->forPartner($partner)->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(LinksRelationManager::class, ['ownerRecord' => $collection, 'pageClass' => ViewCollection::class])
+            ->assertCanSeeTableRecords([$document])
+            ->assertCanNotSeeTableRecords([$website]);
+
+        Livewire::actingAs($user)
+            ->test(LinksRelationManager::class, ['ownerRecord' => $partner, 'pageClass' => ViewPartner::class])
+            ->assertCanSeeTableRecords([$website])
+            ->callTableAction('create', data: [
+                'type' => LinkType::WEBSITE->value,
+                'url' => 'https://museum.example.org/',
+                'title' => 'The museum',
+            ])
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('links', [
+            'linkable_type' => 'partner',
+            'linkable_id' => $partner->id,
+            'type' => 'website',
+            'title' => 'The museum',
+        ]);
+    }
+
+    public function test_an_editions_links_follow_its_publications_policy(): void
+    {
+        $edition = PublicationEdition::factory()->create();
+        $shop = Link::factory()->forEdition($edition)->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($this->createViewOnlyUser())
+            ->test(LinksRelationManager::class, ['ownerRecord' => $edition, 'pageClass' => ViewPublicationEdition::class])
+            ->assertCanSeeTableRecords([$shop])
+            ->assertTableActionHidden('create')
+            ->assertTableActionHidden('edit', $shop)
+            ->assertTableActionHidden('delete', $shop);
+
+        Livewire::actingAs($this->createCrudUser())
+            ->test(LinksRelationManager::class, ['ownerRecord' => $edition, 'pageClass' => ViewPublicationEdition::class])
+            ->assertTableActionVisible('create')
+            ->assertTableActionVisible('edit', $shop)
+            ->assertTableActionVisible('delete', $shop);
+    }
+
+    public function test_an_edition_page_shows_its_links(): void
+    {
+        $edition = PublicationEdition::factory()->create();
+        Link::factory()->forEdition($edition)->create(['title' => 'Amazon']);
+
+        $this->actingAs($this->createViewOnlyUser());
+        $this->setCurrentPanel();
+
+        $this->get(PublicationEditionResource::getUrl('view', ['record' => $edition]))
+            ->assertOk()
+            ->assertSee('Links');
+    }
+
+    public function test_deleting_an_owner_deletes_its_links(): void
+    {
+        $item = Item::factory()->Object()->create();
+        $link = Link::factory()->ownedBy($item)->create();
+
+        $item->delete();
+
+        $this->assertDatabaseMissing('links', ['id' => $link->id]);
     }
 }

@@ -21,7 +21,7 @@ class AllowList
                 'parent', 'children', 'itemImages',
                 'artists', 'tags', 'dynasties', 'translations',
                 'attachedToCollections', 'outgoingLinks', 'incomingLinks',
-                'itemMedia', 'itemDocuments',
+                'links', 'itemDocuments',
             ],
             'image_translation' => [
                 'language',
@@ -41,7 +41,7 @@ class AllowList
             ],
             'collection' => [
                 'language', 'context', 'translations', 'partners', 'items', 'attachedItems', 'collectionImages',
-                'collectionMedia', 'contributors', 'countries', 'relatedCollections', 'coverItem',
+                'links', 'contributors', 'countries', 'relatedCollections', 'coverItem',
             ],
             'collectionImage' => [
                 'collection',
@@ -50,7 +50,7 @@ class AllowList
                 'country', 'items', 'pictures',
                 'project', 'monumentItem',
                 'translations', 'partnerImages', 'partnerLogos',
-                'collections',
+                'collections', 'links',
             ],
             'partner_translation' => [
                 'partner', 'language', 'context',
@@ -125,11 +125,8 @@ class AllowList
             'timeline_event_image' => [
                 'timelineEvent',
             ],
-            'item_media' => [
-                'item', 'language',
-            ],
-            'collection_media' => [
-                'collection', 'language',
+            'link' => [
+                'language',
             ],
             'item_document' => [
                 'item', 'language',
@@ -148,7 +145,7 @@ class AllowList
                 'publication', 'language', 'context',
             ],
             'publication_edition' => [
-                'publication', 'language', 'publicationImages',
+                'publication', 'language', 'publicationImages', 'links',
             ],
             'publication_image' => [
                 'publication', 'publicationEdition',

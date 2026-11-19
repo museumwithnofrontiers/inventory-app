@@ -310,10 +310,11 @@ export class ItemExporter extends BaseExporter {
         this.memberItemIds
       ),
       this.db.query<ItemMediaRow>(
-        `SELECT item_id, language_id, type, title, description, url
-         FROM item_media
-         WHERE item_id IN (${itemPh})
-         ORDER BY item_id, display_order`,
+        `SELECT linkable_id AS item_id, language_id, type, title, description, url
+         FROM links
+         WHERE linkable_type = 'item' AND type IN ('audio', 'video')
+           AND linkable_id IN (${itemPh})
+         ORDER BY linkable_id, display_order, id`,
         this.memberItemIds
       ),
       // Outgoing links only — the legacy model stores them directed, so reading

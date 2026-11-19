@@ -54,6 +54,7 @@ class PublicationEditionResource extends BaseJsonResource
             'language' => new LanguageResource($this->whenLoaded('language')),
             // The covers of this edition (PublicationImageResource[])
             'publicationImages' => PublicationImageResource::collection($this->whenLoaded('publicationImages')),
+            'links' => LinkResource::collection($this->whenLoaded('links')),
         ];
     }
 }

@@ -167,6 +167,7 @@ describe('splitItemTranslationColumns', () => {
       'notice→notice',
       'notice_c→external_notice',
       'legacy_display_status→status',
+      'external_sources→external_sources',
     ]);
     expect(ITEM_TRANSLATION_COLUMN_KEYS).toEqual([
       'materials',
@@ -191,6 +192,7 @@ describe('splitItemTranslationColumns', () => {
       'notice',
       'notice_c',
       'legacy_display_status',
+      'external_sources',
     ]);
   });
 });

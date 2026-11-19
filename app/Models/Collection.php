@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\PartnerLevel;
 use App\Traits\HasDisplayOrder;
 use App\Traits\HasJsonFields;
+use App\Traits\HasLinks;
 use Database\Factories\CollectionFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
@@ -43,6 +44,8 @@ class Collection extends Model
 {
     /** @use HasFactory<CollectionFactory> */
     use HasDisplayOrder, HasFactory, HasJsonFields, HasUuids;
+
+    use HasLinks;
 
     // Type constants
     public const TYPE_COLLECTION = 'collection';
@@ -357,16 +360,6 @@ class Collection extends Model
     public function collectionImages(): HasMany
     {
         return $this->hasMany(CollectionImage::class);
-    }
-
-    /**
-     * Get all media (audio/video URLs) belonging to this collection.
-     *
-     * @return HasMany<CollectionMedia, $this>
-     */
-    public function collectionMedia(): HasMany
-    {
-        return $this->hasMany(CollectionMedia::class)->orderBy('type')->orderBy('display_order');
     }
 
     /**

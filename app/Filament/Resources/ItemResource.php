@@ -22,13 +22,13 @@ use App\Filament\Resources\ItemResource\RelationManagers\DocumentsRelationManage
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\IncomingLinksRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ItemDisplayLabel;
 use App\Filament\Support\RecordSelect;
@@ -552,7 +552,7 @@ class ItemResource extends Resource
             ]),
             RelationGroup::make('Media', [
                 ImagesRelationManager::class,
-                MediaRelationManager::class,
+                LinksRelationManager::class,
                 DocumentsRelationManager::class,
             ]),
             RelationGroup::make('Origin', [

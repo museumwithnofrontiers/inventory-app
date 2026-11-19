@@ -82,6 +82,8 @@ class CollectionResource extends JsonResource
             'items' => ItemResource::collection($this->whenLoaded('items')),
             // Items attached to this collection via many-to-many relationship (ItemResource[])
             'attachedItems' => ItemResource::collection($this->whenLoaded('attachedItems')),
+            // Links to things outside the inventory (videos, documents, ...)
+            'links' => LinkResource::collection($this->whenLoaded('links')),
 
             // The number of items in this collection (computed)
             'items_count' => $this->when($this->relationLoaded('items'), fn () => $this->items->count()),

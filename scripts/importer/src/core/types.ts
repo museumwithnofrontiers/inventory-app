@@ -609,6 +609,14 @@ export interface CollectionMediaData {
   type: 'audio' | 'video' | 'document';
   title: string;
   description?: string | null;
+  /** Who wrote the linked work, as legacy wrote it (M16 F3: a Link column). */
+  authors?: string | null;
+  /** The related content's legacy category id, resource type, entity location and country code, further-reading text (Link columns, F3). */
+  category?: number | null;
+  resource_type?: string | null;
+  location?: string | null;
+  country_code?: string | null;
+  further_reading?: string | null;
   url: string;
   display_order: number;
   extra?: string | null;

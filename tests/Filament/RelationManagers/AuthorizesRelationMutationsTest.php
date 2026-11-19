@@ -15,7 +15,6 @@ use App\Filament\Resources\ItemResource\RelationManagers\DocumentsRelationManage
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\ImagesRelationManager as ItemImagesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\IncomingLinksRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
@@ -25,6 +24,7 @@ use App\Filament\Resources\PartnerResource\Pages\EditPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager as PartnerTranslationsRelationManager;
 use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
 use App\Filament\Resources\PartnerTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PartnerTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Resources\RoleResource\Pages\ViewRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
@@ -37,8 +37,8 @@ use App\Models\Item;
 use App\Models\ItemDocument;
 use App\Models\ItemImage;
 use App\Models\ItemItemLink;
-use App\Models\ItemMedia;
 use App\Models\Language;
+use App\Models\Link;
 use App\Models\Partner;
 use App\Models\Tag;
 use App\Models\TimelineEvent;
@@ -365,14 +365,14 @@ class AuthorizesRelationMutationsTest extends TestCase
             ->assertTableBulkActionVisible('detach');
     }
 
-    // ── Item: MediaRelationManager (has-many, no policy of its own) ─────────
+    // ── Item: LinksRelationManager (morph-many, no policy of its own) ──────
 
     /**
-     * This is the gap #1864 found: ItemMedia has no policy of its own, so
+     * This is the gap #1864 found: a Link (then ItemMedia) has no policy of its own, so
      * Filament's default canCreate() allowed Create unconditionally. It must
      * now require `update` on the host Item.
      */
-    public function test_item_media_relation_manager_hides_create_for_view_only_user(): void
+    public function test_item_links_relation_manager_hides_create_for_view_only_user(): void
     {
         $item = Item::factory()->Object()->create();
         $user = $this->createViewOnlyUser();
@@ -380,23 +380,23 @@ class AuthorizesRelationMutationsTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
             ->assertTableActionHidden('create');
     }
 
-    public function test_item_media_relation_manager_hides_all_mutations_for_view_only_user(): void
+    public function test_item_links_relation_manager_hides_all_mutations_for_view_only_user(): void
     {
         $item = Item::factory()->Object()->create();
-        $media = ItemMedia::factory()->forItem($item)->create();
+        $media = Link::factory()->ownedBy($item)->create();
         $user = $this->createViewOnlyUser();
 
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
@@ -405,16 +405,16 @@ class AuthorizesRelationMutationsTest extends TestCase
             ->assertTableActionHidden('delete', $media);
     }
 
-    public function test_item_media_relation_manager_keeps_mutations_for_crud_user(): void
+    public function test_item_links_relation_manager_keeps_mutations_for_crud_user(): void
     {
         $item = Item::factory()->Object()->create();
-        $media = ItemMedia::factory()->forItem($item)->create();
+        $media = Link::factory()->ownedBy($item)->create();
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])

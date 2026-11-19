@@ -6,6 +6,7 @@ import type {
   PartnerLogo,
   PartnerUrl,
 } from '../core/types.js'
+import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { BaseExporter } from './base-exporter.js'
 
 interface PartnerRow {
@@ -247,6 +248,8 @@ export class PartnerExporter extends BaseExporter {
     const translationMap = new Map<string, Record<string, Record<string, string | null>>>()
     // partner_id -> extra JSON fields (contact persons, extra URLs, portal flag)
     // — same across languages, so the first row seen wins.
+    // The partner's other websites: its links since M16 F3 (`extra.urls` before).
+    const websites = await partnerWebsites((sql, params) => this.db.query(sql, params), partnerIds)
     const extraMap = new Map<string, PartnerExtraFields>()
     for (const t of translations) {
       if (!translationMap.has(t.partner_id)) translationMap.set(t.partner_id, {})
@@ -364,7 +367,7 @@ export class PartnerExporter extends BaseExporter {
       // Same derivation as each item's languages in items.json
       languages: Object.keys(translationMap.get(p.id) ?? {}).sort(),
       contact_persons: contactPersons(extraMap.get(p.id)),
-      additional_urls: extraMap.get(p.id)?.urls ?? [],
+      additional_urls: websites.get(p.id) ?? extraMap.get(p.id)?.urls ?? [],
       images: imageMap.get(p.id) ?? [],
       logos: logoMap.get(p.id) ?? [],
     }))

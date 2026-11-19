@@ -83,6 +83,7 @@ class StoreItemTranslationRequest extends FormRequest
             'notice' => ['nullable', 'string'],
             'external_notice' => ['nullable', 'string'],
             'image_rights' => ['nullable', 'string'],
+            'external_sources' => ['nullable', 'string'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
             'extra' => ['nullable', 'json'],
         ];

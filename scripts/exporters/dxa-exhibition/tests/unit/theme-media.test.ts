@@ -11,10 +11,10 @@ import type { Logger } from '../../src/core/logger.js'
 /**
  * inventory-app#2491 — legacy listed a theme's audio and video under "Related
  * Audio/Videos" on its page (exhibitions-client ThemeComponent, dxa-api
- * THG/Video ordered by the media's id). The importer files them in
- * `collection_media`; the theme exporter now ships them on each theme and
- * sub-theme, in item media's shape, in legacy's order, and nothing else of
- * `collection_media` (the related content rides elsewhere).
+ * THG/Video ordered by the media's id). The importer files them as the
+ * collection's links (M16 F3); the theme exporter ships them on each theme and
+ * sub-theme, in item media's shape, in legacy's order, and none of the
+ * collection's other links (the related content rides elsewhere).
  */
 describe('ThemeExporter — a theme\'s audio and video', () => {
   let outputDir: string
@@ -64,7 +64,7 @@ describe('ThemeExporter — a theme\'s audio and video', () => {
     ({
       query: async (sql: string) => {
         if (sql.includes('FROM languages')) return [{ id: 'eng', backward_compatibility: 'en' }]
-        if (sql.includes('FROM collection_media')) {
+        if (sql.includes('FROM links')) {
           mediaSql = sql
           return media
         }
@@ -94,8 +94,9 @@ describe('ThemeExporter — a theme\'s audio and video', () => {
     expect(six.media).toEqual([])
   })
 
-  it("reads only the theme media of collection_media, not the related content", async () => {
+  it("reads only the theme media of the collection's links, not the related content", async () => {
     await new ThemeExporter(context(stubDb())).export()
     expect(mediaSql).toContain("mwnf3\\_thematic\\_gallery:theme\\_%")
+    expect(mediaSql).toContain("linkable_type = 'collection'")
   })
 })

@@ -63,12 +63,14 @@
                 "artist_birthplace": 0,
                 "artist_deathdate": 0,
                 "artist_deathplace": 0,
+                "catalogue_holding_link": 0,
                 "copyright": 2622,
                 "credits_as_written": 0,
                 "datation_method": 0,
                 "description2": 0,
                 "dimensions": 0,
                 "dynasty": 0,
+                "external_sources": 0,
                 "history": 0,
                 "keywords": 0,
                 "legacy_display_status": 0,
@@ -94,7 +96,13 @@
         "partner_translations": {
             "keys": {
                 "fax": 0,
-                "source": 0
+                "source": 0,
+                "urls": 0
+            }
+        },
+        "publication_editions": {
+            "keys": {
+                "shop_links": 0
             }
         },
         "publication_images": {

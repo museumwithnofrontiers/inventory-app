@@ -19,6 +19,7 @@ import type {
   PictureCreditRow,
   PictureParentImageRow,
 } from '../utils/picture-credits.js';
+import type { CatalogueRow, LinkData, PartnerUrlRow, ShopLinkRow } from '../utils/links.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { ImageTextData, ImageTextRow } from '../utils/image-texts.js';
 import type { IWriteStrategy } from '../core/strategy.js';
@@ -101,8 +102,6 @@ const tableEntityMap: Record<string, EntityType> = {
   timelines: 'timeline',
   timeline_events: 'timeline_event',
   timeline_event_translations: 'timeline_event_translation',
-  item_media: 'item_media',
-  collection_media: 'collection_media',
   item_documents: 'item_document',
   contributors: 'contributor',
   contributor_translations: 'contributor_translation',
@@ -1371,11 +1370,12 @@ export class SqlWriteStrategy implements IWriteStrategy {
     const id = sanitized.backward_compatibility
       ? deterministicUuid(`item_media:${sanitized.backward_compatibility.toLowerCase()}`)
       : uuidv4();
+    // An item's media are Links since M16 F3 (#2653); the id formula is kept.
     await this.db.execute(
-      `INSERT INTO item_media (id, item_id, language_id, type, title, description,
-                               url, display_order, extra, backward_compatibility,
-                               created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO links (id, linkable_type, linkable_id, language_id, type, title, description,
+                          url, display_order, extra, backward_compatibility,
+                          created_at, updated_at)
+       VALUES (?, 'item', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         sanitized.item_id,
@@ -1402,11 +1402,12 @@ export class SqlWriteStrategy implements IWriteStrategy {
     const id = sanitized.backward_compatibility
       ? deterministicUuid(`collection_media:${sanitized.backward_compatibility.toLowerCase()}`)
       : uuidv4();
+    // A collection's media are Links since M16 F3 (#2653); the id formula is kept.
     await this.db.execute(
-      `INSERT INTO collection_media (id, collection_id, language_id, type, title, description,
-                                     url, display_order, extra, backward_compatibility,
-                                     created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO links (id, linkable_type, linkable_id, language_id, type, title, description,
+                          authors, category, resource_type, location, country_code, further_reading,
+                          url, display_order, extra, backward_compatibility, created_at, updated_at)
+       VALUES (?, 'collection', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         sanitized.collection_id,
@@ -1414,6 +1415,12 @@ export class SqlWriteStrategy implements IWriteStrategy {
         sanitized.type,
         sanitized.title,
         sanitized.description ?? null,
+        sanitized.authors ?? null,
+        data.category ?? null,
+        sanitized.resource_type ?? null,
+        sanitized.location ?? null,
+        sanitized.country_code ?? null,
+        sanitized.further_reading ?? null,
         sanitized.url,
         data.display_order,
         sanitized.extra ?? null,
@@ -2267,6 +2274,94 @@ export class SqlWriteStrategy implements IWriteStrategy {
       'UPDATE item_translations SET image_rights = ?, extra = ?, updated_at = ? WHERE id = ?',
       [imageRights, extra, this.now, id]
     );
+  }
+
+  private static parseExtra(raw: unknown): Record<string, unknown> {
+    return (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>;
+  }
+
+  async findCatalogueLinkRows(): Promise<CatalogueRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, item_id, language_id, backward_compatibility, extra FROM item_translations
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', '$.catalogue_holding_link')
+       ORDER BY item_id, language_id, id`
+    );
+    return rows.map((row) => ({
+      id: row.id as string,
+      item_id: row.item_id as string,
+      language_id: row.language_id as string,
+      backward_compatibility: (row.backward_compatibility as string | null) ?? null,
+      extra: SqlWriteStrategy.parseExtra(row.extra),
+    }));
+  }
+
+  async findPartnerUrlRows(): Promise<PartnerUrlRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT pt.id, pt.partner_id, p.backward_compatibility AS partner_key, pt.extra
+       FROM partner_translations pt JOIN partners p ON p.id = pt.partner_id
+       WHERE pt.extra IS NOT NULL AND JSON_CONTAINS_PATH(pt.extra, 'one', '$.urls')
+       ORDER BY pt.partner_id, pt.id`
+    );
+    return rows.map((row) => ({
+      id: row.id as string,
+      partner_id: row.partner_id as string,
+      partner_key: (row.partner_key as string | null) ?? null,
+      extra: SqlWriteStrategy.parseExtra(row.extra),
+    }));
+  }
+
+  async findShopLinkRows(): Promise<ShopLinkRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, backward_compatibility, extra FROM publication_editions
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', '$.shop_links')
+       ORDER BY id`
+    );
+    return rows.map((row) => ({
+      id: row.id as string,
+      backward_compatibility: (row.backward_compatibility as string | null) ?? null,
+      extra: SqlWriteStrategy.parseExtra(row.extra),
+    }));
+  }
+
+  async writeLink(data: LinkData): Promise<string> {
+    // The texts were sanitized when they were first written: copied as stored.
+    const id = deterministicUuid(`link:${data.backward_compatibility.toLowerCase()}`);
+    await this.db.execute(
+      `INSERT INTO links (id, linkable_type, linkable_id, language_id, type, title, url,
+                          display_order, backward_compatibility, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE linkable_type = VALUES(linkable_type), linkable_id = VALUES(linkable_id),
+         language_id = VALUES(language_id), type = VALUES(type), title = VALUES(title), url = VALUES(url),
+         display_order = VALUES(display_order), updated_at = VALUES(updated_at)`,
+      [
+        id,
+        data.linkable_type,
+        data.linkable_id,
+        data.language_id,
+        data.type,
+        data.title,
+        data.url,
+        data.display_order,
+        data.backward_compatibility,
+        this.now,
+        this.now,
+      ]
+    );
+    return id;
+  }
+
+  async setExtraAsStoredById(
+    table: 'partner_translations' | 'publication_editions',
+    id: string,
+    extra: string | null
+  ): Promise<void> {
+    const allowed = new Set(['partner_translations', 'publication_editions']);
+    if (!allowed.has(table)) throw new Error(`Not a table this step writes: ${table}`);
+    await this.db.execute(`UPDATE ${table} SET extra = ?, updated_at = ? WHERE id = ?`, [
+      extra,
+      this.now,
+      id,
+    ]);
   }
 
   async setItemImagePictureCredit(

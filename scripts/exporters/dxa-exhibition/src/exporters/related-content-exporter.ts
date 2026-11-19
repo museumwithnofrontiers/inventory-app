@@ -6,6 +6,12 @@ interface RelatedContentRow {
   language_id: string | null
   title: string | null
   description: string | null
+  authors: string | null
+  category: number | null
+  resource_type: string | null
+  location: string | null
+  country_code: string | null
+  further_reading: string | null
   url: string | null
   display_order: number | null
   extra: unknown
@@ -25,7 +31,7 @@ interface RelatedContentExtra {
  * `related_content.json` — the categorized reading list on `/related`.
  *
  * Legacy's `exhibition_related_content` is a base table plus an `_i18n` table,
- * and the importer files BOTH into `collection_media`:
+ * and the importer files BOTH as the exhibition collection's links (M16 F3):
  *
  *   mwnf3_thematic_gallery:exhibition_related_content:<id>:<kind>            (language_id NULL)
  *   mwnf3_thematic_gallery:exhibition_related_content_i18n:<id>:<lang>:<kind>
@@ -40,7 +46,7 @@ interface RelatedContentExtra {
  *
  * - **Not every entry has something to link to.** An entry can be a
  *   bibliography and nothing else — no link, no document, no title, no type.
- *   Those cannot live in `collection_media` (its `url` is required), so the
+ *   Those cannot be links (a link's `url` is required), so the
  *   importer writes them to the exhibition collection's `extra.further_readings`
  *   and this exporter folds them back into the same array with `kind: "text"`
  *   and a per-language `texts` map. `kind` is what the page switches on.
@@ -67,10 +73,11 @@ export class RelatedContentExporter extends BaseExporter {
     this.logger.info('Exporting related_content.json...')
 
     const rows = await this.db.query<RelatedContentRow>(
-      `SELECT id, language_id, title, description, url, display_order, extra,
+      `SELECT id, language_id, title, description, authors, category, resource_type, location, country_code,
+              further_reading, url, display_order, extra,
               backward_compatibility
-       FROM collection_media
-       WHERE collection_id = ?
+       FROM links
+       WHERE linkable_type = 'collection' AND linkable_id = ?
          AND backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:exhibition\\_related\\_content%'
        ORDER BY display_order, backward_compatibility`,
       [this.exhibition.id]
@@ -119,7 +126,8 @@ export class RelatedContentExporter extends BaseExporter {
       output.push(
         this.stripNulls({
           legacy_id: legacyId,
-          category_id: extra.category_id ?? null,
+          // Link columns since M16 F3; `extra` for a database imported before it.
+          category_id: anchor.category ?? extra.category_id ?? null,
           kind,
           display_order: anchor.display_order ?? 0,
           url: kind === 'link' ? anchor.url : null,
@@ -128,11 +136,12 @@ export class RelatedContentExporter extends BaseExporter {
           document_path: kind === 'document' ? anchor.url : null,
           titles,
           descriptions,
-          authors: extra.authors ?? null,
-          type_resource: extra.type_resource ?? null,
-          further_reading: extra.further_reading ?? null,
-          entity_country: extra.entity_country ?? null,
-          entity_location: extra.entity_location ?? null,
+          // A Link column since M16 F3; `extra` for a database imported before it.
+          authors: anchor.authors ?? extra.authors ?? null,
+          type_resource: anchor.resource_type ?? extra.type_resource ?? null,
+          further_reading: anchor.further_reading ?? extra.further_reading ?? null,
+          entity_country: anchor.country_code ?? extra.entity_country ?? null,
+          entity_location: anchor.location ?? extra.entity_location ?? null,
         })
       )
     }
@@ -165,7 +174,7 @@ export class RelatedContentExporter extends BaseExporter {
 
   /**
    * The "Further Reading" blocks — related-content entries that carry a
-   * bibliography and nothing else. They have no `collection_media` row because
+   * bibliography and nothing else. They have no link because
    * that table needs a URL, so the importer files them on the exhibition
    * collection's `extra` instead (museumwithnofrontiers/inventory-app#1607 territory: the
    * same read-modify-write the gallery anchor and hidden-museum list use).

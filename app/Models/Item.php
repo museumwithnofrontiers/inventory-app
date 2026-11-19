@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ItemType;
 use App\Traits\HasDisplayOrder;
+use App\Traits\HasLinks;
 use Database\Factories\ItemFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -37,6 +38,7 @@ class Item extends Model
     /** @use HasFactory<ItemFactory> */
     use HasFactory;
 
+    use HasLinks;
     use HasUuids;
 
     // No model-level eager loads. Use request-scoped includes in controllers.
@@ -207,16 +209,6 @@ class Item extends Model
     public function itemImages(): HasMany
     {
         return $this->hasMany(ItemImage::class)->orderBy('display_order');
-    }
-
-    /**
-     * The media (audio/video URLs) attached to this item.
-     *
-     * @return HasMany<ItemMedia, $this>
-     */
-    public function itemMedia(): HasMany
-    {
-        return $this->hasMany(ItemMedia::class)->orderBy('type')->orderBy('display_order');
     }
 
     /**

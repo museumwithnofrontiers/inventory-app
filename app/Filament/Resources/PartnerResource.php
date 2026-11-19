@@ -19,6 +19,7 @@ use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManage
 use App\Filament\Resources\PartnerResource\RelationManagers\LogosRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Support\PartnerDisplayLabel;
 use App\Models\Country;
 use App\Models\Partner;
@@ -295,6 +296,7 @@ class PartnerResource extends Resource
             CollectionParticipationsRelationManager::class,
             ImagesRelationManager::class,
             LogosRelationManager::class,
+            LinksRelationManager::class,
         ];
     }
 

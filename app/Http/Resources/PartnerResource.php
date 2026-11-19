@@ -36,6 +36,7 @@ class PartnerResource extends BaseJsonResource
             'translations' => PartnerTranslationResource::collection($this->whenLoaded('translations')),
             'images' => PartnerImageResource::collection($this->whenLoaded('partnerImages')),
             'collections' => CollectionResource::collection($this->whenLoaded('collections')),
+            'links' => LinkResource::collection($this->whenLoaded('links')),
             // Visibility
             'visible' => $this->resource->visible,
             // The date of creation of the resource (managed by the system)

@@ -28,8 +28,8 @@ final class EntityRegistry
      */
     private const TYPES = [
         'item', 'item_translation', 'item_image', 'item_item_link', 'item_item_link_translation',
-        'item_media', 'item_document',
-        'collection', 'collection_translation', 'collection_image', 'collection_media',
+        'item_document',
+        'collection', 'collection_translation', 'collection_image',
         'partner', 'partner_translation', 'partner_image', 'partner_logo', 'partner_translation_image',
         'contributor', 'contributor_translation', 'contributor_image',
         'publication', 'publication_translation', 'publication_edition', 'publication_image',
@@ -40,6 +40,7 @@ final class EntityRegistry
         'country', 'country_translation', 'language', 'language_translation', 'context', 'project',
         'available_image',
         'image_translation',
+        'link',
     ];
 
     /**
