@@ -31,6 +31,7 @@ import {
   planPictureCredits,
 } from '../../utils/picture-credits.js';
 
+/** One fixed rule for every picture: the inventory's default language, English. */
 const DEFAULT_LANGUAGE_ID = 'eng';
 
 export class PictureCreditsImporter extends BaseImporter {
@@ -48,9 +49,7 @@ export class PictureCreditsImporter extends BaseImporter {
         'Moving picture photographers and credits from item_translations.extra to the images...'
       );
       const rows = await this.context.strategy.findPictureCreditRows();
-      const defaultLanguageId =
-        this.context.tracker.getMetadata('default_language_id') ?? DEFAULT_LANGUAGE_ID;
-      const plan = planPictureCredits(rows, defaultLanguageId);
+      const plan = planPictureCredits(rows, DEFAULT_LANGUAGE_ID);
       this.logInfo(
         `Found ${plan.images.length} image(s) and ${plan.translations.length} translation(s) to update; ` +
           `${plan.kept.length} picture text(s) differ by language and stay in extra`

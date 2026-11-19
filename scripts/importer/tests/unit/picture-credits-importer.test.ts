@@ -160,13 +160,42 @@ describe('planPictureCredits', () => {
     expect(plan.images[0]?.clear_copyright).toBe(false);
   });
 
-  it('takes the first text when the default language has none', () => {
+  it('stores nothing on the image when the default language has no text: no other language is picked', () => {
     const plan = planPictureCredits(
-      [row('t1', 'fra', { photographer: 'Jean' }), row('t2', 'ita', { photographer: 'Gianni' })],
+      [
+        row(
+          't1',
+          'fra',
+          { photographer: 'Jean', copyright: 'Musee X' },
+          { image_photographer: 'Jean', image_credit: 'Musee X' }
+        ),
+        row(
+          't2',
+          'ita',
+          { photographer: 'Gianni', copyright: 'Museo X' },
+          { image_photographer: 'Jean', image_credit: 'Musee X' }
+        ),
+      ],
+      'eng'
+    );
+
+    expect(plan.images[0]).toEqual({
+      image_id: 'img-1',
+      photographer: null,
+      credit: null,
+      clear_copyright: false,
+    });
+    expect(plan.translations).toEqual([]);
+  });
+
+  it('moves a text every row carries alike, whatever the languages', () => {
+    const plan = planPictureCredits(
+      [row('t1', 'fra', { photographer: 'Jean' }), row('t2', 'ita', { photographer: 'Jean' })],
       'eng'
     );
 
     expect(plan.images[0]?.photographer).toBe('Jean');
+    expect(plan.translations).toHaveLength(2);
   });
 
   it('keeps on a second run what the first one moved', () => {
