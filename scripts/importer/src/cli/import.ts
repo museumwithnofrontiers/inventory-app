@@ -164,6 +164,7 @@ import {
   ItemTranslationColumnsImporter,
   CollectionTranslationColumnsImporter,
   CollectionItemColumnsImporter,
+  VisitInformationImporter,
   PictureCreditsImporter,
   ImageTextsImporter,
   CollectionRelationsImporter,
@@ -1263,6 +1264,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: CollectionItemColumnsImporter,
     // The mwnf3 and Sharing History exhibition importers, the historical
     // background importer and the justification step write these keys.
+    runsLast: true,
+  },
+  {
+    key: 'visit-information',
+    name: 'Visit Information',
+    description:
+      'Move the visit keys (how to reach, info, contact, the monument contact block, opening hours) of item, collection and partner translations out of extra into visit_information, after every importer that writes them (M16 D1, #2645)',
+    importerClass: VisitInformationImporter,
+    // The monument, Travels and Explore importers write these keys, and later
+    // steps move translations between contexts.
     runsLast: true,
   },
   {

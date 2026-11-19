@@ -25,6 +25,7 @@ export { CollectionCreditsImporter } from './collection-credits-importer.js';
 export { ItemTranslationColumnsImporter } from './item-translation-columns-importer.js';
 export { CollectionTranslationColumnsImporter } from './collection-translation-columns-importer.js';
 export { CollectionItemColumnsImporter } from './collection-item-columns-importer.js';
+export { VisitInformationImporter } from './visit-information-importer.js';
 export { PictureCreditsImporter } from './picture-credits-importer.js';
 export { CollectionRelationsImporter } from './collection-relations-importer.js';
 export { CollectionFlagsImporter } from './collection-flags-importer.js';

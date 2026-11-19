@@ -34,6 +34,7 @@
  */
 
 import { mysqlJsonOrder } from './credits.mjs'
+import { VISIT_INFORMATION_COLUMN, visitInformationSelect, withVisitInformation } from './visit-information.mjs'
 
 /** Each legacy `extra` key (`key` or `parent.child`) and the column that holds it now. */
 export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
@@ -172,6 +173,7 @@ export function itemColumnsSelect(alias) {
     ...pictureSelect(alias),
     `${alias}.image_rights`,
     catalogueSelect(alias),
+    visitInformationSelect(alias, 'item_id'),
   ].join(', ')
 }
 
@@ -241,8 +243,8 @@ export function withItemTranslationColumns(extra, row) {
 export function restoreItemColumns(rows) {
   for (const row of rows) {
     const record = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (row))
-    record.extra = withItemTranslationColumns(record.extra, record)
-    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE), 'image_rights', CATALOGUE]) delete record[column]
+    record.extra = withVisitInformation(withItemTranslationColumns(record.extra, record), record)
+    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE), 'image_rights', CATALOGUE, VISIT_INFORMATION_COLUMN]) delete record[column]
   }
   return rows
 }

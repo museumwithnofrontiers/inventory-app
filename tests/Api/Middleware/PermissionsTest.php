@@ -28,6 +28,7 @@ use App\Models\PublicationEdition;
 use App\Models\PublicationImage;
 use App\Models\PublicationTranslation;
 use App\Models\Tag;
+use App\Models\VisitInformation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\Api\Traits\TestsApiPermissions;
@@ -262,6 +263,13 @@ class PermissionsTest extends TestCase
             ['GET', 'publication-translation.show', Permission::VIEW_DATA, PublicationTranslation::class],
             ['PATCH', 'publication-translation.update', Permission::UPDATE_DATA, PublicationTranslation::class],
             ['DELETE', 'publication-translation.destroy', Permission::DELETE_DATA, PublicationTranslation::class],
+
+            // VisitInformation routes (M16 D1)
+            ['GET', 'visit-information.index', Permission::VIEW_DATA, null],
+            ['POST', 'visit-information.store', Permission::CREATE_DATA, null],
+            ['GET', 'visit-information.show', Permission::VIEW_DATA, VisitInformation::class],
+            ['PATCH', 'visit-information.update', Permission::UPDATE_DATA, VisitInformation::class],
+            ['DELETE', 'visit-information.destroy', Permission::DELETE_DATA, VisitInformation::class],
 
             // PublicationEdition routes: every change is an update of the publication
             ['GET', 'publication-edition.index', Permission::VIEW_DATA, null],

@@ -13,6 +13,7 @@ use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationM
 use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager as CollectionPublicationsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\RelatedCollectionsRelationManager as CollectionRelatedCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\VisitInformationRelationManager as CollectionVisitInformationRelationManager;
 use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\RelationManagers\SiblingTranslationsRelationManager as CollectionTranslationSiblingTranslationsRelationManager;
 use App\Filament\Resources\ContributorResource\Pages\EditContributor;
@@ -40,6 +41,7 @@ use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationMan
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
+use App\Filament\Resources\ItemResource\RelationManagers\VisitInformationRelationManager as ItemVisitInformationRelationManager;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\AuthorCreditsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTranslationsRelationManager as ItemTranslationSiblingTranslationsRelationManager;
@@ -54,6 +56,7 @@ use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManage
 use App\Filament\Resources\PartnerResource\RelationManagers\LogosRelationManager as PartnerLogosRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager as PartnerTranslationsRelationManager;
+use App\Filament\Resources\PartnerResource\RelationManagers\VisitInformationRelationManager as PartnerVisitInformationRelationManager;
 use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
 use App\Filament\Resources\PartnerTranslationResource\RelationManagers\ImagesRelationManager as PartnerTranslationImagesRelationManager;
 use App\Filament\Resources\PartnerTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PartnerTranslationSiblingTranslationsRelationManager;
@@ -251,6 +254,10 @@ class RelationManagerConventionTest extends TestCase
         PublicationEditionsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'editions'],
         // The publication's PDFs, on the item documents' pipeline and convention (#2547)
         PublicationDocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'documents'],
+        // Visit information has no Resource of its own: the inline Create/Edit modal, as Media (M16 D1, #2645)
+        ItemVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'monument', 'variant' => 'editions'],
+        CollectionVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'collection', 'variant' => 'editions'],
+        PartnerVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'partner', 'variant' => 'editions'],
 
         // ── pinned: the three original Images managers + the two Item Links managers ──
         CollectionImagesRelationManager::class => [
@@ -564,13 +571,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 8 has-many + 21 pivot + 4 translations + 4 inline + 24 pinned = 61.
+        // 8 has-many + 21 pivot + 4 translations + 7 inline + 24 pinned = 64.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(61, self::allManagers());
+        $this->assertCount(64, self::allManagers());
     }
 
     private function classify(string $class): array
@@ -1052,6 +1059,7 @@ class RelationManagerConventionTest extends TestCase
         $pageClass = match ($owner) {
             'collection' => EditCollection::class,
             'item' => EditItem::class,
+            'monument' => EditItem::class,
             'partner' => EditPartner::class,
             'project' => EditProject::class,
             'timeline' => EditTimeline::class,
@@ -1073,6 +1081,7 @@ class RelationManagerConventionTest extends TestCase
         $this->ownerCache[$owner] ??= match ($owner) {
             'collection' => $this->makeCollection(),
             'item' => $this->makeItem(),
+            'monument' => Item::factory()->Monument()->create(),
             'partner' => $this->makePartner(),
             'project' => $this->makeProject(),
             'timeline' => $this->makeTimeline(),

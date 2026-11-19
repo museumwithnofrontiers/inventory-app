@@ -49,6 +49,7 @@ use App\Http\Controllers\TimelineEventController;
 use App\Http\Controllers\TimelineEventImageController;
 use App\Http\Controllers\TimelineEventTranslationController;
 use App\Http\Controllers\UserPermissionsController;
+use App\Http\Controllers\VisitInformationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -256,6 +257,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'show'])->name('publication-translation.show');
         Route::get('publication-translation', [PublicationTranslationController::class, 'index'])->name('publication-translation.index');
 
+        // Visit information routes (read, M16 D1)
+        Route::get('visit-information/{visitInformation}', [VisitInformationController::class, 'show'])->name('visit-information.show');
+        Route::get('visit-information', [VisitInformationController::class, 'index'])->name('visit-information.index');
+
         // Publication Edition routes (read)
         Route::get('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'show'])->name('publication-edition.show');
         Route::get('publication-edition', [PublicationEditionController::class, 'index'])->name('publication-edition.index');
@@ -327,6 +332,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('collection/{collection}/attach-image', [CollectionImageController::class, 'attachFromAvailable'])->name('collection.attachImage');
         Route::post('publication', [PublicationController::class, 'store'])->name('publication.store');
         Route::post('publication-translation', [PublicationTranslationController::class, 'store'])->name('publication-translation.store');
+        Route::post('visit-information', [VisitInformationController::class, 'store'])->name('visit-information.store');
         Route::post('publication/{publication}/images', [PublicationImageController::class, 'store'])->name('publication.images.store');
         Route::post('publication/{publication}/attach-image', [PublicationImageController::class, 'attachFromAvailable'])->name('publication.attachImage');
     });
@@ -489,6 +495,8 @@ Route::middleware(['auth:api'])->group(function () {
 
         Route::patch('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update'])->name('publication-translation.update');
         Route::put('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update']);
+        Route::patch('visit-information/{visitInformation}', [VisitInformationController::class, 'update'])->name('visit-information.update');
+        Route::put('visit-information/{visitInformation}', [VisitInformationController::class, 'update']);
 
         // Editions have no policy of their own: every mutation is an update of the publication
         Route::post('publication-edition', [PublicationEditionController::class, 'store'])->name('publication-edition.store');
@@ -564,6 +572,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('contributor-image/{contributorImage}/detach', [ContributorImageController::class, 'detachToAvailable'])->name('contributor-image.detach');
         Route::delete('publication/{publication}', [PublicationController::class, 'destroy'])->name('publication.destroy');
         Route::delete('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'destroy'])->name('publication-translation.destroy');
+        Route::delete('visit-information/{visitInformation}', [VisitInformationController::class, 'destroy'])->name('visit-information.destroy');
         Route::delete('publication-image/{publicationImage}', [PublicationImageController::class, 'destroy'])->name('publication-image.destroy');
         Route::post('publication-image/{publicationImage}/detach', [PublicationImageController::class, 'detachToAvailable'])->name('publication-image.detach');
     });

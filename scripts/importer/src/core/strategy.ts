@@ -69,6 +69,7 @@ import type {
 } from '../utils/picture-credits.js';
 import type { CatalogueRow, LinkData, PartnerUrlRow, ShopLinkRow } from '../utils/links.js';
 import type { CollectionItemColumns } from '../utils/collection-item-columns.js';
+import type { VisitInformationFields, VisitOwner } from '../utils/visit-information.js';
 
 /**
  * Strategy interface for writing entities to the target system
@@ -926,6 +927,50 @@ export interface IWriteStrategy {
   setCollectionItemColumnsById(
     id: string,
     columns: CollectionItemColumns,
+    extra: string | null
+  ): Promise<void>;
+
+  /**
+   * The item, collection or partner translations whose `extra` holds any of
+   * `keys` at its top level, with their owner. Used by VisitInformationImporter
+   * (M16 D1).
+   */
+  findVisitInformationSources(
+    owner: VisitOwner,
+    keys: readonly string[]
+  ): Promise<
+    Array<{
+      id: string;
+      owner_id: string;
+      language_id: string;
+      context_id: string;
+      backward_compatibility: string | null;
+      extra: Record<string, unknown>;
+    }>
+  >;
+
+  /**
+   * Insert an owner's visit information in one language and context, or
+   * replace its texts. The texts are written as given, already sanitized
+   * where they came from.
+   */
+  upsertVisitInformationAsStored(data: {
+    id: string;
+    owner: VisitOwner;
+    ownerId: string;
+    languageId: string;
+    contextId: string;
+    fields: VisitInformationFields;
+    backwardCompatibility: string | null;
+  }): Promise<void>;
+
+  /**
+   * Set (or clear, with null) the extra JSON of an item, collection or
+   * partner translation, as given (sanitized when first written).
+   */
+  setVisitInformationSourceExtraAsStored(
+    owner: VisitOwner,
+    id: string,
     extra: string | null
   ): Promise<void>;
 

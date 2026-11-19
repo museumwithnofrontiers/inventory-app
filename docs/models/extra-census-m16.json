@@ -16,6 +16,7 @@
                 "additional_regions": 0,
                 "author": 0,
                 "bibliography": 13,
+                "contact": 0,
                 "country_ids": 0,
                 "cover_images": 0,
                 "credits": 0,
@@ -26,7 +27,9 @@
                 "exhibition_i18n": 0,
                 "hb_general_type": 0,
                 "hb_type": 0,
+                "how_to_reach": 0,
                 "image_captions": 0,
+                "info": 0,
                 "intro_text": 0,
                 "introd_type": 0,
                 "introduction": 0,
@@ -42,9 +45,9 @@
                 "subtitle": 0,
                 "territory_ids": 0,
                 "territory_level": 0,
+                "theme_ids": 0,
                 "thg_gallery": 0,
                 "thg_gallery_lang": 0,
-                "theme_ids": 0,
                 "travels_author": 0
             }
         },
@@ -70,6 +73,7 @@
                 "artist_deathdate": 0,
                 "artist_deathplace": 0,
                 "catalogue_holding_link": 0,
+                "contact": 0,
                 "copyright": 2622,
                 "credits_as_written": 0,
                 "datation_method": 0,
@@ -77,12 +81,15 @@
                 "dimensions": 0,
                 "dynasty": 0,
                 "external_sources": 0,
-            "further_readings": 42,
+                "further_readings": 42,
                 "history": 0,
+                "how_to_reach": 0,
+                "info": 0,
                 "keywords": 0,
                 "legacy_display_status": 0,
                 "linkcatalogs": 0,
                 "materials": 0,
+                "monument_contact": 0,
                 "notice": 0,
                 "notice_c": 0,
                 "patrons": 0,
@@ -103,6 +110,8 @@
         "partner_translations": {
             "keys": {
                 "fax": 0,
+                "how_to_reach": 0,
+                "opening_hours": 0,
                 "source": 0,
                 "urls": 0
             }

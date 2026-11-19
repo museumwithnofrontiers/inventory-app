@@ -144,6 +144,9 @@ class AllowList
             'publication_translation' => [
                 'publication', 'language', 'context',
             ],
+            'visit_information' => [
+                'item', 'collection', 'partner', 'language', 'context',
+            ],
             'publication_edition' => [
                 'publication', 'language', 'publicationImages', 'links',
             ],

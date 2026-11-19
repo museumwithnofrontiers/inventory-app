@@ -16,13 +16,14 @@ use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
+use App\Filament\Resources\ItemResource\RelationManagers\VisitInformationRelationManager;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Tests\TestCase;
 
 /**
- * Asserts that Item relation managers are organized into the five selected RelationGroup tabs.
+ * Asserts that Item relation managers are organized into the six selected RelationGroup tabs.
  *
- * Groups: Content, Media, Origin, Links, Timeline.
+ * Groups: Content, Media, Origin, Links, Timeline, Visit (M16 D1: a monument's visit information).
  * CollectionAppearancesRelationManager must appear in the Content group after PictureItemsRelationManager.
  * All previously registered relation managers must be reachable through a group.
  */
@@ -39,13 +40,13 @@ class ItemRelationGroupsTest extends TestCase
         );
     }
 
-    public function test_item_resource_returns_exactly_five_relation_groups(): void
+    public function test_item_resource_returns_exactly_six_relation_groups(): void
     {
         $relations = ItemResource::getRelations();
 
         $groups = array_filter($relations, fn (mixed $r): bool => $r instanceof RelationGroup);
 
-        $this->assertCount(5, $groups, 'ItemResource must return exactly 5 RelationGroup entries.');
+        $this->assertCount(6, $groups, 'ItemResource must return exactly 6 RelationGroup entries.');
     }
 
     public function test_item_resource_has_no_flat_relation_managers_outside_groups(): void
@@ -63,7 +64,7 @@ class ItemRelationGroupsTest extends TestCase
 
         $labels = array_map(fn (RelationGroup $g): string => $g->getLabel(), $groups);
 
-        $this->assertSame(['Content', 'Media', 'Origin', 'Links', 'Timeline'], $labels);
+        $this->assertSame(['Content', 'Media', 'Origin', 'Links', 'Timeline', 'Visit'], $labels);
     }
 
     public function test_content_group_contains_expected_managers_in_order(): void
@@ -147,6 +148,15 @@ class ItemRelationGroupsTest extends TestCase
         $managers = $timelineGroup->getManagers();
 
         $this->assertSame([TimelineEventsRelationManager::class], $managers);
+    }
+
+    public function test_visit_group_contains_the_visit_information_manager(): void
+    {
+        $groups = $this->getGroups();
+        $visitGroup = $groups[5];
+
+        $this->assertSame('Visit', $visitGroup->getLabel());
+        $this->assertSame([VisitInformationRelationManager::class], $visitGroup->getManagers());
     }
 
     public function test_all_previously_registered_relation_managers_are_preserved(): void

@@ -202,4 +202,14 @@ class Partner extends Model
 
         return $translation;
     }
+
+    /**
+     * Its visit information, per language and context (M16 D1, #2645).
+     *
+     * @return HasMany<VisitInformation, $this>
+     */
+    public function visitInformation(): HasMany
+    {
+        return $this->hasMany(VisitInformation::class);
+    }
 }
