@@ -34,6 +34,17 @@ describe('CollectionExporter', () => {
   const db = {
     query: async (sql: string) => {
       if (sql.includes('FROM languages')) return [{ id: 'eng', backward_compatibility: 'en' }]
+      // The memberships first: their query selects the collection's legacy key too.
+      if (sql.includes('FROM collection_item ci')) {
+        return [
+          {
+            collection_id: 'loc',
+            item_id: 'item-1',
+            display_order: null,
+            extra: { explore_monument_ids: [1501] },
+          },
+        ]
+      }
       if (sql.includes('FROM collections')) {
         // The database's order, not the tree's.
         return [
@@ -57,16 +68,6 @@ describe('CollectionExporter', () => {
         ]
       }
       if (sql.includes('FROM collection_images')) return []
-      if (sql.includes('FROM collection_item')) {
-        return [
-          {
-            collection_id: 'loc',
-            item_id: 'item-1',
-            display_order: null,
-            extra: { explore_monument_ids: [1501] },
-          },
-        ]
-      }
       return []
     },
   } as unknown as Database
