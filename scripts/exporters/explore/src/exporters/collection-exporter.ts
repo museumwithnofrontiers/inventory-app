@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
+import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { loadCollectionRelations, withCollectionRelations, withTranslationRelations } from '../../../shared/collection-relations.mjs'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { PUBLICATION_PATH, siteLink, type Site } from '../../../shared/sites.mjs'
@@ -141,7 +142,8 @@ export class CollectionExporter extends BaseExporter {
          WHERE collection_id IN (${colPh})
          ORDER BY collection_id, language_id, context_id`,
         collectionIds
-      ).then(restoreCollectionColumns),
+      ).then(restoreCollectionColumns)
+        .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows)),
       this.db.query<CollectionImageRow>(
         `SELECT collection_id, path, alt_text, display_order
          FROM collection_images

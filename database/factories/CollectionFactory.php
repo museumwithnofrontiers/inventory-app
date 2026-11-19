@@ -50,6 +50,10 @@ class CollectionFactory extends Factory
             // Cover picture and days (nullable by default)
             'cover_item_id' => null,
             'days' => null,
+            // Editorial flags
+            'visible' => true,
+            'featured' => false,
+            'published_at' => null,
         ];
     }
 

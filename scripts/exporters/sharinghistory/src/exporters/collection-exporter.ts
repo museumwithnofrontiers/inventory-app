@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
+import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { type LanguageKey, languageKeyer, rekeyIfMap, rekeyLanguages, rekeyNested } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
@@ -129,7 +130,8 @@ export class CollectionExporter extends BaseExporter {
          WHERE collection_id IN (${colPh})
          ORDER BY collection_id, language_id`,
         collectionIds
-      ).then(restoreCollectionColumns),
+      ).then(restoreCollectionColumns)
+        .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows)),
       this.db.query<CollectionImageRow>(
         `SELECT id, collection_id, path, alt_text, display_order, extra
          FROM collection_images

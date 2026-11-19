@@ -4,6 +4,7 @@ import {
   withCollectionRelations,
   withTranslationRelations,
 } from '../../../shared/collection-relations.mjs'
+import { loadCollectionFlags, withCollectionFlags } from '../../../shared/collection-flags.mjs'
 
 /**
  * What the Explore package ships, resolved once and shared by every exporter.
@@ -197,10 +198,16 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
     (sql, params) => db.query(sql, params),
     rows.map(r => r.id)
   )
+  // A theme's `legacy_status` is its `visible` flag now (M16 E4a).
+  const flags = await loadCollectionFlags(
+    (sql, params) => db.query(sql, params),
+    rows.map(r => r.id)
+  )
   const tree = shippedTree(
     rootId,
     rows.map(r => {
       const own = relations.get(r.id)
+      const english = { collection_id: r.id, language_id: 'eng', context_id: exploreContextId }
       return {
         id: r.id,
         parent_id: r.parent_id,
@@ -213,11 +220,11 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
           r.english_id === null
             ? null
             : parse(
-                withTranslationRelations(r.english_extra, own, {
-                  collection_id: r.id,
-                  language_id: 'eng',
-                  context_id: own?.contextId ?? '',
-                })
+                withTranslationRelations(
+                  withCollectionFlags(r.english_extra, flags.get(r.id), english),
+                  own,
+                  english
+                )
               ),
       }
     })

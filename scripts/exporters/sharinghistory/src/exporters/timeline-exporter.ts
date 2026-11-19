@@ -77,11 +77,22 @@ export class TimelineExporter extends BaseExporter {
     const timelines = await this.db.query<TimelineRow>(
       `SELECT t.id, t.internal_name, t.backward_compatibility, t.country_id, t.collection_id,
               t.extra,
-              (SELECT JSON_UNQUOTE(JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show'))
-               FROM collection_translations ct
-               WHERE ct.collection_id = t.collection_id
-                 AND JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show') IS NOT NULL
-               LIMIT 1) AS exhibition_show
+              -- The show flag is the collection's \`visible\` now (M16 E4a), for an
+              -- exhibition whose texts carry \`legacy_exhibition\`; one the
+              -- importer left in \`extra\` is read there.
+              COALESCE(
+                (SELECT JSON_UNQUOTE(JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show'))
+                 FROM collection_translations ct
+                 WHERE ct.collection_id = t.collection_id
+                   AND JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show') IS NOT NULL
+                 LIMIT 1),
+                (SELECT IF(c2.visible, 'y', 'n')
+                 FROM collections c2
+                 WHERE c2.id = t.collection_id
+                   AND EXISTS (SELECT 1 FROM collection_translations ct2
+                               WHERE ct2.collection_id = c2.id
+                                 AND JSON_EXTRACT(ct2.extra, '$.legacy_exhibition') IS NOT NULL))
+              ) AS exhibition_show
        FROM timelines t
        WHERE t.collection_id IN (
          SELECT c.id FROM collections c

@@ -87,6 +87,8 @@ describe('GalleriesExporter', () => {
   const routes = (galleries: unknown[]): Route[] => [
     LANGUAGES,
     [/FROM collections g\s+JOIN collections root/, () => galleries],
+    // The gallery flags, columns since M16 E4a: none here, the chrome holds them.
+    [/FROM collections\s+WHERE id IN/, () => []],
     [
       /FROM collection_translations/,
       () => [

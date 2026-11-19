@@ -1,4 +1,5 @@
 import mysql from 'mysql2/promise'
+import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import type { Gallery, GalleryAnchor, GalleryChrome } from './types.js'
 
 interface GalleryRow {
@@ -124,11 +125,16 @@ export class Database {
    * describe the gallery, not the language), so the first row wins.
    */
   private async loadGalleryChrome(collectionId: string): Promise<GalleryChrome> {
-    const rows = await this.query<{ extra: unknown }>(
-      `SELECT extra FROM collection_translations
-       WHERE collection_id = ? AND extra IS NOT NULL
-       ORDER BY language_id`,
-      [collectionId]
+    // The gallery's featured flag and live date are columns now (M16 E4a):
+    // each row's `thg_gallery` gets them back.
+    const rows = await restoreCollectionFlags(
+      (sql, params) => this.query(sql, params),
+      await this.query<{ collection_id: string; extra: unknown }>(
+        `SELECT collection_id, extra FROM collection_translations
+         WHERE collection_id = ? AND extra IS NOT NULL
+         ORDER BY language_id`,
+        [collectionId]
+      )
     )
 
     for (const row of rows) {
