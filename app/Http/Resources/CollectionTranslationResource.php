@@ -34,10 +34,16 @@ class CollectionTranslationResource extends JsonResource
             'context_id' => $this->context_id,
             // The title of the collection translation
             'title' => $this->title,
+            // The subtitle, as written (optional)
+            'subtitle' => $this->subtitle,
             // The description of the collection translation
             'description' => $this->description,
+            // The introduction, as written (optional, Markdown)
+            'introduction' => $this->introduction,
             // The quote/introduction of the collection translation (optional)
             'quote' => $this->quote,
+            // A trail's duration, as written, e.g. "One day" (optional)
+            'duration' => $this->duration,
             // The URL for the collection translation
             'url' => $this->url,
             // The Id(s) of matching resource in the legacy system (if any).

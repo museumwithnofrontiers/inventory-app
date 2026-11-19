@@ -26,7 +26,10 @@ use Illuminate\Support\Facades\DB;
  * @property string $language_id
  * @property string $context_id
  * @property string|null $title
+ * @property string|null $subtitle
  * @property string|null $description
+ * @property string|null $introduction
+ * @property string|null $duration
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -100,8 +103,11 @@ class CollectionTranslation extends Model
         'language_id',
         'context_id',
         'title',
+        'subtitle',
         'description',
+        'introduction',
         'quote',
+        'duration',
         'url',
         'backward_compatibility',
         'extra',

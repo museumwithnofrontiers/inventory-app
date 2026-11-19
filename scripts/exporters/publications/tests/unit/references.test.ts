@@ -106,7 +106,7 @@ describe('publicationLinks and trailLinks', () => {
     }
     if (sql.includes('FROM collections WHERE')) return [{ id: 't1', backward_compatibility: 'mwnf3_travels:trail:IAM:jo:1' }]
     if (sql.includes('FROM collection_translations')) {
-      return [{ id: 't1', language: 'en', title: 'The Umayyads', extra: { subtitle: 'The Rise of Islamic Art' } }]
+      return [{ id: 't1', language: 'en', title: 'The Umayyads', subtitle: 'The Rise of Islamic Art' }]
     }
     return []
   }

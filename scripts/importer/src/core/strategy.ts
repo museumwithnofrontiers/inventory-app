@@ -716,6 +716,18 @@ export interface IWriteStrategy {
   ): Promise<void>;
 
   /**
+   * Set the given collection_translations columns and the extra JSON (or
+   * clear it, with null) on one row, as given: the values were sanitized when
+   * they were first written, so they are not converted again. Only the
+   * columns of COLLECTION_TRANSLATION_COLUMNS may be set.
+   */
+  setCollectionTranslationColumnsAsStoredById(
+    id: string,
+    columns: Record<string, string>,
+    extra: string | null
+  ): Promise<void>;
+
+  /**
    * Insert a contributor translation, or replace the name and description of
    * the one that exists for (contributor, language, context). The texts are
    * written as given, already sanitized where they came from.

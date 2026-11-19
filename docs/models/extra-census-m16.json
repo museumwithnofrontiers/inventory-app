@@ -8,12 +8,17 @@
         "collection_translations": {
             "keys": {
                 "author": 0,
+                "bibliography": 13,
                 "credits": 0,
                 "curated_by": 0,
+                "duration": 0,
+                "intro_text": 0,
+                "introduction": 0,
                 "local_coordinator": 0,
                 "local_team": 0,
                 "photo_by": 0,
                 "prepared_by": 0,
+                "subtitle": 0,
                 "travels_author": 0
             }
         },
@@ -56,6 +61,11 @@
             "keys": {
                 "date": 0,
                 "legacy_category": 0
+            }
+        },
+        "timelines": {
+            "keys": {
+                "bibliography": 16
             }
         }
     }

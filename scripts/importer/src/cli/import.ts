@@ -163,6 +163,7 @@ import {
   ExploreMonumentCountryBackfillImporter,
   CollectionCreditsImporter,
   ItemTranslationColumnsImporter,
+  CollectionTranslationColumnsImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1240,6 +1241,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     // and later steps move translations between contexts.
     runsLast: true,
   },
+  {
+    key: 'collection-translation-columns',
+    name: 'Collection Translation Columns',
+    description:
+      'Move the collection translation texts that have a column (subtitle, introduction, duration) out of collection_translations.extra, after every importer that writes them (M16 E1, #2647)',
+    importerClass: CollectionTranslationColumnsImporter,
+    // The exhibition, trail and itinerary importers of four databases write
+    // these keys, and later steps move translations between contexts.
+    runsLast: true,
+  },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)
   {
     key: 'publication',
@@ -1946,7 +1957,10 @@ program
   .description(
     'Copy the legacy PDFs of item and publication documents (size=1 placeholder) into the documents directory (ADR 004)'
   )
-  .requiredOption('--target-dir <path>', 'Target documents directory (the staging documents volume)')
+  .requiredOption(
+    '--target-dir <path>',
+    'Target documents directory (the staging documents volume)'
+  )
   .option('--dry-run', 'Simulate synchronization without making changes', false)
   .action(async (options) => {
     const logger = new FileLogger('DocumentSync', 'logs');

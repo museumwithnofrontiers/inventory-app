@@ -167,7 +167,7 @@ describe('the Publications exporters', () => {
   it('writes the trails with their Travels page and entries', async () => {
     const db = fakeDb([
       ['FROM collections WHERE', [{ id: 't1', backward_compatibility: 'mwnf3_travels:trail:IAM:jo:1' }]],
-      ['FROM collection_translations', [{ id: 't1', language: 'en', title: 'The Umayyads', extra: null }]],
+      ['FROM collection_translations', [{ id: 't1', language: 'en', title: 'The Umayyads', subtitle: null }]],
     ])
     const scope = scopeWith({ trailIds: ['t1'], entriesByTrail: new Map([['t1', ['o1', 'o2']]]) })
     await new TrailExporter(contextWith(db, outputDir, scope)).export()

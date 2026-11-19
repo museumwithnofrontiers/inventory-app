@@ -24,3 +24,4 @@ export { ExhibitionI18nTextBackfillImporter } from './exhibition-i18n-text-backf
 export { ExploreMonumentCountryBackfillImporter } from './explore-monument-country-backfill-importer.js';
 export { CollectionCreditsImporter } from './collection-credits-importer.js';
 export { ItemTranslationColumnsImporter } from './item-translation-columns-importer.js';
+export { CollectionTranslationColumnsImporter } from './collection-translation-columns-importer.js';
