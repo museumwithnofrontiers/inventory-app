@@ -601,4 +601,14 @@ class Item extends Model
             ->withPivot('display_order', 'extra')
             ->withTimestamps();
     }
+
+    /**
+     * Its visit information, per language and context (M16 D1, #2645).
+     *
+     * @return HasMany<VisitInformation, $this>
+     */
+    public function visitInformation(): HasMany
+    {
+        return $this->hasMany(VisitInformation::class);
+    }
 }

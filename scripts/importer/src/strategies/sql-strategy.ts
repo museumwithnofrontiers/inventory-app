@@ -79,6 +79,11 @@ import type {
 import { sanitizeAllStrings, sanitizeJsonField } from '../utils/html-to-markdown.js';
 import type { CollectionItemColumns } from '../utils/collection-item-columns.js';
 import { placementUuidName } from '../utils/collection-item-columns.js';
+import {
+  VISIT_INFORMATION_FIELDS,
+  type VisitInformationFields,
+  type VisitOwner,
+} from '../utils/visit-information.js';
 
 const tableEntityMap: Record<string, EntityType> = {
   languages: 'language',
@@ -150,6 +155,12 @@ function isDuplicateKeyError(error: unknown): boolean {
   );
 }
 import type { ITracker } from '../core/tracker.js';
+/** The translation table each visit information owner's keys come from (M16 D1). */
+const VISIT_SOURCE_TABLES: Readonly<Record<VisitOwner, { table: string; column: string }>> = {
+  item: { table: 'item_translations', column: 'item_id' },
+  collection: { table: 'collection_translations', column: 'collection_id' },
+  partner: { table: 'partner_translations', column: 'partner_id' },
+};
 
 // Type for resilient connection wrapper
 type DatabaseConnection = {
@@ -2615,6 +2626,88 @@ export class SqlWriteStrategy implements IWriteStrategy {
     const assignments = [...names.map((name) => `${name} = ?`), 'extra = ?', 'updated_at = ?'];
     await this.db.execute(`UPDATE collection_item SET ${assignments.join(', ')} WHERE id = ?`, [
       ...names.map((name) => columns[name] ?? null),
+      extra,
+      this.now,
+      id,
+    ]);
+  }
+
+  async findVisitInformationSources(
+    owner: VisitOwner,
+    keys: readonly string[]
+  ): Promise<
+    Array<{
+      id: string;
+      owner_id: string;
+      language_id: string;
+      context_id: string;
+      backward_compatibility: string | null;
+      extra: Record<string, unknown>;
+    }>
+  > {
+    if (keys.length === 0) return [];
+    const { table, column } = VISIT_SOURCE_TABLES[owner];
+    const paths = keys.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, ${column} AS owner_id, language_id, context_id, backward_compatibility, extra
+       FROM ${table}
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', ${paths})
+       ORDER BY ${column}, language_id, context_id`,
+      keys.map((key) => `$.${key}`)
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        owner_id: row.owner_id as string,
+        language_id: row.language_id as string,
+        context_id: row.context_id as string,
+        backward_compatibility: (row.backward_compatibility as string | null) ?? null,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async upsertVisitInformationAsStored(data: {
+    id: string;
+    owner: VisitOwner;
+    ownerId: string;
+    languageId: string;
+    contextId: string;
+    fields: VisitInformationFields;
+    backwardCompatibility: string | null;
+  }): Promise<void> {
+    const ownerColumn = VISIT_SOURCE_TABLES[data.owner].column;
+    const texts = VISIT_INFORMATION_FIELDS.map((field) => data.fields[field] ?? null);
+    await this.db.execute(
+      `INSERT INTO visit_information
+         (id, ${ownerColumn}, language_id, context_id, ${VISIT_INFORMATION_FIELDS.join(', ')},
+          backward_compatibility, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ${VISIT_INFORMATION_FIELDS.map(() => '?').join(', ')}, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         ${VISIT_INFORMATION_FIELDS.map((field) => `${field} = VALUES(${field})`).join(', ')},
+         backward_compatibility = VALUES(backward_compatibility),
+         updated_at = VALUES(updated_at)`,
+      [
+        data.id,
+        data.ownerId,
+        data.languageId,
+        data.contextId,
+        ...texts,
+        data.backwardCompatibility,
+        this.now,
+        this.now,
+      ]
+    );
+  }
+
+  async setVisitInformationSourceExtraAsStored(
+    owner: VisitOwner,
+    id: string,
+    extra: string | null
+  ): Promise<void> {
+    const { table } = VISIT_SOURCE_TABLES[owner];
+    await this.db.execute(`UPDATE ${table} SET extra = ?, updated_at = ? WHERE id = ?`, [
       extra,
       this.now,
       id,

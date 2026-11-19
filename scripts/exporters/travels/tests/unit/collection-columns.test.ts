@@ -5,6 +5,7 @@ import {
   restoreCollectionColumns,
   withCollectionTranslationColumns,
 } from '../../../shared/collection-columns.mjs'
+import { visitInformationSelect } from '../../../shared/visit-information.mjs'
 
 describe('withCollectionTranslationColumns', () => {
   it('puts each column back under its legacy key, in MySQL JSON key order', () => {
@@ -73,6 +74,8 @@ describe('the column list', () => {
       )
     ).toBe(true)
     expect(collectionColumnsSelect('ct')).toContain('WHERE cc_ci.collection_id = ct.collection_id')
+    // D1: the collection's visit information, in the translation's language and context.
+    expect(collectionColumnsSelect('ct')).toContain(visitInformationSelect('ct', 'collection_id'))
   })
 })
 

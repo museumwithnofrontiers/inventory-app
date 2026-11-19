@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 54
+- ** Total Models:** 55
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
@@ -70,6 +70,7 @@ title: Generated Model Documentation
 - [TimelineEventItem](#timelineeventitem)
 - [TimelineEventTranslation](#timelineeventtranslation)
 - [User](#user)
+- [VisitInformation](#visitinformation)
 
 ## Artist {#artist}
 
@@ -403,6 +404,7 @@ const UPDATED_AT = 'updated_at';
 - **`items()`**: HasMany [Item](#item)
 - **`collectionImages()`**: HasMany [CollectionImage](#collectionimage)
 - **`contributors()`**: HasMany [Contributor](#contributor)
+- **`visitInformation()`**: HasMany [VisitInformation](#visitinformation)
 
 #### Belongs To Many
 - **`countries()`**: BelongsToMany [Country](#country)
@@ -1551,6 +1553,7 @@ const UPDATED_AT = 'updated_at';
 - **`translations()`**: HasMany [ItemTranslation](#itemtranslation)
 - **`outgoingLinks()`**: HasMany [ItemItemLink](#itemitemlink)
 - **`incomingLinks()`**: HasMany [ItemItemLink](#itemitemlink)
+- **`visitInformation()`**: HasMany [VisitInformation](#visitinformation)
 
 #### Belongs To Many
 - **`tags()`**: BelongsToMany [Tag](#tag)
@@ -2240,6 +2243,7 @@ const UPDATED_AT = 'updated_at';
 - **`translations()`**: HasMany [PartnerTranslation](#partnertranslation)
 - **`partnerImages()`**: HasMany [PartnerImage](#partnerimage)
 - **`partnerLogos()`**: HasMany [PartnerLogo](#partnerlogo)
+- **`visitInformation()`**: HasMany [VisitInformation](#visitinformation)
 
 #### Belongs To Many
 - **`collections()`**: BelongsToMany [Collection](#collection)
@@ -3544,6 +3548,76 @@ const UPDATED_AT = 'updated_at';
 - **`withoutTeam()`**
 - **`permission()`**
 - **`withoutPermission()`**
+
+
+## VisitInformation {#visitinformation}
+
+**Namespace:** `App\Models\VisitInformation`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `visit_information` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `item_id` | char | Unknown | Unknown |  |
+| `collection_id` | char | Unknown | Unknown |  |
+| `partner_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `context_id` | char | Unknown | Unknown |  |
+| `how_to_reach` | text | Unknown | Unknown |  |
+| `opening_hours` | text | Unknown | Unknown |  |
+| `contact` | text | Unknown | Unknown |  |
+| `address` | text | Unknown | Unknown |  |
+| `institution` | text | Unknown | Unknown |  |
+| `practical_information` | text | Unknown | Unknown |  |
+| `phone` | text | Unknown | Unknown |  |
+| `fax` | text | Unknown | Unknown |  |
+| `email` | text | Unknown | Unknown |  |
+| `website` | text | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `extra` | json | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['item_id', 'collection_id', 'partner_id', 'language_id', 'context_id', 'how_to_reach', 'opening_hours', 'contact', 'address', 'institution', 'practical_information', 'phone', 'fax', 'email', 'website', 'backward_compatibility', 'extra']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `extra` | `object` |
+
+### Model Constants
+
+```php
+const OWNER_COLUMNS = null;
+const TEXT_FIELDS = null;
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`item()`**: BelongsTo [Item](#item)
+- **`collection()`**: BelongsTo [Collection](#collection)
+- **`partner()`**: BelongsTo [Partner](#partner)
+- **`language()`**: BelongsTo [Language](#language)
+- **`context()`**: BelongsTo [Context](#context)
 
 
 ---

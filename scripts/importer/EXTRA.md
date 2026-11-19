@@ -212,6 +212,30 @@ stays until C2 (#2642) gives the placement translations their own legacy keys.
 | `membership` (a constant)                                                                                                                                                                                        | thg_gallery.mwnf3_project_id                                                         | importers/phase-10/thg-gallery-native-project-importer.ts                                                 |
 | `contextual_descriptions` (`{language id: text}`)                                                                                                                                                                | objects_trails_justification                                                         | importers/phase-07/travels-trail-entry-importer.ts                                                        |
 
+## Visit information (M16 D1, #2645)
+
+The visit keys of three translation tables are written into `extra` first, then moved to the shared
+`visit_information` model, one row per owner, language and context, every text as written, by
+`importers/phase-11/visit-information-importer.ts`:
+
+| Table | Keys |
+| --- | --- |
+| `item_translations` (monuments: mwnf3, Travels, Explore) | `how_to_reach`, `info`, `contact`, `monument_contact.{address, institution, phone, fax, email, website}` |
+| `collection_translations` (Explore locations) | `how_to_reach`, `info`, `contact` |
+| `partner_translations` (mwnf3 museums) | `how_to_reach`, `opening_hours` |
+
+- `info` goes to `practical_information` whole: it mixes opening hours, fees and access.
+- `monument_contact.responsible_institution` (Sharing History, 38 rows) is dropped: it equals the row's own
+  `responsible_institution_org` on every row, and the exporters restore it from there.
+- A value that isn't a text, a `monument_contact` part with no field, and a responsible institution that differs
+  all stay here and are reported.
+- A collection's `contacts` list (`mwnf3_explore.locations_contact`, 1 row) stays: it is a list of entries, a
+  one-off (ADR 006 rule 5).
+
+None of the moved keys stays after a full import. After re-running one of their writers on its own, run
+`--only visit-information` again. The exporters give the keys back (`scripts/exporters/shared/visit-information.mjs`,
+through `item-columns.mjs`, `collection-columns.mjs` and the Explore and Travels partner exporters).
+
 ## Other tables
 
 | Table                | Key                                                                                                                                                                                 | Legacy source                                                                  | Written by                                                                                                           |

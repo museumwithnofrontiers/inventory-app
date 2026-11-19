@@ -28,6 +28,7 @@ use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationMan
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Resources\ItemResource\RelationManagers\VisitInformationRelationManager;
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ItemDisplayLabel;
@@ -565,6 +566,9 @@ class ItemResource extends Resource
             ]),
             RelationGroup::make('Timeline', [
                 TimelineEventsRelationManager::class,
+            ]),
+            RelationGroup::make('Visit', [
+                VisitInformationRelationManager::class,
             ]),
         ];
     }

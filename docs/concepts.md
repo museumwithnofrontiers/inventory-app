@@ -304,6 +304,21 @@ This means it is sufficient to create a single "default context" translation for
 
 ---
 
+## Visit information
+
+How to visit a place has one model, shared by monuments, travel locations and partners (`App\Models\VisitInformation`, M16 D1). A visit information belongs to exactly one owner: an item (a monument), a collection (a travel location) or a partner. It exists per language and context, like the owner's translations, and holds:
+
+- how to reach the place;
+- opening hours;
+- contact;
+- address and institution;
+- practical information (opening hours, fees and access, as legacy wrote them together);
+- phone, fax, e-mail and website.
+
+Every text is kept as written. The panel edits it in a Visit information tab on the monument, the collection and the partner; the API serves it at `/api/visit-information`.
+
+---
+
 ## Tags
 
 A **Tag** is a free-form label that can be attached to any number of items. Tags allow flexible, ad-hoc categorisation of content that does not fit into the formal collection structure.
