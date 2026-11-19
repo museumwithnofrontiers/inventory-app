@@ -81,6 +81,11 @@ class ItemTranslationResource extends JsonResource
             // The copy-editor of the item translation (AuthorResource id)
             'translation_copy_editor_id' => $this->translation_copy_editor_id,
             // The Id(s) of matching resource in the legacy system (if any).
+            // The credits as legacy wrote them (the Author links are author_id and the others)
+            'author_credit' => $this->author_credit,
+            'copy_editor_credit' => $this->copy_editor_credit,
+            'translator_credit' => $this->translator_credit,
+            'translation_copy_editor_credit' => $this->translation_copy_editor_credit,
             'backward_compatibility' => $this->backward_compatibility,
             // Extra data for translation (object, may be null)
             'extra' => $this->extra,

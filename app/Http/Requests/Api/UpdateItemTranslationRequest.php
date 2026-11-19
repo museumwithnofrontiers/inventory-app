@@ -75,6 +75,10 @@ class UpdateItemTranslationRequest extends FormRequest
             'text_copy_editor_id' => ['nullable', 'uuid', 'exists:authors,id'],
             'translator_id' => ['nullable', 'uuid', 'exists:authors,id'],
             'translation_copy_editor_id' => ['nullable', 'uuid', 'exists:authors,id'],
+            'author_credit' => ['nullable', 'string'],
+            'copy_editor_credit' => ['nullable', 'string'],
+            'translator_credit' => ['nullable', 'string'],
+            'translation_copy_editor_credit' => ['nullable', 'string'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
             'extra' => ['nullable', 'json'],
         ];

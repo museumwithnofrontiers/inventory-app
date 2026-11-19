@@ -33,6 +33,10 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $dynasty
  * @property string|null $region
  * @property string|null $history
+ * @property string|null $author_credit
+ * @property string|null $copy_editor_credit
+ * @property string|null $translator_credit
+ * @property string|null $translation_copy_editor_credit
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -130,6 +134,10 @@ class ItemTranslation extends Model
         'text_copy_editor_id',
         'translator_id',
         'translation_copy_editor_id',
+        'author_credit',
+        'copy_editor_credit',
+        'translator_credit',
+        'translation_copy_editor_credit',
         'backward_compatibility',
         'extra',
     ];
