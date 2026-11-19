@@ -9702,7 +9702,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -9883,7 +9883,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -9937,7 +9937,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -9991,7 +9991,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10055,7 +10055,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10276,7 +10276,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10701,7 +10701,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10777,7 +10777,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -24717,7 +24717,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
@@ -24761,7 +24761,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
@@ -25140,67 +25140,40 @@
                         "type": "string"
                     },
                     "language_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "type": {
-                        "$ref": "#/components/schemas/MediaType"
+                        "type": "string"
                     },
                     "title": {
                         "type": "string"
                     },
                     "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "url": {
                         "type": "string"
                     },
                     "display_order": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "extra": {
-                        "type": [
-                            "object",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "backward_compatibility": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "collection": {
                         "$ref": "#/components/schemas/CollectionResource"
                     },
                     "language": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/LanguageResource"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/LanguageResource"
                     },
                     "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -26847,67 +26820,40 @@
                         "type": "string"
                     },
                     "language_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "type": {
-                        "$ref": "#/components/schemas/MediaType"
+                        "type": "string"
                     },
                     "title": {
                         "type": "string"
                     },
                     "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "url": {
                         "type": "string"
                     },
                     "display_order": {
-                        "type": "integer"
+                        "type": "string"
                     },
                     "extra": {
-                        "type": [
-                            "object",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "backward_compatibility": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
+                        "type": "string"
                     },
                     "item": {
                         "$ref": "#/components/schemas/ItemResource"
                     },
                     "language": {
-                        "anyOf": [
-                            {
-                                "$ref": "#/components/schemas/LanguageResource"
-                            },
-                            {
-                                "type": "null"
-                            }
-                        ]
+                        "$ref": "#/components/schemas/LanguageResource"
                     },
                     "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     },
                     "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time"
+                        "type": "string"
                     }
                 },
                 "required": [
@@ -27057,13 +27003,6 @@
                         "description": "Artists associated with this item (ArtistResource[])",
                         "items": {
                             "$ref": "#/components/schemas/ArtistResource"
-                        }
-                    },
-                    "workshops": {
-                        "type": "array",
-                        "description": "Workshops associated with this item (WorkshopResource[])",
-                        "items": {
-                            "$ref": "#/components/schemas/WorkshopResource"
                         }
                     },
                     "tags": {
@@ -27739,15 +27678,6 @@
                     "updated_at"
                 ],
                 "title": "LanguageTranslationResource"
-            },
-            "MediaType": {
-                "type": "string",
-                "enum": [
-                    "audio",
-                    "video",
-                    "document"
-                ],
-                "title": "MediaType"
             },
             "MessageResource": {
                 "type": "object",
@@ -35350,7 +35280,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
@@ -35374,7 +35304,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `workshops`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
@@ -35384,51 +35314,6 @@
                     "tags"
                 ],
                 "title": "WithAnyTagsItemRequest"
-            },
-            "WorkshopResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "description": "The unique identifier (GUID)"
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "The name of the workshop"
-                    },
-                    "internal_name": {
-                        "type": "string",
-                        "description": "A name for this resource, for internal use only."
-                    },
-                    "backward_compatibility": {
-                        "type": "string",
-                        "description": "The Id(s) of matching resource in the legacy system (if any)."
-                    },
-                    "created_at": {
-                        "type": "string",
-                        "description": "The date of creation of the resource (managed by the system)"
-                    },
-                    "updated_at": {
-                        "type": "string",
-                        "description": "The date of last modification of the resource (managed by the system)"
-                    },
-                    "items": {
-                        "type": "array",
-                        "description": "Items associated with this workshop (ItemResource[])",
-                        "items": {
-                            "$ref": "#/components/schemas/ItemResource"
-                        }
-                    }
-                },
-                "required": [
-                    "id",
-                    "name",
-                    "internal_name",
-                    "backward_compatibility",
-                    "created_at",
-                    "updated_at"
-                ],
-                "title": "WorkshopResource"
             }
         },
         "responses": {
