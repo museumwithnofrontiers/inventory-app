@@ -671,8 +671,11 @@ const UPDATED_AT = 'updated_at';
 | `language_id` | varchar | Unknown | Unknown |  |
 | `context_id` | char | Unknown | Unknown |  |
 | `title` | varchar | Unknown | Unknown |  |
+| `subtitle` | text | Unknown | Unknown |  |
 | `description` | text | Unknown | Unknown |  |
+| `introduction` | text | Unknown | Unknown |  |
 | `quote` | text | Unknown | Unknown |  |
+| `duration` | varchar | Unknown | Unknown |  |
 | `url` | varchar | Unknown | Unknown |  |
 | `backward_compatibility` | varchar | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
@@ -682,7 +685,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['collection_id', 'language_id', 'context_id', 'title', 'description', 'quote', 'url', 'backward_compatibility', 'extra']
+['collection_id', 'language_id', 'context_id', 'title', 'subtitle', 'description', 'introduction', 'quote', 'duration', 'url', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
