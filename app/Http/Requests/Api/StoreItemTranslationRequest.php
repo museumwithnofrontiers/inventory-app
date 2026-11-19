@@ -2,10 +2,10 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\ItemTranslationStatus;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Foundation\Http\FormRequest;
-use App\Enums\ItemTranslationStatus;
 use Illuminate\Validation\Rule;
 
 class StoreItemTranslationRequest extends FormRequest
