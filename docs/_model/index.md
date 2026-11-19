@@ -269,6 +269,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `comment` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
 
@@ -450,6 +452,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -864,6 +868,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -1638,6 +1644,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2231,6 +2239,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -2291,6 +2301,8 @@ const UPDATED_AT = 'updated_at';
 | `logo_type` | varchar | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2435,6 +2447,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2832,6 +2846,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -3244,6 +3260,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
