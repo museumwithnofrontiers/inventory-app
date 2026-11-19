@@ -85,8 +85,8 @@ class ItemTranslationTest extends TestCase
     }
 
     /**
-     * The display texts that left `extra` (M16 B1) are stored and served as
-     * written.
+     * The display texts and credits that left `extra` (M16 B1, B4) are stored
+     * and served as written.
      */
     public function test_stores_and_serves_the_display_columns(): void
     {
@@ -97,6 +97,10 @@ class ItemTranslationTest extends TestCase
             'dynasty' => 'Mamluk; the lid probably Ottoman.',
             'region' => 'Damascus',
             'history' => 'Built in 1277, restored in 1350.',
+            'author_credit' => 'Mona al-Moadin - Zena Takieddine.',
+            'copy_editor_credit' => 'Mandi Gomez.',
+            'translator_credit' => 'Hilary Kalmbach (from the Arabic).',
+            'translation_copy_editor_credit' => 'Margot Cortez.',
         ];
 
         $this->putJson(route('item-translation.update', $resource), $texts)
@@ -105,7 +109,9 @@ class ItemTranslationTest extends TestCase
             ->assertJsonPath('data.materials', $texts['materials'])
             ->assertJsonPath('data.dynasty', $texts['dynasty'])
             ->assertJsonPath('data.region', $texts['region'])
-            ->assertJsonPath('data.history', $texts['history']);
+            ->assertJsonPath('data.history', $texts['history'])
+            ->assertJsonPath('data.author_credit', $texts['author_credit'])
+            ->assertJsonPath('data.translation_copy_editor_credit', $texts['translation_copy_editor_credit']);
 
         $this->assertDatabaseHas('item_translations', ['id' => $resource->id] + $texts);
     }

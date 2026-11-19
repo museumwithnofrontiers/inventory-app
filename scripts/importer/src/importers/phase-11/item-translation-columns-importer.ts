@@ -5,6 +5,9 @@
  * `item_translations.extra` (see utils/item-translation-columns.ts):
  * - B1 (#2635): `materials`, `description2` → `short_description`, `dynasty`,
  *   `province` → `region`, `history`.
+ * - B4 (#2638): `credits_as_written.{author, copy_editor, translator,
+ *   translation_copy_editor}` → the four `*_credit` columns; `prepared_by`
+ *   (Explore and Travels texts) → `author_credit`.
  *
  * The mwnf3, Sharing History, Explore and Travels object and monument
  * importers write these keys, and later steps move translations between

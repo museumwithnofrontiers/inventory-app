@@ -57,6 +57,10 @@ class ItemTranslationFactory extends Factory
             'text_copy_editor_id' => $this->faker->optional()->randomElement([Author::factory(), null]),
             'translator_id' => $this->faker->optional()->randomElement([Author::factory(), null]),
             'translation_copy_editor_id' => $this->faker->optional()->randomElement([Author::factory(), null]),
+            'author_credit' => $this->faker->optional()->name,
+            'copy_editor_credit' => $this->faker->optional()->name,
+            'translator_credit' => $this->faker->optional()->name,
+            'translation_copy_editor_credit' => $this->faker->optional()->name,
             'extra' => $this->faker->optional()->passthrough(
                 json_encode($this->faker->randomElements(['key1' => 'value1', 'key2' => 'value2'], null, false))
             ),

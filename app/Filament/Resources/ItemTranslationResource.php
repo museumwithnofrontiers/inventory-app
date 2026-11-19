@@ -191,9 +191,22 @@ class ItemTranslationResource extends Resource
                 Section::make('Contributors')
                     ->schema([
                         TranslationFormSchema::authorSelectField('author_id', 'Author'),
+                        Textarea::make('author_credit')
+                            ->label('Author, as printed')
+                            ->helperText('The credit line as the sheet prints it')
+                            ->rows(2),
                         TranslationFormSchema::authorSelectField('text_copy_editor_id', 'Text copy editor'),
+                        Textarea::make('copy_editor_credit')
+                            ->label('Text copy editor, as printed')
+                            ->rows(2),
                         TranslationFormSchema::authorSelectField('translator_id', 'Translator'),
+                        Textarea::make('translator_credit')
+                            ->label('Translator, as printed')
+                            ->rows(2),
                         TranslationFormSchema::authorSelectField('translation_copy_editor_id', 'Translation copy editor'),
+                        Textarea::make('translation_copy_editor_credit')
+                            ->label('Translation copy editor, as printed')
+                            ->rows(2),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -303,6 +316,10 @@ class ItemTranslationResource extends Resource
                             ->url(fn (ItemTranslation $record): ?string => $record->translationCopyEditor
                                 ? (auth()->user()?->can('view', $record->translationCopyEditor) ? AuthorResource::getUrl('view', ['record' => $record->translationCopyEditor]) : null)
                                 : null),
+                        TranslationInfolistSchema::rtlTextEntry('author_credit', 'Author, as printed'),
+                        TranslationInfolistSchema::rtlTextEntry('copy_editor_credit', 'Text copy editor, as printed'),
+                        TranslationInfolistSchema::rtlTextEntry('translator_credit', 'Translator, as printed'),
+                        TranslationInfolistSchema::rtlTextEntry('translation_copy_editor_credit', 'Translation copy editor, as printed'),
                     ])
                     ->columns(2)
                     ->collapsible()
