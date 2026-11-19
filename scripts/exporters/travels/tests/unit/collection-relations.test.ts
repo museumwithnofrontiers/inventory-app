@@ -146,7 +146,7 @@ describe('country codes', () => {
   })
 
   it('fails on an ISO3 id with no single code', () => {
-    expect(() => legacyCountryCode('xxx')).toThrow(/xxx/)
+    expect(() => legacyCountryCode('qqq')).toThrow(/qqq/)
     expect(() => legacyCountryCode('ita', { it: 'ita', ix: 'ita' }, [])).toThrow(/it, ix/)
     expect(legacyCountryCode('ita', { it: 'ita', ix: 'ita' }, ['ix'])).toBe('it')
   })

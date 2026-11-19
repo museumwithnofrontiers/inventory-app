@@ -85,10 +85,10 @@ export async function loadCollectionRelations(query, collectionIds) {
     )
     for (const c of collections) contexts.set(c.id, c.context_id)
     for (const c of collections) {
-      if (c.cover_item_id !== null) {
+      if (c.cover_item_id != null) {
         entry(c.id).cover = { item_id: c.cover_item_id, backward_compatibility: c.cover_backward_compatibility }
       }
-      if (c.days !== null) entry(c.id).days = c.days
+      if (c.days != null) entry(c.id).days = c.days
     }
     const countries = /** @type {{ collection_id: string, country_id: string }[]} */ (
       await query(
@@ -179,7 +179,7 @@ export function withTranslationRelations(extra, relations, translation) {
   if (!relations || translation.language_id !== 'eng' || translation.context_id !== relations.contextId) return extra
   /** @type {Record<string, unknown>} */
   const keys = {}
-  if (relations.countries.length > 0) keys['country_ids'] = relations.countries.map(legacyCountryCode)
+  if (relations.countries.length > 0) keys['country_ids'] = relations.countries.map(id => legacyCountryCode(id))
   for (const { key, kind, prefix } of TRANSLATION_LINK_KEYS) {
     const linked = relations.links[kind]
     if (linked && linked.length > 0) keys[key] = linked.map(k => legacyId(k, prefix, translation.collection_id))
