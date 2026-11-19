@@ -6,12 +6,14 @@ use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Support\CollectionDisplayLabel;
+use App\Filament\Support\CollectionItemExploreMonumentForm;
 use App\Filament\Support\CollectionItemTranslationForm;
 use App\Filament\Support\ItemDisplayLabel;
 use App\Models\Collection;
 use App\Models\CollectionItem;
 use App\Models\CollectionItemTranslation;
 use App\Models\Item;
+use Filament\Actions\EditAction as PageEditAction;
 use Filament\Infolists\Infolist;
 use Filament\Pages\Page;
 use Filament\Tables\Actions\CreateAction;
@@ -150,6 +152,49 @@ class ViewCollectionItemAppearance extends Page implements HasTable
             ])
             ->emptyStateHeading('No texts on this collection')
             ->emptyStateDescription('The item shows its own texts here.');
+    }
+
+    /**
+     * The Explore monuments the placement stands for (M16 C4), edited in a
+     * modal: one entry per Explore monument, in order.
+     *
+     * @return array<int, PageEditAction>
+     */
+    protected function getHeaderActions(): array
+    {
+        return [
+            PageEditAction::make('exploreMonuments')
+                ->label('Explore monuments')
+                ->icon('heroicon-o-map-pin')
+                ->modalHeading('Explore monuments')
+                ->modalDescription('The Explore monuments this placement stands for, in order.')
+                ->record(fn (): CollectionItem => $this->placement())
+                ->form(CollectionItemExploreMonumentForm::fields())
+                ->visible(fn (): bool => $this->canChangeTexts()),
+        ];
+    }
+
+    /**
+     * The placement, with its Explore monuments and their museums.
+     */
+    public function placement(): CollectionItem
+    {
+        return CollectionItem::query()
+            ->with(['exploreMonuments.partners:id,internal_name', 'exploreMonuments.locationCollection:id,internal_name'])
+            ->findOrFail($this->placementId);
+    }
+
+    /**
+     * One line per Explore monument, for the page.
+     *
+     * @return array<int, string>
+     */
+    public function exploreMonumentSummaries(): array
+    {
+        return $this->placement()->exploreMonuments
+            ->map(fn ($monument): string => CollectionItemExploreMonumentForm::summary($monument))
+            ->values()
+            ->all();
     }
 
     /**

@@ -32,6 +32,7 @@
  * Types are in `pages.d.mts`.
  */
 
+import { exploreMonumentsSelect, restoreExploreMonuments } from './explore-monuments.mjs'
 import { siteLink } from './sites.mjs'
 
 /** Explore's source order, by legacy key prefix (explore `sourceOf`). */
@@ -162,11 +163,15 @@ export async function resolveItemPages(query, links, sites, parents) {
     const members = []
     for (const part of chunks([...locations].sort())) {
       const rows = /** @type {{ collection_id: string, item_id: string, display_order: number | null, backward_compatibility: string | null, extra: unknown }[]} */ (
-        await query(
-          `SELECT ci.collection_id, ci.item_id, ci.display_order, i.backward_compatibility, ci.extra
-           FROM collection_item ci JOIN items i ON i.id = ci.item_id
-           WHERE ci.collection_id IN (${marks(part)}) ORDER BY ci.collection_id, ci.item_id`,
-          part
+        restoreExploreMonuments(
+          /** @type {{ extra?: unknown }[]} */ (
+            await query(
+              `SELECT ci.collection_id, ci.item_id, ci.display_order, i.backward_compatibility, ci.extra, ${exploreMonumentsSelect('ci')}
+               FROM collection_item ci JOIN items i ON i.id = ci.item_id
+               WHERE ci.collection_id IN (${marks(part)}) ORDER BY ci.collection_id, ci.item_id`,
+              part
+            )
+          )
         )
       )
       for (const r of rows) members.push({ location: r.collection_id, item: r.item_id, order: r.display_order, key: r.backward_compatibility, extra: r.extra })

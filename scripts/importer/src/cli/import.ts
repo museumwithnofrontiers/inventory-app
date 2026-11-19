@@ -167,6 +167,7 @@ import {
   VisitInformationImporter,
   PartnerColumnsImporter,
   CollectionItemTranslationsImporter,
+  CollectionItemExploreMonumentsImporter,
   PictureCreditsImporter,
   ImageTextsImporter,
   CollectionRelationsImporter,
@@ -1297,6 +1298,15 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     // The mwnf3 and Sharing History exhibition importers, the National Context
     // importer, the thematic gallery and Travels trail importers and the
     // justification step write these keys.
+    runsLast: true,
+  },
+  {
+    key: 'collection-item-explore-monuments',
+    name: 'Collection Item Explore Monuments',
+    description:
+      "Move Explore's monuments (a location's list with its coordinates and museums, an itinerary's monument with its location and description references) out of collection_item.extra to the placements' Explore monuments, after every importer that writes them (M16 C4, #2644)",
+    importerClass: CollectionItemExploreMonumentsImporter,
+    // The Explore location and itinerary importers write these keys.
     runsLast: true,
   },
   {

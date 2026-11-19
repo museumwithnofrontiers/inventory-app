@@ -5,6 +5,7 @@ import {
   withTranslationRelations,
 } from '../../../shared/collection-relations.mjs'
 import { loadCollectionFlags, withCollectionFlags } from '../../../shared/collection-flags.mjs'
+import { exploreMonumentsSelect, restoreExploreMonuments } from '../../../shared/explore-monuments.mjs'
 import { withSiteCollectionExtra, withSiteTranslationExtra } from '../../../shared/site-configuration.mjs'
 
 /**
@@ -311,11 +312,19 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
 
   // A monument legacy shows as a museum names the museum on its location
   // membership: the museum's partner ships, for its texts and pictures.
-  const memberships = await db.query<{ extra: unknown }>(
-    `SELECT cm.extra FROM collection_item cm
-     WHERE cm.collection_id IN (${ph}) AND cm.extra LIKE ?
-     ORDER BY cm.collection_id, cm.item_id`,
-    [...treeIds, '%"explore_museums"%']
+  // The museums are the partners of the membership's Explore monuments (M16
+  // C4), or still in `extra` where one didn't resolve.
+  const memberships = restoreExploreMonuments(
+    await db.query<{ extra: unknown }>(
+      `SELECT cm.extra, ${exploreMonumentsSelect('cm')} FROM collection_item cm
+       WHERE cm.collection_id IN (${ph})
+         AND (cm.extra LIKE ? OR EXISTS (
+           SELECT 1 FROM collection_item_explore_monuments sm
+           JOIN collection_item_explore_monument_partner sp ON sp.collection_item_explore_monument_id = sm.id
+           WHERE sm.collection_item_id = cm.id))
+       ORDER BY cm.collection_id, cm.item_id`,
+      [...treeIds, '%"explore_museums"%']
+    )
   )
   const museumKeys = [...new Set(memberships.flatMap(m => museumKeysOf(parse(m.extra))))].sort()
 

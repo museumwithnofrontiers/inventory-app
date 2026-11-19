@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 57
+- ** Total Models:** 58
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
@@ -23,6 +23,7 @@ title: Generated Model Documentation
 - [Collection](#collection)
 - [CollectionImage](#collectionimage)
 - [CollectionItem](#collectionitem)
+- [CollectionItemExploreMonument](#collectionitemexploremonument)
 - [CollectionItemTranslation](#collectionitemtranslation)
 - [CollectionPartner](#collectionpartner)
 - [CollectionTranslation](#collectiontranslation)
@@ -573,7 +574,73 @@ const UPDATED_AT = 'updated_at';
 - **`picture()`**: BelongsTo [Item](#item)
 
 #### Has Many
+- **`exploreMonuments()`**: HasMany [CollectionItemExploreMonument](#collectionitemexploremonument)
 - **`translations()`**: HasMany [CollectionItemTranslation](#collectionitemtranslation)
+
+
+## CollectionItemExploreMonument {#collectionitemexploremonument}
+
+**Namespace:** `App\Models\CollectionItemExploreMonument`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `collection_item_explore_monuments` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `collection_item_id` | char | Unknown | Unknown |  |
+| `position` | int | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `latitude` | double | Unknown | Unknown |  |
+| `longitude` | double | Unknown | Unknown |  |
+| `map_zoom` | int | Unknown | Unknown |  |
+| `location_collection_id` | char | Unknown | Unknown |  |
+| `description_types` | varchar | Unknown | Unknown |  |
+| `travels_description_ref` | varchar | Unknown | Unknown |  |
+| `explore_description_ref` | varchar | Unknown | Unknown |  |
+| `virtual_museum_description_ref` | varchar | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['collection_item_id', 'position', 'backward_compatibility', 'latitude', 'longitude', 'map_zoom', 'location_collection_id', 'description_types', 'travels_description_ref', 'explore_description_ref', 'virtual_museum_description_ref']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `position` | `integer` |
+| `latitude` | `float` |
+| `longitude` | `float` |
+| `map_zoom` | `integer` |
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`collectionItem()`**: BelongsTo [CollectionItem](#collectionitem)
+- **`locationCollection()`**: BelongsTo [Collection](#collection)
+
+#### Belongs To Many
+- **`partners()`**: BelongsToMany [Partner](#partner)
 
 
 ## CollectionItemTranslation {#collectionitemtranslation}

@@ -6,6 +6,7 @@ use App\Enums\Permission;
 use App\Models\AvailableImage;
 use App\Models\Collection;
 use App\Models\CollectionImage;
+use App\Models\CollectionItemExploreMonument;
 use App\Models\CollectionItemTranslation;
 use App\Models\CollectionTranslation;
 use App\Models\Context;
@@ -286,6 +287,13 @@ class PermissionsTest extends TestCase
             ['GET', 'collection-item-translation.show', Permission::VIEW_DATA, CollectionItemTranslation::class],
             ['PATCH', 'collection-item-translation.update', Permission::UPDATE_DATA, CollectionItemTranslation::class],
             ['DELETE', 'collection-item-translation.destroy', Permission::DELETE_DATA, CollectionItemTranslation::class],
+
+            // CollectionItemExploreMonument routes: the Explore monuments of a placement
+            ['GET', 'collection-item-explore-monument.index', Permission::VIEW_DATA, null],
+            ['POST', 'collection-item-explore-monument.store', Permission::CREATE_DATA, null],
+            ['GET', 'collection-item-explore-monument.show', Permission::VIEW_DATA, CollectionItemExploreMonument::class],
+            ['PATCH', 'collection-item-explore-monument.update', Permission::UPDATE_DATA, CollectionItemExploreMonument::class],
+            ['DELETE', 'collection-item-explore-monument.destroy', Permission::DELETE_DATA, CollectionItemExploreMonument::class],
 
             // PublicationEdition routes: every change is an update of the publication
             ['GET', 'publication-edition.index', Permission::VIEW_DATA, null],

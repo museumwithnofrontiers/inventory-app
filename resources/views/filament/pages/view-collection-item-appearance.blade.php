@@ -36,5 +36,17 @@
         </dl>
     </x-filament::section>
 
+    @php($exploreMonuments = $this->exploreMonumentSummaries())
+    @if ($exploreMonuments !== [])
+        <x-filament::section>
+            <x-slot name="heading">Explore monuments</x-slot>
+            <ol class="list-decimal space-y-1 ps-5 text-sm text-gray-900 dark:text-gray-100">
+                @foreach ($exploreMonuments as $summary)
+                    <li class="font-mono">{{ $summary }}</li>
+                @endforeach
+            </ol>
+        </x-filament::section>
+    @endif
+
     {{ $this->table }}
 </x-filament-panels::page>

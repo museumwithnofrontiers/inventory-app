@@ -28,6 +28,7 @@ export { CollectionItemColumnsImporter } from './collection-item-columns-importe
 export { VisitInformationImporter } from './visit-information-importer.js';
 export { CollectionItemTranslationsImporter } from './collection-item-translations-importer.js';
 export { PartnerColumnsImporter } from './partner-columns-importer.js';
+export { CollectionItemExploreMonumentsImporter } from './collection-item-explore-monuments-importer.js';
 export { PictureCreditsImporter } from './picture-credits-importer.js';
 export { CollectionRelationsImporter } from './collection-relations-importer.js';
 export { CollectionFlagsImporter } from './collection-flags-importer.js';

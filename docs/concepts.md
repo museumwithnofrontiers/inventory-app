@@ -171,6 +171,8 @@ A placement also has its own texts, one set per language: its **translations** (
 
 They are edited on the placement's page, which the Collection's Items list opens with **View appearance**.
 
+On Explore, a placement can also stand for one or more **Explore monuments** (`App\Models\CollectionItemExploreMonument`). Explore lists its monuments by its own ids, which the inventory doesn't hold as items: one placed item can stand for several of them. Each one has its place in the list, its legacy key (`mwnf3_explore:monument:<id>`), its coordinates and the museums Explore shows it as; on an itinerary, also the location it is visited in and legacy's references to the texts it showed. They are edited on the placement's page too, with **Explore monuments**.
+
 #### Collection default language and context
 
 Each collection records a **default language** and a **default context**. These specify which language and audience context should be used as the primary mode of presentation for this collection. They do not restrict what translations can be created; they express an editorial preference.

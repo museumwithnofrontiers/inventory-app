@@ -215,6 +215,22 @@ A key of another shape stays here and is reported. None stays after a full impor
 writers on its own, run `--only collection-item-translations` again. The exporters put the keys back
 (`scripts/exporters/shared/placement-translations.mjs`), so the packages are unchanged.
 
+Explore lists its monuments by its own ids, which the model doesn't hold (M16 C4, #2644): one placed item can
+stand for several, and an Explore monument merged into another record has no item of its own. So each Explore
+monument a placement stands for is a row of the placement, `collection_item_explore_monuments`, written here
+first, then moved by `importers/phase-11/collection-item-explore-monuments-importer.ts`, as written:
+- on an Explore location: `explore_monument_ids` → one row per id, in order (`position`), its legacy key
+  `mwnf3_explore:monument:<id>`; `explore_geo` → its `latitude`, `longitude`, `map_zoom`; `explore_museums` →
+  its partners, resolved by legacy key;
+- on an Explore itinerary: `explore_monument_id` → one row; `location_id` → its `location_collection_id`,
+  resolved by legacy key; `desc_types`, `tr_mn_desc`, `explore_mn_desc`, `vm_mn_desc` → `description_types`,
+  `travels_description_ref`, `explore_description_ref`, `virtual_museum_description_ref`: legacy's references
+  to the texts it showed. No exporter or site reads these four today; they are kept so nothing is lost.
+
+A placement whose keys have another shape, or whose location or museum doesn't resolve, keeps them all here,
+reported. After re-running an Explore importer on its own, run `--only collection-item-explore-monuments`
+again. The exporters put the keys back (`scripts/exporters/shared/explore-monuments.mjs`).
+
 | Key                                                                                                                                                                                                              | Legacy source                                                                        | Written by                                                                                                |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | `n`, `n2`                                                                                                                                                                                                        | exhibition_page_images, exhibition_images, artintro_page_images                      | importers/phase-01/mwnf3-exhibition-item-importer.ts                                                      |

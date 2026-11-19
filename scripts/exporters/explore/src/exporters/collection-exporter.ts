@@ -2,6 +2,7 @@ import type { ExportResult } from '../core/types.js'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
 import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
+import { exploreMonumentsSelect, restoreExploreMonuments } from '../../../shared/explore-monuments.mjs'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 import { loadCollectionRelations, withCollectionRelations, withTranslationRelations } from '../../../shared/collection-relations.mjs'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
@@ -156,13 +157,13 @@ export class CollectionExporter extends BaseExporter {
       this.scope.itemIds.length === 0
         ? Promise.resolve([] as CollectionItemRow[])
         : this.db.query<CollectionItemRow>(
-            `SELECT collection_id, item_id, display_order, extra
-             FROM collection_item
-             WHERE collection_id IN (${colPh})
-               AND item_id IN (${itemPh})
-             ORDER BY collection_id, display_order IS NULL, display_order, item_id`,
+            `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra, ${exploreMonumentsSelect('ci')}
+             FROM collection_item ci
+             WHERE ci.collection_id IN (${colPh})
+               AND ci.item_id IN (${itemPh})
+             ORDER BY ci.collection_id, ci.display_order IS NULL, ci.display_order, ci.item_id`,
             [...collectionIds, ...this.scope.itemIds]
-          ),
+          ).then(restoreExploreMonuments),
     ])
 
     // The collection credits are Contributors now (M16 I5); each translation's

@@ -49,6 +49,9 @@ class AllowList
             'collection_item_translation' => [
                 'language',
             ],
+            'collection_item_explore_monument' => [
+                'locationCollection',
+            ],
             'partner' => [
                 'country', 'items', 'pictures',
                 'project', 'monumentItem',
