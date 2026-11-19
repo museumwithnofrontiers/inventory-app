@@ -70,6 +70,15 @@ trait AuthorizesRelationMutations
         return $this->hostRecordCanBeUpdated();
     }
 
+    /**
+     * Reordering (a `reorderable()` table) rewrites the order of the host's
+     * relation, like editing a pivot, so host `update` governs it.
+     */
+    protected function canReorder(): bool
+    {
+        return $this->hostRecordCanBeUpdated();
+    }
+
     protected function canAssociate(): bool
     {
         return $this->hostRecordCanBeUpdated();

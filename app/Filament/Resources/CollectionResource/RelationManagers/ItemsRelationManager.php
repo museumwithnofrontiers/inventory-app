@@ -42,12 +42,14 @@ class ItemsRelationManager extends RelationManager
                 ])
             )->orderByRaw('collection_item.display_order IS NULL, collection_item.display_order ASC')
                 ->orderBy('display_label', 'asc'))
+            ->reorderable('display_order')
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->columns([
                 ItemDisplayLabel::displayLabelColumn()
                     ->url(fn (Item $record): string => ItemResource::getUrl('view', ['record' => $record])),
                 CollectionItemAppearance::displayOrderColumn(),
+                ...CollectionItemAppearance::placementColumns(),
                 CollectionItemAppearance::contextualTextPreviewColumn(),
                 CollectionItemAppearance::contextualTextLanguagesColumn(),
                 TextColumn::make('type')

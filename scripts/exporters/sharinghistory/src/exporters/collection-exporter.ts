@@ -79,6 +79,10 @@ interface CollectionItemRow {
   item_id: string
   display_order: number | null
   extra: unknown
+  /** The variant number at its place (legacy `n2`; M16 C1, a column). */
+  variant_order?: number | null
+  /** The curator's flag (legacy `curator_status` Y/N; M16 C1, a column): 1, 0 or null. */
+  curator_selected?: number | boolean | null
   /** The image of the picture item a theme or subtheme image places. */
   picture_path?: string | null
 }
@@ -159,7 +163,7 @@ export class CollectionExporter extends BaseExporter {
       this.db.query<CollectionItemRow>(
         `SELECT ci.collection_id,
                 IF(i.type = 'picture', i.parent_id, i.id) AS item_id,
-                ci.display_order, ci.extra,
+                ci.display_order, ci.variant_order, ci.curator_selected, ci.extra,
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
                     ORDER BY ii.display_order, ii.id LIMIT 1),
@@ -170,7 +174,7 @@ export class CollectionExporter extends BaseExporter {
          WHERE ci.collection_id IN (${colPh})
            AND ((i.type IN ('object', 'monument', 'detail') AND i.project_id IN (${ph}))
              OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
-         ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), item_id`,
+         ORDER BY ci.collection_id, ci.display_order, ci.variant_order, item_id`,
         [...collectionIds, ...this.projectIds, ...this.projectIds]
       ),
     ])
@@ -496,7 +500,7 @@ export function buildCollectionItemEntry(
   curator_status?: string
 } {
   const extra = parseJson(link.extra) as Record<string, unknown> | null
-  const variantOrder = extra && typeof extra.n2 === 'number' ? extra.n2 : null
+  const variantOrder = typeof link.variant_order === 'number' ? link.variant_order : null
   const caption = extra ? extractCaptions(extra, languageKey) : {}
 
   const details: CollectionItemDetailEntry[] = []
@@ -522,7 +526,9 @@ export function buildCollectionItemEntry(
           { partner: string | null; curator: string | null }
         >)
       : null
-  const curatorStatus = typeof extra?.curator_status === 'string' ? extra.curator_status : null
+  // The package keeps legacy's Y/N; no flag (NULL) ships no key.
+  const curatorStatus =
+    link.curator_selected === null || link.curator_selected === undefined ? null : link.curator_selected ? 'Y' : 'N'
 
   return {
     id: link.item_id,

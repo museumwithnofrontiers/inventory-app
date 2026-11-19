@@ -70,7 +70,7 @@ describe('buildCollectionItemEntry', () => {
 
   it("carries the image of the picture the placement shows", () => {
     const entry = buildCollectionItemEntry(
-      { collection_id: 'page', item_id: 'item', display_order: 1, extra: { n: 1, n2: 2 }, picture_path: 'abc.jpg' },
+      { collection_id: 'page', item_id: 'item', display_order: 1, variant_order: 2, extra: null, picture_path: 'abc.jpg' },
       url
     )
     expect(entry).toMatchObject({ id: 'item', display_order: 1, variant_order: 2, image_url: 'https://example.org/pub/abc.jpg' })
@@ -78,7 +78,7 @@ describe('buildCollectionItemEntry', () => {
 
   it('carries no image when the placement links the item itself', () => {
     const entry = buildCollectionItemEntry(
-      { collection_id: 'page', item_id: 'item', display_order: 1, extra: { n: 1, n2: 1 }, picture_path: null },
+      { collection_id: 'page', item_id: 'item', display_order: 1, variant_order: 1, extra: null, picture_path: null },
       url
     )
     expect(entry).not.toHaveProperty('image_url')

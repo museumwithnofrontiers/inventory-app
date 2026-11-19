@@ -34,7 +34,7 @@ function stubDb(rows: Rows): Database {
         ]
       }
       if (sql.includes('AS page_bc')) return rows.virtual ?? []
-      if (sql.includes("'$.curator_status'")) return rows.sharingHistory ?? []
+      if (sql.includes('ci.curator_selected = 1')) return rows.sharingHistory ?? []
       if (sql.includes('AS titled_en')) return rows.tree ?? []
       if (sql.includes('AS picture_order')) return rows.exhibition ?? []
       if (sql.includes('FROM collection_translations')) return rows.titles ?? []
