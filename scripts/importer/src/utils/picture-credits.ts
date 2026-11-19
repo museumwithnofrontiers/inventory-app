@@ -7,8 +7,9 @@
  * - A key leaves the picture translations' `extra` only when every row of the
  *   picture carries the same text: the packages ship it per language, and the
  *   exporters give the image's value back to each row. Where the rows differ,
- *   or some have none, the image takes the default language's text and the
- *   rows keep theirs until an editor has reviewed them.
+ *   or some have none, the image takes the default language's (English) text,
+ *   or none when the English row has none, and the rows keep theirs until an
+ *   editor has reviewed them.
  * - `copyright` stays the text burned on the picture (image → Project →
  *   fallback, untouched). `credit` holds the picture's own text where the
  *   sheets can't read it back from `copyright`: on ISL and IAM pictures,
@@ -115,36 +116,45 @@ export function planPictureCredits(
     const rowsOfPicture = [...translations.values()];
 
     const chosen: Record<PictureCreditKey, string | null> = { photographer: null, copyright: null };
+    const held = new Set<PictureCreditKey>();
     const moved = new Set<PictureCreditKey>();
     for (const key of PICTURE_CREDIT_KEYS) {
       const values = rowsOfPicture.map((row) => text(row.extra, key));
       const filled = values.filter((value): value is string => value !== null);
       if (filled.length === 0) continue;
+      held.add(key);
       const uniform = filled.length === values.length && new Set(filled).size === 1;
+      if (uniform) {
+        chosen[key] = filled[0]!;
+        moved.add(key);
+        continue;
+      }
+      // The default language's text, by one fixed rule; none without it: no
+      // other language's text is picked instead.
       const defaultRow = rowsOfPicture.find(
         (row) => row.language_id === defaultLanguageId && text(row.extra, key) !== null
       );
-      chosen[key] = defaultRow ? text(defaultRow.extra, key) : filled[0]!;
-      if (uniform) moved.add(key);
-      else plan.kept.push({ item_id: itemId, key });
+      chosen[key] = defaultRow ? text(defaultRow.extra, key) : null;
+      plan.kept.push({ item_id: itemId, key });
     }
 
-    if (chosen.photographer === null && chosen.copyright === null) continue;
+    if (held.size === 0) continue;
 
     for (const imageId of imageIds) {
       const imageRow = group.find((row) => row.image_id === imageId)!;
       const overrides = projectOverridesPictures(imageRow.project_key);
       const own = chosen.copyright;
       // A key the rows no longer hold moved on an earlier run: keep its value.
-      const credit =
-        own === null
-          ? imageRow.image_credit
+      const credit = !held.has('copyright')
+        ? imageRow.image_credit
+        : own === null
+          ? null
           : overrides || withoutCopyrightMark(imageRow.image_copyright) !== own
             ? own
             : null;
       plan.images.push({
         image_id: imageId,
-        photographer: chosen.photographer ?? imageRow.image_photographer,
+        photographer: held.has('photographer') ? chosen.photographer : imageRow.image_photographer,
         credit,
         clear_copyright: overrides && imageRow.image_copyright !== null,
       });
