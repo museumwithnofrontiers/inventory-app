@@ -10,9 +10,9 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 54
+- ** Total Models:** 55
 - ** Database Connection:** mysql
-- ** Laravel Version:** 12.72.0
+- ** Laravel Version:** 12.70.2
 
 ## Table of Contents
 
@@ -38,6 +38,7 @@ title: Generated Model Documentation
 - [Glossary](#glossary)
 - [GlossarySpelling](#glossaryspelling)
 - [GlossaryTranslation](#glossarytranslation)
+- [ImageTranslation](#imagetranslation)
 - [ImageUpload](#imageupload)
 - [Item](#item)
 - [ItemDocument](#itemdocument)
@@ -294,6 +295,9 @@ const UPDATED_AT = 'updated_at';
 
 ### Relationships
 
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
+
 
 ## Collection {#collection}
 
@@ -493,6 +497,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To Many
 - **`tags()`**: BelongsToMany [Tag](#tag)
+
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
 
 ### Query Scopes
 
@@ -697,11 +704,12 @@ const UPDATED_AT = 'updated_at';
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
+| `cover_caption` | text | Unknown | Unknown |  |
 
 ### Fillable Fields
 
 ```php
-['collection_id', 'language_id', 'context_id', 'title', 'subtitle', 'description', 'introduction', 'quote', 'duration', 'url', 'backward_compatibility', 'extra']
+['collection_id', 'language_id', 'context_id', 'title', 'subtitle', 'description', 'introduction', 'quote', 'duration', 'cover_caption', 'url', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
@@ -904,6 +912,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To
 - **`contributor()`**: BelongsTo [Contributor](#contributor)
+
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
 
 
 ## ContributorTranslation {#contributortranslation}
@@ -1414,6 +1425,59 @@ const UPDATED_AT = 'updated_at';
 - **`forLanguage()`**
 
 
+## ImageTranslation {#imagetranslation}
+
+**Namespace:** `App\Models\ImageTranslation`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `image_translations` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `image_type` | varchar | Unknown | Unknown |  |
+| `image_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `caption` | text | Unknown | Unknown |  |
+| `name` | text | Unknown | Unknown |  |
+| `date` | text | Unknown | Unknown |  |
+| `museum` | text | Unknown | Unknown |  |
+| `location` | text | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['language_id', 'caption', 'name', 'date', 'museum', 'location', 'backward_compatibility']
+```
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`language()`**: BelongsTo [Language](#language)
+
+#### Morph To
+- **`image()`**: MorphTo [ImageTranslation](#imagetranslation)
+
+
 ## ImageUpload {#imageupload}
 
 **Namespace:** `App\Models\ImageUpload`
@@ -1682,6 +1746,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To Many
 - **`tags()`**: BelongsToMany [Tag](#tag)
+
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
 
 ### Query Scopes
 
@@ -2277,6 +2344,9 @@ const UPDATED_AT = 'updated_at';
 #### Belongs To
 - **`partner()`**: BelongsTo [Partner](#partner)
 
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
+
 
 ## PartnerLogo {#partnerlogo}
 
@@ -2336,6 +2406,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To
 - **`partner()`**: BelongsTo [Partner](#partner)
+
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
 
 ### Query Scopes
 
@@ -2482,6 +2555,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To
 - **`partnerTranslation()`**: BelongsTo [PartnerTranslation](#partnertranslation)
+
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
 
 
 ## Project {#project}
@@ -2885,6 +2961,9 @@ const UPDATED_AT = 'updated_at';
 #### Belongs To
 - **`publication()`**: BelongsTo [Publication](#publication)
 - **`publicationEdition()`**: BelongsTo [PublicationEdition](#publicationedition)
+
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
 
 
 ## PublicationItem {#publicationitem}
@@ -3295,6 +3374,9 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To
 - **`timelineEvent()`**: BelongsTo [TimelineEvent](#timelineevent)
+
+#### Morph Many
+- **`translations()`**: MorphMany [ImageTranslation](#imagetranslation)
 
 
 ## TimelineEventItem {#timelineeventitem}

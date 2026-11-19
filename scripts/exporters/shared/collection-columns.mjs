@@ -84,7 +84,8 @@ function imageTextKeys(value) {
       for (const field of ['name', 'date', 'museum', 'location']) if (typeof text[field] === 'string') fields[field] = text[field]
       captions[text.key] = { ...(captions[text.key] ?? {}), [text.lang]: mysqlJsonOrder(fields) }
     } else if (text.key.startsWith(HB_MAP_PREFIX) && typeof text.caption === 'string') {
-      const mapKey = `map_${text.key.slice(HB_MAP_PREFIX.length)}`
+      // `<profile id>:<map id>`: the map's id counts within its profile.
+      const mapKey = `map_${text.key.slice(HB_MAP_PREFIX.length).split(':').pop()}`
       maps[mapKey] = { ...(maps[mapKey] ?? {}), [text.lang]: text.caption }
     }
   }

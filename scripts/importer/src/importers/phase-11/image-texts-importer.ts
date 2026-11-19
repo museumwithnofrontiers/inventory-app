@@ -46,14 +46,18 @@ export class ImageTextsImporter extends BaseImporter {
         hb_img_id: number;
         picture: string | null;
       }>(`SELECT hb_img_id, picture FROM ${SH_SCHEMA}.sh_countries_historicalbackground_images`);
-      const maps = await this.context.legacyDb.query<{ map_id: number; map_path: string | null }>(
-        `SELECT map_id, map_path FROM ${SH_SCHEMA}.sh_countries_historicalbackground_maps`
-      );
+      const maps = await this.context.legacyDb.query<{
+        map_id: number;
+        hb_id: number;
+        map_path: string | null;
+      }>(`SELECT map_id, hb_id, map_path FROM ${SH_SCHEMA}.sh_countries_historicalbackground_maps`);
       const imagePaths = new Map(
         images.filter((i) => i.picture).map((i) => [Number(i.hb_img_id), i.picture!])
       );
       const mapPaths = new Map(
-        maps.filter((m) => m.map_path).map((m) => [Number(m.map_id), m.map_path!])
+        maps
+          .filter((m) => m.map_path)
+          .map((m) => [`${Number(m.hb_id)}:${Number(m.map_id)}`, m.map_path!])
       );
 
       const collectionImages = await this.context.strategy.findCollectionImagePaths([
@@ -78,6 +82,20 @@ export class ImageTextsImporter extends BaseImporter {
       }
       this.logInfo(`${plan.texts.length} image text(s) from ${plan.updates.length} translation(s)`);
 
+      // A text's id comes from its legacy key and language: one key on two
+      // images would make the second overwrite the first. Refuse the plan.
+      const owners = new Map<string, string>();
+      for (const text of plan.texts) {
+        const key = `${text.backward_compatibility.toLowerCase()}:${text.language_id}`;
+        const owner = owners.get(key);
+        if (owner !== undefined && owner !== text.image_id) {
+          result.errors.push(`Image text key ${key} names two images; nothing moved`);
+          this.logError('Image texts', `key ${key} names two images`);
+          result.success = false;
+          return result;
+        }
+        owners.set(key, text.image_id);
+      }
       if (preview) {
         result.imported += plan.texts.length;
         return { ...result, success: true };

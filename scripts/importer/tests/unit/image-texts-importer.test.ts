@@ -13,7 +13,8 @@ describe('planImageTexts', () => {
     [155, 'custom/sharinghistory/31.jpg'],
     [16, 'custom/sharinghistory/2.jpg'],
   ]);
-  const mapPaths = new Map([[3, 'sharing_history/sh_historical_profile/awe/11/maps/1.jpg']]);
+  // A map's id counts within its profile: the key is `<profile>:<map>`.
+  const mapPaths = new Map([['11:3', 'sharing_history/sh_historical_profile/awe/11/maps/1.jpg']]);
   const images: Record<string, string> = {
     'page:custom/sharinghistory/31.jpg': 'img-31',
     'profile:sharing_history/sh_historical_profile/awe/11/maps/1.jpg': 'map-1',
@@ -96,6 +97,7 @@ describe('planImageTexts', () => {
         {
           id: 't2',
           collection_id: 'profile',
+          collection_key: 'mwnf3_sharing_history:sh_countries_historicalbackground:11',
           extra: { map_descriptions: { map_3: { eng: '1815' }, map_9: { eng: '1878' } } },
         },
       ],
@@ -109,7 +111,7 @@ describe('planImageTexts', () => {
         image_id: 'map-1',
         language_id: 'eng',
         caption: '1815',
-        backward_compatibility: 'mwnf3_sharing_history:sh_countries_historicalbackground_maps:3',
+        backward_compatibility: 'mwnf3_sharing_history:sh_countries_historicalbackground_maps:11:3',
       }),
     ]);
     expect(plan.updates).toEqual([
@@ -142,25 +144,21 @@ describe('ImageTextsImporter', () => {
       sql.includes('_maps') ? [] : [{ hb_img_id: 155, picture: 'custom/sharinghistory/31.jpg' }]
     );
     strategy = {
-      findImageTextRows: vi
-        .fn()
-        .mockResolvedValue([
-          {
-            id: 't1',
-            collection_id: 'page',
-            extra: { image_captions: { [`${IMG}155`]: { eng: { name: 'Map' } } } },
-          },
-        ]),
-      findCollectionImagePaths: vi
-        .fn()
-        .mockResolvedValue([
-          {
-            id: 'img-31',
-            collection_id: 'page',
-            path: 'b7.jpg',
-            original_name: 'custom/sharinghistory/31.jpg',
-          },
-        ]),
+      findImageTextRows: vi.fn().mockResolvedValue([
+        {
+          id: 't1',
+          collection_id: 'page',
+          extra: { image_captions: { [`${IMG}155`]: { eng: { name: 'Map' } } } },
+        },
+      ]),
+      findCollectionImagePaths: vi.fn().mockResolvedValue([
+        {
+          id: 'img-31',
+          collection_id: 'page',
+          path: 'b7.jpg',
+          original_name: 'custom/sharinghistory/31.jpg',
+        },
+      ]),
       upsertImageTranslation: vi.fn().mockResolvedValue('id'),
       setCollectionTranslationExtraAsStoredById: vi.fn().mockResolvedValue(undefined),
     };
@@ -197,6 +195,40 @@ describe('ImageTextsImporter', () => {
     expect(strategy.setCollectionTranslationExtraAsStoredById).not.toHaveBeenCalled();
   });
 
+  it('refuses a plan where one text key names two images', async () => {
+    strategy.findImageTextRows!.mockResolvedValue([
+      {
+        id: 't1',
+        collection_id: 'page',
+        extra: { image_captions: { [`${IMG}155`]: { eng: { name: 'Map' } } } },
+      },
+      {
+        id: 't2',
+        collection_id: 'page2',
+        extra: { image_captions: { [`${IMG}155`]: { eng: { name: 'Map' } } } },
+      },
+    ]);
+    strategy.findCollectionImagePaths!.mockResolvedValue([
+      {
+        id: 'img-31',
+        collection_id: 'page',
+        path: 'custom/sharinghistory/31.jpg',
+        original_name: null,
+      },
+      {
+        id: 'img-other',
+        collection_id: 'page2',
+        path: 'custom/sharinghistory/31.jpg',
+        original_name: null,
+      },
+    ]);
+
+    const result = await new ImageTextsImporter(context).import();
+
+    expect(result.success).toBe(false);
+    expect(strategy.upsertImageTranslation).not.toHaveBeenCalled();
+    expect(strategy.setCollectionTranslationExtraAsStoredById).not.toHaveBeenCalled();
+  });
   it('never picks one of two images with the same legacy path', async () => {
     strategy.findCollectionImagePaths!.mockResolvedValue([
       { id: 'a', collection_id: 'page', path: 'custom/sharinghistory/31.jpg', original_name: null },

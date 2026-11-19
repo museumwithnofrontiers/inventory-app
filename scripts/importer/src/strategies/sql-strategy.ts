@@ -2083,14 +2083,16 @@ export class SqlWriteStrategy implements IWriteStrategy {
 
   async findImageTextRows(): Promise<ImageTextRow[]> {
     const [rows] = await this.db.execute<RowDataPacket[]>(
-      `SELECT id, collection_id, extra FROM collection_translations
-       WHERE extra IS NOT NULL
-         AND JSON_CONTAINS_PATH(extra, 'one', '$.image_captions', '$.map_descriptions')
-       ORDER BY collection_id, id`
+      `SELECT ct.id, ct.collection_id, c.backward_compatibility AS collection_key, ct.extra
+       FROM collection_translations ct JOIN collections c ON c.id = ct.collection_id
+       WHERE ct.extra IS NOT NULL
+         AND JSON_CONTAINS_PATH(ct.extra, 'one', '$.image_captions', '$.map_descriptions')
+       ORDER BY ct.collection_id, ct.id`
     );
     return rows.map((row) => ({
       id: row.id as string,
       collection_id: row.collection_id as string,
+      collection_key: (row.collection_key as string | null) ?? null,
       extra: (typeof row.extra === 'string' ? JSON.parse(row.extra) : row.extra) as Record<
         string,
         unknown

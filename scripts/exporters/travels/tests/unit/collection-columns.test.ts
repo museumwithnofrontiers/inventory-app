@@ -84,7 +84,7 @@ describe('the history pages’ image texts (F2)', () => {
     const extra = withCollectionTranslationColumns(null, {
       collection_columns_image_texts: JSON.stringify([
         { key: `${IMG}155`, lang: 'eng', caption: null, name: 'Map of Spain', date: '1845', museum: null, location: 'Madrid' },
-        { key: `${MAP}3`, lang: 'eng', caption: '1815', name: null, date: null, museum: null, location: null },
+        { key: `${MAP}11:3`, lang: 'eng', caption: '1815', name: null, date: null, museum: null, location: null },
       ]),
     }) as Record<string, unknown>
     expect(extra).toEqual({

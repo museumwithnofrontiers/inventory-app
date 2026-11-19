@@ -6,7 +6,7 @@
  *   location}`: the caption of a history page's own image, in legacy's four
  *   separate fields, each kept as written (never joined);
  * - `map_descriptions.map_{id}.{language}`: the caption of a history
- *   profile's map.
+ *   profile's map (the id counts within the profile).
  *
  * An image is found by legacy key only: the legacy image or map id gives its
  * legacy file path, which is the collection image's path (or, once synced,
@@ -21,10 +21,13 @@ export const CAPTION_FIELDS = ['name', 'date', 'museum', 'location'] as const;
 
 const HB_IMAGE_PREFIX = 'mwnf3_sharing_history:sh_countries_historicalbackground_images:';
 export const HB_MAP_PREFIX = 'mwnf3_sharing_history:sh_countries_historicalbackground_maps:';
+const HB_PROFILE = /^mwnf3_sharing_history:sh_countries_historicalbackground:(\d+)$/;
 
 export interface ImageTextRow {
   id: string;
   collection_id: string;
+  /** The collection's legacy key: a profile's names its id, which a map's key needs. */
+  collection_key?: string | null;
   extra: Record<string, unknown>;
 }
 
@@ -55,7 +58,8 @@ const isObject = (value: unknown): value is Record<string, unknown> =>
 export function planImageTexts(
   rows: readonly ImageTextRow[],
   imagePaths: ReadonlyMap<number, string>,
-  mapPaths: ReadonlyMap<number, string>,
+  /** Keyed by `<profile id>:<map id>`. */
+  mapPaths: ReadonlyMap<string, string>,
   findImage: ImageLookup
 ): ImageTextPlan {
   const plan: ImageTextPlan = { texts: [], updates: [], kept: [] };
@@ -100,8 +104,10 @@ export function planImageTexts(
       const left: Record<string, unknown> = {};
       let moved = false;
       for (const [mapKey, byLanguage] of Object.entries(maps)) {
+        // A map id is the map's number within its profile: legacy keys a map by both.
         const mapId = /^map_(\d+)$/.exec(mapKey);
-        const path = mapId ? mapPaths.get(Number(mapId[1])) : undefined;
+        const profile = HB_PROFILE.exec(row.collection_key ?? '');
+        const path = mapId && profile ? mapPaths.get(`${profile[1]}:${mapId[1]}`) : undefined;
         const imageId = path ? findImage(row.collection_id, path) : null;
         const texts =
           imageId === null ||
@@ -116,7 +122,7 @@ export function planImageTexts(
                 date: null,
                 museum: null,
                 location: null,
-                backward_compatibility: `${HB_MAP_PREFIX}${mapId![1]}`,
+                backward_compatibility: `${HB_MAP_PREFIX}${profile![1]}:${mapId![1]}`,
               }));
         if (texts === null) {
           left[mapKey] = byLanguage;
