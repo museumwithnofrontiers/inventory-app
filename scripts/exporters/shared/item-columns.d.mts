@@ -1,6 +1,10 @@
 /** Types of `item-columns.mjs`. */
 
-export const ITEM_TRANSLATION_COLUMNS: readonly { readonly key: string; readonly column: string }[]
+export const ITEM_TRANSLATION_COLUMNS: readonly {
+  readonly key: string
+  readonly column: string
+  readonly values?: Readonly<Record<string, string>>
+}[]
 
 export function itemColumnsSelect(alias: string): string
 

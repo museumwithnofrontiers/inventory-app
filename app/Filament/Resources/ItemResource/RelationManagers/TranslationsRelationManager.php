@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Enums\ItemTranslationStatus;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemTranslationResource;
 use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager;
@@ -46,6 +47,10 @@ class TranslationsRelationManager extends BaseOwnerTranslationsRelationManager
             TextColumn::make('alternate_name')
                 ->label('Alternate name')
                 ->toggleable(),
+            TextColumn::make('status')
+                ->badge()
+                ->formatStateUsing(fn (ItemTranslationStatus $state): string => $state->label())
+                ->color(fn (ItemTranslationStatus $state): string => $state->color()),
         ];
     }
 

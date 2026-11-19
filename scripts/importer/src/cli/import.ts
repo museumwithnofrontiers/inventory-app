@@ -1237,7 +1237,7 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     key: 'item-translation-columns',
     name: 'Item Translation Columns',
     description:
-      'Move the item translation texts that have a column (materials, short description, dynasty, region, history; the credits as written; the keyword and artist lines) out of item_translations.extra, after every importer that writes them (M16 B1 #2635, B2 #2636, B3 #2637, B4 #2638)',
+      'Move the item translation texts that have a column (materials, short description, dynasty, region, history; the credits as written; the keyword and artist lines; the catalogue references, notices and display status) out of item_translations.extra, after every importer that writes them (M16 B1 to B6, #2635 to #2640)',
     importerClass: ItemTranslationColumnsImporter,
     // The object and monument importers of four databases write these keys,
     // and later steps move translations between contexts.

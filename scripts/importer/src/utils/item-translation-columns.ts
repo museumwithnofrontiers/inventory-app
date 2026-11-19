@@ -12,6 +12,11 @@
  * - B2 (#2636) and B3 (#2637): the keyword line and the artist, workshop,
  *   scribe, patron and architect lines (display texts; the Tags and Artist
  *   links are separate and untouched).
+ * - B5 (#2639): `linkcatalogs` → `catalogue_references`, codes and citations
+ *   as written (the Book links come from the codes, separately).
+ * - B6 (#2640): the Sharing History notices `notice` and `notice_c` →
+ *   `notice`, `external_notice`, as written; and `legacy_display_status` N →
+ *   `status` hidden. That one is a flag, not a text, so its entry maps values.
  *
  * A key is a top-level `extra` key, or `parent.child` for a key inside an
  * object (`credits_as_written.author`).
@@ -25,6 +30,11 @@ export interface ItemTranslationColumn {
   key: string;
   /** The `item_translations` column that holds it now. */
   column: string;
+  /**
+   * For a flag rather than a text: each legacy value and the column value it
+   * becomes. A value missing here stays in `extra`.
+   */
+  values?: Readonly<Record<string, string>>;
 }
 
 export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
@@ -49,6 +59,10 @@ export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
   { key: 'scriber', column: 'scribe' },
   { key: 'patrons', column: 'patrons' },
   { key: 'architects', column: 'architects' },
+  { key: 'linkcatalogs', column: 'catalogue_references' },
+  { key: 'notice', column: 'notice' },
+  { key: 'notice_c', column: 'external_notice' },
+  { key: 'legacy_display_status', column: 'status', values: { N: 'hidden' } },
 ];
 
 /** The top-level `extra` keys that hold a mapped text, for finding the rows. */
@@ -81,7 +95,7 @@ export function splitItemTranslationColumns(extra: Record<string, unknown>): Spl
   const kept: string[] = [];
   const moved = new Set<string>();
 
-  for (const { key, column } of ITEM_TRANSLATION_COLUMNS) {
+  for (const { key, column, values } of ITEM_TRANSLATION_COLUMNS) {
     const [parent, child] = key.split('.') as [string, string | undefined];
     const holder = child === undefined ? extra : extra[parent];
     const name = child ?? parent;
@@ -91,7 +105,18 @@ export function splitItemTranslationColumns(extra: Record<string, unknown>): Spl
       kept.push(key);
       continue;
     }
-    columns[column] = value;
+    if (values !== undefined) {
+      const mapped = Object.prototype.hasOwnProperty.call(values, value)
+        ? values[value]
+        : undefined;
+      if (mapped === undefined) {
+        kept.push(key);
+        continue;
+      }
+      columns[column] = mapped;
+    } else {
+      columns[column] = value;
+    }
     moved.add(key);
   }
 

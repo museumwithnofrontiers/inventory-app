@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\ItemTranslationStatus;
 use App\Models\ItemTranslation;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Database\Query\Builder;
@@ -90,6 +91,11 @@ class UpdateItemTranslationRequest extends FormRequest
             'scribe' => ['nullable', 'string'],
             'patrons' => ['nullable', 'string'],
             'architects' => ['nullable', 'string'],
+            'status' => ['sometimes', Rule::enum(ItemTranslationStatus::class)],
+            'catalogue_references' => ['nullable', 'string'],
+            'notice' => ['nullable', 'string'],
+            'external_notice' => ['nullable', 'string'],
+            'image_rights' => ['nullable', 'string'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
             'extra' => ['nullable', 'json'],
         ];

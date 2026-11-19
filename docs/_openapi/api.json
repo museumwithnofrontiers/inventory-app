@@ -1,7 +1,7 @@
 {
     "openapi": "3.1.2",
     "info": {
-        "title": "Inventory",
+        "title": "Laravel",
         "version": "0.0.1"
     },
     "servers": [
@@ -27022,6 +27022,13 @@
                         ],
                         "description": "The description of the item translation"
                     },
+                    "short_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A short description, as written (legacy description2)"
+                    },
                     "type": {
                         "type": [
                             "string",
@@ -27064,12 +27071,33 @@
                         ],
                         "description": "The location associated with the item"
                     },
+                    "region": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The region, as written (legacy province)"
+                    },
                     "dimensions": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "description": "The dimensions of the item"
+                    },
+                    "materials": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The materials, as written"
+                    },
+                    "dynasty": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The dynasty, as written (the Dynasty links are on the item)"
                     },
                     "place_of_production": {
                         "type": [
@@ -27113,6 +27141,13 @@
                         ],
                         "description": "The bibliography for the item"
                     },
+                    "history": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A monument's history, as written"
+                    },
                     "author_id": {
                         "type": [
                             "string",
@@ -27141,12 +27176,132 @@
                         ],
                         "description": "The copy-editor of the item translation (AuthorResource id)"
                     },
-                    "backward_compatibility": {
+                    "author_credit": {
                         "type": [
                             "string",
                             "null"
                         ],
-                        "description": "The Id(s) of matching resource in the legacy system (if any)."
+                        "description": "The Id(s) of matching resource in the legacy system (if any).\nThe credits as legacy wrote them (the Author links are author_id and the others)"
+                    },
+                    "copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translator_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translation_copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "keywords": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The keyword line and the artist lines as legacy wrote them (the Tags and Artist links are on the item)"
+                    },
+                    "artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "workshop": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "scribe": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patrons": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "architects": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The editorial state: published, unedited or hidden"
+                    },
+                    "catalogue_references": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The catalogue references, the notices and the image rights line, as legacy wrote them"
+                    },
+                    "notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "external_notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "image_rights": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "extra": {
                         "type": [
@@ -27259,29 +27414,64 @@
                     "name",
                     "alternate_name",
                     "description",
+                    "short_description",
                     "type",
                     "holder",
                     "owner",
                     "initial_owner",
                     "dates",
                     "location",
+                    "region",
                     "dimensions",
+                    "materials",
+                    "dynasty",
                     "place_of_production",
                     "method_for_datation",
                     "method_for_provenance",
                     "provenance",
                     "obtention",
                     "bibliography",
+                    "history",
                     "author_id",
                     "text_copy_editor_id",
                     "translator_id",
                     "translation_copy_editor_id",
+                    "author_credit",
+                    "copy_editor_credit",
+                    "translator_credit",
+                    "translation_copy_editor_credit",
+                    "keywords",
+                    "artist",
+                    "artist_period_of_activity",
+                    "artist_birth_date",
+                    "artist_birth_place",
+                    "artist_death_date",
+                    "artist_death_place",
+                    "workshop",
+                    "scribe",
+                    "patrons",
+                    "architects",
+                    "status",
+                    "catalogue_references",
+                    "notice",
+                    "external_notice",
+                    "image_rights",
                     "backward_compatibility",
                     "extra",
                     "created_at",
                     "updated_at"
                 ],
                 "title": "ItemTranslationResource"
+            },
+            "ItemTranslationStatus": {
+                "type": "string",
+                "description": "The editorial state of an item translation (M16 B6). Hidden translations stay out of lists and search; the pages that link them still show them. Legacy's own flag of that kind (Sharing History's display_status N, the records shown only as HB/HCR illustrations) is imported as hidden.\n",
+                "enum": [
+                    "published",
+                    "unedited",
+                    "hidden"
+                ],
+                "title": "ItemTranslationStatus"
             },
             "ItemType": {
                 "type": "string",
@@ -30100,6 +30290,12 @@
                             "null"
                         ]
                     },
+                    "short_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "type": {
                         "type": [
                             "string",
@@ -30136,7 +30332,25 @@
                             "null"
                         ]
                     },
+                    "region": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "dimensions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "materials": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "dynasty": {
                         "type": [
                             "string",
                             "null"
@@ -30178,6 +30392,12 @@
                             "null"
                         ]
                     },
+                    "history": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "author_id": {
                         "type": [
                             "string",
@@ -30205,6 +30425,123 @@
                             "null"
                         ],
                         "format": "uuid"
+                    },
+                    "author_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translator_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translation_copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "keywords": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "workshop": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "scribe": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patrons": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "architects": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ItemTranslationStatus"
+                    },
+                    "catalogue_references": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "external_notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "image_rights": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "backward_compatibility": {
                         "type": [
@@ -33023,6 +33360,12 @@
                     "description": {
                         "type": "string"
                     },
+                    "short_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "type": {
                         "type": [
                             "string",
@@ -33059,7 +33402,25 @@
                             "null"
                         ]
                     },
+                    "region": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "dimensions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "materials": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "dynasty": {
                         "type": [
                             "string",
                             "null"
@@ -33101,6 +33462,12 @@
                             "null"
                         ]
                     },
+                    "history": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "author_id": {
                         "type": [
                             "string",
@@ -33128,6 +33495,123 @@
                             "null"
                         ],
                         "format": "uuid"
+                    },
+                    "author_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translator_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translation_copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "keywords": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "workshop": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "scribe": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patrons": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "architects": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ItemTranslationStatus"
+                    },
+                    "catalogue_references": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "external_notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "image_rights": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "backward_compatibility": {
                         "type": [

@@ -23,6 +23,10 @@
  *   that differ by language in `extra` until they are reviewed. The credit is
  *   the image's `credit`, else its `copyright` without the mark the importer
  *   added for the burn.
+ * - B5 (inventory-app#2639) and B6 (inventory-app#2640): the catalogue
+ *   references and the two Sharing History notices, as written; and the
+ *   `status` column, which goes back as `legacy_display_status: 'N'` when it
+ *   is `hidden` (an entry with `values` maps a flag, not a text).
  *
  * Types are in `item-columns.d.mts`.
  */
@@ -52,6 +56,10 @@ export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
   Object.freeze({ key: 'scriber', column: 'scribe' }),
   Object.freeze({ key: 'patrons', column: 'patrons' }),
   Object.freeze({ key: 'architects', column: 'architects' }),
+  Object.freeze({ key: 'linkcatalogs', column: 'catalogue_references' }),
+  Object.freeze({ key: 'notice', column: 'notice' }),
+  Object.freeze({ key: 'notice_c', column: 'external_notice' }),
+  Object.freeze({ key: 'legacy_display_status', column: 'status', values: Object.freeze({ N: 'hidden' }) }),
 ])
 
 /** The translation's legacy key, selected next to the columns under this name. */
@@ -171,9 +179,14 @@ function authorCreditKey(row) {
 export function withItemTranslationColumns(extra, row) {
   /** @type {Record<string, unknown>} */
   const texts = {}
-  for (const { key, column } of ITEM_TRANSLATION_COLUMNS) {
-    const value = row[column]
+  for (const { key, column, values } of ITEM_TRANSLATION_COLUMNS) {
+    let value = row[column]
     if (typeof value !== 'string') continue
+    if (values !== undefined) {
+      const legacy = Object.keys(values).find(legacyValue => values[legacyValue] === value)
+      if (legacy === undefined) continue
+      value = legacy
+    }
     if (column === 'author_credit' && key !== authorCreditKey(row)) continue
     const [parent, child] = key.split('.')
     if (child === undefined) texts[parent] = value

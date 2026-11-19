@@ -98,6 +98,13 @@ class ItemTranslationResource extends JsonResource
             'scribe' => $this->scribe,
             'patrons' => $this->patrons,
             'architects' => $this->architects,
+            // The editorial state: published, unedited or hidden
+            'status' => $this->status->value,
+            // The catalogue references, the notices and the image rights line, as legacy wrote them
+            'catalogue_references' => $this->catalogue_references,
+            'notice' => $this->notice,
+            'external_notice' => $this->external_notice,
+            'image_rights' => $this->image_rights,
             'backward_compatibility' => $this->backward_compatibility,
             // Extra data for translation (object, may be null)
             'extra' => $this->extra,
