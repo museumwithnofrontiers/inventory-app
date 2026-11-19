@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { bannerRefToBackwardCompatibility } from '../core/banner-reference.js'
 import { BaseExporter } from './base-exporter.js'
+import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 
 interface TranslationRow {
   collection_id: string
@@ -340,7 +341,7 @@ export class ExhibitionExporter extends BaseExporter {
          WHERE collection_id IN (${placeholders}) AND extra IS NOT NULL
          ORDER BY collection_id, language_id`,
         siblingIds
-      ),
+      ).then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows)),
     ])
 
     const namesById = new Map<string, Record<string, string>>()

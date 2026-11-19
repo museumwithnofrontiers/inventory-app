@@ -105,6 +105,14 @@ code (`ix`, `px`) or an id that resolves to nothing stays, reported. After re-ru
 its own, run `--only collection-relations` again. The exporters give the keys back
 (`scripts/exporters/shared/collection-relations.mjs`, `country-codes.mjs`).
 
+The editorial flags below move to `collections` columns by `importers/phase-11/collection-flags-importer.ts`
+(M16 E4a, #2650, decision 6): `legacy_exhibition.show` and `legacy_status` → `visible`, `thg_gallery.featured`
+(`A`/`H`) → `featured`, `thg_gallery.live_date` → `published_at`. A flag stays when the translations of its
+collection disagree. The same step drops the legacy codes nothing reads: `introd_type`, `et_title`,
+`et_introduction`, `showOnMonument`, `hb_type`, `hb_general_type`, `territory_level`. Run `--only
+collection-flags` again after re-running one of their writers on its own. The exporters give the flags back
+(`scripts/exporters/shared/collection-flags.mjs`).
+
 | Key                                                                                                                                                                                                          | Legacy source                                                                                  | Written by                                                                                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `credits`, `intro_header`, `intro_text`, `subtitle`                                                                                                                                                          | mwnf3 exhibition_fields `exh_*`, artintro_fields `art_*`                                       | importers/phase-01/mwnf3-exhibition-translation-importer.ts                                                |

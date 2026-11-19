@@ -264,4 +264,22 @@ class CollectionTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors(['days']);
     }
+
+    /**
+     * M16 E4a: the editorial flags are columns, served as given.
+     */
+    public function test_stores_and_serves_the_editorial_flags(): void
+    {
+        $collection = Collection::factory()->create();
+
+        $this->putJson(route('collection.update', $collection), [
+            'visible' => false,
+            'featured' => true,
+            'published_at' => '2026-03-24',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.visible', false)
+            ->assertJsonPath('data.featured', true)
+            ->assertJsonPath('data.published_at', '2026-03-24');
+    }
 }

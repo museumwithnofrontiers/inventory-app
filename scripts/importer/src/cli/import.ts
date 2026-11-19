@@ -166,6 +166,7 @@ import {
   CollectionTranslationColumnsImporter,
   PictureCreditsImporter,
   CollectionRelationsImporter,
+  CollectionFlagsImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1270,6 +1271,15 @@ const ALL_IMPORTERS: ImporterConfig[] = [
       'Move the collection relations kept as legacy id lists in extra (countries, locations, territories, themes, regions, historical background, cover picture, days) to the model, resolved by legacy key, after every importer that writes them (M16 E3, #2649)',
     importerClass: CollectionRelationsImporter,
     // The Explore, Travels and thematic gallery importers write these keys.
+    runsLast: true,
+  },
+  {
+    key: 'collection-flags',
+    name: 'Collection Flags',
+    description:
+      'Move the collection flags (exhibition show, Explore theme status, gallery featured and live date) out of collection_translations.extra to visible, featured and published_at, and drop the legacy codes nothing reads (M16 E4a, #2650)',
+    importerClass: CollectionFlagsImporter,
+    // The exhibition, gallery and Explore importers write these keys.
     runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)

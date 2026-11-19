@@ -984,6 +984,15 @@ export interface IWriteStrategy {
   ): Promise<void>;
 
   /**
+   * Set a collection's editorial flags (`visible`, `featured`,
+   * `published_at` as Y-m-d), those given. Used by CollectionFlagsImporter.
+   */
+  setCollectionFlags(
+    collectionId: string,
+    flags: { visible?: boolean; featured?: boolean; published_at?: string }
+  ): Promise<void>;
+
+  /**
    * Get a collection's current purpose (null when unset).
    * Used by marker steps' ensure-semantics to detect no-op updates on reruns.
    */

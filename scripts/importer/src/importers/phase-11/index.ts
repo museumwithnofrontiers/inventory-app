@@ -27,3 +27,4 @@ export { ItemTranslationColumnsImporter } from './item-translation-columns-impor
 export { CollectionTranslationColumnsImporter } from './collection-translation-columns-importer.js';
 export { PictureCreditsImporter } from './picture-credits-importer.js';
 export { CollectionRelationsImporter } from './collection-relations-importer.js';
+export { CollectionFlagsImporter } from './collection-flags-importer.js';

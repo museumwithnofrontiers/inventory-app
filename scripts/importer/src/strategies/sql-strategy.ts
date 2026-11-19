@@ -2590,6 +2590,31 @@ export class SqlWriteStrategy implements IWriteStrategy {
     );
   }
 
+  async setCollectionFlags(
+    collectionId: string,
+    flags: { visible?: boolean; featured?: boolean; published_at?: string }
+  ): Promise<void> {
+    const sets: string[] = [];
+    const values: Array<string | number> = [];
+    if (flags.visible !== undefined) {
+      sets.push('visible = ?');
+      values.push(flags.visible ? 1 : 0);
+    }
+    if (flags.featured !== undefined) {
+      sets.push('featured = ?');
+      values.push(flags.featured ? 1 : 0);
+    }
+    if (flags.published_at !== undefined) {
+      sets.push('published_at = ?');
+      values.push(flags.published_at);
+    }
+    if (sets.length === 0) return;
+    await this.db.execute(
+      `UPDATE collections SET ${[...sets, 'updated_at = ?'].join(', ')} WHERE id = ?`,
+      [...values, this.now, collectionId]
+    );
+  }
+
   async getCollectionPurpose(collectionId: string): Promise<string | null> {
     const [rows] = await this.db.execute<RowDataPacket[]>(
       `SELECT purpose FROM collections WHERE id = ?`,

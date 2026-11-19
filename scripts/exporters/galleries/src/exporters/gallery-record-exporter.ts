@@ -2,6 +2,7 @@ import { bannerRefToBackwardCompatibility } from '../core/banner-reference.js'
 import { parseJson } from '../core/database.js'
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 
 /** The `thg_gallery` fields the importer copies onto every language row of the hub's collection. */
 interface HubChrome {
@@ -32,10 +33,12 @@ export class GalleryRecordExporter extends BaseExporter {
     const langCodeMap = await this.buildLangCodeMap()
     const [collections, translations] = await Promise.all([
       this.db.query<{ extra: unknown }>(`SELECT extra FROM collections WHERE id = ?`, [this.hub.id]),
-      this.db.query<{ language_id: string; title: string | null; extra: unknown }>(
-        `SELECT language_id, title, extra FROM collection_translations WHERE collection_id = ? ORDER BY language_id`,
-        [this.hub.id]
-      ),
+      this.db
+        .query<{ collection_id: string; language_id: string; title: string | null; extra: unknown }>(
+          `SELECT collection_id, language_id, title, extra FROM collection_translations WHERE collection_id = ? ORDER BY language_id`,
+          [this.hub.id]
+        )
+        .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows)),
     ])
 
     const names: Record<string, string> = {}
