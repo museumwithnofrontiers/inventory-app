@@ -159,7 +159,7 @@
                 }
             },
             "put": {
-                "operationId": "author.update_219",
+                "operationId": "author.update_222",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Author"
@@ -610,7 +610,7 @@
                 }
             },
             "put": {
-                "operationId": "authorTranslation.update_221",
+                "operationId": "authorTranslation.update_224",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AuthorTranslation"
@@ -1153,7 +1153,7 @@
                 }
             },
             "put": {
-                "operationId": "availableImage.update_366",
+                "operationId": "availableImage.update_372",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AvailableImage"
@@ -1604,7 +1604,7 @@
                 }
             },
             "put": {
-                "operationId": "collection.update_294",
+                "operationId": "collection.update_299",
                 "summary": "Update the specified collection in storage",
                 "tags": [
                     "Collection"
@@ -2352,7 +2352,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionTranslation.update_292",
+                "operationId": "collectionTranslation.update_297",
                 "summary": "Update the specified collection translation",
                 "tags": [
                     "Collection Translations",
@@ -3068,7 +3068,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionImage.update_276",
+                "operationId": "collectionImage.update_281",
                 "summary": "Update the specified collection image",
                 "tags": [
                     "CollectionImage"
@@ -3399,6 +3399,463 @@
                                 }
                             }
                         }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/collection-item-explore-monument": {
+            "get": {
+                "operationId": "collection-item-explore-monument.index",
+                "summary": "Display a listing of the resource, optionally for one placement",
+                "tags": [
+                    "CollectionItemExploreMonument"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `locationCollection`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "locationCollection"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "collection_item_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `CollectionItemExploreMonumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CollectionItemExploreMonumentResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "collection-item-explore-monument.store",
+                "summary": "Store a newly created resource in storage",
+                "tags": [
+                    "CollectionItemExploreMonument"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCollectionItemExploreMonumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemExploreMonumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemExploreMonumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/collection-item-explore-monument/{collectionItemExploreMonument}": {
+            "get": {
+                "operationId": "collection-item-explore-monument.show",
+                "summary": "Display the specified resource",
+                "tags": [
+                    "CollectionItemExploreMonument"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemExploreMonument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item explore monument ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `locationCollection`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "locationCollection"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemExploreMonumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemExploreMonumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "collection-item-explore-monument.update",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "CollectionItemExploreMonument"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemExploreMonument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item explore monument ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCollectionItemExploreMonumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemExploreMonumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemExploreMonumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "collectionItemExploreMonument.update_263",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "CollectionItemExploreMonument"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemExploreMonument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item explore monument ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCollectionItemExploreMonumentRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemExploreMonumentResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemExploreMonumentResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "collection-item-explore-monument.destroy",
+                "summary": "Remove the specified resource from storage",
+                "tags": [
+                    "CollectionItemExploreMonument"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemExploreMonument",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item explore monument ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
@@ -3785,7 +4242,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionItemTranslation.update_258",
+                "operationId": "collectionItemTranslation.update_261",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CollectionItemTranslation"
@@ -4087,7 +4544,7 @@
                 }
             },
             "put": {
-                "operationId": "context.update_191",
+                "operationId": "context.update_194",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Context"
@@ -4598,7 +5055,7 @@
                 }
             },
             "put": {
-                "operationId": "contributor.update_281",
+                "operationId": "contributor.update_286",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Contributor"
@@ -5127,7 +5584,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorImage.update_285",
+                "operationId": "contributorImage.update_290",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorImage"
@@ -5829,7 +6286,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorTranslation.update_283",
+                "operationId": "contributorTranslation.update_288",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorTranslation"
@@ -6278,7 +6735,7 @@
                 }
             },
             "put": {
-                "operationId": "country.update_209",
+                "operationId": "country.update_212",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Country"
@@ -6726,7 +7183,7 @@
                 }
             },
             "put": {
-                "operationId": "countryTranslation.update_211",
+                "operationId": "countryTranslation.update_214",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CountryTranslation"
@@ -7175,7 +7632,7 @@
                 }
             },
             "put": {
-                "operationId": "dynasty.update_215",
+                "operationId": "dynasty.update_218",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Dynasty"
@@ -7624,7 +8081,7 @@
                 }
             },
             "put": {
-                "operationId": "dynastyTranslation.update_217",
+                "operationId": "dynastyTranslation.update_220",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "DynastyTranslation"
@@ -8075,7 +8532,7 @@
                 }
             },
             "put": {
-                "operationId": "glossary.update_199",
+                "operationId": "glossary.update_202",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Glossary"
@@ -8670,7 +9127,7 @@
                 }
             },
             "put": {
-                "operationId": "glossarySpelling.update_203",
+                "operationId": "glossarySpelling.update_206",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossarySpelling"
@@ -9119,7 +9576,7 @@
                 }
             },
             "put": {
-                "operationId": "glossaryTranslation.update_201",
+                "operationId": "glossaryTranslation.update_204",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossaryTranslation"
@@ -9665,7 +10122,7 @@
                 }
             },
             "put": {
-                "operationId": "imageTranslation.update_256",
+                "operationId": "imageTranslation.update_259",
                 "tags": [
                     "ImageTranslation"
                 ],
@@ -10531,7 +10988,7 @@
                 }
             },
             "put": {
-                "operationId": "item.update_253",
+                "operationId": "item.update_256",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Item"
@@ -11331,7 +11788,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLinkTranslation.update_274",
+                "operationId": "itemItemLinkTranslation.update_279",
                 "summary": "Update the specified item-item link translation",
                 "tags": [
                     "Item Item Link Translations",
@@ -11842,7 +12299,7 @@
                 }
             },
             "put": {
-                "operationId": "itemTranslation.update_290",
+                "operationId": "itemTranslation.update_295",
                 "summary": "Update the specified item translation",
                 "tags": [
                     "Item Translations",
@@ -12498,7 +12955,7 @@
                 }
             },
             "put": {
-                "operationId": "itemDocument.update_268",
+                "operationId": "itemDocument.update_273",
                 "summary": "Update the specified item document",
                 "tags": [
                     "ItemDocument"
@@ -13012,7 +13469,7 @@
                 }
             },
             "put": {
-                "operationId": "itemImage.update_259",
+                "operationId": "itemImage.update_264",
                 "summary": "Update the specified item image",
                 "tags": [
                     "ItemImage"
@@ -13451,7 +13908,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLink.update_272",
+                "operationId": "itemItemLink.update_277",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ItemItemLink"
@@ -14050,7 +14507,7 @@
                 }
             },
             "put": {
-                "operationId": "language.update_195",
+                "operationId": "language.update_198",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Language"
@@ -14549,7 +15006,7 @@
                 }
             },
             "put": {
-                "operationId": "languageTranslation.update_197",
+                "operationId": "languageTranslation.update_200",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "LanguageTranslation"
@@ -15425,7 +15882,7 @@
                 }
             },
             "put": {
-                "operationId": "link.update_264",
+                "operationId": "link.update_269",
                 "summary": "Update the specified link",
                 "tags": [
                     "Link"
@@ -15994,7 +16451,7 @@
                 }
             },
             "put": {
-                "operationId": "partner.update_233",
+                "operationId": "partner.update_236",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Partner"
@@ -16444,7 +16901,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerContact.update_310",
+                "operationId": "partnerContact.update_315",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerContact"
@@ -16980,7 +17437,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerImage.update_237",
+                "operationId": "partnerImage.update_240",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerImage"
@@ -17762,7 +18219,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerLogo.update_242",
+                "operationId": "partnerLogo.update_245",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerLogo"
@@ -18354,7 +18811,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslation.update_235",
+                "operationId": "partnerTranslation.update_238",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslation"
@@ -18883,7 +19340,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslationImage.update_247",
+                "operationId": "partnerTranslationImage.update_250",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslationImage"
@@ -19623,7 +20080,7 @@
                 }
             },
             "put": {
-                "operationId": "project.update_207",
+                "operationId": "project.update_210",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Project"
@@ -20199,7 +20656,7 @@
                 }
             },
             "put": {
-                "operationId": "publication.update_296",
+                "operationId": "publication.update_301",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Publication"
@@ -21515,7 +21972,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationDocument.update_322",
+                "operationId": "publicationDocument.update_327",
                 "summary": "Update the specified document's metadata",
                 "tags": [
                     "PublicationDocument"
@@ -21735,7 +22192,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationEdition.update_313",
+                "operationId": "publicationEdition.update_318",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationEdition"
@@ -22539,7 +22996,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationImage.update_316",
+                "operationId": "publicationImage.update_321",
                 "summary": "Update the specified publication image",
                 "tags": [
                     "PublicationImage"
@@ -23004,7 +23461,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationTranslation.update_306",
+                "operationId": "publicationTranslation.update_311",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationTranslation"
@@ -23659,7 +24116,7 @@
                 }
             },
             "put": {
-                "operationId": "tag.update_213",
+                "operationId": "tag.update_216",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Tag"
@@ -24098,7 +24555,7 @@
                 }
             },
             "put": {
-                "operationId": "timeline.update_223",
+                "operationId": "timeline.update_226",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Timeline"
@@ -24547,7 +25004,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEvent.update_225",
+                "operationId": "timelineEvent.update_228",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEvent"
@@ -24985,7 +25442,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventImage.update_229",
+                "operationId": "timelineEventImage.update_232",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventImage"
@@ -25282,7 +25739,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventTranslation.update_227",
+                "operationId": "timelineEventTranslation.update_230",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventTranslation"
@@ -25583,7 +26040,7 @@
                 }
             },
             "put": {
-                "operationId": "visitInformation.update_308",
+                "operationId": "visitInformation.update_313",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "VisitInformation"
@@ -26782,6 +27239,128 @@
                     "updated_at"
                 ],
                 "title": "CollectionImageResource"
+            },
+            "CollectionItemExploreMonumentResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique identifier (GUID)"
+                    },
+                    "collection_item_id": {
+                        "type": "string",
+                        "description": "The placement that stands for this Explore monument: an item on a collection (its id)"
+                    },
+                    "position": {
+                        "type": "integer",
+                        "description": "Its place in the placement's list of Explore monuments"
+                    },
+                    "backward_compatibility": {
+                        "type": "string",
+                        "description": "The Explore monument's legacy key (mwnf3_explore:monument:<id>)"
+                    },
+                    "latitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "description": "Its coordinates, as written"
+                    },
+                    "longitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ]
+                    },
+                    "map_zoom": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "location_collection_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "On an itinerary: the Explore location it is visited in (CollectionResource id)"
+                    },
+                    "description_types": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "On an itinerary: legacy's references to the texts it showed for the monument, as written"
+                    },
+                    "travels_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "explore_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "virtual_museum_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "partner_ids": {
+                        "type": "array",
+                        "description": "The museums Explore shows it as, in order (PartnerResource ids)",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of creation of the resource (managed by the system)"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of last modification of the resource (managed by the system)"
+                    },
+                    "location_collection": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CollectionResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "collection_item_id",
+                    "position",
+                    "backward_compatibility",
+                    "latitude",
+                    "longitude",
+                    "map_zoom",
+                    "location_collection_id",
+                    "description_types",
+                    "travels_description_ref",
+                    "explore_description_ref",
+                    "virtual_museum_description_ref",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CollectionItemExploreMonumentResource"
             },
             "CollectionItemTranslationResource": {
                 "type": "object",
@@ -31465,6 +32044,109 @@
                 ],
                 "title": "StoreCollectionImageRequest"
             },
+            "StoreCollectionItemExploreMonumentRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "collection_item_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "position": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "backward_compatibility": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "latitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": -90,
+                        "maximum": 90
+                    },
+                    "longitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": -180,
+                        "maximum": 180
+                    },
+                    "map_zoom": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 22
+                    },
+                    "location_collection_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "description_types": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "travels_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "explore_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "virtual_museum_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "partner_ids": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "uniqueItems": true
+                    },
+                    "include": {
+                        "type": "string",
+                        "description": "Comma-separated list of related resources to include. Valid values: `locationCollection`.",
+                        "examples": [
+                            "locationCollection"
+                        ]
+                    }
+                },
+                "required": [
+                    "collection_item_id",
+                    "position",
+                    "backward_compatibility"
+                ],
+                "title": "StoreCollectionItemExploreMonumentRequest"
+            },
             "StoreCollectionItemTranslationRequest": {
                 "type": "object",
                 "properties": {
@@ -35097,6 +35779,103 @@
                     }
                 },
                 "title": "UpdateCollectionImageRequest"
+            },
+            "UpdateCollectionItemExploreMonumentRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "collection_item_id": {
+                        "type": "string"
+                    },
+                    "position": {
+                        "type": "integer",
+                        "minimum": 1
+                    },
+                    "backward_compatibility": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "latitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": -90,
+                        "maximum": 90
+                    },
+                    "longitude": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "minimum": -180,
+                        "maximum": 180
+                    },
+                    "map_zoom": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 22
+                    },
+                    "location_collection_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "description_types": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "travels_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "explore_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "virtual_museum_description_ref": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "partner_ids": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string",
+                            "format": "uuid"
+                        },
+                        "uniqueItems": true
+                    },
+                    "include": {
+                        "type": "string",
+                        "description": "Comma-separated list of related resources to include. Valid values: `locationCollection`.",
+                        "examples": [
+                            "locationCollection"
+                        ]
+                    }
+                },
+                "title": "UpdateCollectionItemExploreMonumentRequest"
             },
             "UpdateCollectionItemTranslationRequest": {
                 "type": "object",
