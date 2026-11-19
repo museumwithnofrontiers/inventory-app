@@ -61,7 +61,11 @@ import type {
   ContributorImageData,
   ImageTable,
 } from './types.js';
-import type { PictureCreditRow, PictureParentImageRow } from '../utils/picture-credits.js';
+import type {
+  ImageRightsRow,
+  PictureCreditRow,
+  PictureParentImageRow,
+} from '../utils/picture-credits.js';
 
 /**
  * Strategy interface for writing entities to the target system
@@ -703,6 +707,19 @@ export interface IWriteStrategy {
    * ordered by item, language and id. Used by PictureCreditsImporter.
    */
   findPictureCreditRows(): Promise<PictureCreditRow[]>;
+
+  /**
+   * Object, monument and detail translations whose `extra` holds `copyright`:
+   * the sheet's rights line, not a picture's. Used by PictureCreditsImporter.
+   */
+  findImageRightsRows(): Promise<ImageRightsRow[]>;
+
+  /** Set a translation's `image_rights` and its `extra` (null clears it), as given. */
+  setItemTranslationImageRights(
+    id: string,
+    imageRights: string,
+    extra: string | null
+  ): Promise<void>;
 
   /**
    * Set an item image's `photographer` and `credit`, and clear its
