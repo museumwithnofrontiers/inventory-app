@@ -58,6 +58,8 @@ class ItemResource extends BaseJsonResource
             'translations' => ItemTranslationResource::collection($this->whenLoaded('translations')),
             // Item images attached to this item with display ordering (ItemImageResource[])
             'itemImages' => ItemImageResource::collection($this->whenLoaded('itemImages')),
+            // Links to things outside the inventory (videos, catalogue entries, ...)
+            'links' => LinkResource::collection($this->whenLoaded('links')),
             // The date of creation of the resource (managed by the system)
             'created_at' => $this->resource->created_at,
             // The date of last modification of the resource (managed by the system)

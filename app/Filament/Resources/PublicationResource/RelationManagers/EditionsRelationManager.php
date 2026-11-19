@@ -5,6 +5,7 @@ namespace App\Filament\Resources\PublicationResource\RelationManagers;
 use App\Enums\PublicationFormat;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Resources\PublicationEditionResource;
 use App\Filament\Support\ExtraJsonField;
 use App\Models\PublicationEdition;
 use Filament\Forms\Components\Select;
@@ -12,6 +13,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\CreateAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
@@ -155,6 +157,12 @@ class EditionsRelationManager extends RelationManager
                 CreateAction::make(),
             ])
             ->actions([
+                // The edition's own page holds its links (shop links).
+                Action::make('links')
+                    ->label('Links')
+                    ->icon('heroicon-o-link')
+                    ->color('gray')
+                    ->url(fn (PublicationEdition $record): string => PublicationEditionResource::getUrl('view', ['record' => $record])),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

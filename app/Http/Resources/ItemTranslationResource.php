@@ -105,6 +105,8 @@ class ItemTranslationResource extends JsonResource
             'notice' => $this->notice,
             'external_notice' => $this->external_notice,
             'image_rights' => $this->image_rights,
+            // External sources as legacy wrote them (a text, links included)
+            'external_sources' => $this->external_sources,
             'backward_compatibility' => $this->backward_compatibility,
             // Extra data for translation (object, may be null)
             'extra' => $this->extra,

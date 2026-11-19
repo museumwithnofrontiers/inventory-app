@@ -144,13 +144,14 @@ describe('the column list', () => {
       'notice→notice',
       'notice_c→external_notice',
       'legacy_display_status→status',
+      'external_sources→external_sources',
     ])
     expect(
       itemColumnsSelect('it').startsWith(
         'it.materials, it.short_description, it.dynasty, it.region, it.history, it.author_credit, it.copy_editor_credit, ' +
           'it.translator_credit, it.translation_copy_editor_credit, it.keywords, it.artist, it.artist_period_of_activity, ' +
           'it.artist_birth_date, it.artist_birth_place, it.artist_death_date, it.artist_death_place, it.workshop, it.scribe, ' +
-          'it.patrons, it.architects, it.catalogue_references, it.notice, it.external_notice, it.status, ' +
+          'it.patrons, it.architects, it.catalogue_references, it.notice, it.external_notice, it.status, it.external_sources, ' +
           'it.backward_compatibility AS item_columns_source, '
       )
     ).toBe(true)
@@ -212,5 +213,18 @@ describe("an object's rights line (F1)", () => {
     const [row] = restoreItemColumns([{ item_id: 'o1', extra: null, image_rights: 'Copyright image: Museo X.' }])
     expect(row).toEqual({ item_id: 'o1', extra: { copyright: 'Copyright image: Museo X.' } })
     expect(itemColumnsSelect('it')).toContain('it.image_rights')
+  })
+})
+
+describe("an object's catalogue page (F3)", () => {
+  it('goes back as catalogue_holding_link from the item link in the row language', () => {
+    const [row] = restoreItemColumns([
+      { item_id: 'i1', extra: '{"binding_desc": "x"}', item_columns_catalogue_link: 'https://museum.example.org/1' },
+    ])
+    expect(row).toEqual({
+      item_id: 'i1',
+      extra: { binding_desc: 'x', catalogue_holding_link: 'https://museum.example.org/1' },
+    })
+    expect(itemColumnsSelect('it')).toContain("ic_l.type = 'catalogue' AND ic_l.language_id = it.language_id")
   })
 })

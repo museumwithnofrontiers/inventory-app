@@ -27,6 +27,8 @@
  *   references and the two Sharing History notices, as written; and the
  *   `status` column, which goes back as `legacy_display_status: 'N'` when it
  *   is `hidden` (an entry with `values` maps a flag, not a text).
+ * - F3 (inventory-app#2653): an object's `catalogue_holding_link` is the item's
+ *   `catalogue` link in the translation's language; it goes back to that row.
  *
  * Types are in `item-columns.d.mts`.
  */
@@ -60,6 +62,7 @@ export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
   Object.freeze({ key: 'notice', column: 'notice' }),
   Object.freeze({ key: 'notice_c', column: 'external_notice' }),
   Object.freeze({ key: 'legacy_display_status', column: 'status', values: Object.freeze({ N: 'hidden' }) }),
+  Object.freeze({ key: 'external_sources', column: 'external_sources' }),
 ])
 
 /** The translation's legacy key, selected next to the columns under this name. */
@@ -124,6 +127,21 @@ function withoutCopyrightMark(copyright) {
   return copyright.startsWith('© ') ? copyright.slice(2) : copyright
 }
 
+/** The item's catalogue link in the row's language, selected under this name. */
+const CATALOGUE = 'item_columns_catalogue_link'
+
+/**
+ * @param {string} alias
+ * @returns {string}
+ */
+function catalogueSelect(alias) {
+  return (
+    `(SELECT ic_l.url FROM links ic_l WHERE ic_l.linkable_type = 'item' AND ic_l.linkable_id = ${alias}.item_id` +
+    ` AND ic_l.type = 'catalogue' AND ic_l.language_id = ${alias}.language_id ORDER BY ic_l.display_order, ic_l.id LIMIT 1)` +
+    ` AS ${CATALOGUE}`
+  )
+}
+
 /**
  * The picture texts this row gets back from its image.
  *
@@ -153,6 +171,7 @@ export function itemColumnsSelect(alias) {
     `${alias}.backward_compatibility AS ${SOURCE}`,
     ...pictureSelect(alias),
     `${alias}.image_rights`,
+    catalogueSelect(alias),
   ].join(', ')
 }
 
@@ -196,6 +215,8 @@ export function withItemTranslationColumns(extra, row) {
   Object.assign(texts, pictureTexts(row))
   // An object's or monument's rights line (F1): its own column, not a picture's.
   if (typeof row.image_rights === 'string') texts.copyright = row.image_rights
+  const catalogue = textOf(row[CATALOGUE])
+  if (catalogue !== null) texts.catalogue_holding_link = catalogue
   if (Object.keys(texts).length === 0) return extra
   const parsed = typeof extra === 'string' ? JSON.parse(extra) : extra
   const base = isObject(parsed) ? parsed : {}
@@ -221,7 +242,7 @@ export function restoreItemColumns(rows) {
   for (const row of rows) {
     const record = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (row))
     record.extra = withItemTranslationColumns(record.extra, record)
-    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE), 'image_rights']) delete record[column]
+    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE), 'image_rights', CATALOGUE]) delete record[column]
   }
   return rows
 }

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasLinks;
 use Database\Factories\PartnerFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -31,6 +32,7 @@ class Partner extends Model
     /** @use HasFactory<PartnerFactory> */
     use HasFactory;
 
+    use HasLinks;
     use HasUuids;
 
     // No model-level eager loads. Use request-scoped includes in controllers.

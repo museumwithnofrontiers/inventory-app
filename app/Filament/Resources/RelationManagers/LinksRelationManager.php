@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\ItemResource\RelationManagers;
+namespace App\Filament\Resources\RelationManagers;
 
-use App\Enums\MediaType;
+use App\Enums\LinkType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\ExtraJsonField;
-use App\Models\ItemMedia;
+use App\Models\Link;
+use App\Models\PublicationEdition;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -20,34 +21,53 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
-class MediaRelationManager extends RelationManager
+/**
+ * The links of an item, a collection, a partner or a publication edition
+ * (M16 F3): one manager for every owner, replacing the Media managers.
+ */
+class LinksRelationManager extends RelationManager
 {
-    use AuthorizesRelationMutations;
+    use AuthorizesRelationMutations {
+        hostRecordCanBeUpdated as ownerRecordCanBeUpdated;
+    }
 
-    protected static string $relationship = 'itemMedia';
+    protected static string $relationship = 'links';
 
     protected static ?string $recordTitleAttribute = 'title';
 
-    protected static ?string $title = 'Media';
+    protected static ?string $title = 'Links';
+
+    /**
+     * A publication edition has no policy of its own: its publication's
+     * governs it, as in the publication's Editions manager.
+     */
+    public function hostRecordCanBeUpdated(): bool
+    {
+        $owner = $this->getOwnerRecord();
+        if ($owner instanceof PublicationEdition) {
+            $user = auth()->user();
+
+            return $user !== null && $owner->publication !== null && $user->can('update', $owner->publication);
+        }
+
+        return $this->ownerRecordCanBeUpdated();
+    }
 
     public function form(Form $form): Form
     {
         return $form
             ->schema([
                 Select::make('type')
-                    ->options(collect(MediaType::cases())->mapWithKeys(fn (MediaType $t) => [$t->value => $t->label()]))
+                    ->options(LinkType::options())
                     ->required(),
                 TextInput::make('url')
                     ->label('URL')
                     ->url()
                     ->required()
-                    ->maxLength(2083)
+                    ->maxLength(2048)
                     ->columnSpanFull(),
                 TextInput::make('title')
                     ->maxLength(255),
-                Textarea::make('description')
-                    ->rows(3)
-                    ->columnSpanFull(),
                 // Optional, unlike a translation's language, so not
                 // TranslationFormSchema::languageField() (which is required).
                 Select::make('language_id')
@@ -55,6 +75,35 @@ class MediaRelationManager extends RelationManager
                     ->relationship('language', 'internal_name')
                     ->searchable()
                     ->nullable(),
+                Textarea::make('description')
+                    ->rows(3)
+                    ->columnSpanFull(),
+                Textarea::make('authors')
+                    ->rows(2)
+                    ->columnSpanFull(),
+                TextInput::make('category')
+                    ->label('Category')
+                    ->helperText('The legacy category number; the site shows its name.')
+                    ->numeric()
+                    ->integer()
+                    ->minValue(0)
+                    ->maxValue(255)
+                    ->nullable(),
+                TextInput::make('resource_type')
+                    ->label('Resource type')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('location')
+                    ->maxLength(255)
+                    ->nullable(),
+                TextInput::make('country_code')
+                    ->label('Country code')
+                    ->maxLength(16)
+                    ->nullable(),
+                Textarea::make('further_reading')
+                    ->label('Further reading')
+                    ->rows(3)
+                    ->columnSpanFull(),
                 TextInput::make('display_order')
                     ->label('Display order')
                     ->numeric()
@@ -74,21 +123,22 @@ class MediaRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('type')
                     ->badge()
-                    ->formatStateUsing(fn (?MediaType $state): ?string => $state?->label())
+                    ->formatStateUsing(fn (?LinkType $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('title')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->placeholder('—'),
                 TextColumn::make('url')
                     ->label('URL')
-                    ->url(fn (ItemMedia $record): string => $record->url)
+                    ->url(fn (Link $record): string => $record->url)
                     ->openUrlInNewTab()
                     ->limit(60)
                     ->searchable(),
                 TextColumn::make('language.internal_name')
                     ->label('Language')
                     ->sortable()
-                    ->url(fn (ItemMedia $record): ?string => $record->language
+                    ->url(fn (Link $record): ?string => $record->language
                         ? (auth()->user()?->can('view', $record->language) ? LanguageResource::getUrl('view', ['record' => $record->language]) : null)
                         : null),
                 TextColumn::make('display_order')
@@ -103,7 +153,7 @@ class MediaRelationManager extends RelationManager
             ])
             ->filters([
                 SelectFilter::make('type')
-                    ->options(collect(MediaType::cases())->mapWithKeys(fn (MediaType $t) => [$t->value => $t->label()])),
+                    ->options(LinkType::options()),
             ])
             ->headerActions([
                 CreateAction::make(),

@@ -20,6 +20,7 @@ use App\Listeners\DispatchSyncSpellingToTimelineEventTranslations;
 use App\Listeners\DispatchSyncTimelineEventTranslationSpellings;
 use App\Models\ItemItemLink;
 use App\Models\ItemItemLinkTranslation;
+use App\Models\Link;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\User;
@@ -61,9 +62,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        // An image's texts (ImageTranslation, M16 F2) name their image by a short,
-        // stable alias rather than a class name.
-        Relation::morphMap(AttachedImageRegistry::morphAliases());
+        // An image's texts (ImageTranslation, M16 F2) name their image, and a Link
+        // (M16 F3) its owner, by a short, stable alias rather than a class name,
+        // so renaming a model never orphans them.
+        Relation::morphMap([...Link::OWNERS, ...AttachedImageRegistry::morphAliases()]);
 
         // Public picture endpoint throttle — configurable via PUB_PICTURES_THROTTLE env var.
         // Counts the requests that cost something: a burn, or an error such as

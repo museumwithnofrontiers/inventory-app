@@ -54,6 +54,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $notice
  * @property string|null $external_notice
  * @property string|null $image_rights
+ * @property string|null $external_sources
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -171,6 +172,7 @@ class ItemTranslation extends Model
         'notice',
         'external_notice',
         'image_rights',
+        'external_sources',
         'backward_compatibility',
         'extra',
     ];

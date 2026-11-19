@@ -320,13 +320,14 @@ export class ItemExporter extends BaseExporter {
          ORDER BY ci.item_id, c.internal_name, c.id`,
         itemIds
       ),
-      // Audio/video media attached to items (item_media table) — legacy
+      // Audio/video media attached to items (links of type audio or video, M16 F3) — legacy
       // objects_video/monuments_video, already imported via ItemMediaImporter.
       this.db.query<ItemMediaRow>(
-        `SELECT item_id, language_id, type, title, description, url
-         FROM item_media
-         WHERE item_id IN (${itemPh})
-         ORDER BY item_id, display_order`,
+        `SELECT linkable_id AS item_id, language_id, type, title, description, url
+         FROM links
+         WHERE linkable_type = 'item' AND type IN ('audio', 'video')
+           AND linkable_id IN (${itemPh})
+         ORDER BY linkable_id, display_order, id`,
         itemIds
       ),
       // Outgoing links only (source_id IN items). The legacy data model stores

@@ -112,7 +112,7 @@ export abstract class BaseExporter {
   /**
    * The audio and video legacy linked to an exhibition (theme 0) or to a theme
    * (`exhibition_audio`/`exhibition_video` assigned by `theme_audio`/
-   * `theme_video`), which the importer files in `collection_media` under
+   * `theme_video`), which the importer files as the collection's links (M16 F3) under
    * `mwnf3_thematic_gallery:theme_<audio|video>:<media>:<gallery>:<theme>`.
    * Per collection, in item media's shape, in legacy's order: its API listed
    * each kind by the media's legacy id.
@@ -132,9 +132,10 @@ export abstract class BaseExporter {
       url: string
       backward_compatibility: string | null
     }>(
-      `SELECT collection_id, language_id, type, title, description, url, backward_compatibility
-       FROM collection_media
-       WHERE collection_id IN (${this.placeholders(collectionIds.length)})
+      `SELECT linkable_id AS collection_id, language_id, type, title, description, url, backward_compatibility
+       FROM links
+       WHERE linkable_type = 'collection'
+         AND linkable_id IN (${this.placeholders(collectionIds.length)})
          AND backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:theme\\_%'
        ORDER BY collection_id, type, backward_compatibility`,
       collectionIds

@@ -2,7 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
-use App\Enums\MediaType;
+use App\Enums\LinkType;
 use App\Filament\Resources\CountryResource\Pages\EditCountry;
 use App\Filament\Resources\CountryResource\RelationManagers\TranslationsRelationManager as CountryTranslationsRelationManager;
 use App\Filament\Resources\GlossaryResource\Pages\EditGlossary;
@@ -11,11 +11,11 @@ use App\Filament\Resources\ItemResource\Pages\EditItem;
 use App\Filament\Resources\ItemResource\RelationManagers\ArtistsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\LanguageResource\Pages\EditLanguage;
 use App\Filament\Resources\LanguageResource\RelationManagers\TranslationsRelationManager as LanguageTranslationsRelationManager;
 use App\Filament\Resources\ProjectResource\Pages\ViewProject;
 use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Models\Artist;
 use App\Models\Country;
 use App\Models\CountryTranslation;
@@ -23,9 +23,9 @@ use App\Models\Dynasty;
 use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\ItemDocument;
-use App\Models\ItemMedia;
 use App\Models\Language;
 use App\Models\LanguageTranslation;
+use App\Models\Link;
 use App\Models\Partner;
 use App\Models\Project;
 use Filament\Tables\Columns\TextColumn;
@@ -231,9 +231,9 @@ class NewRelationManagersTest extends TestCase
         ]);
     }
 
-    // ── ItemResource: MediaRelationManager ────────────────────────────────────
+    // ── ItemResource: LinksRelationManager ────────────────────────────────────
 
-    public function test_item_media_relation_manager_renders_successfully(): void
+    public function test_item_links_relation_manager_renders_successfully(): void
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
@@ -241,14 +241,14 @@ class NewRelationManagersTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
             ->assertSuccessful();
     }
 
-    public function test_item_media_relation_manager_primary_column_is_searchable(): void
+    public function test_item_links_relation_manager_primary_column_is_searchable(): void
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
@@ -256,7 +256,7 @@ class NewRelationManagersTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
@@ -266,7 +266,7 @@ class NewRelationManagersTest extends TestCase
             );
     }
 
-    public function test_item_media_relation_manager_timestamp_is_hidden_by_default(): void
+    public function test_item_links_relation_manager_timestamp_is_hidden_by_default(): void
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
@@ -274,7 +274,7 @@ class NewRelationManagersTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
@@ -284,23 +284,23 @@ class NewRelationManagersTest extends TestCase
             );
     }
 
-    public function test_item_media_relation_manager_shows_media(): void
+    public function test_item_links_relation_manager_shows_links(): void
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
-        ItemMedia::factory()->video()->forItem($item)->create(['title' => 'Cave painting video']);
+        Link::factory()->ownedBy($item)->ofType(LinkType::VIDEO)->create(['title' => 'Cave painting video']);
 
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
-            ->assertCanSeeTableRecords($item->itemMedia);
+            ->assertCanSeeTableRecords($item->links);
     }
 
-    public function test_item_media_relation_manager_can_create_media(): void
+    public function test_item_links_relation_manager_can_create_a_link(): void
     {
         $user = $this->createCrudUser();
         $item = Item::factory()->Object()->create();
@@ -308,19 +308,20 @@ class NewRelationManagersTest extends TestCase
         $this->setCurrentPanel();
 
         Livewire::actingAs($user)
-            ->test(MediaRelationManager::class, [
+            ->test(LinksRelationManager::class, [
                 'ownerRecord' => $item,
                 'pageClass' => EditItem::class,
             ])
             ->callTableAction('create', data: [
-                'type' => MediaType::VIDEO->value,
+                'type' => LinkType::VIDEO->value,
                 'url' => 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
                 'title' => 'Test video',
             ])
             ->assertHasNoTableActionErrors();
 
-        $this->assertDatabaseHas('item_media', [
-            'item_id' => $item->id,
+        $this->assertDatabaseHas('links', [
+            'linkable_type' => 'item',
+            'linkable_id' => $item->id,
             'title' => 'Test video',
         ]);
     }

@@ -7,6 +7,7 @@ import type {
   PartnerOwnProject,
   PartnerUrl,
 } from '../core/types.js'
+import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { BaseExporter } from './base-exporter.js'
 import { galleryProjectCode } from '../../../shared/site-configuration.mjs'
 
@@ -347,6 +348,8 @@ export class PartnerExporter extends BaseExporter {
     // Contact details, opening hours and the portal flag are properties of the
     // museum, not of a language, but the importer copies them onto every
     // language row — so the first row seen wins.
+    // The partner's other websites: its links since M16 F3 (`extra.urls` before).
+    const websites = await partnerWebsites((sql, params) => this.db.query(sql, params), partnerIds)
     const extraMap = new Map<string, PartnerExtraFields>()
 
     for (const row of translations) {
@@ -490,7 +493,7 @@ export class PartnerExporter extends BaseExporter {
         // The languages the partner's page offers, as dxa-api lists them.
         languages: partnerLanguages(partner.backward_compatibility, translationMap.get(partner.id) ?? {}),
         contact_persons: contactPersons(extra),
-        additional_urls: extra?.urls ?? [],
+        additional_urls: websites.get(partner.id) ?? extra?.urls ?? [],
         images: imageMap.get(partner.id) ?? [],
         logos: logoMap.get(partner.id) ?? [],
       }

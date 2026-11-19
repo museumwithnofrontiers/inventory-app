@@ -171,6 +171,7 @@ export {
   CollectionRelationsImporter,
   CollectionFlagsImporter,
   SiteConfigurationOutImporter,
+  LinksImporter,
 } from './phase-11/index.js';
 
 // Phase 12: Publications

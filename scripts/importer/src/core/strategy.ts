@@ -67,6 +67,7 @@ import type {
   PictureCreditRow,
   PictureParentImageRow,
 } from '../utils/picture-credits.js';
+import type { CatalogueRow, LinkData, PartnerUrlRow, ShopLinkRow } from '../utils/links.js';
 
 /**
  * Strategy interface for writing entities to the target system
@@ -724,6 +725,28 @@ export interface IWriteStrategy {
    * ordered by item, language and id. Used by PictureCreditsImporter.
    */
   findPictureCreditRows(): Promise<PictureCreditRow[]>;
+
+  /** Item translations whose `extra` holds `catalogue_holding_link`. Used by LinksImporter. */
+  findCatalogueLinkRows(): Promise<CatalogueRow[]>;
+
+  /** Partner translations whose `extra` holds `urls`, with the partner's legacy key. */
+  findPartnerUrlRows(): Promise<PartnerUrlRow[]>;
+
+  /** Publication editions whose `extra` holds `shop_links`. */
+  findShopLinkRows(): Promise<ShopLinkRow[]>;
+
+  /**
+   * Write a link (M16 F3), its id derived from its legacy key; a second write
+   * of the same key replaces the first.
+   */
+  writeLink(data: LinkData): Promise<string>;
+
+  /** Set (or clear, with null) the `extra` of a partner translation or a publication edition, as given. */
+  setExtraAsStoredById(
+    table: 'partner_translations' | 'publication_editions',
+    id: string,
+    extra: string | null
+  ): Promise<void>;
 
   /**
    * Object, monument and detail translations whose `extra` holds `copyright`:

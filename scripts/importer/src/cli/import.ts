@@ -168,6 +168,7 @@ import {
   CollectionRelationsImporter,
   CollectionFlagsImporter,
   SiteConfigurationOutImporter,
+  LinksImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1299,6 +1300,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: SiteConfigurationOutImporter,
     // After collection-flags, so the flags an older import left in these
     // blocks have reached their columns.
+    runsLast: true,
+  },
+  {
+    key: 'links',
+    name: 'Links',
+    description:
+      "Move the objects' catalogue pages, the partners' websites and the publication editions' shop links from extra to links, after every importer that writes them (M16 F3 #2653)",
+    importerClass: LinksImporter,
+    // The object, partner and edition importers of every legacy database
+    // write these keys, and later steps move translations between contexts.
     runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)

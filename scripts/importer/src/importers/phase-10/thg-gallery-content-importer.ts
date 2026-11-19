@@ -1293,16 +1293,16 @@ export class ThgGalleryContentImporter extends BaseImporter implements SiteConfi
       type: resolvedType ?? 'document',
       title: convertHtmlToMarkdown(title),
       description: description ? this.markdownOf(description, parameters.galleryId) : null,
+      authors: trimToNull(parameters.source.authors),
       url: parameters.url,
       display_order: parameters.displayOrder,
-      extra: buildExtra({
-        category_id: parameters.categoryId,
-        further_reading: parameters.source.further_reading,
-        entity_location: parameters.source.entity_location,
-        entity_country: parameters.source.entity_country,
-        authors: parameters.source.authors,
-        type_resource: parameters.source.type_resource,
-      }),
+      // Link columns since M16 F3: the exporter reads each as content.
+      category: parameters.categoryId,
+      resource_type: trimToNull(parameters.source.type_resource),
+      location: trimToNull(parameters.source.entity_location),
+      country_code: trimToNull(parameters.source.entity_country),
+      further_reading: trimToNull(parameters.source.further_reading),
+      extra: null,
       backward_compatibility: parameters.backwardCompatibility,
     };
 

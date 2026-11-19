@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PublicationFormat;
+use App\Traits\HasLinks;
 use Database\Factories\PublicationEditionFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -43,6 +44,8 @@ class PublicationEdition extends Model
 {
     /** @use HasFactory<PublicationEditionFactory> */
     use HasFactory, HasUuids;
+
+    use HasLinks;
 
     /**
      * @var list<string>

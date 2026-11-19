@@ -428,8 +428,9 @@ export abstract class BaseImporter {
       timeline: 'timelines',
       timeline_event: 'timeline_events',
       timeline_event_translation: 'timeline_event_translations',
-      item_media: 'item_media',
-      collection_media: 'collection_media',
+      // Links since M16 F3: both kinds of media rows live in `links`.
+      item_media: 'links',
+      collection_media: 'links',
       item_document: 'item_documents',
       contributor: 'contributors',
       contributor_translation: 'contributor_translations',

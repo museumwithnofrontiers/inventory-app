@@ -117,6 +117,7 @@ class ItemTranslationTest extends TestCase
             'notice' => 'This is an unedited Database entry.',
             'external_notice' => 'Cet objet est disponible aussi sur Gallica.',
             'image_rights' => 'Copyright image: Soprintendenza per i Beni Archeologici',
+            'external_sources' => 'Virtual visit: [https://example.org/tour](https://example.org/tour)',
         ];
 
         $this->putJson(route('item-translation.update', $resource), $texts)
@@ -134,7 +135,8 @@ class ItemTranslationTest extends TestCase
             ->assertJsonPath('data.architects', $texts['architects'])
             ->assertJsonPath('data.catalogue_references', $texts['catalogue_references'])
             ->assertJsonPath('data.external_notice', $texts['external_notice'])
-            ->assertJsonPath('data.image_rights', $texts['image_rights']);
+            ->assertJsonPath('data.image_rights', $texts['image_rights'])
+            ->assertJsonPath('data.external_sources', $texts['external_sources']);
 
         $this->assertDatabaseHas('item_translations', ['id' => $resource->id] + $texts);
     }
