@@ -61,6 +61,7 @@ import type {
   ContributorImageData,
   ImageTable,
 } from './types.js';
+import type { ImageTextData, ImageTextRow } from '../utils/image-texts.js';
 import type {
   ImageRightsRow,
   PictureCreditRow,
@@ -700,6 +701,22 @@ export interface IWriteStrategy {
    * are not converted again.
    */
   setCollectionTranslationExtraAsStoredById(id: string, extra: string | null): Promise<void>;
+
+  /** Collection translations whose `extra` holds image captions or map descriptions (M16 F2). */
+  findImageTextRows(): Promise<ImageTextRow[]>;
+
+  /** The images of these collections, with their path and original name. */
+  findCollectionImagePaths(
+    collectionIds: readonly string[]
+  ): Promise<
+    Array<{ id: string; collection_id: string; path: string; original_name: string | null }>
+  >;
+
+  /**
+   * Write an image's texts in one language (M16 F2), its id derived from its
+   * legacy key and language; a second write of the same key replaces them.
+   */
+  upsertImageTranslation(data: ImageTextData & { image_type: string }): Promise<string>;
 
   /**
    * Every translation of each picture item whose rows carry a `photographer`

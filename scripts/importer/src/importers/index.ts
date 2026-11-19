@@ -167,6 +167,7 @@ export {
   ItemTranslationColumnsImporter,
   CollectionTranslationColumnsImporter,
   PictureCreditsImporter,
+  ImageTextsImporter,
   CollectionRelationsImporter,
   CollectionFlagsImporter,
   SiteConfigurationOutImporter,

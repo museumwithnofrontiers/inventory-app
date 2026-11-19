@@ -30,6 +30,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $description
  * @property string|null $introduction
  * @property string|null $duration
+ * @property string|null $cover_caption
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -108,6 +109,7 @@ class CollectionTranslation extends Model
         'introduction',
         'quote',
         'duration',
+        'cover_caption',
         'url',
         'backward_compatibility',
         'extra',

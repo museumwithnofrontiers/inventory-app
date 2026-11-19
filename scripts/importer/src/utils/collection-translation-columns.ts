@@ -7,6 +7,8 @@
  *   call the introduction `intro_text`, Travels' itineraries `introduction`:
  *   both go to `introduction`. A translation holding both is not moved and is
  *   reported, so that nothing is merged.
+ * - F2 (#2652): `cover_images`, an exhibition cover picture's caption, as
+ *   written, into `cover_caption` (nothing says which image is the cover).
  *
  * The exporters give each key back to the package under its legacy name
  * (`scripts/exporters/shared/collection-columns.mjs`), so keep the two lists
@@ -25,6 +27,7 @@ export const COLLECTION_TRANSLATION_COLUMNS: readonly CollectionTranslationColum
   { key: 'intro_text', column: 'introduction' },
   { key: 'introduction', column: 'introduction' },
   { key: 'duration', column: 'duration' },
+  { key: 'cover_images', column: 'cover_caption' },
 ];
 
 export const COLLECTION_TRANSLATION_COLUMN_KEYS: readonly string[] =

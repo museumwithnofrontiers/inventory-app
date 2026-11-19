@@ -49,12 +49,13 @@ describe('splitCollectionTranslationColumns', () => {
     expect(kept).toEqual(['subtitle']);
   });
 
-  it('covers the keys of E1', () => {
+  it('covers the keys of E1 and F2', () => {
     expect(COLLECTION_TRANSLATION_COLUMNS.map((c) => `${c.key}→${c.column}`)).toEqual([
       'subtitle→subtitle',
       'intro_text→introduction',
       'introduction→introduction',
       'duration→duration',
+      'cover_images→cover_caption',
     ]);
   });
 });
@@ -108,7 +109,7 @@ describe('CollectionTranslationColumnsImporter', () => {
     extra,
   });
 
-  it('asks for the four keys and writes each row once', async () => {
+  it('asks for every key and writes each row once', async () => {
     findMock.mockResolvedValue([
       row('t1', { subtitle: 'S', legacy_exhibition: { show: 'y' } }),
       row('t2', { duration: 'One day' }),
@@ -118,7 +119,7 @@ describe('CollectionTranslationColumnsImporter', () => {
 
     expect(result.success).toBe(true);
     expect(result.imported).toBe(2);
-    expect(findMock).toHaveBeenCalledWith(['subtitle', 'intro_text', 'introduction', 'duration']);
+    expect(findMock).toHaveBeenCalledWith(['subtitle', 'intro_text', 'introduction', 'duration', 'cover_images']);
     expect(setMock.mock.calls).toEqual([
       ['t1', { subtitle: 'S' }, JSON.stringify({ legacy_exhibition: { show: 'y' } })],
       ['t2', { duration: 'One day' }, null],

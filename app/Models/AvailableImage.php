@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Contracts\StreamableImageFile;
+use App\Traits\HasImageTranslations;
 use Database\Factories\AvailableImageFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,7 @@ class AvailableImage extends Model implements StreamableImageFile
     /** @use HasFactory<AvailableImageFactory> */
     use HasFactory;
 
+    use HasImageTranslations;
     use HasUuids;
 
     protected $fillable = [

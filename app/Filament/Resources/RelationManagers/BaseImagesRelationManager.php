@@ -7,7 +7,10 @@ use App\Contracts\StreamableImageFile;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Models\AvailableImage;
 use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -225,6 +228,33 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->nullable()
                             ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
                         ...$this->extraImageFormFields(),
+                        // The image's texts per language (M16 F2). The alt text
+                        // above has no language; these each have one.
+                        Section::make('Translations')
+                            ->schema([
+                                Repeater::make('translations')
+                                    ->hiddenLabel()
+                                    ->relationship()
+                                    ->schema([
+                                        Select::make('language_id')
+                                            ->label('Language')
+                                            ->relationship('language', 'internal_name')
+                                            ->searchable()
+                                            ->required()
+                                            ->distinct(),
+                                        Textarea::make('caption')
+                                            ->rows(2)
+                                            ->columnSpanFull(),
+                                        TextInput::make('name'),
+                                        TextInput::make('date'),
+                                        TextInput::make('museum'),
+                                        TextInput::make('location'),
+                                    ])
+                                    ->columns(2)
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add a language'),
+                            ])
+                            ->collapsible(),
                     ]),
                 Action::make('detach')
                     ->label('Detach')

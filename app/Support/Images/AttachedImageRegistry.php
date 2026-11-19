@@ -4,6 +4,7 @@ namespace App\Support\Images;
 
 use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
+use App\Models\AvailableImage;
 use App\Models\CollectionImage;
 use App\Models\ContributorImage;
 use App\Models\ItemImage;
@@ -14,6 +15,7 @@ use App\Models\PublicationImage;
 use App\Models\TimelineEventImage;
 use App\Traits\DeletesImageFilesOnDelete;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 class AttachedImageRegistry
 {
@@ -48,6 +50,23 @@ class AttachedImageRegistry
         self::validate();
 
         return self::MODELS;
+    }
+
+    /**
+     * Each registered model under its morph alias, the singular of its table
+     * (`item_images` -> `item_image`), plus AvailableImage, whose row an image
+     * becomes when detached. An ImageTranslation names its image this way.
+     *
+     * @return array<string, class-string<Model>>
+     */
+    public static function morphAliases(): array
+    {
+        $aliases = ['available_image' => AvailableImage::class];
+        foreach (self::modelClasses() as $class) {
+            $aliases[Str::singular((new $class)->getTable())] = $class;
+        }
+
+        return $aliases;
     }
 
     /**

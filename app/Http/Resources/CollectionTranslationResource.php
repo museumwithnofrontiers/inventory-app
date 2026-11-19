@@ -44,6 +44,8 @@ class CollectionTranslationResource extends JsonResource
             'quote' => $this->quote,
             // A trail's duration, as written, e.g. "One day" (optional)
             'duration' => $this->duration,
+            // The cover picture's caption, as written
+            'cover_caption' => $this->cover_caption,
             // The URL for the collection translation
             'url' => $this->url,
             // The Id(s) of matching resource in the legacy system (if any).

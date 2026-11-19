@@ -6,6 +6,7 @@ use App\Contracts\HasCopyright;
 use App\Contracts\StreamableImageFile;
 use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
+use App\Traits\HasImageTranslations;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\PartnerLogoFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +19,7 @@ use Illuminate\Support\Facades\Config;
 class PartnerLogo extends Model implements HasCopyright, StreamableImageFile
 {
     /** @use HasFactory<PartnerLogoFactory> */
-    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasImageTranslations, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.

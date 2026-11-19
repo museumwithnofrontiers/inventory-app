@@ -117,6 +117,11 @@ class CollectionTranslationResource extends Resource
                             ->helperText('A trail\'s duration, as written.')
                             ->nullable()
                             ->maxLength(255),
+                        Textarea::make('cover_caption')
+                            ->label('Cover caption')
+                            ->helperText('The cover picture\'s caption, as written.')
+                            ->rows(3)
+                            ->columnSpanFull(),
                     ])
                     ->columns(2),
 
@@ -162,6 +167,7 @@ class CollectionTranslationResource extends Resource
                         TextEntry::make('url'),
                         TranslationInfolistSchema::rtlTextEntry('subtitle'),
                         TranslationInfolistSchema::rtlTextEntry('duration'),
+                        TranslationInfolistSchema::markdownEntry('cover_caption', 'Cover caption', columnSpanFull: true),
                         TranslationInfolistSchema::markdownEntry('description', columnSpanFull: true),
                         TranslationInfolistSchema::markdownEntry('introduction', columnSpanFull: true),
                         TranslationInfolistSchema::markdownEntry('quote', columnSpanFull: true),

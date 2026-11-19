@@ -20,6 +20,7 @@ import type {
   PictureParentImageRow,
 } from '../utils/picture-credits.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
+import type { ImageTextData, ImageTextRow } from '../utils/image-texts.js';
 import type { IWriteStrategy } from '../core/strategy.js';
 import type {
   EntityType,
@@ -2078,6 +2079,75 @@ export class SqlWriteStrategy implements IWriteStrategy {
       `UPDATE collection_translations SET extra = ?, updated_at = ? WHERE id = ?`,
       [extra, this.now, id]
     );
+  }
+
+  async findImageTextRows(): Promise<ImageTextRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT ct.id, ct.collection_id, c.backward_compatibility AS collection_key, ct.extra
+       FROM collection_translations ct JOIN collections c ON c.id = ct.collection_id
+       WHERE ct.extra IS NOT NULL
+         AND JSON_CONTAINS_PATH(ct.extra, 'one', '$.image_captions', '$.map_descriptions')
+       ORDER BY ct.collection_id, ct.id`
+    );
+    return rows.map((row) => ({
+      id: row.id as string,
+      collection_id: row.collection_id as string,
+      collection_key: (row.collection_key as string | null) ?? null,
+      extra: (typeof row.extra === 'string' ? JSON.parse(row.extra) : row.extra) as Record<
+        string,
+        unknown
+      >,
+    }));
+  }
+
+  async findCollectionImagePaths(
+    collectionIds: readonly string[]
+  ): Promise<
+    Array<{ id: string; collection_id: string; path: string; original_name: string | null }>
+  > {
+    if (collectionIds.length === 0) return [];
+    const marks = collectionIds.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, collection_id, path, original_name FROM collection_images
+       WHERE collection_id IN (${marks}) ORDER BY collection_id, id`,
+      [...collectionIds]
+    );
+    return rows.map((row) => ({
+      id: row.id as string,
+      collection_id: row.collection_id as string,
+      path: row.path as string,
+      original_name: (row.original_name as string | null) ?? null,
+    }));
+  }
+
+  async upsertImageTranslation(data: ImageTextData & { image_type: string }): Promise<string> {
+    // The texts were sanitized when they were first written: copied as stored.
+    const id = deterministicUuid(
+      `image_translation:${data.backward_compatibility.toLowerCase()}:${data.language_id}`
+    );
+    await this.db.execute(
+      `INSERT INTO image_translations (id, image_type, image_id, language_id, caption, name, date,
+                                       museum, location, backward_compatibility, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE caption = VALUES(caption), name = VALUES(name), date = VALUES(date),
+         museum = VALUES(museum), location = VALUES(location),
+         backward_compatibility = VALUES(backward_compatibility), updated_at = VALUES(updated_at)`,
+      [
+        id,
+        data.image_type,
+        data.image_id,
+        data.language_id,
+        data.caption,
+        data.name,
+        data.date,
+        data.museum,
+        data.location,
+        data.backward_compatibility,
+        this.now,
+        this.now,
+      ]
+    );
+    return id;
   }
 
   async findItemTranslationsWithExtraKeys(

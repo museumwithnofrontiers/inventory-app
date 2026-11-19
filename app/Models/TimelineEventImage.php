@@ -7,6 +7,7 @@ use App\Contracts\DetachableImage;
 use App\Contracts\StreamableImageFile;
 use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
+use App\Traits\HasImageTranslations;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\TimelineEventImageFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Storage;
 class TimelineEventImage extends Model implements BurnsCopyright, DetachableImage, StreamableImageFile
 {
     /** @use HasFactory<TimelineEventImageFactory> */
-    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasImageTranslations, HasUuids, ResolvesCopyright;
 
     protected $fillable = [
         'timeline_event_id',

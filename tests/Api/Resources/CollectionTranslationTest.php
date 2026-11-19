@@ -81,13 +81,16 @@ class CollectionTranslationTest extends TestCase
             'subtitle' => 'From Damascus to Cairo',
             'introduction' => "The trail follows the **Mamluk** road.\n\nIt starts at the citadel.",
             'duration' => 'One day',
+            'cover_caption' => 'Title: Two Musician Girls (detail)  
+Author: Osman Hamdi Bey',
         ];
 
         $this->putJson(route('collection-translation.update', $resource), $texts)
             ->assertOk()
             ->assertJsonPath('data.subtitle', $texts['subtitle'])
             ->assertJsonPath('data.introduction', $texts['introduction'])
-            ->assertJsonPath('data.duration', $texts['duration']);
+            ->assertJsonPath('data.duration', $texts['duration'])
+            ->assertJsonPath('data.cover_caption', $texts['cover_caption']);
 
         $this->assertDatabaseHas('collection_translations', ['id' => $resource->id] + $texts);
     }

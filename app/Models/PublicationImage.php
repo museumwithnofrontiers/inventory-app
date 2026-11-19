@@ -8,6 +8,7 @@ use App\Contracts\StreamableImageFile;
 use App\Enums\PublicationImageKind;
 use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
+use App\Traits\HasImageTranslations;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\PublicationImageFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -46,7 +47,7 @@ use Illuminate\Support\Facades\Storage;
 class PublicationImage extends Model implements BurnsCopyright, DetachableImage, StreamableImageFile
 {
     /** @use HasFactory<PublicationImageFactory> */
-    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasImageTranslations, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.
