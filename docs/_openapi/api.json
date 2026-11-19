@@ -25267,6 +25267,21 @@
                         ],
                         "description": "A Travels itinerary's number of days"
                     },
+                    "visible": {
+                        "type": "boolean",
+                        "description": "Whether the sites show the collection (legacy's exhibition show flag, Explore theme status)"
+                    },
+                    "featured": {
+                        "type": "boolean",
+                        "description": "Whether a gallery is among the featured ones"
+                    },
+                    "published_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A gallery's live date (Y-m-d)"
+                    },
                     "created_at": {
                         "type": [
                             "string",
@@ -25413,6 +25428,9 @@
                     "extra",
                     "cover_item_id",
                     "days",
+                    "visible",
+                    "featured",
+                    "published_at",
                     "created_at",
                     "updated_at"
                 ],
@@ -29506,6 +29524,19 @@
                         ],
                         "minimum": 1,
                         "maximum": 365
+                    },
+                    "visible": {
+                        "type": "boolean"
+                    },
+                    "featured": {
+                        "type": "boolean"
+                    },
+                    "published_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "required": [
@@ -32720,6 +32751,19 @@
                         ],
                         "minimum": 1,
                         "maximum": 365
+                    },
+                    "visible": {
+                        "type": "boolean"
+                    },
+                    "featured": {
+                        "type": "boolean"
+                    },
+                    "published_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
                     }
                 },
                 "title": "UpdateCollectionRequest"
