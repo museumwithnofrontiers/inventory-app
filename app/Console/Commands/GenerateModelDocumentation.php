@@ -351,6 +351,14 @@ class GenerateModelDocumentation extends Command
         foreach ($methods as $method) {
             $methodName = $method->getName();
 
+            // Only a method declared to return a Relation is ever called. Calling
+            // any other public method on this blank model can write to the
+            // database: HasDisplayOrder::tightenOrdering() renumbers every
+            // sibling, detachToAvailableImage() creates an AvailableImage.
+            if (! $this->declaresRelation($method)) {
+                continue;
+            }
+
             // Skip magic methods, accessors, mutators, and other non-relationship methods
             if ($method->isStatic() ||
                 $method->getDeclaringClass()->getName() !== $reflection->getName() ||
@@ -408,6 +416,27 @@ class GenerateModelDocumentation extends Command
         }
 
         return $relationships;
+    }
+
+    /**
+     * Whether the method declares a Relation (or a subclass) as its return
+     * type, or, when it has no return type (Laravel's Notifiable trait), names
+     * one in its docblock's `@return`.
+     */
+    private function declaresRelation(\ReflectionMethod $method): bool
+    {
+        $type = $method->getReturnType();
+        if ($type instanceof \ReflectionNamedType && ! $type->isBuiltin()) {
+            return is_a($type->getName(), Relation::class, true);
+        }
+        if ($type !== null) {
+            return false;
+        }
+
+        $doc = $method->getDocComment();
+
+        return is_string($doc)
+            && preg_match('/@return\s+\\\\?Illuminate\\\\Database\\\\Eloquent\\\\Relations\\\\\w+/', $doc) === 1;
     }
 
     /**
