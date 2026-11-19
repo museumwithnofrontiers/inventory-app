@@ -34,6 +34,8 @@ class PartnerLogo extends Model implements HasCopyright, StreamableImageFile
         'logo_type',
         'alt_text',
         'copyright',
+        'photographer',
+        'credit',
         'display_order',
     ];
 

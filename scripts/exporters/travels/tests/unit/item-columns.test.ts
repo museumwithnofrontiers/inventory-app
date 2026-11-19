@@ -127,11 +127,63 @@ describe('the column list', () => {
       'patrons→patrons',
       'architects→architects',
     ])
-    expect(itemColumnsSelect('it')).toBe(
-      'it.materials, it.short_description, it.dynasty, it.region, it.history, it.author_credit, it.copy_editor_credit, ' +
-        'it.translator_credit, it.translation_copy_editor_credit, it.keywords, it.artist, it.artist_period_of_activity, ' +
-        'it.artist_birth_date, it.artist_birth_place, it.artist_death_date, it.artist_death_place, it.workshop, it.scribe, ' +
-        'it.patrons, it.architects, it.backward_compatibility AS item_columns_source'
-    )
+    expect(
+      itemColumnsSelect('it').startsWith(
+        'it.materials, it.short_description, it.dynasty, it.region, it.history, it.author_credit, it.copy_editor_credit, ' +
+          'it.translator_credit, it.translation_copy_editor_credit, it.keywords, it.artist, it.artist_period_of_activity, ' +
+          'it.artist_birth_date, it.artist_birth_place, it.artist_death_date, it.artist_death_place, it.workshop, it.scribe, ' +
+          'it.patrons, it.architects, it.backward_compatibility AS item_columns_source, '
+      )
+    ).toBe(true)
+    // F1: the picture image's fields, read through the translation's item.
+    expect(itemColumnsSelect('it')).toContain('WHERE ic_ii.item_id = it.item_id')
+    expect(itemColumnsSelect('it')).toContain("JSON_CONTAINS_PATH(ic_t.extra, 'one', '$.photographer')) AS item_columns_picture_photographer_kept")
+  })
+})
+
+describe("a picture's photographer and credit (F1)", () => {
+  const picture = (fields: Record<string, unknown>) => ({
+    item_id: 'pic-1',
+    extra: '{"legacy_type": "d"}',
+    item_columns_picture_photographer: null,
+    item_columns_picture_credit: null,
+    item_columns_picture_copyright: null,
+    item_columns_picture_photographer_kept: 0,
+    item_columns_picture_copyright_kept: 0,
+    ...fields,
+  })
+
+  it("go back from the image, the copyright without the importer's mark, in MySQL JSON order", () => {
+    const [row] = restoreItemColumns([
+      picture({ item_columns_picture_photographer: 'Ana', item_columns_picture_copyright: '© Museo X' }),
+    ])
+    expect(row).toEqual({ item_id: 'pic-1', extra: { copyright: 'Museo X', legacy_type: 'd', photographer: 'Ana' } })
+    expect(Object.keys(row!.extra as unknown as Record<string, unknown>)).toEqual(['copyright', 'legacy_type', 'photographer'])
+  })
+
+  it('prints credit before copyright', () => {
+    const [row] = restoreItemColumns([
+      picture({ item_columns_picture_credit: 'Wikimedia Commons', item_columns_picture_copyright: null }),
+    ])
+    expect(row!.extra).toEqual({ copyright: 'Wikimedia Commons', legacy_type: 'd' })
+  })
+
+  it('leaves the rows of a picture that keeps its own texts as they are', () => {
+    const [row] = restoreItemColumns([
+      picture({
+        extra: '{"photographer": "Anna"}',
+        item_columns_picture_photographer: 'Ana',
+        item_columns_picture_copyright: '© Museo X',
+        item_columns_picture_photographer_kept: 1,
+        item_columns_picture_copyright_kept: 1,
+      }),
+    ])
+    expect(row).toEqual({ item_id: 'pic-1', extra: '{"photographer": "Anna"}' })
+  })
+
+  it("adds nothing to a row that isn't a picture's", () => {
+    const extra = '{"copyright": "Copyright image: Museo X"}'
+    const [row] = restoreItemColumns([picture({ extra })])
+    expect(row).toEqual({ item_id: 'pic-1', extra })
   })
 })

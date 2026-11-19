@@ -208,9 +208,20 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->integer()
                             ->nullable(),
                         TextInput::make('copyright')
-                            ->label('Copyright')
+                            ->label('Burned on the picture')
                             ->helperText('Leave blank to inherit from the owning project, or the site-wide default.')
                             ->maxLength(500)
+                            ->nullable()
+                            ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
+                        TextInput::make('credit')
+                            ->label('Picture credit')
+                            ->helperText('The picture\'s own credit where it is not the text burned on it. The sheets print it instead.')
+                            ->maxLength(500)
+                            ->nullable()
+                            ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
+                        TextInput::make('photographer')
+                            ->label('Photographer')
+                            ->maxLength(255)
                             ->nullable()
                             ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
                         ...$this->extraImageFormFields(),

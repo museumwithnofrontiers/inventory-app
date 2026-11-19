@@ -31,6 +31,8 @@ class UpdateCollectionImageRequest extends FormRequest
             'mime_type' => ['sometimes', 'string', 'max:100', 'regex:/^[a-zA-Z0-9][a-zA-Z0-9!#$&\-\^_]*\/[a-zA-Z0-9][a-zA-Z0-9!#$&\-\^_.]*$/'],
             'size' => ['sometimes', 'integer', 'min:1'],
             'alt_text' => ['sometimes', 'nullable', 'string', 'max:500'],
+            'photographer' => ['sometimes', 'nullable', 'string', 'max:255'],
+            'credit' => ['sometimes', 'nullable', 'string', 'max:500'],
             'display_order' => ['sometimes', 'integer', 'min:1'],
             'include' => ['sometimes', 'string', new IncludeRule('collectionImage')],
         ];

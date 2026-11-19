@@ -36,6 +36,8 @@ use Illuminate\Support\Facades\Storage;
  * @property int $size
  * @property string|null $alt_text
  * @property string|null $copyright
+ * @property string|null $photographer
+ * @property string|null $credit
  * @property int $display_order
  * @property array<string, mixed>|null $extra
  * @property Carbon|null $created_at
@@ -61,6 +63,8 @@ class PublicationImage extends Model implements BurnsCopyright, DetachableImage,
         'size',
         'alt_text',
         'copyright',
+        'photographer',
+        'credit',
         'display_order',
         'extra',
     ];
@@ -154,6 +158,8 @@ class PublicationImage extends Model implements BurnsCopyright, DetachableImage,
                 'size' => $availableImage->size ?? 0,
                 'alt_text' => $altText ?? $availableImage->comment,
                 'copyright' => $availableImage->copyright,
+                'photographer' => $availableImage->photographer,
+                'credit' => $availableImage->credit,
                 'display_order' => $displayOrder,
             ]));
 
@@ -186,6 +192,8 @@ class PublicationImage extends Model implements BurnsCopyright, DetachableImage,
                 'size' => $this->size ?: null,
                 'comment' => $this->alt_text,
                 'copyright' => $this->copyright,
+                'photographer' => $this->photographer,
+                'credit' => $this->credit,
             ]));
 
             // The row is deleted to recreate it as an AvailableImage above,

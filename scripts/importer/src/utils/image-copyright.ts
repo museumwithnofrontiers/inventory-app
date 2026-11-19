@@ -71,7 +71,7 @@ const MWNF3_PROJECT_COPYRIGHT: Readonly<Record<string, string>> = {
  * Legacy printed these projects' line on every picture and never read the
  * picture's own copyright.
  */
-const PROJECTS_OVERRIDING_PICTURES: ReadonlySet<string> = new Set(['ISL', 'IAM']);
+export const PROJECTS_OVERRIDING_PICTURES: ReadonlySet<string> = new Set(['ISL', 'IAM']);
 
 /** Legacy's line for a Sharing History picture with no copyright of its own. */
 export const SHARING_HISTORY_COPYRIGHT = '© MWNF | Sharing History';

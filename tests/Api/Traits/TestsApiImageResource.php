@@ -120,6 +120,8 @@ trait TestsApiImageResource
 
         // Modify only the fields we want to test
         $updateData['alt_text'] = 'Updated alt text';
+        $updateData['photographer'] = 'Updated photographer';
+        $updateData['credit'] = 'Updated credit';
 
         if ($this->hasColumn('display_order')) {
             $updateData['display_order'] = 99;
@@ -128,7 +130,9 @@ trait TestsApiImageResource
         $response = $this->patchJson(route($this->getResourceName().'.update', $image), $updateData);
 
         $response->assertOk()
-            ->assertJsonPath('data.id', $image->id);
+            ->assertJsonPath('data.id', $image->id)
+            ->assertJsonPath('data.photographer', 'Updated photographer')
+            ->assertJsonPath('data.credit', 'Updated credit');
 
         if (isset($updateData['alt_text'])) {
             $response->assertJsonPath('data.alt_text', 'Updated alt text');

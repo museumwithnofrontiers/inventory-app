@@ -29,6 +29,8 @@ class UpdateAvailableImageRequest extends FormRequest
             'mime_type' => ['prohibited'],
             'size' => ['prohibited'],
             'comment' => ['nullable', 'string'],
+            'photographer' => ['nullable', 'string', 'max:255'],
+            'credit' => ['nullable', 'string', 'max:500'],
         ];
     }
 }

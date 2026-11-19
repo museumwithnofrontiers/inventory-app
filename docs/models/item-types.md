@@ -60,4 +60,4 @@ The M16 stories add columns and links where `extra` held content (ADR 006):
 | B4 #2638 | `author_credit`, `copy_editor_credit`, `translator_credit`, `translation_copy_editor_credit` | objects, monuments |
 | B6 #2640 | `status`: published, unedited, hidden | every type |
 | D1 #2645 | VisitInformation (its own model) | monuments |
-| F1 #2651 | `photographer` and `credit` on the image, not the translation | pictures' images |
+| F1 #2651 | `photographer` and `credit` on the image, not the translation (`copyright` stays the text burned on it); a picture whose language rows differ keeps its texts on the translations until reviewed | pictures' images |

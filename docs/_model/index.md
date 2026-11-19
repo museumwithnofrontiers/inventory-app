@@ -269,13 +269,15 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `comment` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
 
 ### Fillable Fields
 
 ```php
-['path', 'original_name', 'mime_type', 'size', 'comment', 'copyright']
+['path', 'original_name', 'mime_type', 'size', 'comment', 'copyright', 'photographer', 'credit']
 ```
 
 ### Attribute Casting
@@ -443,6 +445,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -451,7 +455,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['collection_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order', 'extra']
+['collection_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order', 'extra']
 ```
 
 ### Attribute Casting
@@ -857,6 +861,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -864,7 +870,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['contributor_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
+['contributor_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order']
 ```
 
 ### Attribute Casting
@@ -1631,6 +1637,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -1638,7 +1646,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
+['item_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order']
 ```
 
 ### Attribute Casting
@@ -2218,6 +2226,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -2226,7 +2236,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order', 'extra']
+['partner_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order', 'extra']
 ```
 
 ### Attribute Casting
@@ -2278,6 +2288,8 @@ const UPDATED_AT = 'updated_at';
 | `logo_type` | varchar | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2285,7 +2297,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_id', 'path', 'original_name', 'mime_type', 'size', 'logo_type', 'alt_text', 'copyright', 'display_order']
+['partner_id', 'path', 'original_name', 'mime_type', 'size', 'logo_type', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order']
 ```
 
 ### Attribute Casting
@@ -2422,6 +2434,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | text | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2429,7 +2443,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_translation_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
+['partner_translation_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order']
 ```
 
 ### Attribute Casting
@@ -2819,6 +2833,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -2827,7 +2843,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['publication_id', 'publication_edition_id', 'kind', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order', 'extra']
+['publication_id', 'publication_edition_id', 'kind', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order', 'extra']
 ```
 
 ### Attribute Casting
@@ -3231,6 +3247,8 @@ const UPDATED_AT = 'updated_at';
 | `size` | bigint | Unknown | Unknown |  |
 | `alt_text` | varchar | Unknown | Unknown |  |
 | `copyright` | varchar | Unknown | Unknown |  |
+| `photographer` | varchar | Unknown | Unknown |  |
+| `credit` | varchar | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -3238,7 +3256,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['timeline_event_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'display_order']
+['timeline_event_id', 'path', 'original_name', 'mime_type', 'size', 'alt_text', 'copyright', 'photographer', 'credit', 'display_order']
 ```
 
 ### Attribute Casting

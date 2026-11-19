@@ -27,6 +27,10 @@ class PartnerTranslationImageResource extends JsonResource
             'mime_type' => $this->mime_type,
             'size' => $this->size,
             'alt_text' => $this->alt_text,
+            // The picture's photographer, if any
+            'photographer' => $this->photographer,
+            // The picture's own credit where it is not the text burned on it
+            'credit' => $this->credit,
             'display_order' => $this->display_order,
             // Relationships
             'partner_translation' => new PartnerTranslationResource($this->whenLoaded('partnerTranslation')),

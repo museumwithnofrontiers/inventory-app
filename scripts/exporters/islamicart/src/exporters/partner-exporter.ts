@@ -53,6 +53,7 @@ interface PartnerImageRow {
   alt_text: string | null
   display_order: number
   copyright: string | null
+  photographer: string | null
   extra: unknown
 }
 
@@ -167,7 +168,7 @@ export class PartnerExporter extends BaseExporter {
         partnerIds
       ),
       this.db.query<PartnerImageRow>(
-        `SELECT partner_id, path, alt_text, display_order, copyright, extra
+        `SELECT partner_id, path, alt_text, display_order, copyright, photographer, extra
          FROM partner_images
          WHERE partner_id IN (${partnerPh})
          ORDER BY partner_id, display_order`,
@@ -281,7 +282,7 @@ export class PartnerExporter extends BaseExporter {
         url: this.imageUrl(img.path),
         alt_text: img.alt_text,
         display_order: img.display_order,
-        photographer: extra?.photographer ?? null,
+        photographer: img.photographer ?? extra?.photographer ?? null,
         // The column holds legacy's text with the mark the burn adds (M16 I4, #2659).
         copyright: extra?.copyright ?? withoutCopyrightMark(img.copyright),
       })

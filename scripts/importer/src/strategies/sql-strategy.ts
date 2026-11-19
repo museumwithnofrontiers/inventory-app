@@ -14,6 +14,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { deterministicUuid } from '../utils/deterministic-uuid.js';
 import { ITEM_TRANSLATION_COLUMNS } from '../utils/item-translation-columns.js';
 import { COLLECTION_TRANSLATION_COLUMNS } from '../utils/collection-translation-columns.js';
+import type { PictureCreditRow, PictureParentImageRow } from '../utils/picture-credits.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { IWriteStrategy } from '../core/strategy.js';
 import type {
@@ -1521,8 +1522,8 @@ export class SqlWriteStrategy implements IWriteStrategy {
       this.computeImageId('publication_images', sanitized.publication_id, sanitized.path);
     try {
       await this.db.execute(
-        `INSERT INTO publication_images (id, publication_id, publication_edition_id, kind, path, original_name, mime_type, size, alt_text, copyright, display_order, extra, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        `INSERT INTO publication_images (id, publication_id, publication_edition_id, kind, path, original_name, mime_type, size, alt_text, copyright, photographer, display_order, extra, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
         [
           id,
           sanitized.publication_id,
@@ -1534,6 +1535,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
           data.size,
           sanitized.alt_text ?? null,
           sanitized.copyright ?? null,
+          sanitized.photographer ?? null,
           data.display_order,
           sanitized.extra ?? null,
           this.now,
@@ -2124,6 +2126,110 @@ export class SqlWriteStrategy implements IWriteStrategy {
     await this.db.execute(
       `UPDATE collection_translations SET ${sets}${sets ? ', ' : ''}extra = ?, updated_at = ? WHERE id = ?`,
       [...names.map((name) => columns[name]!), extra, this.now, id]
+    );
+  }
+
+  async findPictureCreditRows(): Promise<PictureCreditRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT it.id, it.item_id, it.language_id, it.extra,
+              ii.id AS image_id, ii.copyright AS image_copyright,
+              ii.photographer AS image_photographer, ii.credit AS image_credit,
+              p.backward_compatibility AS project_key
+       FROM item_translations it
+       JOIN items i ON i.id = it.item_id AND i.type = 'picture'
+       JOIN item_images ii ON ii.item_id = i.id
+       LEFT JOIN projects p ON p.id = i.project_id
+       WHERE it.item_id IN (
+         SELECT t.item_id FROM item_translations t
+         WHERE t.extra IS NOT NULL
+           AND JSON_CONTAINS_PATH(t.extra, 'one', '$.photographer', '$.copyright')
+       )
+       ORDER BY it.item_id, it.language_id, it.id, ii.id`
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        item_id: row.item_id as string,
+        language_id: row.language_id as string,
+        extra: (raw === null ? null : typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<
+          string,
+          unknown
+        > | null,
+        image_id: row.image_id as string,
+        image_copyright: (row.image_copyright as string | null) ?? null,
+        image_photographer: (row.image_photographer as string | null) ?? null,
+        image_credit: (row.image_credit as string | null) ?? null,
+        project_key: (row.project_key as string | null) ?? null,
+      };
+    });
+  }
+
+  async setItemImagePictureCredit(
+    id: string,
+    photographer: string | null,
+    credit: string | null,
+    clearCopyright: boolean
+  ): Promise<void> {
+    await this.db.execute(
+      `UPDATE item_images SET photographer = ?, credit = ?${clearCopyright ? ', copyright = NULL' : ''}, updated_at = ? WHERE id = ?`,
+      [photographer, credit, this.now, id]
+    );
+  }
+
+  async findPictureParentImages(): Promise<PictureParentImageRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT pi.id AS parent_image_id, pi.photographer AS parent_photographer,
+              pi.credit AS parent_credit, pi.copyright AS parent_copyright,
+              MIN(ii.photographer) AS photographer, MIN(ii.credit) AS credit,
+              MIN(p.backward_compatibility) AS project_key
+       FROM item_images pi
+       JOIN items par ON par.id = pi.item_id AND par.type <> 'picture'
+       JOIN items pic ON pic.parent_id = par.id AND pic.type = 'picture'
+       -- The legacy source path: image-sync gives each row its own file name.
+       JOIN item_images ii ON ii.item_id = pic.id AND ii.original_name = pi.original_name
+       LEFT JOIN projects p ON p.id = pic.project_id
+       WHERE ii.photographer IS NOT NULL OR ii.credit IS NOT NULL
+          OR pi.photographer IS NOT NULL OR pi.credit IS NOT NULL
+       GROUP BY pi.id, pi.photographer, pi.credit, pi.copyright
+       ORDER BY pi.id`
+    );
+    return rows.map((row) => ({
+      parent_image_id: row.parent_image_id as string,
+      parent_photographer: (row.parent_photographer as string | null) ?? null,
+      parent_credit: (row.parent_credit as string | null) ?? null,
+      parent_copyright: (row.parent_copyright as string | null) ?? null,
+      photographer: (row.photographer as string | null) ?? null,
+      credit: (row.credit as string | null) ?? null,
+      project_key: (row.project_key as string | null) ?? null,
+    }));
+  }
+
+  async findPartnerImagesWithPhotographer(): Promise<
+    Array<{ id: string; extra: Record<string, unknown> }>
+  > {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, extra FROM partner_images
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', '$.photographer')
+       ORDER BY id`
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async setPartnerImagePhotographer(
+    id: string,
+    photographer: string,
+    extra: string | null
+  ): Promise<void> {
+    await this.db.execute(
+      'UPDATE partner_images SET photographer = ?, extra = ?, updated_at = ? WHERE id = ?',
+      [photographer, extra, this.now, id]
     );
   }
 

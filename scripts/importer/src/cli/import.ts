@@ -164,6 +164,7 @@ import {
   CollectionCreditsImporter,
   ItemTranslationColumnsImporter,
   CollectionTranslationColumnsImporter,
+  PictureCreditsImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1249,6 +1250,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: CollectionTranslationColumnsImporter,
     // The exhibition, trail and itinerary importers of four databases write
     // these keys, and later steps move translations between contexts.
+    runsLast: true,
+  },
+  {
+    key: 'picture-credits',
+    name: 'Picture Credits',
+    description:
+      "Move a picture's photographer and own credit from item_translations.extra to its image row (photographer, credit), and partner_images.extra.photographer to its column, after every importer that writes them (M16 F1 #2651)",
+    importerClass: PictureCreditsImporter,
+    // The picture importers of every legacy database write these keys, and
+    // later steps move translations between contexts.
     runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)

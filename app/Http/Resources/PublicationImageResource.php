@@ -34,6 +34,10 @@ class PublicationImageResource extends BaseJsonResource
             'size' => $this->resource->size,
             // Alternative text for accessibility
             'alt_text' => $this->resource->alt_text,
+            // The picture's photographer, if any
+            'photographer' => $this->resource->photographer,
+            // The picture's own credit where it is not the text burned on it
+            'credit' => $this->resource->credit,
             // The image's own copyright, if any (else the project's, else the global one)
             'copyright' => $this->resource->copyright,
             // Display order for sorting images

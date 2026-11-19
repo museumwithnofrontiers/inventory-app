@@ -37,6 +37,8 @@ class ItemImage extends Model implements BurnsCopyright, DetachableImage, Stream
         'size',
         'alt_text',
         'copyright',
+        'photographer',
+        'credit',
         'display_order',
     ];
 
@@ -168,6 +170,8 @@ class ItemImage extends Model implements BurnsCopyright, DetachableImage, Stream
                 'size' => $availableImage->size ?? 0,
                 'alt_text' => $altText ?? $availableImage->comment,
                 'copyright' => $availableImage->copyright,
+                'photographer' => $availableImage->photographer,
+                'credit' => $availableImage->credit,
                 'display_order' => $displayOrder,
             ]));
 
@@ -200,6 +204,8 @@ class ItemImage extends Model implements BurnsCopyright, DetachableImage, Stream
                 'size' => $this->size ?: null,
                 'comment' => $this->alt_text,
                 'copyright' => $this->copyright,
+                'photographer' => $this->photographer,
+                'credit' => $this->credit,
             ]));
 
             // The row is deleted to recreate it as an AvailableImage above,

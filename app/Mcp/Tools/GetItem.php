@@ -16,7 +16,7 @@ use Laravel\Mcp\Server\Attributes\Name;
 use Laravel\Mcp\Server\Tools\Annotations\IsReadOnly;
 
 #[Name('get_item')]
-#[Description('An item sheet, like the websites show it: the item with its translations (per language and context), images (public URL and copyright), partner, project, collections, tags, artists, workshops, dynasties, parent, children and links, and the legacy links (its pages on the legacy websites and back office). Look an item up by id, or by legacy key with find_by_legacy_key.')]
+#[Description('An item sheet, like the websites show it: the item with its translations (per language and context), images (public URL, burned copyright, picture credit and photographer), partner, project, collections, tags, artists, workshops, dynasties, parent, children and links, and the legacy links (its pages on the legacy websites and back office). Look an item up by id, or by legacy key with find_by_legacy_key.')]
 #[IsReadOnly]
 class GetItem extends InventoryTool
 {
@@ -54,6 +54,9 @@ class GetItem extends InventoryTool
                 'alt_text' => $image->alt_text,
                 'public_url' => route('pub.picture', ['filename' => $image->path]),
                 'copyright' => $image->resolveCopyright(),
+                // The picture's own credit where it is not the burned text, and its photographer
+                'credit' => $image->credit,
+                'photographer' => $image->photographer,
             ])->all(),
             // The same links the panel's "Legacy links" section shows
             'legacy_links' => array_map(

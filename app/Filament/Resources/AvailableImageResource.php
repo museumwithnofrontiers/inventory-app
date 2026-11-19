@@ -69,9 +69,20 @@ class AvailableImageResource extends Resource
                     ->maxLength(255)
                     ->nullable(),
                 TextInput::make('copyright')
-                    ->label('Copyright')
+                    ->label('Burned on the picture')
                     ->helperText('Leave blank to inherit from the owning project, or the site-wide default, once attached.')
                     ->maxLength(500)
+                    ->nullable()
+                    ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
+                TextInput::make('credit')
+                    ->label('Picture credit')
+                    ->helperText('The picture\'s own credit where it is not the text burned on it. The sheets print it instead.')
+                    ->maxLength(500)
+                    ->nullable()
+                    ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
+                TextInput::make('photographer')
+                    ->label('Photographer')
+                    ->maxLength(255)
                     ->nullable()
                     ->dehydrateStateUsing(fn (?string $state): ?string => filled($state) ? $state : null),
             ]);
@@ -100,6 +111,15 @@ class AvailableImageResource extends Resource
                             ->numeric(),
                         TextEntry::make('comment')
                             ->label('Comment / Alt text'),
+                        TextEntry::make('copyright')
+                            ->label('Burned on the picture')
+                            ->placeholder('Inherited once attached'),
+                        TextEntry::make('credit')
+                            ->label('Picture credit')
+                            ->placeholder('—'),
+                        TextEntry::make('photographer')
+                            ->label('Photographer')
+                            ->placeholder('—'),
                     ])
                     ->columns(2),
                 InfolistSection::make('System Information')

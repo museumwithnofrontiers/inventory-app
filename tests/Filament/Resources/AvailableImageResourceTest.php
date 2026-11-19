@@ -106,6 +106,41 @@ class AvailableImageResourceTest extends TestCase
         ]);
     }
 
+    public function test_available_image_can_be_edited_with_picture_credit_and_photographer(): void
+    {
+        Storage::fake('local');
+        Storage::fake('public');
+
+        $user = $this->createCrudUser();
+        $availableImage = AvailableImage::factory()->create([
+            'credit' => 'Original credit',
+            'photographer' => 'Original photographer',
+        ]);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(EditAvailableImage::class, [
+                'record' => $availableImage->getRouteKey(),
+            ])
+            ->assertFormSet([
+                'credit' => 'Original credit',
+                'photographer' => 'Original photographer',
+            ])
+            ->fillForm([
+                'credit' => 'Wikimedia Commons',
+                'photographer' => '',
+            ])
+            ->call('save')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('available_images', [
+            'id' => $availableImage->id,
+            'credit' => 'Wikimedia Commons',
+            'photographer' => null,
+        ]);
+    }
+
     public function test_available_image_copyright_stores_null_for_blank(): void
     {
         Storage::fake('local');

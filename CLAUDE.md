@@ -78,7 +78,7 @@ Never propose shortcuts or alternative flows.
 3. ImageUploadListener → validates, resizes, creates AvailableImage, deletes ImageUpload, dispatches AvailableImageEvent
 4. AvailableImageListener → moves the file from the uploads disk to the private originals disk
 5. Entities attach images with `attachFromAvailableImage()` and detach them with `detachToAvailableImage()`. Both exist on every `*Image` model: ItemImage, CollectionImage, PartnerImage, PartnerTranslationImage, ContributorImage, TimelineEventImage and PublicationImage (DetachableImage).
-   - Both are row swaps: the id, path and copyright carry over, and the original never moves.
+   - Both are row swaps: the id, path, copyright, photographer and credit carry over, and the original never moves.
    - Detaching also removes the burned rendition from the pictures cache.
 6. Deleting an attached image removes its original and its burned rendition (DeletesImageFilesOnDelete).
    - A row removed by a database cascade skips that hook.
@@ -93,6 +93,7 @@ Never propose shortcuts or alternative flows.
 - **Originals:** the admin panel (Filament) view and download serve the original (InlineImageResponse/DownloadImageResponse), as do the AvailableImage and PartnerLogo endpoints.
 - **PartnerLogo:** served at `/pub` but never burned. It doesn't implement BurnsCopyright, so `/pub` streams its original.
 - **Copyright resolution:** image → owning Project → "© Museum With No Frontiers" (HasCopyright/ResolvesCopyright).
+- **Picture credit:** `credit` holds the picture's own text where it is not the burned one (ISL and IAM pictures burn their project's line). It is metadata: never burned, never part of the ETag (ADR 006 Decision 3 (b)).
 
 **Hard prohibitions:**
 - Never write to the public disk outside the burn pipeline (only PublicRenditions writes the pictures cache)

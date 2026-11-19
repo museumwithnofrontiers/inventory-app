@@ -123,6 +123,47 @@ class EntityImagesRelationManagerTest extends TestCase
         ]);
     }
 
+    public function test_item_images_edit_action_updates_picture_credit_and_photographer(): void
+    {
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Object()->create();
+        $image = ItemImage::factory()->forItem($item)->create([
+            'path' => 'credit-item.jpg',
+            'copyright' => null,
+            'credit' => 'Old credit',
+            'photographer' => 'Old photographer',
+        ]);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(ItemImagesRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => EditItem::class,
+            ])
+            ->mountTableAction('edit', $image)
+            ->assertTableActionDataSet([
+                'credit' => 'Old credit',
+                'photographer' => 'Old photographer',
+            ])
+            ->setTableActionData([
+                'alt_text' => $image->alt_text,
+                'display_order' => $image->display_order,
+                'copyright' => '',
+                'credit' => 'Wikimedia Commons',
+                'photographer' => '',
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('item_images', [
+            'id' => $image->id,
+            'copyright' => null,
+            'credit' => 'Wikimedia Commons',
+            'photographer' => null,
+        ]);
+    }
+
     public function test_item_images_detach_action_moves_image_to_available_pool(): void
     {
         Storage::fake('public');

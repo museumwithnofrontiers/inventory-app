@@ -17,6 +17,9 @@ use Illuminate\Support\Facades\Config;
  * @property string|null $mime_type
  * @property int|null $size
  * @property string|null $comment
+ * @property string|null $copyright
+ * @property string|null $photographer
+ * @property string|null $credit
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -34,6 +37,8 @@ class AvailableImage extends Model implements StreamableImageFile
         'size',
         'comment',
         'copyright',
+        'photographer',
+        'credit',
     ];
 
     /**
