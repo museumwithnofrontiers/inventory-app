@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 56
+- ** Total Models:** 57
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
