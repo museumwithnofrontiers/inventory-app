@@ -11,40 +11,79 @@ use Illuminate\Support\Facades\Schema;
  * picture's own text where that is not the burned one, e.g. on ISL and IAM
  * pictures, which burn their project's line. Metadata only.
  *
- * A migration is a snapshot, so the tables are listed as they are today; a
- * test checks every AttachedImageRegistry table has both columns.
+ * One call per table, as the tables are today, so that Larastan reads the
+ * columns; a test checks every AttachedImageRegistry table has both.
  */
 return new class extends Migration
 {
-    /** @var list<string> */
-    private const TABLES = [
-        'available_images',
-        'item_images',
-        'collection_images',
-        'partner_images',
-        'partner_translation_images',
-        'contributor_images',
-        'timeline_event_images',
-        'publication_images',
-        'partner_logos',
-    ];
-
     public function up(): void
     {
-        foreach (self::TABLES as $tableName) {
-            Schema::table($tableName, function (Blueprint $table) {
-                $table->string('photographer')->nullable()->after('copyright');
-                $table->string('credit', 500)->nullable()->after('photographer');
-            });
-        }
+        Schema::table('available_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('item_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('collection_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('partner_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('partner_translation_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('contributor_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('timeline_event_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('publication_images', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
+        Schema::table('partner_logos', function (Blueprint $table) {
+            $table->string('photographer')->nullable()->after('copyright');
+            $table->string('credit', 500)->nullable()->after('photographer');
+        });
     }
 
     public function down(): void
     {
-        foreach (self::TABLES as $tableName) {
-            Schema::table($tableName, function (Blueprint $table) {
-                $table->dropColumn(['photographer', 'credit']);
-            });
-        }
+        Schema::table('available_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('item_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('collection_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('partner_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('partner_translation_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('contributor_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('timeline_event_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('publication_images', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
+        Schema::table('partner_logos', function (Blueprint $table) {
+            $table->dropColumn(['photographer', 'credit']);
+        });
     }
 };
