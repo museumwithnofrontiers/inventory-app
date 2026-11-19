@@ -518,7 +518,7 @@ const UPDATED_AT = 'updated_at';
 |----------|-------|
 | **Table Name** | `collection_item` |
 | **Primary Key** | `id` |
-| **Key Type** | Auto-incrementing Integer |
+| **Key Type** | String (UUID) |
 | **Incrementing** | No |
 | **Timestamps** | Yes (`created_at`, `updated_at`) |
 
@@ -526,9 +526,14 @@ const UPDATED_AT = 'updated_at';
 
 | Column | Type | Nullable | Default | Extra |
 |--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
 | `collection_id` | char | Unknown | Unknown |  |
 | `item_id` | char | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
+| `variant_order` | int | Unknown | Unknown |  |
+| `parent_variant_order` | int | Unknown | Unknown |  |
+| `picture_item_id` | char | Unknown | Unknown |  |
+| `curator_selected` | tinyint | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -536,7 +541,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['collection_id', 'item_id', 'display_order', 'extra']
+['collection_id', 'item_id', 'display_order', 'variant_order', 'parent_variant_order', 'picture_item_id', 'curator_selected', 'extra']
 ```
 
 ### Attribute Casting
@@ -544,6 +549,9 @@ const UPDATED_AT = 'updated_at';
 | Attribute | Cast Type |
 |-----------|-----------|
 | `display_order` | `integer` |
+| `variant_order` | `integer` |
+| `parent_variant_order` | `integer` |
+| `curator_selected` | `boolean` |
 | `extra` | `array` |
 
 ### Model Constants
@@ -558,6 +566,7 @@ const UPDATED_AT = 'updated_at';
 #### Belongs To
 - **`collection()`**: BelongsTo [Collection](#collection)
 - **`item()`**: BelongsTo [Item](#item)
+- **`picture()`**: BelongsTo [Item](#item)
 
 
 ## CollectionPartner {#collectionpartner}
