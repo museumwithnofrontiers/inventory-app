@@ -50,8 +50,6 @@ class ItemResource extends BaseJsonResource
             'collection' => new CollectionResource($this->whenLoaded('collection')),
             // Artists associated with this item (ArtistResource[])
             'artists' => ArtistResource::collection($this->whenLoaded('artists')),
-            // Workshops associated with this item (WorkshopResource[])
-            'workshops' => WorkshopResource::collection($this->whenLoaded('workshops')),
             // Tags associated with this item (TagResource[])
             'tags' => TagResource::collection($this->whenLoaded('tags')),
             // Dynasties associated with this item (DynastyResource[])

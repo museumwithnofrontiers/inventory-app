@@ -19,7 +19,6 @@ use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTranslationsRelationManager as ItemTranslationSiblingTranslationsRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\EditPartner;
@@ -44,7 +43,6 @@ use App\Models\Partner;
 use App\Models\Tag;
 use App\Models\TimelineEvent;
 use App\Models\User;
-use App\Models\Workshop;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
@@ -326,44 +324,6 @@ class AuthorizesRelationMutationsTest extends TestCase
             ])
             ->assertTableActionVisible('attach')
             ->assertTableActionVisible('detach', $artist)
-            ->assertTableBulkActionVisible('detach');
-    }
-
-    // ── Item: WorkshopsRelationManager (pivot) ──────────────────────────────
-
-    public function test_item_workshops_relation_manager_hides_mutations_for_view_only_user(): void
-    {
-        $item = Item::factory()->Object()->create();
-        $workshop = Workshop::factory()->create();
-        $user = $this->createViewOnlyUser();
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(WorkshopsRelationManager::class, [
-                'ownerRecord' => $item,
-                'pageClass' => EditItem::class,
-            ])
-            ->assertTableActionHidden('attach')
-            ->assertTableActionHidden('detach', $workshop)
-            ->assertTableBulkActionHidden('detach');
-    }
-
-    public function test_item_workshops_relation_manager_keeps_mutations_for_crud_user(): void
-    {
-        $item = Item::factory()->Object()->create();
-        $workshop = Workshop::factory()->create();
-        $user = $this->createCrudUser();
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(WorkshopsRelationManager::class, [
-                'ownerRecord' => $item,
-                'pageClass' => EditItem::class,
-            ])
-            ->assertTableActionVisible('attach')
-            ->assertTableActionVisible('detach', $workshop)
             ->assertTableBulkActionVisible('detach');
     }
 

@@ -34,7 +34,7 @@ Optional hooks add pre-fill values (`hasManyChildCreateExtra()`), narrow or cycl
 
 ## Pivot convention
 
-A pivot relation goes through a link table, for example `collection_item`, `collection_partner`, `timeline_event_item`, or the Item's tags, artists, workshops and dynasties.
+A pivot relation goes through a link table, for example `collection_item`, `collection_partner`, `timeline_event_item`, or the Item's tags, artists and dynasties.
 
 > **Header:** `Attach` (searchable record select + the pivot's metadata fields).
 > **Row:** `View` (related record) · `Edit` (modal on the pivot metadata only) · `Detach`.

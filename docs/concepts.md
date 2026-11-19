@@ -312,14 +312,15 @@ The API supports querying items by tags in two modes:
 
 ---
 
-## Artists and Workshops
+## Artists
 
-**Artists** and **Workshops** describe the _creation_ of an item.
+**Artists** describe the _creation_ of an item.
 
 - An **Artist** is a person who created or contributed to the creation of an item. An artist record stores biographical information (name, place and date of birth and death, period of activity).
-- A **Workshop** is a place or atelier where an item was created.
 
-Both are linked to items through many-to-many relationships. An item can have multiple artists and multiple workshops.
+Artists are linked to items through a many-to-many relationship. An item can have several artists.
+
+The artist, workshop, scribe, patron and architect lines that the sheets print are display texts on the item translation, as legacy wrote them. They are kept next to the Artist links, and neither is derived from the other (ADR 006).
 
 ---
 
@@ -426,7 +427,6 @@ Country ◄─── Item ◄─── ItemTranslation (language × context)
               ├── Children Items (self-referential)
               ├── Tags (many-to-many)
               ├── Artists (many-to-many)
-              ├── Workshops (many-to-many)
               └── ItemItemLink (source → target, with context)
 
 Collection ◄── CollectionTranslation (language × context)

@@ -14,7 +14,6 @@ use App\Models\Publication;
 use App\Models\Tag;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
-use App\Models\Workshop;
 use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\AssociateAction;
@@ -34,10 +33,10 @@ use Spatie\Permission\Models\Permission;
  * exists, ordered, capped at {@see self::RESULT_LIMIT} results, and never
  * preloaded.
  *
- * Tag, Artist, Author, Workshop, Glossary, Timeline and Publication have no
+ * Tag, Artist, Author, Glossary, Timeline and Publication have no
  * `*DisplayLabel` helper. Their label is the model's own natural name column:
  * Tag::description (TagResource's own `$recordTitleAttribute`),
- * Artist::name, Author::name, Workshop::name, Glossary::internal_name,
+ * Artist::name, Author::name, Glossary::internal_name,
  * Timeline::internal_name, Publication::internal_name — suffixed with the
  * legacy `backward_compatibility`
  * code the same way the display-label entities are, via
@@ -81,8 +80,6 @@ class RecordSelect
     public const ARTISTS = 'artists';
 
     public const AUTHORS = 'authors';
-
-    public const WORKSHOPS = 'workshops';
 
     public const DYNASTIES = 'dynasties';
 
@@ -352,35 +349,6 @@ class RecordSelect
         return self::requiredOrNullable($select, $required);
     }
 
-    public static function forWorkshops(string $name = 'workshop_id', string $label = 'Workshop', bool $required = true): Select
-    {
-        $select = Select::make($name)
-            ->label($label)
-            ->searchable()
-            ->getSearchResultsUsing(fn (string $search): array => Workshop::query()
-                ->where(function (Builder $query) use ($search): void {
-                    $query->where('id', 'like', "%{$search}%")
-                        ->orWhere('internal_name', 'like', "%{$search}%")
-                        ->orWhere('backward_compatibility', 'like', "%{$search}%");
-                })
-                ->orderBy('name')
-                ->limit(self::RESULT_LIMIT)
-                ->get()
-                ->mapWithKeys(fn (Workshop $workshop): array => [
-                    $workshop->id => self::legacyLabel($workshop->name, $workshop->backward_compatibility),
-                ])
-                ->all())
-            ->getOptionLabelUsing(function (mixed $value): string {
-                $workshop = Workshop::query()->whereKey($value)->first();
-
-                return $workshop instanceof Workshop
-                    ? self::legacyLabel($workshop->name, $workshop->backward_compatibility)
-                    : (is_scalar($value) ? (string) $value : '');
-            });
-
-        return self::requiredOrNullable($select, $required);
-    }
-
     public static function forDynasties(string $name = 'dynasty_id', string $label = 'Dynasty', bool $required = true): Select
     {
         $select = Select::make($name)
@@ -458,11 +426,6 @@ class RecordSelect
                 ->recordSelectSearchColumns(self::ID_NAME_INTERNAL_NAME_BC)
                 ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('name'), $scope))
                 ->recordTitle(fn (Author $record): string => self::legacyLabel($record->name, $record->backward_compatibility)),
-
-            self::WORKSHOPS => $action
-                ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
-                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('name'), $scope))
-                ->recordTitle(fn (Workshop $record): string => self::legacyLabel($record->name, $record->backward_compatibility)),
 
             self::DYNASTIES => $action
                 ->recordSelectSearchColumns(self::ID_BC)

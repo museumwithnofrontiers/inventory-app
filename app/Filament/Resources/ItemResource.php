@@ -29,7 +29,6 @@ use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationMan
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ItemDisplayLabel;
 use App\Filament\Support\RecordSelect;
@@ -558,7 +557,6 @@ class ItemResource extends Resource
             ]),
             RelationGroup::make('Origin', [
                 ArtistsRelationManager::class,
-                WorkshopsRelationManager::class,
                 DynastiesRelationManager::class,
             ]),
             RelationGroup::make('Links', [

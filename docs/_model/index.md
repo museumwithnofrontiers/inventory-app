@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 55
+- ** Total Models:** 54
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
@@ -70,7 +70,6 @@ title: Generated Model Documentation
 - [TimelineEventItem](#timelineeventitem)
 - [TimelineEventTranslation](#timelineeventtranslation)
 - [User](#user)
-- [Workshop](#workshop)
 
 ## Artist {#artist}
 
@@ -1536,7 +1535,6 @@ const UPDATED_AT = 'updated_at';
 #### Belongs To Many
 - **`tags()`**: BelongsToMany [Tag](#tag)
 - **`artists()`**: BelongsToMany [Artist](#artist)
-- **`workshops()`**: BelongsToMany [Workshop](#workshop)
 - **`dynasties()`**: BelongsToMany [Dynasty](#dynasty)
 - **`timelineEvents()`**: BelongsToMany [TimelineEvent](#timelineevent)
 - **`attachedToCollections()`**: BelongsToMany [Collection](#collection)
@@ -3487,57 +3485,6 @@ const UPDATED_AT = 'updated_at';
 - **`withoutTeam()`**
 - **`permission()`**
 - **`withoutPermission()`**
-
-
-## Workshop {#workshop}
-
-**Namespace:** `App\Models\Workshop`
-
-### Database Table
-
-| Property | Value |
-|----------|-------|
-| **Table Name** | `workshops` |
-| **Primary Key** | `id` |
-| **Key Type** | String (UUID) |
-| **Incrementing** | No |
-| **Timestamps** | Yes (`created_at`, `updated_at`) |
-
-### Database Schema
-
-| Column | Type | Nullable | Default | Extra |
-|--------|------|----------|---------|-------|
-| `id` | char | Unknown | Unknown |  |
-| `name` | varchar | Unknown | Unknown |  |
-| `internal_name` | varchar | Unknown | Unknown |  |
-| `backward_compatibility` | varchar | Unknown | Unknown |  |
-| `created_at` | timestamp | Unknown | Unknown |  |
-| `updated_at` | timestamp | Unknown | Unknown |  |
-
-### Fillable Fields
-
-```php
-['name', 'internal_name', 'backward_compatibility']
-```
-
-### Attribute Casting
-
-| Attribute | Cast Type |
-|-----------|-----------|
-| `created_at` | `datetime` |
-| `updated_at` | `datetime` |
-
-### Model Constants
-
-```php
-const CREATED_AT = 'created_at';
-const UPDATED_AT = 'updated_at';
-```
-
-### Relationships
-
-#### Belongs To Many
-- **`items()`**: BelongsToMany [Item](#item)
 
 
 ---

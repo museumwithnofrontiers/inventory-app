@@ -19,7 +19,7 @@ class AllowList
             'item' => [
                 'partner', 'country', 'project', 'collection',
                 'parent', 'children', 'itemImages',
-                'artists', 'workshops', 'tags', 'dynasties', 'translations',
+                'artists', 'tags', 'dynasties', 'translations',
                 'attachedToCollections', 'outgoingLinks', 'incomingLinks',
                 'itemMedia', 'itemDocuments',
             ],

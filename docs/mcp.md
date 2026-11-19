@@ -57,7 +57,7 @@ claude mcp add mwnf-inventory-local -- docker compose exec -T -e MCP_LOCAL_USER=
 | `describe_entity` | A type's fields (usable as filters), searched fields, includes, and whether it has translations, `extra` or a legacy key |
 | `search` | Records of one type: free text over id, internal name, legacy key and name; exact-match filters; paginated like the API |
 | `get` | One record by id, shaped like the API's, with the includes asked for |
-| `get_item` | An item sheet: translations per language and context, images (public URL and copyright), partner, project, collections, tags, artists, workshops, dynasties, parent, children, links, and the legacy links the panel shows (public pages and back office, in the `language` asked for) |
+| `get_item` | An item sheet: translations per language and context, images (public URL and copyright), partner, project, collections, tags, artists, dynasties, parent, children, links, and the legacy links the panel shows (public pages and back office, in the `language` asked for) |
 | `get_collection` | A collection with translations, parent, children and partners, and a page of its members (native and attached items, as the websites list them) |
 | `find_by_legacy_key` | What a legacy record was imported as, across every type you may read (exact or prefix match on `backward_compatibility`) |
 | `list_tags` | Tags with the number of items carrying each, most used first: free text over internal name, description and legacy key; by category and language |

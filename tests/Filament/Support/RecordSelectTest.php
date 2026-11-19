@@ -57,7 +57,6 @@ class RecordSelectTest extends TestCase
             'app/Filament/Resources/CollectionResource/RelationManagers/PartnersRelationManager.php',
             'app/Filament/Resources/ItemResource/RelationManagers/TagsRelationManager.php',
             'app/Filament/Resources/ItemResource/RelationManagers/ArtistsRelationManager.php',
-            'app/Filament/Resources/ItemResource/RelationManagers/WorkshopsRelationManager.php',
             'app/Filament/Resources/ItemResource/RelationManagers/DynastiesRelationManager.php',
             'app/Filament/Resources/TimelineEventResource/RelationManagers/ItemsRelationManager.php',
             'app/Filament/Concerns/HasChangeParentAction.php',
