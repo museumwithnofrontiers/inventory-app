@@ -146,6 +146,14 @@ There are two distinct relationships between items and collections:
 
 Both types of membership can coexist. An item may have a primary collection and also be attached to several other collections.
 
+An attached membership is a **placement** (`App\Models\CollectionItem`), a record of its own with a UUID `id`. One item has at most one placement per collection. A placement holds:
+
+- `display_order`: its place in the collection. The Collection's Items list can be reordered by dragging.
+- `variant_order`: the variant number at that place, as legacy wrote it. Legacy's exhibition pages could show several images of one item at one place.
+- `parent_variant_order`: for a detail view, such as a close-up shown under another image of the same item, the variant number it belongs to at the same `display_order`. It is a position, not a link, because legacy has detail views whose parent image was never placed.
+- `picture_item_id`: the picture the placement shows.
+- `curator_selected`: the curator's flag. Empty means legacy didn't say.
+
 #### Collection default language and context
 
 Each collection records a **default language** and a **default context**. These specify which language and audience context should be used as the primary mode of presentation for this collection. They do not restrict what translations can be created; they express an editorial preference.

@@ -2,14 +2,18 @@
 
 namespace App\Filament\Support;
 
+use App\Enums\ItemType;
 use App\Models\CollectionItem;
+use App\Models\Item;
 use App\Models\Language;
 use Filament\Forms\Components\Component;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -23,10 +27,11 @@ use Illuminate\Database\Eloquent\Model;
 class CollectionItemAppearance
 {
     /**
-     * Returns the collection_item pivot's own editable fields — display_order
-     * and extra — used identically by both ItemsRelationManager's and
+     * Returns the placement's own editable fields — the order, the variant
+     * and parent variant numbers, the picture it shows, the curator flag and
+     * extra — used identically by both ItemsRelationManager's and
      * CollectionAppearancesRelationManager's Attach and Edit-pivot forms (M7
-     * story A2.1, #1900).
+     * story A2.1, #1900; M16 C1, #2641).
      *
      * @return array<int, Component>
      */
@@ -37,7 +42,66 @@ class CollectionItemAppearance
                 ->label('Display order')
                 ->numeric()
                 ->integer(),
+            TextInput::make('variant_order')
+                ->label('Variant')
+                ->helperText('The variant number at this place, as legacy wrote it.')
+                ->numeric()
+                ->integer(),
+            TextInput::make('parent_variant_order')
+                ->label('Detail view of variant')
+                ->helperText('For a detail view: the variant number it belongs to, at the same display order.')
+                ->numeric()
+                ->integer(),
+            RecordSelect::forItems(
+                'picture_item_id',
+                'Picture shown',
+                required: false,
+                scope: fn (Builder $query, ?Model $record): Builder => $record instanceof Item
+                    ? $query->where('type', ItemType::PICTURE)->where('parent_id', $record->id)
+                    : $query->where('type', ItemType::PICTURE),
+            ),
+            Select::make('curator_selected')
+                ->label('Curator selection')
+                ->options(['1' => 'Selected', '0' => 'Not selected'])
+                ->placeholder('Not given')
+                ->formatStateUsing(fn (mixed $state): ?string => $state === null ? null : ((bool) $state ? '1' : '0'))
+                ->dehydrateStateUsing(fn (mixed $state): ?bool => $state === null || $state === '' ? null : $state === '1' || $state === 1 || $state === true),
             ExtraJsonField::formComponent(),
+        ];
+    }
+
+    /**
+     * Returns the placement's variant and curator columns, hidden by default.
+     *
+     * @return array<int, TextColumn>
+     */
+    public static function placementColumns(): array
+    {
+        return [
+            TextColumn::make('pivot.variant_order')
+                ->label('Variant')
+                ->numeric()
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('pivot.parent_variant_order')
+                ->label('Detail of variant')
+                ->numeric()
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
+            TextColumn::make('pivot.curator_selected')
+                ->label('Curator')
+                ->getStateUsing(function (Model $record): ?string {
+                    $pivot = $record->getAttribute('pivot');
+                    if (! ($pivot instanceof CollectionItem) || $pivot->curator_selected === null) {
+                        return null;
+                    }
+
+                    return $pivot->curator_selected ? 'Selected' : 'Not selected';
+                })
+                ->badge()
+                ->color(fn (?string $state): string => $state === 'Selected' ? 'success' : 'gray')
+                ->placeholder('—')
+                ->toggleable(isToggledHiddenByDefault: true),
         ];
     }
 

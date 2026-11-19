@@ -163,6 +163,7 @@ import {
   CollectionCreditsImporter,
   ItemTranslationColumnsImporter,
   CollectionTranslationColumnsImporter,
+  CollectionItemColumnsImporter,
   PictureCreditsImporter,
   ImageTextsImporter,
   CollectionRelationsImporter,
@@ -1252,6 +1253,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: CollectionTranslationColumnsImporter,
     // The exhibition, trail and itinerary importers of four databases write
     // these keys, and later steps move translations between contexts.
+    runsLast: true,
+  },
+  {
+    key: 'collection-item-columns',
+    name: 'Collection Item Columns',
+    description:
+      'Move the placement fields that have a column (variant and parent variant numbers, curator flag, the picture shown) out of collection_item.extra, and drop n and detail_n, after every importer that writes them (M16 C1, #2641)',
+    importerClass: CollectionItemColumnsImporter,
+    // The mwnf3 and Sharing History exhibition importers, the historical
+    // background importer and the justification step write these keys.
     runsLast: true,
   },
   {

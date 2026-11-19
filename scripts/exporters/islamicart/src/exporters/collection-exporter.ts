@@ -79,6 +79,8 @@ interface CollectionItemRow {
   item_id: string
   display_order: number | null
   extra: unknown
+  /** The variant number at its place (legacy `n2`; M16 C1, a column). */
+  variant_order?: number | null
   /** The image of the picture the placement shows, when it links one. */
   picture_path: string | null
 }
@@ -148,7 +150,7 @@ export class CollectionExporter extends BaseExporter {
       this.db.query<CollectionItemRow>(
         `SELECT ci.collection_id,
                 IF(i.type = 'picture' AND i.parent_id IS NOT NULL, i.parent_id, i.id) AS item_id,
-                ci.display_order, ci.extra,
+                ci.display_order, ci.variant_order, ci.extra,
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
                     ORDER BY ii.display_order, ii.id LIMIT 1),
@@ -161,7 +163,7 @@ export class CollectionExporter extends BaseExporter {
              OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph}))${
                scope ? `\n             OR (i.type = 'picture' AND i.parent_id IS NULL AND i.project_id IN (${ph}))` : ''
              })
-         ORDER BY ci.collection_id, ci.display_order, JSON_EXTRACT(ci.extra, '$.n2'), ci.item_id`,
+         ORDER BY ci.collection_id, ci.display_order, ci.variant_order, ci.item_id`,
         [...collectionIds, ...this.projectIds, ...this.projectIds, ...(scope ? this.projectIds : [])]
       ),
       // The glossary terms each text links, per language: legacy linked a
@@ -426,7 +428,7 @@ export function buildCollectionItemEntry(
   details?: CollectionItemDetailEntry[]
 } {
   const extra = parseJson(link.extra) as Record<string, unknown> | null
-  const variantOrder = extra && typeof extra.n2 === 'number' ? extra.n2 : null
+  const variantOrder = typeof link.variant_order === 'number' ? link.variant_order : null
   const caption = extra ? extractCaptions(extra, languageKey) : {}
 
   const details: CollectionItemDetailEntry[] = []

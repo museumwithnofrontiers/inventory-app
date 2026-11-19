@@ -2,18 +2,33 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
- * CollectionItem Pivot Model
+ * A placement: an item on a collection (M16 C1, #2641).
  *
- * Typed representation of a row in the collection_item table.
- * Exposes display order, contextual descriptions, and source
- * backward-compatibility values through named helpers.
+ * A row of the collection_item table, with its own UUID `id`;
+ * `(collection_id, item_id)` stays unique. It holds the order, the variant
+ * and parent variant numbers as legacy wrote them, the picture it shows and
+ * the curator flag, and exposes the contextual descriptions and source
+ * backward-compatibility values still in `extra` through named helpers.
+ *
+ * @property string $id
+ * @property string $collection_id
+ * @property string $item_id
+ * @property int|null $display_order
+ * @property int|null $variant_order
+ * @property int|null $parent_variant_order
+ * @property string|null $picture_item_id
+ * @property bool|null $curator_selected
+ * @property array<string, mixed>|null $extra
  */
 class CollectionItem extends Pivot
 {
+    use HasUuids;
+
     /**
      * The table associated with the model.
      *
@@ -27,6 +42,20 @@ class CollectionItem extends Pivot
      * @var bool
      */
     public $incrementing = false;
+
+    /**
+     * The primary key: the placement's own UUID.
+     *
+     * @var string
+     */
+    protected $primaryKey = 'id';
+
+    /**
+     * The data type of the primary key.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
 
     /**
      * Indicates if the model should be timestamped.
@@ -44,6 +73,10 @@ class CollectionItem extends Pivot
         'collection_id',
         'item_id',
         'display_order',
+        'variant_order',
+        'parent_variant_order',
+        'picture_item_id',
+        'curator_selected',
         'extra',
     ];
 
@@ -54,6 +87,9 @@ class CollectionItem extends Pivot
      */
     protected $casts = [
         'display_order' => 'integer',
+        'variant_order' => 'integer',
+        'parent_variant_order' => 'integer',
+        'curator_selected' => 'boolean',
         'extra' => 'array',
     ];
 
@@ -75,6 +111,16 @@ class CollectionItem extends Pivot
     public function item(): BelongsTo
     {
         return $this->belongsTo(Item::class);
+    }
+
+    /**
+     * Get the picture the placement shows: a picture item of the placed item.
+     *
+     * @return BelongsTo<Item, $this>
+     */
+    public function picture(): BelongsTo
+    {
+        return $this->belongsTo(Item::class, 'picture_item_id');
     }
 
     /**

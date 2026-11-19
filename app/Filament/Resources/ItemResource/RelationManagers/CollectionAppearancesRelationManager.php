@@ -58,6 +58,7 @@ class CollectionAppearancesRelationManager extends RelationManager
                         ? $this->getAuthorizedUrl($record->parent, CollectionResource::class)
                         : null),
                 CollectionItemAppearance::displayOrderColumn(),
+                ...CollectionItemAppearance::placementColumns(),
                 CollectionItemAppearance::contextualTextPreviewColumn(),
                 CollectionItemAppearance::contextualTextLanguagesColumn(),
                 TextColumn::make('context.internal_name')

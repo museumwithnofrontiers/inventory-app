@@ -183,6 +183,21 @@ collection no instance file takes.
 
 ## collection_item.extra
 
+A row is a placement: an item on a collection, with its own UUID `id` (M16 C1, #2641). Six keys below are
+written here first, then moved to the placement's columns, or dropped, by
+`importers/phase-11/collection-item-columns-importer.ts`:
+- `n2` → `variant_order` and `parent_n2` → `parent_variant_order`, as written: positions, not links,
+  since some detail views have no parent placement;
+- `curator_status` Y/N → `curator_selected` true/false; absent stays NULL;
+- `picture` (a legacy path) → `picture_item_id`, the placed item's picture whose image has that original name;
+- `n` is dropped: it equals `display_order`. `detail_n` is dropped: it is always 1.
+
+A value the step can't place (an `n` that differs from `display_order`, a `detail_n` other than 1, a
+`curator_status` other than Y or N, a `picture` that resolves to no picture or to more than one) stays here and
+is reported. None stays after a full import. After re-running one of their writers on its own, run
+`--only collection-item-columns` again. The exporters read the columns themselves. `source_bc_by_language`
+stays until C2 (#2642) gives the placement translations their own legacy keys.
+
 | Key                                                                                                                                                                                                              | Legacy source                                                                        | Written by                                                                                                |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |
 | `n`, `n2`                                                                                                                                                                                                        | exhibition_page_images, exhibition_images, artintro_page_images                      | importers/phase-01/mwnf3-exhibition-item-importer.ts                                                      |

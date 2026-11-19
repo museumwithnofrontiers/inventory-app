@@ -68,6 +68,7 @@ import type {
   PictureParentImageRow,
 } from '../utils/picture-credits.js';
 import type { CatalogueRow, LinkData, PartnerUrlRow, ShopLinkRow } from '../utils/links.js';
+import type { CollectionItemColumns } from '../utils/collection-item-columns.js';
 
 /**
  * Strategy interface for writing entities to the target system
@@ -896,6 +897,37 @@ export interface IWriteStrategy {
     languageId: string,
     contextId: string
   ): Promise<boolean>;
+
+  /**
+   * Find collection_item rows (placements) whose `extra` holds any of `keys`
+   * at its top level. Used by CollectionItemColumnsImporter (M16 C1).
+   */
+  findCollectionItemsWithExtraKeys(keys: readonly string[]): Promise<
+    Array<{
+      id: string;
+      collection_id: string;
+      item_id: string;
+      display_order: number | null;
+      extra: Record<string, unknown>;
+    }>
+  >;
+
+  /**
+   * The picture items of `parentItemId` whose image has `originalName` as its
+   * original name (the legacy path). Used to resolve a placement's `picture`.
+   */
+  findPictureItemIdsByOriginalName(parentItemId: string, originalName: string): Promise<string[]>;
+
+  /**
+   * Set the placement columns (M16 C1) and the extra JSON (or clear it, with
+   * null) on one collection_item row, as given: `extra` was sanitized when it
+   * was first written, so it is not converted again.
+   */
+  setCollectionItemColumnsById(
+    id: string,
+    columns: CollectionItemColumns,
+    extra: string | null
+  ): Promise<void>;
 
   /**
    * Read the extra JSON from a collection_item pivot row.

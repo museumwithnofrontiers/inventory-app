@@ -77,6 +77,8 @@ import type {
   PublicationDocumentData,
 } from '../core/types.js';
 import { sanitizeAllStrings, sanitizeJsonField } from '../utils/html-to-markdown.js';
+import type { CollectionItemColumns } from '../utils/collection-item-columns.js';
+import { placementUuidName } from '../utils/collection-item-columns.js';
 
 const tableEntityMap: Record<string, EntityType> = {
   languages: 'language',
@@ -362,13 +364,21 @@ export class SqlWriteStrategy implements IWriteStrategy {
     // curator justifications kept their `<i>` tags through a reimport.
     const extra = sanitized.extra ? JSON.stringify(sanitized.extra) : null;
     await this.db.execute(
-      `INSERT INTO collection_item (collection_id, item_id, display_order, extra, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?)
+      `INSERT INTO collection_item (id, collection_id, item_id, display_order, extra, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
        ON DUPLICATE KEY UPDATE
          display_order = VALUES(display_order),
          extra = VALUES(extra),
          updated_at = VALUES(updated_at)`,
-      [sanitized.collection_id, sanitized.item_id, displayOrder, extra, this.now, this.now]
+      [
+        deterministicUuid(placementUuidName(sanitized.collection_id, sanitized.item_id)),
+        sanitized.collection_id,
+        sanitized.item_id,
+        displayOrder,
+        extra,
+        this.now,
+        this.now,
+      ]
     );
   }
 
@@ -668,9 +678,15 @@ export class SqlWriteStrategy implements IWriteStrategy {
     for (const itemId of itemIds) {
       try {
         await this.db.execute(
-          `INSERT IGNORE INTO collection_item (collection_id, item_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?)`,
-          [collectionId, itemId, this.now, this.now]
+          `INSERT IGNORE INTO collection_item (id, collection_id, item_id, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?)`,
+          [
+            deterministicUuid(placementUuidName(collectionId, itemId)),
+            collectionId,
+            itemId,
+            this.now,
+            this.now,
+          ]
         );
       } catch {
         // Ignore duplicates
@@ -2537,6 +2553,72 @@ export class SqlWriteStrategy implements IWriteStrategy {
       [itemId, languageId, contextId]
     );
     return rows.length > 0;
+  }
+
+  async findCollectionItemsWithExtraKeys(keys: readonly string[]): Promise<
+    Array<{
+      id: string;
+      collection_id: string;
+      item_id: string;
+      display_order: number | null;
+      extra: Record<string, unknown>;
+    }>
+  > {
+    if (keys.length === 0) return [];
+    const paths = keys.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, collection_id, item_id, display_order, extra
+       FROM collection_item
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', ${paths})
+       ORDER BY collection_id, item_id`,
+      keys.map((key) => `$.${key}`)
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        collection_id: row.collection_id as string,
+        item_id: row.item_id as string,
+        display_order: (row.display_order as number | null) ?? null,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async findPictureItemIdsByOriginalName(
+    parentItemId: string,
+    originalName: string
+  ): Promise<string[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT DISTINCT pic.id
+       FROM items pic
+       JOIN item_images ii ON ii.item_id = pic.id
+       WHERE pic.parent_id = ? AND pic.type = 'picture' AND ii.original_name = ?
+       ORDER BY pic.id`,
+      [parentItemId, originalName]
+    );
+    return rows.map((row) => row.id as string);
+  }
+
+  async setCollectionItemColumnsById(
+    id: string,
+    columns: CollectionItemColumns,
+    extra: string | null
+  ): Promise<void> {
+    const allowed = [
+      'variant_order',
+      'parent_variant_order',
+      'curator_selected',
+      'picture_item_id',
+    ] as const;
+    const names = allowed.filter((name) => Object.prototype.hasOwnProperty.call(columns, name));
+    const assignments = [...names.map((name) => `${name} = ?`), 'extra = ?', 'updated_at = ?'];
+    await this.db.execute(`UPDATE collection_item SET ${assignments.join(', ')} WHERE id = ?`, [
+      ...names.map((name) => columns[name] ?? null),
+      extra,
+      this.now,
+      id,
+    ]);
   }
 
   async getCollectionItemExtra(

@@ -303,7 +303,7 @@ class Item extends Model
     {
         return $this->belongsToMany(Collection::class, 'collection_item')
             ->using(CollectionItem::class)
-            ->withPivot('display_order', 'extra')
+            ->withPivot('id', 'display_order', 'variant_order', 'parent_variant_order', 'picture_item_id', 'curator_selected', 'extra')
             ->withTimestamps();
     }
 

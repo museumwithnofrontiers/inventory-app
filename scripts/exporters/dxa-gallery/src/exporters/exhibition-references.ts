@@ -162,7 +162,7 @@ export async function buildExhibitionReferences(
            LEFT JOIN collections p ON p.id = c.parent_id
            WHERE ci.item_id IN (${memberPh})
              AND c.type IN ('theme', 'subtheme')
-             AND JSON_UNQUOTE(JSON_EXTRACT(ci.extra, '$.curator_status')) = 'Y'
+             AND ci.curator_selected = 1
              AND (c.parent_id IN (${placeholders(sharingHistoryRoots.length)})
                   OR p.parent_id IN (${placeholders(sharingHistoryRoots.length)}))
            ORDER BY ci.item_id, ci.collection_id`,
