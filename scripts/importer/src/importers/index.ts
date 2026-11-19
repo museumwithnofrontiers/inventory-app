@@ -169,6 +169,7 @@ export {
   CollectionItemColumnsImporter,
   VisitInformationImporter,
   CollectionItemTranslationsImporter,
+  PartnerColumnsImporter,
   PictureCreditsImporter,
   ImageTextsImporter,
   CollectionRelationsImporter,

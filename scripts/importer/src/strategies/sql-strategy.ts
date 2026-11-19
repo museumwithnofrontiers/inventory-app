@@ -2773,6 +2773,77 @@ export class SqlWriteStrategy implements IWriteStrategy {
     return id;
   }
 
+  async findPartnerTranslationsWithExtraKeys(
+    keys: readonly string[]
+  ): Promise<Array<{ id: string; partner_id: string; extra: Record<string, unknown> }>> {
+    if (keys.length === 0) return [];
+    const paths = keys.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, partner_id, extra
+       FROM partner_translations
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', ${paths})
+       ORDER BY partner_id, language_id, context_id`,
+      keys.map((key) => `$.${key}`)
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        partner_id: row.partner_id as string,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async setPartnerColumns(
+    partnerId: string,
+    columns: { category?: string; featured?: boolean; city?: string }
+  ): Promise<void> {
+    const names = (['category', 'featured', 'city'] as const).filter(
+      (name) => columns[name] !== undefined
+    );
+    if (names.length === 0) return;
+    await this.db.execute(
+      `UPDATE partners SET ${names.map((name) => `${name} = ?`).join(', ')}, updated_at = ? WHERE id = ?`,
+      [...names.map((name) => columns[name] as string | boolean), this.now, partnerId]
+    );
+  }
+
+  async upsertPartnerContactAsStored(data: {
+    id: string;
+    partnerId: string;
+    displayOrder: number;
+    fields: Partial<Record<'name' | 'title' | 'email' | 'phone' | 'fax', string>>;
+  }): Promise<void> {
+    const fields = ['name', 'title', 'email', 'phone', 'fax'] as const;
+    await this.db.execute(
+      `INSERT INTO partner_contacts (id, partner_id, display_order, ${fields.join(', ')}, created_at, updated_at)
+       VALUES (?, ?, ?, ${fields.map(() => '?').join(', ')}, ?, ?)
+       ON DUPLICATE KEY UPDATE
+         ${fields.map((field) => `${field} = VALUES(${field})`).join(', ')},
+         updated_at = VALUES(updated_at)`,
+      [
+        data.id,
+        data.partnerId,
+        data.displayOrder,
+        ...fields.map((field) => data.fields[field] ?? null),
+        this.now,
+        this.now,
+      ]
+    );
+  }
+
+  async setPartnerTranslationColumnsAsStored(
+    id: string,
+    alsoKnownAs: string | null,
+    extra: string | null
+  ): Promise<void> {
+    await this.db.execute(
+      `UPDATE partner_translations SET also_known_as = COALESCE(?, also_known_as), extra = ?, updated_at = ? WHERE id = ?`,
+      [alsoKnownAs, extra, this.now, id]
+    );
+  }
+
   async getCollectionItemExtra(
     collectionId: string,
     itemId: string

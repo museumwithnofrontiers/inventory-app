@@ -9,6 +9,7 @@ import type {
 import { parseJson } from '../core/database.js'
 import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { BaseExporter } from './base-exporter.js'
+import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 
 interface PartnerRow {
   id: string
@@ -119,12 +120,13 @@ export class PartnerExporter extends BaseExporter {
     const langCodeMap = await this.buildLangCodeMap()
 
     const memberPh = this.placeholders(Math.max(this.memberItemIds.length, 1))
-    const [translations, images, logos, levels, groupMemberships, heldItems, projectRows] = await Promise.all([
+    const [partnerTranslations, images, logos, levels, groupMemberships, heldItems, projectRows] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also makes the "first row wins" extra pick deterministic).
         `SELECT partner_id, language_id, name, description, city_display, address_notes,
-                contact_website, contact_phone, contact_fax, contact_email_general, extra
+                contact_website, contact_phone, contact_fax, contact_email_general, extra,
+                ${partnerColumnsSelect('partner_translations')}
          FROM partner_translations
          WHERE partner_id IN (${partnerPh})
          ORDER BY partner_id, language_id`,
@@ -183,6 +185,7 @@ export class PartnerExporter extends BaseExporter {
         [this.partnerProjectId]
       ),
     ])
+    const translations = restorePartnerColumns(partnerTranslations)
 
     const translationMap = new Map<string, Record<string, Record<string, string | null>>>()
     // Contact persons, extra URLs and the portal flag are properties of the

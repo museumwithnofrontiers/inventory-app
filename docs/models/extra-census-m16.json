@@ -122,9 +122,15 @@
         },
         "partner_translations": {
             "keys": {
+                "city": 0,
+                "contact_person_1": 0,
+                "contact_person_2": 0,
+                "ex_name": 0,
                 "fax": 0,
                 "how_to_reach": 0,
                 "opening_hours": 0,
+                "partner_category": 0,
+                "portal_display": 0,
                 "source": 0,
                 "urls": 0
             }

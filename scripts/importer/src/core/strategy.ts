@@ -1001,6 +1001,38 @@ export interface IWriteStrategy {
   ): Promise<string>;
 
   /**
+   * Partner translations whose `extra` holds any of `keys` at its top level.
+   * Used by PartnerColumnsImporter (M16 D2).
+   */
+  findPartnerTranslationsWithExtraKeys(
+    keys: readonly string[]
+  ): Promise<Array<{ id: string; partner_id: string; extra: Record<string, unknown> }>>;
+
+  /** Set a partner's category, featured flag and city (M16 D2), those given only. */
+  setPartnerColumns(
+    partnerId: string,
+    columns: { category?: string; featured?: boolean; city?: string }
+  ): Promise<void>;
+
+  /** Insert a partner's contact at a position, or replace its fields, as given. */
+  upsertPartnerContactAsStored(data: {
+    id: string;
+    partnerId: string;
+    displayOrder: number;
+    fields: Partial<Record<'name' | 'title' | 'email' | 'phone' | 'fax', string>>;
+  }): Promise<void>;
+
+  /**
+   * Set a partner translation's `also_known_as` (when given; null keeps the
+   * one it has) and its extra JSON (or clear it, with null), as given.
+   */
+  setPartnerTranslationColumnsAsStored(
+    id: string,
+    alsoKnownAs: string | null,
+    extra: string | null
+  ): Promise<void>;
+
+  /**
    * Read the extra JSON from a collection_item pivot row.
    * Returns null if no matching row or if extra is null.
    */

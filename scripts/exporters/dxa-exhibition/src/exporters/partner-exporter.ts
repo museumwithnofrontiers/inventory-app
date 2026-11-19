@@ -9,6 +9,7 @@ import type {
 } from '../core/types.js'
 import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { BaseExporter } from './base-exporter.js'
+import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 import { galleryProjectCode } from '../../../shared/site-configuration.mjs'
 
 interface PartnerRow {
@@ -231,12 +232,13 @@ export class PartnerExporter extends BaseExporter {
       exhibitionProjects.length === 0 ? 'FALSE' : `${column} IN (${this.placeholders(exhibitionProjects.length)})`
     const langCodeMap = await this.buildLangCodeMap()
 
-    const [translations, images, logos, levels, groupMemberships, heldItems, ownProjects] = await Promise.all([
+    const [partnerTranslations, images, logos, levels, groupMemberships, heldItems, ownProjects] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also makes the "first row wins" extra-fields pick below deterministic).
         `SELECT partner_id, language_id, name, description, city_display, address_notes,
-                contact_website, contact_phone, contact_fax, contact_email_general, extra
+                contact_website, contact_phone, contact_fax, contact_email_general, extra,
+                ${partnerColumnsSelect('partner_translations')}
          FROM partner_translations
          WHERE partner_id IN (${partnerPh})
          ORDER BY partner_id, language_id`,
@@ -332,6 +334,7 @@ export class PartnerExporter extends BaseExporter {
         [...exhibitionProjects, ...exhibitionProjects, ...partnerIds]
       ),
     ])
+    const translations = restorePartnerColumns(partnerTranslations)
 
     const ownProjectMap = new Map<string, PartnerOwnProject>()
     for (const row of ownProjects) {

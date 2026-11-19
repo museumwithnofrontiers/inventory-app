@@ -8,6 +8,7 @@ import type {
 } from '../core/types.js'
 import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { BaseExporter } from './base-exporter.js'
+import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 import { restoreVisitInformation, visitInformationSelect } from '../../../shared/visit-information.mjs'
 
 interface PartnerRow {
@@ -165,7 +166,8 @@ export class PartnerExporter extends BaseExporter {
         // The visit information (M16 D1) goes back into extra under its legacy keys.
         `SELECT partner_id, language_id, name, description, city_display, address_notes,
                 contact_website, contact_phone, contact_fax, contact_email_general, extra,
-                ${visitInformationSelect('partner_translations', 'partner_id')}
+                ${visitInformationSelect('partner_translations', 'partner_id')},
+                ${partnerColumnsSelect('partner_translations')}
          FROM partner_translations
          WHERE partner_id IN (${partnerPh})
          ORDER BY partner_id, language_id`,
@@ -220,7 +222,7 @@ export class PartnerExporter extends BaseExporter {
         [...itemIds, ...partnerIds]
       ),
     ])
-    const translations = restoreVisitInformation(visitTranslations)
+    const translations = restorePartnerColumns(restoreVisitInformation(visitTranslations))
 
     // Per-context hierarchy: partner-hierarchy-importer.ts / institution-hierarchy-importer.ts
     // give each tier-1 partner_museums/partner_institutions row its own "group" collection

@@ -29,6 +29,7 @@ class StorePartnerTranslationRequest extends FormRequest
             'language_id' => ['required', 'string', 'size:3', 'exists:languages,id'],
             'context_id' => ['required', 'uuid', 'exists:contexts,id'],
             'name' => ['required', 'string', 'max:255'],
+            'also_known_as' => ['nullable', 'string'],
             'description' => ['nullable', 'string'],
             // Address fields
             'city_display' => ['nullable', 'string', 'max:255'],

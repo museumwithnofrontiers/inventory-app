@@ -52,6 +52,7 @@ use App\Filament\Resources\LanguageResource\Pages\EditLanguage;
 use App\Filament\Resources\LanguageResource\RelationManagers\TranslationsRelationManager as LanguageTranslationsRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\EditPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\CollectionParticipationsRelationManager;
+use App\Filament\Resources\PartnerResource\RelationManagers\ContactsRelationManager as PartnerContactsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManager as PartnerImagesRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\LogosRelationManager as PartnerLogosRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
@@ -258,6 +259,8 @@ class RelationManagerConventionTest extends TestCase
         ItemVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'monument', 'variant' => 'media'],
         CollectionVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'collection', 'variant' => 'media'],
         PartnerVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'partner', 'variant' => 'media'],
+        // A partner's contacts have no Resource of their own, no language and no extra (M16 D2, #2646)
+        PartnerContactsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'partner', 'variant' => 'contacts'],
 
         // ── pinned: the three original Images managers + the two Item Links managers ──
         CollectionImagesRelationManager::class => [
@@ -571,13 +574,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 8 has-many + 21 pivot + 4 translations + 7 inline + 24 pinned = 64.
+        // 8 has-many + 21 pivot + 4 translations + 8 inline + 24 pinned = 65.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(64, self::allManagers());
+        $this->assertCount(65, self::allManagers());
     }
 
     private function classify(string $class): array
@@ -718,6 +721,7 @@ class RelationManagerConventionTest extends TestCase
         match ($config['variant']) {
             'media', 'editions' => $this->assertMediaConvention($class, $config),
             'documents' => $this->assertDocumentsConvention($class, $config),
+            'contacts' => $this->assertContactsConvention($class, $config),
             default => Assert::fail("{$class}: unknown inline variant [{$config['variant']}] in RelationManagerConventionTest::CLASSIFICATION."),
         };
     }
@@ -743,6 +747,23 @@ class RelationManagerConventionTest extends TestCase
         $fields = $this->mountedActionFieldNames($component, 'create');
         $this->assertContains('language_id', $fields, "{$class}: the inline Create/Edit form must include a language field, 'language_id' (#1908).");
         $this->assertContains('extra', $fields, "{$class}: the inline Create/Edit form must include an 'extra' field (#1908).");
+    }
+
+    /**
+     * A partner's contacts (M16 D2): the inline Create/Edit modal of Media,
+     * without its language and extra fields, since a contact belongs to the
+     * partner, not to a language, and has no holding area.
+     */
+    private function assertContactsConvention(string $class, array $config): void
+    {
+        $component = $this->mountManager($class, $config);
+        $table = $component->instance()->getTable();
+
+        $header = $this->flattenActions($table->getHeaderActions());
+        $this->assertSame(['create'], $this->namesOf($header), "{$class}: header actions must be exactly [create].");
+
+        $row = $this->flattenActions($table->getActions());
+        $this->assertSame(['edit', 'delete'], $this->namesOf($row), "{$class}: row actions must be exactly [edit, delete].");
     }
 
     /**

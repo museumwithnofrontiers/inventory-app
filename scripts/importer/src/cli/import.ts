@@ -165,6 +165,7 @@ import {
   CollectionTranslationColumnsImporter,
   CollectionItemColumnsImporter,
   VisitInformationImporter,
+  PartnerColumnsImporter,
   CollectionItemTranslationsImporter,
   PictureCreditsImporter,
   ImageTextsImporter,
@@ -1275,6 +1276,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: VisitInformationImporter,
     // The monument, Travels and Explore importers write these keys, and later
     // steps move translations between contexts.
+    runsLast: true,
+  },
+  {
+    key: 'partner-columns',
+    name: 'Partner Columns',
+    description:
+      'Move the partner fields out of partner_translations.extra: the contact persons to partner_contacts, the category, Portal flag and city to partners, the other name to also_known_as, after every importer that writes them (M16 D2, #2646)',
+    importerClass: PartnerColumnsImporter,
+    // The museum, institution, school and Sharing History partner importers
+    // write these keys on every translation of a partner.
     runsLast: true,
   },
   {

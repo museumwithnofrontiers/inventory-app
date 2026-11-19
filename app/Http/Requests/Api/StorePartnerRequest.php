@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\PartnerCategory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StorePartnerRequest extends FormRequest
 {
@@ -37,6 +39,10 @@ class StorePartnerRequest extends FormRequest
             'monument_item_id' => ['nullable', 'uuid', 'exists:items,id'],
             // Visibility
             'visible' => ['sometimes', 'boolean'],
+            // M16 D2 (decision 7)
+            'category' => ['nullable', Rule::enum(PartnerCategory::class)],
+            'featured' => ['sometimes', 'boolean'],
+            'city' => ['nullable', 'string', 'max:255'],
         ];
     }
 }
