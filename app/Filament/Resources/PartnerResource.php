@@ -16,6 +16,7 @@ use App\Filament\Resources\PartnerResource\Pages\ListPartner;
 use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\CollectionParticipationsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManager;
+use App\Filament\Resources\PartnerResource\RelationManagers\LogosRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\PartnerDisplayLabel;
@@ -293,6 +294,7 @@ class PartnerResource extends Resource
             TranslationsRelationManager::class,
             CollectionParticipationsRelationManager::class,
             ImagesRelationManager::class,
+            LogosRelationManager::class,
         ];
     }
 

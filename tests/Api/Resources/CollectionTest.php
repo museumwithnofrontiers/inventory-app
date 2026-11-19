@@ -4,6 +4,8 @@ namespace Tests\Api\Resources;
 
 use App\Models\Collection;
 use App\Models\Context;
+use App\Models\Country;
+use App\Models\Item;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Api\Traits\AuthenticatesApiRequests;
 use Tests\Api\Traits\TestsApiCrud;
@@ -226,5 +228,40 @@ class CollectionTest extends TestCase
 
         $response->assertOk()
             ->assertJsonPath('data.purpose', Collection::PURPOSE_EXHIBITIONS_ROOT);
+    }
+
+    /**
+     * M16 E3: the cover picture and the days are columns, and the other
+     * countries and the links to other collections are included on request.
+     */
+    public function test_stores_the_cover_picture_and_days_and_includes_the_relations(): void
+    {
+        $collection = Collection::factory()->create();
+        $picture = Item::factory()->create();
+        $country = Country::factory()->create();
+        $location = Collection::factory()->create();
+        $collection->countries()->attach($country->id, ['display_order' => 1]);
+        $collection->relatedCollections()->attach($location->id, ['kind' => 'location', 'display_order' => 1]);
+
+        $this->putJson(route('collection.update', $collection), ['cover_item_id' => $picture->id, 'days' => 2])
+            ->assertOk()
+            ->assertJsonPath('data.cover_item_id', $picture->id)
+            ->assertJsonPath('data.days', 2);
+
+        $this->getJson(route('collection.show', $collection).'?include=countries,relatedCollections,coverItem')
+            ->assertOk()
+            ->assertJsonPath('data.countries.0.id', $country->id)
+            ->assertJsonPath('data.relatedCollections.0.id', $location->id)
+            ->assertJsonPath('data.relatedCollections.0.link.kind', 'location')
+            ->assertJsonPath('data.coverItem.id', $picture->id);
+    }
+
+    public function test_rejects_days_that_are_no_positive_number(): void
+    {
+        $collection = Collection::factory()->create();
+
+        $this->putJson(route('collection.update', $collection), ['days' => 0])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['days']);
     }
 }

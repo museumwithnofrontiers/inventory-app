@@ -38,7 +38,7 @@ class AllowList
             ],
             'collection' => [
                 'language', 'context', 'translations', 'partners', 'items', 'attachedItems', 'collectionImages',
-                'collectionMedia', 'contributors',
+                'collectionMedia', 'contributors', 'countries', 'relatedCollections', 'coverItem',
             ],
             'collectionImage' => [
                 'collection',

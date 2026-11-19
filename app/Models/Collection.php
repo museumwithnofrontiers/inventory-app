@@ -30,6 +30,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $context_id
  * @property string|null $backward_compatibility
  * @property object|null $extra
+ * @property string|null $cover_item_id
+ * @property int|null $days
  * @property string|null $display_label
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -146,6 +148,10 @@ class Collection extends Model
         'map_zoom',
         // Country reference
         'country_id',
+        // The picture shown as the collection's cover
+        'cover_item_id',
+        // A Travels itinerary's number of days
+        'days',
     ];
 
     /**
@@ -159,6 +165,7 @@ class Collection extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'map_zoom' => 'integer',
+        'days' => 'integer',
     ];
 
     /**
@@ -236,6 +243,57 @@ class Collection extends Model
     public function country(): BelongsTo
     {
         return $this->belongsTo(Country::class);
+    }
+
+    /**
+     * The other countries the collection covers, besides its main country, in
+     * their order.
+     *
+     * @return BelongsToMany<Country, $this>
+     */
+    public function countries(): BelongsToMany
+    {
+        return $this->belongsToMany(Country::class, 'collection_country')
+            ->withPivot('display_order')
+            ->withTimestamps()
+            ->orderByPivot('display_order');
+    }
+
+    /**
+     * The collections this one links to, by kind (CollectionRelationKind), in
+     * their order.
+     *
+     * @return BelongsToMany<Collection, $this>
+     */
+    public function relatedCollections(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'collection_collection', 'collection_id', 'related_collection_id')
+            ->withPivot('kind', 'display_order')
+            ->withTimestamps()
+            ->orderByPivot('kind')
+            ->orderByPivot('display_order');
+    }
+
+    /**
+     * The collections that link to this one.
+     *
+     * @return BelongsToMany<Collection, $this>
+     */
+    public function relatingCollections(): BelongsToMany
+    {
+        return $this->belongsToMany(self::class, 'collection_collection', 'related_collection_id', 'collection_id')
+            ->withPivot('kind', 'display_order')
+            ->withTimestamps();
+    }
+
+    /**
+     * The picture shown as the collection's cover.
+     *
+     * @return BelongsTo<Item, $this>
+     */
+    public function coverItem(): BelongsTo
+    {
+        return $this->belongsTo(Item::class, 'cover_item_id');
     }
 
     /**

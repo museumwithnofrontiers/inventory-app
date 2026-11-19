@@ -5,6 +5,7 @@ namespace App\Filament\Support;
 use App\Models\Artist;
 use App\Models\Author;
 use App\Models\Collection;
+use App\Models\Country;
 use App\Models\Dynasty;
 use App\Models\Glossary;
 use App\Models\Item;
@@ -90,6 +91,8 @@ class RecordSelect
     public const PERMISSIONS = 'permissions';
 
     public const PUBLICATIONS = 'publications';
+
+    public const COUNTRIES = 'countries';
 
     private const RESULT_LIMIT = 50;
 
@@ -475,6 +478,11 @@ class RecordSelect
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
                 ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('internal_name'), $scope))
                 ->recordTitle(fn (Publication $record): string => self::legacyLabel($record->internal_name, $record->backward_compatibility)),
+
+            self::COUNTRIES => $action
+                ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
+                ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope($query->orderBy('internal_name'), $scope))
+                ->recordTitle(fn (Country $record): string => self::legacyLabel($record->internal_name, $record->backward_compatibility)),
 
             self::PERMISSIONS => $action
                 ->recordSelectSearchColumns(self::NAME_GUARD)

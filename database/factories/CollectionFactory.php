@@ -47,6 +47,9 @@ class CollectionFactory extends Factory
             'map_zoom' => null,
             // Country reference (nullable by default)
             'country_id' => null,
+            // Cover picture and days (nullable by default)
+            'cover_item_id' => null,
+            'days' => null,
         ];
     }
 

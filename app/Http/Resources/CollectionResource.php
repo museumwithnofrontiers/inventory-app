@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Collection;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -44,6 +45,10 @@ class CollectionResource extends JsonResource
             'backward_compatibility' => $this->backward_compatibility,
             // Collection-level structured attributes that belong to the collection rather than to one of its languages (e.g. a thematic gallery's source project, slug and canonical host)
             'extra' => $this->extra,
+            // The picture shown as the collection's cover (ItemResource id), e.g. a gallery theme's
+            'cover_item_id' => $this->cover_item_id,
+            // A Travels itinerary's number of days
+            'days' => $this->days,
             // The date of creation of the resource (managed by the system)
             'created_at' => $this->created_at,
             // The date of last modification of the resource (managed by the system)
@@ -61,6 +66,12 @@ class CollectionResource extends JsonResource
             'translations' => CollectionTranslationResource::collection($this->whenLoaded('translations')),
             // Partners associated with this collection (PartnerResource[])
             'partners' => PartnerResource::collection($this->whenLoaded('partners')),
+            // The other countries the collection covers, in their order (CountryResource[])
+            'countries' => CountryResource::collection($this->whenLoaded('countries')),
+            // The collections this one links to, with the link's kind and order (CollectionResource[])
+            'relatedCollections' => CollectionResource::collection($this->whenLoaded('relatedCollections')),
+            // The cover picture (ItemResource)
+            'coverItem' => new ItemResource($this->whenLoaded('coverItem')),
             // Items associated with this collection - primary relationship (ItemResource[])
             'items' => ItemResource::collection($this->whenLoaded('items')),
             // Items attached to this collection via many-to-many relationship (ItemResource[])
@@ -72,6 +83,17 @@ class CollectionResource extends JsonResource
             'partners_count' => $this->when($this->relationLoaded('partners'), fn () => $this->partners->count()),
             'translations_count' => $this->when($this->relationLoaded('translations'), fn () => $this->translations->count()),
             'children_count' => $this->when($this->relationLoaded('children'), fn () => $this->children->count()),
+
+            // On a related collection: the link's kind (CollectionRelationKind) and order
+            'link' => $this->whenPivotLoaded('collection_collection', function (): array {
+                /** @var Model $pivot */
+                $pivot = $this->resource->getRelation('pivot');
+
+                return [
+                    'kind' => $pivot->getAttribute('kind'),
+                    'display_order' => $pivot->getAttribute('display_order'),
+                ];
+            }),
         ];
     }
 }

@@ -683,6 +683,7 @@ export interface IWriteStrategy {
       id: string;
       collection_id: string;
       collection_backward_compatibility: string | null;
+      collection_context_id: string | null;
       language_id: string;
       context_id: string;
       extra: Record<string, unknown>;
@@ -946,6 +947,41 @@ export interface IWriteStrategy {
    * Set the extra JSON on a collections row.
    */
   setCollectionExtra(collectionId: string, extra: string): Promise<void>;
+
+  /**
+   * Find collections rows whose `extra` holds any of `keys` at its top level.
+   * Used by CollectionRelationsImporter.
+   */
+  findCollectionsWithExtraKeys(
+    keys: readonly string[]
+  ): Promise<Array<{ id: string; extra: Record<string, unknown> }>>;
+
+  /**
+   * Replace a collection's other countries (`collection_country`) with these
+   * ISO3 ids, in this order.
+   */
+  replaceCollectionCountries(collectionId: string, countryIds: readonly string[]): Promise<void>;
+
+  /**
+   * Replace a collection's links of one kind (`collection_collection`) with
+   * these collections, in this order.
+   */
+  replaceCollectionLinks(
+    collectionId: string,
+    kind: string,
+    relatedCollectionIds: readonly string[]
+  ): Promise<void>;
+
+  /**
+   * Set a collection's `cover_item_id` and `days` (those given) and its extra
+   * JSON (or clear it, with null), as given: the extra was sanitized when it
+   * was first written.
+   */
+  setCollectionRelationColumnsAsStored(
+    collectionId: string,
+    columns: { cover_item_id?: string; days?: number },
+    extra: string | null
+  ): Promise<void>;
 
   /**
    * Get a collection's current purpose (null when unset).

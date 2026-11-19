@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
+import { loadCollectionRelations, withCollectionRelations, withTranslationRelations } from '../../../shared/collection-relations.mjs'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { PUBLICATION_PATH, siteLink, type Site } from '../../../shared/sites.mjs'
 import { BaseExporter } from './base-exporter.js'
@@ -163,12 +164,15 @@ export class CollectionExporter extends BaseExporter {
     // The collection credits are Contributors now (M16 I5); each translation's
     // `extra` gets them back under their keys, as the packages ship them.
     const credits = await loadCollectionCredits((sql, params) => this.db.query(sql, params), collectionIds)
+    // The relations legacy kept as id lists are the model's now (M16 E3); the
+    // collection's and its English text's `extra` get them back.
+    const relations = await loadCollectionRelations((sql, params) => this.db.query(sql, params), collectionIds)
     // collection_id -> lang_code -> fields. A collection translated in two
     // contexts keeps the first row, the sort above deciding.
     const byLang = new Map<string, Record<string, unknown>>()
     for (const t of translations) {
       const extra = withCollectionCredits(
-        parseJson(t.extra),
+        withTranslationRelations(parseJson(t.extra), relations.get(t.collection_id), t),
         credits.get(creditKey(t.collection_id, t.language_id, t.context_id))
       )
       const code = langCodeMap.get(t.language_id)
@@ -226,7 +230,7 @@ export class CollectionExporter extends BaseExporter {
         latitude: c.latitude !== null ? parseFloat(c.latitude) : null,
         longitude: c.longitude !== null ? parseFloat(c.longitude) : null,
         map_zoom: c.map_zoom,
-        extra: withPublicationLinks(parseJson(c.extra), publications),
+        extra: withPublicationLinks(withCollectionRelations(parseJson(c.extra), relations.get(c.id)), publications),
         images: imageMap.get(c.id) ?? [],
         items: itemMap.get(c.id) ?? [],
       }))

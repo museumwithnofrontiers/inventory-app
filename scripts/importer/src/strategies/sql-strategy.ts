@@ -2036,6 +2036,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
       id: string;
       collection_id: string;
       collection_backward_compatibility: string | null;
+      collection_context_id: string | null;
       language_id: string;
       context_id: string;
       extra: Record<string, unknown>;
@@ -2045,6 +2046,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
     const paths = keys.map(() => '?').join(', ');
     const [rows] = await this.db.execute<RowDataPacket[]>(
       `SELECT ct.id, ct.collection_id, c.backward_compatibility AS collection_backward_compatibility,
+              c.context_id AS collection_context_id,
               ct.language_id, ct.context_id, ct.extra
        FROM collection_translations ct
        JOIN collections c ON c.id = ct.collection_id
@@ -2059,6 +2061,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
         collection_id: row.collection_id as string,
         collection_backward_compatibility:
           (row.collection_backward_compatibility as string | null) ?? null,
+        collection_context_id: (row.collection_context_id as string | null) ?? null,
         language_id: row.language_id as string,
         context_id: row.context_id as string,
         extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
@@ -2510,6 +2513,81 @@ export class SqlWriteStrategy implements IWriteStrategy {
       this.now,
       collectionId,
     ]);
+  }
+
+  async findCollectionsWithExtraKeys(
+    keys: readonly string[]
+  ): Promise<Array<{ id: string; extra: Record<string, unknown> }>> {
+    if (keys.length === 0) return [];
+    const paths = keys.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT id, extra FROM collections
+       WHERE extra IS NOT NULL AND JSON_CONTAINS_PATH(extra, 'one', ${paths})
+       ORDER BY id`,
+      keys.map((key) => `$.${key}`)
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async replaceCollectionCountries(
+    collectionId: string,
+    countryIds: readonly string[]
+  ): Promise<void> {
+    await this.db.execute(`DELETE FROM collection_country WHERE collection_id = ?`, [
+      collectionId,
+    ]);
+    for (const [index, countryId] of countryIds.entries()) {
+      await this.db.execute(
+        `INSERT INTO collection_country (collection_id, country_id, display_order, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?)`,
+        [collectionId, countryId, index + 1, this.now, this.now]
+      );
+    }
+  }
+
+  async replaceCollectionLinks(
+    collectionId: string,
+    kind: string,
+    relatedCollectionIds: readonly string[]
+  ): Promise<void> {
+    await this.db.execute(
+      `DELETE FROM collection_collection WHERE collection_id = ? AND kind = ?`,
+      [collectionId, kind]
+    );
+    for (const [index, relatedId] of relatedCollectionIds.entries()) {
+      await this.db.execute(
+        `INSERT INTO collection_collection (collection_id, related_collection_id, kind, display_order, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [collectionId, relatedId, kind, index + 1, this.now, this.now]
+      );
+    }
+  }
+
+  async setCollectionRelationColumnsAsStored(
+    collectionId: string,
+    columns: { cover_item_id?: string; days?: number },
+    extra: string | null
+  ): Promise<void> {
+    const sets: string[] = [];
+    const values: Array<string | number> = [];
+    if (columns.cover_item_id !== undefined) {
+      sets.push('cover_item_id = ?');
+      values.push(columns.cover_item_id);
+    }
+    if (columns.days !== undefined) {
+      sets.push('days = ?');
+      values.push(columns.days);
+    }
+    await this.db.execute(
+      `UPDATE collections SET ${[...sets, 'extra = ?', 'updated_at = ?'].join(', ')} WHERE id = ?`,
+      [...values, extra, this.now, collectionId]
+    );
   }
 
   async getCollectionPurpose(collectionId: string): Promise<string | null> {

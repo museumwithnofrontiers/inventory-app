@@ -19,6 +19,7 @@ use App\Http\Controllers\Filament\ContributorImageController as FilamentContribu
 use App\Http\Controllers\Filament\ItemDocumentController as FilamentItemDocumentController;
 use App\Http\Controllers\Filament\ItemImageController as FilamentItemImageController;
 use App\Http\Controllers\Filament\PartnerImageController as FilamentPartnerImageController;
+use App\Http\Controllers\Filament\PartnerLogoController as FilamentPartnerLogoController;
 use App\Http\Controllers\Filament\PartnerTranslationImageController as FilamentPartnerTranslationImageController;
 use App\Http\Controllers\Filament\PublicationDocumentController as FilamentPublicationDocumentController;
 use App\Http\Controllers\Filament\PublicationImageController as FilamentPublicationImageController;
@@ -181,6 +182,11 @@ class AdminPanelProvider extends PanelProvider
                     ->name('partner-image.view');
                 Route::get('/partners/{partner}/images/{partnerImage}/download', [FilamentPartnerImageController::class, 'download'])
                     ->name('partner-image.download');
+
+                Route::get('/partners/{partner}/logos/{partnerLogo}/view', [FilamentPartnerLogoController::class, 'view'])
+                    ->name('partner-logo.view');
+                Route::get('/partners/{partner}/logos/{partnerLogo}/download', [FilamentPartnerLogoController::class, 'download'])
+                    ->name('partner-logo.download');
 
                 Route::get('/partner-translations/{partnerTranslation}/images/{partnerTranslationImage}/view', [FilamentPartnerTranslationImageController::class, 'view'])
                     ->name('partner-translation-image.view');

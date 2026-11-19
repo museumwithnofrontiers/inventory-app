@@ -6,10 +6,12 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ContributorsRelationManager as CollectionContributorsRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\CountriesRelationManager as CollectionCountriesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ImagesRelationManager as CollectionImagesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager as CollectionPartnersRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager as CollectionPublicationsRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\RelatedCollectionsRelationManager as CollectionRelatedCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
 use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\RelationManagers\SiblingTranslationsRelationManager as CollectionTranslationSiblingTranslationsRelationManager;
@@ -51,6 +53,7 @@ use App\Filament\Resources\LanguageResource\RelationManagers\TranslationsRelatio
 use App\Filament\Resources\PartnerResource\Pages\EditPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\CollectionParticipationsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManager as PartnerImagesRelationManager;
+use App\Filament\Resources\PartnerResource\RelationManagers\LogosRelationManager as PartnerLogosRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager as PartnerTranslationsRelationManager;
 use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
@@ -214,6 +217,9 @@ class RelationManagerConventionTest extends TestCase
         // ── pivot ─────────────────────────────────────────────────────
         CollectionItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true, 'extraRow' => ['view_appearance']],
         CollectionPartnersRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true],
+        // M16 E3 (#2649): a collection's other countries, and its links to other collections by kind
+        CollectionCountriesRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true],
+        CollectionRelatedCollectionsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'collection', 'edit' => true],
         CollectionAppearancesRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => true, 'extraRow' => ['view_appearance']],
         TagsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
         ArtistsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
@@ -259,6 +265,11 @@ class RelationManagerConventionTest extends TestCase
         PartnerImagesRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'partner',
             'pinnedHeader' => ['attach'], 'pinnedRow' => ['view_image', 'download', 'edit', 'detach', 'delete'], 'pinnedBulk' => [],
+        ],
+        // A partner's logos (M16 E3, #2649): no upload, so no attach; view and download the original, as the images
+        PartnerLogosRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'partner',
+            'pinnedHeader' => [], 'pinnedRow' => ['view_image', 'download', 'edit', 'delete'], 'pinnedBulk' => [],
         ],
         OutgoingLinksRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'item',
@@ -554,13 +565,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 8 has-many + 20 pivot + 4 translations + 4 inline + 23 pinned = 59.
+        // 8 has-many + 22 pivot + 4 translations + 4 inline + 24 pinned = 62.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(59, self::allManagers());
+        $this->assertCount(62, self::allManagers());
     }
 
     private function classify(string $class): array

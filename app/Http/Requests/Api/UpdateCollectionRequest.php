@@ -50,6 +50,8 @@ class UpdateCollectionRequest extends FormRequest
             'display_order' => ['nullable', 'integer', 'min:0'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
             'extra' => ['nullable', 'array'],
+            'cover_item_id' => ['nullable', 'uuid', 'exists:items,id'],
+            'days' => ['nullable', 'integer', 'min:1', 'max:365'],
         ];
     }
 }
