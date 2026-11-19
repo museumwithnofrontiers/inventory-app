@@ -18,6 +18,14 @@ Paths are relative to `src/`; `T:` is `domain/transformers/`.
 
 ## item_translations.extra
 
+Five keys below are written here first, then moved to columns of their own by
+`importers/phase-11/item-translation-columns-importer.ts` (M16 B1, #2635), the text as written:
+`materials` → `materials`, `description2` → `short_description`, `dynasty` → `dynasty`, `province` →
+`region`, `history` → `history`. None stays after a full import. After re-running one of their writers on
+its own, run `--only item-translation-columns` again. The exporters give the keys back to the packages
+(`scripts/exporters/shared/item-columns.mjs`); the two lists in `utils/item-translation-columns.ts` and
+that module stay equal.
+
 | Key                                                                                                                                                                                          | Legacy source                                                                                                                                            | Written by                                                                                       |
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
 | `province`                                                                                                                                                                                   | mwnf3.objects.province                                                                                                                                   | T:object-transformer.ts                                                                          |

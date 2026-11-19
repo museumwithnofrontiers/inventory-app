@@ -28,6 +28,11 @@ use Illuminate\Support\Facades\DB;
  * @property string $context_id
  * @property string|null $name
  * @property string|null $description
+ * @property string|null $short_description
+ * @property string|null $materials
+ * @property string|null $dynasty
+ * @property string|null $region
+ * @property string|null $history
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -103,19 +108,24 @@ class ItemTranslation extends Model
         'name',
         'alternate_name',
         'description',
+        'short_description',
         'type',
         'holder',
         'owner',
         'initial_owner',
         'dates',
         'location',
+        'region',
         'dimensions',
+        'materials',
+        'dynasty',
         'place_of_production',
         'method_for_datation',
         'method_for_provenance',
         'provenance',
         'obtention',
         'bibliography',
+        'history',
         'author_id',
         'text_copy_editor_id',
         'translator_id',

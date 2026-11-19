@@ -83,4 +83,30 @@ class ItemTranslationTest extends TestCase
         $this->assertSame($long, $resource->alternate_name);
         $this->assertSame($long, $resource->type);
     }
+
+    /**
+     * The display texts that left `extra` (M16 B1) are stored and served as
+     * written.
+     */
+    public function test_stores_and_serves_the_display_columns(): void
+    {
+        $resource = ItemTranslation::factory()->create();
+        $texts = [
+            'short_description' => 'A brass basin, engraved.',
+            'materials' => 'Brass, hammered, engraved and inlaid with silver.',
+            'dynasty' => 'Mamluk; the lid probably Ottoman.',
+            'region' => 'Damascus',
+            'history' => 'Built in 1277, restored in 1350.',
+        ];
+
+        $this->putJson(route('item-translation.update', $resource), $texts)
+            ->assertOk()
+            ->assertJsonPath('data.short_description', $texts['short_description'])
+            ->assertJsonPath('data.materials', $texts['materials'])
+            ->assertJsonPath('data.dynasty', $texts['dynasty'])
+            ->assertJsonPath('data.region', $texts['region'])
+            ->assertJsonPath('data.history', $texts['history']);
+
+        $this->assertDatabaseHas('item_translations', ['id' => $resource->id] + $texts);
+    }
 }

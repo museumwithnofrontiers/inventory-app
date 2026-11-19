@@ -1860,19 +1860,24 @@ const UPDATED_AT = 'updated_at';
 | `name` | varchar | Unknown | Unknown |  |
 | `alternate_name` | text | Unknown | Unknown |  |
 | `description` | text | Unknown | Unknown |  |
+| `short_description` | text | Unknown | Unknown |  |
 | `type` | text | Unknown | Unknown |  |
 | `holder` | text | Unknown | Unknown |  |
 | `owner` | text | Unknown | Unknown |  |
 | `initial_owner` | text | Unknown | Unknown |  |
 | `dates` | text | Unknown | Unknown |  |
 | `location` | text | Unknown | Unknown |  |
+| `region` | text | Unknown | Unknown |  |
 | `dimensions` | text | Unknown | Unknown |  |
+| `materials` | text | Unknown | Unknown |  |
+| `dynasty` | text | Unknown | Unknown |  |
 | `place_of_production` | text | Unknown | Unknown |  |
 | `method_for_datation` | text | Unknown | Unknown |  |
 | `method_for_provenance` | text | Unknown | Unknown |  |
 | `provenance` | text | Unknown | Unknown |  |
 | `obtention` | text | Unknown | Unknown |  |
 | `bibliography` | text | Unknown | Unknown |  |
+| `history` | text | Unknown | Unknown |  |
 | `author_id` | char | Unknown | Unknown |  |
 | `text_copy_editor_id` | char | Unknown | Unknown |  |
 | `translator_id` | char | Unknown | Unknown |  |
@@ -1885,7 +1890,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'dimensions', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'backward_compatibility', 'extra']
+['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting

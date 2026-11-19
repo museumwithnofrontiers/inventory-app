@@ -5,6 +5,7 @@
 
 import { resolveItemSites, type Query, type Site } from '../../../shared/sites.mjs'
 import { resolveItemPages } from '../../../shared/pages.mjs'
+import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs'
 import type { BuildInput, ItemRow, NameRow, TagRow, TranslationRow } from './documents.js'
 
 /** The item types that have a page of their own on a site. Pictures are an item's images, not results. */
@@ -39,10 +40,11 @@ export async function readInput(query: Query, sites: Site[], baseUrl: string): P
   const pictures = new Map<string, string>()
   for (const part of chunks(ids)) {
     translations.push(
-      ...(await q<TranslationRow>(
+      ...restoreItemColumns(await q<TranslationRow>(
         `SELECT it.item_id, l.backward_compatibility AS language, it.context_id,
                 p.context_id AS own_context_id, it.name, it.alternate_name, it.description, it.type,
-                it.holder, it.owner, it.dates, it.location, it.place_of_production, it.provenance, it.extra
+                it.holder, it.owner, it.dates, it.location, it.place_of_production, it.provenance, it.extra,
+                ${itemColumnsSelect('it')}
          FROM item_translations it
          JOIN items i ON i.id = it.item_id
          JOIN languages l ON l.id = it.language_id
