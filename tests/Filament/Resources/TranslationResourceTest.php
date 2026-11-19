@@ -565,6 +565,8 @@ class TranslationResourceTest extends TestCase
                 'region' => 'Attica',
                 'history' => 'Removed from the Parthenon in 1801.',
                 'author_id' => $author->id,
+                'author_credit' => 'Jane Author (text).',
+                'translator_credit' => 'From the Greek.',
                 'backward_compatibility' => 'legacy-123',
                 'extra' => '{"notes": "Some extra notes"}',
             ])
@@ -580,6 +582,8 @@ class TranslationResourceTest extends TestCase
             'dynasty' => 'Classical period',
             'region' => 'Attica',
             'history' => 'Removed from the Parthenon in 1801.',
+            'author_credit' => 'Jane Author (text).',
+            'translator_credit' => 'From the Greek.',
             'type' => 'sculpture',
             'holder' => 'The British Museum',
             'dates' => '3rd century BC',

@@ -1882,6 +1882,10 @@ const UPDATED_AT = 'updated_at';
 | `text_copy_editor_id` | char | Unknown | Unknown |  |
 | `translator_id` | char | Unknown | Unknown |  |
 | `translation_copy_editor_id` | char | Unknown | Unknown |  |
+| `author_credit` | text | Unknown | Unknown |  |
+| `copy_editor_credit` | text | Unknown | Unknown |  |
+| `translator_credit` | text | Unknown | Unknown |  |
+| `translation_copy_editor_credit` | text | Unknown | Unknown |  |
 | `backward_compatibility` | varchar | Unknown | Unknown |  |
 | `extra` | json | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -1890,7 +1894,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'backward_compatibility', 'extra']
+['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting

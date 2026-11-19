@@ -5,6 +5,7 @@ import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
 import type { IWriteStrategy } from '../../src/core/strategy.js';
 import {
+  ITEM_TRANSLATION_COLUMN_KEYS,
   ITEM_TRANSLATION_COLUMNS,
   splitItemTranslationColumns,
 } from '../../src/utils/item-translation-columns.js';
@@ -39,13 +40,69 @@ describe('splitItemTranslationColumns', () => {
     expect(kept).toEqual(['history']);
   });
 
-  it('covers the five keys of B1', () => {
+  it('moves the credits as written into the four columns and drops the emptied object', () => {
+    const { extra, columns, kept } = splitItemTranslationColumns({
+      credits_as_written: {
+        author: 'Mona al-Moadin - Zena Takieddine.',
+        translator: 'Hilary Kalmbach (from the Arabic).',
+      },
+      copyright: 'MWNF',
+    });
+    expect(columns).toEqual({
+      author_credit: 'Mona al-Moadin - Zena Takieddine.',
+      translator_credit: 'Hilary Kalmbach (from the Arabic).',
+    });
+    expect(extra).toEqual({ copyright: 'MWNF' });
+    expect(kept).toEqual([]);
+  });
+
+  it('keeps an unknown key inside credits_as_written', () => {
+    const { extra, columns } = splitItemTranslationColumns({
+      credits_as_written: { author: 'Ana', note: 'x' },
+    });
+    expect(columns).toEqual({ author_credit: 'Ana' });
+    expect(extra).toEqual({ credits_as_written: { note: 'x' } });
+  });
+
+  it('moves prepared_by into author_credit, as written', () => {
+    const { extra, columns } = splitItemTranslationColumns({
+      prepared_by: 'Author: Curatorial committee (Farida Benouis)',
+    });
+    expect(columns).toEqual({ author_credit: 'Author: Curatorial committee (Farida Benouis)' });
+    expect(extra).toBeNull();
+  });
+
+  it('keeps a second author credit in extra rather than lose one', () => {
+    const { extra, columns, kept } = splitItemTranslationColumns({
+      credits_as_written: { author: 'Ana' },
+      prepared_by: 'Bea',
+    });
+    expect(columns).toEqual({ author_credit: 'Ana' });
+    expect(extra).toEqual({ prepared_by: 'Bea' });
+    expect(kept).toEqual(['prepared_by']);
+  });
+
+  it('covers the keys of B1 and B4', () => {
     expect(ITEM_TRANSLATION_COLUMNS.map((c) => `${c.key}→${c.column}`)).toEqual([
       'materials→materials',
       'description2→short_description',
       'dynasty→dynasty',
       'province→region',
       'history→history',
+      'credits_as_written.author→author_credit',
+      'credits_as_written.copy_editor→copy_editor_credit',
+      'credits_as_written.translator→translator_credit',
+      'credits_as_written.translation_copy_editor→translation_copy_editor_credit',
+      'prepared_by→author_credit',
+    ]);
+    expect(ITEM_TRANSLATION_COLUMN_KEYS).toEqual([
+      'materials',
+      'description2',
+      'dynasty',
+      'province',
+      'history',
+      'credits_as_written',
+      'prepared_by',
     ]);
   });
 });
@@ -90,7 +147,7 @@ describe('ItemTranslationColumnsImporter', () => {
     };
   });
 
-  it('asks for the five keys and writes each row once', async () => {
+  it('asks for every mapped key and writes each row once', async () => {
     findMock.mockResolvedValue([
       { id: 't1', extra: { materials: 'Glass', copyright: 'MWNF' } },
       { id: 't2', extra: { history: 'Built in 1277.' } },
@@ -100,13 +157,7 @@ describe('ItemTranslationColumnsImporter', () => {
 
     expect(result.success).toBe(true);
     expect(result.imported).toBe(2);
-    expect(findMock).toHaveBeenCalledWith([
-      'materials',
-      'description2',
-      'dynasty',
-      'province',
-      'history',
-    ]);
+    expect(findMock).toHaveBeenCalledWith(ITEM_TRANSLATION_COLUMN_KEYS);
     expect(setMock.mock.calls).toEqual([
       ['t1', { materials: 'Glass' }, JSON.stringify({ copyright: 'MWNF' })],
       ['t2', { history: 'Built in 1277.' }, null],

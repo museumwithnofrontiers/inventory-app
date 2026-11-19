@@ -41,4 +41,4 @@ Keys the file doesn't list are not checked.
 
 [`extra-census-m16-epic-i.json`](extra-census-m16-epic-i.json) holds what M16's Epic I removed: the keys it took out are at 0, and the 302 Travels `prepared_by` texts that stay as written (role labels, or a name an existing author spells with other accents) are the ceiling for that key. I5 added the eight collection credits of `collection_translations`, at 0: they are Contributors now.
 
-[`extra-census-m16.json`](extra-census-m16.json) is the running expectation for the whole milestone: Epic I's keys, plus each later story's. B1 (#2635) puts `materials`, `description2`, `dynasty`, `province` and `history` of `item_translations` at 0: they are columns now.
+[`extra-census-m16.json`](extra-census-m16.json) is the running expectation for the whole milestone: Epic I's keys, plus each later story's. B1 (#2635) puts `materials`, `description2`, `dynasty`, `province` and `history` of `item_translations` at 0: they are columns now. B4 (#2638) puts `credits_as_written` and `prepared_by` at 0: the credits as written are the four `*_credit` columns.
