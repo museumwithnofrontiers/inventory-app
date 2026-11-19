@@ -365,10 +365,10 @@ class AuthorizesRelationMutationsTest extends TestCase
             ->assertTableBulkActionVisible('detach');
     }
 
-    // ── Item: MediaRelationManager (has-many, no policy of its own) ─────────
+    // ── Item: LinksRelationManager (morph-many, no policy of its own) ──────
 
     /**
-     * This is the gap #1864 found: ItemMedia has no policy of its own, so
+     * This is the gap #1864 found: a Link (then ItemMedia) has no policy of its own, so
      * Filament's default canCreate() allowed Create unconditionally. It must
      * now require `update` on the host Item.
      */

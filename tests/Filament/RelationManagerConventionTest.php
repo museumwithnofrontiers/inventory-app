@@ -64,7 +64,6 @@ use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationMana
 use App\Filament\Resources\PublicationResource\Pages\EditPublication;
 use App\Filament\Resources\PublicationResource\RelationManagers\CollectionsRelationManager as PublicationCollectionsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\DocumentsRelationManager as PublicationDocumentsRelationManager;
-use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\EditionsRelationManager as PublicationEditionsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\ImagesRelationManager as PublicationImagesRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\ItemsRelationManager as PublicationItemsRelationManager;
@@ -72,6 +71,7 @@ use App\Filament\Resources\PublicationResource\RelationManagers\TagsRelationMana
 use App\Filament\Resources\PublicationResource\RelationManagers\TranslationsRelationManager as PublicationTranslationsRelationManager;
 use App\Filament\Resources\PublicationTranslationResource\Pages\EditPublicationTranslation;
 use App\Filament\Resources\PublicationTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PublicationTranslationSiblingTranslationsRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Resources\RoleResource\Pages\EditRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;

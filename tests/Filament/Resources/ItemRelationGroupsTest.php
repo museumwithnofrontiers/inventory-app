@@ -10,12 +10,12 @@ use App\Filament\Resources\ItemResource\RelationManagers\DocumentsRelationManage
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\IncomingLinksRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\OutgoingLinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Tests\TestCase;
 
@@ -102,7 +102,7 @@ class ItemRelationGroupsTest extends TestCase
         $managers = $mediaGroup->getManagers();
 
         $this->assertSame(
-            [ImagesRelationManager::class, MediaRelationManager::class, DocumentsRelationManager::class],
+            [ImagesRelationManager::class, LinksRelationManager::class, DocumentsRelationManager::class],
             $managers
         );
     }
@@ -158,7 +158,7 @@ class ItemRelationGroupsTest extends TestCase
             CollectionAppearancesRelationManager::class,
             TagsRelationManager::class,
             ImagesRelationManager::class,
-            MediaRelationManager::class,
+            LinksRelationManager::class,
             DocumentsRelationManager::class,
             ArtistsRelationManager::class,
             DynastiesRelationManager::class,
