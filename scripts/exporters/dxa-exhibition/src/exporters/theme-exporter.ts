@@ -1,3 +1,4 @@
+import { placementTranslationsSelect, restorePlacementTranslations } from '../../../shared/placement-translations.mjs'
 import type { ExportResult, Theme } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 
@@ -96,12 +97,12 @@ export class ThemeExporter extends BaseExporter {
 
     const [selections, themeTranslations] = await Promise.all([
       this.db.query<ThemeItemRow>(
-        `SELECT collection_id, item_id, display_order, extra
-         FROM collection_item
-         WHERE collection_id IN (${themePh})
-         ORDER BY collection_id, display_order`,
+        `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra, ${placementTranslationsSelect('ci')}
+         FROM collection_item ci
+         WHERE ci.collection_id IN (${themePh})
+         ORDER BY ci.collection_id, ci.display_order`,
         themeIds
-      ),
+      ).then(restorePlacementTranslations),
       this.db.query<ThemeTranslationRow>(
         // Row order is unspecified; sorted so the theme-id key order in each
         // language's translation file is byte-identical across two exports of

@@ -154,6 +154,17 @@ An attached membership is a **placement** (`App\Models\CollectionItem`), a recor
 - `picture_item_id`: the picture the placement shows.
 - `curator_selected`: the curator's flag. Empty means legacy didn't say.
 
+A placement also has its own texts, one set per language: its **translations** (`App\Models\CollectionItemTranslation`). They belong to the placement, not to the item, because the same item placed on two themes can carry two descriptions and two captions. Each text is kept as written:
+
+- `title`: a detail view's name;
+- `description`: the item's text on this collection;
+- `curator_justification` and `partner_justification`: why the item was selected, as Sharing History gives them; `justification`: the National Context's single one;
+- `caption`: the image caption;
+- `item_name`, `item_date`, `item_location`, `item_museum`, `item_dynasty`, `item_artist`, `item_material`: the item's caption on this collection;
+- `backward_compatibility`: the text's own legacy key.
+
+They are edited on the placement's page, which the Collection's Items list opens with **View appearance**.
+
 #### Collection default language and context
 
 Each collection records a **default language** and a **default context**. These specify which language and audience context should be used as the primary mode of presentation for this collection. They do not restrict what translations can be created; they express an editorial preference.

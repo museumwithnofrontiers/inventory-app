@@ -1,5 +1,6 @@
 import type { Database } from '../core/database.js'
 import type { ExhibitionSite } from '../core/instance.js'
+import { placementTranslationsSelect, restorePlacementTranslations } from '../../../shared/placement-translations.mjs'
 
 /**
  * Legacy's "On display in → Exhibition(s)" on the galleries' item sheet
@@ -191,7 +192,7 @@ export async function buildExhibitionReferences(
           `SELECT pic.parent_id AS item_id, pt.parent_id AS root_id,
                   pt.id AS theme_id, pt.backward_compatibility AS theme_bc, pt.display_order AS theme_order,
                   st.id AS subtheme_id, st.display_order AS subtheme_order,
-                  ci.display_order AS picture_order, ci.extra
+                  ci.display_order AS picture_order, ci.extra, ${placementTranslationsSelect('ci')}
            FROM collection_item ci
            JOIN items pic ON pic.id = ci.item_id AND pic.type = 'picture'
            JOIN collections st ON st.id = ci.collection_id
@@ -202,6 +203,7 @@ export async function buildExhibitionReferences(
           [...exhibitionRoots, ...memberItemIds]
         ),
   ])
+  restorePlacementTranslations(exhibitionRows)
 
   const titledIds = new Set<string>()
   for (const row of virtualRows) titledIds.add(row.root_id).add(row.theme_id)

@@ -195,8 +195,25 @@ written here first, then moved to the placement's columns, or dropped, by
 A value the step can't place (an `n` that differs from `display_order`, a `detail_n` other than 1, a
 `curator_status` other than Y or N, a `picture` that resolves to no picture or to more than one) stays here and
 is reported. None stays after a full import. After re-running one of their writers on its own, run
-`--only collection-item-columns` again. The exporters read the columns themselves. `source_bc_by_language`
-stays until C2 (#2642) gives the placement translations their own legacy keys.
+`--only collection-item-columns` again. The exporters read the columns themselves.
+
+A placement's texts are its own, per language (M16 C2, #2642; decision 4 (a)): the same item on two themes
+keeps two descriptions and two captions. They are written here first, then moved to the placement
+translations, `collection_item_translations`, one row per placement and language, by
+`importers/phase-11/collection-item-translations-importer.ts`. Each key goes to one column, as written:
+- `detail_name` → `title`; `image_captions` → `caption`;
+- `contextual_descriptions` (thematic gallery themes, Travels trails) or `detail_justification` (mwnf3
+  exhibition pages) → `description`. A placement has one or the other; an mwnf3 collection's is
+  `detail_justification`, and a placement where that doesn't hold keeps the key here;
+- `justifications`: `{curator, partner}` → `curator_justification` and `partner_justification`, JSON nulls
+  included; the National Context's single text → `justification`;
+- `item_name`, `item_date`, `item_location`, `item_museum`, and `item_dynasty`, `item_artist`, `item_material`
+  (C3, #2643) → the columns of the same name: the item's caption on that page, as written (decision 1 (a));
+- `source_bc_by_language` → `backward_compatibility`: each theme text's own legacy key (ADR 006 rule 3).
+
+A key of another shape stays here and is reported. None stays after a full import. After re-running one of their
+writers on its own, run `--only collection-item-translations` again. The exporters put the keys back
+(`scripts/exporters/shared/placement-translations.mjs`), so the packages are unchanged.
 
 | Key                                                                                                                                                                                                              | Legacy source                                                                        | Written by                                                                                                |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------- |

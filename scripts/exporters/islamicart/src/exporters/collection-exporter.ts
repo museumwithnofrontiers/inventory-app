@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
+import { placementTranslationsSelect, restorePlacementTranslations } from '../../../shared/placement-translations.mjs'
 import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { restoreSiteTranslations } from '../../../shared/site-configuration.mjs'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
@@ -150,7 +151,7 @@ export class CollectionExporter extends BaseExporter {
       this.db.query<CollectionItemRow>(
         `SELECT ci.collection_id,
                 IF(i.type = 'picture' AND i.parent_id IS NOT NULL, i.parent_id, i.id) AS item_id,
-                ci.display_order, ci.variant_order, ci.extra,
+                ci.display_order, ci.variant_order, ci.extra, ${placementTranslationsSelect('ci')},
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
                     ORDER BY ii.display_order, ii.id LIMIT 1),
@@ -178,6 +179,7 @@ export class CollectionExporter extends BaseExporter {
         collectionIds
       ),
     ])
+    restorePlacementTranslations(itemLinks)
     const glossaryIds = new Map<string, string[]>()
     for (const link of glossaryLinks) {
       const key = `${link.collection_id} ${link.language_id}`

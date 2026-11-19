@@ -8,6 +8,7 @@ use App\Http\Controllers\AuthorTranslationController;
 use App\Http\Controllers\AvailableImageController;
 use App\Http\Controllers\CollectionController;
 use App\Http\Controllers\CollectionImageController;
+use App\Http\Controllers\CollectionItemTranslationController;
 use App\Http\Controllers\CollectionTranslationController;
 use App\Http\Controllers\ContextController;
 use App\Http\Controllers\ContributorController;
@@ -201,6 +202,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('image-translation', [ImageTranslationController::class, 'index'])->name('image-translation.index');
         Route::get('image-translation/{imageTranslation}', [ImageTranslationController::class, 'show'])->name('image-translation.show');
 
+        // CollectionItemTranslation routes (read): a placement's texts per language
+        Route::get('collection-item-translation', [CollectionItemTranslationController::class, 'index'])->name('collection-item-translation.index');
+        Route::get('collection-item-translation/{collectionItemTranslation}', [CollectionItemTranslationController::class, 'show'])->name('collection-item-translation.show');
+
         // Link routes (read): the links of items, collections, partners and publication editions
         Route::get('item/{item}/links', [LinkController::class, 'indexForItem'])->name('item.links.index');
         Route::get('collection/{collection}/links', [LinkController::class, 'indexForCollection'])->name('collection.links.index');
@@ -311,6 +316,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('item', [ItemController::class, 'store'])->name('item.store');
         Route::post('item/{item}/images', [ItemImageController::class, 'store'])->name('item.images.store');
         Route::post('image-translation', [ImageTranslationController::class, 'store'])->name('image-translation.store');
+        Route::post('collection-item-translation', [CollectionItemTranslationController::class, 'store'])->name('collection-item-translation.store');
         Route::post('item/{item}/attach-image', [ItemImageController::class, 'attachFromAvailable'])->name('item.attachImage');
         Route::post('item/{item}/links', [LinkController::class, 'storeForItem'])->name('item.links.store');
         Route::post('collection/{collection}/links', [LinkController::class, 'storeForCollection'])->name('collection.links.store');
@@ -432,6 +438,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::patch('item-image/{itemImage}', [ItemImageController::class, 'update'])->name('item-image.update');
         Route::patch('image-translation/{imageTranslation}', [ImageTranslationController::class, 'update'])->name('image-translation.update');
         Route::put('image-translation/{imageTranslation}', [ImageTranslationController::class, 'update']);
+        Route::patch('collection-item-translation/{collectionItemTranslation}', [CollectionItemTranslationController::class, 'update'])->name('collection-item-translation.update');
+        Route::put('collection-item-translation/{collectionItemTranslation}', [CollectionItemTranslationController::class, 'update']);
         Route::put('item-image/{itemImage}', [ItemImageController::class, 'update']);
         Route::patch('item-image/{itemImage}/move-up', [ItemImageController::class, 'moveUp'])->name('item-image.moveUp');
         Route::patch('item-image/{itemImage}/move-down', [ItemImageController::class, 'moveDown'])->name('item-image.moveDown');
@@ -549,6 +557,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('item/{item}/detach-tags', [ItemController::class, 'detachTags'])->name('item.detachTags');
         Route::delete('item-image/{itemImage}', [ItemImageController::class, 'destroy'])->name('item-image.destroy');
         Route::delete('image-translation/{imageTranslation}', [ImageTranslationController::class, 'destroy'])->name('image-translation.destroy');
+        Route::delete('collection-item-translation/{collectionItemTranslation}', [CollectionItemTranslationController::class, 'destroy'])->name('collection-item-translation.destroy');
         Route::post('item-image/{itemImage}/detach', [ItemImageController::class, 'detachToAvailable'])->name('item-image.detach');
         Route::delete('link/{link}', [LinkController::class, 'destroy'])->name('link.destroy');
         Route::delete('item-document/{itemDocument}', [ItemDocumentController::class, 'destroy'])->name('item-document.destroy');

@@ -4,12 +4,14 @@ namespace Tests\Unit\Models;
 
 use App\Models\Collection;
 use App\Models\CollectionItem;
+use App\Models\CollectionItemTranslation;
 use App\Models\Item;
+use App\Models\Language;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * Tests for the CollectionItem typed pivot model.
+ * Tests for the CollectionItem typed pivot model: the placement.
  */
 class CollectionItemTest extends TestCase
 {
@@ -33,160 +35,47 @@ class CollectionItemTest extends TestCase
     {
         $collection = Collection::factory()->create();
         $item = Item::factory()->Object()->create();
-        $extra = [
-            'contextual_descriptions' => ['eng' => 'A description in English.'],
-            'source_bc_by_language' => ['eng' => 'THG-001'],
-        ];
-        $collection->attachedItems()->attach($item->id, ['extra' => $extra]);
+        $collection->attachedItems()->attach($item->id, ['extra' => ['membership' => 'project']]);
 
         /** @var CollectionItem $pivot */
         $pivot = $collection->attachedItems()->first()->pivot;
 
         $this->assertInstanceOf(CollectionItem::class, $pivot);
         $this->assertIsArray($pivot->extra);
-        $this->assertArrayHasKey('contextual_descriptions', $pivot->extra);
+        $this->assertArrayHasKey('membership', $pivot->extra);
     }
 
-    public function test_contextual_descriptions_returns_array_from_extra(): void
+    public function test_the_placement_has_its_texts_per_language(): void
     {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $extra = [
-            'contextual_descriptions' => [
-                'eng' => 'English contextual text.',
-                'fra' => 'Texte contextuel en français.',
-            ],
-        ];
-        $collection->attachedItems()->attach($item->id, ['extra' => $extra]);
+        $pivot = $this->placementWithTexts([
+            'eng' => ['description' => 'English contextual text.', 'backward_compatibility' => 'THG-source-001'],
+            'fra' => ['description' => 'Texte contextuel en français.', 'backward_compatibility' => 'THG-source-002'],
+        ]);
 
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $result = $pivot->contextualDescriptions();
-
-        $this->assertIsArray($result);
-        $this->assertSame('English contextual text.', $result['eng']);
-        $this->assertSame('Texte contextuel en français.', $result['fra']);
+        $this->assertSame([
+            'eng' => 'English contextual text.',
+            'fra' => 'Texte contextuel en français.',
+        ], $pivot->contextualDescriptions());
+        $this->assertSame('English contextual text.', $pivot->contextualDescriptionForLanguage('eng'));
+        $this->assertNull($pivot->contextualDescriptionForLanguage('deu'));
+        $this->assertSame(['eng', 'fra'], $pivot->contextualDescriptionLanguages());
+        $this->assertSame(['eng' => 'THG-source-001', 'fra' => 'THG-source-002'], $pivot->sourceBackwardCompatibilityByLanguage());
+        $this->assertSame('THG-source-002', $pivot->sourceBackwardCompatibilityForLanguage('fra'));
     }
 
-    public function test_contextual_descriptions_returns_empty_array_when_extra_is_null(): void
+    public function test_a_language_without_a_description_is_left_out(): void
     {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $collection->attachedItems()->attach($item->id);
+        $pivot = $this->placementWithTexts([
+            'eng' => ['item_name' => 'The Hercules fountain'],
+            'fra' => ['description' => 'Texte.'],
+        ]);
 
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $this->assertSame([], $pivot->contextualDescriptions());
-    }
-
-    public function test_contextual_descriptions_returns_empty_array_when_key_missing(): void
-    {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $extra = ['source_bc_by_language' => ['eng' => 'THG-001']];
-        $collection->attachedItems()->attach($item->id, ['extra' => $extra]);
-
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $this->assertSame([], $pivot->contextualDescriptions());
-    }
-
-    public function test_contextual_description_for_language_returns_string_when_present(): void
-    {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $extra = ['contextual_descriptions' => ['eng' => 'English text.']];
-        $collection->attachedItems()->attach($item->id, ['extra' => $extra]);
-
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $this->assertSame('English text.', $pivot->contextualDescriptionForLanguage('eng'));
-    }
-
-    public function test_contextual_description_for_language_returns_null_when_missing(): void
-    {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $collection->attachedItems()->attach($item->id);
-
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $this->assertNull($pivot->contextualDescriptionForLanguage('eng'));
-    }
-
-    public function test_contextual_description_languages_returns_keys(): void
-    {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $extra = [
-            'contextual_descriptions' => [
-                'eng' => 'English text.',
-                'fra' => 'French text.',
-            ],
-        ];
-        $collection->attachedItems()->attach($item->id, ['extra' => $extra]);
-
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $languages = $pivot->contextualDescriptionLanguages();
-
-        $this->assertEqualsCanonicalizing(['eng', 'fra'], $languages);
-    }
-
-    public function test_source_backward_compatibility_by_language_returns_array(): void
-    {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $extra = [
-            'source_bc_by_language' => [
-                'eng' => 'THG-source-001',
-                'fra' => 'THG-source-002',
-            ],
-        ];
-        $collection->attachedItems()->attach($item->id, ['extra' => $extra]);
-
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $result = $pivot->sourceBackwardCompatibilityByLanguage();
-
-        $this->assertIsArray($result);
-        $this->assertSame('THG-source-001', $result['eng']);
-        $this->assertSame('THG-source-002', $result['fra']);
-    }
-
-    public function test_source_backward_compatibility_by_language_returns_empty_when_missing(): void
-    {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $collection->attachedItems()->attach($item->id);
-
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
+        $this->assertSame(['fra' => 'Texte.'], $pivot->contextualDescriptions());
         $this->assertSame([], $pivot->sourceBackwardCompatibilityByLanguage());
+        $this->assertNull($pivot->sourceBackwardCompatibilityForLanguage('eng'));
     }
 
-    public function test_source_backward_compatibility_for_language_returns_value_when_present(): void
-    {
-        $collection = Collection::factory()->create();
-        $item = Item::factory()->Object()->create();
-        $extra = ['source_bc_by_language' => ['eng' => 'THG-legacy-key']];
-        $collection->attachedItems()->attach($item->id, ['extra' => $extra]);
-
-        /** @var CollectionItem $pivot */
-        $pivot = $collection->attachedItems()->first()->pivot;
-
-        $this->assertSame('THG-legacy-key', $pivot->sourceBackwardCompatibilityForLanguage('eng'));
-    }
-
-    public function test_source_backward_compatibility_for_language_returns_null_when_absent(): void
+    public function test_a_placement_without_texts_has_none(): void
     {
         $collection = Collection::factory()->create();
         $item = Item::factory()->Object()->create();
@@ -195,7 +84,9 @@ class CollectionItemTest extends TestCase
         /** @var CollectionItem $pivot */
         $pivot = $collection->attachedItems()->first()->pivot;
 
-        $this->assertNull($pivot->sourceBackwardCompatibilityForLanguage('fra'));
+        $this->assertSame([], $pivot->contextualDescriptions());
+        $this->assertSame([], $pivot->contextualDescriptionLanguages());
+        $this->assertSame([], $pivot->sourceBackwardCompatibilityByLanguage());
     }
 
     public function test_collection_relationship_resolves_to_collection_model(): void
@@ -244,5 +135,33 @@ class CollectionItemTest extends TestCase
         $attachedCollection = $item->attachedToCollections()->first();
 
         $this->assertInstanceOf(CollectionItem::class, $attachedCollection->pivot);
+    }
+
+    /**
+     * A placement with these texts, read back through the relation as the
+     * panel reads it.
+     *
+     * @param  array<string, array<string, string>>  $texts  language id → columns
+     */
+    private function placementWithTexts(array $texts): CollectionItem
+    {
+        $collection = Collection::factory()->create();
+        $item = Item::factory()->Object()->create();
+        $collection->attachedItems()->attach($item->id);
+        $placement = CollectionItem::query()->where('collection_id', $collection->id)->firstOrFail();
+        foreach ($texts as $languageId => $columns) {
+            Language::factory()->create(['id' => $languageId]);
+            CollectionItemTranslation::factory()->forPlacement($placement)->create([
+                'language_id' => $languageId,
+                'description' => null,
+                'item_name' => null,
+                ...$columns,
+            ]);
+        }
+
+        /** @var CollectionItem $pivot */
+        $pivot = $collection->attachedItems()->first()->pivot;
+
+        return $pivot;
     }
 }

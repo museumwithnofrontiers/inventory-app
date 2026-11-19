@@ -165,6 +165,7 @@ import {
   CollectionTranslationColumnsImporter,
   CollectionItemColumnsImporter,
   VisitInformationImporter,
+  CollectionItemTranslationsImporter,
   PictureCreditsImporter,
   ImageTextsImporter,
   CollectionRelationsImporter,
@@ -1274,6 +1275,17 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: VisitInformationImporter,
     // The monument, Travels and Explore importers write these keys, and later
     // steps move translations between contexts.
+    runsLast: true,
+  },
+  {
+    key: 'collection-item-translations',
+    name: 'Collection Item Translations',
+    description:
+      "Move the placement texts (detail name, description, justifications, image caption, the item's caption, each text's legacy key) out of collection_item.extra to the placement translations, after every importer that writes them (M16 C2, #2642)",
+    importerClass: CollectionItemTranslationsImporter,
+    // The mwnf3 and Sharing History exhibition importers, the National Context
+    // importer, the thematic gallery and Travels trail importers and the
+    // justification step write these keys.
     runsLast: true,
   },
   {

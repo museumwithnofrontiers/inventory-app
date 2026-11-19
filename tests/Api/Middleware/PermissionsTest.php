@@ -6,6 +6,7 @@ use App\Enums\Permission;
 use App\Models\AvailableImage;
 use App\Models\Collection;
 use App\Models\CollectionImage;
+use App\Models\CollectionItemTranslation;
 use App\Models\CollectionTranslation;
 use App\Models\Context;
 use App\Models\Country;
@@ -270,6 +271,13 @@ class PermissionsTest extends TestCase
             ['GET', 'visit-information.show', Permission::VIEW_DATA, VisitInformation::class],
             ['PATCH', 'visit-information.update', Permission::UPDATE_DATA, VisitInformation::class],
             ['DELETE', 'visit-information.destroy', Permission::DELETE_DATA, VisitInformation::class],
+
+            // CollectionItemTranslation routes: a placement's texts
+            ['GET', 'collection-item-translation.index', Permission::VIEW_DATA, null],
+            ['POST', 'collection-item-translation.store', Permission::CREATE_DATA, null],
+            ['GET', 'collection-item-translation.show', Permission::VIEW_DATA, CollectionItemTranslation::class],
+            ['PATCH', 'collection-item-translation.update', Permission::UPDATE_DATA, CollectionItemTranslation::class],
+            ['DELETE', 'collection-item-translation.destroy', Permission::DELETE_DATA, CollectionItemTranslation::class],
 
             // PublicationEdition routes: every change is an update of the publication
             ['GET', 'publication-edition.index', Permission::VIEW_DATA, null],

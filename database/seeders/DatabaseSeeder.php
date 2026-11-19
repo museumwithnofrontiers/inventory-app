@@ -28,6 +28,7 @@ class DatabaseSeeder extends Seeder
             CollectionSeeder::class,
             PublicationSeeder::class,
             ImageTranslationSeeder::class,
+            CollectionItemTranslationSeeder::class,
             LinkSeeder::class,
             VisitInformationSeeder::class,
             ItemTranslationSeeder::class,
