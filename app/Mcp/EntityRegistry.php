@@ -36,7 +36,7 @@ final class EntityRegistry
         'publication_document',
         'timeline', 'timeline_event', 'timeline_event_translation', 'timeline_event_image',
         'glossary', 'glossary_translation', 'glossary_spelling',
-        'author', 'author_translation', 'artist', 'workshop', 'dynasty', 'dynasty_translation', 'tag',
+        'author', 'author_translation', 'artist', 'dynasty', 'dynasty_translation', 'tag',
         'country', 'country_translation', 'language', 'language_translation', 'context', 'project',
         'available_image',
     ];

@@ -18,7 +18,7 @@ use Illuminate\Support\Facades\Gate;
  * ItemTranslation, ItemItemLink) additionally require that entity's own
  * `create`/`update`/`delete`/`deleteAny` ability. A related entity with no
  * policy of its own (ItemMedia, ItemDocument, the `*Image` models, and
- * pivot-only relations such as tags/artists/workshops/dynasties) has nothing
+ * pivot-only relations such as tags/artists/dynasties) has nothing
  * further to check, so host `update` alone governs it.
  *
  * These hooks only govern Filament's own built-in actions (CreateAction,

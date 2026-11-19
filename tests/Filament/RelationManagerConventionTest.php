@@ -41,7 +41,6 @@ use App\Filament\Resources\ItemResource\RelationManagers\PublicationsRelationMan
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager as ItemTranslationsRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\AuthorCreditsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTranslationsRelationManager as ItemTranslationSiblingTranslationsRelationManager;
@@ -223,7 +222,6 @@ class RelationManagerConventionTest extends TestCase
         CollectionAppearancesRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => true, 'extraRow' => ['view_appearance']],
         TagsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
         ArtistsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
-        WorkshopsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
         DynastiesRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
         TimelineEventsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => true, 'bcColumn' => true],
         CollectionParticipationsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'partner', 'edit' => true],
@@ -565,13 +563,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 8 has-many + 22 pivot + 4 translations + 4 inline + 24 pinned = 62.
+        // 8 has-many + 21 pivot + 4 translations + 4 inline + 24 pinned = 61.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(62, self::allManagers());
+        $this->assertCount(61, self::allManagers());
     }
 
     private function classify(string $class): array

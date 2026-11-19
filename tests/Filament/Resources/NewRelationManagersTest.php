@@ -12,7 +12,6 @@ use App\Filament\Resources\ItemResource\RelationManagers\ArtistsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\DocumentsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\MediaRelationManager;
-use App\Filament\Resources\ItemResource\RelationManagers\WorkshopsRelationManager;
 use App\Filament\Resources\LanguageResource\Pages\EditLanguage;
 use App\Filament\Resources\LanguageResource\RelationManagers\TranslationsRelationManager as LanguageTranslationsRelationManager;
 use App\Filament\Resources\ProjectResource\Pages\ViewProject;
@@ -29,7 +28,6 @@ use App\Models\Language;
 use App\Models\LanguageTranslation;
 use App\Models\Partner;
 use App\Models\Project;
-use App\Models\Workshop;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -191,63 +189,6 @@ class NewRelationManagersTest extends TestCase
         $this->assertDatabaseHas('artist_item', [
             'item_id' => $item->id,
             'artist_id' => $artist->id,
-        ]);
-    }
-
-    // ── ItemResource: WorkshopsRelationManager ────────────────────────────────
-
-    public function test_item_workshops_relation_manager_renders_successfully(): void
-    {
-        $user = $this->createCrudUser();
-        $item = Item::factory()->Object()->create();
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(WorkshopsRelationManager::class, [
-                'ownerRecord' => $item,
-                'pageClass' => EditItem::class,
-            ])
-            ->assertSuccessful();
-    }
-
-    public function test_item_workshops_relation_manager_primary_column_is_searchable(): void
-    {
-        $user = $this->createCrudUser();
-        $item = Item::factory()->Object()->create();
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(WorkshopsRelationManager::class, [
-                'ownerRecord' => $item,
-                'pageClass' => EditItem::class,
-            ])
-            ->assertTableColumnExists(
-                'name',
-                fn (TextColumn $column): bool => $column->isSearchable()
-            );
-    }
-
-    public function test_item_workshops_relation_manager_attach_detach_actions_exist(): void
-    {
-        $user = $this->createCrudUser();
-        $item = Item::factory()->Object()->create();
-        $workshop = Workshop::factory()->create(['internal_name' => 'venetian_glass']);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(WorkshopsRelationManager::class, [
-                'ownerRecord' => $item,
-                'pageClass' => EditItem::class,
-            ])
-            ->callTableAction('attach', data: ['recordId' => $workshop->id])
-            ->assertHasNoTableActionErrors();
-
-        $this->assertDatabaseHas('item_workshop', [
-            'item_id' => $item->id,
-            'workshop_id' => $workshop->id,
         ]);
     }
 

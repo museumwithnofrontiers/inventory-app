@@ -77,7 +77,6 @@ class Item extends Model
 
             // 4. Detach all many-to-many relationships
             $this->tags()->detach();
-            $this->workshops()->detach();
             $this->attachedToCollections()->detach();
 
             // 6. Finally, delete the item itself
@@ -248,16 +247,6 @@ class Item extends Model
     public function artists(): BelongsToMany
     {
         return $this->belongsToMany(Artist::class, 'artist_item');
-    }
-
-    /**
-     * Workshops associated with this item
-     *
-     * @return BelongsToMany<Workshop, $this>
-     */
-    public function workshops(): BelongsToMany
-    {
-        return $this->belongsToMany(Workshop::class, 'item_workshop');
     }
 
     /**
