@@ -34,6 +34,7 @@ export interface ImageRow {
   kind: string
   path: string
   alt_text: string | null
+  photographer: string | null
   display_order: number
   extra: unknown
 }
@@ -135,7 +136,7 @@ export class PublicationExporter extends BaseExporter {
         ids
       ),
       this.db.query<ImageRow>(
-        `SELECT publication_id, publication_edition_id, kind, path, alt_text, display_order, extra
+        `SELECT publication_id, publication_edition_id, kind, path, alt_text, photographer, display_order, extra
          FROM publication_images
          WHERE publication_id IN (${ph})
          ORDER BY publication_id, kind, display_order, path`,
@@ -244,7 +245,8 @@ export class PublicationExporter extends BaseExporter {
 
 export function toImage(row: ImageRow, imageUrl: (path: string) => string): PublicationImage {
   const extra = parseJson(row.extra) as Record<string, unknown> | null
-  const photographer = extra?.['photographer']
+  // The column since M16 F1; `extra` for a database imported before it.
+  const photographer = row.photographer ?? extra?.['photographer']
   return {
     url: imageUrl(row.path),
     alt_text: row.alt_text,

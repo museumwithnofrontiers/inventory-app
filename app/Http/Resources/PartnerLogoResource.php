@@ -28,6 +28,10 @@ class PartnerLogoResource extends JsonResource
             'size' => $this->size,
             'logo_type' => $this->logo_type,
             'alt_text' => $this->alt_text,
+            // The picture's photographer, if any
+            'photographer' => $this->photographer,
+            // The picture's own credit where it is not the text burned on it
+            'credit' => $this->credit,
             'display_order' => $this->display_order,
             // Relationships
             'partner' => new PartnerResource($this->whenLoaded('partner')),

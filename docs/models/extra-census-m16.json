@@ -30,6 +30,7 @@
                 "artist_birthplace": 0,
                 "artist_deathdate": 0,
                 "artist_deathplace": 0,
+                "copyright": 3407,
                 "credits_as_written": 0,
                 "datation_method": 0,
                 "description2": 0,
@@ -40,6 +41,7 @@
                 "materials": 0,
                 "patrons": 0,
                 "period_activity": 0,
+                "photographer": 341,
                 "prepared_by": 0,
                 "province": 0,
                 "scriber": 0,
@@ -48,13 +50,19 @@
         },
         "partner_images": {
             "keys": {
-                "copyright": 0
+                "copyright": 0,
+                "photographer": 0
             }
         },
         "partner_translations": {
             "keys": {
                 "fax": 0,
                 "source": 0
+            }
+        },
+        "publication_images": {
+            "keys": {
+                "photographer": 0
             }
         },
         "publications": {

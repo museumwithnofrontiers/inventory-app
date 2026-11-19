@@ -759,6 +759,7 @@ export interface PublicationImageData {
   size: number;
   alt_text?: string | null;
   copyright?: string | null;
+  photographer?: string | null;
   display_order: number;
   extra?: string | null; // JSON
 }

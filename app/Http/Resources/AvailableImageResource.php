@@ -28,6 +28,10 @@ class AvailableImageResource extends BaseJsonResource
             'size' => $this->resource->size,
             // A user defined comment associated with the file
             'comment' => $this->resource->comment,
+            // The picture's photographer, if any
+            'photographer' => $this->resource->photographer,
+            // The picture's own credit where it is not the text burned on it
+            'credit' => $this->resource->credit,
             // The date of creation of the resource (managed by the system)
             'created_at' => $this->resource->created_at,
             // The date of last modification of the resource (managed by the system)

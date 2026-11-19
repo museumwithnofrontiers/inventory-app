@@ -23,6 +23,8 @@ class UpdatePartnerLogoRequest extends FormRequest
             'size' => ['required', 'integer', 'min:0'],
             'logo_type' => ['sometimes', 'string', 'max:50'],
             'alt_text' => ['nullable', 'string'],
+            'photographer' => ['nullable', 'string', 'max:255'],
+            'credit' => ['nullable', 'string', 'max:500'],
             'display_order' => ['required', 'integer', 'min:1'],
         ];
     }

@@ -61,6 +61,7 @@ import type {
   ContributorImageData,
   ImageTable,
 } from './types.js';
+import type { PictureCreditRow, PictureParentImageRow } from '../utils/picture-credits.js';
 
 /**
  * Strategy interface for writing entities to the target system
@@ -694,6 +695,44 @@ export interface IWriteStrategy {
    * are not converted again.
    */
   setCollectionTranslationExtraAsStoredById(id: string, extra: string | null): Promise<void>;
+
+  /**
+   * Every translation of each picture item whose rows carry a `photographer`
+   * or `copyright` in `extra`, with the picture's image row and project key,
+   * ordered by item, language and id. Used by PictureCreditsImporter.
+   */
+  findPictureCreditRows(): Promise<PictureCreditRow[]>;
+
+  /**
+   * Set an item image's `photographer` and `credit`, and clear its
+   * `copyright` when asked. Used by PictureCreditsImporter.
+   */
+  setItemImagePictureCredit(
+    id: string,
+    photographer: string | null,
+    credit: string | null,
+    clearCopyright: boolean
+  ): Promise<void>;
+
+  /**
+   * The images of objects, monuments and details that are their picture's
+   * image too (the first picture's file, attached to the parent as well;
+   * matched on the legacy source path, `original_name`), with that picture
+   * image's credit fields and the picture's project key.
+   */
+  findPictureParentImages(): Promise<PictureParentImageRow[]>;
+
+  /** partner_images rows whose `extra` holds `photographer`. */
+  findPartnerImagesWithPhotographer(): Promise<
+    Array<{ id: string; extra: Record<string, unknown> }>
+  >;
+
+  /** Set a partner image's `photographer` and its `extra` (null clears it), as given. */
+  setPartnerImagePhotographer(
+    id: string,
+    photographer: string,
+    extra: string | null
+  ): Promise<void>;
 
   /**
    * Find item_translations rows whose `extra` holds any of `keys` at its top

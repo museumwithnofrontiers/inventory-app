@@ -31,6 +31,10 @@ class CollectionImageResource extends JsonResource
             'size' => $this->size,
             // Alternative text for accessibility
             'alt_text' => $this->alt_text,
+            // The picture's photographer, if any
+            'photographer' => $this->photographer,
+            // The picture's own credit where it is not the text burned on it
+            'credit' => $this->credit,
             // Display order for sorting images
             'display_order' => $this->display_order,
             // The collection this image belongs to (CollectionResource)

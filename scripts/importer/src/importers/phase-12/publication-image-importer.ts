@@ -12,7 +12,7 @@
  *   page number. Pages carry no edition number, so they are linked to the
  *   edition only when exactly one edition has that language, publisher and format.
  * - caption → alt_text; the copyright as legacy has it (empty: ResolvesCopyright
- *   then resolves the project); the photographer → extra.photographer.
+ *   then resolves the project); the photographer → photographer (M16 F1).
  *
  * Dependencies: publication-edition
  */
@@ -166,7 +166,7 @@ export class PublicationImageImporter extends BaseImporter {
             alt_text: picture.caption?.trim() ? convertHtmlToMarkdown(picture.caption) : null,
             copyright: picture.copyright?.trim() || null,
             display_order: order,
-            extra: photographer ? JSON.stringify({ photographer }) : null,
+            photographer: photographer || null,
           });
           result.imported++;
           this.showProgress();

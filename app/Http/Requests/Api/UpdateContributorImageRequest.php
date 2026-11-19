@@ -22,6 +22,8 @@ class UpdateContributorImageRequest extends FormRequest
             'mime_type' => ['required', 'string', 'max:100'],
             'size' => ['required', 'integer', 'min:0'],
             'alt_text' => ['nullable', 'string'],
+            'photographer' => ['nullable', 'string', 'max:255'],
+            'credit' => ['nullable', 'string', 'max:500'],
             'display_order' => ['required', 'integer', 'min:1'],
         ];
     }

@@ -167,6 +167,7 @@ export {
   CollectionCreditsImporter,
   ItemTranslationColumnsImporter,
   CollectionTranslationColumnsImporter,
+  PictureCreditsImporter,
 } from './phase-11/index.js';
 
 // Phase 12: Publications

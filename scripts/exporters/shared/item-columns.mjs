@@ -16,6 +16,13 @@
  *   which, so `itemColumnsSelect` selects it too.
  * - B2 (inventory-app#2636) and B3 (inventory-app#2637): the keyword line and
  *   the artist, workshop, scribe, patron and architect lines, as written.
+ * - F1 (inventory-app#2651): a picture's `photographer` and its own credit
+ *   (`copyright`) left its translations for its image row. A picture's rows
+ *   ship them per language, so each row gets the image's value back, unless a
+ *   row of that picture still holds the key: the importer leaves the texts
+ *   that differ by language in `extra` until they are reviewed. The credit is
+ *   the image's `credit`, else its `copyright` without the mark the importer
+ *   added for the burn.
  *
  * Types are in `item-columns.d.mts`.
  */
@@ -55,17 +62,89 @@ const PREPARED_BY_SOURCES = Object.freeze(['mwnf3_explore:', 'mwnf3_travels:'])
 
 const COLUMNS = [...new Set(ITEM_TRANSLATION_COLUMNS.map(({ column }) => column))]
 
+/** The picture image's fields and the "a row keeps its own" flags, selected under these names. */
+const PICTURE = Object.freeze({
+  photographer: 'item_columns_picture_photographer',
+  credit: 'item_columns_picture_credit',
+  copyright: 'item_columns_picture_copyright',
+  photographerKept: 'item_columns_picture_photographer_kept',
+  copyrightKept: 'item_columns_picture_copyright_kept',
+})
+
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value)
 
 /**
- * The columns, for a SELECT list: `it.materials, …, it.backward_compatibility AS item_columns_source`.
+ * The picture's image fields, for a SELECT list. Null on a row that isn't a
+ * picture's.
+ *
+ * @param {string} alias
+ * @returns {string[]}
+ */
+function pictureSelect(alias) {
+  /** @param {string} column */
+  const image = column =>
+    `(SELECT ic_ii.${column} FROM item_images ic_ii JOIN items ic_i ON ic_i.id = ic_ii.item_id AND ic_i.type = 'picture'` +
+    ` WHERE ic_ii.item_id = ${alias}.item_id ORDER BY ic_ii.display_order, ic_ii.id LIMIT 1)`
+  /** @param {string} key */
+  const kept = key =>
+    `EXISTS (SELECT 1 FROM item_translations ic_t WHERE ic_t.item_id = ${alias}.item_id` +
+    ` AND JSON_CONTAINS_PATH(ic_t.extra, 'one', '$.${key}'))`
+  return [
+    `${image('photographer')} AS ${PICTURE.photographer}`,
+    `${image('credit')} AS ${PICTURE.credit}`,
+    `${image('copyright')} AS ${PICTURE.copyright}`,
+    `${kept('photographer')} AS ${PICTURE.photographerKept}`,
+    `${kept('copyright')} AS ${PICTURE.copyrightKept}`,
+  ]
+}
+
+/** @param {unknown} value @returns {string | null} */
+const textOf = value => (typeof value === 'string' && value !== '' ? value : null)
+
+/** @param {unknown} value */
+const isSet = value => value === true || Number(value) === 1
+
+/**
+ * `copyright` as the sheets print it: without the "© " the importer added.
+ *
+ * @param {string | null} copyright
+ * @returns {string | null}
+ */
+function withoutCopyrightMark(copyright) {
+  if (copyright === null) return null
+  return copyright.startsWith('© ') ? copyright.slice(2) : copyright
+}
+
+/**
+ * The picture texts this row gets back from its image.
+ *
+ * @param {Record<string, unknown>} row
+ * @returns {Record<string, string>}
+ */
+function pictureTexts(row) {
+  /** @type {Record<string, string>} */
+  const texts = {}
+  const photographer = textOf(row[PICTURE.photographer])
+  if (photographer !== null && !isSet(row[PICTURE.photographerKept])) texts.photographer = photographer
+  const credit = textOf(row[PICTURE.credit]) ?? withoutCopyrightMark(textOf(row[PICTURE.copyright]))
+  if (credit !== null && !isSet(row[PICTURE.copyrightKept])) texts.copyright = credit
+  return texts
+}
+
+/**
+ * The columns, for a SELECT list: `it.materials, …, it.backward_compatibility AS item_columns_source`,
+ * then the picture image's fields (subqueries on `item_images`).
  *
  * @param {string} alias the item_translations alias in the query
  * @returns {string}
  */
 export function itemColumnsSelect(alias) {
-  return [...COLUMNS.map(column => `${alias}.${column}`), `${alias}.backward_compatibility AS ${SOURCE}`].join(', ')
+  return [
+    ...COLUMNS.map(column => `${alias}.${column}`),
+    `${alias}.backward_compatibility AS ${SOURCE}`,
+    ...pictureSelect(alias),
+  ].join(', ')
 }
 
 /**
@@ -100,6 +179,7 @@ export function withItemTranslationColumns(extra, row) {
     if (child === undefined) texts[parent] = value
     else texts[parent] = { ...(isObject(texts[parent]) ? texts[parent] : {}), [child]: value }
   }
+  Object.assign(texts, pictureTexts(row))
   if (Object.keys(texts).length === 0) return extra
   const parsed = typeof extra === 'string' ? JSON.parse(extra) : extra
   const base = isObject(parsed) ? parsed : {}
@@ -125,7 +205,7 @@ export function restoreItemColumns(rows) {
   for (const row of rows) {
     const record = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (row))
     record.extra = withItemTranslationColumns(record.extra, record)
-    for (const column of [...COLUMNS, SOURCE]) delete record[column]
+    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE)]) delete record[column]
   }
   return rows
 }

@@ -24,6 +24,10 @@ class TimelineEventImageResource extends JsonResource
             'mime_type' => $this->mime_type,
             'size' => $this->size,
             'alt_text' => $this->alt_text,
+            // The picture's photographer, if any
+            'photographer' => $this->photographer,
+            // The picture's own credit where it is not the text burned on it
+            'credit' => $this->credit,
             'display_order' => $this->display_order,
             'timeline_event' => new TimelineEventResource($this->whenLoaded('timelineEvent')),
             'created_at' => $this->created_at,
