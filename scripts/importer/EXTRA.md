@@ -30,6 +30,9 @@ These keys are written here first, then moved to columns of their own by
   `artist_deathdate` → `artist_death_date`, `artist_deathplace` → `artist_death_place`, `workshop`,
   `scriber` → `scribe`, `patrons`, `architects`. They are display texts: the keyword Tags and the
   Artist links the object importers create stay as they are, and nothing is derived from the texts.
+- M16 B5 (#2639), B6 (#2640): `linkcatalogs` → `catalogue_references` (codes and citations as written; the Book
+  links come from the codes, separately), the Sharing History `notice` → `notice` and `notice_c` →
+  `external_notice`, as written; and `legacy_display_status` N → `status` = `hidden`, a flag, not a text.
 
 The pictures' `photographer` and `copyright` (M16 F1, #2651) move to the picture's image row instead, by
 `importers/phase-11/picture-credits-importer.ts`: `photographer` → `item_images.photographer`; `copyright` → `item_images.credit`

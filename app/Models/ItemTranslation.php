@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CreditRole;
+use App\Enums\ItemTranslationStatus;
 use App\Events\ItemTranslationSaved;
 use App\Traits\HasJsonFields;
 use Database\Factories\ItemTranslationFactory;
@@ -48,6 +49,11 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $scribe
  * @property string|null $patrons
  * @property string|null $architects
+ * @property ItemTranslationStatus $status
+ * @property string|null $catalogue_references
+ * @property string|null $notice
+ * @property string|null $external_notice
+ * @property string|null $image_rights
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -160,6 +166,11 @@ class ItemTranslation extends Model
         'scribe',
         'patrons',
         'architects',
+        'status',
+        'catalogue_references',
+        'notice',
+        'external_notice',
+        'image_rights',
         'backward_compatibility',
         'extra',
     ];
@@ -171,6 +182,16 @@ class ItemTranslation extends Model
      */
     protected $casts = [
         'extra' => 'object',
+        'status' => ItemTranslationStatus::class,
+    ];
+
+    /**
+     * A new translation is published unless it says otherwise.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'status' => 'published',
     ];
 
     /**

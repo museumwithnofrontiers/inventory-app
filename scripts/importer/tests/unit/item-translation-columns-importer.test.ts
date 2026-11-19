@@ -106,7 +106,41 @@ describe('splitItemTranslationColumns', () => {
     });
   });
 
-  it('covers the keys of B1 to B4', () => {
+  it('moves the catalogue references and the notices, as written', () => {
+    expect(
+      splitItemTranslationColumns({
+        linkcatalogs: 'Ifriqiya, pp. 174-176',
+        notice: 'This is an unedited Database entry.',
+        notice_c: 'Cet objet est disponible aussi sur Gallica.',
+      })
+    ).toEqual({
+      extra: null,
+      columns: {
+        catalogue_references: 'Ifriqiya, pp. 174-176',
+        notice: 'This is an unedited Database entry.',
+        external_notice: 'Cet objet est disponible aussi sur Gallica.',
+      },
+      kept: [],
+    });
+  });
+
+  it('maps legacy_display_status N to the hidden status', () => {
+    expect(splitItemTranslationColumns({ legacy_display_status: 'N', copyright: 'MWNF' })).toEqual({
+      extra: { copyright: 'MWNF' },
+      columns: { status: 'hidden' },
+      kept: [],
+    });
+  });
+
+  it('keeps a legacy_display_status it has no status for in extra', () => {
+    expect(splitItemTranslationColumns({ legacy_display_status: 'A' })).toEqual({
+      extra: { legacy_display_status: 'A' },
+      columns: {},
+      kept: ['legacy_display_status'],
+    });
+  });
+
+  it('covers the keys of B1 to B6', () => {
     expect(ITEM_TRANSLATION_COLUMNS.map((c) => `${c.key}→${c.column}`)).toEqual([
       'materials→materials',
       'description2→short_description',
@@ -129,6 +163,10 @@ describe('splitItemTranslationColumns', () => {
       'scriber→scribe',
       'patrons→patrons',
       'architects→architects',
+      'linkcatalogs→catalogue_references',
+      'notice→notice',
+      'notice_c→external_notice',
+      'legacy_display_status→status',
     ]);
     expect(ITEM_TRANSLATION_COLUMN_KEYS).toEqual([
       'materials',
@@ -149,6 +187,10 @@ describe('splitItemTranslationColumns', () => {
       'scriber',
       'patrons',
       'architects',
+      'linkcatalogs',
+      'notice',
+      'notice_c',
+      'legacy_display_status',
     ]);
   });
 });

@@ -1875,6 +1875,7 @@ const UPDATED_AT = 'updated_at';
 | `item_id` | char | Unknown | Unknown |  |
 | `language_id` | varchar | Unknown | Unknown |  |
 | `context_id` | char | Unknown | Unknown |  |
+| `status` | varchar | Unknown | Unknown |  |
 | `name` | varchar | Unknown | Unknown |  |
 | `alternate_name` | text | Unknown | Unknown |  |
 | `description` | text | Unknown | Unknown |  |
@@ -1900,6 +1901,7 @@ const UPDATED_AT = 'updated_at';
 | `scribe` | text | Unknown | Unknown |  |
 | `patrons` | text | Unknown | Unknown |  |
 | `architects` | text | Unknown | Unknown |  |
+| `image_rights` | text | Unknown | Unknown |  |
 | `place_of_production` | text | Unknown | Unknown |  |
 | `method_for_datation` | text | Unknown | Unknown |  |
 | `method_for_provenance` | text | Unknown | Unknown |  |
@@ -1907,6 +1909,9 @@ const UPDATED_AT = 'updated_at';
 | `obtention` | text | Unknown | Unknown |  |
 | `bibliography` | text | Unknown | Unknown |  |
 | `history` | text | Unknown | Unknown |  |
+| `catalogue_references` | text | Unknown | Unknown |  |
+| `notice` | text | Unknown | Unknown |  |
+| `external_notice` | text | Unknown | Unknown |  |
 | `author_id` | char | Unknown | Unknown |  |
 | `text_copy_editor_id` | char | Unknown | Unknown |  |
 | `translator_id` | char | Unknown | Unknown |  |
@@ -1923,7 +1928,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'backward_compatibility', 'extra']
+['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'status', 'catalogue_references', 'notice', 'external_notice', 'image_rights', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
@@ -1931,6 +1936,7 @@ const UPDATED_AT = 'updated_at';
 | Attribute | Cast Type |
 |-----------|-----------|
 | `extra` | `object` |
+| `status` | `App\Enums\ItemTranslationStatus` |
 
 ### Model Constants
 

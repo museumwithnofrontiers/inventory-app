@@ -72,6 +72,11 @@ class ItemTranslationFactory extends Factory
             'scribe' => $this->faker->optional()->name,
             'patrons' => $this->faker->optional()->name,
             'architects' => $this->faker->optional()->name,
+            'status' => 'published',
+            'catalogue_references' => $this->faker->optional()->sentence,
+            'notice' => $this->faker->optional()->sentence,
+            'external_notice' => $this->faker->optional()->sentence,
+            'image_rights' => $this->faker->optional()->company,
             'extra' => $this->faker->optional()->passthrough(
                 json_encode($this->faker->randomElements(['key1' => 'value1', 'key2' => 'value2'], null, false))
             ),

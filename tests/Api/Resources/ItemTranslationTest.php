@@ -2,6 +2,7 @@
 
 namespace Tests\Api\Resources;
 
+use App\Enums\ItemTranslationStatus;
 use App\Models\ItemTranslation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Api\Traits\AuthenticatesApiRequests;
@@ -85,7 +86,7 @@ class ItemTranslationTest extends TestCase
     }
 
     /**
-     * The display texts and credits that left `extra` (M16 B1 to B4) are
+     * The display texts and credits that left `extra` (M16 B1 to B6) are
      * stored and served as written.
      */
     public function test_stores_and_serves_the_display_columns(): void
@@ -112,6 +113,10 @@ class ItemTranslationTest extends TestCase
             'scribe' => 'Ibn al-Bawwab',
             'patrons' => 'Sultan al-Nasir Muhammad',
             'architects' => 'Unknown',
+            'catalogue_references' => 'Ifriqiya, pp. 174-176',
+            'notice' => 'This is an unedited Database entry.',
+            'external_notice' => 'Cet objet est disponible aussi sur Gallica.',
+            'image_rights' => 'Copyright image: Soprintendenza per i Beni Archeologici',
         ];
 
         $this->putJson(route('item-translation.update', $resource), $texts)
@@ -126,8 +131,30 @@ class ItemTranslationTest extends TestCase
             ->assertJsonPath('data.keywords', $texts['keywords'])
             ->assertJsonPath('data.artist', $texts['artist'])
             ->assertJsonPath('data.artist_death_place', $texts['artist_death_place'])
-            ->assertJsonPath('data.architects', $texts['architects']);
+            ->assertJsonPath('data.architects', $texts['architects'])
+            ->assertJsonPath('data.catalogue_references', $texts['catalogue_references'])
+            ->assertJsonPath('data.external_notice', $texts['external_notice'])
+            ->assertJsonPath('data.image_rights', $texts['image_rights']);
 
         $this->assertDatabaseHas('item_translations', ['id' => $resource->id] + $texts);
+    }
+
+    /**
+     * A translation is published unless it says otherwise (M16 B6); the
+     * status takes only its three values.
+     */
+    public function test_status_defaults_to_published_and_takes_only_its_values(): void
+    {
+        $resource = ItemTranslation::factory()->create();
+        $this->assertSame(ItemTranslationStatus::PUBLISHED, $resource->fresh()?->status);
+
+        $this->putJson(route('item-translation.update', $resource), ['status' => 'hidden'])
+            ->assertOk()
+            ->assertJsonPath('data.status', 'hidden');
+        $this->assertSame(ItemTranslationStatus::HIDDEN, $resource->fresh()?->status);
+
+        $this->putJson(route('item-translation.update', $resource), ['status' => 'draft'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('status');
     }
 }

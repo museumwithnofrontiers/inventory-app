@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ItemTranslationStatus;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Resources\ItemTranslationResource\Pages\CreateItemTranslation;
@@ -93,6 +94,12 @@ class ItemTranslationResource extends Resource
                     ->searchable()
                     ->required(),
 
+                Select::make('status')
+                    ->options(ItemTranslationStatus::options())
+                    ->default(ItemTranslationStatus::PUBLISHED->value)
+                    ->helperText('Hidden: left out of lists and search; pages that link it still show it.')
+                    ->required(),
+
                 Section::make('Basic Text')
                     ->schema([
                         TextInput::make('name')
@@ -176,6 +183,11 @@ class ItemTranslationResource extends Resource
                             ->placeholder('Bibliographic references')
                             ->rows(4)
                             ->columnSpanFull(),
+                        Textarea::make('catalogue_references')
+                            ->label('Catalogue references')
+                            ->helperText('As the sheet holds it: catalogue codes or citations. The Book links are on the item.')
+                            ->rows(2)
+                            ->columnSpanFull(),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -218,6 +230,22 @@ class ItemTranslationResource extends Resource
                         Textarea::make('patrons')
                             ->rows(2),
                         Textarea::make('architects')
+                            ->rows(2),
+                    ])
+                    ->columns(2)
+                    ->collapsible()
+                    ->collapsed(),
+
+                Section::make('Notices and rights')
+                    ->description('As the sheet prints them.')
+                    ->schema([
+                        Textarea::make('notice')
+                            ->rows(2),
+                        Textarea::make('external_notice')
+                            ->label('External notice')
+                            ->rows(2),
+                        Textarea::make('image_rights')
+                            ->label('Image rights')
                             ->rows(2),
                     ])
                     ->columns(2)
@@ -281,6 +309,10 @@ class ItemTranslationResource extends Resource
                             ->url(fn (ItemTranslation $record): ?string => $record->context
                                 ? (auth()->user()?->can('view', $record->context) ? ContextResource::getUrl('view', ['record' => $record->context]) : null)
                                 : null),
+                        TextEntry::make('status')
+                            ->badge()
+                            ->formatStateUsing(fn (ItemTranslationStatus $state): string => $state->label())
+                            ->color(fn (ItemTranslationStatus $state): string => $state->color()),
                     ])
                     ->columns(2),
 
@@ -319,6 +351,7 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::markdownEntry('provenance'),
                         TranslationInfolistSchema::markdownEntry('obtention'),
                         TranslationInfolistSchema::markdownEntry('bibliography', columnSpanFull: true),
+                        TranslationInfolistSchema::markdownEntry('catalogue_references', 'Catalogue references', columnSpanFull: true),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -343,6 +376,16 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::markdownEntry('scribe'),
                         TranslationInfolistSchema::markdownEntry('patrons'),
                         TranslationInfolistSchema::markdownEntry('architects'),
+                    ])
+                    ->columns(2)
+                    ->collapsible()
+                    ->collapsed(),
+
+                InfolistSection::make('Notices and rights')
+                    ->schema([
+                        TranslationInfolistSchema::markdownEntry('notice'),
+                        TranslationInfolistSchema::markdownEntry('external_notice', 'External notice'),
+                        TranslationInfolistSchema::markdownEntry('image_rights', 'Image rights'),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -440,6 +483,11 @@ class ItemTranslationResource extends Resource
                             ->orWhere('id', 'like', "%{$search}%")
                         )
                     ),
+                TextColumn::make('status')
+                    ->badge()
+                    ->formatStateUsing(fn (ItemTranslationStatus $state): string => $state->label())
+                    ->color(fn (ItemTranslationStatus $state): string => $state->color())
+                    ->sortable(),
                 IconColumn::make('is_default_pair')
                     ->label('★')
                     ->tooltip('Default language + context pair')
@@ -470,6 +518,8 @@ class ItemTranslationResource extends Resource
                     ->label('Context')
                     ->relationship('context', 'internal_name')
                     ->searchable(),
+                SelectFilter::make('status')
+                    ->options(ItemTranslationStatus::options()),
                 Filter::make('default_language')
                     ->label('Default language only')
                     ->query(fn (Builder $query): Builder => $query->whereHas('language', fn (Builder $q): Builder => $q->where('is_default', true))),

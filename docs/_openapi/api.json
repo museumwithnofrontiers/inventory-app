@@ -1437,7 +1437,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -1501,7 +1501,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -1722,7 +1722,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -2085,7 +2085,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -2162,7 +2162,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -24637,7 +24637,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "examples": [
                             "language,context,translations"
                         ]
@@ -24697,7 +24697,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "examples": [
                             "language,context,translations"
                         ]
@@ -24996,6 +24996,20 @@
                         ],
                         "description": "A user defined comment associated with the file"
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "created_at": {
                         "type": [
                             "string",
@@ -25020,6 +25034,8 @@
                     "mime_type",
                     "size",
                     "comment",
+                    "photographer",
+                    "credit",
                     "created_at",
                     "updated_at"
                 ],
@@ -25059,6 +25075,20 @@
                         ],
                         "description": "Alternative text for accessibility"
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "display_order": {
                         "type": "integer",
                         "description": "Display order for sorting images"
@@ -25092,6 +25122,8 @@
                     "mime_type",
                     "size",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "display_order",
                     "created_at",
                     "updated_at"
@@ -25248,6 +25280,20 @@
                         ],
                         "description": "Collection-level structured attributes that belong to the collection rather than to one of its languages (e.g. a thematic gallery's source project, slug and canonical host)"
                     },
+                    "cover_item_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture shown as the collection's cover (ItemResource id), e.g. a gallery theme's"
+                    },
+                    "days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "A Travels itinerary's number of days"
+                    },
                     "created_at": {
                         "type": [
                             "string",
@@ -25304,6 +25350,31 @@
                             "$ref": "#/components/schemas/PartnerResource"
                         }
                     },
+                    "countries": {
+                        "type": "array",
+                        "description": "The other countries the collection covers, in their order (CountryResource[])",
+                        "items": {
+                            "$ref": "#/components/schemas/CountryResource"
+                        }
+                    },
+                    "relatedCollections": {
+                        "type": "array",
+                        "description": "The collections this one links to, with the link's kind and order (CollectionResource[])",
+                        "items": {
+                            "$ref": "#/components/schemas/CollectionResource"
+                        }
+                    },
+                    "coverItem": {
+                        "anyOf": [
+                            {
+                                "description": "The cover picture (ItemResource)",
+                                "$ref": "#/components/schemas/ItemResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
                     "items": {
                         "type": "array",
                         "description": "Items associated with this collection - primary relationship (ItemResource[])",
@@ -25338,6 +25409,22 @@
                     "children_count": {
                         "type": "integer",
                         "minimum": 0
+                    },
+                    "link": {
+                        "type": "object",
+                        "description": "On a related collection: the link's kind (CollectionRelationKind) and order",
+                        "properties": {
+                            "kind": {
+                                "type": "string"
+                            },
+                            "display_order": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "kind",
+                            "display_order"
+                        ]
                     }
                 },
                 "required": [
@@ -25351,6 +25438,8 @@
                     "display_order",
                     "backward_compatibility",
                     "extra",
+                    "cover_item_id",
+                    "days",
                     "created_at",
                     "updated_at"
                 ],
@@ -25382,6 +25471,13 @@
                         ],
                         "description": "The title of the collection translation"
                     },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The subtitle, as written (optional)"
+                    },
                     "description": {
                         "type": [
                             "string",
@@ -25389,12 +25485,26 @@
                         ],
                         "description": "The description of the collection translation"
                     },
+                    "introduction": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The introduction, as written (optional, Markdown)"
+                    },
                     "quote": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "description": "The quote/introduction of the collection translation (optional)"
+                    },
+                    "duration": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A trail's duration, as written, e.g. \"One day\" (optional)"
                     },
                     "url": {
                         "type": [
@@ -25452,8 +25562,11 @@
                     "language_id",
                     "context_id",
                     "title",
+                    "subtitle",
                     "description",
+                    "introduction",
                     "quote",
+                    "duration",
                     "url",
                     "backward_compatibility",
                     "extra",
@@ -25538,6 +25651,20 @@
                             "null"
                         ]
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "display_order": {
                         "type": "integer"
                     },
@@ -25569,6 +25696,8 @@
                     "mime_type",
                     "size",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "display_order",
                     "created_at",
                     "updated_at"
@@ -26515,6 +26644,20 @@
                         ],
                         "description": "Alternative text for accessibility"
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "display_order": {
                         "type": "integer",
                         "description": "Display order for sorting images"
@@ -26548,6 +26691,8 @@
                     "mime_type",
                     "size",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "display_order",
                     "created_at",
                     "updated_at"
@@ -27022,6 +27167,13 @@
                         ],
                         "description": "The description of the item translation"
                     },
+                    "short_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A short description, as written (legacy description2)"
+                    },
                     "type": {
                         "type": [
                             "string",
@@ -27064,12 +27216,33 @@
                         ],
                         "description": "The location associated with the item"
                     },
+                    "region": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The region, as written (legacy province)"
+                    },
                     "dimensions": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "description": "The dimensions of the item"
+                    },
+                    "materials": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The materials, as written"
+                    },
+                    "dynasty": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The dynasty, as written (the Dynasty links are on the item)"
                     },
                     "place_of_production": {
                         "type": [
@@ -27113,6 +27286,13 @@
                         ],
                         "description": "The bibliography for the item"
                     },
+                    "history": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A monument's history, as written"
+                    },
                     "author_id": {
                         "type": [
                             "string",
@@ -27141,12 +27321,132 @@
                         ],
                         "description": "The copy-editor of the item translation (AuthorResource id)"
                     },
-                    "backward_compatibility": {
+                    "author_credit": {
                         "type": [
                             "string",
                             "null"
                         ],
-                        "description": "The Id(s) of matching resource in the legacy system (if any)."
+                        "description": "The Id(s) of matching resource in the legacy system (if any).\nThe credits as legacy wrote them (the Author links are author_id and the others)"
+                    },
+                    "copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translator_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translation_copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "keywords": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The keyword line and the artist lines as legacy wrote them (the Tags and Artist links are on the item)"
+                    },
+                    "artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "workshop": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "scribe": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patrons": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "architects": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "description": "The editorial state: published, unedited or hidden"
+                    },
+                    "catalogue_references": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The catalogue references, the notices and the image rights line, as legacy wrote them"
+                    },
+                    "notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "external_notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "image_rights": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "extra": {
                         "type": [
@@ -27259,29 +27559,64 @@
                     "name",
                     "alternate_name",
                     "description",
+                    "short_description",
                     "type",
                     "holder",
                     "owner",
                     "initial_owner",
                     "dates",
                     "location",
+                    "region",
                     "dimensions",
+                    "materials",
+                    "dynasty",
                     "place_of_production",
                     "method_for_datation",
                     "method_for_provenance",
                     "provenance",
                     "obtention",
                     "bibliography",
+                    "history",
                     "author_id",
                     "text_copy_editor_id",
                     "translator_id",
                     "translation_copy_editor_id",
+                    "author_credit",
+                    "copy_editor_credit",
+                    "translator_credit",
+                    "translation_copy_editor_credit",
+                    "keywords",
+                    "artist",
+                    "artist_period_of_activity",
+                    "artist_birth_date",
+                    "artist_birth_place",
+                    "artist_death_date",
+                    "artist_death_place",
+                    "workshop",
+                    "scribe",
+                    "patrons",
+                    "architects",
+                    "status",
+                    "catalogue_references",
+                    "notice",
+                    "external_notice",
+                    "image_rights",
                     "backward_compatibility",
                     "extra",
                     "created_at",
                     "updated_at"
                 ],
                 "title": "ItemTranslationResource"
+            },
+            "ItemTranslationStatus": {
+                "type": "string",
+                "description": "The editorial state of an item translation (M16 B6). Hidden translations stay out of lists and search; the pages that link them still show them. Legacy's own flag of that kind (Sharing History's display_status N, the records shown only as HB/HCR illustrations) is imported as hidden.\n",
+                "enum": [
+                    "published",
+                    "unedited",
+                    "hidden"
+                ],
+                "title": "ItemTranslationStatus"
             },
             "ItemType": {
                 "type": "string",
@@ -27495,6 +27830,20 @@
                             "null"
                         ]
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "display_order": {
                         "type": "integer"
                     },
@@ -27526,6 +27875,8 @@
                     "mime_type",
                     "size",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "display_order",
                     "created_at",
                     "updated_at"
@@ -27565,6 +27916,20 @@
                             "null"
                         ]
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "display_order": {
                         "type": "integer"
                     },
@@ -27597,6 +27962,8 @@
                     "size",
                     "logo_type",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "display_order",
                     "created_at",
                     "updated_at"
@@ -27756,6 +28123,20 @@
                             "null"
                         ]
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "display_order": {
                         "type": "integer"
                     },
@@ -27787,6 +28168,8 @@
                     "mime_type",
                     "size",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "display_order",
                     "created_at",
                     "updated_at"
@@ -28459,6 +28842,20 @@
                         ],
                         "description": "Alternative text for accessibility"
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "copyright": {
                         "type": [
                             "string",
@@ -28520,6 +28917,8 @@
                     "mime_type",
                     "size",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "copyright",
                     "display_order",
                     "extra",
@@ -29162,6 +29561,21 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "cover_item_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 365
                     }
                 },
                 "required": [
@@ -29195,7 +29609,19 @@
                         "type": "string",
                         "maxLength": 255
                     },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "introduction": {
                         "type": [
                             "string",
                             "null"
@@ -29206,6 +29632,13 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "duration": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     },
                     "url": {
                         "type": [
@@ -30100,6 +30533,12 @@
                             "null"
                         ]
                     },
+                    "short_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "type": {
                         "type": [
                             "string",
@@ -30136,7 +30575,25 @@
                             "null"
                         ]
                     },
+                    "region": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "dimensions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "materials": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "dynasty": {
                         "type": [
                             "string",
                             "null"
@@ -30178,6 +30635,12 @@
                             "null"
                         ]
                     },
+                    "history": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "author_id": {
                         "type": [
                             "string",
@@ -30205,6 +30668,123 @@
                             "null"
                         ],
                         "format": "uuid"
+                    },
+                    "author_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translator_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translation_copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "keywords": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "workshop": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "scribe": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patrons": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "architects": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ItemTranslationStatus"
+                    },
+                    "catalogue_references": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "external_notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "image_rights": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "backward_compatibility": {
                         "type": [
@@ -31517,6 +32097,20 @@
                             "null"
                         ]
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's photographer, if any"
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit where it is not the text burned on it"
+                    },
                     "display_order": {
                         "type": "integer"
                     },
@@ -31546,6 +32140,8 @@
                     "mime_type",
                     "size",
                     "alt_text",
+                    "photographer",
+                    "credit",
                     "display_order",
                     "created_at",
                     "updated_at"
@@ -31972,6 +32568,20 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
                     }
                 },
                 "title": "UpdateAvailableImageRequest"
@@ -31994,6 +32604,20 @@
                         "minimum": 1
                     },
                     "alt_text": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
                         "type": [
                             "string",
                             "null"
@@ -32151,6 +32775,21 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "cover_item_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "days": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 365
                     }
                 },
                 "title": "UpdateCollectionRequest"
@@ -32178,7 +32817,19 @@
                         "type": "string",
                         "maxLength": 255
                     },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "introduction": {
                         "type": [
                             "string",
                             "null"
@@ -32189,6 +32840,13 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "duration": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     },
                     "url": {
                         "type": [
@@ -32269,6 +32927,20 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
                     },
                     "display_order": {
                         "type": "integer",
@@ -32737,6 +33409,20 @@
                         ],
                         "maxLength": 500
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
                     "display_order": {
                         "type": "integer",
                         "minimum": 1
@@ -33023,6 +33709,12 @@
                     "description": {
                         "type": "string"
                     },
+                    "short_description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "type": {
                         "type": [
                             "string",
@@ -33059,7 +33751,25 @@
                             "null"
                         ]
                     },
+                    "region": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "dimensions": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "materials": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "dynasty": {
                         "type": [
                             "string",
                             "null"
@@ -33101,6 +33811,12 @@
                             "null"
                         ]
                     },
+                    "history": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "author_id": {
                         "type": [
                             "string",
@@ -33128,6 +33844,123 @@
                             "null"
                         ],
                         "format": "uuid"
+                    },
+                    "author_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translator_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "translation_copy_editor_credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "keywords": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_birth_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artist_death_place": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "workshop": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "scribe": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "patrons": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "architects": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "$ref": "#/components/schemas/ItemTranslationStatus"
+                    },
+                    "catalogue_references": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "external_notice": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "image_rights": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "backward_compatibility": {
                         "type": [
@@ -33242,6 +34075,20 @@
                             "null"
                         ]
                     },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
                     "display_order": {
                         "type": "integer",
                         "minimum": 1
@@ -33292,6 +34139,20 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
                     },
                     "display_order": {
                         "type": "integer",
@@ -33422,6 +34283,20 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
                     },
                     "display_order": {
                         "type": "integer",
@@ -33870,6 +34745,20 @@
                         "minimum": 1
                     },
                     "alt_text": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 500
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "credit": {
                         "type": [
                             "string",
                             "null"
@@ -34512,26 +35401,15 @@
                         "description": "A name for this resource, for internal use only."
                     },
                     "backward_compatibility": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
+                        "type": "string",
                         "description": "The Id(s) of matching resource in the legacy system (if any)."
                     },
                     "created_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time",
+                        "type": "string",
                         "description": "The date of creation of the resource (managed by the system)"
                     },
                     "updated_at": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "format": "date-time",
+                        "type": "string",
                         "description": "The date of last modification of the resource (managed by the system)"
                     },
                     "items": {
