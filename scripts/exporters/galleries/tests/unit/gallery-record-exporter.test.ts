@@ -18,6 +18,8 @@ describe('GalleryRecordExporter', () => {
     fakeDb([
       LANGUAGES,
       [/FROM collections WHERE id = \?/, () => [{ extra: { thg_gallery: { slug: 'galleries', host: 'https://gallery-partners.museumwnf.org' } } }]],
+      // The gallery flags, columns since M16 E4a: none here.
+      [/FROM collections\s+WHERE id IN/, () => []],
       [
         /FROM collection_translations/,
         () => [
