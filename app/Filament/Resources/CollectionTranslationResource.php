@@ -97,13 +97,26 @@ class CollectionTranslationResource extends Resource
                             ->url()
                             ->nullable()
                             ->maxLength(255),
+                        Textarea::make('subtitle')
+                            ->rows(2)
+                            ->nullable()
+                            ->columnSpanFull(),
                         Textarea::make('description')
                             ->rows(4)
+                            ->columnSpanFull(),
+                        Textarea::make('introduction')
+                            ->helperText('The introduction, as written (Markdown).')
+                            ->rows(6)
                             ->columnSpanFull(),
                         Textarea::make('quote')
                             ->placeholder('A representative quote or excerpt')
                             ->rows(3)
                             ->columnSpanFull(),
+                        TextInput::make('duration')
+                            ->placeholder('e.g., One day')
+                            ->helperText('A trail\'s duration, as written.')
+                            ->nullable()
+                            ->maxLength(255),
                     ])
                     ->columns(2),
 
@@ -147,7 +160,10 @@ class CollectionTranslationResource extends Resource
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('title'),
                         TextEntry::make('url'),
+                        TranslationInfolistSchema::rtlTextEntry('subtitle'),
+                        TranslationInfolistSchema::rtlTextEntry('duration'),
                         TranslationInfolistSchema::markdownEntry('description', columnSpanFull: true),
+                        TranslationInfolistSchema::markdownEntry('introduction', columnSpanFull: true),
                         TranslationInfolistSchema::markdownEntry('quote', columnSpanFull: true),
                     ])
                     ->columns(2),

@@ -79,6 +79,14 @@ Contributor's `category` and the text as written in its translation. None stays 
 re-running one of their writers on its own, run `--only collection-credits` again. The exporters give the
 keys back to the packages (`scripts/exporters/shared/credits.mjs`).
 
+Four texts below are written here first, then moved to columns of their own by
+`importers/phase-11/collection-translation-columns-importer.ts` (M16 E1, #2647), the text as written:
+`subtitle` → `subtitle`, `intro_text` (mwnf3) and `introduction` (Travels) → `introduction`, `duration` →
+`duration`. None stays after a full import. After re-running one of their writers on its own, run
+`--only collection-translation-columns` again. The exporters give the keys back to the packages
+(`scripts/exporters/shared/collection-columns.mjs`); the two lists in
+`utils/collection-translation-columns.ts` and that module stay equal.
+
 | Key                                                                                                                                                                                                          | Legacy source                                                                                  | Written by                                                                                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `credits`, `intro_header`, `intro_text`, `subtitle`                                                                                                                                                          | mwnf3 exhibition_fields `exh_*`, artintro_fields `art_*`                                       | importers/phase-01/mwnf3-exhibition-translation-importer.ts                                                |

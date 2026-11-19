@@ -22,7 +22,7 @@ describe('the exhibition trails of an item', () => {
           return [{ id: 't1', backward_compatibility: 'mwnf3_travels:trail:IAM:pt:1' }] as T[]
         }
         if (sql.includes('FROM collection_translations')) {
-          return [{ id: 't1', language: 'en', title: 'In Lands of the Christian Kings', extra: { subtitle: 'Mudejar Art' } }] as T[]
+          return [{ id: 't1', language: 'en', title: 'In Lands of the Christian Kings', subtitle: 'Mudejar Art' }] as T[]
         }
         return []
       },

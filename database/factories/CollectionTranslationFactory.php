@@ -32,8 +32,11 @@ class CollectionTranslationFactory extends Factory
             'language_id' => Language::factory(),
             'context_id' => Context::factory(),
             'title' => $this->faker->sentence(3),
+            'subtitle' => $this->faker->optional(0.3)->sentence(),
             'description' => $this->faker->paragraph(3),
+            'introduction' => $this->faker->optional(0.3)->paragraph(),
             'quote' => $this->faker->optional(0.3)->sentence(),
+            'duration' => $this->faker->optional(0.2)->randomElement(['One day', 'Two days']),
             'url' => $this->faker->optional(0.3)->url(),
             'backward_compatibility' => $this->faker->optional()->uuid(),
             'extra' => $this->faker->optional()->randomElement([

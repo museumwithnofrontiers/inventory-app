@@ -15,19 +15,12 @@ import { PUBLICATION_PATH, TRAIL_PATH, loadSites, siteLink, siteOf } from './sit
 const marks = values => values.map(() => '?').join(', ')
 
 /**
- * @param {unknown} extra
+ * A trail's subtitle (its own column since M16 E1), or null when it is blank.
+ *
+ * @param {unknown} subtitle
  * @returns {string | null}
  */
-function subtitleOf(extra) {
-  let value = extra
-  if (typeof value === 'string') {
-    try {
-      value = JSON.parse(value)
-    } catch {
-      return null
-    }
-  }
-  const subtitle = value && typeof value === 'object' ? /** @type {Record<string, unknown>} */ (value)['subtitle'] : null
+function subtitleOf(subtitle) {
   return typeof subtitle === 'string' && subtitle.trim() !== '' ? subtitle : null
 }
 
@@ -105,10 +98,10 @@ export async function trailLinks(query, ids, sites = loadSites()) {
   const rows = /** @type {{ id: string, backward_compatibility: string | null }[]} */ (
     await query(`SELECT id, backward_compatibility FROM collections WHERE id IN (${marks(unique)}) ORDER BY id`, unique)
   )
-  const textRows = /** @type {{ id: string, language: string, title: string | null, extra: unknown }[]} */ (
+  const textRows = /** @type {{ id: string, language: string, title: string | null, subtitle: string | null }[]} */ (
     await query(
       // A trail is translated in its own (Travels) context first.
-      `SELECT ct.collection_id AS id, l.backward_compatibility AS language, ct.title, ct.extra
+      `SELECT ct.collection_id AS id, l.backward_compatibility AS language, ct.title, ct.subtitle
        FROM collection_translations ct
        JOIN collections c ON c.id = ct.collection_id
        JOIN languages l ON l.id = ct.language_id
@@ -120,7 +113,7 @@ export async function trailLinks(query, ids, sites = loadSites()) {
   const titles = titlesById(textRows)
   const subtitles = new Map()
   for (const row of textRows) {
-    const subtitle = subtitleOf(row.extra)
+    const subtitle = subtitleOf(row.subtitle)
     if (!subtitle) continue
     const byLang = subtitles.get(row.id) ?? {}
     if (byLang[row.language] === undefined) byLang[row.language] = subtitle

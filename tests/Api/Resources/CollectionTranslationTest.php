@@ -70,4 +70,25 @@ class CollectionTranslationTest extends TestCase
             ['id' => $resource->id] + array_intersect_key($dbData, array_flip($modelClass::make()->getFillable()))
         );
     }
+
+    /**
+     * The texts that left `extra` (M16 E1) are stored and served as written.
+     */
+    public function test_stores_and_serves_the_text_columns(): void
+    {
+        $resource = CollectionTranslation::factory()->create();
+        $texts = [
+            'subtitle' => 'From Damascus to Cairo',
+            'introduction' => "The trail follows the **Mamluk** road.\n\nIt starts at the citadel.",
+            'duration' => 'One day',
+        ];
+
+        $this->putJson(route('collection-translation.update', $resource), $texts)
+            ->assertOk()
+            ->assertJsonPath('data.subtitle', $texts['subtitle'])
+            ->assertJsonPath('data.introduction', $texts['introduction'])
+            ->assertJsonPath('data.duration', $texts['duration']);
+
+        $this->assertDatabaseHas('collection_translations', ['id' => $resource->id] + $texts);
+    }
 }

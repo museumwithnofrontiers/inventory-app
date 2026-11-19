@@ -1,5 +1,6 @@
 import { publicationLinks } from '../../../shared/links.mjs'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
+import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
 import type { PageLink } from '../../../shared/links.mjs'
 import type { ExportResult } from '../core/types.js'
 import { type LanguageKey, languageKeyer, rekeyIfMap } from '../core/language-keys.js'
@@ -113,12 +114,13 @@ export class CollectionExporter extends BaseExporter {
         ),
         this.db.query<CollectionTranslationRow>(
           // Row order is unspecified; sorted so two exports of one database are byte-identical.
-          `SELECT collection_id, language_id, context_id, title, description, quote, url, extra
+          `SELECT collection_id, language_id, context_id, title, description, quote, url, extra,
+           ${collectionColumnsSelect('collection_translations')}
            FROM collection_translations
            WHERE collection_id IN (${colPh})
            ORDER BY collection_id, language_id, context_id`,
           collectionIds
-        ),
+        ).then(restoreCollectionColumns),
         this.db.query<CollectionImageRow>(
           `SELECT collection_id, path, alt_text, display_order
            FROM collection_images

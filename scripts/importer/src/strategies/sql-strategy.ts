@@ -13,6 +13,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import { deterministicUuid } from '../utils/deterministic-uuid.js';
 import { ITEM_TRANSLATION_COLUMNS } from '../utils/item-translation-columns.js';
+import { COLLECTION_TRANSLATION_COLUMNS } from '../utils/collection-translation-columns.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { IWriteStrategy } from '../core/strategy.js';
 import type {
@@ -2104,6 +2105,24 @@ export class SqlWriteStrategy implements IWriteStrategy {
     const sets = names.map((name) => `\`${name}\` = ?`).join(', ');
     await this.db.execute(
       `UPDATE item_translations SET ${sets}${sets ? ', ' : ''}extra = ?, updated_at = ? WHERE id = ?`,
+      [...names.map((name) => columns[name]!), extra, this.now, id]
+    );
+  }
+
+  async setCollectionTranslationColumnsAsStoredById(
+    id: string,
+    columns: Record<string, string>,
+    extra: string | null
+  ): Promise<void> {
+    const allowed = new Set(COLLECTION_TRANSLATION_COLUMNS.map((entry) => entry.column));
+    const names = Object.keys(columns);
+    const unknown = names.filter((name) => !allowed.has(name));
+    if (unknown.length > 0) {
+      throw new Error(`Not a collection translation column of ADR 006: ${unknown.join(', ')}`);
+    }
+    const sets = names.map((name) => `\`${name}\` = ?`).join(', ');
+    await this.db.execute(
+      `UPDATE collection_translations SET ${sets}${sets ? ', ' : ''}extra = ?, updated_at = ? WHERE id = ?`,
       [...names.map((name) => columns[name]!), extra, this.now, id]
     );
   }

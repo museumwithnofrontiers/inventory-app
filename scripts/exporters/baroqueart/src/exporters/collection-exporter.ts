@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
+import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
@@ -146,12 +147,13 @@ export class CollectionExporter extends BaseExporter {
     const [allTranslations, images, itemLinks, detailViews, glossaryLinks] = await Promise.all([
       this.db.query<CollectionTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
-        `SELECT collection_id, language_id, context_id, title, description, quote, url, extra
+        `SELECT collection_id, language_id, context_id, title, description, quote, url, extra,
+         ${collectionColumnsSelect('collection_translations')}
          FROM collection_translations
          WHERE collection_id IN (${colPh})
          ORDER BY collection_id, language_id`,
         collectionIds
-      ),
+      ).then(restoreCollectionColumns),
       this.db.query<CollectionImageRow>(
         `SELECT collection_id, path, alt_text, display_order
          FROM collection_images
