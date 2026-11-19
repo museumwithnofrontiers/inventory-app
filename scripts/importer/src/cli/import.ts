@@ -164,6 +164,7 @@ import {
   ItemTranslationColumnsImporter,
   CollectionTranslationColumnsImporter,
   PictureCreditsImporter,
+  ImageTextsImporter,
   CollectionRelationsImporter,
   CollectionFlagsImporter,
   SiteConfigurationOutImporter,
@@ -1260,6 +1261,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: PictureCreditsImporter,
     // The picture importers of every legacy database write these keys, and
     // later steps move translations between contexts.
+    runsLast: true,
+  },
+  {
+    key: 'image-texts',
+    name: 'Image Texts',
+    description:
+      "Move the Sharing History history pages' image captions and the profiles' map descriptions from collection_translations.extra to the images' ImageTranslations, by legacy key (M16 F2 #2652)",
+    importerClass: ImageTextsImporter,
+    // The history-page importer writes these keys, and later steps move
+    // translations between contexts.
     runsLast: true,
   },
   {

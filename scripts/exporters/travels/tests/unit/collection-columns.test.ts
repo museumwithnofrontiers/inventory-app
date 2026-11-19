@@ -65,9 +65,39 @@ describe('the column list', () => {
       'intro_text→introduction',
       'introduction→introduction',
       'duration→duration',
+      'cover_images→cover_caption',
     ])
-    expect(collectionColumnsSelect('ct')).toBe(
-      'ct.subtitle, ct.introduction, ct.duration, ct.backward_compatibility AS collection_columns_source'
-    )
+    expect(
+      collectionColumnsSelect('ct').startsWith(
+        'ct.subtitle, ct.introduction, ct.duration, ct.cover_caption, ct.backward_compatibility AS collection_columns_source, '
+      )
+    ).toBe(true)
+    expect(collectionColumnsSelect('ct')).toContain('WHERE cc_ci.collection_id = ct.collection_id')
+  })
+})
+
+describe('the history pages’ image texts (F2)', () => {
+  const IMG = 'mwnf3_sharing_history:sh_countries_historicalbackground_images:'
+  const MAP = 'mwnf3_sharing_history:sh_countries_historicalbackground_maps:'
+
+  it('rebuild image_captions and map_descriptions, each caption with only its fields, in MySQL JSON order', () => {
+    const extra = withCollectionTranslationColumns(null, {
+      collection_columns_image_texts: JSON.stringify([
+        { key: `${IMG}155`, lang: 'eng', caption: null, name: 'Map of Spain', date: '1845', museum: null, location: 'Madrid' },
+        { key: `${MAP}3`, lang: 'eng', caption: '1815', name: null, date: null, museum: null, location: null },
+      ]),
+    }) as Record<string, unknown>
+    expect(extra).toEqual({
+      image_captions: { [`${IMG}155`]: { eng: { date: '1845', name: 'Map of Spain', location: 'Madrid' } } },
+      map_descriptions: { map_3: { eng: '1815' } },
+    })
+    expect(Object.keys(extra)).toEqual(['image_captions', 'map_descriptions'])
+    const caption = (extra.image_captions as Record<string, Record<string, object>>)[`${IMG}155`]!.eng!
+    expect(Object.keys(caption)).toEqual(['date', 'name', 'location'])
+  })
+
+  it('leave extra as it came when the collection has no image text', () => {
+    const extra = '{"a": 1}'
+    expect(withCollectionTranslationColumns(extra, { collection_columns_image_texts: null })).toBe(extra)
   })
 })

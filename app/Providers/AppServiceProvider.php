@@ -30,11 +30,13 @@ use App\Policies\TimelineEventPolicy;
 use App\Policies\TimelinePolicy;
 use App\Policies\UserPolicy;
 use App\Support\Documentation\RuleTransformers\IncludeRuleTransformer;
+use App\Support\Images\AttachedImageRegistry;
 use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Dedoc\Scramble\Support\Generator\SecuritySchemes\OAuthFlow;
 use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Event;
@@ -59,6 +61,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // An image's texts (ImageTranslation, M16 F2) name their image by a short,
+        // stable alias rather than a class name.
+        Relation::morphMap(AttachedImageRegistry::morphAliases());
+
         // Public picture endpoint throttle — configurable via PUB_PICTURES_THROTTLE env var.
         // Counts the requests that cost something: a burn, or an error such as
         // an unknown filename. A 304 or a cache hit is the cheap path a page full

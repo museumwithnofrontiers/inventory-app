@@ -56,6 +56,7 @@ class UpdateCollectionTranslationRequest extends FormRequest
             'introduction' => ['nullable', 'string'],
             'quote' => ['nullable', 'string'],
             'duration' => ['nullable', 'string', 'max:255'],
+            'cover_caption' => ['nullable', 'string'],
             'url' => ['nullable', 'url', 'max:2048'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
             'extra' => ['nullable', 'json'],

@@ -23,6 +23,9 @@ class AllowList
                 'attachedToCollections', 'outgoingLinks', 'incomingLinks',
                 'itemMedia', 'itemDocuments',
             ],
+            'image_translation' => [
+                'language',
+            ],
             'itemImage' => [
                 'item',
             ],

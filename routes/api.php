@@ -21,6 +21,7 @@ use App\Http\Controllers\DynastyTranslationController;
 use App\Http\Controllers\GlossaryController;
 use App\Http\Controllers\GlossarySpellingController;
 use App\Http\Controllers\GlossaryTranslationController;
+use App\Http\Controllers\ImageTranslationController;
 use App\Http\Controllers\ImageUploadController;
 use App\Http\Controllers\InfoController;
 use App\Http\Controllers\ItemController;
@@ -196,6 +197,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('item-image/{itemImage}/view', [ItemImageController::class, 'view'])->name('item-image.view');
         Route::get('item-image/{itemImage}', [ItemImageController::class, 'show'])->name('item-image.show');
 
+        // ImageTranslation routes (read): an image's texts per language
+        Route::get('image-translation', [ImageTranslationController::class, 'index'])->name('image-translation.index');
+        Route::get('image-translation/{imageTranslation}', [ImageTranslationController::class, 'show'])->name('image-translation.show');
+
         // ItemMedia routes (read)
         Route::get('item/{item}/media', [ItemMediaController::class, 'index'])->name('item.media.index');
         Route::get('item-media/{itemMedia}', [ItemMediaController::class, 'show'])->name('item-media.show');
@@ -302,6 +307,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('contributor-image', [ContributorImageController::class, 'store'])->name('contributor-image.store');
         Route::post('item', [ItemController::class, 'store'])->name('item.store');
         Route::post('item/{item}/images', [ItemImageController::class, 'store'])->name('item.images.store');
+        Route::post('image-translation', [ImageTranslationController::class, 'store'])->name('image-translation.store');
         Route::post('item/{item}/attach-image', [ItemImageController::class, 'attachFromAvailable'])->name('item.attachImage');
         Route::post('item/{item}/media', [ItemMediaController::class, 'store'])->name('item.media.store');
         Route::post('item/{item}/documents', [ItemDocumentController::class, 'store'])->name('item.documents.store');
@@ -418,6 +424,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::put('item/{item}', [ItemController::class, 'update']);
 
         Route::patch('item-image/{itemImage}', [ItemImageController::class, 'update'])->name('item-image.update');
+        Route::patch('image-translation/{imageTranslation}', [ImageTranslationController::class, 'update'])->name('image-translation.update');
+        Route::put('image-translation/{imageTranslation}', [ImageTranslationController::class, 'update']);
         Route::put('item-image/{itemImage}', [ItemImageController::class, 'update']);
         Route::patch('item-image/{itemImage}/move-up', [ItemImageController::class, 'moveUp'])->name('item-image.moveUp');
         Route::patch('item-image/{itemImage}/move-down', [ItemImageController::class, 'moveDown'])->name('item-image.moveDown');
@@ -537,6 +545,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('item/{item}/detach-tag', [ItemController::class, 'detachTag'])->name('item.detachTag');
         Route::delete('item/{item}/detach-tags', [ItemController::class, 'detachTags'])->name('item.detachTags');
         Route::delete('item-image/{itemImage}', [ItemImageController::class, 'destroy'])->name('item-image.destroy');
+        Route::delete('image-translation/{imageTranslation}', [ImageTranslationController::class, 'destroy'])->name('image-translation.destroy');
         Route::post('item-image/{itemImage}/detach', [ItemImageController::class, 'detachToAvailable'])->name('item-image.detach');
         Route::delete('item-media/{itemMedia}', [ItemMediaController::class, 'destroy'])->name('item-media.destroy');
         Route::delete('item-document/{itemDocument}', [ItemDocumentController::class, 'destroy'])->name('item-document.destroy');

@@ -11,8 +11,10 @@ use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManage
 use App\Models\AvailableImage;
 use App\Models\Collection;
 use App\Models\CollectionImage;
+use App\Models\ImageTranslation;
 use App\Models\Item;
 use App\Models\ItemImage;
+use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerImage;
 use Filament\Tables\Actions\DeleteAction;
@@ -120,6 +122,42 @@ class EntityImagesRelationManagerTest extends TestCase
         $this->assertDatabaseHas('item_images', [
             'id' => $image->id,
             'copyright' => null,
+        ]);
+    }
+
+    public function test_item_images_edit_action_shows_and_saves_the_translations(): void
+    {
+        $user = $this->createCrudUser();
+        $item = Item::factory()->Object()->create();
+        $image = ItemImage::factory()->forItem($item)->create(['path' => 'texts-item.jpg']);
+        $language = Language::factory()->create();
+        ImageTranslation::factory()->of($image)->create(['language_id' => $language->id, 'caption' => 'Old caption']);
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)
+            ->test(ItemImagesRelationManager::class, [
+                'ownerRecord' => $item,
+                'pageClass' => EditItem::class,
+            ])
+            ->mountTableAction('edit', $image);
+
+        $translations = $component->get('mountedTableActionsData.0.translations');
+        $this->assertCount(1, $translations);
+        $key = array_key_first($translations);
+
+        $component
+            ->set("mountedTableActionsData.0.translations.{$key}.caption", 'New caption')
+            ->set("mountedTableActionsData.0.translations.{$key}.museum", 'National Museum of Romanticism')
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('image_translations', [
+            'image_type' => 'item_image',
+            'image_id' => $image->id,
+            'language_id' => $language->id,
+            'caption' => 'New caption',
+            'museum' => 'National Museum of Romanticism',
         ]);
     }
 

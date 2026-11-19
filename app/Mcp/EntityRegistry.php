@@ -39,6 +39,7 @@ final class EntityRegistry
         'author', 'author_translation', 'artist', 'dynasty', 'dynasty_translation', 'tag',
         'country', 'country_translation', 'language', 'language_translation', 'context', 'project',
         'available_image',
+        'image_translation',
     ];
 
     /**

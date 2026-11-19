@@ -7,6 +7,7 @@ use App\Contracts\DetachableImage;
 use App\Contracts\StreamableImageFile;
 use App\Traits\DeletesImageFilesOnDelete;
 use App\Traits\HasDisplayOrder;
+use App\Traits\HasImageTranslations;
 use App\Traits\ResolvesCopyright;
 use Database\Factories\PartnerTranslationImageFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Storage;
 class PartnerTranslationImage extends Model implements BurnsCopyright, DetachableImage, StreamableImageFile
 {
     /** @use HasFactory<PartnerTranslationImageFactory> */
-    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasUuids, ResolvesCopyright;
+    use DeletesImageFilesOnDelete, HasDisplayOrder, HasFactory, HasImageTranslations, HasUuids, ResolvesCopyright;
 
     /**
      * The attributes that are mass assignable.
