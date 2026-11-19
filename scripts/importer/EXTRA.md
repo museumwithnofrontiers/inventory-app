@@ -94,6 +94,14 @@ Four texts below are written here first, then moved to columns of their own by
 (`scripts/exporters/shared/collection-columns.mjs`); the two lists in
 `utils/collection-translation-columns.ts` and that module stay equal.
 
+The Explore id lists below (`country_ids`, `location_ids`, `territory_ids`, `theme_ids`,
+`additional_regions`), on a collection's English text in its own context, are moved to the model by
+`importers/phase-11/collection-relations-importer.ts` (M16 E3, #2649), each id resolved by its legacy key:
+`collection_country`, and `collection_collection` by kind, in legacy's order. A list holding an alias country
+code (`ix`, `px`) or an id that resolves to nothing stays, reported. After re-running one of their writers on
+its own, run `--only collection-relations` again. The exporters give the keys back
+(`scripts/exporters/shared/collection-relations.mjs`, `country-codes.mjs`).
+
 | Key                                                                                                                                                                                                          | Legacy source                                                                                  | Written by                                                                                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `credits`, `intro_header`, `intro_text`, `subtitle`                                                                                                                                                          | mwnf3 exhibition_fields `exh_*`, artintro_fields `art_*`                                       | importers/phase-01/mwnf3-exhibition-translation-importer.ts                                                |
@@ -125,6 +133,10 @@ Four texts below are written here first, then moved to columns of their own by
 | `exhibition_i18n.{enabled, subtitle, heading, about, exh_img_caption, popup_logo_show, popup_logo}`                                                                                                          | exhibition_i18n                                                                                | importers/phase-10/thg-gallery-translation-importer.ts, phase-11/exhibition-i18n-text-backfill-importer.ts |
 
 ## collections.extra
+
+`historical_background`, `thg_theme.cover_picture` and `days` below are moved by the same step (M16 E3,
+#2649): to `collection_collection` (kind `historical_background`), `cover_item_id` and `days`. `logos`
+stays until E4 (#2650) moves it to the instance files: it is site presentation (Decision 6).
 
 | Key                                                                                                         | Legacy source                                                                                                                                      | Written by                                                  |
 | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |

@@ -7,8 +7,10 @@
         },
         "collection_translations": {
             "keys": {
+                "additional_regions": 0,
                 "author": 0,
                 "bibliography": 13,
+                "country_ids": 0,
                 "credits": 0,
                 "curated_by": 0,
                 "duration": 0,
@@ -16,10 +18,21 @@
                 "introduction": 0,
                 "local_coordinator": 0,
                 "local_team": 0,
+                "location_ids": 0,
                 "photo_by": 0,
                 "prepared_by": 0,
                 "subtitle": 0,
+                "territory_ids": 0,
+                "theme_ids": 0,
                 "travels_author": 0
+            }
+        },
+        "collections": {
+            "keys": {
+                "days": 0,
+                "historical_background": 0,
+                "logos": 16,
+                "thg_theme": 0
             }
         },
         "item_translations": {

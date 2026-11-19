@@ -31,6 +31,7 @@ interface ThemeRow {
   backward_compatibility: string | null
   display_order: number | null
   parent_id: string | null
+  cover_item_id?: string | null
   extra: unknown
 }
 
@@ -190,7 +191,7 @@ export class Database {
   async resolveThemes(collectionId: string): Promise<Theme[]> {
     const rows = await this.query<ThemeRow>(
       `SELECT c.id, c.internal_name, c.backward_compatibility, c.display_order,
-              c.parent_id, c.extra
+              c.parent_id, c.cover_item_id, c.extra
        FROM collections c
        WHERE c.type = 'theme'
          AND (c.parent_id = ?
@@ -207,7 +208,7 @@ export class Database {
       internalName: row.internal_name,
       displayOrder: row.display_order ?? 0,
       parentId: row.parent_id,
-      coverPictureItemId: coverPictureItemId(row.extra),
+      coverPictureItemId: row.cover_item_id ?? coverPictureItemId(row.extra),
     }))
   }
 
@@ -297,7 +298,8 @@ export function legacyProjectKey(backwardCompatibility: string | null): string |
 }
 
 /**
- * `extra.thg_theme.cover_picture` (legacy `theme_cover_image`, gap E4). The
+ * `extra.thg_theme.cover_picture` (legacy `theme_cover_image`, gap E4), for a
+ * theme M16 E3 left in `extra`; the others have `cover_item_id`. The
  * importer resolves the legacy composite key to an item UUID at import time and
  * stores both, so the exporter reads the id and never re-parses the key.
  */

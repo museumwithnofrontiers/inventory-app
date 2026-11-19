@@ -119,6 +119,15 @@ export const COUNTRY_CODE_MAP: Record<string, string> = {
 };
 
 /**
+ * The legacy country codes the map above names as aliases of another code
+ * ("maps to same as"): `ix` of `it`, `px` of `pa`. A legacy code list that
+ * holds one of them can't be given back from ISO3 ids, so M16 E3 leaves it
+ * in `extra`. The exporters' reverse map (`scripts/exporters/shared/country-codes.mjs`)
+ * leaves the same codes out; a test there keeps the two equal.
+ */
+export const COUNTRY_CODE_ALIASES: readonly string[] = ['ix', 'px'];
+
+/**
  * Map legacy 2-character language code to 3-character ISO 639-3 code
  * @throws Error if code is not found
  */

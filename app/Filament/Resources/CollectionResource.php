@@ -16,13 +16,16 @@ use App\Filament\Resources\CollectionResource\Pages\ListCollection;
 use App\Filament\Resources\CollectionResource\Pages\ViewCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ContributorsRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\CountriesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager;
+use App\Filament\Resources\CollectionResource\RelationManagers\RelatedCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\ItemDisplayLabel;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Country;
@@ -216,6 +219,17 @@ class CollectionResource extends Resource
                             ->label('Map zoom')
                             ->numeric()
                             ->integer(),
+                        RecordSelect::forItems(
+                            name: 'cover_item_id',
+                            label: 'Cover picture',
+                            required: false,
+                        ),
+                        TextInput::make('days')
+                            ->helperText('A Travels itinerary\'s number of days.')
+                            ->numeric()
+                            ->integer()
+                            ->minValue(1)
+                            ->maxValue(365),
                     ])
                     ->columns(2),
                 FiltersSection::make('Technical identification')
@@ -440,6 +454,13 @@ class CollectionResource extends Resource
                         TextEntry::make('longitude'),
                         TextEntry::make('map_zoom')
                             ->label('Map zoom'),
+                        TextEntry::make('cover_item_id')
+                            ->label('Cover picture')
+                            ->formatStateUsing(fn (?string $state): string => $state ? (ItemDisplayLabel::resolveLabel($state) ?: $state) : '')
+                            ->url(fn (Collection $record): ?string => $record->coverItem
+                                ? (auth()->user()?->can('view', $record->coverItem) ? ItemResource::getUrl('view', ['record' => $record->coverItem]) : null)
+                                : null),
+                        TextEntry::make('days'),
                     ])
                     ->columns(2),
                 InfolistSection::make('System Information')
@@ -466,6 +487,8 @@ class CollectionResource extends Resource
             TranslationsRelationManager::class,
             ItemsRelationManager::class,
             PartnersRelationManager::class,
+            CountriesRelationManager::class,
+            RelatedCollectionsRelationManager::class,
             ImagesRelationManager::class,
             PublicationsRelationManager::class,
             ContributorsRelationManager::class,

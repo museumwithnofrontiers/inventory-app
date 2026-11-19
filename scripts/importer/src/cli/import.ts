@@ -165,6 +165,7 @@ import {
   ItemTranslationColumnsImporter,
   CollectionTranslationColumnsImporter,
   PictureCreditsImporter,
+  CollectionRelationsImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1260,6 +1261,15 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     importerClass: PictureCreditsImporter,
     // The picture importers of every legacy database write these keys, and
     // later steps move translations between contexts.
+    runsLast: true,
+  },
+  {
+    key: 'collection-relations',
+    name: 'Collection Relations',
+    description:
+      'Move the collection relations kept as legacy id lists in extra (countries, locations, territories, themes, regions, historical background, cover picture, days) to the model, resolved by legacy key, after every importer that writes them (M16 E3, #2649)',
+    importerClass: CollectionRelationsImporter,
+    // The Explore, Travels and thematic gallery importers write these keys.
     runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)

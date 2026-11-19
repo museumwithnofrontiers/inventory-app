@@ -1,4 +1,9 @@
 import type { Database } from './database.js'
+import {
+  loadCollectionRelations,
+  withCollectionRelations,
+  withTranslationRelations,
+} from '../../../shared/collection-relations.mjs'
 
 /**
  * What the Explore package ships, resolved once and shared by every exporter.
@@ -165,10 +170,11 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
     display_order: number | null
     internal_name: string
     extra: unknown
+    english_id: string | null
     english_extra: unknown
   }>(
     `SELECT c.id, c.parent_id, c.type, c.purpose, c.display_order, c.internal_name, c.extra,
-            ct.extra AS english_extra
+            ct.id AS english_id, ct.extra AS english_extra
      FROM collections c
      LEFT JOIN collection_translations ct
        ON ct.collection_id = c.id AND ct.language_id = 'eng' AND ct.context_id = c.context_id
@@ -184,18 +190,37 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
   }
   const rootId = roots[0]!.id
 
+  // The relations legacy kept as id lists are the model's now (M16 E3): the
+  // collection's and its English text's `extra` get them back, as the tree
+  // reads them (`location_ids`, `historical_background`).
+  const relations = await loadCollectionRelations(
+    (sql, params) => db.query(sql, params),
+    rows.map(r => r.id)
+  )
   const tree = shippedTree(
     rootId,
-    rows.map(r => ({
-      id: r.id,
-      parent_id: r.parent_id,
-      type: r.type,
-      purpose: r.purpose,
-      display_order: r.display_order,
-      internal_name: r.internal_name,
-      extra: parse(r.extra),
-      english_extra: parse(r.english_extra),
-    }))
+    rows.map(r => {
+      const own = relations.get(r.id)
+      return {
+        id: r.id,
+        parent_id: r.parent_id,
+        type: r.type,
+        purpose: r.purpose,
+        display_order: r.display_order,
+        internal_name: r.internal_name,
+        extra: parse(withCollectionRelations(r.extra, own)),
+        english_extra:
+          r.english_id === null
+            ? null
+            : parse(
+                withTranslationRelations(r.english_extra, own, {
+                  collection_id: r.id,
+                  language_id: 'eng',
+                  context_id: own?.contextId ?? '',
+                })
+              ),
+      }
+    })
   )
   const treeIds = tree.map(c => c.id)
 
