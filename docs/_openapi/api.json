@@ -25382,6 +25382,13 @@
                         ],
                         "description": "The title of the collection translation"
                     },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The subtitle, as written (optional)"
+                    },
                     "description": {
                         "type": [
                             "string",
@@ -25389,12 +25396,26 @@
                         ],
                         "description": "The description of the collection translation"
                     },
+                    "introduction": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The introduction, as written (optional, Markdown)"
+                    },
                     "quote": {
                         "type": [
                             "string",
                             "null"
                         ],
                         "description": "The quote/introduction of the collection translation (optional)"
+                    },
+                    "duration": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A trail's duration, as written, e.g. \"One day\" (optional)"
                     },
                     "url": {
                         "type": [
@@ -25452,8 +25473,11 @@
                     "language_id",
                     "context_id",
                     "title",
+                    "subtitle",
                     "description",
+                    "introduction",
                     "quote",
+                    "duration",
                     "url",
                     "backward_compatibility",
                     "extra",
@@ -29385,7 +29409,19 @@
                         "type": "string",
                         "maxLength": 255
                     },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "introduction": {
                         "type": [
                             "string",
                             "null"
@@ -29396,6 +29432,13 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "duration": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     },
                     "url": {
                         "type": [
@@ -32515,7 +32558,19 @@
                         "type": "string",
                         "maxLength": 255
                     },
+                    "subtitle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "introduction": {
                         "type": [
                             "string",
                             "null"
@@ -32526,6 +32581,13 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "duration": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     },
                     "url": {
                         "type": [
