@@ -1,6 +1,7 @@
 import { publicationLinks } from '../../../shared/links.mjs'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
+import { placementTranslationsSelect, restorePlacementTranslations } from '../../../shared/placement-translations.mjs'
 import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 import { loadCollectionRelations, withCollectionRelations, withTranslationRelations } from '../../../shared/collection-relations.mjs'
@@ -140,24 +141,24 @@ export class CollectionExporter extends BaseExporter {
               // them by their number (tr_monuments ORDER BY number, a varchar:
               // a, b, c…), the last part of their legacy key, so the key orders
               // them as legacy's itinerary gallery did.
-              `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra
+              `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra, ${placementTranslationsSelect('ci')}
                FROM collection_item ci
                JOIN items i ON i.id = ci.item_id
                WHERE ci.collection_id IN (${colPh})
                  AND ci.item_id IN (${itemPh})
                ORDER BY ci.collection_id, ci.display_order IS NULL, ci.display_order, i.backward_compatibility, ci.item_id`,
               [...collectionIds, ...this.scope.itemIds]
-            ),
+            ).then(restorePlacementTranslations),
         this.scope.entryIds.length === 0
           ? Promise.resolve([] as CollectionItemRow[])
           : this.db.query<CollectionItemRow>(
-              `SELECT collection_id, item_id, display_order, extra
-               FROM collection_item
-               WHERE collection_id IN (${trailPh})
-                 AND item_id IN (${this.placeholders(this.scope.entryIds.length)})
-               ORDER BY collection_id, display_order IS NULL, display_order, item_id`,
+              `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra, ${placementTranslationsSelect('ci')}
+               FROM collection_item ci
+               WHERE ci.collection_id IN (${trailPh})
+                 AND ci.item_id IN (${this.placeholders(this.scope.entryIds.length)})
+               ORDER BY ci.collection_id, ci.display_order IS NULL, ci.display_order, ci.item_id`,
               [...trailIds, ...this.scope.entryIds]
-            ),
+            ).then(restorePlacementTranslations),
         trailIds.length === 0
           ? Promise.resolve([] as CollectionPartnerRow[])
           : this.db.query<CollectionPartnerRow>(

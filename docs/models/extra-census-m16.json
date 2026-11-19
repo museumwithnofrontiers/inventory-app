@@ -2,13 +2,26 @@
     "tables": {
         "collection_item": {
             "keys": {
+                "contextual_descriptions": 0,
                 "curator_status": 0,
+                "detail_justification": 0,
                 "detail_n": 0,
+                "detail_name": 0,
+                "image_captions": 0,
+                "item_artist": 0,
+                "item_date": 0,
+                "item_dynasty": 0,
+                "item_location": 0,
+                "item_material": 0,
+                "item_museum": 0,
+                "item_name": 0,
+                "justifications": 0,
                 "mn_order": 0,
                 "n": 0,
                 "n2": 0,
                 "parent_n2": 0,
-                "picture": 0
+                "picture": 0,
+                "source_bc_by_language": 0
             }
         },
         "collection_translations": {

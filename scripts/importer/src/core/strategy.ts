@@ -70,6 +70,7 @@ import type {
 import type { CatalogueRow, LinkData, PartnerUrlRow, ShopLinkRow } from '../utils/links.js';
 import type { CollectionItemColumns } from '../utils/collection-item-columns.js';
 import type { VisitInformationFields, VisitOwner } from '../utils/visit-information.js';
+import type { CollectionItemTranslationColumns } from '../utils/collection-item-translations.js';
 
 /**
  * Strategy interface for writing entities to the target system
@@ -950,6 +951,19 @@ export interface IWriteStrategy {
   >;
 
   /**
+   * Find placements whose `extra` holds any of `keys` at its top level, with
+   * their collection's legacy key. Used by CollectionItemTranslationsImporter
+   * (M16 C2).
+   */
+  findCollectionItemTextRows(keys: readonly string[]): Promise<
+    Array<{
+      id: string;
+      collection_backward_compatibility: string | null;
+      extra: Record<string, unknown>;
+    }>
+  >;
+
+  /**
    * Insert an owner's visit information in one language and context, or
    * replace its texts. The texts are written as given, already sanitized
    * where they came from.
@@ -973,6 +987,18 @@ export interface IWriteStrategy {
     id: string,
     extra: string | null
   ): Promise<void>;
+
+  /**
+   * Write a placement's texts in one language (M16 C2), its id derived from
+   * the placement and the language. Only the columns given are set; a second
+   * write sets them again and leaves the others as they are. The texts were
+   * sanitized when they were first written, so they are copied as stored.
+   */
+  upsertCollectionItemTranslation(
+    placementId: string,
+    languageId: string,
+    columns: CollectionItemTranslationColumns
+  ): Promise<string>;
 
   /**
    * Read the extra JSON from a collection_item pivot row.

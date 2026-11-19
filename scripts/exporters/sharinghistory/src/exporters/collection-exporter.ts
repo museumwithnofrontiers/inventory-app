@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { creditKey, loadCollectionCredits, withCollectionCredits } from '../../../shared/credits.mjs'
 import { collectionColumnsSelect, restoreCollectionColumns } from '../../../shared/collection-columns.mjs'
+import { placementTranslationsSelect, restorePlacementTranslations } from '../../../shared/placement-translations.mjs'
 import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { restoreSiteTranslations } from '../../../shared/site-configuration.mjs'
 import { type LanguageKey, languageKeyer, rekeyIfMap, rekeyLanguages, rekeyNested } from '../core/language-keys.js'
@@ -163,7 +164,7 @@ export class CollectionExporter extends BaseExporter {
       this.db.query<CollectionItemRow>(
         `SELECT ci.collection_id,
                 IF(i.type = 'picture', i.parent_id, i.id) AS item_id,
-                ci.display_order, ci.variant_order, ci.curator_selected, ci.extra,
+                ci.display_order, ci.variant_order, ci.curator_selected, ci.extra, ${placementTranslationsSelect('ci')},
                 IF(i.type = 'picture',
                    (SELECT ii.path FROM item_images ii WHERE ii.item_id = i.id
                     ORDER BY ii.display_order, ii.id LIMIT 1),
@@ -178,6 +179,7 @@ export class CollectionExporter extends BaseExporter {
         [...collectionIds, ...this.projectIds, ...this.projectIds]
       ),
     ])
+    restorePlacementTranslations(itemLinks)
 
     // The legacy site only listed exhibitions with show='y'
     // (mwnf3.exhibitions.show, preserved by the importer in

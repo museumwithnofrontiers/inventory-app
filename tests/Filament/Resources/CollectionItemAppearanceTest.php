@@ -9,6 +9,8 @@ use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationMana
 use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\CollectionAppearancesRelationManager;
 use App\Models\Collection;
+use App\Models\CollectionItem;
+use App\Models\CollectionItemTranslation;
 use App\Models\Context;
 use App\Models\Item;
 use App\Models\Language;
@@ -21,9 +23,9 @@ use Tests\TestCase;
 /**
  * Tests covering Collection-Item appearance presentation in Filament.
  *
- * Uses self-contained factory data that matches the imported THG pivot extra shape:
- *   - extra.contextual_descriptions.{lang_id}: readable paragraph per language
- *   - extra.source_bc_by_language.{lang_id}: legacy provenance key per language
+ * Uses self-contained factory data: a placement and its texts per language
+ * (CollectionItemTranslation, M16 C2): a description and the text's own
+ * legacy key.
  */
 class CollectionItemAppearanceTest extends TestCase
 {
@@ -40,16 +42,10 @@ class CollectionItemAppearanceTest extends TestCase
         $collection = Collection::factory()->create(['internal_name' => 'THG Collection']);
         $item = Item::factory()->Object()->create(['internal_name' => 'THG Relief']);
 
-        $collection->attachedItems()->attach($item->id, [
-            'display_order' => 5,
-            'extra' => [
-                'contextual_descriptions' => [
-                    'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
-                ],
-                'source_bc_by_language' => [
-                    'eng' => 'THG-001-ENG',
-                ],
-            ],
+        $this->attachWithTexts($collection, $item, ['display_order' => 5], [
+            'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
+        ], [
+            'eng' => 'THG-001-ENG',
         ]);
 
         $this->setCurrentPanel();
@@ -72,15 +68,10 @@ class CollectionItemAppearanceTest extends TestCase
         // Default context required so ItemDisplayLabel::withDisplayLabel() resolves without errors.
         Context::factory()->create(['internal_name' => 'Default', 'is_default' => true]);
 
-        $collection->attachedItems()->attach($item->id, [
-            'display_order' => 1,
-            'extra' => [
-                'contextual_descriptions' => [
-                    'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
-                    'fra' => 'Un remarquable relief sculpté représentant la vie quotidienne des communautés anciennes.',
-                ],
-            ],
-        ]);
+        $this->attachWithTexts($collection, $item, ['display_order' => 1], [
+            'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
+            'fra' => 'Un remarquable relief sculpté représentant la vie quotidienne des communautés anciennes.',
+        ], []);
 
         $this->setCurrentPanel();
 
@@ -99,17 +90,11 @@ class CollectionItemAppearanceTest extends TestCase
         $collection = Collection::factory()->create(['internal_name' => 'THG Collection']);
         $item = Item::factory()->Object()->create(['internal_name' => 'THG Relief']);
 
-        $collection->attachedItems()->attach($item->id, [
-            'display_order' => 2,
-            'extra' => [
-                'contextual_descriptions' => [
-                    'eng' => 'A remarkable carved relief.',
-                    'fra' => 'Un remarquable relief sculpté.',
-                ],
-                'source_bc_by_language' => [
-                    'eng' => 'THG-001-ENG',
-                ],
-            ],
+        $this->attachWithTexts($collection, $item, ['display_order' => 2], [
+            'eng' => 'A remarkable carved relief.',
+            'fra' => 'Un remarquable relief sculpté.',
+        ], [
+            'eng' => 'THG-001-ENG',
         ]);
 
         $this->setCurrentPanel();
@@ -176,17 +161,11 @@ class CollectionItemAppearanceTest extends TestCase
         ]);
         $item = Item::factory()->Object()->create(['internal_name' => 'THG Relief']);
 
-        $collection->attachedItems()->attach($item->id, [
-            'display_order' => 3,
-            'extra' => [
-                'contextual_descriptions' => [
-                    'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
-                    'fra' => 'Un remarquable relief sculpté.',
-                ],
-                'source_bc_by_language' => [
-                    'eng' => 'THG-001-ENG',
-                ],
-            ],
+        $this->attachWithTexts($collection, $item, ['display_order' => 3], [
+            'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
+            'fra' => 'Un remarquable relief sculpté.',
+        ], [
+            'eng' => 'THG-001-ENG',
         ]);
 
         $this->setCurrentPanel();
@@ -214,17 +193,11 @@ class CollectionItemAppearanceTest extends TestCase
         ]);
         $item = Item::factory()->Object()->create(['internal_name' => 'THG Relief']);
 
-        $collection->attachedItems()->attach($item->id, [
-            'display_order' => 1,
-            'extra' => [
-                'contextual_descriptions' => [
-                    'eng' => 'A remarkable carved relief.',
-                    'fra' => 'Un remarquable relief sculpté.',
-                ],
-                'source_bc_by_language' => [
-                    'eng' => 'THG-001-ENG',
-                ],
-            ],
+        $this->attachWithTexts($collection, $item, ['display_order' => 1], [
+            'eng' => 'A remarkable carved relief.',
+            'fra' => 'Un remarquable relief sculpté.',
+        ], [
+            'eng' => 'THG-001-ENG',
         ]);
 
         $this->setCurrentPanel();
@@ -337,16 +310,10 @@ class CollectionItemAppearanceTest extends TestCase
         ]);
         $item = Item::factory()->Object()->create(['internal_name' => 'THG Relief']);
 
-        $collection->attachedItems()->attach($item->id, [
-            'display_order' => 7,
-            'extra' => [
-                'contextual_descriptions' => [
-                    'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
-                ],
-                'source_bc_by_language' => [
-                    'eng' => 'THG-001-ENG',
-                ],
-            ],
+        $this->attachWithTexts($collection, $item, ['display_order' => 7], [
+            'eng' => 'A remarkable carved relief depicting the daily life of ancient communities.',
+        ], [
+            'eng' => 'THG-001-ENG',
         ]);
 
         $this->setCurrentPanel();
@@ -372,14 +339,10 @@ class CollectionItemAppearanceTest extends TestCase
         $collection = Collection::factory()->create(['internal_name' => 'Multi-lang Collection']);
         $item = Item::factory()->Object()->create(['internal_name' => 'Multi-lang Item']);
 
-        $collection->attachedItems()->attach($item->id, [
-            'extra' => [
-                'contextual_descriptions' => [
-                    'eng' => 'English description.',
-                    'fra' => 'Description française.',
-                    'ara' => 'وصف عربي.',
-                ],
-            ],
+        $this->attachWithTexts($collection, $item, [], [
+            'eng' => 'English description.',
+            'fra' => 'Description française.',
+            'ara' => 'وصف عربي.',
         ]);
 
         $this->setCurrentPanel();
@@ -437,5 +400,96 @@ class CollectionItemAppearanceTest extends TestCase
         );
 
         $response->assertForbidden();
+    }
+
+    // -------------------------------------------------------------------------
+    // Appearance detail page — the placement's texts
+    // -------------------------------------------------------------------------
+
+    public function test_appearance_page_adds_edits_and_deletes_a_language(): void
+    {
+        $user = $this->createCrudUser();
+        $collection = Collection::factory()->create();
+        $item = Item::factory()->Object()->create();
+        $collection->attachedItems()->attach($item->id);
+        $placement = CollectionItem::query()->where('collection_id', $collection->id)->firstOrFail();
+        $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
+
+        $this->setCurrentPanel();
+
+        $page = Livewire::actingAs($user)
+            ->test(ViewCollectionItemAppearance::class, ['collection' => $collection, 'item' => $item])
+            ->callTableAction('create', data: [
+                'language_id' => $language->id,
+                'description' => 'The fountain on this page.',
+                'item_name' => 'The Hercules fountain',
+                'curator_justification' => 'Chosen by the curator.',
+            ])
+            ->assertHasNoTableActionErrors();
+
+        $translation = CollectionItemTranslation::query()->where('collection_item_id', $placement->id)->firstOrFail();
+        $this->assertSame('The Hercules fountain', $translation->item_name);
+        $this->assertSame('Chosen by the curator.', $translation->curator_justification);
+        $this->assertNull($translation->partner_justification);
+
+        $page->callTableAction('create', data: ['language_id' => $language->id])
+            ->assertHasTableActionErrors(['language_id' => 'unique']);
+
+        $page = Livewire::actingAs($user)
+            ->test(ViewCollectionItemAppearance::class, ['collection' => $collection, 'item' => $item]);
+        $page->callTableAction('edit', $translation, data: ['caption' => 'Orientalist painting (detail)'])
+            ->assertHasNoTableActionErrors();
+        $this->assertSame('Orientalist painting (detail)', $translation->refresh()->caption);
+        $this->assertSame('The Hercules fountain', $translation->item_name);
+
+        $page->callTableAction('delete', $translation);
+        $this->assertDatabaseMissing('collection_item_translations', ['id' => $translation->id]);
+    }
+
+    public function test_appearance_page_texts_are_read_only_without_update_on_the_collection(): void
+    {
+        $user = $this->createViewOnlyUser();
+        $collection = Collection::factory()->create();
+        $item = Item::factory()->Object()->create();
+        $this->attachWithTexts($collection, $item, [], ['eng' => 'English description.']);
+        $translation = CollectionItemTranslation::query()->firstOrFail();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(ViewCollectionItemAppearance::class, ['collection' => $collection, 'item' => $item])
+            ->assertCanSeeTableRecords([$translation])
+            ->assertTableActionHidden('create')
+            ->assertTableActionHidden('edit', $translation)
+            ->assertTableActionHidden('delete', $translation)
+            ->assertTableActionVisible('view', $translation);
+    }
+
+    /**
+     * Attaches the item and gives the placement a description, and a legacy
+     * key, per language.
+     *
+     * @param  array<string, mixed>  $pivot
+     * @param  array<string, string>  $descriptions  language id → description
+     * @param  array<string, string>  $keys  language id → legacy key
+     */
+    private function attachWithTexts(Collection $collection, Item $item, array $pivot, array $descriptions, array $keys = []): void
+    {
+        $collection->attachedItems()->attach($item->id, $pivot);
+        $placement = CollectionItem::query()
+            ->where('collection_id', $collection->id)
+            ->where('item_id', $item->id)
+            ->firstOrFail();
+        foreach (array_unique([...array_keys($descriptions), ...array_keys($keys)]) as $languageId) {
+            if (! Language::query()->whereKey($languageId)->exists()) {
+                Language::factory()->create(['id' => $languageId]);
+            }
+            CollectionItemTranslation::factory()->forPlacement($placement)->create([
+                'language_id' => $languageId,
+                'description' => $descriptions[$languageId] ?? null,
+                'item_name' => null,
+                'backward_compatibility' => $keys[$languageId] ?? null,
+            ]);
+        }
     }
 }

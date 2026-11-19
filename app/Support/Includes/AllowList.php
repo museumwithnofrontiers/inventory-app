@@ -46,6 +46,9 @@ class AllowList
             'collectionImage' => [
                 'collection',
             ],
+            'collection_item_translation' => [
+                'language',
+            ],
             'partner' => [
                 'country', 'items', 'pictures',
                 'project', 'monumentItem',

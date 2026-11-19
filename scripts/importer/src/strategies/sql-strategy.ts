@@ -84,6 +84,11 @@ import {
   type VisitInformationFields,
   type VisitOwner,
 } from '../utils/visit-information.js';
+import type { CollectionItemTranslationColumns } from '../utils/collection-item-translations.js';
+import {
+  COLLECTION_ITEM_TRANSLATION_COLUMNS,
+  placementTranslationUuidName,
+} from '../utils/collection-item-translations.js';
 
 const tableEntityMap: Record<string, EntityType> = {
   languages: 'language',
@@ -2712,6 +2717,60 @@ export class SqlWriteStrategy implements IWriteStrategy {
       this.now,
       id,
     ]);
+  }
+
+  async findCollectionItemTextRows(keys: readonly string[]): Promise<
+    Array<{
+      id: string;
+      collection_backward_compatibility: string | null;
+      extra: Record<string, unknown>;
+    }>
+  > {
+    if (keys.length === 0) return [];
+    const paths = keys.map(() => '?').join(', ');
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT ci.id, c.backward_compatibility AS collection_backward_compatibility, ci.extra
+       FROM collection_item ci
+       JOIN collections c ON c.id = ci.collection_id
+       WHERE ci.extra IS NOT NULL AND JSON_CONTAINS_PATH(ci.extra, 'one', ${paths})
+       ORDER BY ci.collection_id, ci.item_id`,
+      keys.map((key) => `$.${key}`)
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        collection_backward_compatibility: (row.collection_backward_compatibility as string | null) ?? null,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async upsertCollectionItemTranslation(
+    placementId: string,
+    languageId: string,
+    columns: CollectionItemTranslationColumns
+  ): Promise<string> {
+    const id = deterministicUuid(placementTranslationUuidName(placementId, languageId));
+    const names = COLLECTION_ITEM_TRANSLATION_COLUMNS.filter((name) =>
+      Object.prototype.hasOwnProperty.call(columns, name)
+    );
+    const updates = [...names.map((name) => `${name} = VALUES(${name})`), 'updated_at = VALUES(updated_at)'];
+    await this.db.execute(
+      `INSERT INTO collection_item_translations
+         (id, collection_item_id, language_id, ${names.map((name) => `${name}, `).join('')}created_at, updated_at)
+       VALUES (?, ?, ?, ${names.map(() => '?, ').join('')}?, ?)
+       ON DUPLICATE KEY UPDATE ${updates.join(', ')}`,
+      [
+        id,
+        placementId,
+        languageId,
+        ...names.map((name) => columns[name] ?? null),
+        this.now,
+        this.now,
+      ]
+    );
+    return id;
   }
 
   async getCollectionItemExtra(

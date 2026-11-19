@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 /**
@@ -12,8 +13,8 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
  * A row of the collection_item table, with its own UUID `id`;
  * `(collection_id, item_id)` stays unique. It holds the order, the variant
  * and parent variant numbers as legacy wrote them, the picture it shows and
- * the curator flag, and exposes the contextual descriptions and source
- * backward-compatibility values still in `extra` through named helpers.
+ * the curator flag. Its texts per language are its translations
+ * (CollectionItemTranslation, M16 C2, #2642).
  *
  * @property string $id
  * @property string $collection_id
@@ -124,32 +125,35 @@ class CollectionItem extends Pivot
     }
 
     /**
-     * Return all language-keyed contextual descriptions.
+     * The placement's texts, one per language (M16 C2).
+     *
+     * @return HasMany<CollectionItemTranslation, $this>
+     */
+    public function translations(): HasMany
+    {
+        return $this->hasMany(CollectionItemTranslation::class, 'collection_item_id');
+    }
+
+    /**
+     * The placement's description per language: language id → text.
      *
      * @return array<string, string>
      */
     public function contextualDescriptions(): array
     {
-        $extra = is_array($this->extra) ? $this->extra : [];
-
-        /** @var array<string, string> */
-        return (array) ($extra['contextual_descriptions'] ?? []);
+        return $this->textsByLanguage('description');
     }
 
     /**
-     * Return the contextual description for a specific language, or null.
+     * Return the description for a specific language, or null.
      */
     public function contextualDescriptionForLanguage(string $languageId): ?string
     {
-        $descriptions = $this->contextualDescriptions();
-
-        return isset($descriptions[$languageId]) && $descriptions[$languageId] !== ''
-            ? (string) $descriptions[$languageId]
-            : null;
+        return $this->contextualDescriptions()[$languageId] ?? null;
     }
 
     /**
-     * Return the language keys that have a contextual description.
+     * Return the language keys that have a description.
      *
      * @return array<int, string>
      */
@@ -159,27 +163,38 @@ class CollectionItem extends Pivot
     }
 
     /**
-     * Return all language-keyed source backward-compatibility values.
+     * Each text's own legacy key per language: language id → key.
      *
      * @return array<string, string>
      */
     public function sourceBackwardCompatibilityByLanguage(): array
     {
-        $extra = is_array($this->extra) ? $this->extra : [];
-
-        /** @var array<string, string> */
-        return (array) ($extra['source_bc_by_language'] ?? []);
+        return $this->textsByLanguage('backward_compatibility');
     }
 
     /**
-     * Return the source backward-compatibility value for a specific language, or null.
+     * Return the legacy key of the text in a specific language, or null.
      */
     public function sourceBackwardCompatibilityForLanguage(string $languageId): ?string
     {
-        $sources = $this->sourceBackwardCompatibilityByLanguage();
+        return $this->sourceBackwardCompatibilityByLanguage()[$languageId] ?? null;
+    }
 
-        return isset($sources[$languageId]) && $sources[$languageId] !== ''
-            ? (string) $sources[$languageId]
-            : null;
+    /**
+     * One column of the translations, by language, without the empty ones.
+     *
+     * @return array<string, string>
+     */
+    private function textsByLanguage(string $column): array
+    {
+        $texts = [];
+        foreach ($this->translations->sortBy('language_id') as $translation) {
+            $value = $translation->getAttribute($column);
+            if (is_string($value) && $value !== '') {
+                $texts[$translation->language_id] = $value;
+            }
+        }
+
+        return $texts;
     }
 }
