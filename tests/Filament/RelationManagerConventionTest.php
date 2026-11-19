@@ -255,9 +255,9 @@ class RelationManagerConventionTest extends TestCase
         // The publication's PDFs, on the item documents' pipeline and convention (#2547)
         PublicationDocumentsRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'publication', 'variant' => 'documents'],
         // Visit information has no Resource of its own: the inline Create/Edit modal, as Media (M16 D1, #2645)
-        ItemVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'monument', 'variant' => 'editions'],
-        CollectionVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'collection', 'variant' => 'editions'],
-        PartnerVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'partner', 'variant' => 'editions'],
+        ItemVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'monument', 'variant' => 'media'],
+        CollectionVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'collection', 'variant' => 'media'],
+        PartnerVisitInformationRelationManager::class => ['kind' => self::KIND_INLINE, 'owner' => 'partner', 'variant' => 'media'],
 
         // ── pinned: the three original Images managers + the two Item Links managers ──
         CollectionImagesRelationManager::class => [
