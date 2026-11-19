@@ -159,7 +159,7 @@
                 }
             },
             "put": {
-                "operationId": "author.update_204",
+                "operationId": "author.update_213",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Author"
@@ -610,7 +610,7 @@
                 }
             },
             "put": {
-                "operationId": "authorTranslation.update_206",
+                "operationId": "authorTranslation.update_215",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AuthorTranslation"
@@ -1153,7 +1153,7 @@
                 }
             },
             "put": {
-                "operationId": "availableImage.update_346",
+                "operationId": "availableImage.update_355",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AvailableImage"
@@ -1437,7 +1437,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `links`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -1501,7 +1501,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `links`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -1604,7 +1604,7 @@
                 }
             },
             "put": {
-                "operationId": "collection.update_279",
+                "operationId": "collection.update_286",
                 "summary": "Update the specified collection in storage",
                 "tags": [
                     "Collection"
@@ -1722,7 +1722,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `links`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -2085,7 +2085,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `links`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -2162,7 +2162,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `links`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -2352,7 +2352,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionTranslation.update_277",
+                "operationId": "collectionTranslation.update_284",
                 "summary": "Update the specified collection translation",
                 "tags": [
                     "Collection Translations",
@@ -3068,7 +3068,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionImage.update_257",
+                "operationId": "collectionImage.update_268",
                 "summary": "Update the specified collection image",
                 "tags": [
                     "CollectionImage"
@@ -3409,408 +3409,6 @@
                 }
             }
         },
-        "/collection/{collection}/media": {
-            "get": {
-                "operationId": "collection.media.index",
-                "summary": "Display a listing of collection media for a specific collection",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collection",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Array of `CollectionMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/CollectionMediaResource"
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "collection.media.store",
-                "summary": "Store a newly created collection media",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collection",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreCollectionMediaRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`CollectionMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CollectionMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            }
-        },
-        "/collection-media/{collectionMedia}": {
-            "get": {
-                "operationId": "collection-media.show",
-                "summary": "Display the specified collection media",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collectionMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`CollectionMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CollectionMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "collection-media.update",
-                "summary": "Update the specified collection media",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collectionMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateCollectionMediaRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`CollectionMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CollectionMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            },
-            "put": {
-                "operationId": "collectionMedia.update_262",
-                "summary": "Update the specified collection media",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collectionMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateCollectionMediaRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`CollectionMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CollectionMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "collection-media.destroy",
-                "summary": "Remove the specified collection media",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collectionMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No content"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/collection-media/{collectionMedia}/move-up": {
-            "patch": {
-                "operationId": "collection-media.moveUp",
-                "summary": "Move collection media up in display order",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collectionMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`CollectionMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CollectionMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/collection-media/{collectionMedia}/move-down": {
-            "patch": {
-                "operationId": "collection-media.moveDown",
-                "summary": "Move collection media down in display order",
-                "tags": [
-                    "CollectionMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "collectionMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The collection media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`CollectionMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/CollectionMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/context/default": {
             "get": {
                 "operationId": "context.getDefault",
@@ -4023,7 +3621,7 @@
                 }
             },
             "put": {
-                "operationId": "context.update_176",
+                "operationId": "context.update_185",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Context"
@@ -4534,7 +4132,7 @@
                 }
             },
             "put": {
-                "operationId": "contributor.update_266",
+                "operationId": "contributor.update_273",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Contributor"
@@ -5063,7 +4661,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorImage.update_270",
+                "operationId": "contributorImage.update_277",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorImage"
@@ -5765,7 +5363,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorTranslation.update_268",
+                "operationId": "contributorTranslation.update_275",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorTranslation"
@@ -6214,7 +5812,7 @@
                 }
             },
             "put": {
-                "operationId": "country.update_194",
+                "operationId": "country.update_203",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Country"
@@ -6662,7 +6260,7 @@
                 }
             },
             "put": {
-                "operationId": "countryTranslation.update_196",
+                "operationId": "countryTranslation.update_205",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CountryTranslation"
@@ -7111,7 +6709,7 @@
                 }
             },
             "put": {
-                "operationId": "dynasty.update_200",
+                "operationId": "dynasty.update_209",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Dynasty"
@@ -7560,7 +7158,7 @@
                 }
             },
             "put": {
-                "operationId": "dynastyTranslation.update_202",
+                "operationId": "dynastyTranslation.update_211",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "DynastyTranslation"
@@ -8011,7 +7609,7 @@
                 }
             },
             "put": {
-                "operationId": "glossary.update_184",
+                "operationId": "glossary.update_193",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Glossary"
@@ -8606,7 +8204,7 @@
                 }
             },
             "put": {
-                "operationId": "glossarySpelling.update_188",
+                "operationId": "glossarySpelling.update_197",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossarySpelling"
@@ -9055,7 +8653,7 @@
                 }
             },
             "put": {
-                "operationId": "glossaryTranslation.update_186",
+                "operationId": "glossaryTranslation.update_195",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossaryTranslation"
@@ -9376,6 +8974,315 @@
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/image-translation": {
+            "get": {
+                "operationId": "image-translation.index",
+                "summary": "The texts of one image",
+                "tags": [
+                    "ImageTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "image_type",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "available_image",
+                                "item_image",
+                                "collection_image",
+                                "partner_image",
+                                "partner_translation_image",
+                                "contributor_image",
+                                "timeline_event_image",
+                                "publication_image",
+                                "partner_logo"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "image_id",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `ImageTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ImageTranslationResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "image-translation.store",
+                "tags": [
+                    "ImageTranslation"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreImageTranslationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ImageTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ImageTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/image-translation/{imageTranslation}": {
+            "get": {
+                "operationId": "image-translation.show",
+                "tags": [
+                    "ImageTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "imageTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The image translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ImageTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ImageTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "image-translation.update",
+                "tags": [
+                    "ImageTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "imageTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The image translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateImageTranslationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ImageTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ImageTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "imageTranslation.update_250",
+                "tags": [
+                    "ImageTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "imageTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The image translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateImageTranslationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ImageTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ImageTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "image-translation.destroy",
+                "tags": [
+                    "ImageTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "imageTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The image translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 }
             }
@@ -9702,7 +9609,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -9883,7 +9790,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -9937,7 +9844,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -9991,7 +9898,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10055,7 +9962,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10158,7 +10065,7 @@
                 }
             },
             "put": {
-                "operationId": "item.update_238",
+                "operationId": "item.update_247",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Item"
@@ -10276,7 +10183,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10701,7 +10608,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10777,7 +10684,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -10958,7 +10865,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLinkTranslation.update_255",
+                "operationId": "itemItemLinkTranslation.update_266",
                 "summary": "Update the specified item-item link translation",
                 "tags": [
                     "Item Item Link Translations",
@@ -11469,7 +11376,7 @@
                 }
             },
             "put": {
-                "operationId": "itemTranslation.update_275",
+                "operationId": "itemTranslation.update_282",
                 "summary": "Update the specified item translation",
                 "tags": [
                     "Item Translations",
@@ -12125,7 +12032,7 @@
                 }
             },
             "put": {
-                "operationId": "itemDocument.update_249",
+                "operationId": "itemDocument.update_260",
                 "summary": "Update the specified item document",
                 "tags": [
                     "ItemDocument"
@@ -12639,7 +12546,7 @@
                 }
             },
             "put": {
-                "operationId": "itemImage.update_240",
+                "operationId": "itemImage.update_251",
                 "summary": "Update the specified item image",
                 "tags": [
                     "ItemImage"
@@ -13078,7 +12985,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLink.update_253",
+                "operationId": "itemItemLink.update_264",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ItemItemLink"
@@ -13415,408 +13322,6 @@
                 }
             }
         },
-        "/item/{item}/media": {
-            "get": {
-                "operationId": "item.media.index",
-                "summary": "Display a listing of item media for a specific item",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "item",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Array of `ItemMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ItemMediaResource"
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "post": {
-                "operationId": "item.media.store",
-                "summary": "Store a newly created item media",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "item",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/StoreItemMediaRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ItemMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ItemMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            }
-        },
-        "/item-media/{itemMedia}": {
-            "get": {
-                "operationId": "item-media.show",
-                "summary": "Display the specified item media",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "itemMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`ItemMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ItemMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            },
-            "patch": {
-                "operationId": "item-media.update",
-                "summary": "Update the specified item media",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "itemMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateItemMediaRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ItemMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ItemMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            },
-            "put": {
-                "operationId": "itemMedia.update_245",
-                "summary": "Update the specified item media",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "itemMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/UpdateItemMediaRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ItemMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ItemMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            },
-            "delete": {
-                "operationId": "item-media.destroy",
-                "summary": "Remove the specified item media",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "itemMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "204": {
-                        "description": "No content"
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/item-media/{itemMedia}/move-up": {
-            "patch": {
-                "operationId": "item-media.moveUp",
-                "summary": "Move item media up in display order",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "itemMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`ItemMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ItemMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
-        "/item-media/{itemMedia}/move-down": {
-            "patch": {
-                "operationId": "item-media.moveDown",
-                "summary": "Move item media down in display order",
-                "tags": [
-                    "ItemMedia"
-                ],
-                "parameters": [
-                    {
-                        "name": "itemMedia",
-                        "in": "path",
-                        "required": true,
-                        "description": "The item media ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`ItemMediaResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ItemMediaResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/language/default": {
             "get": {
                 "operationId": "language.getDefault",
@@ -14079,7 +13584,7 @@
                 }
             },
             "put": {
-                "operationId": "language.update_180",
+                "operationId": "language.update_189",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Language"
@@ -14578,7 +14083,7 @@
                 }
             },
             "put": {
-                "operationId": "languageTranslation.update_182",
+                "operationId": "languageTranslation.update_191",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "LanguageTranslation"
@@ -14903,6 +14408,741 @@
                 }
             }
         },
+        "/item/{item}/links": {
+            "get": {
+                "operationId": "item.links.index",
+                "summary": "List an item's links",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "description": "The item ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LinkResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "item.links.store",
+                "summary": "Add a link to an item",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "item",
+                        "in": "path",
+                        "required": true,
+                        "description": "The item ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/collection/{collection}/links": {
+            "get": {
+                "operationId": "collection.links.index",
+                "summary": "List a collection's links",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LinkResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "collection.links.store",
+                "summary": "Add a link to a collection",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "collection",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/partner/{partner}/links": {
+            "get": {
+                "operationId": "partner.links.index",
+                "summary": "List a partner's links",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "partner",
+                        "in": "path",
+                        "required": true,
+                        "description": "The partner ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LinkResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "partner.links.store",
+                "summary": "Add a link to a partner",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "partner",
+                        "in": "path",
+                        "required": true,
+                        "description": "The partner ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/publication-edition/{publicationEdition}/links": {
+            "get": {
+                "operationId": "publication-edition.links.index",
+                "summary": "List a publication edition's links",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicationEdition",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication edition ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/LinkResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "publication-edition.links.store",
+                "summary": "Add a link to a publication edition",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "publicationEdition",
+                        "in": "path",
+                        "required": true,
+                        "description": "The publication edition ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/link/{link}": {
+            "get": {
+                "operationId": "link.show",
+                "summary": "Display the specified link",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "link",
+                        "in": "path",
+                        "required": true,
+                        "description": "The link ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "link.update",
+                "summary": "Update the specified link",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "link",
+                        "in": "path",
+                        "required": true,
+                        "description": "The link ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "link.update_256",
+                "summary": "Update the specified link",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "link",
+                        "in": "path",
+                        "required": true,
+                        "description": "The link ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateLinkRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "link.destroy",
+                "summary": "Remove the specified link",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "link",
+                        "in": "path",
+                        "required": true,
+                        "description": "The link ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/link/{link}/move-up": {
+            "patch": {
+                "operationId": "link.moveUp",
+                "summary": "Move a link up among its owner's links of its type",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "link",
+                        "in": "path",
+                        "required": true,
+                        "description": "The link ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/link/{link}/move-down": {
+            "patch": {
+                "operationId": "link.moveDown",
+                "summary": "Move a link down among its owner's links of its type",
+                "tags": [
+                    "Link"
+                ],
+                "parameters": [
+                    {
+                        "name": "link",
+                        "in": "path",
+                        "required": true,
+                        "description": "The link ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`LinkResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/LinkResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/markdown/to-html": {
             "post": {
                 "operationId": "markdown.toHtml",
@@ -15184,7 +15424,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `country`, `items`, `pictures`, `project`, `monumentItem`, `translations`, `partnerImages`, `partnerLogos`, `collections`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `country`, `items`, `pictures`, `project`, `monumentItem`, `translations`, `partnerImages`, `partnerLogos`, `collections`, `links`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -15288,7 +15528,7 @@
                 }
             },
             "put": {
-                "operationId": "partner.update_218",
+                "operationId": "partner.update_227",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Partner"
@@ -15407,7 +15647,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `country`, `items`, `pictures`, `project`, `monumentItem`, `translations`, `partnerImages`, `partnerLogos`, `collections`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `country`, `items`, `pictures`, `project`, `monumentItem`, `translations`, `partnerImages`, `partnerLogos`, `collections`, `links`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -15817,7 +16057,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerImage.update_222",
+                "operationId": "partnerImage.update_231",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerImage"
@@ -16599,7 +16839,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerLogo.update_227",
+                "operationId": "partnerLogo.update_236",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerLogo"
@@ -17191,7 +17431,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslation.update_220",
+                "operationId": "partnerTranslation.update_229",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslation"
@@ -17720,7 +17960,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslationImage.update_232",
+                "operationId": "partnerTranslationImage.update_241",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslationImage"
@@ -18460,7 +18700,7 @@
                 }
             },
             "put": {
-                "operationId": "project.update_192",
+                "operationId": "project.update_201",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Project"
@@ -19036,7 +19276,7 @@
                 }
             },
             "put": {
-                "operationId": "publication.update_281",
+                "operationId": "publication.update_288",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Publication"
@@ -20352,7 +20592,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationDocument.update_303",
+                "operationId": "publicationDocument.update_312",
                 "summary": "Update the specified document's metadata",
                 "tags": [
                     "PublicationDocument"
@@ -20469,7 +20709,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`, `links`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -20572,7 +20812,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationEdition.update_294",
+                "operationId": "publicationEdition.update_303",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationEdition"
@@ -20696,7 +20936,7 @@
                     {
                         "name": "include",
                         "in": "query",
-                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`, `links`.",
                         "schema": {
                             "type": "string",
                             "examples": [
@@ -21376,7 +21616,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationImage.update_297",
+                "operationId": "publicationImage.update_306",
                 "summary": "Update the specified publication image",
                 "tags": [
                     "PublicationImage"
@@ -21841,7 +22081,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationTranslation.update_291",
+                "operationId": "publicationTranslation.update_298",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationTranslation"
@@ -22496,7 +22736,7 @@
                 }
             },
             "put": {
-                "operationId": "tag.update_198",
+                "operationId": "tag.update_207",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Tag"
@@ -22935,7 +23175,7 @@
                 }
             },
             "put": {
-                "operationId": "timeline.update_208",
+                "operationId": "timeline.update_217",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Timeline"
@@ -23384,7 +23624,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEvent.update_210",
+                "operationId": "timelineEvent.update_219",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEvent"
@@ -23822,7 +24062,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventImage.update_214",
+                "operationId": "timelineEventImage.update_223",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventImage"
@@ -24119,7 +24359,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventTranslation.update_212",
+                "operationId": "timelineEventTranslation.update_221",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventTranslation"
@@ -24289,6 +24529,496 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/visit-information/{visitInformation}": {
+            "get": {
+                "operationId": "visit-information.show",
+                "summary": "Display the specified resource",
+                "tags": [
+                    "VisitInformation"
+                ],
+                "parameters": [
+                    {
+                        "name": "visitInformation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The visit information ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `item`, `collection`, `partner`, `language`, `context`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "item,collection,partner"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`VisitInformationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VisitInformationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "visit-information.update",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "VisitInformation"
+                ],
+                "parameters": [
+                    {
+                        "name": "visitInformation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The visit information ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateVisitInformationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`VisitInformationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VisitInformationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "visitInformation.update_300",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "VisitInformation"
+                ],
+                "parameters": [
+                    {
+                        "name": "visitInformation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The visit information ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateVisitInformationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`VisitInformationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VisitInformationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "visit-information.destroy",
+                "summary": "Remove the specified resource from storage",
+                "tags": [
+                    "VisitInformation"
+                ],
+                "parameters": [
+                    {
+                        "name": "visitInformation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The visit information ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/visit-information": {
+            "get": {
+                "operationId": "visit-information.index",
+                "summary": "Display a listing of the resource, optionally for one item, collection, partner,\nlanguage or context",
+                "tags": [
+                    "VisitInformation"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `item`, `collection`, `partner`, `language`, `context`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "item,collection,partner"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "item_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "collection_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "partner_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "language_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3,
+                            "maxLength": 3
+                        }
+                    },
+                    {
+                        "name": "context_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `VisitInformationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/VisitInformationResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "visit-information.store",
+                "summary": "Store a newly created resource in storage",
+                "tags": [
+                    "VisitInformation"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreVisitInformationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`VisitInformationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/VisitInformationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
@@ -24637,7 +25367,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `links`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "examples": [
                             "language,context,translations"
                         ]
@@ -24697,7 +25427,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `collectionMedia`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`, `context`, `translations`, `partners`, `items`, `attachedItems`, `collectionImages`, `links`, `contributors`, `countries`, `relatedCollections`, `coverItem`.",
                         "examples": [
                             "language,context,translations"
                         ]
@@ -24717,7 +25447,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
@@ -24761,7 +25491,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
@@ -25130,68 +25860,6 @@
                 ],
                 "title": "CollectionImageResource"
             },
-            "CollectionMediaResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "collection_id": {
-                        "type": "string"
-                    },
-                    "language_id": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string"
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "url": {
-                        "type": "string"
-                    },
-                    "display_order": {
-                        "type": "string"
-                    },
-                    "extra": {
-                        "type": "string"
-                    },
-                    "backward_compatibility": {
-                        "type": "string"
-                    },
-                    "collection": {
-                        "$ref": "#/components/schemas/CollectionResource"
-                    },
-                    "language": {
-                        "$ref": "#/components/schemas/LanguageResource"
-                    },
-                    "created_at": {
-                        "type": "string"
-                    },
-                    "updated_at": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "collection_id",
-                    "language_id",
-                    "type",
-                    "title",
-                    "description",
-                    "url",
-                    "display_order",
-                    "extra",
-                    "backward_compatibility",
-                    "created_at",
-                    "updated_at"
-                ],
-                "title": "CollectionMediaResource"
-            },
             "CollectionResource": {
                 "type": "object",
                 "properties": {
@@ -25377,6 +26045,13 @@
                             "$ref": "#/components/schemas/ItemResource"
                         }
                     },
+                    "links": {
+                        "type": "array",
+                        "description": "Links to things outside the inventory (videos, documents, ...)",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkResource"
+                        }
+                    },
                     "items_count": {
                         "type": "integer",
                         "description": "The number of items in this collection (computed)",
@@ -25497,6 +26172,13 @@
                         ],
                         "description": "A trail's duration, as written, e.g. \"One day\" (optional)"
                     },
+                    "cover_caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The cover picture's caption, as written"
+                    },
                     "url": {
                         "type": [
                             "string",
@@ -25558,6 +26240,7 @@
                     "introduction",
                     "quote",
                     "duration",
+                    "cover_caption",
                     "url",
                     "backward_compatibility",
                     "extra",
@@ -26414,6 +27097,95 @@
                 ],
                 "title": "GlossaryTranslationResource"
             },
+            "ImageTranslationResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique identifier (GUID)"
+                    },
+                    "image_type": {
+                        "type": "string",
+                        "description": "The image's kind (e.g. item_image, collection_image) and id"
+                    },
+                    "image_id": {
+                        "type": "string"
+                    },
+                    "language_id": {
+                        "type": "string"
+                    },
+                    "caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "A caption as legacy wrote it"
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The parts of a caption legacy kept as separate fields, as written"
+                    },
+                    "date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "museum": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "language": {
+                        "$ref": "#/components/schemas/LanguageResource"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "image_type",
+                    "image_id",
+                    "language_id",
+                    "caption",
+                    "name",
+                    "date",
+                    "museum",
+                    "location",
+                    "backward_compatibility",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "ImageTranslationResource"
+            },
             "ImageUploadResource": {
                 "type": "object",
                 "properties": {
@@ -26828,68 +27600,6 @@
                 ],
                 "title": "ItemItemLinkTranslationResource"
             },
-            "ItemMediaResource": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "item_id": {
-                        "type": "string"
-                    },
-                    "language_id": {
-                        "type": "string"
-                    },
-                    "type": {
-                        "type": "string"
-                    },
-                    "title": {
-                        "type": "string"
-                    },
-                    "description": {
-                        "type": "string"
-                    },
-                    "url": {
-                        "type": "string"
-                    },
-                    "display_order": {
-                        "type": "string"
-                    },
-                    "extra": {
-                        "type": "string"
-                    },
-                    "backward_compatibility": {
-                        "type": "string"
-                    },
-                    "item": {
-                        "$ref": "#/components/schemas/ItemResource"
-                    },
-                    "language": {
-                        "$ref": "#/components/schemas/LanguageResource"
-                    },
-                    "created_at": {
-                        "type": "string"
-                    },
-                    "updated_at": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "id",
-                    "item_id",
-                    "language_id",
-                    "type",
-                    "title",
-                    "description",
-                    "url",
-                    "display_order",
-                    "extra",
-                    "backward_compatibility",
-                    "created_at",
-                    "updated_at"
-                ],
-                "title": "ItemMediaResource"
-            },
             "ItemResource": {
                 "type": "object",
                 "properties": {
@@ -27049,6 +27759,13 @@
                         "description": "Item images attached to this item with display ordering (ItemImageResource[])",
                         "items": {
                             "$ref": "#/components/schemas/ItemImageResource"
+                        }
+                    },
+                    "links": {
+                        "type": "array",
+                        "description": "Links to things outside the inventory (videos, catalogue entries, ...)",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkResource"
                         }
                     },
                     "created_at": {
@@ -27399,6 +28116,13 @@
                             "null"
                         ]
                     },
+                    "external_sources": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "External sources as legacy wrote them (a text, links included)"
+                    },
                     "backward_compatibility": {
                         "type": [
                             "string",
@@ -27558,6 +28282,7 @@
                     "notice",
                     "external_notice",
                     "image_rights",
+                    "external_sources",
                     "backward_compatibility",
                     "extra",
                     "created_at",
@@ -27696,6 +28421,163 @@
                     "updated_at"
                 ],
                 "title": "LanguageTranslationResource"
+            },
+            "LinkResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique identifier (GUID)"
+                    },
+                    "linkable_type": {
+                        "type": "string",
+                        "description": "The owner's kind: item, collection, partner or publication_edition"
+                    },
+                    "linkable_id": {
+                        "type": "string",
+                        "description": "The owner's id"
+                    },
+                    "language_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The language of the link, if it has one"
+                    },
+                    "type": {
+                        "description": "What it points at: video, audio, document, website, shop, catalogue, further_reading, virtual_visit",
+                        "$ref": "#/components/schemas/LinkType"
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "url": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "authors": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "category": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "description": "The legacy category id (the site names it), the resource type, the linked\nentity's location and country code, and a further-reading text, as written"
+                    },
+                    "resource_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "country_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "further_reading": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "display_order": {
+                        "type": "integer"
+                    },
+                    "extra": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Residual legacy values (holding area)"
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "language": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/LanguageResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time"
+                    }
+                },
+                "required": [
+                    "id",
+                    "linkable_type",
+                    "linkable_id",
+                    "language_id",
+                    "type",
+                    "title",
+                    "url",
+                    "description",
+                    "authors",
+                    "category",
+                    "resource_type",
+                    "location",
+                    "country_code",
+                    "further_reading",
+                    "display_order",
+                    "extra",
+                    "backward_compatibility",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "LinkResource"
+            },
+            "LinkType": {
+                "type": "string",
+                "description": "What a Link points at (M16 F3, #2653).\n",
+                "enum": [
+                    "video",
+                    "audio",
+                    "document",
+                    "website",
+                    "shop",
+                    "catalogue",
+                    "further_reading",
+                    "virtual_visit"
+                ],
+                "title": "LinkType"
             },
             "MessageResource": {
                 "type": "object",
@@ -28004,6 +28886,12 @@
                         "type": "array",
                         "items": {
                             "$ref": "#/components/schemas/CollectionResource"
+                        }
+                    },
+                    "links": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkResource"
                         }
                     },
                     "visible": {
@@ -28701,6 +29589,12 @@
                         "items": {
                             "$ref": "#/components/schemas/PublicationImageResource"
                         }
+                    },
+                    "links": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/LinkResource"
+                        }
                     }
                 },
                 "required": [
@@ -29367,70 +30261,6 @@
                 ],
                 "title": "StoreCollectionImageRequest"
             },
-            "StoreCollectionMediaRequest": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "language_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "minLength": 3,
-                        "maxLength": 3
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "audio",
-                            "video",
-                            "document"
-                        ]
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "url": {
-                        "type": "string",
-                        "format": "uri",
-                        "maxLength": 512
-                    },
-                    "display_order": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ],
-                        "minimum": 0
-                    },
-                    "extra": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "backward_compatibility": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "type",
-                    "title",
-                    "url"
-                ],
-                "title": "StoreCollectionMediaRequest"
-            },
             "StoreCollectionRequest": {
                 "type": "object",
                 "properties": {
@@ -29600,6 +30430,12 @@
                             "null"
                         ],
                         "maxLength": 255
+                    },
+                    "cover_caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "url": {
                         "type": [
@@ -30089,6 +30925,80 @@
                 ],
                 "title": "StoreGlossaryTranslationRequest"
             },
+            "StoreImageTranslationRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "image_type": {
+                        "type": "string",
+                        "enum": [
+                            "available_image",
+                            "item_image",
+                            "collection_image",
+                            "partner_image",
+                            "partner_translation_image",
+                            "contributor_image",
+                            "timeline_event_image",
+                            "publication_image",
+                            "partner_logo"
+                        ]
+                    },
+                    "image_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "museum": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "image_type",
+                    "image_id",
+                    "language_id"
+                ],
+                "title": "StoreImageTranslationRequest"
+            },
             "StoreImageUploadRequest": {
                 "type": "object",
                 "properties": {
@@ -30288,69 +31198,6 @@
                     "language_id"
                 ],
                 "title": "StoreItemItemLinkTranslationRequest"
-            },
-            "StoreItemMediaRequest": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "language_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "minLength": 3,
-                        "maxLength": 3
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "audio",
-                            "video"
-                        ]
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "url": {
-                        "type": "string",
-                        "format": "uri",
-                        "maxLength": 512
-                    },
-                    "display_order": {
-                        "type": [
-                            "integer",
-                            "null"
-                        ],
-                        "minimum": 0
-                    },
-                    "extra": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "backward_compatibility": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "required": [
-                    "type",
-                    "title",
-                    "url"
-                ],
-                "title": "StoreItemMediaRequest"
             },
             "StoreItemRequest": {
                 "type": "object",
@@ -30747,6 +31594,12 @@
                             "null"
                         ]
                     },
+                    "external_sources": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "backward_compatibility": {
                         "type": [
                             "string",
@@ -30841,6 +31694,115 @@
                     "name"
                 ],
                 "title": "StoreLanguageTranslationRequest"
+            },
+            "StoreLinkRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "linkable_type": {
+                        "type": "string"
+                    },
+                    "linkable_id": {
+                        "type": "string"
+                    },
+                    "language_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/LinkType"
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri",
+                        "maxLength": 2048
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "authors": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "category": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 255
+                    },
+                    "resource_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "country_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 16
+                    },
+                    "further_reading": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "display_order": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0
+                    },
+                    "extra": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "type",
+                    "url"
+                ],
+                "title": "StoreLinkRequest"
             },
             "StorePartnerImageRequest": {
                 "type": "object",
@@ -31494,7 +32456,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`, `links`.",
                         "examples": [
                             "publication,language,publicationImages"
                         ]
@@ -31965,6 +32927,132 @@
                     "country_id"
                 ],
                 "title": "StoreTimelineRequest"
+            },
+            "StoreVisitInformationRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "item_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "collection_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "partner_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "uuid"
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "context_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "extra": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "include": {
+                        "type": "string",
+                        "description": "Comma-separated list of related resources to include. Valid values: `item`, `collection`, `partner`, `language`, `context`.",
+                        "examples": [
+                            "item,collection,partner"
+                        ]
+                    },
+                    "how_to_reach": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "opening_hours": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "contact": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "institution": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "practical_information": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "fax": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "website": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "language_id",
+                    "context_id"
+                ],
+                "title": "StoreVisitInformationRequest"
             },
             "TagResource": {
                 "type": "object",
@@ -32599,65 +33687,6 @@
                 },
                 "title": "UpdateCollectionImageRequest"
             },
-            "UpdateCollectionMediaRequest": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "collection_id": {
-                        "type": "string"
-                    },
-                    "language_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "minLength": 3,
-                        "maxLength": 3
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "audio",
-                            "video",
-                            "document"
-                        ]
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "url": {
-                        "type": "string",
-                        "format": "uri",
-                        "maxLength": 512
-                    },
-                    "display_order": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "extra": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "backward_compatibility": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "title": "UpdateCollectionMediaRequest"
-            },
             "UpdateCollectionRequest": {
                 "type": "object",
                 "properties": {
@@ -32821,6 +33850,12 @@
                             "null"
                         ],
                         "maxLength": 255
+                    },
+                    "cover_caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     },
                     "url": {
                         "type": [
@@ -33303,6 +34338,61 @@
                 },
                 "title": "UpdateGlossaryTranslationRequest"
             },
+            "UpdateImageTranslationRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "image_type": {
+                        "type": "string"
+                    },
+                    "image_id": {
+                        "type": "string"
+                    },
+                    "language_id": {
+                        "type": "string"
+                    },
+                    "caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "museum": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "title": "UpdateImageTranslationRequest"
+            },
             "UpdateItemDocumentRequest": {
                 "type": "object",
                 "properties": {
@@ -33489,64 +34579,6 @@
                     "language_id"
                 ],
                 "title": "UpdateItemItemLinkTranslationRequest"
-            },
-            "UpdateItemMediaRequest": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string"
-                    },
-                    "item_id": {
-                        "type": "string"
-                    },
-                    "language_id": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "minLength": 3,
-                        "maxLength": 3
-                    },
-                    "type": {
-                        "type": "string",
-                        "enum": [
-                            "audio",
-                            "video"
-                        ]
-                    },
-                    "title": {
-                        "type": "string",
-                        "maxLength": 255
-                    },
-                    "description": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "url": {
-                        "type": "string",
-                        "format": "uri",
-                        "maxLength": 512
-                    },
-                    "display_order": {
-                        "type": "integer",
-                        "minimum": 0
-                    },
-                    "extra": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    },
-                    "backward_compatibility": {
-                        "type": [
-                            "string",
-                            "null"
-                        ]
-                    }
-                },
-                "title": "UpdateItemMediaRequest"
             },
             "UpdateItemRequest": {
                 "type": "object",
@@ -33936,6 +34968,12 @@
                             "null"
                         ]
                     },
+                    "external_sources": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "backward_compatibility": {
                         "type": [
                             "string",
@@ -34016,6 +35054,108 @@
                     }
                 },
                 "title": "UpdateLanguageTranslationRequest"
+            },
+            "UpdateLinkRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "linkable_type": {
+                        "type": "string"
+                    },
+                    "linkable_id": {
+                        "type": "string"
+                    },
+                    "language_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "type": {
+                        "$ref": "#/components/schemas/LinkType"
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "url": {
+                        "type": "string",
+                        "format": "uri",
+                        "maxLength": 2048
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "authors": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "category": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 255
+                    },
+                    "resource_type": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "country_code": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 16
+                    },
+                    "further_reading": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "display_order": {
+                        "type": "integer",
+                        "minimum": 0
+                    },
+                    "extra": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "title": "UpdateLinkRequest"
             },
             "UpdatePartnerImageRequest": {
                 "type": "object",
@@ -34682,7 +35822,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `publication`, `language`, `publicationImages`, `links`.",
                         "examples": [
                             "publication,language,publicationImages"
                         ]
@@ -35155,6 +36295,116 @@
                 },
                 "title": "UpdateTimelineRequest"
             },
+            "UpdateVisitInformationRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "item_id": {
+                        "type": "string"
+                    },
+                    "collection_id": {
+                        "type": "string"
+                    },
+                    "partner_id": {
+                        "type": "string"
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "context_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "extra": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "include": {
+                        "type": "string",
+                        "description": "Comma-separated list of related resources to include. Valid values: `item`, `collection`, `partner`, `language`, `context`.",
+                        "examples": [
+                            "item,collection,partner"
+                        ]
+                    },
+                    "how_to_reach": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "opening_hours": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "contact": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "institution": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "practical_information": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "fax": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "website": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "title": "UpdateVisitInformationRequest"
+            },
             "User": {
                 "type": "object",
                 "properties": {
@@ -35311,6 +36561,197 @@
                 ],
                 "title": "VersionResource"
             },
+            "VisitInformationResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique identifier (GUID)"
+                    },
+                    "item_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The owner: exactly one of the item (a monument), the collection (a travel location) or the partner"
+                    },
+                    "collection_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "partner_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "description": "The language of these texts (LanguageResource id)"
+                    },
+                    "context_id": {
+                        "type": "string",
+                        "description": "The context of these texts (ContextResource id)"
+                    },
+                    "how_to_reach": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "How to reach the place, as written"
+                    },
+                    "opening_hours": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Opening hours, as written"
+                    },
+                    "contact": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Contact, as written"
+                    },
+                    "address": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Address, as written"
+                    },
+                    "institution": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The institution to contact, as written"
+                    },
+                    "practical_information": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Practical information (hours, fees, access\u2026), as written"
+                    },
+                    "phone": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "fax": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "website": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The Id(s) of matching resource in the legacy system (if any)."
+                    },
+                    "extra": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "description": "Residual legacy values (holding area)"
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of creation of the resource (managed by the system)"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of last modification of the resource (managed by the system)"
+                    },
+                    "item": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/ItemResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "collection": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CollectionResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "partner": {
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/PartnerResource"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
+                    },
+                    "language": {
+                        "$ref": "#/components/schemas/LanguageResource"
+                    },
+                    "context": {
+                        "$ref": "#/components/schemas/ContextResource"
+                    }
+                },
+                "required": [
+                    "id",
+                    "item_id",
+                    "collection_id",
+                    "partner_id",
+                    "language_id",
+                    "context_id",
+                    "how_to_reach",
+                    "opening_hours",
+                    "contact",
+                    "address",
+                    "institution",
+                    "practical_information",
+                    "phone",
+                    "fax",
+                    "email",
+                    "website",
+                    "backward_compatibility",
+                    "extra",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "VisitInformationResource"
+            },
             "WithAllTagsItemRequest": {
                 "type": "object",
                 "properties": {
@@ -35324,7 +36765,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
@@ -35348,7 +36789,7 @@
                     },
                     "include": {
                         "type": "string",
-                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `itemMedia`, `itemDocuments`.",
+                        "description": "Comma-separated list of related resources to include. Valid values: `partner`, `country`, `project`, `collection`, `parent`, `children`, `itemImages`, `artists`, `tags`, `dynasties`, `translations`, `attachedToCollections`, `outgoingLinks`, `incomingLinks`, `links`, `itemDocuments`.",
                         "examples": [
                             "partner,country,project"
                         ]
