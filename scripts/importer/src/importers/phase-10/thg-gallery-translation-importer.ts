@@ -4,11 +4,13 @@
  * Imports exhibition_i18n entries as CollectionTranslation records.
  * Only runs for galleries classified and validated as exhibitions.
  *
- * extra shape:
- * {
- *   "thg_gallery":     { <non-empty source fields without direct target columns> },
- *   "exhibition_i18n": { "enabled": "Y", "exh_img_caption": "...", ... }  // when non-empty
- * }
+ * Site configuration (M16 E4b, decision 6): the texts carry no `extra`.
+ * `siteConfiguration()` builds, for the `site-config` command and the
+ * exhibition's instance file:
+ * - `translation_extra.thg_gallery`: the exhibition's settings, the same on
+ *   every text (`featured` and `live_date` are the collection's columns since
+ *   M16 E4a);
+ * - `translations.<language>.exhibition_i18n`: { "enabled": "Y", "exh_img_caption": "...", ... }.
  *
  * Legacy schema:
  * - mwnf3_thematic_gallery.exhibition_i18n (gallery_id, language_id, title, subtitle, heading,
@@ -41,6 +43,8 @@ import {
   type GalleryAddress,
 } from '../../utils/legacy-links.js';
 import { bitToBoolean } from '../../utils/legacy-values.js';
+import { LANGUAGE_CODE_MAP } from '../../utils/code-mappings.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 
 /**
  * Legacy exhibition_i18n structure
@@ -83,7 +87,34 @@ interface LegacyThgGalleryExtra {
 /** thg_gallery columns that are MySQL bit(1) and must be stored as booleans. */
 const GALLERY_BIT_FIELDS = ['has_timeline', 'has_country_timeline'] as const;
 
-export class ThgGalleryTranslationImporter extends BaseImporter {
+export class ThgGalleryTranslationImporter extends BaseImporter implements SiteConfigBuilder {
+  /** Each exhibition's settings and its texts' exhibition_i18n, for its instance file. */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    await this.loadGalleryExtras();
+    this.galleryAddresses = await loadGalleryAddresses(this.context.legacyDb);
+    const rows = await this.context.legacyDb.query<LegacyExhibitionI18n>(
+      `SELECT gallery_id, language_id, title, subtitle, heading, about, enabled,
+              exh_img_caption, popup_logo_show, popup_logo
+       FROM mwnf3_thematic_gallery.exhibition_i18n
+       ORDER BY gallery_id, language_id`
+    );
+    const entries: SiteConfigEntry[] = [];
+    for (const row of rows) {
+      const legacy = this.localiseLinks(row);
+      const languageId = LANGUAGE_CODE_MAP[legacy.language_id];
+      if (!languageId) continue;
+      const extra = this.buildExtra(legacy);
+      if (!extra) continue;
+      const { thg_gallery: gallery, ...perLanguage } = extra;
+      entries.push({
+        collection: `mwnf3_thematic_gallery:thg_gallery:${legacy.gallery_id}`,
+        ...(gallery ? { translationExtra: { thg_gallery: gallery } } : {}),
+        ...(Object.keys(perLanguage).length > 0 ? { translations: { [languageId]: perLanguage } } : {}),
+      });
+    }
+    return entries;
+  }
+
   /** gallery_id -> extra fields from thg_gallery */
   private galleryExtraMap: Map<number, LegacyThgGalleryExtra> = new Map();
   /** gallery_id -> the site's own address, for the links a curator wrote into its texts */
@@ -183,9 +214,6 @@ export class ThgGalleryTranslationImporter extends BaseImporter {
           }
           const description = descriptionParts.join('\n\n') || null;
 
-          // Build extra object
-          const extra = this.buildExtra(legacy);
-
           // Collect sample
           this.collectSample(
             'thg_gallery_translation',
@@ -211,7 +239,8 @@ export class ThgGalleryTranslationImporter extends BaseImporter {
             context_id: contextId,
             title: title,
             description: description,
-            extra: extra ? JSON.stringify(extra) : null,
+            // The exhibition's settings are site configuration (M16 E4b).
+            extra: null,
             backward_compatibility: backwardCompat,
           });
 
@@ -284,8 +313,8 @@ export class ThgGalleryTranslationImporter extends BaseImporter {
       const galleryExtra: Record<string, unknown> = {};
       const galleryFields: Array<keyof LegacyThgGalleryExtra> = [
         'link', 'image', 'banner_image', 'banner_item', 'new_expire_date',
-        'landing_url', 'portal_image', 'live_date', 'homepage_image', 'homepage_item',
-        'has_timeline', 'has_country_timeline', 'featured', 'mwnf3_project_id',
+        'landing_url', 'portal_image', 'homepage_image', 'homepage_item',
+        'has_timeline', 'has_country_timeline', 'mwnf3_project_id',
       ];
       for (const field of galleryFields) {
         const isBitField = (GALLERY_BIT_FIELDS as readonly string[]).includes(field);
