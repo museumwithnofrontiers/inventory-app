@@ -182,3 +182,30 @@ export function planParentImage(row: PictureParentImageRow): PictureImageUpdate 
     clear_copyright: clear,
   };
 }
+
+/** An object's or monument's translation still holding its rights line. */
+export interface ImageRightsRow {
+  id: string;
+  extra: Record<string, unknown>;
+}
+
+/**
+ * The `copyright` of an object or a monument translation is not a picture's:
+ * it is the sheet's own rights line ("Copyright image: …", legacy `notice_b`),
+ * translated. It goes to the translation's `image_rights` column, as written.
+ */
+export function planImageRights(
+  rows: readonly ImageRightsRow[]
+): Array<{ id: string; image_rights: string; extra: Record<string, unknown> | null }> {
+  const out: Array<{ id: string; image_rights: string; extra: Record<string, unknown> | null }> =
+    [];
+  for (const row of rows) {
+    const text = row.extra['copyright'];
+    if (typeof text !== 'string') continue;
+    const rest = Object.fromEntries(
+      Object.entries(row.extra).filter(([key]) => key !== 'copyright')
+    );
+    out.push({ id: row.id, image_rights: text, extra: Object.keys(rest).length > 0 ? rest : null });
+  }
+  return out;
+}

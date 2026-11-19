@@ -206,3 +206,11 @@ describe("a picture's photographer and credit (F1)", () => {
     expect(row).toEqual({ item_id: 'pic-1', extra })
   })
 })
+
+describe("an object's rights line (F1)", () => {
+  it('goes back as copyright from image_rights', () => {
+    const [row] = restoreItemColumns([{ item_id: 'o1', extra: null, image_rights: 'Copyright image: Museo X.' }])
+    expect(row).toEqual({ item_id: 'o1', extra: { copyright: 'Copyright image: Museo X.' } })
+    expect(itemColumnsSelect('it')).toContain('it.image_rights')
+  })
+})

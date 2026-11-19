@@ -12,6 +12,9 @@
  * every one of them (`runsLast`). It reads nothing from the legacy database;
  * the texts are copied as stored.
  *
+ * The objects' and monuments' `copyright` is the sheet's rights line, not a
+ * picture's: it moves to their translations' `image_rights`.
+ *
  * Only the 26 ISL/IAM images that still burn their own text change what
  * `/pub` burns: their text moves to `credit`, so they burn the project's line
  * like every other ISL and IAM picture.
@@ -22,7 +25,11 @@
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
-import { planParentImage, planPictureCredits } from '../../utils/picture-credits.js';
+import {
+  planImageRights,
+  planParentImage,
+  planPictureCredits,
+} from '../../utils/picture-credits.js';
 
 const DEFAULT_LANGUAGE_ID = 'eng';
 
@@ -94,6 +101,18 @@ export class PictureCreditsImporter extends BaseImporter {
         const extra = Object.keys(rest).length > 0 ? JSON.stringify(rest) : null;
         await this.apply(result, `Partner image ${row.id}`, preview, tag, () =>
           this.context.strategy.setPartnerImagePhotographer(row.id, photographer, extra)
+        );
+      }
+
+      // An object's or monument's `copyright` is the sheet's rights line, not a
+      // picture's: it goes to the translation's `image_rights` column.
+      for (const update of planImageRights(await this.context.strategy.findImageRightsRows())) {
+        await this.apply(result, `Item translation ${update.id}`, preview, tag, () =>
+          this.context.strategy.setItemTranslationImageRights(
+            update.id,
+            update.image_rights,
+            update.extra === null ? null : JSON.stringify(update.extra)
+          )
         );
       }
 

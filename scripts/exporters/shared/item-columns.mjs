@@ -152,6 +152,7 @@ export function itemColumnsSelect(alias) {
     ...COLUMNS.map(column => `${alias}.${column}`),
     `${alias}.backward_compatibility AS ${SOURCE}`,
     ...pictureSelect(alias),
+    `${alias}.image_rights`,
   ].join(', ')
 }
 
@@ -193,6 +194,8 @@ export function withItemTranslationColumns(extra, row) {
     else texts[parent] = { ...(isObject(texts[parent]) ? texts[parent] : {}), [child]: value }
   }
   Object.assign(texts, pictureTexts(row))
+  // An object's or monument's rights line (F1): its own column, not a picture's.
+  if (typeof row.image_rights === 'string') texts.copyright = row.image_rights
   if (Object.keys(texts).length === 0) return extra
   const parsed = typeof extra === 'string' ? JSON.parse(extra) : extra
   const base = isObject(parsed) ? parsed : {}
@@ -218,7 +221,7 @@ export function restoreItemColumns(rows) {
   for (const row of rows) {
     const record = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (row))
     record.extra = withItemTranslationColumns(record.extra, record)
-    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE)]) delete record[column]
+    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE), 'image_rights']) delete record[column]
   }
   return rows
 }

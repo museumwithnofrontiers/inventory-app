@@ -5,6 +5,7 @@ import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
 import type { IWriteStrategy } from '../../src/core/strategy.js';
 import {
+  planImageRights,
   planParentImage,
   planPictureCredits,
   projectOverridesPictures,
@@ -294,6 +295,8 @@ describe('PictureCreditsImporter', () => {
       findPictureParentImages: vi.fn().mockResolvedValue([]),
       findPartnerImagesWithPhotographer: vi.fn().mockResolvedValue([]),
       setPartnerImagePhotographer: vi.fn().mockResolvedValue(undefined),
+      findImageRightsRows: vi.fn().mockResolvedValue([]),
+      setItemTranslationImageRights: vi.fn().mockResolvedValue(undefined),
     };
     context = {
       legacyDb,
@@ -379,5 +382,20 @@ describe('PictureCreditsImporter', () => {
     expect(result.success).toBe(false);
     expect(result.errors).toEqual(['Item image img-1: lock wait timeout']);
     expect(strategy.setItemImagePictureCredit).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('planImageRights', () => {
+  it("moves an object's rights line to image_rights, as written, and leaves other keys", () => {
+    expect(
+      planImageRights([
+        { id: 't1', extra: { copyright: 'Copyright image: Museo X.', binding_desc: 'x' } },
+        { id: 't2', extra: { copyright: 'Copyright immagine: Museo X.' } },
+        { id: 't3', extra: { copyright: ['not a text'] } },
+      ])
+    ).toEqual([
+      { id: 't1', image_rights: 'Copyright image: Museo X.', extra: { binding_desc: 'x' } },
+      { id: 't2', image_rights: 'Copyright immagine: Museo X.', extra: null },
+    ]);
   });
 });

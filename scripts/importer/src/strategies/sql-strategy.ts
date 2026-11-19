@@ -14,7 +14,11 @@ import { v4 as uuidv4 } from 'uuid';
 import { deterministicUuid } from '../utils/deterministic-uuid.js';
 import { ITEM_TRANSLATION_COLUMNS } from '../utils/item-translation-columns.js';
 import { COLLECTION_TRANSLATION_COLUMNS } from '../utils/collection-translation-columns.js';
-import type { PictureCreditRow, PictureParentImageRow } from '../utils/picture-credits.js';
+import type {
+  ImageRightsRow,
+  PictureCreditRow,
+  PictureParentImageRow,
+} from '../utils/picture-credits.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { IWriteStrategy } from '../core/strategy.js';
 import type {
@@ -2168,6 +2172,33 @@ export class SqlWriteStrategy implements IWriteStrategy {
     });
   }
 
+  async findImageRightsRows(): Promise<ImageRightsRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT it.id, it.extra FROM item_translations it
+       JOIN items i ON i.id = it.item_id AND i.type <> 'picture'
+       WHERE it.extra IS NOT NULL AND JSON_CONTAINS_PATH(it.extra, 'one', '$.copyright')
+       ORDER BY it.id`
+    );
+    return rows.map((row) => {
+      const raw = row.extra;
+      return {
+        id: row.id as string,
+        extra: (typeof raw === 'string' ? JSON.parse(raw) : raw) as Record<string, unknown>,
+      };
+    });
+  }
+
+  async setItemTranslationImageRights(
+    id: string,
+    imageRights: string,
+    extra: string | null
+  ): Promise<void> {
+    await this.db.execute(
+      'UPDATE item_translations SET image_rights = ?, extra = ?, updated_at = ? WHERE id = ?',
+      [imageRights, extra, this.now, id]
+    );
+  }
+
   async setItemImagePictureCredit(
     id: string,
     photographer: string | null,
@@ -2539,9 +2570,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
     collectionId: string,
     countryIds: readonly string[]
   ): Promise<void> {
-    await this.db.execute(`DELETE FROM collection_country WHERE collection_id = ?`, [
-      collectionId,
-    ]);
+    await this.db.execute(`DELETE FROM collection_country WHERE collection_id = ?`, [collectionId]);
     for (const [index, countryId] of countryIds.entries()) {
       await this.db.execute(
         `INSERT INTO collection_country (collection_id, country_id, display_order, created_at, updated_at)
