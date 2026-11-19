@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 55
+- ** Total Models:** 56
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
@@ -51,6 +51,7 @@ title: Generated Model Documentation
 - [LanguageTranslation](#languagetranslation)
 - [Link](#link)
 - [Partner](#partner)
+- [PartnerContact](#partnercontact)
 - [PartnerImage](#partnerimage)
 - [PartnerLogo](#partnerlogo)
 - [PartnerTranslation](#partnertranslation)
@@ -2262,20 +2263,23 @@ const UPDATED_AT = 'updated_at';
 | `internal_name` | varchar | Unknown | Unknown |  |
 | `backward_compatibility` | varchar | Unknown | Unknown |  |
 | `type` | enum | Unknown | Unknown |  |
+| `category` | varchar | Unknown | Unknown |  |
 | `latitude` | decimal | Unknown | Unknown |  |
 | `longitude` | decimal | Unknown | Unknown |  |
 | `map_zoom` | int | Unknown | Unknown |  |
 | `project_id` | char | Unknown | Unknown |  |
 | `monument_item_id` | char | Unknown | Unknown |  |
 | `visible` | tinyint | Unknown | Unknown |  |
+| `featured` | tinyint | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
 | `country_id` | varchar | Unknown | Unknown |  |
+| `city` | varchar | Unknown | Unknown |  |
 
 ### Fillable Fields
 
 ```php
-['internal_name', 'type', 'backward_compatibility', 'country_id', 'latitude', 'longitude', 'map_zoom', 'project_id', 'monument_item_id', 'visible']
+['internal_name', 'type', 'backward_compatibility', 'country_id', 'latitude', 'longitude', 'map_zoom', 'project_id', 'monument_item_id', 'visible', 'category', 'featured', 'city']
 ```
 
 ### Attribute Casting
@@ -2286,6 +2290,8 @@ const UPDATED_AT = 'updated_at';
 | `longitude` | `decimal:8` |
 | `map_zoom` | `integer` |
 | `visible` | `boolean` |
+| `category` | `App\Enums\PartnerCategory` |
+| `featured` | `boolean` |
 
 ### Model Constants
 
@@ -2307,6 +2313,7 @@ const UPDATED_AT = 'updated_at';
 - **`partnerImages()`**: HasMany [PartnerImage](#partnerimage)
 - **`partnerLogos()`**: HasMany [PartnerLogo](#partnerlogo)
 - **`visitInformation()`**: HasMany [VisitInformation](#visitinformation)
+- **`contacts()`**: HasMany [PartnerContact](#partnercontact)
 
 #### Belongs To Many
 - **`collections()`**: BelongsToMany [Collection](#collection)
@@ -2317,6 +2324,62 @@ const UPDATED_AT = 'updated_at';
 ### Query Scopes
 
 - **`visible()`**
+
+
+## PartnerContact {#partnercontact}
+
+**Namespace:** `App\Models\PartnerContact`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `partner_contacts` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `partner_id` | char | Unknown | Unknown |  |
+| `display_order` | int | Unknown | Unknown |  |
+| `name` | text | Unknown | Unknown |  |
+| `title` | text | Unknown | Unknown |  |
+| `email` | text | Unknown | Unknown |  |
+| `phone` | text | Unknown | Unknown |  |
+| `fax` | text | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['partner_id', 'display_order', 'name', 'title', 'email', 'phone', 'fax', 'backward_compatibility']
+```
+
+### Attribute Casting
+
+| Attribute | Cast Type |
+|-----------|-----------|
+| `display_order` | `integer` |
+
+### Model Constants
+
+```php
+const TEXT_FIELDS = null;
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`partner()`**: BelongsTo [Partner](#partner)
 
 
 ## PartnerImage {#partnerimage}
@@ -2474,6 +2537,7 @@ const UPDATED_AT = 'updated_at';
 | `language_id` | varchar | Unknown | Unknown |  |
 | `context_id` | char | Unknown | Unknown |  |
 | `name` | varchar | Unknown | Unknown |  |
+| `also_known_as` | text | Unknown | Unknown |  |
 | `description` | text | Unknown | Unknown |  |
 | `city_display` | varchar | Unknown | Unknown |  |
 | `address_line_1` | varchar | Unknown | Unknown |  |
@@ -2497,7 +2561,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_id', 'language_id', 'context_id', 'name', 'description', 'city_display', 'address_line_1', 'address_line_2', 'postal_code', 'address_notes', 'contact_name', 'contact_email_general', 'contact_email_press', 'contact_phone', 'contact_fax', 'contact_website', 'contact_notes', 'contact_emails', 'contact_phones', 'backward_compatibility', 'extra']
+['partner_id', 'language_id', 'context_id', 'name', 'also_known_as', 'description', 'city_display', 'address_line_1', 'address_line_2', 'postal_code', 'address_notes', 'contact_name', 'contact_email_general', 'contact_email_press', 'contact_phone', 'contact_fax', 'contact_website', 'contact_notes', 'contact_emails', 'contact_phones', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
