@@ -25,6 +25,20 @@ php artisan test tests/Integration
 php artisan test tests/Feature/Api/Item/IndexTest.php
 ```
 
+### On Windows with Docker Desktop: run from a volume
+
+Docker Desktop reads a bind-mounted Windows folder through the WSL2 VM's file share, and that share is slow for the many small PHP files a test run loads. Measured on 4 CPUs, the whole suite takes about 55 minutes from the bind mount and 7.5 minutes from a volume; 10 Filament tests take 152 s and 13 s. `scripts/Invoke-VolumeCheck.ps1` copies the checkout into a Docker volume first (about 10 to 20 s) and runs one check there:
+
+```powershell
+.\scripts\Invoke-VolumeCheck.ps1 -Check pint
+.\scripts\Invoke-VolumeCheck.ps1 -Check phpstan
+.\scripts\Invoke-VolumeCheck.ps1 -Check tests
+.\scripts\Invoke-VolumeCheck.ps1 -Check tests -Tests tests/Filament/RelationManagers
+.\scripts\Invoke-VolumeCheck.ps1 -Check tests -Path C:\worktrees\my-branch
+```
+
+Each check uses its own volume, so the three can run at the same time. PHPStan keeps its result cache between runs. The copy is one-way: Pint only reports (`--test`), so fix style on the checkout itself.
+
 ## Test Organisation
 
 ```

@@ -428,3 +428,25 @@ Run all tests suites in parallel.
 ```powershell
 .\Scripts\Start-Tests.ps1
 ```
+
+#### Running one PHP check from a Docker volume
+
+Run Pint, PHPStan or the tests on a checkout from a copy of its files in a Docker volume. On Windows, Docker Desktop reads a bind-mounted folder through the WSL2 file share, which made the whole suite take about 55 minutes; from a volume it takes 7.5 minutes. See [Testing](../docs/development/testing.md).
+
+**Script properties**
+
+| Property | Value |
+| --- | --- |
+| Script | `Invoke-VolumeCheck.ps1` |
+| Invoker | Invoked by the developer, once per check (each can run as its own task) |
+| Input | The checkout's tracked and untracked files (not ignored, without node_modules) |
+| Output | **N/A** - The script writes to the terminal; Pint only reports (`--test`) |
+| Log | **N/A** - The script writes to the terminal |
+
+**Usage**
+
+```powershell
+.\scripts\Invoke-VolumeCheck.ps1 -Check pint
+.\scripts\Invoke-VolumeCheck.ps1 -Check phpstan
+.\scripts\Invoke-VolumeCheck.ps1 -Check tests [-Tests tests/Unit] [-Path C:\worktrees\my-branch]
+```
