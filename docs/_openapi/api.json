@@ -159,7 +159,7 @@
                 }
             },
             "put": {
-                "operationId": "author.update_213",
+                "operationId": "author.update_216",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Author"
@@ -610,7 +610,7 @@
                 }
             },
             "put": {
-                "operationId": "authorTranslation.update_215",
+                "operationId": "authorTranslation.update_218",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AuthorTranslation"
@@ -1153,7 +1153,7 @@
                 }
             },
             "put": {
-                "operationId": "availableImage.update_355",
+                "operationId": "availableImage.update_361",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AvailableImage"
@@ -1604,7 +1604,7 @@
                 }
             },
             "put": {
-                "operationId": "collection.update_286",
+                "operationId": "collection.update_291",
                 "summary": "Update the specified collection in storage",
                 "tags": [
                     "Collection"
@@ -2352,7 +2352,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionTranslation.update_284",
+                "operationId": "collectionTranslation.update_289",
                 "summary": "Update the specified collection translation",
                 "tags": [
                     "Collection Translations",
@@ -3068,7 +3068,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionImage.update_268",
+                "operationId": "collectionImage.update_273",
                 "summary": "Update the specified collection image",
                 "tags": [
                     "CollectionImage"
@@ -3409,6 +3409,472 @@
                 }
             }
         },
+        "/collection-item-translation": {
+            "get": {
+                "operationId": "collection-item-translation.index",
+                "summary": "Display a listing of the resource, optionally for one placement or\nlanguage",
+                "tags": [
+                    "CollectionItemTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "language"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "collection_item_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "language_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "minLength": 3,
+                            "maxLength": 3
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `CollectionItemTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/CollectionItemTranslationResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "collection-item-translation.store",
+                "summary": "Store a newly created resource in storage",
+                "tags": [
+                    "CollectionItemTranslation"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreCollectionItemTranslationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
+        "/collection-item-translation/{collectionItemTranslation}": {
+            "get": {
+                "operationId": "collection-item-translation.show",
+                "summary": "Display the specified resource",
+                "tags": [
+                    "CollectionItemTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "language"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "collection-item-translation.update",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "CollectionItemTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCollectionItemTranslationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "collectionItemTranslation.update_255",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "CollectionItemTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateCollectionItemTranslationRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`CollectionItemTranslationResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/CollectionItemTranslationResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "collection-item-translation.destroy",
+                "summary": "Remove the specified resource from storage",
+                "tags": [
+                    "CollectionItemTranslation"
+                ],
+                "parameters": [
+                    {
+                        "name": "collectionItemTranslation",
+                        "in": "path",
+                        "required": true,
+                        "description": "The collection item translation ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
         "/context/default": {
             "get": {
                 "operationId": "context.getDefault",
@@ -3621,7 +4087,7 @@
                 }
             },
             "put": {
-                "operationId": "context.update_185",
+                "operationId": "context.update_188",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Context"
@@ -4132,7 +4598,7 @@
                 }
             },
             "put": {
-                "operationId": "contributor.update_273",
+                "operationId": "contributor.update_278",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Contributor"
@@ -4661,7 +5127,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorImage.update_277",
+                "operationId": "contributorImage.update_282",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorImage"
@@ -5363,7 +5829,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorTranslation.update_275",
+                "operationId": "contributorTranslation.update_280",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorTranslation"
@@ -5812,7 +6278,7 @@
                 }
             },
             "put": {
-                "operationId": "country.update_203",
+                "operationId": "country.update_206",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Country"
@@ -6260,7 +6726,7 @@
                 }
             },
             "put": {
-                "operationId": "countryTranslation.update_205",
+                "operationId": "countryTranslation.update_208",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CountryTranslation"
@@ -6709,7 +7175,7 @@
                 }
             },
             "put": {
-                "operationId": "dynasty.update_209",
+                "operationId": "dynasty.update_212",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Dynasty"
@@ -7158,7 +7624,7 @@
                 }
             },
             "put": {
-                "operationId": "dynastyTranslation.update_211",
+                "operationId": "dynastyTranslation.update_214",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "DynastyTranslation"
@@ -7609,7 +8075,7 @@
                 }
             },
             "put": {
-                "operationId": "glossary.update_193",
+                "operationId": "glossary.update_196",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Glossary"
@@ -8204,7 +8670,7 @@
                 }
             },
             "put": {
-                "operationId": "glossarySpelling.update_197",
+                "operationId": "glossarySpelling.update_200",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossarySpelling"
@@ -8653,7 +9119,7 @@
                 }
             },
             "put": {
-                "operationId": "glossaryTranslation.update_195",
+                "operationId": "glossaryTranslation.update_198",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossaryTranslation"
@@ -9199,7 +9665,7 @@
                 }
             },
             "put": {
-                "operationId": "imageTranslation.update_250",
+                "operationId": "imageTranslation.update_253",
                 "tags": [
                     "ImageTranslation"
                 ],
@@ -10065,7 +10531,7 @@
                 }
             },
             "put": {
-                "operationId": "item.update_247",
+                "operationId": "item.update_250",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Item"
@@ -10865,7 +11331,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLinkTranslation.update_266",
+                "operationId": "itemItemLinkTranslation.update_271",
                 "summary": "Update the specified item-item link translation",
                 "tags": [
                     "Item Item Link Translations",
@@ -11376,7 +11842,7 @@
                 }
             },
             "put": {
-                "operationId": "itemTranslation.update_282",
+                "operationId": "itemTranslation.update_287",
                 "summary": "Update the specified item translation",
                 "tags": [
                     "Item Translations",
@@ -12032,7 +12498,7 @@
                 }
             },
             "put": {
-                "operationId": "itemDocument.update_260",
+                "operationId": "itemDocument.update_265",
                 "summary": "Update the specified item document",
                 "tags": [
                     "ItemDocument"
@@ -12546,7 +13012,7 @@
                 }
             },
             "put": {
-                "operationId": "itemImage.update_251",
+                "operationId": "itemImage.update_256",
                 "summary": "Update the specified item image",
                 "tags": [
                     "ItemImage"
@@ -12985,7 +13451,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLink.update_264",
+                "operationId": "itemItemLink.update_269",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ItemItemLink"
@@ -13584,7 +14050,7 @@
                 }
             },
             "put": {
-                "operationId": "language.update_189",
+                "operationId": "language.update_192",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Language"
@@ -14083,7 +14549,7 @@
                 }
             },
             "put": {
-                "operationId": "languageTranslation.update_191",
+                "operationId": "languageTranslation.update_194",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "LanguageTranslation"
@@ -14959,7 +15425,7 @@
                 }
             },
             "put": {
-                "operationId": "link.update_256",
+                "operationId": "link.update_261",
                 "summary": "Update the specified link",
                 "tags": [
                     "Link"
@@ -15528,7 +15994,7 @@
                 }
             },
             "put": {
-                "operationId": "partner.update_227",
+                "operationId": "partner.update_230",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Partner"
@@ -16057,7 +16523,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerImage.update_231",
+                "operationId": "partnerImage.update_234",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerImage"
@@ -16839,7 +17305,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerLogo.update_236",
+                "operationId": "partnerLogo.update_239",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerLogo"
@@ -17431,7 +17897,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslation.update_229",
+                "operationId": "partnerTranslation.update_232",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslation"
@@ -17960,7 +18426,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslationImage.update_241",
+                "operationId": "partnerTranslationImage.update_244",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslationImage"
@@ -18700,7 +19166,7 @@
                 }
             },
             "put": {
-                "operationId": "project.update_201",
+                "operationId": "project.update_204",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Project"
@@ -19276,7 +19742,7 @@
                 }
             },
             "put": {
-                "operationId": "publication.update_288",
+                "operationId": "publication.update_293",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Publication"
@@ -20592,7 +21058,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationDocument.update_312",
+                "operationId": "publicationDocument.update_317",
                 "summary": "Update the specified document's metadata",
                 "tags": [
                     "PublicationDocument"
@@ -20812,7 +21278,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationEdition.update_303",
+                "operationId": "publicationEdition.update_308",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationEdition"
@@ -21616,7 +22082,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationImage.update_306",
+                "operationId": "publicationImage.update_311",
                 "summary": "Update the specified publication image",
                 "tags": [
                     "PublicationImage"
@@ -22081,7 +22547,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationTranslation.update_298",
+                "operationId": "publicationTranslation.update_303",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationTranslation"
@@ -22736,7 +23202,7 @@
                 }
             },
             "put": {
-                "operationId": "tag.update_207",
+                "operationId": "tag.update_210",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Tag"
@@ -23175,7 +23641,7 @@
                 }
             },
             "put": {
-                "operationId": "timeline.update_217",
+                "operationId": "timeline.update_220",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Timeline"
@@ -23624,7 +24090,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEvent.update_219",
+                "operationId": "timelineEvent.update_222",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEvent"
@@ -24062,7 +24528,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventImage.update_223",
+                "operationId": "timelineEventImage.update_226",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventImage"
@@ -24359,7 +24825,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventTranslation.update_221",
+                "operationId": "timelineEventTranslation.update_224",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventTranslation"
@@ -24660,7 +25126,7 @@
                 }
             },
             "put": {
-                "operationId": "visitInformation.update_300",
+                "operationId": "visitInformation.update_305",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "VisitInformation"
@@ -25859,6 +26325,157 @@
                     "updated_at"
                 ],
                 "title": "CollectionImageResource"
+            },
+            "CollectionItemTranslationResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The unique identifier (GUID)"
+                    },
+                    "collection_item_id": {
+                        "type": "string",
+                        "description": "The placement these texts belong to: an item on a collection (its id)"
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "description": "The language of these texts (LanguageResource id)"
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The detail view's name, as written"
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The item's text on this collection (Markdown), as written"
+                    },
+                    "curator_justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Sharing History: the curator's justification for the selection"
+                    },
+                    "partner_justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Sharing History: the partner's justification for the selection"
+                    },
+                    "justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "Sharing History National Context: the justification for the selection"
+                    },
+                    "caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The image caption, as written"
+                    },
+                    "item_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The item's caption on this collection, as written: name, date, location, museum"
+                    },
+                    "item_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_museum": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_dynasty": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The item's dynasty, artist and material lines on this collection, as written"
+                    },
+                    "item_artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_material": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The Id(s) of matching resource in the legacy system (if any)."
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of creation of the resource (managed by the system)"
+                    },
+                    "updated_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "format": "date-time",
+                        "description": "The date of last modification of the resource (managed by the system)"
+                    },
+                    "language": {
+                        "$ref": "#/components/schemas/LanguageResource"
+                    }
+                },
+                "required": [
+                    "id",
+                    "collection_item_id",
+                    "language_id",
+                    "title",
+                    "description",
+                    "curator_justification",
+                    "partner_justification",
+                    "justification",
+                    "caption",
+                    "item_name",
+                    "item_date",
+                    "item_location",
+                    "item_museum",
+                    "item_dynasty",
+                    "item_artist",
+                    "item_material",
+                    "backward_compatibility",
+                    "created_at",
+                    "updated_at"
+                ],
+                "title": "CollectionItemTranslationResource"
             },
             "CollectionResource": {
                 "type": "object",
@@ -30261,6 +30878,121 @@
                 ],
                 "title": "StoreCollectionImageRequest"
             },
+            "StoreCollectionItemTranslationRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "collection_item_id": {
+                        "type": "string",
+                        "format": "uuid"
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "curator_justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "partner_justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_museum": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_dynasty": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_material": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "include": {
+                        "type": "string",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`.",
+                        "examples": [
+                            "language"
+                        ]
+                    }
+                },
+                "required": [
+                    "collection_item_id",
+                    "language_id"
+                ],
+                "title": "StoreCollectionItemTranslationRequest"
+            },
             "StoreCollectionRequest": {
                 "type": "object",
                 "properties": {
@@ -33686,6 +34418,116 @@
                     }
                 },
                 "title": "UpdateCollectionImageRequest"
+            },
+            "UpdateCollectionItemTranslationRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "collection_item_id": {
+                        "type": "string"
+                    },
+                    "language_id": {
+                        "type": "string",
+                        "minLength": 3,
+                        "maxLength": 3
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "description": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "curator_justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "partner_justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "justification": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "caption": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_location": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_museum": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_dynasty": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_artist": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "item_material": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "include": {
+                        "type": "string",
+                        "description": "Comma-separated list of related resources to include. Valid values: `language`.",
+                        "examples": [
+                            "language"
+                        ]
+                    }
+                },
+                "title": "UpdateCollectionItemTranslationRequest"
             },
             "UpdateCollectionRequest": {
                 "type": "object",

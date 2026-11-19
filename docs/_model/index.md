@@ -23,6 +23,7 @@ title: Generated Model Documentation
 - [Collection](#collection)
 - [CollectionImage](#collectionimage)
 - [CollectionItem](#collectionitem)
+- [CollectionItemTranslation](#collectionitemtranslation)
 - [CollectionPartner](#collectionpartner)
 - [CollectionTranslation](#collectiontranslation)
 - [Context](#context)
@@ -569,6 +570,68 @@ const UPDATED_AT = 'updated_at';
 - **`collection()`**: BelongsTo [Collection](#collection)
 - **`item()`**: BelongsTo [Item](#item)
 - **`picture()`**: BelongsTo [Item](#item)
+
+#### Has Many
+- **`translations()`**: HasMany [CollectionItemTranslation](#collectionitemtranslation)
+
+
+## CollectionItemTranslation {#collectionitemtranslation}
+
+**Namespace:** `App\Models\CollectionItemTranslation`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `collection_item_translations` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `collection_item_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `title` | varchar | Unknown | Unknown |  |
+| `description` | text | Unknown | Unknown |  |
+| `curator_justification` | text | Unknown | Unknown |  |
+| `partner_justification` | text | Unknown | Unknown |  |
+| `justification` | text | Unknown | Unknown |  |
+| `caption` | text | Unknown | Unknown |  |
+| `item_name` | text | Unknown | Unknown |  |
+| `item_date` | text | Unknown | Unknown |  |
+| `item_location` | text | Unknown | Unknown |  |
+| `item_museum` | text | Unknown | Unknown |  |
+| `item_dynasty` | text | Unknown | Unknown |  |
+| `item_artist` | text | Unknown | Unknown |  |
+| `item_material` | text | Unknown | Unknown |  |
+| `backward_compatibility` | varchar | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['collection_item_id', 'language_id', 'title', 'description', 'curator_justification', 'partner_justification', 'justification', 'caption', 'item_name', 'item_date', 'item_location', 'item_museum', 'item_dynasty', 'item_artist', 'item_material', 'backward_compatibility']
+```
+
+### Model Constants
+
+```php
+const TEXT_COLUMNS = null;
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`collectionItem()`**: BelongsTo [CollectionItem](#collectionitem)
+- **`language()`**: BelongsTo [Language](#language)
 
 
 ## CollectionPartner {#collectionpartner}
