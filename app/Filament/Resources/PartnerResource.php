@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\ItemType;
+use App\Enums\PartnerCategory;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
@@ -15,6 +16,7 @@ use App\Filament\Resources\PartnerResource\Pages\EditPartner;
 use App\Filament\Resources\PartnerResource\Pages\ListPartner;
 use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\CollectionParticipationsRelationManager;
+use App\Filament\Resources\PartnerResource\RelationManagers\ContactsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\LogosRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
@@ -120,6 +122,16 @@ class PartnerResource extends Resource
                             ->searchable(),
                         Toggle::make('visible')
                             ->default(true),
+                        Select::make('category')
+                            ->options(PartnerCategory::options())
+                            ->placeholder('None')
+                            ->helperText('Legacy\'s partner category (Sharing History).'),
+                        Toggle::make('featured')
+                            ->helperText('The Portal\'s own selection: shown in the featured strip, whether visible or not.')
+                            ->default(false),
+                        TextInput::make('city')
+                            ->helperText('As the Sharing History partner list prints it, for every language.')
+                            ->maxLength(255),
                     ])
                     ->columns(2),
                 FiltersSection::make('Technical identification')
@@ -267,6 +279,13 @@ class PartnerResource extends Resource
                                 : null),
                         IconEntry::make('visible')
                             ->boolean(),
+                        TextEntry::make('category')
+                            ->formatStateUsing(fn (?PartnerCategory $state): ?string => $state?->label())
+                            ->placeholder('—'),
+                        IconEntry::make('featured')
+                            ->boolean(),
+                        TextEntry::make('city')
+                            ->placeholder('—'),
                         TextEntry::make('latitude'),
                         TextEntry::make('longitude'),
                         TextEntry::make('map_zoom')
@@ -299,6 +318,7 @@ class PartnerResource extends Resource
             LogosRelationManager::class,
             LinksRelationManager::class,
             VisitInformationRelationManager::class,
+            ContactsRelationManager::class,
         ];
     }
 

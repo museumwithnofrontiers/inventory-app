@@ -73,7 +73,7 @@ describe('PartnerExporter — shared partner shape', () => {
       query: async (sql: string, params?: unknown) => {
         queries.push({ sql, params })
         if (sql.includes('AS own_project_id')) return rows.ownProjects ?? []
-        if (sql.includes('FROM partners')) return rows.partners
+        if (sql.includes('FROM partners') && !sql.includes('FROM partner_translations')) return rows.partners
         if (sql.includes('FROM languages')) {
           return [
             { id: 'eng', backward_compatibility: 'en' },

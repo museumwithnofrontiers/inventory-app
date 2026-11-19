@@ -50,6 +50,8 @@ class PartnerTranslation extends Model
         'language_id',
         'context_id',
         'name',
+        // The partner's other name, as written (M16 D2)
+        'also_known_as',
         'description',
         // Address fields (embedded)
         'city_display',

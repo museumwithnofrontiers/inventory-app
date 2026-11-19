@@ -229,6 +229,25 @@ writers on its own, run `--only collection-item-translations` again. The exporte
 | `membership` (a constant)                                                                                                                                                                                        | thg_gallery.mwnf3_project_id                                                         | importers/phase-10/thg-gallery-native-project-importer.ts                                                 |
 | `contextual_descriptions` (`{language id: text}`)                                                                                                                                                                | objects_trails_justification                                                         | importers/phase-07/travels-trail-entry-importer.ts                                                        |
 
+## Partner fields (M16 D2, #2646)
+
+The partner importers (museums, institutions, schools, Sharing History) write these keys into every translation
+of a partner first. `importers/phase-11/partner-columns-importer.ts` then moves them, one partner at a time, only
+where all of the partner's translations agree:
+
+| Key | Goes to |
+| --- | --- |
+| `contact_person_1`, `contact_person_2` (`name`, `title`, `email`, `phone`, `fax`) | `partner_contacts`, display order 1 and 2, as written |
+| `partner_category` (Sharing History) | `partners.category`, one of six values; the one `Museums` joins `museums` |
+| `portal_display` (`y`/`n`) | `partners.featured` |
+| `city` (Sharing History) | `partners.city`, as written |
+| `ex_name` (per translation) | `partner_translations.also_known_as`, as written |
+
+A value the translations disagree on, an unknown category or flag, and a contact with a field the model lacks all
+stay here and are reported. What stays: `region`, `region_id` and `ex_description`, which no exporter reads (ADR 006
+rule 5). After re-running one of the writers on its own, run `--only partner-columns` again. The exporters give the
+keys back (`scripts/exporters/shared/partner-columns.mjs`).
+
 ## Visit information (M16 D1, #2645)
 
 The visit keys of three translation tables are written into `extra` first, then moved to the shared

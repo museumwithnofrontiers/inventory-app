@@ -33,6 +33,7 @@ use App\Http\Controllers\ItemTranslationController;
 use App\Http\Controllers\LanguageController;
 use App\Http\Controllers\LanguageTranslationController;
 use App\Http\Controllers\LinkController;
+use App\Http\Controllers\PartnerContactController;
 use App\Http\Controllers\PartnerController;
 use App\Http\Controllers\PartnerImageController;
 use App\Http\Controllers\PartnerLogoController;
@@ -266,6 +267,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('visit-information/{visitInformation}', [VisitInformationController::class, 'show'])->name('visit-information.show');
         Route::get('visit-information', [VisitInformationController::class, 'index'])->name('visit-information.index');
 
+        // Partner contact routes (read, M16 D2)
+        Route::get('partner-contact/{partnerContact}', [PartnerContactController::class, 'show'])->name('partner-contact.show');
+        Route::get('partner-contact', [PartnerContactController::class, 'index'])->name('partner-contact.index');
+
         // Publication Edition routes (read)
         Route::get('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'show'])->name('publication-edition.show');
         Route::get('publication-edition', [PublicationEditionController::class, 'index'])->name('publication-edition.index');
@@ -339,6 +344,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('publication', [PublicationController::class, 'store'])->name('publication.store');
         Route::post('publication-translation', [PublicationTranslationController::class, 'store'])->name('publication-translation.store');
         Route::post('visit-information', [VisitInformationController::class, 'store'])->name('visit-information.store');
+        Route::post('partner-contact', [PartnerContactController::class, 'store'])->name('partner-contact.store');
         Route::post('publication/{publication}/images', [PublicationImageController::class, 'store'])->name('publication.images.store');
         Route::post('publication/{publication}/attach-image', [PublicationImageController::class, 'attachFromAvailable'])->name('publication.attachImage');
     });
@@ -505,6 +511,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::put('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update']);
         Route::patch('visit-information/{visitInformation}', [VisitInformationController::class, 'update'])->name('visit-information.update');
         Route::put('visit-information/{visitInformation}', [VisitInformationController::class, 'update']);
+        Route::patch('partner-contact/{partnerContact}', [PartnerContactController::class, 'update'])->name('partner-contact.update');
+        Route::put('partner-contact/{partnerContact}', [PartnerContactController::class, 'update']);
 
         // Editions have no policy of their own: every mutation is an update of the publication
         Route::post('publication-edition', [PublicationEditionController::class, 'store'])->name('publication-edition.store');
@@ -582,6 +590,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('publication/{publication}', [PublicationController::class, 'destroy'])->name('publication.destroy');
         Route::delete('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'destroy'])->name('publication-translation.destroy');
         Route::delete('visit-information/{visitInformation}', [VisitInformationController::class, 'destroy'])->name('visit-information.destroy');
+        Route::delete('partner-contact/{partnerContact}', [PartnerContactController::class, 'destroy'])->name('partner-contact.destroy');
         Route::delete('publication-image/{publicationImage}', [PublicationImageController::class, 'destroy'])->name('publication-image.destroy');
         Route::post('publication-image/{publicationImage}/detach', [PublicationImageController::class, 'detachToAvailable'])->name('publication-image.detach');
     });

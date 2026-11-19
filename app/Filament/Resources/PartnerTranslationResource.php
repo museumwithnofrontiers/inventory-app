@@ -95,6 +95,10 @@ class PartnerTranslationResource extends Resource
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255),
+                        Textarea::make('also_known_as')
+                            ->label('Also known as')
+                            ->helperText('The partner\'s other name, as written.')
+                            ->rows(2),
                         TextInput::make('city_display')
                             ->label('City (display)')
                             ->placeholder('City name to display (may differ from actual address)')

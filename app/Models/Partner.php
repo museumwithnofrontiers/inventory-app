@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PartnerCategory;
 use App\Traits\HasLinks;
 use Database\Factories\PartnerFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,6 +24,9 @@ use Illuminate\Support\Carbon;
  * @property string|null $longitude
  * @property int $map_zoom
  * @property bool $visible
+ * @property PartnerCategory|null $category
+ * @property bool $featured
+ * @property string|null $city
  * @property string|null $display_label
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -52,6 +56,10 @@ class Partner extends Model
         'monument_item_id',
         // Visibility
         'visible',
+        // M16 D2 (decision 7)
+        'category',
+        'featured',
+        'city',
     ];
 
     /**
@@ -64,6 +72,8 @@ class Partner extends Model
         'longitude' => 'decimal:8',
         'map_zoom' => 'integer',
         'visible' => 'boolean',
+        'category' => PartnerCategory::class,
+        'featured' => 'boolean',
     ];
 
     /**
@@ -211,5 +221,15 @@ class Partner extends Model
     public function visitInformation(): HasMany
     {
         return $this->hasMany(VisitInformation::class);
+    }
+
+    /**
+     * The partner's contact persons, in legacy's order (M16 D2, #2646).
+     *
+     * @return HasMany<PartnerContact, $this>
+     */
+    public function contacts(): HasMany
+    {
+        return $this->hasMany(PartnerContact::class)->orderBy('display_order');
     }
 }

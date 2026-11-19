@@ -25,6 +25,8 @@ class PartnerTranslationResource extends JsonResource
             'context_id' => $this->context_id,
             // Core partner info
             'name' => $this->name,
+            // The partner's other name, as written
+            'also_known_as' => $this->also_known_as,
             'description' => $this->description,
             // Address fields (embedded)
             'city_display' => $this->city_display,

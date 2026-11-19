@@ -19,6 +19,7 @@ use App\Models\ItemImage;
 use App\Models\ItemTranslation;
 use App\Models\Language;
 use App\Models\Partner;
+use App\Models\PartnerContact;
 use App\Models\PartnerImage;
 use App\Models\PartnerTranslation;
 use App\Models\PartnerTranslationImage;
@@ -264,6 +265,13 @@ class PermissionsTest extends TestCase
             ['GET', 'publication-translation.show', Permission::VIEW_DATA, PublicationTranslation::class],
             ['PATCH', 'publication-translation.update', Permission::UPDATE_DATA, PublicationTranslation::class],
             ['DELETE', 'publication-translation.destroy', Permission::DELETE_DATA, PublicationTranslation::class],
+
+            // PartnerContact routes (M16 D2)
+            ['GET', 'partner-contact.index', Permission::VIEW_DATA, null],
+            ['POST', 'partner-contact.store', Permission::CREATE_DATA, null],
+            ['GET', 'partner-contact.show', Permission::VIEW_DATA, PartnerContact::class],
+            ['PATCH', 'partner-contact.update', Permission::UPDATE_DATA, PartnerContact::class],
+            ['DELETE', 'partner-contact.destroy', Permission::DELETE_DATA, PartnerContact::class],
 
             // VisitInformation routes (M16 D1)
             ['GET', 'visit-information.index', Permission::VIEW_DATA, null],

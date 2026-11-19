@@ -39,6 +39,12 @@ class PartnerResource extends BaseJsonResource
             'links' => LinkResource::collection($this->whenLoaded('links')),
             // Visibility
             'visible' => $this->resource->visible,
+            // Legacy's partner category (Sharing History), or null
+            'category' => $this->resource->category?->value,
+            // The Portal's own selection: shown in the featured strip
+            'featured' => $this->resource->featured,
+            // The city as the Sharing History partner list prints it, for every language
+            'city' => $this->resource->city,
             // The date of creation of the resource (managed by the system)
             'created_at' => $this->resource->created_at,
             // The date of last modification of the resource (managed by the system)

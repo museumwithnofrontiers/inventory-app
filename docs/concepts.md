@@ -85,6 +85,7 @@ A **Partner** is an institution, museum, or individual who contributes content t
 | `museum`      | A museum or gallery                           |
 | `institution` | A non-museum cultural or academic institution |
 | `individual`  | An individual contributor                     |
+| `school`      | A school                                      |
 
 #### Partner key attributes
 
@@ -93,6 +94,11 @@ A **Partner** is an institution, museum, or individual who contributes content t
 - **Monument item** — A partner can optionally be linked to an item that represents their main monument or building. This is a direct reference to an Item of type `monument`.
 - **Visible** — A boolean flag controlling whether the partner is publicly visible. Partners with `visible = false` are typically hidden from public-facing outputs.
 - **GPS coordinates** — The geographic location of the partner institution.
+- **Category** — Legacy's partner category in Sharing History: museums, archives, cultural heritage authorities, libraries, universities or others. It is finer than the type, and empty for the other partners.
+- **Featured** — The Portal's own selection, shown in the home page's featured strip. It is independent of `visible`.
+- **City** — The city as the Sharing History partner list prints it, one value for every language. Each translation still has its own `city_display`.
+- **Contacts** — The partner's contact persons (`App\Models\PartnerContact`), in legacy's order: name, title, e-mail, phone and fax, as written. They belong to the partner, not to a language. A translation's own contact fields remain the institution's contact.
+- **Also known as** — On a partner translation: the partner's other name in that language, as written.
 
 #### Partner participation in collections
 
