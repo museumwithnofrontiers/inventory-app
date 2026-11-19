@@ -328,13 +328,15 @@ const UPDATED_AT = 'updated_at';
 | `longitude` | decimal | Unknown | Unknown |  |
 | `map_zoom` | int | Unknown | Unknown |  |
 | `country_id` | varchar | Unknown | Unknown |  |
+| `cover_item_id` | char | Unknown | Unknown |  |
+| `days` | smallint | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
 
 ### Fillable Fields
 
 ```php
-['internal_name', 'type', 'purpose', 'language_id', 'context_id', 'parent_id', 'display_order', 'backward_compatibility', 'extra', 'latitude', 'longitude', 'map_zoom', 'country_id']
+['internal_name', 'type', 'purpose', 'language_id', 'context_id', 'parent_id', 'display_order', 'backward_compatibility', 'extra', 'latitude', 'longitude', 'map_zoom', 'country_id', 'cover_item_id', 'days']
 ```
 
 ### Attribute Casting
@@ -346,6 +348,7 @@ const UPDATED_AT = 'updated_at';
 | `latitude` | `decimal:8` |
 | `longitude` | `decimal:8` |
 | `map_zoom` | `integer` |
+| `days` | `integer` |
 
 ### Model Constants
 
@@ -383,6 +386,7 @@ const UPDATED_AT = 'updated_at';
 - **`language()`**: BelongsTo [Language](#language)
 - **`context()`**: BelongsTo [Context](#context)
 - **`country()`**: BelongsTo [Country](#country)
+- **`coverItem()`**: BelongsTo [Item](#item)
 - **`parent()`**: BelongsTo [Collection](#collection)
 
 #### Has Many
@@ -394,6 +398,9 @@ const UPDATED_AT = 'updated_at';
 - **`contributors()`**: HasMany [Contributor](#contributor)
 
 #### Belongs To Many
+- **`countries()`**: BelongsToMany [Country](#country)
+- **`relatedCollections()`**: BelongsToMany [Collection](#collection)
+- **`relatingCollections()`**: BelongsToMany [Collection](#collection)
 - **`attachedItems()`**: BelongsToMany [Item](#item)
 - **`partners()`**: BelongsToMany [Partner](#partner)
 - **`directPartners()`**: BelongsToMany [Partner](#partner)
