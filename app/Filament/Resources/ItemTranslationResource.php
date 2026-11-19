@@ -131,6 +131,9 @@ class ItemTranslationResource extends Resource
                         Textarea::make('dynasty')
                             ->helperText('As the sheet prints it. The Dynasty links are on the item.')
                             ->rows(2),
+                        Textarea::make('keywords')
+                            ->helperText('As the sheet prints it. The Tags are on the item.')
+                            ->rows(2),
                         Textarea::make('region')
                             ->placeholder('Region or province')
                             ->rows(2),
@@ -185,6 +188,39 @@ class ItemTranslationResource extends Resource
                             ->rows(5)
                             ->columnSpanFull(),
                     ])
+                    ->collapsible()
+                    ->collapsed(),
+
+                Section::make('Artist')
+                    ->description('The lines as the sheet prints them. The Artist links are on the item.')
+                    ->schema([
+                        Textarea::make('artist')
+                            ->rows(2),
+                        Textarea::make('artist_period_of_activity')
+                            ->label('Period of activity')
+                            ->rows(2),
+                        Textarea::make('artist_birth_date')
+                            ->label('Date of birth')
+                            ->rows(1),
+                        Textarea::make('artist_birth_place')
+                            ->label('Place of birth')
+                            ->rows(1),
+                        Textarea::make('artist_death_date')
+                            ->label('Date of death')
+                            ->rows(1),
+                        Textarea::make('artist_death_place')
+                            ->label('Place of death')
+                            ->rows(1),
+                        Textarea::make('workshop')
+                            ->rows(2),
+                        Textarea::make('scribe')
+                            ->rows(2),
+                        Textarea::make('patrons')
+                            ->rows(2),
+                        Textarea::make('architects')
+                            ->rows(2),
+                    ])
+                    ->columns(2)
                     ->collapsible()
                     ->collapsed(),
 
@@ -265,6 +301,7 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::rtlTextEntry('dimensions'),
                         TranslationInfolistSchema::markdownEntry('materials'),
                         TranslationInfolistSchema::markdownEntry('dynasty'),
+                        TranslationInfolistSchema::markdownEntry('keywords'),
                         TranslationInfolistSchema::markdownEntry('region'),
                         TranslationInfolistSchema::rtlTextEntry('place_of_production', 'Place of production'),
                         TranslationInfolistSchema::markdownEntry('holder'),
@@ -291,6 +328,23 @@ class ItemTranslationResource extends Resource
                     ->schema([
                         TranslationInfolistSchema::markdownEntry('history', columnSpanFull: true),
                     ])
+                    ->collapsible()
+                    ->collapsed(),
+
+                InfolistSection::make('Artist')
+                    ->schema([
+                        TranslationInfolistSchema::markdownEntry('artist'),
+                        TranslationInfolistSchema::markdownEntry('artist_period_of_activity', 'Period of activity'),
+                        TranslationInfolistSchema::markdownEntry('artist_birth_date', 'Date of birth'),
+                        TranslationInfolistSchema::markdownEntry('artist_birth_place', 'Place of birth'),
+                        TranslationInfolistSchema::markdownEntry('artist_death_date', 'Date of death'),
+                        TranslationInfolistSchema::markdownEntry('artist_death_place', 'Place of death'),
+                        TranslationInfolistSchema::markdownEntry('workshop'),
+                        TranslationInfolistSchema::markdownEntry('scribe'),
+                        TranslationInfolistSchema::markdownEntry('patrons'),
+                        TranslationInfolistSchema::markdownEntry('architects'),
+                    ])
+                    ->columns(2)
                     ->collapsible()
                     ->collapsed(),
 

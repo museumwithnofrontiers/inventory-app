@@ -9,6 +9,9 @@
  *   (Explore and Travels texts, whose legacy field has that name) go to the
  *   four `*_credit` columns. No translation has both `prepared_by` and
  *   `credits_as_written.author`.
+ * - B2 (#2636) and B3 (#2637): the keyword line and the artist, workshop,
+ *   scribe, patron and architect lines (display texts; the Tags and Artist
+ *   links are separate and untouched).
  *
  * A key is a top-level `extra` key, or `parent.child` for a key inside an
  * object (`credits_as_written.author`).
@@ -35,6 +38,17 @@ export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
   { key: 'credits_as_written.translator', column: 'translator_credit' },
   { key: 'credits_as_written.translation_copy_editor', column: 'translation_copy_editor_credit' },
   { key: 'prepared_by', column: 'author_credit' },
+  { key: 'keywords', column: 'keywords' },
+  { key: 'artist', column: 'artist' },
+  { key: 'period_activity', column: 'artist_period_of_activity' },
+  { key: 'artist_birthdate', column: 'artist_birth_date' },
+  { key: 'artist_birthplace', column: 'artist_birth_place' },
+  { key: 'artist_deathdate', column: 'artist_death_date' },
+  { key: 'artist_deathplace', column: 'artist_death_place' },
+  { key: 'workshop', column: 'workshop' },
+  { key: 'scriber', column: 'scribe' },
+  { key: 'patrons', column: 'patrons' },
+  { key: 'architects', column: 'architects' },
 ];
 
 /** The top-level `extra` keys that hold a mapped text, for finding the rows. */

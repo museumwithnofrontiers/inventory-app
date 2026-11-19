@@ -84,8 +84,26 @@ describe('the credits as written (B4)', () => {
   })
 })
 
+describe('the keyword and artist lines (B2, B3)', () => {
+  it('go back under their legacy keys, as written', () => {
+    const extra = withItemTranslationColumns(null, {
+      keywords: 'Basin; ablution',
+      artist_period_of_activity: 'About 1300',
+      scribe: 'Ibn al-Bawwab',
+      artist_birth_place: 'Cairo (?)',
+    }) as Record<string, unknown>
+    expect(extra).toEqual({
+      scriber: 'Ibn al-Bawwab',
+      keywords: 'Basin; ablution',
+      period_activity: 'About 1300',
+      artist_birthplace: 'Cairo (?)',
+    })
+    expect(Object.keys(extra)).toEqual(['scriber', 'keywords', 'period_activity', 'artist_birthplace'])
+  })
+})
+
 describe('the column list', () => {
-  it('names the B1 and B4 columns, as the importer moves them', () => {
+  it('names the B1 to B4 columns, as the importer moves them', () => {
     expect(ITEM_TRANSLATION_COLUMNS.map(c => `${c.key}→${c.column}`)).toEqual([
       'materials→materials',
       'description2→short_description',
@@ -97,10 +115,23 @@ describe('the column list', () => {
       'credits_as_written.translator→translator_credit',
       'credits_as_written.translation_copy_editor→translation_copy_editor_credit',
       'prepared_by→author_credit',
+      'keywords→keywords',
+      'artist→artist',
+      'period_activity→artist_period_of_activity',
+      'artist_birthdate→artist_birth_date',
+      'artist_birthplace→artist_birth_place',
+      'artist_deathdate→artist_death_date',
+      'artist_deathplace→artist_death_place',
+      'workshop→workshop',
+      'scriber→scribe',
+      'patrons→patrons',
+      'architects→architects',
     ])
     expect(itemColumnsSelect('it')).toBe(
       'it.materials, it.short_description, it.dynasty, it.region, it.history, it.author_credit, it.copy_editor_credit, ' +
-        'it.translator_credit, it.translation_copy_editor_credit, it.backward_compatibility AS item_columns_source'
+        'it.translator_credit, it.translation_copy_editor_credit, it.keywords, it.artist, it.artist_period_of_activity, ' +
+        'it.artist_birth_date, it.artist_birth_place, it.artist_death_date, it.artist_death_place, it.workshop, it.scribe, ' +
+        'it.patrons, it.architects, it.backward_compatibility AS item_columns_source'
     )
   })
 })

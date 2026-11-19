@@ -86,6 +86,18 @@ class ItemTranslationResource extends JsonResource
             'copy_editor_credit' => $this->copy_editor_credit,
             'translator_credit' => $this->translator_credit,
             'translation_copy_editor_credit' => $this->translation_copy_editor_credit,
+            // The keyword line and the artist lines as legacy wrote them (the Tags and Artist links are on the item)
+            'keywords' => $this->keywords,
+            'artist' => $this->artist,
+            'artist_period_of_activity' => $this->artist_period_of_activity,
+            'artist_birth_date' => $this->artist_birth_date,
+            'artist_birth_place' => $this->artist_birth_place,
+            'artist_death_date' => $this->artist_death_date,
+            'artist_death_place' => $this->artist_death_place,
+            'workshop' => $this->workshop,
+            'scribe' => $this->scribe,
+            'patrons' => $this->patrons,
+            'architects' => $this->architects,
             'backward_compatibility' => $this->backward_compatibility,
             // Extra data for translation (object, may be null)
             'extra' => $this->extra,

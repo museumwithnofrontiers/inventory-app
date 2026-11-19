@@ -1871,6 +1871,17 @@ const UPDATED_AT = 'updated_at';
 | `dimensions` | text | Unknown | Unknown |  |
 | `materials` | text | Unknown | Unknown |  |
 | `dynasty` | text | Unknown | Unknown |  |
+| `keywords` | text | Unknown | Unknown |  |
+| `artist` | text | Unknown | Unknown |  |
+| `artist_period_of_activity` | text | Unknown | Unknown |  |
+| `artist_birth_date` | text | Unknown | Unknown |  |
+| `artist_birth_place` | text | Unknown | Unknown |  |
+| `artist_death_date` | text | Unknown | Unknown |  |
+| `artist_death_place` | text | Unknown | Unknown |  |
+| `workshop` | text | Unknown | Unknown |  |
+| `scribe` | text | Unknown | Unknown |  |
+| `patrons` | text | Unknown | Unknown |  |
+| `architects` | text | Unknown | Unknown |  |
 | `place_of_production` | text | Unknown | Unknown |  |
 | `method_for_datation` | text | Unknown | Unknown |  |
 | `method_for_provenance` | text | Unknown | Unknown |  |
@@ -1894,7 +1905,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'backward_compatibility', 'extra']
+['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
