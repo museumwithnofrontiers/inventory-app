@@ -23,8 +23,8 @@ use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationM
 use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\RelatedCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager;
-use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\VisitInformationRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ExtraJsonField;
 use App\Filament\Support\ItemDisplayLabel;

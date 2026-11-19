@@ -15,8 +15,8 @@ use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationMan
 use App\Filament\Resources\ItemResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\TranslationsRelationManager;
-use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\VisitInformationRelationManager;
+use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Tests\TestCase;
 
