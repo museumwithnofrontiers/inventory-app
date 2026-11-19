@@ -3,5 +3,56 @@
   "slug": "with-brush-and-qalam",
   "name": "With Brush and Qalam",
   "collection_id": "bac76311-0d8c-5065-8693-bc1720e569db",
-  "package_name": "@museumwnf/with-brush-and-qalam-data"
+  "package_name": "@museumwnf/with-brush-and-qalam-data",
+  "collections": {
+    "bac76311-0d8c-5065-8693-bc1720e569db": {
+      "extra": {
+        "logos": [
+          {
+            "file": "thematic_gallery/thg_galleries/50/logo/36/1.jpg",
+            "link": "https://www.smb.museum/museen-einrichtungen/museum-fuer-islamische-kunst/home/",
+            "labels": {
+              "eng": "Museum für islamische Kunst"
+            },
+            "visible": true,
+            "category_id": 2,
+            "category_name": "Footer 2",
+            "display_order": 1
+          }
+        ],
+        "thg_gallery": {
+          "host": "https://exhibitions.museumwnf.org",
+          "slug": "with_brush_and_qalam",
+          "i18n_group_id": 72,
+          "mwnf3_project_id": "EXWIT",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "link": "with_brush_and_qalam",
+          "banner_item": "mwnf#obj#EXWIT;de;Mus61;21",
+          "landing_url": "https://www.smb.museum/en/exhibitions/detail/with-brush-and-qalam/",
+          "banner_image": "thematic_gallery/thg_galleries/50/banner.jpg",
+          "has_timeline": false,
+          "homepage_item": "mwnf#obj#EXWIT;de;Mus61;21",
+          "homepage_image": "thematic_gallery/thg_galleries/50/home_image.jpg",
+          "mwnf3_project_id": "EXWIT",
+          "has_country_timeline": false
+        }
+      },
+      "translations": {
+        "eng": {
+          "exhibition_i18n": {
+            "enabled": "Y",
+            "heading": "Online exhibition curated by the Museum for Islamic Art Berlin, a MWNF co-founding Partner.  \n  \nHaji Noor Deen is a master of Sini calligraphy, the artistic script of Muslims in China. The exhibition shows a selection of 24 works that blend Arabic and Chinese calligraphy traditions.  \n  \nBased on the exhibition organised by the Museum for Islamic Art Berlin, on display at the Pergamon Museum, 6 July – 22 October 2023.",
+            "subtitle": "Chinese Arabic Calligraphy by Haji Noor Deen",
+            "popup_logo": "**Welcome to ‘With Brush and Qalam’!**\n\n**This online exhibition offers a new and exciting opportunity for our Partners and visitors to take advantage of the MWNF platform.**\n\n**‘With Brush and Qalam’ was an exhibition organised at the Museum for Islamic Art in Berlin. Thanks to this new online format, the exhibition remains accessible also after the end of its physical display.**\n\n**We hope you will enjoy your visit.**\n\n  **![](https://images.museumwnf.org/full/upload/mceclip3.jpg)  ![](https://images.museumwnf.org/full/upload/mceclip0.jpg)**",
+            "exh_img_caption": "Museum for Islamic Art Berlin, Germany",
+            "popup_logo_show": "Y"
+          }
+        }
+      }
+    }
+  }
 }

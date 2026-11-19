@@ -77,46 +77,32 @@ describe('ThgHiddenMuseumImporter', () => {
     context = { legacyDb, strategy, tracker, logger, dryRun: false };
   });
 
-  it('stores one exclusion list per exhibition, resolved to partners', async () => {
-    const importer = new ThgHiddenMuseumImporter(context);
-    const result = await importer.import();
-
-    expect(result.imported).toBe(4);
-    expect(setCollectionExtraMock).toHaveBeenCalledTimes(2);
-
-    const written = Object.fromEntries(
-      setCollectionExtraMock.mock.calls.map((call: unknown[]) => [
-        call[0] as string,
-        JSON.parse(call[1] as string) as Record<string, Record<string, unknown>>,
+  /** The hidden_partners siteConfiguration() builds, by gallery legacy key. */
+  const built = async () =>
+    Object.fromEntries(
+      (await new ThgHiddenMuseumImporter(context).siteConfiguration()).map((entry) => [
+        entry.collection,
+        (entry.extra as { thg_gallery: { hidden_partners: unknown[] } }).thg_gallery
+          .hidden_partners,
       ])
     );
 
-    expect(written['collection-54'].thg_gallery.hidden_partners).toEqual([
+  it('builds one exclusion list per exhibition, resolved to partners', async () => {
+    const lists = await built();
+
+    expect(Object.keys(lists)).toEqual([
+      'mwnf3_thematic_gallery:thg_gallery:54',
+      'mwnf3_thematic_gallery:thg_gallery:56',
+    ]);
+    expect(lists['mwnf3_thematic_gallery:thg_gallery:54']).toEqual([
       { backward_compatibility: 'mwnf3:museums:Mus52:uk', partner_id: 'partner-mus52-uk' },
       { backward_compatibility: 'mwnf3:museums:Mus21:us', partner_id: 'partner-mus21-us' },
     ]);
     // One list per exhibition: its hidden institutions follow its hidden museums.
-    expect(written['collection-56'].thg_gallery.hidden_partners).toEqual([
+    expect(lists['mwnf3_thematic_gallery:thg_gallery:56']).toEqual([
       { backward_compatibility: 'mwnf3:museums:Mus81:dz', partner_id: 'partner-mus81-dz' },
       { backward_compatibility: 'mwnf3:institutions:Mon01:es', partner_id: 'partner-mon01-es' },
     ]);
-  });
-
-  it('preserves the gallery anchor already stored in extra', async () => {
-    getCollectionExtraMock.mockResolvedValue({
-      thg_gallery: { mwnf3_project_id: 'EXAID', slug: 'arts_in_dialogue' },
-    });
-
-    const importer = new ThgHiddenMuseumImporter(context);
-    await importer.import();
-
-    const extra = JSON.parse(setCollectionExtraMock.mock.calls[0][1] as string) as Record<
-      string,
-      Record<string, unknown>
-    >;
-
-    expect(extra.thg_gallery.slug).toBe('arts_in_dialogue');
-    expect(extra.thg_gallery.hidden_partners).toBeDefined();
   });
 
   it('keeps an exclusion whose partner never resolved', async () => {
@@ -126,38 +112,14 @@ describe('ThgHiddenMuseumImporter', () => {
         : [{ gallery_id: 54, partner_id: 'Mus99', country_id: 'zz' }]
     );
 
-    const importer = new ThgHiddenMuseumImporter(context);
-    const result = await importer.import();
-
-    const extra = JSON.parse(setCollectionExtraMock.mock.calls[0][1] as string) as Record<
-      string,
-      Record<string, unknown>
-    >;
-
-    expect(extra.thg_gallery.hidden_partners).toEqual([
+    expect((await built())['mwnf3_thematic_gallery:thg_gallery:54']).toEqual([
       { backward_compatibility: 'mwnf3:museums:Mus99:zz', partner_id: null },
       { backward_compatibility: 'mwnf3:institutions:Mon99:zz', partner_id: null },
     ]);
-    expect(result.warnings).toEqual([
-      expect.stringContaining('mwnf3:museums:Mus99:zz'),
-      expect.stringContaining('mwnf3:institutions:Mon99:zz'),
-    ]);
-  });
-
-  it('warns and skips a gallery whose collection is missing', async () => {
-    tracker = new UnifiedTracker();
-    context = { ...context, tracker };
-
-    const importer = new ThgHiddenMuseumImporter(context);
-    const result = await importer.import();
-
-    expect(setCollectionExtraMock).not.toHaveBeenCalled();
-    expect(result.skipped).toBe(4);
   });
 
   it('reads the mwnf3 hidden-museum and hidden-institution tables only', async () => {
-    const importer = new ThgHiddenMuseumImporter(context);
-    await importer.import();
+    await new ThgHiddenMuseumImporter(context).siteConfiguration();
 
     const sql = queryMock.mock.calls.map((call: unknown[]) => call[0] as string);
     expect(sql).toHaveLength(2);
@@ -166,7 +128,7 @@ describe('ThgHiddenMuseumImporter', () => {
     expect(sql.join('\n')).not.toContain('exhibition_hidden_sh_museums');
   });
 
-  it('still imports the hidden museums from a legacy copy without the institutions table', async () => {
+  it('still builds the hidden museums from a legacy copy without the institutions table', async () => {
     queryMock.mockImplementation(async (sql: string) => {
       if (sql.includes('exhibition_hidden_mwnf3_institutions')) {
         throw new Error(
@@ -176,29 +138,24 @@ describe('ThgHiddenMuseumImporter', () => {
       return [{ gallery_id: 56, partner_id: 'Mus81', country_id: 'dz' }];
     });
 
-    const importer = new ThgHiddenMuseumImporter(context);
-    const result = await importer.import();
-
-    expect(result.success).toBe(true);
-    expect(result.imported).toBe(1);
-    expect(result.warnings).toEqual([
+    expect(await built()).toEqual({
+      'mwnf3_thematic_gallery:thg_gallery:56': [
+        { backward_compatibility: 'mwnf3:museums:Mus81:dz', partner_id: 'partner-mus81-dz' },
+      ],
+    });
+    expect(logger.warning).toHaveBeenCalledWith(
       expect.stringContaining('exhibition_hidden_mwnf3_institutions'),
-    ]);
-    const extra = JSON.parse(setCollectionExtraMock.mock.calls[0][1] as string) as Record<
-      string,
-      Record<string, unknown>
-    >;
-    expect(extra.thg_gallery.hidden_partners).toEqual([
-      { backward_compatibility: 'mwnf3:museums:Mus81:dz', partner_id: 'partner-mus81-dz' },
-    ]);
+      undefined
+    );
   });
 
-  it('writes nothing in dry-run mode', async () => {
-    context.dryRun = true;
+  it('writes nothing on import', async () => {
+    const result = await new ThgHiddenMuseumImporter(context).import();
 
-    const importer = new ThgHiddenMuseumImporter(context);
-    await importer.import();
-
+    expect(result.success).toBe(true);
+    expect(result.imported).toBe(0);
+    expect(queryMock).not.toHaveBeenCalled();
+    expect(getCollectionExtraMock).not.toHaveBeenCalled();
     expect(setCollectionExtraMock).not.toHaveBeenCalled();
   });
 });

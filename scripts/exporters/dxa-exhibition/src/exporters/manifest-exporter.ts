@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { galleryProjectCode } from '../../../shared/site-configuration.mjs'
 
 interface ExhibitionTranslationRow {
   language_id: string
@@ -272,17 +273,34 @@ export class ManifestExporter extends BaseExporter {
     const homes = new Map(byProject)
     const collectionIds = [...bySiteCollection.keys()]
     if (collectionIds.length === 0) return homes
-    const rows = await this.db.query<SiteProjectRow>(
-      // Sorted so the first site wins, the same way on every export, should
-      // two sites ever share a project.
-      `SELECT c.id AS collection_id, p.id AS project_id
-       FROM collections c
-       JOIN projects p ON p.backward_compatibility =
-         CONCAT('mwnf3:projects:', JSON_UNQUOTE(JSON_EXTRACT(c.extra, '$.thg_gallery.mwnf3_project_id')))
-       WHERE c.id IN (${this.placeholders(collectionIds.length)})
-       ORDER BY c.id`,
-      collectionIds
-    )
+    // Each site's project is its gallery's `thg_gallery.mwnf3_project_id`, site
+    // configuration in the instance files (M16 E4b).
+    const keyBySite = new Map<string, string>()
+    for (const id of collectionIds) {
+      const code = galleryProjectCode(id)
+      if (code) keyBySite.set(id, `mwnf3:projects:${code}`.toLowerCase())
+    }
+    const keys = [...new Set(keyBySite.values())]
+    const projects =
+      keys.length === 0
+        ? []
+        : await this.db.query<{ id: string; backward_compatibility: string | null }>(
+            `SELECT id, backward_compatibility FROM projects
+             WHERE backward_compatibility IN (${this.placeholders(keys.length)})
+             ORDER BY id`,
+            keys
+          )
+    const projectByKey = new Map<string, string>()
+    for (const project of projects) {
+      const key = (project.backward_compatibility ?? '').toLowerCase()
+      if (!projectByKey.has(key)) projectByKey.set(key, project.id)
+    }
+    // Sorted so the first site wins, the same way on every export, should
+    // two sites ever share a project.
+    const rows: SiteProjectRow[] = [...keyBySite]
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([collection_id, key]) => ({ collection_id, project_id: projectByKey.get(key) ?? '' }))
+      .filter(row => row.project_id !== '')
     for (const row of rows) {
       const slug = bySiteCollection.get(row.collection_id)
       if (slug && !homes.has(row.project_id)) homes.set(row.project_id, slug)

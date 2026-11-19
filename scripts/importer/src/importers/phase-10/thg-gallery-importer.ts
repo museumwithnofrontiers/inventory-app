@@ -19,7 +19,10 @@
  * - collections (id, type, context_id, language_id, parent_id, internal_name,
  *                backward_compatibility, extra)
  *
- * The gallery anchor is written to collections.extra.thg_gallery:
+ * The gallery anchor is site configuration (M16 E4b, decision 6): it is not
+ * written to the inventory. `siteConfiguration()` builds it for the
+ * `site-config` command, which keeps it in the gallery's instance file as
+ * `extra.thg_gallery`:
  *
  *   { "mwnf3_project_id": "DCA", "slug": "carpets",
  *     "host": "https://carpets.museumwnf.org",
@@ -38,6 +41,7 @@
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 
 /**
  * Legacy thg_gallery structure
@@ -51,6 +55,9 @@ interface LegacyThgGallery {
   mwnf3_project_id: string | null;
   i18n_group_id: number | null;
   i18n_common_group_id: number | null;
+  /** legacy enum('A','H'): A = among the featured galleries */
+  featured?: string | null;
+  live_date?: Date | string | null;
 }
 
 /**
@@ -74,7 +81,31 @@ interface LegacyProjectType {
   is_exhibition: number;
 }
 
-export class ThgGalleryImporter extends BaseImporter {
+export class ThgGalleryImporter extends BaseImporter implements SiteConfigBuilder {
+  /**
+   * Each gallery's anchor, for its instance file (M16 E4b): built from the
+   * legacy tables alone, as the import read them.
+   */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    await this.loadGalleryHosts();
+    const galleries = await this.context.legacyDb.query<LegacyThgGallery>(
+      `SELECT gallery_id, project_id, name, link, sort_order,
+              mwnf3_project_id, i18n_group_id, i18n_common_group_id
+       FROM mwnf3_thematic_gallery.thg_gallery
+       ORDER BY sort_order, gallery_id`
+    );
+    const entries: SiteConfigEntry[] = [];
+    for (const legacy of galleries) {
+      const anchor = this.buildAnchor(legacy);
+      if (Object.keys(anchor).length === 0) continue;
+      entries.push({
+        collection: `mwnf3_thematic_gallery:thg_gallery:${legacy.gallery_id}`,
+        extra: { thg_gallery: anchor },
+      });
+    }
+    return entries;
+  }
+
   private galleriesRootId: string | null = null;
   private exhibitionsRootId: string | null = null;
   /** Gallery IDs that have rows in exhibition_i18n */
@@ -134,7 +165,7 @@ export class ThgGalleryImporter extends BaseImporter {
       // Query galleries from legacy database
       const galleries = await this.context.legacyDb.query<LegacyThgGallery>(
         `SELECT gallery_id, project_id, name, link, sort_order,
-                mwnf3_project_id, i18n_group_id, i18n_common_group_id
+                mwnf3_project_id, i18n_group_id, i18n_common_group_id, featured, live_date
          FROM mwnf3_thematic_gallery.thg_gallery
          ORDER BY sort_order, gallery_id`
       );
@@ -145,13 +176,9 @@ export class ThgGalleryImporter extends BaseImporter {
         try {
           const backwardCompat = `mwnf3_thematic_gallery:thg_gallery:${legacy.gallery_id}`;
 
-          const anchor = this.buildAnchor(legacy);
-
           // Check if already exists as collection (use async for database fallback).
-          // The anchor is still refreshed so a re-run picks up legacy edits to the
-          // slug, host or i18n groups without recreating the collection.
           if (await this.entityExistsAsync(backwardCompat, 'collection')) {
-            await this.refreshAnchor(backwardCompat, anchor);
+            await this.writeFlags(backwardCompat, legacy);
             result.skipped++;
             this.showSkipped();
             continue;
@@ -225,10 +252,12 @@ export class ThgGalleryImporter extends BaseImporter {
             language_id: defaultLanguageId,
             parent_id: parentId,
             type: collectionType,
-            extra: Object.keys(anchor).length > 0 ? JSON.stringify({ thg_gallery: anchor }) : null,
+            // The anchor is site configuration, kept in the instance file (M16 E4b).
+            extra: null,
           });
 
           this.registerEntity(collectionId, backwardCompat, 'collection');
+          await this.writeFlags(backwardCompat, legacy);
 
           result.imported++;
           this.showProgress();
@@ -323,25 +352,20 @@ export class ThgGalleryImporter extends BaseImporter {
     return anchor;
   }
 
+
   /**
-   * Write the anchor onto an already-imported gallery collection, preserving any
-   * other keys previously stored in extra.
+   * The gallery's editorial flags (M16 E4a): featured (legacy's `A`) and its
+   * live date, the only settings the inventory keeps.
    */
-  private async refreshAnchor(backwardCompat: string, anchor: ThgGalleryAnchor): Promise<void> {
-    if (Object.keys(anchor).length === 0 || this.isDryRun || this.isSampleOnlyMode) {
-      return;
-    }
-
+  private async writeFlags(backwardCompat: string, legacy: LegacyThgGallery): Promise<void> {
+    if (this.isDryRun || this.isSampleOnlyMode) return;
     const collectionId = await this.getEntityUuidAsync(backwardCompat, 'collection');
-    if (!collectionId) {
-      return;
-    }
-
-    const existing = (await this.context.strategy.getCollectionExtra(collectionId)) ?? {};
-    await this.context.strategy.setCollectionExtra(
-      collectionId,
-      JSON.stringify({ ...existing, thg_gallery: anchor })
-    );
+    if (!collectionId) return;
+    const flags: { featured?: boolean; published_at?: string } = {};
+    if (legacy.featured === 'A' || legacy.featured === 'H') flags.featured = legacy.featured === 'A';
+    const published = galleryDate(legacy.live_date);
+    if (published) flags.published_at = published;
+    await this.context.strategy.setCollectionFlags(collectionId, flags);
   }
 
   /**
@@ -385,4 +409,15 @@ export class ThgGalleryImporter extends BaseImporter {
       .replace(/[\s_-]+/g, '_')
       .replace(/^-+|-+$/g, '');
   }
+}
+
+/**
+ * A legacy DATE as the inventory stores it (Y-m-d). The driver reads it as a
+ * Date at midnight UTC; a string is taken as written.
+ */
+export function galleryDate(value: Date | string | null | undefined): string | null {
+  if (value === null || value === undefined || value === '') return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
+  const match = /^(d{4}-d{2}-d{2})/.exec(value);
+  return match ? match[1]! : null;
 }

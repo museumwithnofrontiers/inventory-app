@@ -3,5 +3,27 @@
   "slug": "communication",
   "name": "Communication and Transportation",
   "collection_id": "609a1a94-54d6-55be-bb31-215bc58ad178",
-  "package_name": "@museumwnf/communication-data"
+  "package_name": "@museumwnf/communication-data",
+  "collections": {
+    "609a1a94-54d6-55be-bb31-215bc58ad178": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://communication.museumwnf.org",
+          "slug": "communication_and_transportation",
+          "i18n_group_id": 30,
+          "mwnf3_project_id": "COM",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/14/1.jpg",
+          "banner_item": "mwnf#obj#BAR;pt;Mus11_A;22",
+          "banner_image": "thematic_gallery/thg_galleries/14/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

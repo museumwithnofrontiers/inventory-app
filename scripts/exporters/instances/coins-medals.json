@@ -3,5 +3,27 @@
   "slug": "coins-medals",
   "name": "Coins and Medals",
   "collection_id": "80c45a07-c4a2-5ddb-acad-8a2515210c35",
-  "package_name": "@museumwnf/coins-medals-data"
+  "package_name": "@museumwnf/coins-medals-data",
+  "collections": {
+    "80c45a07-c4a2-5ddb-acad-8a2515210c35": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://coins-medals.museumwnf.org",
+          "slug": "coins_and_medals",
+          "i18n_group_id": 29,
+          "mwnf3_project_id": "COI",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/13/1.jpg",
+          "banner_item": "mwnf#obj#EPM;kw;Mus21;32",
+          "banner_image": "thematic_gallery/thg_galleries/13/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

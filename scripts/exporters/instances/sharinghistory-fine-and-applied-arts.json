@@ -7,5 +7,34 @@
   "collection_id": "6b99dfaa-ab1c-5153-b0c4-a5823a98f95c",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-fine-and-applied-arts-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=5"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=5",
+  "collections": {
+    "6b99dfaa-ab1c-5153-b0c4-a5823a98f95c": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/5/item_logo_15.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=GR_01;gr&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/5/item_logo_25.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=TR_02;tr&shpro=AWE&",
+            "display_order": 2
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/5/item_logo_35.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=ES_01;es&shpro=AWE&",
+            "display_order": 3
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

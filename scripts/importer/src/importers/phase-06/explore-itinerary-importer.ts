@@ -16,7 +16,8 @@
  * - parent_itineraries_id → parent_id (for nested itineraries)
  * - cycle → link to thematic cycle collection
  * - type = 'itinerary' (or 'exhibition trail' for sub-itineraries)
- * - type, itinorder, location_home_link → extra.explore_itinerary (see itineraryExtra)
+ * - type, itinorder, location_home_link, country → explore_itinerary (see itineraryExtra): site
+ *   configuration (M16 E4b, decision 6), kept in explore.json by the `site-config` command
  *
  * It writes no translation: the derived title is not legacy's. Every
  * translation, English included, comes from explore_itineraries_langs through
@@ -32,6 +33,7 @@
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 import type { ImportResult } from '../../core/types.js';
 
 /**
@@ -117,7 +119,7 @@ interface LegacyCycleInfo {
   cycleDescription: string;
 }
 
-export class ExploreItineraryImporter extends BaseImporter {
+export class ExploreItineraryImporter extends BaseImporter implements SiteConfigBuilder {
   private exploreContextId!: string;
   private exploreByItineraryId: string | null = null;
   private defaultLanguageId: string = 'eng';
@@ -209,7 +211,6 @@ export class ExploreItineraryImporter extends BaseImporter {
       // Already imported: only make sure it carries the legacy fields, which
       // collections imported before they were kept lack.
       if (await this.entityExistsAsync(backwardCompat, 'collection')) {
-        await this.ensureItineraryExtra(backwardCompat, legacy);
         result.skipped++;
         this.showSkipped();
         return;
@@ -261,7 +262,8 @@ export class ExploreItineraryImporter extends BaseImporter {
         longitude,
         map_zoom: legacy.zoom ?? null,
         country_id: null,
-        extra: JSON.stringify({ explore_itinerary: itineraryExtra(legacy) }),
+        // explore_itinerary is site configuration (M16 E4b).
+        extra: null,
       });
 
       this.registerEntity(collectionId, backwardCompat, 'collection');
@@ -280,24 +282,18 @@ export class ExploreItineraryImporter extends BaseImporter {
     }
   }
 
-  /**
-   * Merges `extra.explore_itinerary` into an existing itinerary collection,
-   * keeping whatever else its `extra` holds. Writes nothing when it is already
-   * there, so a re-run is idempotent.
-   */
-  private async ensureItineraryExtra(backwardCompat: string, legacy: LegacyItinerary): Promise<void> {
-    if (this.isDryRun || this.isSampleOnlyMode) return;
-    const collectionId = await this.getEntityUuidAsync(backwardCompat, 'collection');
-    if (!collectionId) return;
-
-    const wanted = itineraryExtra(legacy);
-    const current = (await this.context.strategy.getCollectionExtra(collectionId)) ?? {};
-    if (JSON.stringify(current['explore_itinerary']) === JSON.stringify(wanted)) return;
-
-    await this.context.strategy.setCollectionExtra(
-      collectionId,
-      JSON.stringify({ ...current, explore_itinerary: wanted })
+  /** Each itinerary's legacy kind and order, for explore.json (M16 E4b). */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    const itineraries = await this.context.legacyDb.query<LegacyItinerary>(
+      `SELECT ei.itineraries_id, ei.cycle, ei.country, ei.regionId, ei.locationId, ei.monumentId,
+              ei.parent_itineraries_id, ei.type, ei.itinorder, ei.location_home_link, ei.path
+       FROM mwnf3_explore.explore_itineraries ei
+       ORDER BY ei.itineraries_id`
     );
+    return itineraries.map((legacy) => ({
+      collection: `mwnf3_explore:itinerary:${legacy.itineraries_id}`,
+      extra: { explore_itinerary: itineraryExtra(legacy) },
+    }));
   }
 
   /**

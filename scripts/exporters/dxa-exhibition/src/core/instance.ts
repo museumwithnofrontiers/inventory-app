@@ -40,6 +40,7 @@ const KNOWN_FIELDS = new Set([
   'collection_id',
   'package_name',
   'languages_enabled',
+  'collections',
 ])
 
 /**

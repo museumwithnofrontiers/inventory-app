@@ -3,5 +3,27 @@
   "slug": "religious-life",
   "name": "Religious Life",
   "collection_id": "5a36f0a4-1bbb-57ed-9450-4535e888784a",
-  "package_name": "@museumwnf/religious-life-data"
+  "package_name": "@museumwnf/religious-life-data",
+  "collections": {
+    "5a36f0a4-1bbb-57ed-9450-4535e888784a": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://religious-life.museumwnf.org",
+          "slug": "religious_life",
+          "i18n_group_id": 47,
+          "mwnf3_project_id": "REL",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/33/1.jpg",
+          "banner_item": "mwnf#obj#BAR;hr;Mus11_A;20",
+          "banner_image": "thematic_gallery/thg_galleries/33/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

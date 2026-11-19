@@ -9,5 +9,18 @@
     "f446146a-791c-5ab5-a762-4bd0263541be"
   ],
   "package_name": "@museumwnf/baroqueart-absolutism-data",
-  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/absolutism/"
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/absolutism/",
+  "collections": {
+    "7b1abeea-6930-5264-b1ee-9c77bec1e5b9": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://baroqueart.museumwnf.org/exhibitions/BAR/absolutism/",
+          "new_status": "N",
+          "project_id": "BAR",
+          "portal_image": "database/exhibitions/46/portal_image/1.jpg",
+          "display_order": 1
+        }
+      }
+    }
+  }
 }

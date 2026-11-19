@@ -3,5 +3,27 @@
   "slug": "textiles",
   "name": "Textiles",
   "collection_id": "03bb8011-e888-5310-8a5e-e58f63ccf810",
-  "package_name": "@museumwnf/textiles-data"
+  "package_name": "@museumwnf/textiles-data",
+  "collections": {
+    "03bb8011-e888-5310-8a5e-e58f63ccf810": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://textiles.museumwnf.org",
+          "slug": "textiles",
+          "i18n_group_id": 51,
+          "mwnf3_project_id": "TEX",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/37/1.jpg",
+          "banner_item": "mwnf#obj#EPM;us;Mus21;3",
+          "banner_image": "thematic_gallery/thg_galleries/37/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

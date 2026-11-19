@@ -10,5 +10,18 @@
     "3b73a306-1129-5c8d-acba-8e34a39e132f"
   ],
   "package_name": "@museumwnf/islamicart-water-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/water/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/water/",
+  "collections": {
+    "e0d404ea-dbc1-591a-86a5-75265066d6f0": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/water/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/22/portal_image/1.jpg",
+          "display_order": 10
+        }
+      }
+    }
+  }
 }

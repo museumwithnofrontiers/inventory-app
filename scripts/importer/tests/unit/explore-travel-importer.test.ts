@@ -328,15 +328,16 @@ describe('ExploreTravelImporter', () => {
     };
   });
 
-  it("writes every block once on the site root, with its scope, keeping the root's other extra", async () => {
-    const result = await new ExploreTravelImporter(context).import();
+  const travelOf = async (importer: ExploreTravelImporter) => {
+    const entries = await importer.siteConfiguration();
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.collection).toBe('mwnf3_explore:root');
+    expect(Object.keys(entries[0]!.extra ?? {})).toEqual(['explore_travel']);
+    return (entries[0]!.extra as { explore_travel: Record<string, unknown[]> }).explore_travel;
+  };
 
-    expect(result.success).toBe(true);
-    const [id, json] = vi.mocked(strategy.setCollectionExtra).mock.calls[0]!;
-    expect(id).toBe('root-uuid');
-    const extra = JSON.parse(json);
-    expect(extra.explore_home).toEqual({ banners: [] });
-    const travel = extra.explore_travel;
+  it('builds every block once for the site root, with its scope', async () => {
+    const travel = await travelOf(new ExploreTravelImporter(context));
 
     expect(travel.books).toEqual([
       {
@@ -404,13 +405,20 @@ describe('ExploreTravelImporter', () => {
     ]);
   });
 
-  it('fails without the site root', async () => {
-    const result = await new ExploreTravelImporter({
-      ...context,
-      tracker: new UnifiedTracker(),
-    }).import();
+  it('names the publication a Travel Book links to', async () => {
+    tracker.set('mwnf3:bookbase:4', 'publication-uuid', 'publication');
 
-    expect(result.success).toBe(false);
+    const travel = await travelOf(new ExploreTravelImporter(context));
+
+    expect(travel.books[0]).toMatchObject({ id: 10, publication_id: 'publication-uuid' });
+  });
+
+  it('no longer writes the travel layer on import', async () => {
+    const result = await new ExploreTravelImporter(context).import();
+
+    expect(result.success).toBe(true);
+    expect(result.imported).toBe(0);
     expect(strategy.setCollectionExtra).not.toHaveBeenCalled();
+    expect(context.legacyDb.query).not.toHaveBeenCalled();
   });
 });

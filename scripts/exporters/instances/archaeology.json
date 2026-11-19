@@ -3,5 +3,27 @@
   "slug": "archaeology",
   "name": "Archaeological Objects",
   "collection_id": "f38a24de-240c-5463-b14d-e1a5f826b32d",
-  "package_name": "@museumwnf/archaeology-data"
+  "package_name": "@museumwnf/archaeology-data",
+  "collections": {
+    "f38a24de-240c-5463-b14d-e1a5f826b32d": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://archaeology.museumwnf.org",
+          "slug": "archaeological_objects",
+          "i18n_group_id": 22,
+          "mwnf3_project_id": "ARC",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/5/1.jpg",
+          "banner_item": "sh#obj#AWE;uk;107",
+          "banner_image": "thematic_gallery/thg_galleries/5/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

@@ -7,5 +7,29 @@
   "collection_id": "a64d0674-78bf-5ac3-97ad-7d66056c91e2",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-reforms-and-social-changes-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=10"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=10",
+  "collections": {
+    "a64d0674-78bf-5ac3-97ad-7d66056c91e2": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/10/item_logo_110.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=FR_01;fr&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/10/item_logo_210.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=TN_01;tn&shpro=AWE&",
+            "display_order": 2
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

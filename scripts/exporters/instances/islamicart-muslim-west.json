@@ -12,5 +12,18 @@
     "7712e497-33e4-5529-91c3-47abff00f87c"
   ],
   "package_name": "@museumwnf/islamicart-muslim-west-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/muslim_west/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/muslim_west/",
+  "collections": {
+    "82d1ab69-c61e-55a9-920a-bf67ddfb6bda": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/muslim_west/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/27/portal_image/1.jpg",
+          "display_order": 7
+        }
+      }
+    }
+  }
 }

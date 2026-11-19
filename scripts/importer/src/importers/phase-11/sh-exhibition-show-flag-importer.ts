@@ -1,34 +1,27 @@
 /**
  * Sharing History Exhibition Show-Flag Importer
  *
- * Stamps the legacy `sh_exhibitions.show` publication flag (and related list
- * metadata) into `collection_translations.extra.legacy_exhibition` for every
- * SH exhibition collection — mirroring what
- * Mwnf3ExhibitionTranslationImporter persists for mwnf3 exhibitions.
+ * Sets `collections.visible` from the legacy `sh_exhibitions.show` publication
+ * flag (`y` shown, `n` not) on every SH exhibition collection, as
+ * Mwnf3ExhibitionTranslationImporter does for mwnf3 exhibitions (M16 E4a).
+ * Exporters leave an unpublished exhibition out of a package by that flag
+ * (computeUnpublishedExhibitionSubtree), so hidden SH exhibitions (e.g. AWE
+ * exhibition 2 "Political Context") never leak into a data-package.
  *
- * Why: exporters exclude unpublished exhibitions structurally via
- * `collection_translations.extra.legacy_exhibition.show === 'n'`
- * (computeUnpublishedExhibitionSubtree). ShExhibitionImporter reads `show`
- * from the legacy table but never persisted it, so hidden SH exhibitions
- * (e.g. AWE exhibition 2 "Political Context") would leak into a data-package.
+ * The rest of the exhibition's list metadata (`project_id`, `new_status`) is
+ * site configuration (M16 E4b, decision 6): `siteConfiguration()` builds it
+ * for the `site-config` command, which keeps it in the exhibition's instance
+ * file as `translation_extra.legacy_exhibition`, the same on every text.
  *
- * The flag is MERGED into the existing `extra` of every translation row of
- * the collection (all languages): other keys — bibliography, see-also,
- * quotation, ... — are preserved, and an existing `legacy_exhibition` object
- * is extended rather than replaced.
- *
- * Standalone (`--only sh-exhibition-show-flag`) and idempotent; also safe at
- * the end of a full fresh import.
+ * Standalone (`--only sh-exhibition-show-flag`) and idempotent.
  *
  * Dependencies:
  * - ShExhibitionImporter (exhibition collections must exist)
- * - ShExhibitionTranslationImporter (translation rows must exist to stamp)
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
-import { sanitizeJsonField } from '../../utils/html-to-markdown.js';
-import { jsonValuesEqual } from '../../utils/json-equal.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 
 const SH_SCHEMA = 'mwnf3_sharing_history';
 
@@ -39,28 +32,49 @@ interface ShLegacyExhibitionFlagRow {
   new_status: string | null;
 }
 
-export class ShExhibitionShowFlagImporter extends BaseImporter {
+export class ShExhibitionShowFlagImporter extends BaseImporter implements SiteConfigBuilder {
   getName(): string {
     return 'ShExhibitionShowFlagImporter';
+  }
+
+  private async exhibitions(): Promise<ShLegacyExhibitionFlagRow[]> {
+    return this.context.legacyDb.query<ShLegacyExhibitionFlagRow>(
+      `SELECT exhibition_id, project_id, \`show\`, new_status
+       FROM ${SH_SCHEMA}.sh_exhibitions
+       ORDER BY project_id, exhibition_id`
+    );
   }
 
   async import(): Promise<ImportResult> {
     const result = this.createResult();
 
     try {
-      this.logInfo('Stamping legacy show flags on SH exhibition collection translations...');
-
-      const exhibitions = await this.context.legacyDb.query<ShLegacyExhibitionFlagRow>(
-        `SELECT exhibition_id, project_id, \`show\`, new_status
-         FROM ${SH_SCHEMA}.sh_exhibitions
-         ORDER BY project_id, exhibition_id`
-      );
-
+      this.logInfo('Setting the SH exhibitions visible from their legacy show flag...');
+      const exhibitions = await this.exhibitions();
       this.logInfo(`Found ${exhibitions.length} SH exhibitions`);
 
       for (const legacy of exhibitions) {
+        const collectionBackwardCompat = `${SH_SCHEMA}:sh_exhibitions:${legacy.exhibition_id}`;
         try {
-          await this.stampExhibition(legacy, result);
+          const collectionId = await this.getEntityUuidAsync(collectionBackwardCompat, 'collection');
+          if (!collectionId) {
+            this.logWarning(
+              `SH exhibition collection not found (${collectionBackwardCompat}), skipping — run ShExhibitionImporter first`
+            );
+            result.skipped++;
+            this.showSkipped();
+            continue;
+          }
+          if (legacy.show !== 'y' && legacy.show !== 'n') {
+            result.skipped++;
+            this.showSkipped();
+            continue;
+          }
+          if (!this.isDryRun && !this.isSampleOnlyMode) {
+            await this.context.strategy.setCollectionFlags(collectionId, { visible: legacy.show === 'y' });
+          }
+          result.imported++;
+          this.showProgress();
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           result.errors.push(`SH exhibition ${legacy.exhibition_id}: ${message}`);
@@ -72,7 +86,7 @@ export class ShExhibitionShowFlagImporter extends BaseImporter {
       this.showSummary(result.imported, result.skipped, result.errors.length);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Failed to stamp SH exhibition show flags: ${message}`);
+      result.errors.push(`Failed to set the SH exhibitions visible: ${message}`);
       this.logError('ShExhibitionShowFlagImporter', message);
       this.showError();
     }
@@ -81,98 +95,30 @@ export class ShExhibitionShowFlagImporter extends BaseImporter {
     return result;
   }
 
-  private async stampExhibition(
-    legacy: ShLegacyExhibitionFlagRow,
-    result: ImportResult
-  ): Promise<void> {
-    const collectionBackwardCompat = `${SH_SCHEMA}:sh_exhibitions:${legacy.exhibition_id}`;
-    const collectionId = await this.getEntityUuidAsync(collectionBackwardCompat, 'collection');
-
-    if (!collectionId) {
-      this.logWarning(
-        `SH exhibition collection not found (${collectionBackwardCompat}), skipping — run ShExhibitionImporter first`
-      );
-      result.skipped++;
-      this.showSkipped();
-      return;
+  /**
+   * Each SH exhibition's list metadata, the same on every one of its texts:
+   * for an exhibition that has a text (a row in sh_exhibitionnames).
+   */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    const named = new Set(
+      (
+        await this.context.legacyDb.query<{ exhibition_id: number }>(
+          `SELECT DISTINCT exhibition_id FROM ${SH_SCHEMA}.sh_exhibitionnames`
+        )
+      ).map((row) => row.exhibition_id)
+    );
+    const entries: SiteConfigEntry[] = [];
+    for (const legacy of await this.exhibitions()) {
+      if (!named.has(legacy.exhibition_id)) continue;
+      const legacyExhibition: Record<string, unknown> = {};
+      if (legacy.project_id) legacyExhibition.project_id = legacy.project_id;
+      if (legacy.new_status) legacyExhibition.new_status = legacy.new_status;
+      if (Object.keys(legacyExhibition).length === 0) continue;
+      entries.push({
+        collection: `${SH_SCHEMA}:sh_exhibitions:${legacy.exhibition_id}`,
+        translationExtra: { legacy_exhibition: legacyExhibition },
+      });
     }
-
-    // Same shape as Mwnf3ExhibitionTranslationImporter's extra.legacy_exhibition.
-    const legacyExhibition: Record<string, unknown> = {};
-    if (legacy.project_id) legacyExhibition.project_id = legacy.project_id;
-    if (legacy.show) legacyExhibition.show = legacy.show;
-    if (legacy.new_status) legacyExhibition.new_status = legacy.new_status;
-
-    if (Object.keys(legacyExhibition).length === 0) {
-      result.skipped++;
-      this.showSkipped();
-      return;
-    }
-
-    if (this.isDryRun || this.isSampleOnlyMode) {
-      this.logInfo(
-        `[${this.isSampleOnlyMode ? 'SAMPLE' : 'DRY-RUN'}] Would stamp legacy_exhibition ${JSON.stringify(legacyExhibition)} on ${collectionBackwardCompat}`
-      );
-      result.imported++;
-      this.showProgress();
-      return;
-    }
-
-    const languageIds = await this.context.strategy.getCollectionTranslationLanguages(collectionId);
-    if (languageIds.length === 0) {
-      this.logWarning(
-        `No translations found for ${collectionBackwardCompat} — run ShExhibitionTranslationImporter first`
-      );
-      result.skipped++;
-      this.showSkipped();
-      return;
-    }
-
-    let changed = false;
-    for (const langId of languageIds) {
-      const existing = await this.context.strategy.getCollectionTranslationExtra(
-        collectionId,
-        langId
-      );
-      const existingLegacyExhibition =
-        existing && typeof existing.legacy_exhibition === 'object' && existing.legacy_exhibition
-          ? (existing.legacy_exhibition as Record<string, unknown>)
-          : {};
-
-      const mergedLegacyExhibition = { ...existingLegacyExhibition, ...legacyExhibition };
-
-      // The whole `extra` is written, so the whole `extra` decides. `raw` is
-      // what's actually sent to setCollectionTranslationExtra, which
-      // sanitises its own argument as every set*Extra* strategy method does;
-      // sanitising here too, before the call, would double-convert on every
-      // write — `merged` sanitises separately, only to know what the write
-      // will persist, so it can be compared against what's already there.
-      // Compared with a key-order-independent check: MySQL's JSON column
-      // does not preserve insertion order, so `existing`'s keys rarely match
-      // a freshly-built object's own order even when every value is
-      // identical — a plain JSON.stringify comparison never converges.
-      const raw = { ...(existing || {}), legacy_exhibition: mergedLegacyExhibition };
-      const merged = sanitizeJsonField(raw);
-
-      // Idempotency: skip the write when nothing would change.
-      if (jsonValuesEqual(existing || {}, merged)) {
-        continue;
-      }
-      await this.context.strategy.setCollectionTranslationExtra(
-        collectionId,
-        langId,
-        JSON.stringify(raw)
-      );
-      changed = true;
-    }
-
-    if (changed) {
-      this.logInfo(`Stamped legacy_exhibition on ${collectionBackwardCompat}`);
-      result.imported++;
-      this.showProgress();
-    } else {
-      result.skipped++;
-      this.showSkipped();
-    }
+    return entries;
   }
 }

@@ -3,5 +3,27 @@
   "slug": "sculptures",
   "name": "Sculptures",
   "collection_id": "decbe529-2594-59e2-ba50-d15b9ea9381b",
-  "package_name": "@museumwnf/sculptures-data"
+  "package_name": "@museumwnf/sculptures-data",
+  "collections": {
+    "decbe529-2594-59e2-ba50-d15b9ea9381b": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://sculptures.museumwnf.org",
+          "slug": "sculptures",
+          "i18n_group_id": 49,
+          "mwnf3_project_id": "SCU",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/35/1.jpg",
+          "banner_item": "sh#obj#AWE;tr;184",
+          "banner_image": "thematic_gallery/thg_galleries/35/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

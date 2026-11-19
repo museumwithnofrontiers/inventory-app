@@ -159,7 +159,6 @@ import {
   CollectionPurposeBackfillImporter,
   ExtraBitBufferBackfillImporter,
   MuseumProjectLinkBackfillImporter,
-  ExhibitionI18nTextBackfillImporter,
   ExploreMonumentCountryBackfillImporter,
   CollectionCreditsImporter,
   ItemTranslationColumnsImporter,
@@ -167,6 +166,7 @@ import {
   PictureCreditsImporter,
   CollectionRelationsImporter,
   CollectionFlagsImporter,
+  SiteConfigurationOutImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -191,6 +191,12 @@ import {
 } from '../importers/index.js';
 import { ImageSyncTool } from '../tools/image-sync.js';
 import { resolveImageTargetDir } from '../tools/image-target-dir.js';
+import {
+  buildSiteConfiguration,
+  compareSiteConfiguration,
+  inventorySiteConfiguration,
+  writeSiteConfiguration,
+} from '../site-config/run.js';
 
 // Load environment variables
 dotenv.config({ path: resolve(process.cwd(), '.env') });
@@ -1209,14 +1215,6 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     dependencies: ['project', 'partner'],
   },
   {
-    key: 'exhibition-i18n-text-backfill',
-    name: 'Exhibition i18n Text Backfill',
-    description:
-      'Backfill exhibition_i18n subtitle/heading/about into collection_translations.extra on an already-populated database, so exhibition exporters can render the three separately',
-    importerClass: ExhibitionI18nTextBackfillImporter,
-    dependencies: ['thg-gallery-translation'],
-  },
-  {
     key: 'explore-monument-country-backfill',
     name: 'Explore Monument Country Backfill',
     description:
@@ -1280,6 +1278,16 @@ const ALL_IMPORTERS: ImporterConfig[] = [
       'Move the collection flags (exhibition show, Explore theme status, gallery featured and live date) out of collection_translations.extra to visible, featured and published_at, and drop the legacy codes nothing reads (M16 E4a, #2650)',
     importerClass: CollectionFlagsImporter,
     // The exhibition, gallery and Explore importers write these keys.
+    runsLast: true,
+  },
+  {
+    key: 'site-configuration-out',
+    name: 'Site Configuration Out',
+    description:
+      "Take the sites' configuration (thg_gallery, legacy_exhibition, exhibition_i18n, Explore's home and itinerary records, logos) out of an inventory imported before it moved to the instance files (M16 E4b, #2673); a fresh import holds none",
+    importerClass: SiteConfigurationOutImporter,
+    // After collection-flags, so the flags an older import left in these
+    // blocks have reached their columns.
     runsLast: true,
   },
   // Phase 12: Publications (legacy books; after every other phase, before the project cleanup)
@@ -2163,6 +2171,55 @@ program
       console.log(chalk.red(`\n❌ Image sync failed: ${message}`));
       console.log(chalk.red(error instanceof Error ? error.stack : ''));
       process.exit(1);
+    }
+  });
+
+program
+  .command('site-config')
+  .description(
+    "Write the sites' configuration from the legacy database (SELECT only) into the exporters' instance files (M16 E4b); not part of import"
+  )
+  .option('--instances <dir>', 'The instance files directory', '../exporters/instances')
+  .option(
+    '--check',
+    'Compare what it builds with what the inventory database still holds in extra, and write nothing'
+  )
+  .action(async (options: { instances: string; check?: boolean }) => {
+    const logger = new FileLogger('SiteConfig', 'logs');
+    const legacyDb = new LegacyDatabase();
+    try {
+      await legacyDb.connect();
+      const built = await buildSiteConfiguration(legacyDb, logger);
+      console.log(chalk.green(`✓ Built the site configuration of ${built.records.size} collection(s)`));
+
+      if (options.check) {
+        const newDb = await createNewDbConnection();
+        try {
+          const held = await inventorySiteConfiguration(async (sql) => {
+            const [rows] = await newDb.execute<mysql.RowDataPacket[]>(sql);
+            return rows as Array<Record<string, unknown>>;
+          });
+          const lines = compareSiteConfiguration(built.records, held, built.keys);
+          for (const line of lines) console.log(line);
+          console.log(
+            lines.length === 0
+              ? chalk.green(`✓ Equal to the inventory's ${held.size} collection(s)`)
+              : chalk.red(`❌ ${lines.length} difference(s) with the inventory`)
+          );
+          if (lines.length > 0) process.exitCode = 1;
+        } finally {
+          await newDb.end();
+        }
+      } else {
+        const changed = writeSiteConfiguration(built, resolve(process.cwd(), options.instances));
+        console.log(chalk.green(`✓ ${changed.length} instance file(s) changed: ${changed.join(', ') || 'none'}`));
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.log(chalk.red(`\n❌ site-config failed: ${message}`));
+      process.exitCode = 1;
+    } finally {
+      await legacyDb.disconnect();
     }
   });
 

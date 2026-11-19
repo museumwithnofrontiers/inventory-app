@@ -3,5 +3,27 @@
   "slug": "architectural-elements",
   "name": "Architectural Elements",
   "collection_id": "7e6bf0d0-fc65-528e-a454-e02f4928bf91",
-  "package_name": "@museumwnf/architectural-elements-data"
+  "package_name": "@museumwnf/architectural-elements-data",
+  "collections": {
+    "7e6bf0d0-fc65-528e-a454-e02f4928bf91": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://architectural-elements.museumwnf.org",
+          "slug": "architectural_elements",
+          "i18n_group_id": 23,
+          "mwnf3_project_id": "ARH",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/6/1.jpg",
+          "banner_item": "mwnf#obj#EPM;dn;Mus21;17",
+          "banner_image": "thematic_gallery/thg_galleries/6/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

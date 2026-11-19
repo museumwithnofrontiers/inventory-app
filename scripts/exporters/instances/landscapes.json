@@ -3,5 +3,27 @@
   "slug": "landscapes",
   "name": "Landscapes",
   "collection_id": "a2313f76-4eef-542a-9570-c97b2bd331f2",
-  "package_name": "@museumwnf/landscapes-data"
+  "package_name": "@museumwnf/landscapes-data",
+  "collections": {
+    "a2313f76-4eef-542a-9570-c97b2bd331f2": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://landscapes.museumwnf.org",
+          "slug": "landscapes",
+          "i18n_group_id": 36,
+          "mwnf3_project_id": "LAN",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/22/1.jpg",
+          "banner_item": "mwnf#obj#BAR;cz;Mus11;25",
+          "banner_image": "thematic_gallery/thg_galleries/22/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

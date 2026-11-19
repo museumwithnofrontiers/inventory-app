@@ -7,5 +7,34 @@
   "collection_id": "5760ea9a-dc6f-52b5-bfd7-2c63dd3da757",
   "partner_ids": [],
   "package_name": "@museumwnf/sharinghistory-cities-and-urban-spaces-data",
-  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=3"
+  "legacy_url": "https://sharinghistory.museumwnf.org/exhibitions/AWE/exh_items.php?eId=3",
+  "collections": {
+    "5760ea9a-dc6f-52b5-bfd7-2c63dd3da757": {
+      "extra": {
+        "logos": [
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/3/item_logo_13.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=HU_01;hu&shpro=AWE&",
+            "display_order": 1
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/3/item_logo_23.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=LB_01;lb&shpro=AWE&",
+            "display_order": 2
+          },
+          {
+            "file": "sharing_history/sh_exhibitions/exhibitions/AWE/3/item_logo_33.png",
+            "link": "https://sharinghistory.museumwnf.org/pm_partner.php?id=PT_01;pt&shpro=AWE&",
+            "display_order": 3
+          }
+        ]
+      },
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    }
+  }
 }

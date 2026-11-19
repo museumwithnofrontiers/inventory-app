@@ -32,6 +32,7 @@
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { EXPLORE_ROOT_KEY } from './explore-root-collections-importer.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 import { exploreScope, type ExploreScope, type ExploreScopeColumns } from './explore-scope.js';
 
 type Texts = Record<string, Record<string, string>>;
@@ -132,24 +133,23 @@ export function bookCover(covers: BookCoverRow[]): string | null {
   return null;
 }
 
-export class ExploreTravelImporter extends BaseImporter {
+export class ExploreTravelImporter extends BaseImporter implements SiteConfigBuilder {
   private languages = new Map<string, string | null>();
 
   getName(): string {
     return 'ExploreTravelImporter';
   }
 
+  /** The import writes nothing: the travel layer is site configuration (M16 E4b). */
   async import(): Promise<ImportResult> {
     const result = this.createResult();
+    this.logInfo('The Explore travel layer is site configuration: run the site-config command');
+    return result;
+  }
 
-    try {
-      const rootId = await this.getEntityUuidAsync(EXPLORE_ROOT_KEY, 'collection');
-      if (!rootId) {
-        throw new Error(
-          `Explore root not found (${EXPLORE_ROOT_KEY}). Run ExploreRootCollectionsImporter first.`
-        );
-      }
-
+  /** The travel layer, for explore.json (M16 E4b, decision 6). */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    {
       const travel = {
         books: await this.books(),
         tours: await this.tours(),
@@ -160,27 +160,21 @@ export class ExploreTravelImporter extends BaseImporter {
       };
       for (const [block, records] of Object.entries(travel)) {
         this.logInfo(`${block}: ${records.length}`);
-        result.imported += records.length;
       }
-
-      if (this.isDryRun || this.isSampleOnlyMode) {
-        return result;
+      // Each Travel Book names the publication its links point at (the legacy
+      // books id of the first language that has one), as the inventory's id.
+      for (const record of travel.books as Array<Record<string, unknown>>) {
+        const texts = (record['texts'] ?? {}) as Record<string, { read_more?: string | null }>;
+        const id =
+          Object.values(texts)
+            .map((values) => booksId(values?.read_more ?? null))
+            .find((value) => value !== null) ?? null;
+        const publicationId =
+          id === null ? null : await this.getEntityUuidAsync(`mwnf3:bookbase:${id}`, 'publication');
+        if (publicationId) record['publication_id'] = publicationId;
       }
-
-      const extra = (await this.context.strategy.getCollectionExtra(rootId)) ?? {};
-      await this.context.strategy.setCollectionExtra(
-        rootId,
-        JSON.stringify({ ...extra, explore_travel: travel })
-      );
-    } catch (error) {
-      result.success = false;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Error in Explore travel import: ${errorMessage}`);
-      this.logError('ExploreTravelImporter', errorMessage);
-      this.showError();
+      return [{ collection: EXPLORE_ROOT_KEY, extra: { explore_travel: travel } }];
     }
-
-    return result;
   }
 
   private async language(legacyCode: string): Promise<string | null> {

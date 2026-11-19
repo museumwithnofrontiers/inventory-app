@@ -99,6 +99,21 @@ specification doc. It is prose for humans, read by nothing at export time.
   address, `https://museumwithnofrontiers.github.io/<slug>`, which is where
   every site is served until its cutover. The DXA and mini-site loaders do
   not take it yet: the first cutover adds it to them.
+- `collections` — optional, the last member: the site configuration (M16
+  E4b, inventory-app#2673) of the collections whose package this site ships,
+  by collection UUID. Each entry holds `extra` (keys of the collection's own
+  `extra`: `thg_gallery`, `logos`, `explore_home`, `explore_travel`,
+  `explore_itinerary`), `translation_extra` (keys every text of the
+  collection carries) and `translations.<language id>` (one text's keys:
+  `thg_gallery_lang`, `exhibition_i18n`). The inventory no longer holds them;
+  [`../shared/site-configuration.mjs`](../shared/site-configuration.mjs)
+  gives them back to the packages, and fails when two files hold the same
+  collection. Galleries without a site of their own and the hub are in
+  `galleries.json`, Explore's in `explore.json`, Sharing History's and the
+  mwnf3 exhibitions in the file of the site that ships them. Never edit this
+  member by hand: the importer's `site-config` command writes it from legacy
+  (see `scripts/importer/EXTRA.md`). `logos` is kept as reference data: no
+  exporter reads it yet.
 
 ### Which sites show an item
 

@@ -3,5 +3,27 @@
   "slug": "glass",
   "name": "Glass",
   "collection_id": "44587d84-d4bb-5db4-8fd3-bdaf8bbcb30a",
-  "package_name": "@museumwnf/glass-data"
+  "package_name": "@museumwnf/glass-data",
+  "collections": {
+    "44587d84-d4bb-5db4-8fd3-bdaf8bbcb30a": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://glass.museumwnf.org",
+          "slug": "glass",
+          "i18n_group_id": 17,
+          "mwnf3_project_id": "DGA",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/18/1.jpg",
+          "banner_item": "mwnf#obj#EPM;qt;Mus21;14",
+          "banner_image": "thematic_gallery/thg_galleries/18/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

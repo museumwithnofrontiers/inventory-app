@@ -20,7 +20,6 @@ export { ShHistoricalProfilesRootImporter } from './sh-historical-profiles-root-
 export { CollectionPurposeBackfillImporter } from './collection-purpose-backfill-importer.js';
 export { ExtraBitBufferBackfillImporter } from './extra-bit-buffer-backfill-importer.js';
 export { MuseumProjectLinkBackfillImporter } from './museum-project-link-backfill-importer.js';
-export { ExhibitionI18nTextBackfillImporter } from './exhibition-i18n-text-backfill-importer.js';
 export { ExploreMonumentCountryBackfillImporter } from './explore-monument-country-backfill-importer.js';
 export { CollectionCreditsImporter } from './collection-credits-importer.js';
 export { ItemTranslationColumnsImporter } from './item-translation-columns-importer.js';
@@ -28,3 +27,4 @@ export { CollectionTranslationColumnsImporter } from './collection-translation-c
 export { PictureCreditsImporter } from './picture-credits-importer.js';
 export { CollectionRelationsImporter } from './collection-relations-importer.js';
 export { CollectionFlagsImporter } from './collection-flags-importer.js';
+export { SiteConfigurationOutImporter } from './site-configuration-out-importer.js';

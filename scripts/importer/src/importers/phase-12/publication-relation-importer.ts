@@ -309,6 +309,11 @@ export class PublicationExploreLinkImporter extends BaseImporter {
     return 'PublicationExploreLinkImporter';
   }
 
+  /**
+   * The import writes nothing: the Travel Books are site configuration (M16
+   * E4b), and ExploreTravelImporter's siteConfiguration() names each one's
+   * publication. Kept for a database imported before E4b.
+   */
   async import(): Promise<ImportResult> {
     const result = this.createResult();
     try {

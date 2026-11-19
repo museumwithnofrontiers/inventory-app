@@ -3,5 +3,129 @@
   "slug": "arts-in-dialogue",
   "name": "Arts in Dialogue",
   "collection_id": "0a393936-e887-535c-bf34-e7741e566c1d",
-  "package_name": "@museumwnf/arts-in-dialogue-data"
+  "package_name": "@museumwnf/arts-in-dialogue-data",
+  "collections": {
+    "0a393936-e887-535c-bf34-e7741e566c1d": {
+      "extra": {
+        "logos": [
+          {
+            "file": "thematic_gallery/thg_galleries/54/logo/28/1.jpg",
+            "link": "https://european-union.europa.eu/index_en",
+            "labels": {
+              "eng": "EU"
+            },
+            "visible": true,
+            "category_id": 0,
+            "category_name": "Header",
+            "display_order": 1
+          },
+          {
+            "file": "thematic_gallery/thg_galleries/54/logo/29/1.jpg",
+            "link": "https://www.unaoc.org/",
+            "labels": {
+              "eng": "UNAOC"
+            },
+            "visible": true,
+            "category_id": 1,
+            "category_name": "Footer 1",
+            "display_order": 1
+          },
+          {
+            "file": "thematic_gallery/thg_galleries/54/logo/30/1.jpg",
+            "link": "https://avicom.mini.icom.museum/",
+            "labels": {
+              "eng": "AVICOM"
+            },
+            "visible": true,
+            "category_id": 2,
+            "category_name": "Footer 2",
+            "display_order": 1
+          },
+          {
+            "file": "thematic_gallery/thg_galleries/54/logo/31/1.jpg",
+            "link": "https://mnk.pl/",
+            "labels": {
+              "eng": "Muzeum Narodowe W Krakowie"
+            },
+            "visible": true,
+            "category_id": 3,
+            "category_name": "Footer 3",
+            "display_order": 1
+          },
+          {
+            "file": "thematic_gallery/thg_galleries/54/logo/34/1.jpg",
+            "link": "https://www.smb.museum/museen-einrichtungen/museum-fuer-islamische-kunst/home/",
+            "labels": {
+              "eng": "Museum für islamische Kunst"
+            },
+            "visible": true,
+            "category_id": 4,
+            "category_name": "Footer 4",
+            "display_order": 1
+          },
+          {
+            "file": "thematic_gallery/thg_galleries/54/logo/32/1.jpg",
+            "link": "https://www.man.es/man/en/home",
+            "labels": {
+              "eng": "MAN"
+            },
+            "visible": true,
+            "category_id": 3,
+            "category_name": "Footer 3",
+            "display_order": 2
+          },
+          {
+            "file": "thematic_gallery/thg_galleries/54/logo/33/1.jpg",
+            "labels": {
+              "eng": "Logo 10"
+            },
+            "visible": true,
+            "category_id": 3,
+            "category_name": "Footer 3",
+            "display_order": 3
+          }
+        ],
+        "thg_gallery": {
+          "host": "https://exhibitions.museumwnf.org",
+          "slug": "arts_in_dialogue",
+          "i18n_group_id": 68,
+          "hidden_partners": [
+            {
+              "partner_id": "f44fb8f2-6c70-5288-9890-4968a73642a1",
+              "backward_compatibility": "mwnf3:museums:Mus52:uk"
+            },
+            {
+              "partner_id": "b43ae2c6-2060-5819-bd1c-dd9ca66b9f11",
+              "backward_compatibility": "mwnf3:museums:Mus21:us"
+            }
+          ],
+          "mwnf3_project_id": "EXAID",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "link": "arts_in_dialogue",
+          "banner_item": "mwnf#obj#EXAID;pl;Mus51;1",
+          "banner_image": "thematic_gallery/thg_galleries/54/banner.jpg",
+          "has_timeline": true,
+          "homepage_item": "mwnf#obj#EXAID;pl;Mus51;1",
+          "homepage_image": "thematic_gallery/thg_galleries/54/home_image.jpg",
+          "mwnf3_project_id": "EXAID",
+          "has_country_timeline": false
+        }
+      },
+      "translations": {
+        "eng": {
+          "exhibition_i18n": {
+            "enabled": "Y",
+            "heading": "\\[HEADLINE = Exhibition homepage text\\]  \nArt is a great messenger of emotions. From artist to viewer, it has the power to give us a sense of focus, allowing us to exist in the moment causing us to reflect on things we often lose sight of in the bustle and overwhelm of our everyday lives. It's a personal interaction.",
+            "popup_logo": "**On the occasion of the launch of this Exhibition a guided tour will be available on streaming, recorded by:**\n\n![Textile Museum of Canada  Toronto, Canada](https://images.museumwnf.org/full/upload/toronto.jpg \"Textile Museum of Canada  Toronto, Canada\")\n\n![Aga Khan Museum  Toronto, Canada](https://images.museumwnf.org/full/upload/toronto2.jpg \"Aga Khan Museum  Toronto, Canada\")\n\n![MIBACT | Museum of Capodimonte  Naples, Italy](https://images.museumwnf.org/full/upload/naples.jpg \"MIBACT | Museum of Capodimonte  Naples, Italy\")\n\n**Museum With No Frontiers thanks these Partners for their contribution.**",
+            "exh_img_caption": "Vincent Van Gogh, Landscape at Twilight, Van Gogh Museum, Amsterdam",
+            "popup_logo_show": "Y"
+          }
+        }
+      }
+    }
+  }
 }

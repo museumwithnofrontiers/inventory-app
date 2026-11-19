@@ -6,5 +6,63 @@
   "package_name": "@museumwnf/sharinghistory-data",
   "project_ids": [
     "0f031e22-6dc6-5ce6-b94b-9bb88345140c"
-  ]
+  ],
+  "collections": {
+    "04345e8e-bd1c-534c-9817-2a6c2aba7d20": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "USA"
+        }
+      }
+    },
+    "0abd43d3-87f8-5884-9a5b-322ceac20a68": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "USA"
+        }
+      }
+    },
+    "800eafca-271f-5e32-b26c-35205b5d53db": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "AWE"
+        }
+      }
+    },
+    "89bc9763-cd3b-5a26-8014-741eb7daf37c": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "USA"
+        }
+      }
+    },
+    "8ca7a34c-fd4f-5441-b960-1ad75c181665": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "USA"
+        }
+      }
+    },
+    "e944d53f-02cb-54e2-b526-08ea1bc6a7b2": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "USA"
+        }
+      }
+    },
+    "f88cebc0-c53c-5882-a580-62723d665aa1": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "new_status": "N",
+          "project_id": "RUS"
+        }
+      }
+    }
+  }
 }

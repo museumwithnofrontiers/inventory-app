@@ -24,6 +24,8 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import type { Mwnf3LegacyEavField, Mwnf3LegacyExhibition } from '../../domain/types/index.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
+import { LANGUAGE_CODE_MAP } from '../../utils/code-mappings.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 
 const MWNF3_SCHEMA = 'mwnf3';
 
@@ -34,7 +36,53 @@ interface PivotedFields {
   [field: string]: string;
 }
 
-export class Mwnf3ExhibitionTranslationImporter extends BaseImporter {
+/**
+ * An exhibition's list metadata from mwnf3.exhibitions, as the sites read it
+ * (`legacy_exhibition`); its show flag is the collection's `visible`.
+ */
+export function legacyExhibitionMetadata(meta: Mwnf3LegacyExhibition): Record<string, unknown> {
+  const legacyExhibition: Record<string, unknown> = {};
+  if (meta.project_id) legacyExhibition.project_id = meta.project_id;
+  if (meta.n !== null) legacyExhibition.display_order = meta.n;
+  if (meta.new_status) legacyExhibition.new_status = meta.new_status;
+  if (meta.portal_image) legacyExhibition.portal_image = meta.portal_image;
+  if (meta.exh_link) legacyExhibition.exh_link = meta.exh_link;
+  return legacyExhibition;
+}
+
+export class Mwnf3ExhibitionTranslationImporter extends BaseImporter implements SiteConfigBuilder {
+  /**
+   * Each exhibition's list metadata (M16 E4b), for its instance file: on the
+   * exhibitions that have a text, the same on every one of them.
+   */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    const rows = await this.context.legacyDb.query<Mwnf3LegacyExhibition>(
+      `SELECT exhibition_id, project_id, name, n, \`show\`, new_status, portal_image, exh_link
+       FROM ${MWNF3_SCHEMA}.exhibitions`
+    );
+    const metadata = new Map(rows.map((r) => [r.exhibition_id, r]));
+    const eavRows = await this.context.legacyDb.query<Mwnf3LegacyEavField>(
+      `SELECT exhibition_id AS entity_id, lang_id, field, value
+       FROM ${MWNF3_SCHEMA}.exhibition_fields
+       WHERE value IS NOT NULL AND value != ''
+       ORDER BY exhibition_id, lang_id, field`
+    );
+    const entries: SiteConfigEntry[] = [];
+    for (const [key, fields] of this.pivotEavRows(eavRows).entries()) {
+      const [entityIdStr, legacyLang] = key.split(':');
+      const entityId = parseInt(entityIdStr!, 10);
+      const meta = metadata.get(entityId);
+      if (!meta || !LANGUAGE_CODE_MAP[legacyLang!] || !fields['exh_title']?.trim()) continue;
+      const legacyExhibition = legacyExhibitionMetadata(meta);
+      if (Object.keys(legacyExhibition).length === 0) continue;
+      entries.push({
+        collection: `${MWNF3_SCHEMA}:exhibitions:${entityId}`,
+        translationExtra: { legacy_exhibition: legacyExhibition },
+      });
+    }
+    return entries;
+  }
+
   // Cache: exhibition_id → full exhibition metadata
   private exhibitionMetadataMap: Map<number, Mwnf3LegacyExhibition> | null = null;
   // Cache: theme_id → exhibition_id
@@ -177,18 +225,10 @@ export class Mwnf3ExhibitionTranslationImporter extends BaseImporter {
           extra.intro_text = convertHtmlToMarkdown(fields['exh_intro_text']);
         if (fields['exh_subtitle']) extra.subtitle = convertHtmlToMarkdown(fields['exh_subtitle']);
 
-        // Persist exhibition list metadata from mwnf3.exhibitions
+        // The exhibition's list metadata from mwnf3.exhibitions is site
+        // configuration (M16 E4b, see siteConfiguration); its show flag is
+        // the collection's `visible` (M16 E4a).
         const meta = this.exhibitionMetadataMap?.get(entityId);
-        if (meta) {
-          const legacyExhibition: Record<string, unknown> = {};
-          if (meta.project_id) legacyExhibition.project_id = meta.project_id;
-          if (meta.n !== null) legacyExhibition.display_order = meta.n;
-          if (meta.show) legacyExhibition.show = meta.show;
-          if (meta.new_status) legacyExhibition.new_status = meta.new_status;
-          if (meta.portal_image) legacyExhibition.portal_image = meta.portal_image;
-          if (meta.exh_link) legacyExhibition.exh_link = meta.exh_link;
-          if (Object.keys(legacyExhibition).length > 0) extra.legacy_exhibition = legacyExhibition;
-        }
 
         const extraJson = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 
@@ -196,6 +236,10 @@ export class Mwnf3ExhibitionTranslationImporter extends BaseImporter {
           result.imported++;
           this.showProgress();
           continue;
+        }
+
+        if (meta && (meta.show === 'y' || meta.show === 'n')) {
+          await this.context.strategy.setCollectionFlags(collectionId, { visible: meta.show === 'y' });
         }
 
         await this.context.strategy.writeCollectionTranslation({

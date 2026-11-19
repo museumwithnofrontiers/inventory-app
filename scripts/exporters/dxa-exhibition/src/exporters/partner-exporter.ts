@@ -8,6 +8,7 @@ import type {
   PartnerUrl,
 } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { galleryProjectCode } from '../../../shared/site-configuration.mjs'
 
 interface PartnerRow {
   id: string
@@ -222,6 +223,11 @@ export class PartnerExporter extends BaseExporter {
 
     const partnerIds = partners.map(p => p.id)
     const partnerPh = this.placeholders(partnerIds.length)
+    // The projects an exhibition anchors (`thg_gallery.mwnf3_project_id`, site
+    // configuration in the instance files since M16 E4b), as legacy keys.
+    const exhibitionProjects = await this.exhibitionProjectKeys()
+    const inExhibitionProjects = (column: string) =>
+      exhibitionProjects.length === 0 ? 'FALSE' : `${column} IN (${this.placeholders(exhibitionProjects.length)})`
     const langCodeMap = await this.buildLangCodeMap()
 
     const [translations, images, logos, levels, groupMemberships, heldItems, ownProjects] = await Promise.all([
@@ -308,11 +314,7 @@ export class PartnerExporter extends BaseExporter {
                     AND c.context_id = proj.context_id
                   ORDER BY cp.level IS NULL, cp.level
                   LIMIT 1) AS level,
-                EXISTS (SELECT 1
-                          FROM collections x
-                         WHERE x.type = 'exhibition'
-                           AND proj.backward_compatibility = CONCAT('mwnf3:projects:',
-                               JSON_UNQUOTE(JSON_EXTRACT(x.extra, '$.thg_gallery.mwnf3_project_id')))) AS exhibition
+                ${inExhibitionProjects('proj.backward_compatibility')} AS exhibition
          FROM partners p
          JOIN projects proj ON proj.id = COALESCE(p.project_id, (
            SELECT pp.id
@@ -321,16 +323,12 @@ export class PartnerExporter extends BaseExporter {
              JOIN projects pp ON pp.context_id = c.context_id
             WHERE cp.partner_id = p.id
               AND cp.collection_type = 'project'
-            ORDER BY EXISTS (SELECT 1
-                               FROM collections x
-                              WHERE x.type = 'exhibition'
-                                AND pp.backward_compatibility = CONCAT('mwnf3:projects:',
-                                    JSON_UNQUOTE(JSON_EXTRACT(x.extra, '$.thg_gallery.mwnf3_project_id')))),
+            ORDER BY ${inExhibitionProjects('pp.backward_compatibility')},
                      pp.id
             LIMIT 1))
          WHERE p.id IN (${partnerPh})
          ORDER BY p.id`,
-        partnerIds
+        [...exhibitionProjects, ...exhibitionProjects, ...partnerIds]
       ),
     ])
 
@@ -509,6 +507,19 @@ export class PartnerExporter extends BaseExporter {
     )
 
     return { file: 'partners.json', count: output.length }
+  }
+
+  /** The legacy keys of the projects an exhibition anchors. */
+  private async exhibitionProjectKeys(): Promise<string[]> {
+    const exhibitions = await this.db.query<{ id: string }>(
+      `SELECT id FROM collections WHERE type = 'exhibition' ORDER BY id`
+    )
+    const keys = new Set<string>()
+    for (const { id } of exhibitions) {
+      const code = galleryProjectCode(id)
+      if (code) keys.add(`mwnf3:projects:${code}`)
+    }
+    return [...keys]
   }
 }
 

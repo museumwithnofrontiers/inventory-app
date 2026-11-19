@@ -3,5 +3,27 @@
   "slug": "precious-stones",
   "name": "Precious Stones",
   "collection_id": "6b8c4c9c-4762-5c85-9684-e30288082992",
-  "package_name": "@museumwnf/precious-stones-data"
+  "package_name": "@museumwnf/precious-stones-data",
+  "collections": {
+    "6b8c4c9c-4762-5c85-9684-e30288082992": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://precious-stones.museumwnf.org",
+          "slug": "precious_stones",
+          "i18n_group_id": 64,
+          "mwnf3_project_id": "PRS",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/46/1.jpg",
+          "banner_item": "mwnf#obj#EPM;at;Mus22;35",
+          "banner_image": "thematic_gallery/thg_galleries/46/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

@@ -9,5 +9,18 @@
     "31de84d4-3de2-5ea1-b1d4-c8712cbcb314"
   ],
   "package_name": "@museumwnf/baroqueart-languages-baroque-data",
-  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/languages_baroque/"
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/languages_baroque/",
+  "collections": {
+    "92811773-7d90-5bec-90f3-f22c45c8cc29": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://baroqueart.museumwnf.org/exhibitions/BAR/languages_baroque/",
+          "new_status": "N",
+          "project_id": "BAR",
+          "portal_image": "database/exhibitions/48/portal_image/1.jpg",
+          "display_order": 5
+        }
+      }
+    }
+  }
 }

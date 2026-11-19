@@ -3,5 +3,27 @@
   "slug": "leatherworks",
   "name": "Leatherwork",
   "collection_id": "4716e71f-dab6-558c-a08e-b28114a24fff",
-  "package_name": "@museumwnf/leatherworks-data"
+  "package_name": "@museumwnf/leatherworks-data",
+  "collections": {
+    "4716e71f-dab6-558c-a08e-b28114a24fff": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://leatherworks.museumwnf.org",
+          "slug": "leatherwork",
+          "i18n_group_id": 37,
+          "mwnf3_project_id": "LEA",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/23/1.jpg",
+          "banner_item": "mwnf#obj#ISL;uk;Mus02;18",
+          "banner_image": "thematic_gallery/thg_galleries/23/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

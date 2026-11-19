@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { loadSiteConfiguration } from '../../../shared/site-configuration.mjs'
 
 interface TimelineRow {
   id: string
@@ -9,6 +10,8 @@ interface TimelineRow {
   collection_id: string | null
   extra: unknown
   exhibition_show: string | null
+  collection_visible?: number | boolean | null
+  legacy_exhibition_held?: number | boolean | null
 }
 
 interface TimelineEventRow {
@@ -77,22 +80,19 @@ export class TimelineExporter extends BaseExporter {
     const timelines = await this.db.query<TimelineRow>(
       `SELECT t.id, t.internal_name, t.backward_compatibility, t.country_id, t.collection_id,
               t.extra,
-              -- The show flag is the collection's \`visible\` now (M16 E4a), for an
-              -- exhibition whose texts carry \`legacy_exhibition\`; one the
-              -- importer left in \`extra\` is read there.
-              COALESCE(
-                (SELECT JSON_UNQUOTE(JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show'))
-                 FROM collection_translations ct
-                 WHERE ct.collection_id = t.collection_id
-                   AND JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show') IS NOT NULL
-                 LIMIT 1),
-                (SELECT IF(c2.visible, 'y', 'n')
-                 FROM collections c2
-                 WHERE c2.id = t.collection_id
-                   AND EXISTS (SELECT 1 FROM collection_translations ct2
-                               WHERE ct2.collection_id = c2.id
-                                 AND JSON_EXTRACT(ct2.extra, '$.legacy_exhibition') IS NOT NULL))
-              ) AS exhibition_show
+              -- The show flag is the collection's \`visible\` (M16 E4a), for an
+              -- exhibition that has \`legacy_exhibition\` (site configuration in
+              -- the instance files since M16 E4b, see below); one the importer
+              -- left in \`extra\` is read there.
+              (SELECT JSON_UNQUOTE(JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show'))
+               FROM collection_translations ct
+               WHERE ct.collection_id = t.collection_id
+                 AND JSON_EXTRACT(ct.extra, '$.legacy_exhibition.show') IS NOT NULL
+               LIMIT 1) AS exhibition_show,
+              (SELECT c2.visible FROM collections c2 WHERE c2.id = t.collection_id) AS collection_visible,
+              EXISTS (SELECT 1 FROM collection_translations ct2
+                      WHERE ct2.collection_id = t.collection_id
+                        AND JSON_EXTRACT(ct2.extra, '$.legacy_exhibition') IS NOT NULL) AS legacy_exhibition_held
        FROM timelines t
        WHERE t.collection_id IN (
          SELECT c.id FROM collections c
@@ -103,6 +103,14 @@ export class TimelineExporter extends BaseExporter {
        ORDER BY t.country_id, t.internal_name`,
       this.projectIds
     )
+
+    for (const t of timelines) {
+      if (t.exhibition_show !== null || t.collection_id === null) continue
+      const site = loadSiteConfiguration().get(t.collection_id)?.translation_extra?.['legacy_exhibition']
+      if (site || Number(t.legacy_exhibition_held) === 1) {
+        t.exhibition_show = Number(t.collection_visible) === 1 ? 'y' : 'n'
+      }
+    }
 
     if (timelines.length === 0) {
       await this.writeJson('timelines.json', [])

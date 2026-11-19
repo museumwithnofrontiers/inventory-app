@@ -3,5 +3,27 @@
   "slug": "calligraphy",
   "name": "Calligraphy",
   "collection_id": "9642e7a5-e60a-5bb5-a1cb-2adcd44334b5",
-  "package_name": "@museumwnf/calligraphy-data"
+  "package_name": "@museumwnf/calligraphy-data",
+  "collections": {
+    "9642e7a5-e60a-5bb5-a1cb-2adcd44334b5": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://calligraphy.museumwnf.org",
+          "slug": "calligraphy",
+          "i18n_group_id": 25,
+          "mwnf3_project_id": "CAL",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/8/1.jpg",
+          "banner_item": "mwnf#obj#EPM;ua;Mus21;2",
+          "banner_image": "thematic_gallery/thg_galleries/8/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

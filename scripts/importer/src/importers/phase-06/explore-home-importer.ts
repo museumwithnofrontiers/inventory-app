@@ -26,6 +26,7 @@
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { EXPLORE_ROOT_KEY } from './explore-root-collections-importer.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 import { exploreScope, type ExploreScope } from './explore-scope.js';
 
 interface LegacyBanner {
@@ -95,22 +96,25 @@ export function exploreBanner(legacy: LegacyBanner): ExploreBanner {
   };
 }
 
-export class ExploreHomeImporter extends BaseImporter {
+export class ExploreHomeImporter extends BaseImporter implements SiteConfigBuilder {
   getName(): string {
     return 'ExploreHomeImporter';
   }
 
+  /** The import writes nothing: the home page records are site configuration (M16 E4b). */
   async import(): Promise<ImportResult> {
     const result = this.createResult();
+    this.logInfo('The Explore home page records are site configuration: run the site-config command');
+    return result;
+  }
 
-    try {
-      const rootId = await this.getEntityUuidAsync(EXPLORE_ROOT_KEY, 'collection');
-      if (!rootId) {
-        throw new Error(
-          `Explore root not found (${EXPLORE_ROOT_KEY}). Run ExploreRootCollectionsImporter first.`
-        );
-      }
+  /** The home page records, for explore.json (M16 E4b, decision 6). */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    return [{ collection: EXPLORE_ROOT_KEY, extra: { explore_home: await this.homeRecords() } }];
+  }
 
+  private async homeRecords(): Promise<{ banners: ExploreBanner[]; featured_partnerships: ExplorePartnership[] }> {
+    {
       // Hidden banners (status N) are not served.
       const banners = (
         await this.context.legacyDb.query<LegacyBanner>(
@@ -136,26 +140,8 @@ export class ExploreHomeImporter extends BaseImporter {
       this.logInfo(
         `Found ${banners.length} banners and ${partnerships.length} featured partnerships`
       );
-      result.imported = banners.length + partnerships.length;
-
-      if (this.isDryRun || this.isSampleOnlyMode) {
-        return result;
-      }
-
-      const extra = (await this.context.strategy.getCollectionExtra(rootId)) ?? {};
-      await this.context.strategy.setCollectionExtra(
-        rootId,
-        JSON.stringify({ ...extra, explore_home: { banners, featured_partnerships: partnerships } })
-      );
-    } catch (error) {
-      result.success = false;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Error in Explore home import: ${errorMessage}`);
-      this.logError('ExploreHomeImporter', errorMessage);
-      this.showError();
+      return { banners, featured_partnerships: partnerships };
     }
-
-    return result;
   }
 
   /** One record per sponsor: legacy may spread its scope over several rows. */

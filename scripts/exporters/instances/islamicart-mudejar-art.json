@@ -12,5 +12,18 @@
     "7712e497-33e4-5529-91c3-47abff00f87c"
   ],
   "package_name": "@museumwnf/islamicart-mudejar-art-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/mudejar_art/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/mudejar_art/",
+  "collections": {
+    "664da959-c73e-5c6a-8641-060470f0010e": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/mudejar_art/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/26/portal_image/1.jpg",
+          "display_order": 17
+        }
+      }
+    }
+  }
 }

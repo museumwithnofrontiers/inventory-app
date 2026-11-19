@@ -3,5 +3,65 @@
   "slug": "the-use-of-colours-in-art",
   "name": "The Use of Colours in Art",
   "collection_id": "3854e510-66bb-5f9a-a6b8-dd1193551c88",
-  "package_name": "@museumwnf/the-use-of-colours-in-art-data"
+  "package_name": "@museumwnf/the-use-of-colours-in-art-data",
+  "collections": {
+    "3854e510-66bb-5f9a-a6b8-dd1193551c88": {
+      "extra": {
+        "logos": [
+          {
+            "file": "thematic_gallery/thg_galleries/47/logo/4/1.jpg",
+            "link": "https://www.unaoc.org/",
+            "labels": {
+              "eng": "United Nations Alliance of Civilizations"
+            },
+            "visible": true,
+            "category_id": 2,
+            "category_name": "Footer 2",
+            "display_order": 1
+          }
+        ],
+        "thg_gallery": {
+          "host": "https://exhibitions.museumwnf.org",
+          "slug": "the_use_of_colours_in_art",
+          "i18n_group_id": 65,
+          "mwnf3_project_id": "EXHCOLOUR",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "link": "the_use_of_colours_in_art",
+          "banner_item": "sh#obj#AWE;pt;21",
+          "landing_url": "https://exhibitions.museumwnf.org/the_use_of_colours_in_art/en/",
+          "banner_image": "thematic_gallery/thg_galleries/47/banner.jpg",
+          "has_timeline": true,
+          "homepage_item": "sh#obj#AWE;pt;21",
+          "homepage_image": "thematic_gallery/thg_galleries/47/home_image.jpg",
+          "new_expire_date": "2023-04-22T00:00:00.000Z",
+          "mwnf3_project_id": "EXHCOLOUR",
+          "has_country_timeline": false
+        }
+      },
+      "translations": {
+        "deu": {
+          "exhibition_i18n": {
+            "enabled": "N",
+            "heading": "Ohne Farbe wäre ein Künstler nicht in der Lage, sein Motiv genau darzustellen und zu beschreiben. Künstler, insbesondere Maler und Handwerker, verwandeln ihr Wissen über Farben in lebendige Darstellungen von Stimmung, Ausdruck, Licht und Tiefe.",
+            "subtitle": "Über Techniken, Symbolik und Bedeutungen",
+            "popup_logo_show": "N"
+          }
+        },
+        "eng": {
+          "exhibition_i18n": {
+            "enabled": "Y",
+            "heading": "***This is the demo exhibition for the new MWNF online exhibition platform.***  \n  \nWithout colour an artist would be unable to accurately depict and describe their subject. Artists, especially painters and craftspeople, transform their knowledge of colour into vivid representations of mood, expression, light, and depth. Such aspects are crucial as they ultimately affect how the viewer interprets a piece.",
+            "subtitle": "About Techniques, Symbolism and Meanings",
+            "popup_logo": "**Welcome to our new online exhibition platform!**\n\n**The exhibition ‘THE USE OF COLOURS: About Techniques, Symbolism and Meanings’ is the demo exhibition of our new platform.**\n\n****We look forward to feedbacks from our visitors at [office@museumwnf.net](mailto:office@museumwnf.net)**\n\n![](https://images.museumwnf.org/full/upload/imageID1710885838544.jpg \"MWNF_en.jpg\")**",
+            "exh_img_caption": "The Revolt of the Dolls, National Museum of Contemporary Art – Chiado Museum, Lisbon, Portugal",
+            "popup_logo_show": "Y"
+          }
+        }
+      }
+    }
+  }
 }

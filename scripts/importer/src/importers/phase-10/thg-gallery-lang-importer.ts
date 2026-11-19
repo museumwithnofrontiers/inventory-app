@@ -19,11 +19,13 @@
  * - collection_translations (id, collection_id, language_id, context_id, title, description,
  *                             extra, backward_compatibility)
  *
- * extra shape:
- * {
- *   "thg_gallery":      { <non-empty source fields without direct target columns> },
- *   "thg_gallery_lang": { "mouse_over_text": "...", "keywords": "..." }   // when non-empty
- * }
+ * Site configuration (M16 E4b, decision 6): the texts carry no `extra`.
+ * `siteConfiguration()` builds, for the `site-config` command and the
+ * gallery's instance file:
+ * - `translation_extra.thg_gallery`: the gallery's settings, the same on every
+ *   text (non-empty source fields without a column; `featured` and
+ *   `live_date` are the collection's columns since M16 E4a);
+ * - `translations.<language>.thg_gallery_lang`: `mouse_over_text`, `keywords`.
  *
  * has_timeline and has_country_timeline are MySQL bit(1) columns and are stored
  * as JSON booleans — see bitToBoolean.
@@ -39,6 +41,8 @@
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { bitToBoolean } from '../../utils/legacy-values.js';
+import { LANGUAGE_CODE_MAP } from '../../utils/code-mappings.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 
 /**
  * Legacy thg_gallery_lang structure
@@ -79,7 +83,31 @@ interface LegacyThgGalleryExtra {
 /** thg_gallery columns that are MySQL bit(1) and must be stored as booleans. */
 const GALLERY_BIT_FIELDS = ['has_timeline', 'has_country_timeline'] as const;
 
-export class ThgGalleryLangImporter extends BaseImporter {
+export class ThgGalleryLangImporter extends BaseImporter implements SiteConfigBuilder {
+  /** Each gallery's settings and its texts' lang fields, for its instance file. */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    await this.loadGalleryExtras();
+    const rows = await this.context.legacyDb.query<LegacyThgGalleryLang>(
+      `SELECT gallery_id, lang, title, long_title, short_text, mouse_over_text, keywords
+       FROM mwnf3_thematic_gallery.thg_gallery_lang
+       ORDER BY gallery_id, lang`
+    );
+    const entries: SiteConfigEntry[] = [];
+    for (const legacy of rows) {
+      const languageId = legacy.lang ? LANGUAGE_CODE_MAP[legacy.lang] : undefined;
+      if (!languageId) continue;
+      const extra = this.buildExtra(legacy);
+      if (!extra) continue;
+      const { thg_gallery: gallery, ...perLanguage } = extra;
+      entries.push({
+        collection: `mwnf3_thematic_gallery:thg_gallery:${legacy.gallery_id}`,
+        ...(gallery ? { translationExtra: { thg_gallery: gallery } } : {}),
+        ...(Object.keys(perLanguage).length > 0 ? { translations: { [languageId]: perLanguage } } : {}),
+      });
+    }
+    return entries;
+  }
+
   /** gallery_id -> extra fields from thg_gallery */
   private galleryExtraMap: Map<number, LegacyThgGalleryExtra> = new Map();
 
@@ -166,9 +194,6 @@ export class ThgGalleryLangImporter extends BaseImporter {
           if (legacy.short_text) descriptionParts.push(legacy.short_text);
           const description = descriptionParts.join('\n\n') || null;
 
-          // Build extra object
-          const extra = this.buildExtra(legacy);
-
           // Check for existing translation by (collectionId, languageId, contextId) key — idempotent update
           const existingTranslation = await this.context.strategy.getCollectionTranslationByKey(
             collectionId,
@@ -176,16 +201,6 @@ export class ThgGalleryLangImporter extends BaseImporter {
             contextId
           );
           if (existingTranslation) {
-            if (extra && !this.isDryRun && !this.isSampleOnlyMode) {
-              // Merge: new keys are added, existing keys are NOT overwritten
-              const merged = { ...extra, ...(existingTranslation.extra ?? {}) };
-              await this.context.strategy.setCollectionTranslationExtraByKey(
-                collectionId,
-                languageId,
-                contextId,
-                JSON.stringify(merged)
-              );
-            }
             result.skipped++;
             this.showSkipped();
             continue;
@@ -214,7 +229,8 @@ export class ThgGalleryLangImporter extends BaseImporter {
             context_id: contextId,
             title,
             description,
-            extra: extra ? JSON.stringify(extra) : null,
+            // The gallery's settings are site configuration (M16 E4b).
+            extra: null,
             backward_compatibility: backwardCompat,
           });
 
@@ -278,8 +294,8 @@ export class ThgGalleryLangImporter extends BaseImporter {
       // to collections.extra.thg_gallery as a first-class anchor.
       const galleryFields: Array<keyof LegacyThgGalleryExtra> = [
         'image', 'banner_image', 'banner_item', 'new_expire_date',
-        'landing_url', 'portal_image', 'live_date', 'homepage_image', 'homepage_item',
-        'has_timeline', 'has_country_timeline', 'featured',
+        'landing_url', 'portal_image', 'homepage_image', 'homepage_item',
+        'has_timeline', 'has_country_timeline',
       ];
       for (const field of galleryFields) {
         const isBitField = (GALLERY_BIT_FIELDS as readonly string[]).includes(field);

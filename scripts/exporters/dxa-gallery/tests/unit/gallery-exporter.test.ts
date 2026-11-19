@@ -84,7 +84,7 @@ describe('GalleryExporter — project_id', () => {
         if (sql.includes('FROM collections')) {
           return [sibling('glass-uuid', 18), sibling('doubts-uuid', 43)]
         }
-        if (sql.includes('extra IS NOT NULL')) {
+        if (sql.includes('SELECT collection_id, extra')) {
           // A database imported before status was dropped still holds it: not read.
           return [
             { collection_id: 'glass-uuid', extra: { thg_gallery: { status: 'H', featured: 'A' } } },

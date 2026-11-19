@@ -113,6 +113,24 @@ collection disagree. The same step drops the legacy codes nothing reads: `introd
 collection-flags` again after re-running one of their writers on its own. The exporters give the flags back
 (`scripts/exporters/shared/collection-flags.mjs`).
 
+`thg_gallery`, `thg_gallery_lang`, `legacy_exhibition` and `exhibition_i18n` below, and `thg_gallery`,
+`logos`, `explore_home`, `explore_travel` and `explore_itinerary` on `collections.extra`, are site
+configuration (M16 E4b, #2673, decision 6). They live in the instance files
+(`scripts/exporters/instances/*.json`, each file's `collections`), not in the inventory:
+`importers/phase-11/site-configuration-out-importer.ts` removes them from `extra`, and the exporters read
+them back from the instance files (`scripts/exporters/shared/site-configuration.mjs`). The importers that
+wrote them build them for the `site-config` command instead, which reads legacy alone (SELECT only) and
+writes the instance files; it is not part of `import`. Re-run it when legacy's gallery, exhibition or
+Explore tables change, and review the change as a diff of the instance files:
+
+```sh
+npx tsx src/cli/import.ts site-config          # writes ../exporters/instances
+npx tsx src/cli/import.ts site-config --check  # compares with an inventory imported before E4b
+```
+
+It refuses a local copy of legacy (a gallery host that is no public https museumwnf address) and a
+collection no instance file takes.
+
 | Key                                                                                                                                                                                                          | Legacy source                                                                                  | Written by                                                                                                 |
 | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | `credits`, `intro_header`, `intro_text`, `subtitle`                                                                                                                                                          | mwnf3 exhibition_fields `exh_*`, artintro_fields `art_*`                                       | importers/phase-01/mwnf3-exhibition-translation-importer.ts                                                |
@@ -141,13 +159,13 @@ collection-flags` again after re-running one of their writers on its own. The ex
 | `description_2` (column `description2`), `author`, `introduction`, `prepared_by`                                                                                                                             | mwnf3_travels.tr_itineraries                                                                   | importers/phase-07/travels-itinerary-translation-importer.ts                                               |
 | `thg_gallery.{image, banner_image, banner_item, new_expire_date, landing_url, portal_image, live_date, homepage_image, homepage_item, has_timeline, has_country_timeline, featured, link, mwnf3_project_id}` | thg_gallery                                                                                    | importers/phase-10/thg-gallery-lang-importer.ts, thg-gallery-translation-importer.ts                       |
 | `thg_gallery_lang.{mouse_over_text, keywords}`                                                                                                                                                               | thg_gallery_lang                                                                               | importers/phase-10/thg-gallery-lang-importer.ts                                                            |
-| `exhibition_i18n.{enabled, subtitle, heading, about, exh_img_caption, popup_logo_show, popup_logo}`                                                                                                          | exhibition_i18n                                                                                | importers/phase-10/thg-gallery-translation-importer.ts, phase-11/exhibition-i18n-text-backfill-importer.ts |
+| `exhibition_i18n.{enabled, subtitle, heading, about, exh_img_caption, popup_logo_show, popup_logo}`                                                                                                          | exhibition_i18n                                                                                | importers/phase-10/thg-gallery-translation-importer.ts                                                     |
 
 ## collections.extra
 
 `historical_background`, `thg_theme.cover_picture` and `days` below are moved by the same step (M16 E3,
-#2649): to `collection_collection` (kind `historical_background`), `cover_item_id` and `days`. `logos`
-stays until E4 (#2650) moves it to the instance files: it is site presentation (Decision 6).
+#2649): to `collection_collection` (kind `historical_background`), `cover_item_id` and `days`. `logos`,
+`thg_gallery`, `explore_*`: see above (E4b).
 
 | Key                                                                                                         | Legacy source                                                                                                                                      | Written by                                                  |
 | ----------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |

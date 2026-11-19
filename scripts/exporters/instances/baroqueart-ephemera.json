@@ -9,5 +9,18 @@
     "6a136d05-856b-5321-aaeb-eba1b39136a2"
   ],
   "package_name": "@museumwnf/baroqueart-ephemera-data",
-  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/ephemera/"
+  "legacy_url": "https://baroqueart.museumwnf.org/exhibitions/BAR/ephemera/",
+  "collections": {
+    "9e8b4feb-4136-5c7e-9fb9-a6267e9aa01a": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://baroqueart.museumwnf.org/exhibitions/BAR/ephemera/",
+          "new_status": "N",
+          "project_id": "BAR",
+          "portal_image": "database/exhibitions/43/portal_image/1.jpg",
+          "display_order": 4
+        }
+      }
+    }
+  }
 }

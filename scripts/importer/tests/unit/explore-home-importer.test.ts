@@ -175,15 +175,15 @@ describe('ExploreHomeImporter', () => {
     };
   });
 
-  it('writes the banners and partnerships on the site root, keeping its other extra', async () => {
-    const result = await new ExploreHomeImporter(context).import();
+  it('builds the banners and partnerships for the site root', async () => {
+    const entries = await new ExploreHomeImporter(context).siteConfiguration();
 
-    expect(result.success).toBe(true);
-    expect(result.imported).toBe(3);
-    const [id, extra] = vi.mocked(strategy.setCollectionExtra).mock.calls[0]!;
-    expect(id).toBe('root-uuid');
-    const written = JSON.parse(extra);
-    expect(written.note).toBe('kept');
+    expect(entries).toHaveLength(1);
+    expect(entries[0]!.collection).toBe('mwnf3_explore:root');
+    const written = entries[0]!.extra as {
+      explore_home: { banners: unknown[]; featured_partnerships: unknown[] };
+    };
+    expect(Object.keys(written)).toEqual(['explore_home']);
     expect(written.explore_home.banners).toEqual([
       expect.objectContaining({
         id: 15,
@@ -218,12 +218,13 @@ describe('ExploreHomeImporter', () => {
     ]);
   });
 
-  it('fails without the site root', async () => {
-    tracker = new UnifiedTracker();
-    const result = await new ExploreHomeImporter({ ...context, tracker }).import();
+  it('no longer writes the home page records on import', async () => {
+    const result = await new ExploreHomeImporter(context).import();
 
-    expect(result.success).toBe(false);
+    expect(result.success).toBe(true);
+    expect(result.imported).toBe(0);
     expect(strategy.setCollectionExtra).not.toHaveBeenCalled();
+    expect(context.legacyDb.query).not.toHaveBeenCalled();
   });
 });
 

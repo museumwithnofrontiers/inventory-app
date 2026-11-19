@@ -11,5 +11,18 @@
     "5db20458-bdcf-5050-98fb-3fb2d1392a0a"
   ],
   "package_name": "@museumwnf/islamicart-the-ottomans-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ottomans/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ottomans/",
+  "collections": {
+    "618dce7d-8482-5ccb-b334-54c0c96e6db0": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/the_ottomans/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/18/portal_image/1.jpg",
+          "display_order": 6
+        }
+      }
+    }
+  }
 }

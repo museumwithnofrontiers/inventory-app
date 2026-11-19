@@ -87,11 +87,22 @@ describe('ThgGalleryTranslationImporter', () => {
     };
   }
 
-  /** Parse the extra written by the single writeCollectionTranslation call. */
-  function writtenExtra(): { serialized: string; parsed: Record<string, unknown> } {
-    const call = writeCollectionTranslationMock.mock.calls[0][0] as Record<string, unknown>;
-    const serialized = call.extra as string;
-    return { serialized, parsed: JSON.parse(serialized) as Record<string, unknown> };
+  /** The single entry siteConfiguration() builds. */
+  async function builtEntry(): Promise<{
+    gallery: Record<string, unknown>;
+    exhibition: Record<string, unknown> | undefined;
+    serialized: string;
+  }> {
+    const entries = await new ThgGalleryTranslationImporter(context).siteConfiguration();
+    expect(entries).toHaveLength(1);
+    const [entry] = entries;
+    expect(entry!.collection).toBe('mwnf3_thematic_gallery:thg_gallery:42');
+    return {
+      gallery: (entry!.translationExtra?.['thg_gallery'] ?? {}) as Record<string, unknown>,
+      exhibition: entry!.translations?.['eng']?.['exhibition_i18n'] as
+        Record<string, unknown> | undefined,
+      serialized: JSON.stringify(entry),
+    };
   }
 
   beforeEach(() => {
@@ -133,12 +144,9 @@ describe('ThgGalleryTranslationImporter', () => {
       ),
     };
 
-    const importer = new ThgGalleryTranslationImporter(context);
-    await importer.import();
-
-    const { serialized, parsed } = writtenExtra();
+    const { gallery, serialized } = await builtEntry();
     expect(serialized).not.toContain('Buffer');
-    expect(parsed.thg_gallery).toMatchObject({
+    expect(gallery).toMatchObject({
       has_timeline: true,
       has_country_timeline: false,
     });
@@ -153,25 +161,18 @@ describe('ThgGalleryTranslationImporter', () => {
       ),
     };
 
-    const importer = new ThgGalleryTranslationImporter(context);
-    await importer.import();
-
-    const galleryExtra = writtenExtra().parsed.thg_gallery as Record<string, unknown>;
-    expect(galleryExtra).toHaveProperty('has_timeline', false);
-    expect(galleryExtra).toHaveProperty('has_country_timeline', false);
+    const { gallery } = await builtEntry();
+    expect(gallery).toHaveProperty('has_timeline', false);
+    expect(gallery).toHaveProperty('has_country_timeline', false);
   });
 
   it('omits the timeline flags when the source columns are null', async () => {
-    const importer = new ThgGalleryTranslationImporter(context);
-    await importer.import();
-
-    const { parsed } = writtenExtra();
-    const galleryExtra = (parsed.thg_gallery ?? {}) as Record<string, unknown>;
-    expect(galleryExtra).not.toHaveProperty('has_timeline');
-    expect(galleryExtra).not.toHaveProperty('has_country_timeline');
+    const { gallery } = await builtEntry();
+    expect(gallery).not.toHaveProperty('has_timeline');
+    expect(gallery).not.toHaveProperty('has_country_timeline');
   });
 
-  it('leaves non-bit thg_gallery fields untouched, and drops the runtime status', async () => {
+  it('keeps the other thg_gallery fields, and leaves out status, featured and live_date', async () => {
     context = {
       ...context,
       legacyDb: makeLegacyDb(
@@ -181,24 +182,18 @@ describe('ThgGalleryTranslationImporter', () => {
             link: 'the_use_of_colours_in_art',
             status: 'A',
             featured: 'A',
+            live_date: '2010-01-01',
             has_timeline: Buffer.from([1]),
           }),
         ]
       ),
     };
 
-    const importer = new ThgGalleryTranslationImporter(context);
-    await importer.import();
-
-    expect(writtenExtra().parsed.thg_gallery).toMatchObject({
-      link: 'the_use_of_colours_in_art',
-      featured: 'A',
-      has_timeline: true,
-    });
-    expect(writtenExtra().parsed.thg_gallery).not.toHaveProperty('status');
+    const { gallery } = await builtEntry();
+    expect(gallery).toEqual({ link: 'the_use_of_colours_in_art', has_timeline: true });
   });
 
-  it('writes the exhibition_i18n extras alongside the normalised gallery extras', async () => {
+  it('builds the exhibition_i18n fields by language, beside the gallery settings', async () => {
     context = {
       ...context,
       legacyDb: makeLegacyDb(
@@ -214,8 +209,39 @@ describe('ThgGalleryTranslationImporter', () => {
       ),
     };
 
-    const importer = new ThgGalleryTranslationImporter(context);
-    const result = await importer.import();
+    const { gallery, exhibition } = await builtEntry();
+    expect(gallery).toEqual({ has_timeline: true });
+    // subtitle/heading/about are ALSO joined into the translation's
+    // `description`. The join is lossy — `about` contains the same blank-line
+    // separator it uses — so they are kept individually here as well, which
+    // is the only way an exhibition package can render the sub-title, the
+    // banner headline and the About page in the three places legacy puts them.
+    expect(exhibition).toEqual({
+      enabled: 'Y',
+      exh_img_caption: 'A caption',
+      popup_logo_show: 'Y',
+      subtitle: 'A subtitle',
+      about: 'About the exhibition.',
+    });
+  });
+
+  it('takes language ids from the code map, not the tracker', async () => {
+    context = { ...context, tracker: new UnifiedTracker() };
+
+    const { exhibition } = await builtEntry();
+    expect(exhibition).toEqual({ enabled: 'Y' });
+  });
+
+  it('writes the translation with no extra', async () => {
+    context = {
+      ...context,
+      legacyDb: makeLegacyDb(
+        [i18nRow({ subtitle: 'A subtitle', about: 'About the exhibition.' })],
+        [galleryRow({ has_timeline: Buffer.from([1]) })]
+      ),
+    };
+
+    const result = await new ThgGalleryTranslationImporter(context).import();
 
     expect(writeCollectionTranslationMock).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -224,24 +250,10 @@ describe('ThgGalleryTranslationImporter', () => {
         context_id: 'context-uuid-42',
         title: 'The Exhibition',
         description: 'A subtitle\n\nAbout the exhibition.',
+        extra: null,
         backward_compatibility: 'mwnf3_thematic_gallery:exhibition_i18n:42:en',
       })
     );
-
-    const { parsed } = writtenExtra();
-    expect(parsed.thg_gallery).toMatchObject({ has_timeline: true });
-    // subtitle/heading/about are ALSO joined into `description` above. The join
-    // is lossy — `about` contains the same blank-line separator it uses — so
-    // they are preserved individually here as well, which is the only way an
-    // exhibition package can render the sub-title, the banner headline and the
-    // About page in the three places legacy puts them.
-    expect(parsed.exhibition_i18n).toEqual({
-      enabled: 'Y',
-      exh_img_caption: 'A caption',
-      popup_logo_show: 'Y',
-      subtitle: 'A subtitle',
-      about: 'About the exhibition.',
-    });
     expect(result.success).toBe(true);
     expect(result.imported).toBe(1);
     expect(result.errors).toHaveLength(0);

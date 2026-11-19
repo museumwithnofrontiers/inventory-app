@@ -2,7 +2,8 @@
  * THG Gallery Content Importer
  *
  * Imports exhibition-specific content for thematic galleries:
- * - exhibition_logo (+ _i18n, + _category) -> collections.extra.logos
+ * - exhibition_logo (+ _i18n, + _category) -> logos: site configuration (M16 E4b,
+ *   decision 6), built by siteConfiguration() for the gallery's instance file
  * - exhibition_partner -> partners + collection_partner + partner_logos
  * - exhibition_related_content links/documents -> collection_media
  *
@@ -31,6 +32,7 @@ import {
   localiseConverted,
   type GalleryAddress,
 } from '../../utils/legacy-links.js';
+import type { SiteConfigBuilder, SiteConfigEntry } from '../../site-config/types.js';
 
 interface LegacyExhibitionLogo {
   logo_id: number;
@@ -332,7 +334,7 @@ export function buildExhibitionLogo(source: ExhibitionLogoSource): Record<string
   return extra;
 }
 
-export class ThgGalleryContentImporter extends BaseImporter {
+export class ThgGalleryContentImporter extends BaseImporter implements SiteConfigBuilder {
   private galleryCollectionTypes = new Map<number, 'gallery' | 'exhibition'>();
   /** gallery_id -> the site's own address, for the links a curator wrote into its texts */
   private galleryAddresses = new Map<number, GalleryAddress>();
@@ -356,13 +358,6 @@ export class ThgGalleryContentImporter extends BaseImporter {
     try {
       await this.loadGalleryCollectionTypes();
       this.galleryAddresses = await loadGalleryAddresses(this.context.legacyDb);
-
-      this.logInfo("Importing exhibition logos into their collections' extra...");
-      const logoResult = await this.importExhibitionLogos();
-      result.imported += logoResult.imported;
-      result.skipped += logoResult.skipped;
-      result.errors.push(...logoResult.errors);
-      result.warnings.push(...(logoResult.warnings ?? []));
 
       this.logInfo('Importing exhibition partners as partners...');
       const partnerResult = await this.importExhibitionPartners();
@@ -410,8 +405,21 @@ export class ThgGalleryContentImporter extends BaseImporter {
     }
   }
 
-  private async importExhibitionLogos(): Promise<ImportResult> {
+  /** Each gallery's sponsor logos, for its instance file (M16 E4b). */
+  async siteConfiguration(): Promise<SiteConfigEntry[]> {
+    await this.loadGalleryCollectionTypes();
+    this.galleryAddresses = await loadGalleryAddresses(this.context.legacyDb);
+    const { logos } = await this.buildExhibitionLogos();
+    return [...logos].map(([collection, entries]) => ({ collection, extra: { logos: entries } }));
+  }
+
+  /** The gallery legacy key -> its logos, in legacy's order. */
+  private async buildExhibitionLogos(): Promise<{
+    result: ImportResult;
+    logos: Map<string, Array<Record<string, unknown>>>;
+  }> {
     const result = this.createResult();
+    const none = new Map<string, Array<Record<string, unknown>>>();
 
     let logoRows: LegacyExhibitionLogo[];
     try {
@@ -426,14 +434,14 @@ export class ThgGalleryContentImporter extends BaseImporter {
         this.logInfo(`exhibition_logo table not available: ${message}`);
         result.warnings.push(`exhibition_logo table not available: ${message}`);
         result.success = true;
-        return result;
+        return { result, logos: none };
       }
       throw queryError;
     }
 
     this.logInfo(`Found ${logoRows.length} exhibition logo rows`);
     if (logoRows.length === 0) {
-      return result;
+      return { result, logos: none };
     }
 
     // The caption, the banner slot and the hyperlink live in two tables the
@@ -450,7 +458,7 @@ export class ThgGalleryContentImporter extends BaseImporter {
       i18nByLogoId.set(i18n.logo_id, existing);
     }
 
-    // collection id -> its logos, in legacy's order (the query's).
+    // gallery legacy key -> its logos, in legacy's order (the query's).
     const logosByCollection = new Map<string, Array<Record<string, unknown>>>();
 
     for (const logo of logoRows) {
@@ -500,9 +508,10 @@ export class ThgGalleryContentImporter extends BaseImporter {
           translations,
         });
 
-        const logos = logosByCollection.get(collectionId) ?? [];
+        const galleryKey = `mwnf3_thematic_gallery:thg_gallery:${logo.gallery_id}`;
+        const logos = logosByCollection.get(galleryKey) ?? [];
         logos.push(entry);
-        logosByCollection.set(collectionId, logos);
+        logosByCollection.set(galleryKey, logos);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         result.errors.push(`exhibition_logo.logo_id=${logo.logo_id}: ${message}`);
@@ -511,32 +520,7 @@ export class ThgGalleryContentImporter extends BaseImporter {
       }
     }
 
-    // Read-modify-write, so the list sits beside whatever else the gallery's
-    // steps keep in `extra`; written whole, so a rerun leaves the same list.
-    for (const [collectionId, logos] of logosByCollection) {
-      try {
-        if (this.isDryRun || this.isSampleOnlyMode) {
-          this.logInfo(
-            `[${this.isSampleOnlyMode ? 'SAMPLE' : 'DRY-RUN'}] Would write ${logos.length} logo(s) to collection ${collectionId}`
-          );
-        } else {
-          const existing = (await this.context.strategy.getCollectionExtra(collectionId)) ?? {};
-          await this.context.strategy.setCollectionExtra(
-            collectionId,
-            JSON.stringify({ ...existing, logos })
-          );
-        }
-        result.imported += logos.length;
-        for (let i = 0; i < logos.length; i++) this.showProgress();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        result.errors.push(`exhibition logos of collection ${collectionId}: ${message}`);
-        this.logError(`exhibition logos of collection ${collectionId}`, message);
-        this.showError();
-      }
-    }
-
-    return result;
+    return { result, logos: logosByCollection };
   }
 
   private async importExhibitionPartners(): Promise<ImportResult> {

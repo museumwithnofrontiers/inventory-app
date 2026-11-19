@@ -10,5 +10,18 @@
     "559ab197-7289-5af4-a295-1118bde9afce"
   ],
   "package_name": "@museumwnf/islamicart-figural-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/figural/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/figural/",
+  "collections": {
+    "96e50aab-a868-5824-b376-8cdd7e37d384": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/figural/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/20/portal_image/1.jpg",
+          "display_order": 12
+        }
+      }
+    }
+  }
 }

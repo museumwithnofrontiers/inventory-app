@@ -12,5 +12,18 @@
     "7712e497-33e4-5529-91c3-47abff00f87c"
   ],
   "package_name": "@museumwnf/islamicart-geometric-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/geometric/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/geometric/",
+  "collections": {
+    "9f0c366a-10e7-53d5-91e8-2d8a35ffc22a": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/geometric/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/21/portal_image/1.jpg",
+          "display_order": 14
+        }
+      }
+    }
+  }
 }

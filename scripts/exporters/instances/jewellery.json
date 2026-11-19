@@ -3,5 +3,27 @@
   "slug": "jewellery",
   "name": "Jewellery",
   "collection_id": "38175ebd-bd2d-5a5f-896d-b9e98d0b6af2",
-  "package_name": "@museumwnf/jewellery-data"
+  "package_name": "@museumwnf/jewellery-data",
+  "collections": {
+    "38175ebd-bd2d-5a5f-896d-b9e98d0b6af2": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://jewellery.museumwnf.org",
+          "slug": "jewellery",
+          "i18n_group_id": 35,
+          "mwnf3_project_id": "JEW",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/21/1.jpg",
+          "banner_item": "mwnf#obj#EPM;ua;Mus21;39",
+          "banner_image": "thematic_gallery/thg_galleries/21/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

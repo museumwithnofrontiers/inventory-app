@@ -11,5 +11,18 @@
     "d9f6c12d-ca03-5d6e-b33c-c1a37daec1fa"
   ],
   "package_name": "@museumwnf/islamicart-arabic-calligraphy-data",
-  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/arabic_calligraphy/"
+  "legacy_url": "https://islamicart.museumwnf.org/exhibitions/ISL/arabic_calligraphy/",
+  "collections": {
+    "647c6643-4c92-5053-a855-7bc6c0f2444a": {
+      "translation_extra": {
+        "legacy_exhibition": {
+          "exh_link": "https://islamicart.museumwnf.org/exhibitions/ISL/arabic_calligraphy/",
+          "new_status": "N",
+          "project_id": "ISL",
+          "portal_image": "database/exhibitions/19/portal_image/1.jpg",
+          "display_order": 11
+        }
+      }
+    }
+  }
 }

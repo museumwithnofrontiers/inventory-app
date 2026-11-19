@@ -3,5 +3,27 @@
   "slug": "wallpaintings",
   "name": "Wall Paintings and Frescoes",
   "collection_id": "728038a5-a956-5e3c-8b81-1647e31437fd",
-  "package_name": "@museumwnf/wallpaintings-data"
+  "package_name": "@museumwnf/wallpaintings-data",
+  "collections": {
+    "728038a5-a956-5e3c-8b81-1647e31437fd": {
+      "extra": {
+        "thg_gallery": {
+          "host": "https://wallpaintings.museumwnf.org",
+          "slug": "wall_paintings_and_frescoes",
+          "i18n_group_id": 54,
+          "mwnf3_project_id": "WAL",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "image": "thematic_gallery/thg_galleries/40/1.jpg",
+          "banner_item": "mwnf#obj#ISL;jo;Mus01;51",
+          "banner_image": "thematic_gallery/thg_galleries/40/banner.jpg",
+          "has_timeline": false,
+          "has_country_timeline": false
+        }
+      }
+    }
+  }
 }

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { Mwnf3ExhibitionTranslationImporter } from '../../src/importers/phase-01/mwnf3-exhibition-translation-importer.js';
+import {
+  legacyExhibitionMetadata,
+  Mwnf3ExhibitionTranslationImporter,
+} from '../../src/importers/phase-01/mwnf3-exhibition-translation-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
 import type { IWriteStrategy } from '../../src/core/strategy.js';
@@ -20,7 +23,12 @@ const ISL_PROJECT_BC = 'mwnf3:projects:ISL';
 /** Base EAV rows for exhibition 10 with all six fields. */
 const EXHIBITION_ALL_FIELDS_EAV = [
   { entity_id: EXHIBITION_ID, lang_id: 'en', field: 'exh_title', value: 'The Umayyads' },
-  { entity_id: EXHIBITION_ID, lang_id: 'en', field: 'exh_description', value: 'A landing description.' },
+  {
+    entity_id: EXHIBITION_ID,
+    lang_id: 'en',
+    field: 'exh_description',
+    value: 'A landing description.',
+  },
   { entity_id: EXHIBITION_ID, lang_id: 'en', field: 'exh_credits', value: 'Credit text.' },
   { entity_id: EXHIBITION_ID, lang_id: 'en', field: 'exh_intro_header', value: 'Intro Header' },
   { entity_id: EXHIBITION_ID, lang_id: 'en', field: 'exh_intro_text', value: 'Intro body text.' },
@@ -56,6 +64,7 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
   let context: ImportContext;
   let queryMock: ReturnType<typeof vi.fn>;
   let writeCollectionTranslationMock: ReturnType<typeof vi.fn>;
+  let setCollectionFlagsMock: ReturnType<typeof vi.fn>;
 
   const logger: ILogger = {
     info: vi.fn(),
@@ -76,7 +85,7 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
    */
   function makeExhibitionOnlyQueryMock(
     eavRows: typeof EXHIBITION_ALL_FIELDS_EAV,
-    metaRows: typeof EXHIBITION_META[] = [EXHIBITION_META]
+    metaRows: (typeof EXHIBITION_META)[] = [EXHIBITION_META]
   ): ReturnType<typeof vi.fn> {
     return vi.fn(async (sql: string) => {
       if (sql.includes('FROM mwnf3.exhibition_fields')) return eavRows;
@@ -118,11 +127,13 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
     };
 
     writeCollectionTranslationMock = vi.fn().mockResolvedValue(undefined);
+    setCollectionFlagsMock = vi.fn().mockResolvedValue(undefined);
 
     strategy = {
       exists: vi.fn().mockResolvedValue(false),
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       writeCollectionTranslation: writeCollectionTranslationMock,
+      setCollectionFlags: setCollectionFlagsMock,
     } as unknown as IWriteStrategy;
 
     context = {
@@ -159,6 +170,7 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
       expect(extra.intro_header).toBe('Intro Header');
       expect(extra.intro_text).toBe('Intro body text.');
       expect(extra.subtitle).toBe('A subtitle');
+      expect(extra.legacy_exhibition).toBeUndefined();
 
       expect(result.success).toBe(true);
       expect(result.imported).toBe(1);
@@ -177,7 +189,7 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
     });
 
     it('skips and logs a warning when exh_title is missing', async () => {
-      const eavWithoutTitle = EXHIBITION_ALL_FIELDS_EAV.filter(r => r.field !== 'exh_title');
+      const eavWithoutTitle = EXHIBITION_ALL_FIELDS_EAV.filter((r) => r.field !== 'exh_title');
       context = {
         ...context,
         legacyDb: {
@@ -195,7 +207,7 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
     });
 
     it('skips and logs a warning when exh_title is blank after trimming', async () => {
-      const eavWithBlankTitle = EXHIBITION_ALL_FIELDS_EAV.map(r =>
+      const eavWithBlankTitle = EXHIBITION_ALL_FIELDS_EAV.map((r) =>
         r.field === 'exh_title' ? { ...r, value: '   ' } : r
       );
       context = {
@@ -216,7 +228,12 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
 
     it('omits extra fields when their source values are empty', async () => {
       const eavTitleOnly = [
-        { entity_id: EXHIBITION_ID, lang_id: 'en', field: 'exh_title', value: 'Minimal Exhibition' },
+        {
+          entity_id: EXHIBITION_ID,
+          lang_id: 'en',
+          field: 'exh_title',
+          value: 'Minimal Exhibition',
+        },
       ];
       context = {
         ...context,
@@ -230,93 +247,106 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
       await importer.import();
 
       const call = writeCollectionTranslationMock.mock.calls[0][0] as Record<string, unknown>;
-      // extra contains only legacy_exhibition (from mwnf3.exhibitions metadata)
-      expect(call.extra).toBeDefined();
-      const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-      expect(extra.credits).toBeUndefined();
-      expect(extra.intro_header).toBeUndefined();
-      expect(extra.intro_text).toBeUndefined();
-      expect(extra.subtitle).toBeUndefined();
+      expect(call.extra).toBeNull();
     });
   });
 
   // ==========================================================================
-  // Legacy exhibition metadata in extra (Issue #1218)
+  // Legacy exhibition metadata: site configuration (Issue #1218, M16 E4b)
   // ==========================================================================
 
-  describe('importExhibitionTranslations — legacy_exhibition metadata', () => {
-    it('includes legacy_exhibition.portal_image and legacy_exhibition.exh_link in extra', async () => {
-      const importer = new Mwnf3ExhibitionTranslationImporter(context);
-      await importer.import();
-
-      const call = writeCollectionTranslationMock.mock.calls[0][0] as Record<string, unknown>;
-      expect(call.extra).toBeDefined();
-      const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-      expect(extra.legacy_exhibition).toBeDefined();
-      const legacyExhibition = extra.legacy_exhibition as Record<string, unknown>;
-      expect(legacyExhibition.portal_image).toBe('umayyads.jpg');
-      expect(legacyExhibition.exh_link).toBe('the_umayyads');
-    });
-
-    it('includes project_id, display_order, show, new_status in legacy_exhibition', async () => {
-      const importer = new Mwnf3ExhibitionTranslationImporter(context);
-      await importer.import();
-
-      const call = writeCollectionTranslationMock.mock.calls[0][0] as Record<string, unknown>;
-      const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-      const legacyExhibition = extra.legacy_exhibition as Record<string, unknown>;
-      expect(legacyExhibition.project_id).toBe('ISL');
-      expect(legacyExhibition.display_order).toBe(5);
-      expect(legacyExhibition.show).toBe('y');
-      expect(legacyExhibition.new_status).toBe('new');
-    });
-
-    it('includes display_order when n is zero', async () => {
-      const metaWithZeroN = { ...EXHIBITION_META, n: 0 };
+  describe('legacy_exhibition metadata', () => {
+    const withMeta = (meta: Mwnf3LegacyExhibition) => {
       context = {
         ...context,
         legacyDb: {
           ...legacyDb,
-          query: makeExhibitionOnlyQueryMock(EXHIBITION_ALL_FIELDS_EAV, [metaWithZeroN]) as ILegacyDatabase['query'],
+          query: makeExhibitionOnlyQueryMock(EXHIBITION_ALL_FIELDS_EAV, [
+            meta,
+          ]) as ILegacyDatabase['query'],
         },
       };
+    };
 
-      const importer = new Mwnf3ExhibitionTranslationImporter(context);
-      await importer.import();
+    it('builds the list metadata for the exhibition translations', async () => {
+      const entries = await new Mwnf3ExhibitionTranslationImporter(context).siteConfiguration();
 
-      const call = writeCollectionTranslationMock.mock.calls[0][0] as Record<string, unknown>;
-      const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-      const legacyExhibition = extra.legacy_exhibition as Record<string, unknown>;
-      expect(legacyExhibition.display_order).toBe(0);
+      expect(entries).toEqual([
+        {
+          collection: EXHIBITION_COLLECTION_BC,
+          translationExtra: {
+            legacy_exhibition: {
+              project_id: 'ISL',
+              display_order: 5,
+              new_status: 'new',
+              portal_image: 'umayyads.jpg',
+              exh_link: 'the_umayyads',
+            },
+          },
+        },
+      ]);
     });
 
-    it('omits null optional fields from legacy_exhibition', async () => {
-      const metaNoPortalImage = {
-        ...EXHIBITION_META,
-        portal_image: null,
-        exh_link: null,
-        new_status: null,
-      };
+    it('keeps display_order when n is zero', () => {
+      expect(legacyExhibitionMetadata({ ...EXHIBITION_META, n: 0 }).display_order).toBe(0);
+    });
+
+    it('omits null optional fields', () => {
+      expect(
+        legacyExhibitionMetadata({
+          ...EXHIBITION_META,
+          portal_image: null,
+          exh_link: null,
+          new_status: null,
+        })
+      ).toEqual({ project_id: 'ISL', display_order: 5 });
+    });
+
+    it('builds nothing for an exhibition without a title', async () => {
       context = {
         ...context,
         legacyDb: {
           ...legacyDb,
-          query: makeExhibitionOnlyQueryMock(EXHIBITION_ALL_FIELDS_EAV, [metaNoPortalImage]) as ILegacyDatabase['query'],
+          query: makeExhibitionOnlyQueryMock(
+            EXHIBITION_ALL_FIELDS_EAV.filter((r) => r.field !== 'exh_title')
+          ) as ILegacyDatabase['query'],
         },
       };
 
-      const importer = new Mwnf3ExhibitionTranslationImporter(context);
-      await importer.import();
+      const entries = await new Mwnf3ExhibitionTranslationImporter(context).siteConfiguration();
+
+      expect(entries).toEqual([]);
+    });
+
+    it('no longer writes legacy_exhibition into the translation', async () => {
+      await new Mwnf3ExhibitionTranslationImporter(context).import();
 
       const call = writeCollectionTranslationMock.mock.calls[0][0] as Record<string, unknown>;
       const extra = JSON.parse(call.extra as string) as Record<string, unknown>;
-      const legacyExhibition = extra.legacy_exhibition as Record<string, unknown>;
-      expect(legacyExhibition.portal_image).toBeUndefined();
-      expect(legacyExhibition.exh_link).toBeUndefined();
-      expect(legacyExhibition.new_status).toBeUndefined();
-      // project_id and display_order should still be present
-      expect(legacyExhibition.project_id).toBe('ISL');
-      expect(legacyExhibition.display_order).toBe(5);
+      expect(extra.legacy_exhibition).toBeUndefined();
+    });
+
+    it('sets the collection visible when legacy shows the exhibition', async () => {
+      await new Mwnf3ExhibitionTranslationImporter(context).import();
+
+      expect(setCollectionFlagsMock).toHaveBeenCalledWith('exhibition-uuid', { visible: true });
+    });
+
+    it('hides the collection when legacy does not show the exhibition', async () => {
+      withMeta({ ...EXHIBITION_META, show: 'n' });
+
+      await new Mwnf3ExhibitionTranslationImporter(context).import();
+
+      expect(setCollectionFlagsMock).toHaveBeenCalledWith('exhibition-uuid', { visible: false });
+    });
+
+    it('leaves the flag alone when the show value is neither y nor n', async () => {
+      withMeta({ ...EXHIBITION_META, show: '' as unknown as Mwnf3LegacyExhibition['show'] });
+
+      await new Mwnf3ExhibitionTranslationImporter(context).import();
+
+      expect(setCollectionFlagsMock).not.toHaveBeenCalled();
+      expect(writeCollectionTranslationMock).toHaveBeenCalledTimes(1);
     });
 
     it('theme translations do not receive legacy_exhibition in extra', async () => {
@@ -457,7 +487,9 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
     });
 
     it('description is only from art_description when art_intro_text is absent', async () => {
-      const eavWithoutIntroText = ARTINTRO_ALL_FIELDS_EAV.filter(r => r.field !== 'art_intro_text');
+      const eavWithoutIntroText = ARTINTRO_ALL_FIELDS_EAV.filter(
+        (r) => r.field !== 'art_intro_text'
+      );
       context = {
         ...context,
         legacyDb: {
@@ -476,7 +508,7 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
     });
 
     it('skips and logs a warning when art_title is missing', async () => {
-      const eavWithoutTitle = ARTINTRO_ALL_FIELDS_EAV.filter(r => r.field !== 'art_title');
+      const eavWithoutTitle = ARTINTRO_ALL_FIELDS_EAV.filter((r) => r.field !== 'art_title');
       context = {
         ...context,
         legacyDb: {

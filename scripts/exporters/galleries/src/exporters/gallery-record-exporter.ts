@@ -3,6 +3,7 @@ import { parseJson } from '../core/database.js'
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
+import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 
 /** The `thg_gallery` fields the importer copies onto every language row of the hub's collection. */
 interface HubChrome {
@@ -38,6 +39,7 @@ export class GalleryRecordExporter extends BaseExporter {
           `SELECT collection_id, language_id, title, extra FROM collection_translations WHERE collection_id = ? ORDER BY language_id`,
           [this.hub.id]
         )
+        .then(restoreSiteTranslations)
         .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows)),
     ])
 
@@ -50,7 +52,9 @@ export class GalleryRecordExporter extends BaseExporter {
       const parsed = parseJson<{ thg_gallery?: HubChrome }>(row.extra)
       if (!chrome.banner_image && parsed?.thg_gallery) chrome = parsed.thg_gallery
     }
-    const anchor = parseJson<{ thg_gallery?: { slug?: string; host?: string } }>(collections[0]?.extra)?.thg_gallery ?? {}
+    const anchor =
+      parseJson<{ thg_gallery?: { slug?: string; host?: string } }>(withSiteCollectionExtra(collections[0]?.extra, this.hub.id))
+        ?.thg_gallery ?? {}
 
     const [bannerItemId, homepageItemId] = await Promise.all([
       this.resolveItemReference(chrome.banner_item),

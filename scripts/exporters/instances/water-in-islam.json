@@ -3,5 +3,88 @@
   "slug": "water-in-islam",
   "name": "Water in Islam",
   "collection_id": "8635ee08-9015-5583-8d09-526c932e8d36",
-  "package_name": "@museumwnf/water-in-islam-data"
+  "package_name": "@museumwnf/water-in-islam-data",
+  "collections": {
+    "8635ee08-9015-5583-8d09-526c932e8d36": {
+      "extra": {
+        "logos": [
+          {
+            "file": "thematic_gallery/thg_galleries/56/logo/42/1.jpg",
+            "link": "https://www.unaoc.org/",
+            "labels": {
+              "eng": "United Nations Alliance of Civilizations"
+            },
+            "visible": true,
+            "category_id": 1,
+            "category_name": "Footer 1",
+            "display_order": 1
+          }
+        ],
+        "thg_gallery": {
+          "host": "https://exhibitions.museumwnf.org",
+          "slug": "water_in_islam",
+          "i18n_group_id": 75,
+          "hidden_partners": [
+            {
+              "partner_id": "2fdf7845-02a0-5dee-822f-aa31efdd3b52",
+              "backward_compatibility": "mwnf3:museums:Mus82:es"
+            },
+            {
+              "partner_id": "983b0e8b-33f6-5a33-9cb9-713086b20365",
+              "backward_compatibility": "mwnf3:museums:Mus83:jo"
+            },
+            {
+              "partner_id": "ce3247b9-66e0-5f8a-8a89-84331a2ec436",
+              "backward_compatibility": "mwnf3:museums:Mus81:pt"
+            },
+            {
+              "partner_id": "2199ae06-0841-5113-9fe0-9d189579a6cf",
+              "backward_compatibility": "mwnf3:museums:Mus82:us"
+            },
+            {
+              "partner_id": "58c8172d-fae1-5f16-b902-72c508fa89ca",
+              "backward_compatibility": "mwnf3:museums:Mus83:us"
+            },
+            {
+              "partner_id": "77df4de0-b517-5d99-a1f5-e81c745d07d5",
+              "backward_compatibility": "mwnf3:museums:Mus84:us"
+            },
+            {
+              "partner_id": "af4615a8-3b32-5dd1-982c-aa0295c74353",
+              "backward_compatibility": "mwnf3:institutions:Mon01:es"
+            },
+            {
+              "partner_id": "b9805a0c-521a-5023-8e4f-f310f1b27296",
+              "backward_compatibility": "mwnf3:institutions:Mon81:pa"
+            }
+          ],
+          "mwnf3_project_id": "GalEx6",
+          "i18n_common_group_id": 59
+        }
+      },
+      "translation_extra": {
+        "thg_gallery": {
+          "link": "water_in_islam",
+          "banner_item": "mwnf#obj#DCA;hr;Mus31;25",
+          "banner_image": "thematic_gallery/thg_galleries/56/banner.jpg",
+          "has_timeline": false,
+          "homepage_item": "mwnf#mon#ISL;ma;Mon01;1",
+          "homepage_image": "thematic_gallery/thg_galleries/56/home_image.jpg",
+          "mwnf3_project_id": "GalEx6",
+          "has_country_timeline": false
+        }
+      },
+      "translations": {
+        "eng": {
+          "exhibition_i18n": {
+            "enabled": "Y",
+            "heading": "Islam emerged in Arabia, where water was rare, deeply valued, and frequently mentioned in the Qur’an. **As Islam spread across diverse regions, water shaped religious practice, agriculture, urban life, and systems of management adapted to local environments**. It carried rich symbolic meanings in both sacred and profane literature and played a central role in social and spiritual life. Today, water remains at the heart of Islamic cities, where environmental pressures and rapid urbanisation renew its cultural, ethical, and practical significance.",
+            "subtitle": "\"And We Made from Water Every Living Thing\"",
+            "popup_logo": "**Welcome to the MWNF online exhibition platform!**\n\nFor more than 30 years, Museum With No Frontiers has promoted mutual understanding through the knowledge of cultural heritage and history.\n\nAll MWNF projects are transnational collaborations and are based on a multilateral approach to the topic, combining the different perspectives to a joint narrative.\n\n**If you believe that what we do is important, please consider making a donation via PayPal or a bank transfer.** Contact us at this [email](<mailto: management@museumwnf.net>) for further details.\n\n**Thank you**\n\n**The MWNF Team**",
+            "popup_logo_show": "Y"
+          }
+        }
+      }
+    }
+  }
 }
