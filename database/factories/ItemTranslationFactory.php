@@ -61,6 +61,17 @@ class ItemTranslationFactory extends Factory
             'copy_editor_credit' => $this->faker->optional()->name,
             'translator_credit' => $this->faker->optional()->name,
             'translation_copy_editor_credit' => $this->faker->optional()->name,
+            'keywords' => $this->faker->optional()->words(3, true),
+            'artist' => $this->faker->optional()->name,
+            'artist_period_of_activity' => $this->faker->optional()->century,
+            'artist_birth_date' => $this->faker->optional()->year,
+            'artist_birth_place' => $this->faker->optional()->city,
+            'artist_death_date' => $this->faker->optional()->year,
+            'artist_death_place' => $this->faker->optional()->city,
+            'workshop' => $this->faker->optional()->company,
+            'scribe' => $this->faker->optional()->name,
+            'patrons' => $this->faker->optional()->name,
+            'architects' => $this->faker->optional()->name,
             'extra' => $this->faker->optional()->passthrough(
                 json_encode($this->faker->randomElements(['key1' => 'value1', 'key2' => 'value2'], null, false))
             ),

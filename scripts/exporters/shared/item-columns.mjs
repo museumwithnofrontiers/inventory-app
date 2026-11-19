@@ -14,6 +14,8 @@
  *   `prepared_by`, the legacy field those texts had; on any other text the four
  *   go back inside `credits_as_written`. The translation's legacy key says
  *   which, so `itemColumnsSelect` selects it too.
+ * - B2 (inventory-app#2636) and B3 (inventory-app#2637): the keyword line and
+ *   the artist, workshop, scribe, patron and architect lines, as written.
  *
  * Types are in `item-columns.d.mts`.
  */
@@ -32,6 +34,17 @@ export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
   Object.freeze({ key: 'credits_as_written.translator', column: 'translator_credit' }),
   Object.freeze({ key: 'credits_as_written.translation_copy_editor', column: 'translation_copy_editor_credit' }),
   Object.freeze({ key: 'prepared_by', column: 'author_credit' }),
+  Object.freeze({ key: 'keywords', column: 'keywords' }),
+  Object.freeze({ key: 'artist', column: 'artist' }),
+  Object.freeze({ key: 'period_activity', column: 'artist_period_of_activity' }),
+  Object.freeze({ key: 'artist_birthdate', column: 'artist_birth_date' }),
+  Object.freeze({ key: 'artist_birthplace', column: 'artist_birth_place' }),
+  Object.freeze({ key: 'artist_deathdate', column: 'artist_death_date' }),
+  Object.freeze({ key: 'artist_deathplace', column: 'artist_death_place' }),
+  Object.freeze({ key: 'workshop', column: 'workshop' }),
+  Object.freeze({ key: 'scriber', column: 'scribe' }),
+  Object.freeze({ key: 'patrons', column: 'patrons' }),
+  Object.freeze({ key: 'architects', column: 'architects' }),
 ])
 
 /** The translation's legacy key, selected next to the columns under this name. */

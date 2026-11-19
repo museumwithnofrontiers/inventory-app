@@ -19,15 +19,26 @@
         },
         "item_translations": {
             "keys": {
+                "architects": 0,
+                "artist": 0,
+                "artist_birthdate": 0,
+                "artist_birthplace": 0,
+                "artist_deathdate": 0,
+                "artist_deathplace": 0,
                 "credits_as_written": 0,
                 "datation_method": 0,
                 "description2": 0,
                 "dimensions": 0,
                 "dynasty": 0,
                 "history": 0,
+                "keywords": 0,
                 "materials": 0,
+                "patrons": 0,
+                "period_activity": 0,
                 "prepared_by": 0,
-                "province": 0
+                "province": 0,
+                "scriber": 0,
+                "workshop": 0
             }
         },
         "partner_images": {

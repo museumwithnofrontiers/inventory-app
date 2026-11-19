@@ -85,8 +85,8 @@ class ItemTranslationTest extends TestCase
     }
 
     /**
-     * The display texts and credits that left `extra` (M16 B1, B4) are stored
-     * and served as written.
+     * The display texts and credits that left `extra` (M16 B1 to B4) are
+     * stored and served as written.
      */
     public function test_stores_and_serves_the_display_columns(): void
     {
@@ -101,6 +101,17 @@ class ItemTranslationTest extends TestCase
             'copy_editor_credit' => 'Mandi Gomez.',
             'translator_credit' => 'Hilary Kalmbach (from the Arabic).',
             'translation_copy_editor_credit' => 'Margot Cortez.',
+            'keywords' => 'Basin; ablution; Mamluk metalwork',
+            'artist' => 'Muhammad ibn al-Zayn',
+            'artist_period_of_activity' => 'Active about 1300',
+            'artist_birth_date' => 'Unknown',
+            'artist_birth_place' => 'Cairo (?)',
+            'artist_death_date' => 'After 1320',
+            'artist_death_place' => 'Damascus',
+            'workshop' => 'Royal workshops of Cairo',
+            'scribe' => 'Ibn al-Bawwab',
+            'patrons' => 'Sultan al-Nasir Muhammad',
+            'architects' => 'Unknown',
         ];
 
         $this->putJson(route('item-translation.update', $resource), $texts)
@@ -111,7 +122,11 @@ class ItemTranslationTest extends TestCase
             ->assertJsonPath('data.region', $texts['region'])
             ->assertJsonPath('data.history', $texts['history'])
             ->assertJsonPath('data.author_credit', $texts['author_credit'])
-            ->assertJsonPath('data.translation_copy_editor_credit', $texts['translation_copy_editor_credit']);
+            ->assertJsonPath('data.translation_copy_editor_credit', $texts['translation_copy_editor_credit'])
+            ->assertJsonPath('data.keywords', $texts['keywords'])
+            ->assertJsonPath('data.artist', $texts['artist'])
+            ->assertJsonPath('data.artist_death_place', $texts['artist_death_place'])
+            ->assertJsonPath('data.architects', $texts['architects']);
 
         $this->assertDatabaseHas('item_translations', ['id' => $resource->id] + $texts);
     }

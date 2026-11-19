@@ -138,7 +138,7 @@ Never hardcode lists of image models — always use the registry.
 ## Model: what goes in `extra` (ADR 006)
 
 See docs/adr/006-what-goes-in-extra.md.
-- Translation columns hold the display text as written. Links hold the structure next to it. One never replaces the other.
+- Translation columns hold the display text as written. Links hold the structure next to it. One never replaces the other, and neither is derived from the other: never create a Dynasty, Artist or Tag link from a display text, and never rebuild a display line from links.
 - The row's legacy key goes in `backward_compatibility` (one string), never in `extra`.
 - Site configuration goes in the instance files (`scripts/exporters/instances/`) and the site repos, not the inventory.
 - `extra` keeps only true one-offs. A key that more than one importer step writes, or that an exporter reads as content, gets a column, a link or a model, with its field in the panel.

@@ -24,7 +24,12 @@ These keys are written here first, then moved to columns of their own by
   `province` → `region`, `history` → `history`;
 - M16 B4 (#2638): `credits_as_written.{author, copy_editor, translator, translation_copy_editor}` →
   `author_credit`, `copy_editor_credit`, `translator_credit`, `translation_copy_editor_credit`; and the
-  Explore and Travels `prepared_by` → `author_credit`.
+  Explore and Travels `prepared_by` → `author_credit`;
+- M16 B2 (#2636), B3 (#2637): `keywords`, `artist`, `period_activity` → `artist_period_of_activity`,
+  `artist_birthdate` → `artist_birth_date`, `artist_birthplace` → `artist_birth_place`,
+  `artist_deathdate` → `artist_death_date`, `artist_deathplace` → `artist_death_place`, `workshop`,
+  `scriber` → `scribe`, `patrons`, `architects`. They are display texts: the keyword Tags and the
+  Artist links the object importers create stay as they are, and nothing is derived from the texts.
 
 None stays after a full import. After re-running one of their writers on its own, run `--only item-translation-columns` again. The exporters give the keys back to the packages
 (`scripts/exporters/shared/item-columns.mjs`); the two lists in `utils/item-translation-columns.ts` and

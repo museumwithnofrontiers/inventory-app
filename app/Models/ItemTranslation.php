@@ -37,6 +37,17 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $copy_editor_credit
  * @property string|null $translator_credit
  * @property string|null $translation_copy_editor_credit
+ * @property string|null $keywords
+ * @property string|null $artist
+ * @property string|null $artist_period_of_activity
+ * @property string|null $artist_birth_date
+ * @property string|null $artist_birth_place
+ * @property string|null $artist_death_date
+ * @property string|null $artist_death_place
+ * @property string|null $workshop
+ * @property string|null $scribe
+ * @property string|null $patrons
+ * @property string|null $architects
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -138,6 +149,17 @@ class ItemTranslation extends Model
         'copy_editor_credit',
         'translator_credit',
         'translation_copy_editor_credit',
+        'keywords',
+        'artist',
+        'artist_period_of_activity',
+        'artist_birth_date',
+        'artist_birth_place',
+        'artist_death_date',
+        'artist_death_place',
+        'workshop',
+        'scribe',
+        'patrons',
+        'architects',
         'backward_compatibility',
         'extra',
     ];

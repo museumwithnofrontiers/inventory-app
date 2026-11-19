@@ -55,7 +55,8 @@ The M16 stories add columns and links where `extra` held content (ADR 006):
 | Story | Adds | Used by |
 |---|---|---|
 | B1 #2635 | `materials`, `short_description`, `dynasty`, `history`, `region` | objects, monuments; `dynasty` also pictures |
-| B3 #2637 | the artist line as written, Artist translations and roles | objects, monuments |
+| B2 #2636 | `keywords`, the keyword line as written (the Tags are unchanged) | objects, monuments |
+| B3 #2637 | `artist`, `artist_period_of_activity`, `artist_birth_date`, `artist_birth_place`, `artist_death_date`, `artist_death_place`, `workshop`, `scribe`, `patrons`, `architects`, as written (the Artist links are unchanged; Workshop is removed) | objects, monuments |
 | B4 #2638 | `author_credit`, `copy_editor_credit`, `translator_credit`, `translation_copy_editor_credit` | objects, monuments |
 | B6 #2640 | `status`: published, unedited, hidden | every type |
 | D1 #2645 | VisitInformation (its own model) | monuments |

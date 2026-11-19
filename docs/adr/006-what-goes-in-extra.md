@@ -22,7 +22,7 @@ The panel can't edit `extra` as fields. An editor can't correct the dynasty line
 ### The rule
 
 1. **Translation columns hold the display text, as written.** `dates`, `location` and `holder` already do. Nothing is reworded or merged on the way in: legacy's text is what the sites print.
-2. **Links hold the structure, next to that text.** `start_date`, `country`, `partner`, the Dynasty and Artist links, and the Author links for credits. A link drives indexes and filters; the text is what a sheet prints. One doesn't replace the other.
+2. **Links hold the structure, next to that text.** `start_date`, `country`, `partner`, the Dynasty and Artist links, and the Author links for credits. A link drives indexes and filters; the text is what a sheet prints. One doesn't replace the other, and neither is derived from the other: no link, Artist or Tag is made from a display text, and no display text is rebuilt from links (2026-11-19). An item with a text and no link is a normal state; linking it is editorial work in the panel.
 3. **The row's legacy key goes in `backward_compatibility`**, never in `extra`. The column holds one string. So another legacy code is dropped when it only repeats the key, and gets a home when an exporter needs it.
 4. **Site configuration belongs to the sites:** the instance files (`scripts/exporters/instances/*.json`) and the site repos. The inventory keeps only the editorial flags `visible`, `featured` and `published_at`.
 5. **`extra` keeps only true one-offs.** A key gets a home in the model when more than one importer step writes it, or when an exporter reads it as content.

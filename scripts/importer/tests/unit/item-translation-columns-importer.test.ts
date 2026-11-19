@@ -16,14 +16,14 @@ describe('splitItemTranslationColumns', () => {
       materials: 'Brass, engraved',
       description2: 'A basin.',
       province: 'Damascus',
-      keywords: 'basin; brass',
+      copyright: 'MWNF',
     });
     expect(columns).toEqual({
       materials: 'Brass, engraved',
       short_description: 'A basin.',
       region: 'Damascus',
     });
-    expect(extra).toEqual({ keywords: 'basin; brass' });
+    expect(extra).toEqual({ copyright: 'MWNF' });
     expect(kept).toEqual([]);
   });
 
@@ -82,7 +82,31 @@ describe('splitItemTranslationColumns', () => {
     expect(kept).toEqual(['prepared_by']);
   });
 
-  it('covers the keys of B1 and B4', () => {
+  it('moves the keyword and artist lines, as written', () => {
+    const extra = {
+      keywords: 'Basin; ablution',
+      artist: 'Muhammad ibn al-Zayn',
+      period_activity: 'About 1300',
+      artist_birthdate: 'Unknown',
+      scriber: 'Ibn al-Bawwab',
+      patrons: 'Sultan al-Nasir Muhammad',
+      copyright: 'MWNF',
+    };
+    expect(splitItemTranslationColumns(extra)).toEqual({
+      extra: { copyright: 'MWNF' },
+      columns: {
+        keywords: 'Basin; ablution',
+        artist: 'Muhammad ibn al-Zayn',
+        artist_period_of_activity: 'About 1300',
+        artist_birth_date: 'Unknown',
+        scribe: 'Ibn al-Bawwab',
+        patrons: 'Sultan al-Nasir Muhammad',
+      },
+      kept: [],
+    });
+  });
+
+  it('covers the keys of B1 to B4', () => {
     expect(ITEM_TRANSLATION_COLUMNS.map((c) => `${c.key}→${c.column}`)).toEqual([
       'materials→materials',
       'description2→short_description',
@@ -94,6 +118,17 @@ describe('splitItemTranslationColumns', () => {
       'credits_as_written.translator→translator_credit',
       'credits_as_written.translation_copy_editor→translation_copy_editor_credit',
       'prepared_by→author_credit',
+      'keywords→keywords',
+      'artist→artist',
+      'period_activity→artist_period_of_activity',
+      'artist_birthdate→artist_birth_date',
+      'artist_birthplace→artist_birth_place',
+      'artist_deathdate→artist_death_date',
+      'artist_deathplace→artist_death_place',
+      'workshop→workshop',
+      'scriber→scribe',
+      'patrons→patrons',
+      'architects→architects',
     ]);
     expect(ITEM_TRANSLATION_COLUMN_KEYS).toEqual([
       'materials',
@@ -103,6 +138,17 @@ describe('splitItemTranslationColumns', () => {
       'history',
       'credits_as_written',
       'prepared_by',
+      'keywords',
+      'artist',
+      'period_activity',
+      'artist_birthdate',
+      'artist_birthplace',
+      'artist_deathdate',
+      'artist_deathplace',
+      'workshop',
+      'scriber',
+      'patrons',
+      'architects',
     ]);
   });
 });

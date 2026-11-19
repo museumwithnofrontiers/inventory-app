@@ -8,6 +8,11 @@
  * - B4 (#2638): `credits_as_written.{author, copy_editor, translator,
  *   translation_copy_editor}` → the four `*_credit` columns; `prepared_by`
  *   (Explore and Travels texts) → `author_credit`.
+ * - B2 (#2636), B3 (#2637): `keywords`, `artist` and the artist's life data
+ *   (`artist_birthdate` → `artist_birth_date`, …, `period_activity` →
+ *   `artist_period_of_activity`), `workshop`, `scriber` → `scribe`, `patrons`,
+ *   `architects`. Display texts only: the Tags and Artist links stay as
+ *   imported.
  *
  * The mwnf3, Sharing History, Explore and Travels object and monument
  * importers write these keys, and later steps move translations between
