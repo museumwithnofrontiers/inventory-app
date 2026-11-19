@@ -57,7 +57,9 @@ export class DynastyExporter extends BaseExporter {
     const dynasties = await this.db.query<DynastyRow>(
       `SELECT id, backward_compatibility, from_ah, to_ah, from_ad, to_ad
        FROM dynasties
-       ORDER BY from_ad`
+       -- Dynasties that start the same year: the one that ends first, then by
+       -- legacy key, so two exports of one database list them alike.
+       ORDER BY from_ad, to_ad, backward_compatibility, id`
     )
 
     if (dynasties.length === 0) {

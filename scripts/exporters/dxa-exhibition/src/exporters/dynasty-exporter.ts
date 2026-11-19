@@ -55,7 +55,9 @@ export class DynastyExporter extends BaseExporter {
        FROM dynasties d
        JOIN item_dynasty idyn ON idyn.dynasty_id = d.id
        WHERE idyn.item_id IN (${itemPh})
-       ORDER BY d.from_ad`,
+       -- Dynasties that start the same year: the one that ends first, then by
+       -- legacy key, so two exports of one database list them alike.
+       ORDER BY d.from_ad, d.to_ad, d.backward_compatibility, d.id`,
       this.memberItemIds
     )
 
