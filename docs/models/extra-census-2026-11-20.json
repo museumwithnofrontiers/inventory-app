@@ -1,0 +1,186 @@
+{
+    "total_rows": 962,
+    "tables": {
+        "author_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "collection_images": {
+            "rows": 0,
+            "keys": {}
+        },
+        "collection_item": {
+            "rows": 58,
+            "keys": {
+                "membership": 58
+            }
+        },
+        "collection_translations": {
+            "rows": 275,
+            "keys": {
+                "description_2": 233,
+                "bibliography": 13,
+                "about": 11,
+                "region_territory": 11,
+                "country_texts": 3,
+                "disabled_bibliography": 3,
+                "remark": 3,
+                "contacts": 1
+            }
+        },
+        "collections": {
+            "rows": 3,
+            "keys": {
+                "further_readings": 3
+            }
+        },
+        "contributor_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "country_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "dynasty_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "item_documents": {
+            "rows": 23,
+            "keys": {
+                "img_count": 23
+            }
+        },
+        "item_translations": {
+            "rows": 274,
+            "keys": {
+                "structured_bibliography": 98,
+                "binding_desc": 72,
+                "further_readings": 42,
+                "responsible_institution_org": 38,
+                "country_id_present_days": 22,
+                "name2": 1,
+                "note": 1
+            },
+            "by_item_type": {
+                "monument": {
+                    "rows": 86,
+                    "keys": {
+                        "further_readings": 42,
+                        "responsible_institution_org": 38,
+                        "structured_bibliography": 3,
+                        "country_id_present_days": 2,
+                        "note": 1
+                    }
+                },
+                "object": {
+                    "rows": 188,
+                    "keys": {
+                        "structured_bibliography": 95,
+                        "binding_desc": 72,
+                        "country_id_present_days": 20,
+                        "name2": 1
+                    }
+                }
+            }
+        },
+        "language_translations": {
+            "rows": 0,
+            "keys": {}
+        },
+        "links": {
+            "rows": 19,
+            "keys": {
+                "overview_page": 19
+            }
+        },
+        "partner_images": {
+            "rows": 0,
+            "keys": {}
+        },
+        "partner_translations": {
+            "rows": 23,
+            "keys": {
+                "region_id": 21,
+                "region": 7,
+                "ex_description": 2
+            }
+        },
+        "publication_collection": {
+            "rows": 0,
+            "keys": {}
+        },
+        "publication_documents": {
+            "rows": 0,
+            "keys": {}
+        },
+        "publication_editions": {
+            "rows": 76,
+            "keys": {
+                "legacy_texts": 76
+            }
+        },
+        "publication_images": {
+            "rows": 0,
+            "keys": {}
+        },
+        "publication_item": {
+            "rows": 156,
+            "keys": {
+                "linkcatalogs": 156
+            }
+        },
+        "publication_translations": {
+            "rows": 2,
+            "keys": {
+                "remarks_1": 2
+            }
+        },
+        "publications": {
+            "rows": 3,
+            "keys": {
+                "region": 3
+            }
+        },
+        "timeline_event_item": {
+            "rows": 16,
+            "keys": {
+                "texts": 16
+            }
+        },
+        "timeline_event_translations": {
+            "rows": 8,
+            "keys": {
+                "organisers": 8,
+                "rea_cities": 8,
+                "rea_countries": 8,
+                "remarks": 1
+            }
+        },
+        "timeline_events": {
+            "rows": 8,
+            "keys": {
+                "ongoing": 8
+            }
+        },
+        "timelines": {
+            "rows": 18,
+            "keys": {
+                "bibliography": 16,
+                "description": 1,
+                "disabled_bibliography": 1,
+                "organisers": 1,
+                "rea_countries": 1,
+                "rea_from_year": 1,
+                "rea_to_year": 1,
+                "sponsors": 1,
+                "title": 1
+            }
+        },
+        "visit_information": {
+            "rows": 0,
+            "keys": {}
+        }
+    }
+}
