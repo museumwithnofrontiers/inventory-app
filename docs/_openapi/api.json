@@ -28799,6 +28799,19 @@
                             "null"
                         ]
                     },
+                    "copyright": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The picture's own credit and photographer in this language, as written"
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "backward_compatibility": {
                         "type": [
                             "string",
@@ -28833,6 +28846,8 @@
                     "date",
                     "museum",
                     "location",
+                    "copyright",
+                    "photographer",
                     "backward_compatibility",
                     "created_at",
                     "updated_at"
@@ -29776,6 +29791,27 @@
                         ],
                         "description": "External sources as legacy wrote them (a text, links included)"
                     },
+                    "original_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The name in the item's original language, as written (Sharing History)"
+                    },
+                    "holder_original_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The holding institution's name in its own language, as written"
+                    },
+                    "archival_reference": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "description": "The archival reference or source citation, as written"
+                    },
                     "backward_compatibility": {
                         "type": [
                             "string",
@@ -29936,6 +29972,9 @@
                     "external_notice",
                     "image_rights",
                     "external_sources",
+                    "original_name",
+                    "holder_original_name",
+                    "archival_reference",
                     "backward_compatibility",
                     "extra",
                     "created_at",
@@ -32985,6 +33024,18 @@
                             "null"
                         ]
                     },
+                    "copyright": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "backward_compatibility": {
                         "type": [
                             "string",
@@ -33596,6 +33647,24 @@
                         ]
                     },
                     "external_sources": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "original_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "holder_original_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "archival_reference": {
                         "type": [
                             "string",
                             "null"
@@ -36683,6 +36752,18 @@
                             "null"
                         ]
                     },
+                    "copyright": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "photographer": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "backward_compatibility": {
                         "type": [
                             "string",
@@ -37269,6 +37350,24 @@
                         ]
                     },
                     "external_sources": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "original_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "holder_original_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "archival_reference": {
                         "type": [
                             "string",
                             "null"
