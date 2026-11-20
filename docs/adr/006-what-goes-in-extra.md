@@ -40,6 +40,22 @@ The panel can't edit `extra` as fields. An editor can't correct the dynasty line
 | 6 | Site configuration | **(a)** It goes to the instance files and site repos. A `site_settings` JSON column would be `extra` under another name. |
 | 7 | Partner category, portal display, city | Three columns on partners: `category`; `featured`, from `portal_display`, which Explore and the galleries ship as a partner's `featured` flag; `city`, one value for every language, which the Sharing History partner list prints. |
 
+### Decisions taken during M16 (Pascal)
+
+| Date | Question | Decided |
+|---|---|---|
+| 2026-11-19 | May a link, Artist or Tag be made from a display text, or a text rebuilt from links? | No, either way (rule 2). Display text and documentation links stay apart too: neither is derived from the other. |
+| 2026-11-20 | Sharing History's `second_name` ("Other name") and its one `name2` ("Also known as") | `second_name` is the `alternate_name` column, which mwnf3's `name2` fills elsewhere (no text has both). Sharing History's single `name2` stays in `extra` as a one-off (B7, #2690). |
+| 2026-11-20 | Glossary links in the Sharing History second names now in `alternate_name` | Kept, as for mwnf3's "Also known as". |
+| 2026-11-20 | Dynasty images in the packages | Stable, in legacy's order of a dynasty's items (start date, project, country, partner, number), then the item's first picture (G5, #2704). |
+| 2026-11-20 | Explore's `period_from`/`period_to` | Into those monuments' `start_date`/`end_date` (G2, #2697). |
+| 2026-11-20 | A timeline event with no end year | `year_to` is nullable: no end year, not 0 (G2, #2697; G3, #2699). |
+| 2026-11-20 | Object start and end years written as a decade ("1960s") | Kept as legacy's API reads them (the leading integer), the text as written in `dates`; typos are fixed in legacy (#2339). |
+
+### Result
+
+The full reimport of 2026-11-20 (G1, #2655) left **962 rows** with `extra`, against 72,145 before and the design's estimate of about 3,400: every key within [`extra-census-m16.json`](../models/extra-census-m16.json), the census in [`extra-census-2026-11-20.json`](../models/extra-census-2026-11-20.json). Every data package difference it caused is one a decision above names, and parity showed no regression.
+
 ## Consequences
 
 - Every M16 story moves its keys into columns, links or models, with the panel fields to edit them. A key that leaves `extra` without a field in the panel is not done.
