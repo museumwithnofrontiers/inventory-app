@@ -139,11 +139,10 @@ export function transformShMonumentDetailTranslation(
     return null;
   }
 
-  // Build extra JSON for translation-specific fields
+  // Build extra JSON for translation-specific fields. The date and location
+  // live in their columns (`dates`, `location`) only (M16 G2 #2697).
   const extra: Record<string, unknown> = {};
   if (text.artist) extra.artist = convertHtmlToMarkdown(text.artist);
-  if (text.date) extra.date = text.date;
-  if (text.location) extra.location = convertHtmlToMarkdown(text.location);
 
   const extraField = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 

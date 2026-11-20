@@ -3,8 +3,37 @@ import { describe, expect, it } from 'vitest';
 import {
   transformHcrEvent,
   transformHcrEventTranslation,
+  transformShHcrEvent,
 } from '../../src/domain/transformers/timeline-transformer.js';
-import type { LegacyHcrEvent } from '../../src/domain/types/index.js';
+import type { LegacyHcrEvent, ShLegacyHcr } from '../../src/domain/types/index.js';
+
+const shHcr = (overrides: Partial<ShLegacyHcr> = {}): ShLegacyHcr => ({
+  hcr_id: 1497,
+  country: 'es',
+  exhibition_id: 1,
+  name: 'Event',
+  date_from_year: '1701',
+  date_to_year: '1714',
+  date_from_month: null,
+  date_to_month: null,
+  date_from_date: null,
+  date_to_date: null,
+  ...overrides,
+});
+
+describe('transformShHcrEvent end year (M16 G2 #2697)', () => {
+  it('keeps the end year as written', () => {
+    expect(transformShHcrEvent(shHcr()).data.year_to).toBe(1714);
+  });
+
+  it('gives no end year, not 0, when legacy has none', () => {
+    const event = transformShHcrEvent(shHcr({ date_to_year: '' })).data;
+
+    expect(event.year_to).toBeNull();
+    expect(event.date_to).toBeNull();
+    expect(event.year_from).toBe(1701);
+  });
+});
 
 const hcrEvent = (overrides: Partial<LegacyHcrEvent> = {}): LegacyHcrEvent => ({
   hcr_id: 101,

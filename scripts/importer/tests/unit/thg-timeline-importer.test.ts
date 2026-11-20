@@ -149,6 +149,21 @@ describe('ThgTimelineImporter', () => {
     );
   });
 
+  it('writes no end year, not 0, when legacy has none (M16 G2 #2697)', async () => {
+    const baseQuery = queryMock.getMockImplementation() as (sql: string) => Promise<unknown[]>;
+    queryMock.mockImplementation(async (sql: string) =>
+      sql.includes('FROM mwnf3_thematic_gallery.hcr') && !sql.includes('hcr_events')
+        ? [{ hcr_id: 10, gallery_id: 7, name: 'Open-ended', from_ad: 900, to_ad: null, from_ah: 287, to_ah: null }]
+        : baseQuery(sql)
+    );
+
+    await new ThgTimelineImporter(context).import();
+
+    expect(writeTimelineEventMock).toHaveBeenCalledWith(
+      expect.objectContaining({ year_from: 900, year_to: null, year_to_ah: null })
+    );
+  });
+
   it('creates a timeline event translation using lang_id from hcr_events', async () => {
     const importer = new ThgTimelineImporter(context);
     await importer.import();

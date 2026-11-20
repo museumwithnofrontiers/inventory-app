@@ -16,6 +16,8 @@
  * - exploremonumentext.name → internal_name (default language first, then first named translation)
  * - geoCoordinates → latitude, longitude
  * - zoom → map_zoom
+ * - exploremonumentext.period_from / period_to → start_date / end_date, as
+ *   written, natively created monuments only (M16 G2 #2697)
  * - locationId → collection link (via collection_item pivot), which keeps the
  *   monument's id, position and museums whichever record it resolves to
  *   (writeLocationLink)
@@ -35,6 +37,7 @@ import {
   transformExploreMonument,
   type ExploreLegacyMonument,
   type ExploreMonumentNameTranslation,
+  type ExploreMonumentPeriodRow,
 } from '../../domain/transformers/explore-monument-transformer.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { ExploreMonumentResolver } from './explore-monument-resolver.js';
@@ -119,6 +122,7 @@ export class ExploreMonumentImporter extends BaseImporter {
         ]);
       }
 
+      const periodsByMonumentId = await this.loadPeriods();
       this.museumsByMonument = await this.loadMuseums();
 
       this.logInfo(`Found ${monuments.length} monuments to import`);
@@ -155,6 +159,18 @@ export class ExploreMonumentImporter extends BaseImporter {
           const collectionId = legacy.locationId
             ? await this.getLocationCollectionId(legacy.locationId)
             : null;
+
+          // Its period years belong to the item created here: one that
+          // resolves onto another record keeps that record's years (none does
+          // today), reported.
+          if (
+            (resolution.mode === 'resolvedCandidates' || resolution.mode === 'referenced') &&
+            periodsByMonumentId.has(legacy.monumentId)
+          ) {
+            this.logWarning(
+              `Explore monument ${backwardCompat} resolves onto another record; its period_from/period_to are not written there`
+            );
+          }
 
           // A monument that resolves onto another record takes that record's
           // name: legacy lists one with no name rows of its own (1682) under
@@ -204,7 +220,12 @@ export class ExploreMonumentImporter extends BaseImporter {
             );
           }
 
-          const transformed = transformExploreMonument(legacy, translations, defaultLanguageId);
+          const transformed = transformExploreMonument(
+            legacy,
+            translations,
+            defaultLanguageId,
+            periodsByMonumentId.get(legacy.monumentId) ?? []
+          );
           for (const w of transformed.warnings) {
             this.logWarning(w);
           }
@@ -326,6 +347,28 @@ export class ExploreMonumentImporter extends BaseImporter {
       display_order: null,
       extra,
     });
+  }
+
+  /**
+   * The period years each Explore monument has on its text rows
+   * (`exploremonumentext.period_from`, `period_to`; M16 G2 #2697), by monument.
+   */
+  private async loadPeriods(): Promise<Map<number, ExploreMonumentPeriodRow[]>> {
+    const rows = await this.context.legacyDb.query<ExploreMonumentPeriodRow & { monumentId: number }>(
+      `SELECT monumentId, langId, period_from, period_to
+       FROM mwnf3_explore.exploremonumentext
+       WHERE NULLIF(TRIM(period_from), '') IS NOT NULL OR NULLIF(TRIM(period_to), '') IS NOT NULL
+       ORDER BY monumentId, langId`
+    );
+    const periods = new Map<number, ExploreMonumentPeriodRow[]>();
+    for (const row of rows) {
+      if (!row.period_from?.trim() && !row.period_to?.trim()) continue;
+      periods.set(row.monumentId, [
+        ...(periods.get(row.monumentId) ?? []),
+        { langId: row.langId, period_from: row.period_from ?? null, period_to: row.period_to ?? null },
+      ]);
+    }
+    return periods;
   }
 
   /**

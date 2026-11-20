@@ -380,6 +380,47 @@ describe('ExploreMonumentImporter', () => {
     expect(result.success).toBe(true);
   });
 
+  it('writes period_from and period_to as the start and end years of a natively created monument (M16 G2 #2697)', async () => {
+    queryMock = vi.fn(async (sql: string) => {
+      if (sql.includes('period_from')) {
+        return [{ monumentId: 777, langId: 'en', period_from: '1731', period_to: '1781' }];
+      }
+      return nativeMonumentQuery(sql);
+    });
+    context = {
+      ...context,
+      legacyDb: { query: queryMock as ILegacyDatabase['query'], execute: vi.fn(), connect: vi.fn(), disconnect: vi.fn() },
+    };
+    writeItemMock.mockResolvedValue('native-item-uuid');
+
+    await new ExploreMonumentImporter(context).import();
+
+    expect(writeItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        backward_compatibility: 'mwnf3_explore:monument:777',
+        start_date: 1731,
+        end_date: 1781,
+      })
+    );
+  });
+
+  it('never writes period years onto the item a referenced monument reuses', async () => {
+    const baseQuery = queryMock.getMockImplementation() as (sql: string) => Promise<unknown[]>;
+    queryMock.mockImplementation(async (sql: string) =>
+      sql.includes('period_from')
+        ? [{ monumentId: 123, langId: 'en', period_from: '1731', period_to: '1781' }]
+        : baseQuery(sql)
+    );
+
+    await new ExploreMonumentImporter(context).import();
+
+    expect(writeItemMock).not.toHaveBeenCalled();
+    expect(logger.warning).toHaveBeenCalledWith(
+      expect.stringContaining('mwnf3_explore:monument:123 resolves onto another record'),
+      undefined
+    );
+  });
+
   it('joins the monument location so the legacy country code is available', async () => {
     await new ExploreMonumentImporter(context).import();
 

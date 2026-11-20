@@ -22,7 +22,7 @@ class StoreTimelineEventRequest extends FormRequest
             'timeline_id' => ['required', 'string', 'exists:timelines,id'],
             'internal_name' => ['required', 'string', 'max:255'],
             'year_from' => ['required', 'integer'],
-            'year_to' => ['required', 'integer'],
+            'year_to' => ['nullable', 'integer'],
             'year_from_ah' => ['nullable', 'integer'],
             'year_to_ah' => ['nullable', 'integer'],
             'date_from' => ['nullable', 'date'],

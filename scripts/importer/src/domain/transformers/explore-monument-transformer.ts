@@ -27,6 +27,59 @@ export interface ExploreLegacyMonument {
   countryId: string | null;
 }
 
+/**
+ * One `exploremonumentext` row's period years (varchar columns holding integer
+ * years, M16 G2 #2697).
+ */
+export interface ExploreMonumentPeriodRow {
+  langId: string;
+  period_from: string | null;
+  period_to: string | null;
+}
+
+export interface ExploreMonumentPeriod {
+  start_date: number | null;
+  end_date: number | null;
+  warnings: string[];
+}
+
+/**
+ * The item's start and end years from a monument's `period_from` and
+ * `period_to`, as written. The columns sit on the per-language rows, so a year
+ * is kept only when every row that has one agrees, and only when it is a whole
+ * number; otherwise it stays null, reported.
+ */
+export function selectExploreMonumentPeriod(
+  backwardCompatibility: string,
+  rows: readonly ExploreMonumentPeriodRow[]
+): ExploreMonumentPeriod {
+  const warnings: string[] = [];
+  const year = (column: 'period_from' | 'period_to'): number | null => {
+    const values = [
+      ...new Set(
+        rows.map((row) => (row[column] ?? '').trim()).filter((value) => value !== '')
+      ),
+    ];
+    if (values.length === 0) return null;
+    if (values.length > 1) {
+      warnings.push(
+        `Explore monument ${backwardCompatibility}: ${column} differs between languages (${values.join(', ')}), left empty`
+      );
+      return null;
+    }
+    const value = values[0]!;
+    if (!/^-?\d+$/.test(value)) {
+      warnings.push(
+        `Explore monument ${backwardCompatibility}: ${column} '${value}' is not a whole year, left empty`
+      );
+      return null;
+    }
+    return Number(value);
+  };
+
+  return { start_date: year('period_from'), end_date: year('period_to'), warnings };
+}
+
 export interface TransformedExploreMonument {
   data: Omit<ItemData, 'collection_id' | 'partner_id' | 'project_id'>;
   backwardCompatibility: string;
@@ -61,7 +114,8 @@ export function parseGeoCoordinates(coords: string | null): [number | null, numb
 export function transformExploreMonument(
   legacy: ExploreLegacyMonument,
   translations: ExploreMonumentNameTranslation[],
-  defaultLanguageId: string
+  defaultLanguageId: string,
+  periodRows: readonly ExploreMonumentPeriodRow[] = []
 ): TransformedExploreMonument {
   const backwardCompatibility = `mwnf3_explore:monument:${legacy.monumentId}`;
   const candidates: ItemInternalNameCandidate[] = [];
@@ -82,6 +136,8 @@ export function transformExploreMonument(
   const [latitude, longitude] = parseGeoCoordinates(legacy.geoCoordinates);
 
   const warnings = selectedInternalName.warning ? [selectedInternalName.warning] : [];
+  const period = selectExploreMonumentPeriod(backwardCompatibility, periodRows);
+  warnings.push(...period.warnings);
 
   // Legacy resolves the country at query time via locationId → countries; the
   // 2-char code is mapped to the inventory's ISO alpha-3 id here. An unmappable
@@ -108,6 +164,8 @@ export function transformExploreMonument(
       parent_id: null,
       owner_reference: null,
       mwnf_reference: null,
+      start_date: period.start_date,
+      end_date: period.end_date,
       latitude,
       longitude,
       map_zoom: legacy.zoom,
