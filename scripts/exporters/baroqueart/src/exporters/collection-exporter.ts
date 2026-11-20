@@ -7,6 +7,7 @@ import { restoreSiteTranslations } from '../../../shared/site-configuration.mjs'
 import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
+import { dropProjectRoots, projectRootIds } from '../../../shared/project-roots.mjs'
 
 /** The site this exporter's own package is, as the mini-site instances name it. */
 const SITE_KEY = 'baroqueart'
@@ -131,18 +132,24 @@ export class CollectionExporter extends BaseExporter {
     const ph = this.placeholders(this.projectIds.length)
     const scope = this.context.scope
 
+    // The project roots are left out (shared/project-roots.mjs, M16 J5).
+    const rootIds = scope ? new Set<string>() : await projectRootIds((sql, params) => this.db.query(sql, params), this.projectIds)
+
     // A mini-site's package holds its own subtree only.
-    const collections = await this.db.query<CollectionRow>(
-      `SELECT c.id, c.type, c.purpose, c.internal_name, c.backward_compatibility,
-              c.parent_id, c.display_order, c.country_id, c.latitude, c.longitude
-       FROM collections c
-       WHERE ${
-         scope
-           ? `c.id IN (${this.placeholders(scope.collectionIds.length)})`
-           : `c.context_id IN (SELECT p.context_id FROM projects p WHERE p.id IN (${ph}))`
-       }
-       ORDER BY c.parent_id IS NOT NULL, c.display_order, c.internal_name`,
-      scope ? scope.collectionIds : this.projectIds
+    const collections = dropProjectRoots(
+      await this.db.query<CollectionRow>(
+        `SELECT c.id, c.type, c.purpose, c.internal_name, c.backward_compatibility,
+                c.parent_id, c.display_order, c.country_id, c.latitude, c.longitude
+         FROM collections c
+         WHERE ${
+           scope
+             ? `c.id IN (${this.placeholders(scope.collectionIds.length)})`
+             : `c.context_id IN (SELECT p.context_id FROM projects p WHERE p.id IN (${ph}))`
+         }
+         ORDER BY c.parent_id IS NOT NULL, c.display_order, c.internal_name`,
+        scope ? scope.collectionIds : this.projectIds
+      ),
+      rootIds
     )
 
     if (collections.length === 0) {
