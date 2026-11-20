@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { PartnerExporter, groupParents } from '../../src/exporters/partner-exporter.js'
+import { PartnerExporter } from '../../src/exporters/partner-exporter.js'
 import { LANGUAGES, context, fakeDb, tempDir, type Route } from './support.js'
 
 describe('PartnerExporter', () => {
@@ -74,9 +74,9 @@ describe('PartnerExporter', () => {
     [/FROM partner_images/, () => []],
     [/FROM links\s+WHERE linkable_type = 'partner'/, () => []],
     [/FROM partner_logos/, () => [{ partner_id: 'swiss', path: 'logo.jpg', logo_type: 'primary', alt_text: null, display_order: 1 }]],
+    [/cp\.parent_partner_id IS NOT NULL/, () => []],
     // Legacy's "Partner" tier; Museu do Caramulo has no level — legacy's "Affiliate".
     [/cp\.collection_type = 'project'/, () => [{ partner_id: 'swiss', level: 'partner' }]],
-    [/cp\.collection_type = 'collection'/, () => []],
     [/FROM projects WHERE id = \?/, () => [{ name: 'MWNF Galleries', backward_compatibility: 'mwnf3:projects:GALLERIES' }]],
     [/COUNT\(\*\) AS item_count/, () => [{ partner_id: 'swiss', item_count: 12 }]],
   ]
@@ -138,13 +138,37 @@ describe('PartnerExporter', () => {
   })
 })
 
-describe('groupParents', () => {
-  it("maps a group member to the group's owner, and never an owner to itself", () => {
-    const parents = groupParents([
-      { collection_id: 'g1', partner_id: 'owner', level: 'partner' },
-      { collection_id: 'g1', partner_id: 'member', level: 'associated_partner' },
-      { collection_id: 'g2', partner_id: 'owner', level: 'minor_contributor' },
-    ])
-    expect([...parents.entries()]).toEqual([['member', 'owner']])
+describe('parent_id (M16 J2)', () => {
+  let out: ReturnType<typeof tempDir>
+  beforeEach(() => {
+    out = tempDir()
+  })
+  afterEach(() => out.cleanup())
+
+  it("takes the parent from the member's project-tier row, in the partner project only", async () => {
+    const routes: Route[] = [
+      [/cp\.parent_partner_id IS NOT NULL/, () => [{ partner_id: 'caramulo', parent_partner_id: 'swiss' }]],
+      LANGUAGES,
+      [/FROM partners WHERE project_id = \?/, () => [{ id: 'swiss' }, { id: 'caramulo' }]],
+      [/FROM partners\s+WHERE id IN/, () => [
+        { id: 'caramulo', type: 'museum', internal_name: 'caramulo', backward_compatibility: null, country_id: 'prt', latitude: null, longitude: null, map_zoom: null, monument_item_id: null },
+        { id: 'swiss', type: 'museum', internal_name: 'swiss', backward_compatibility: null, country_id: 'che', latitude: null, longitude: null, map_zoom: null, monument_item_id: null },
+      ]],
+      [/FROM partner_translations/, () => []],
+      [/FROM partner_images/, () => []],
+      [/FROM links\s+WHERE linkable_type = 'partner'/, () => []],
+      [/FROM partner_logos/, () => []],
+      [/cp\.collection_type = 'project'/, () => []],
+      [/FROM projects WHERE id = \?/, () => []],
+      [/COUNT\(\*\) AS item_count/, () => []],
+    ]
+    const db = fakeDb(routes)
+    await new PartnerExporter(context(db, out.dir)).export()
+
+    const partners = out.read('partners.json') as Record<string, unknown>[]
+    expect(partners.find(p => p['id'] === 'caramulo')?.['parent_id']).toBe('swiss')
+    expect(partners.find(p => p['id'] === 'swiss')?.['parent_id']).toBeNull()
+    const parents = db.calls.find(call => /cp\.parent_partner_id IS NOT NULL/.test(call.sql))
+    expect(parents?.params[0]).toBe('galleries-project-uuid')
   })
 })

@@ -275,6 +275,51 @@ class CollectionPartnerPivotTest extends TestCase
             ->assertTableActionHidden('detach', $projectRoot->getKey());
     }
 
+    public function test_a_project_link_shows_the_partner_it_belongs_to(): void
+    {
+        $owner = Partner::factory()->create(['internal_name' => 'Owner museum']);
+        $member = Partner::factory()->create();
+        $projectRoot = $this->makeCollection();
+        $member->collections()->attach($projectRoot->id, [
+            'collection_type' => 'project',
+            'level' => 'associated_partner',
+            'parent_partner_id' => $owner->id,
+        ]);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionParticipationsRelationManager::class, [
+                'ownerRecord' => $member,
+                'pageClass' => ViewPartner::class,
+            ])
+            ->assertCanSeeTableRecords([$projectRoot])
+            ->assertTableColumnStateSet('pivot.parent_partner_id', $owner->id, $projectRoot->getKey())
+            ->assertTableColumnFormattedStateSet('pivot.parent_partner_id', 'Owner museum', $projectRoot->getKey());
+    }
+
+    public function test_deleting_the_parent_partner_clears_the_link_and_keeps_the_row(): void
+    {
+        $owner = Partner::factory()->create();
+        $member = Partner::factory()->create();
+        $projectRoot = $this->makeCollection();
+        $member->collections()->attach($projectRoot->id, [
+            'collection_type' => 'project',
+            'level' => 'associated_partner',
+            'parent_partner_id' => $owner->id,
+        ]);
+
+        $owner->delete();
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $projectRoot->id,
+            'partner_id' => $member->id,
+            'collection_type' => 'project',
+            'parent_partner_id' => null,
+        ]);
+    }
+
     public function test_detaching_a_collection_link_never_removes_a_project_link_of_the_same_pair(): void
     {
         $partner = Partner::factory()->create();

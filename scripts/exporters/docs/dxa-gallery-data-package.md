@@ -332,9 +332,9 @@ even when they hold nothing (legacy MWNF-384, below). Additions:
 - **`item_count`**: member items held — the count the partners list prints,
   and the reason most partners appear at all. It is legitimately `0` for an
   MWNF-384 partner.
-- **`level` / `parent_id`**: the same curated `partner_group:…` hierarchy the
-  project-scoped exporters read (owner row `level: 'partner'`, member rows'
-  `parent_id` set to the owner), scoped to the gallery's own single native
+- **`level` / `parent_id`**: the same curated hierarchy the project-scoped
+  exporters read (the project-tier `level`, and `parent_id` from the row's
+  `parent_partner_id`, M16 J2), scoped to the gallery's own single native
   project rather than a project list. `null` for an uncurated partner, and
   for every partner on a gallery with no native project (43, 45) — there is
   no project to curate the hierarchy under.

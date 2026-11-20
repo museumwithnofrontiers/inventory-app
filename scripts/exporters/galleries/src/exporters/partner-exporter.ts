@@ -8,6 +8,7 @@ import type {
 } from '../core/types.js'
 import { parseJson } from '../core/database.js'
 import { partnerWebsites } from '../../../shared/partner-websites.mjs'
+import { partnerParents } from '../../../shared/partner-parents.mjs'
 import { BaseExporter } from './base-exporter.js'
 import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 
@@ -68,12 +69,6 @@ interface PartnerLevelRow {
   level: string | null
 }
 
-interface GroupMembershipRow {
-  collection_id: string
-  partner_id: string
-  level: string | null
-}
-
 /**
  * `partners.json` — the hub's partner directory: the museums of the partner
  * project (`GALLERIES`), which is exactly what legacy's hub lists
@@ -120,7 +115,7 @@ export class PartnerExporter extends BaseExporter {
     const langCodeMap = await this.buildLangCodeMap()
 
     const memberPh = this.placeholders(Math.max(this.memberItemIds.length, 1))
-    const [partnerTranslations, images, logos, levels, groupMemberships, heldItems, projectRows] = await Promise.all([
+    const [partnerTranslations, images, logos, levels, parentMap, heldItems, projectRows] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also makes the "first row wins" extra pick deterministic).
@@ -158,17 +153,9 @@ export class PartnerExporter extends BaseExporter {
          ORDER BY cp.partner_id`,
         [this.partnerProjectId, ...partnerIds]
       ),
-      this.db.query<GroupMembershipRow>(
-        `SELECT cp.collection_id, cp.partner_id, cp.level
-         FROM collection_partner cp
-         JOIN collections c ON c.id = cp.collection_id
-         WHERE cp.collection_type = 'collection'
-           AND c.internal_name LIKE 'partner_group:%'
-           AND c.context_id = (SELECT p.context_id FROM projects p WHERE p.id = ?)
-           AND cp.partner_id IN (${partnerPh})
-         ORDER BY cp.collection_id, cp.partner_id`,
-        [this.partnerProjectId, ...partnerIds]
-      ),
+      // The partner each member belongs to (legacy's associated partners): the
+      // project-tier row's parent_partner_id (M16 J2).
+      partnerParents((sql, params) => this.db.query(sql, params), [this.partnerProjectId], partnerIds),
       // The hub's objects each partner holds.
       this.memberItemIds.length > 0
         ? this.db.query<{ partner_id: string; item_count: number }>(
@@ -257,7 +244,6 @@ export class PartnerExporter extends BaseExporter {
     for (const row of levels) {
       if (row.level) levelMap.set(row.partner_id, row.level)
     }
-    const parentMap = groupParents(groupMemberships)
     const heldMap = new Map(heldItems.map(row => [row.partner_id, Number(row.item_count)]))
     const project = projectRows[0] ?? null
 
@@ -302,25 +288,6 @@ export class PartnerExporter extends BaseExporter {
 
     return { file: 'partners.json', count: output.length }
   }
-}
-
-/**
- * partner_id → parent partner_id: the owner of the curated group a partner
- * belongs to (the member at level `partner`), excluding a group it owns
- * itself.
- */
-export function groupParents(memberships: GroupMembershipRow[]): Map<string, string> {
-  const owners = new Map<string, string>()
-  for (const row of memberships) {
-    if (row.level === 'partner') owners.set(row.collection_id, row.partner_id)
-  }
-  const parents = new Map<string, string>()
-  for (const row of memberships) {
-    if (row.level === 'partner') continue
-    const owner = owners.get(row.collection_id)
-    if (owner && owner !== row.partner_id) parents.set(row.partner_id, owner)
-  }
-  return parents
 }
 
 /**

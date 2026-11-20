@@ -725,13 +725,14 @@ const UPDATED_AT = 'updated_at';
 | `partner_id` | char | Unknown | Unknown |  |
 | `level` | varchar | Unknown | Unknown |  |
 | `visible` | tinyint | Unknown | Unknown |  |
+| `parent_partner_id` | char | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
 
 ### Fillable Fields
 
 ```php
-['collection_id', 'collection_type', 'partner_id', 'level', 'visible']
+['collection_id', 'collection_type', 'partner_id', 'level', 'visible', 'parent_partner_id']
 ```
 
 ### Attribute Casting
@@ -752,6 +753,7 @@ const UPDATED_AT = 'updated_at';
 
 #### Belongs To
 - **`collection()`**: BelongsTo [Collection](#collection)
+- **`parentPartner()`**: BelongsTo [Partner](#partner)
 - **`partner()`**: BelongsTo [Partner](#partner)
 
 

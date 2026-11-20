@@ -103,6 +103,21 @@ describe('MonumentImporter', () => {
     expect(result.imported).toBe(1);
   });
 
+  it('leaves the item home in items.collection_id, with no collection_item row on the project collection (M16 J3)', async () => {
+    const importer = new MonumentImporter(context);
+    await importer.import();
+
+    expect(writeItemMock).toHaveBeenCalledWith(
+      expect.objectContaining({ collection_id: expect.any(String) })
+    );
+    expect(strategy.attachItemsToCollection).not.toHaveBeenCalled();
+    expect(strategy.attachPartnersToCollection).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.any(Array),
+      'project'
+    );
+  });
+
   describe('when the item already exists', () => {
     beforeEach(() => {
       // writeItem/writeItemTranslation both plain INSERTs — a second run

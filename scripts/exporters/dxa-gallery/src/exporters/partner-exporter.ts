@@ -8,6 +8,7 @@ import type {
   PartnerUrl,
 } from '../core/types.js'
 import { partnerWebsites } from '../../../shared/partner-websites.mjs'
+import { partnerParents } from '../../../shared/partner-parents.mjs'
 import { BaseExporter } from './base-exporter.js'
 import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 import { galleryProjectCode } from '../../../shared/site-configuration.mjs'
@@ -68,16 +69,10 @@ interface PartnerLogoRow {
 }
 
 // The curated legacy hierarchy (partner / associated_partner / minor_contributor,
-// same partner_group:… collections the standalone exporters read) scoped to the
+// the same project-tier rows and parent_partner_id the standalone exporters read) scoped to the
 // gallery's own single native project — a gallery has at most one, unlike the
 // project-scoped exporters which can carry several (e.g. ISL + EPM).
 interface PartnerLevelRow {
-  partner_id: string
-  level: string | null
-}
-
-interface GroupMembershipRow {
-  collection_id: string
   partner_id: string
   level: string | null
 }
@@ -209,7 +204,7 @@ export class PartnerExporter extends BaseExporter {
       exhibitionProjects.length === 0 ? 'FALSE' : `${column} IN (${this.placeholders(exhibitionProjects.length)})`
     const langCodeMap = await this.buildLangCodeMap()
 
-    const [partnerTranslations, images, logos, levels, groupMemberships, heldItems, ownProjects] = await Promise.all([
+    const [partnerTranslations, images, logos, levels, parentMap, heldItems, ownProjects] = await Promise.all([
       this.db.query<PartnerTranslationRow>(
         // Row order is unspecified; sorted so two exports of one database are
         // byte-identical (also makes the "first row wins" extra-fields pick below deterministic).
@@ -235,7 +230,7 @@ export class PartnerExporter extends BaseExporter {
          ORDER BY partner_id, display_order`,
         partnerIds
       ),
-      // level/parent_id: the same curated partner_group:… hierarchy the
+      // level/parent_id: the same curated project-tier hierarchy the
       // standalone (project-scoped) exporters read, scoped to this gallery's
       // one native project. Skipped entirely when the gallery has none (43,
       // 45) — there is no project to curate the hierarchy under.
@@ -252,18 +247,11 @@ export class PartnerExporter extends BaseExporter {
             [galleryProjectId, ...partnerIds]
           )
         : Promise.resolve([] as PartnerLevelRow[]),
+      // The partner each member belongs to (legacy's associated partners): the
+      // project-tier row's parent_partner_id (M16 J2).
       galleryProjectId
-        ? this.db.query<GroupMembershipRow>(
-            `SELECT cp.collection_id, cp.partner_id, cp.level
-             FROM collection_partner cp
-             JOIN collections c ON c.id = cp.collection_id
-             WHERE cp.collection_type = 'collection'
-               AND c.internal_name LIKE 'partner_group:%'
-               AND c.context_id = (SELECT p.context_id FROM projects p WHERE p.id = ?)
-               AND cp.partner_id IN (${partnerPh})`,
-            [galleryProjectId, ...partnerIds]
-          )
-        : Promise.resolve([] as GroupMembershipRow[]),
+        ? partnerParents((sql, params) => this.db.query(sql, params), [galleryProjectId], partnerIds)
+        : Promise.resolve(new Map<string, string>()),
       // The member items counted into item_count, by partner — resolved to
       // project_uuids below. Row order is unspecified; sorted so `project_uuids`
       // is byte-identical across two exports of one database.
@@ -387,20 +375,6 @@ export class PartnerExporter extends BaseExporter {
     const levelMap = new Map<string, string>()
     for (const row of levels) {
       if (row.level) levelMap.set(row.partner_id, row.level)
-    }
-
-    // collection_id -> owner partner_id (the member with level='partner')
-    const groupOwnerMap = new Map<string, string>()
-    for (const row of groupMemberships) {
-      if (row.level === 'partner') groupOwnerMap.set(row.collection_id, row.partner_id)
-    }
-    // partner_id -> parent partner_id (the owner of the group this partner
-    // belongs to, excluding a group it owns itself)
-    const parentMap = new Map<string, string>()
-    for (const row of groupMemberships) {
-      if (row.level === 'partner') continue
-      const owner = groupOwnerMap.get(row.collection_id)
-      if (owner && owner !== row.partner_id) parentMap.set(row.partner_id, owner)
     }
 
     // partner_id -> project UUIDs of the member items it holds here (each

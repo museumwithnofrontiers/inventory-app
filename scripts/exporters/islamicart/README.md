@@ -26,8 +26,7 @@ The dataset scope is hardcoded — this exporter is single-purpose and takes
 no scope arguments: it always exports the projects `ISL` (Discover Islamic
 Art) **and** `EPM` (Explore Islamic Art Collections) together as
 `@museumwnf/islamicart-data`. They are one dataset: an ISL-only export would
-silently drop the EPM project collection and every `partner_group:museums:*`
-collection, which is exactly why the keys are not configurable.
+silently drop the EPM project collection and its partners, which is exactly why the keys are not configurable.
 `manifest.json` always lists `"projectKeys": ["ISL", "EPM"]`.
 
 Image URLs in the exported JSON are built from `BASE_URL` in `.env` (or
@@ -144,7 +143,7 @@ schedule.
 ## Troubleshooting
 
 **Content missing from the package (e.g. the "Explore Islamic Art
-Collections" project or `partner_group:*` collections)** — the installed
+Collections" project or its partners)** — the installed
 package predates the exporter hardcoding its `ISL EPM` scope and was
 exported with `ISL` only; check `manifest.json`'s `projectKeys` (must be
 `["ISL", "EPM"]`) and re-export/republish — the current exporter cannot

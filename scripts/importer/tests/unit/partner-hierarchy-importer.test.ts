@@ -182,4 +182,80 @@ describe('PartnerHierarchyImporter', () => {
       'associated_museums id=5 has no project_id, and museum Mus01:jo has none either; skipped',
     ]);
   });
+
+  describe('the partner a member belongs to (M16 J2 #2709)', () => {
+    let setProjectPartnerParentMock: ReturnType<typeof vi.fn>;
+    let writeCollectionMock: ReturnType<typeof vi.fn>;
+
+    beforeEach(() => {
+      tracker.set('mwnf3:projects:ISL', 'isl-collection-uuid', 'collection');
+      tracker.set('mwnf3:projects:ISL', 'isl-context-uuid', 'context');
+      tracker.set('mwnf3:projects:BAR', 'bar-collection-uuid', 'collection');
+      tracker.set('mwnf3:museums:Mus02:jo', 'member-uuid', 'partner');
+      tracker.set('mwnf3:museums:Mus03:jo', 'minor-uuid', 'partner');
+      setProjectPartnerParentMock = vi.fn().mockResolvedValue(undefined);
+      writeCollectionMock = vi.fn().mockResolvedValue('group-uuid');
+      Object.assign(strategy, {
+        setProjectPartnerParent: setProjectPartnerParentMock,
+        writeCollection: writeCollectionMock,
+      });
+    });
+
+    const legacy = (associatedProject: string) =>
+      vi.fn(async (sql: string) => {
+        if (sql.includes('FROM mwnf3.partner_museums')) {
+          return [{ partner_id: 12, project_id: 'ISL', museum_id: 'Mus01', country_id: 'jo' }];
+        }
+        if (sql.includes('FROM mwnf3.associated_museums')) {
+          return [
+            {
+              associated_id: 7,
+              partner_id: 12,
+              project_id: associatedProject,
+              museum_id: 'Mus02',
+              country_id: 'jo',
+              museum_project_id: 'ISL',
+            },
+          ];
+        }
+        if (sql.includes('FROM mwnf3.further_associated_museums')) {
+          return [
+            { fur_associated_id: 1, partner_id: 12, project_id: 'ISL', museum_id: 'Mus03', country_id: 'jo' },
+          ];
+        }
+        return [];
+      });
+
+    it('puts the tier-1 museum on the project-tier rows of its members and creates no group collection', async () => {
+      context.legacyDb.query = legacy('ISL') as ILegacyDatabase['query'];
+
+      const result = await new PartnerHierarchyImporter(context).import();
+
+      expect(setProjectPartnerParentMock.mock.calls).toEqual([
+        ['isl-collection-uuid', 'member-uuid', 'partner-uuid'],
+        ['isl-collection-uuid', 'minor-uuid', 'partner-uuid'],
+      ]);
+      expect(writeCollectionMock).not.toHaveBeenCalled();
+      expect(attachPartnerToCollectionWithLevelMock).not.toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'collection',
+        expect.anything()
+      );
+      expect(result).toMatchObject({ success: true, imported: 3 });
+    });
+
+    it('gives no parent, reported, when the owner is in another project', async () => {
+      context.legacyDb.query = legacy('BAR') as ILegacyDatabase['query'];
+
+      const result = await new PartnerHierarchyImporter(context).import();
+
+      expect(setProjectPartnerParentMock.mock.calls).toEqual([
+        ['isl-collection-uuid', 'minor-uuid', 'partner-uuid'],
+      ]);
+      expect(result.warnings).toEqual([
+        'partner_museums id=12 is in project ISL, not BAR; partner member-uuid gets no parent',
+      ]);
+    });
+  });
 });

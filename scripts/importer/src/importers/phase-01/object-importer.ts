@@ -316,8 +316,8 @@ export class ObjectImporter extends BaseImporter {
       }
     }
 
-    // Attach item to its collection via many-to-many relationship
-    await this.context.strategy.attachItemsToCollection(collectionId, [itemId]);
+    // The item's home is items.collection_id; no collection_item row repeats
+    // it on the project's root collection (M16 J3, #2710).
 
     // Attach partner to collection (gracefully handles duplicates)
     await this.context.strategy.attachPartnersToCollection(collectionId, [partnerId], 'project');

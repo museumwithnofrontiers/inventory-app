@@ -502,7 +502,7 @@ class Collection extends Model
     {
         return $this->belongsToMany(Partner::class, 'collection_partner', 'collection_id', 'partner_id')
             ->wherePivot('collection_type', '=', 'collection')
-            ->withPivot(['collection_type', 'level', 'visible'])
+            ->withPivot(['collection_type', 'level', 'visible', 'parent_partner_id'])
             ->withTimestamps()
             ->using(CollectionPartner::class);
     }

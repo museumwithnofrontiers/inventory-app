@@ -174,6 +174,8 @@ import {
   CollectionFlagsImporter,
   SiteConfigurationOutImporter,
   LinksImporter,
+  ProjectShellCleanupImporter,
+  OrphanAuthorCleanupImporter,
   AuthorImporter,
   TimelineImporter,
   ShChronologyImporter,
@@ -1437,6 +1439,25 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     description: 'Remove projects that have neither items nor publications (post-import cleanup)',
     importerClass: ProjectCleanupImporter,
     dependencies: ['item-item-link', 'publication'],
+  },
+  {
+    key: 'project-shell-cleanup',
+    name: 'Project Shell Cleanup',
+    description:
+      "Remove the root collection and context of every deleted project when nothing refers to them any more, after every other step (M16 J1, #2708)",
+    importerClass: ProjectShellCleanupImporter,
+    // Must follow project-cleanup and every step that could still write to a
+    // project's collection or context.
+    runsLast: true,
+  },
+  {
+    key: 'orphan-author-cleanup',
+    name: 'Orphan Author Cleanup',
+    description:
+      'Remove the authors made from credit text that nothing refers to, after every other step (M16 J4, #2711)',
+    importerClass: OrphanAuthorCleanupImporter,
+    // The credit junction replaces these authors in later steps.
+    runsLast: true,
   },
 ];
 

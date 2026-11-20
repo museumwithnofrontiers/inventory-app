@@ -42,6 +42,7 @@ class CollectionPartner extends Pivot
         'partner_id',
         'level',
         'visible',
+        'parent_partner_id',
     ];
 
     /**
@@ -72,6 +73,17 @@ class CollectionPartner extends Pivot
     public function collection(): BelongsTo
     {
         return $this->belongsTo(Collection::class);
+    }
+
+    /**
+     * The partner this one belongs to in the project (legacy's associated
+     * partners), on project-tier rows only (M16 J2, #2709).
+     *
+     * @return BelongsTo<Partner, $this>
+     */
+    public function parentPartner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class, 'parent_partner_id');
     }
 
     /**

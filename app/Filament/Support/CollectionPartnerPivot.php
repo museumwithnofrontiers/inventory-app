@@ -3,6 +3,7 @@
 namespace App\Filament\Support;
 
 use App\Enums\PartnerLevel;
+use App\Models\Partner;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -60,6 +61,21 @@ class CollectionPartnerPivot
             ->label('Level')
             ->formatStateUsing(fn (?string $state): ?string => $state ? PartnerLevel::from($state)->label() : null)
             ->sortable();
+    }
+
+    /**
+     * The partner a project partner belongs to (legacy's associated partners,
+     * M16 J2 #2709). Only project-tier rows carry one; the importer writes it.
+     */
+    public static function parentPartnerColumn(): TextColumn
+    {
+        return TextColumn::make('pivot.parent_partner_id')
+            ->label('Parent partner')
+            ->formatStateUsing(fn (?string $state): ?string => $state
+                ? Partner::query()->whereKey($state)->value('internal_name')
+                : null)
+            ->placeholder('—')
+            ->toggleable();
     }
 
     public static function visibleColumn(): IconColumn

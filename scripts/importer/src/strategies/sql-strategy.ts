@@ -23,7 +23,7 @@ import type {
 import type { CatalogueRow, LinkData, PartnerUrlRow, ShopLinkRow } from '../utils/links.js';
 import type { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import type { ImageTextData, ImageTextRow } from '../utils/image-texts.js';
-import type { IWriteStrategy } from '../core/strategy.js';
+import type { IWriteStrategy, ProjectShellCleanup } from '../core/strategy.js';
 import type {
   EntityType,
   LanguageData,
@@ -472,6 +472,157 @@ export class SqlWriteStrategy implements IWriteStrategy {
     }
   }
 
+  /**
+   * The columns whose foreign key points at `table` (information_schema), so a
+   * reference check covers every table, including the ones added later.
+   */
+  private async referencingColumns(
+    table: string
+  ): Promise<Array<{ table: string; column: string }>> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT TABLE_NAME AS table_name, COLUMN_NAME AS column_name
+       FROM information_schema.KEY_COLUMN_USAGE
+       WHERE TABLE_SCHEMA = DATABASE() AND REFERENCED_TABLE_NAME = ?
+       ORDER BY TABLE_NAME, COLUMN_NAME`,
+      [table]
+    );
+    return (rows as RowDataPacket[]).map((r) => ({
+      table: String(r.table_name),
+      column: String(r.column_name),
+    }));
+  }
+
+  /** The `table.column` names among `columns` that hold `id`. */
+  private async referencesTo(
+    id: string,
+    columns: Array<{ table: string; column: string }>
+  ): Promise<string[]> {
+    const found: string[] = [];
+    for (const { table, column } of columns) {
+      const [rows] = await this.db.execute<RowDataPacket[]>(
+        `SELECT 1 FROM \`${table}\` WHERE \`${column}\` = ? LIMIT 1`,
+        [id]
+      );
+      if ((rows as RowDataPacket[]).length > 0) found.push(`${table}.${column}`);
+    }
+    return found;
+  }
+
+  async deleteProjectShells(dryRun = false): Promise<ProjectShellCleanup> {
+    const collectionRefs = (await this.referencingColumns('collections')).filter(
+      // A shell's own translations go with it.
+      (c) => !(c.table === 'collection_translations' && c.column === 'collection_id')
+    );
+    const contextRefs = await this.referencingColumns('contexts');
+
+    await this.db.beginTransaction();
+    try {
+      // A legacy project's root collection shares its key with the project's
+      // context (ProjectImporter, ShProjectImporter).
+      const [rows] = await this.db.execute<RowDataPacket[]>(
+        `SELECT c.id, c.backward_compatibility, c.context_id
+         FROM collections c
+         JOIN contexts x ON x.id = c.context_id AND x.backward_compatibility = c.backward_compatibility
+         WHERE c.parent_id IS NULL
+           AND (c.backward_compatibility LIKE 'mwnf3:projects:%'
+                OR c.backward_compatibility LIKE 'mwnf3_sharing_history:sh_projects:%')
+           AND NOT EXISTS (
+             SELECT 1 FROM projects p WHERE p.backward_compatibility = c.backward_compatibility
+           )
+         ORDER BY c.backward_compatibility`
+      );
+
+      const result: ProjectShellCleanup = { collections: [], contexts: [], kept: [] };
+      for (const row of rows as RowDataPacket[]) {
+        const shell = {
+          id: String(row.id),
+          backward_compatibility: String(row.backward_compatibility),
+          context_id: String(row.context_id),
+        };
+        const referencedBy = await this.referencesTo(shell.id, collectionRefs);
+        const [links] = await this.db.execute<RowDataPacket[]>(
+          `SELECT 1 FROM links WHERE linkable_type = 'collection' AND linkable_id = ? LIMIT 1`,
+          [shell.id]
+        );
+        if ((links as RowDataPacket[]).length > 0) referencedBy.push('links.linkable_id');
+        if (referencedBy.length > 0) {
+          result.kept.push({
+            kind: 'collection',
+            id: shell.id,
+            backward_compatibility: shell.backward_compatibility,
+            referencedBy,
+          });
+          continue;
+        }
+
+        await this.db.execute(`DELETE FROM collections WHERE id = ?`, [shell.id]);
+        result.collections.push({
+          id: shell.id,
+          backward_compatibility: shell.backward_compatibility,
+        });
+
+        const contextReferencedBy = await this.referencesTo(shell.context_id, contextRefs);
+        if (contextReferencedBy.length > 0) {
+          result.kept.push({
+            kind: 'context',
+            id: shell.context_id,
+            backward_compatibility: shell.backward_compatibility,
+            referencedBy: contextReferencedBy,
+          });
+          continue;
+        }
+        await this.db.execute(`DELETE FROM contexts WHERE id = ?`, [shell.context_id]);
+        result.contexts.push({
+          id: shell.context_id,
+          backward_compatibility: shell.backward_compatibility,
+        });
+      }
+
+      if (dryRun) {
+        await this.db.rollback();
+      } else {
+        await this.db.commit();
+      }
+      return result;
+    } catch (err) {
+      await this.db.rollback();
+      throw err;
+    }
+  }
+
+  async deleteOrphanFreeTextAuthors(dryRun = false): Promise<Array<{ id: string; name: string }>> {
+    const authorRefs = await this.referencingColumns('authors');
+
+    await this.db.beginTransaction();
+    try {
+      // AuthorHelper writes the authors it makes from credit text with no
+      // legacy key; every legacy author has one.
+      const [rows] = await this.db.execute<RowDataPacket[]>(
+        `SELECT id, name FROM authors
+         WHERE backward_compatibility IS NULL OR backward_compatibility = ''
+         ORDER BY name, id`
+      );
+
+      const deleted: Array<{ id: string; name: string }> = [];
+      for (const row of rows as RowDataPacket[]) {
+        const id = String(row.id);
+        if ((await this.referencesTo(id, authorRefs)).length > 0) continue;
+        await this.db.execute(`DELETE FROM authors WHERE id = ?`, [id]);
+        deleted.push({ id, name: String(row.name) });
+      }
+
+      if (dryRun) {
+        await this.db.rollback();
+      } else {
+        await this.db.commit();
+      }
+      return deleted;
+    } catch (err) {
+      await this.db.rollback();
+      throw err;
+    }
+  }
+
   // =========================================================================
   // Partners
   // ========================================================================="},{
@@ -753,6 +904,18 @@ export class SqlWriteStrategy implements IWriteStrategy {
         throw error;
       }
     }
+  }
+
+  async setProjectPartnerParent(
+    collectionId: string,
+    partnerId: string,
+    parentPartnerId: string
+  ): Promise<void> {
+    await this.db.execute(
+      `UPDATE collection_partner SET parent_partner_id = ?, updated_at = ?
+       WHERE collection_id = ? AND collection_type = 'project' AND partner_id = ?`,
+      [parentPartnerId, this.now, collectionId, partnerId]
+    );
   }
 
   // =========================================================================
