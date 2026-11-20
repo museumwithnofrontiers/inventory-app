@@ -932,8 +932,9 @@ export interface IWriteStrategy {
   >;
 
   /**
-   * The picture items of `parentItemId` whose image has `originalName` as its
-   * original name (the legacy path). Used to resolve a placement's `picture`.
+   * The picture items of `parentItemId` whose image has `originalName` (the
+   * legacy path) as its path, which holds it before image-sync, or as its
+   * original name, which holds it after. Used to resolve a placement's `picture`.
    */
   findPictureItemIdsByOriginalName(parentItemId: string, originalName: string): Promise<string[]>;
 

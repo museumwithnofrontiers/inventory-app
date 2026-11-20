@@ -2652,13 +2652,16 @@ export class SqlWriteStrategy implements IWriteStrategy {
     parentItemId: string,
     originalName: string
   ): Promise<string[]> {
+    // The legacy path is in `path` until image-sync copies the file, and in
+    // `original_name` after it (the importer writes only the base name there),
+    // so a placement resolves in a full stage as well as on a synced copy.
     const [rows] = await this.db.execute<RowDataPacket[]>(
       `SELECT DISTINCT pic.id
        FROM items pic
        JOIN item_images ii ON ii.item_id = pic.id
-       WHERE pic.parent_id = ? AND pic.type = 'picture' AND ii.original_name = ?
+       WHERE pic.parent_id = ? AND pic.type = 'picture' AND (ii.path = ? OR ii.original_name = ?)
        ORDER BY pic.id`,
-      [parentItemId, originalName]
+      [parentItemId, originalName, originalName]
     );
     return rows.map((row) => row.id as string);
   }
