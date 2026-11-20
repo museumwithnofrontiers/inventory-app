@@ -73,7 +73,7 @@ describe('PartnerHierarchyImporter', () => {
     };
   });
 
-  it('assigns missing associated_museums project_id to the legacy ISL project', async () => {
+  it("takes a missing associated_museums project_id from the museum's own row (M16 G3 #2699)", async () => {
     tracker.set('mwnf3:projects:ISL', 'isl-collection-uuid', 'collection');
     queryMock.mockImplementation(async (sql: string) => {
       if (sql.includes('FROM mwnf3.associated_museums')) {
@@ -84,6 +84,7 @@ describe('PartnerHierarchyImporter', () => {
             project_id: null,
             museum_id: 'Mus01',
             country_id: 'jo',
+            museum_project_id: 'ISL',
           },
         ];
       }
@@ -94,25 +95,30 @@ describe('PartnerHierarchyImporter', () => {
     const importer = new PartnerHierarchyImporter(context);
     const result = await importer.import();
 
-    expect(logger.warning).toHaveBeenCalledWith(
-      'associated_museums id=3 has no project_id, assigning default legacy project ISL',
-      undefined
-    );
     expect(attachPartnerToCollectionWithLevelMock).toHaveBeenCalledWith(
       'isl-collection-uuid',
       'partner-uuid',
       'project',
       'associated_partner'
     );
+    expect(logger.warning).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
     expect(result.imported).toBe(1);
     expect(result.skipped).toBe(0);
-    expect(result.warnings).toEqual([
-      'associated_museums id=3 has no project_id, assigning default legacy project ISL',
-    ]);
+    expect(result.warnings).toEqual([]);
   });
 
-  it('keeps explicit associated_museums project_id values unchanged', async () => {
+  it('joins the museum row to read its project', async () => {
+    await new PartnerHierarchyImporter(context).import();
+
+    const sql = queryMock.mock.calls
+      .map((args: unknown[]) => args[0] as string)
+      .find((query: string) => query.includes('FROM mwnf3.associated_museums'))!;
+    expect(sql).toContain('LEFT JOIN mwnf3.museums m ON m.museum_id = a.museum_id AND m.country = a.country_id');
+    expect(sql).toContain('m.project_id AS museum_project_id');
+  });
+
+  it("keeps explicit associated_museums project_id values unchanged, over the museum's", async () => {
     tracker.set('mwnf3:projects:ABC', 'abc-collection-uuid', 'collection');
     queryMock.mockImplementation(async (sql: string) => {
       if (sql.includes('FROM mwnf3.associated_museums')) {
@@ -123,6 +129,7 @@ describe('PartnerHierarchyImporter', () => {
             project_id: 'ABC',
             museum_id: 'Mus01',
             country_id: 'jo',
+            museum_project_id: 'ISL',
           },
         ];
       }
@@ -133,10 +140,6 @@ describe('PartnerHierarchyImporter', () => {
     const importer = new PartnerHierarchyImporter(context);
     const result = await importer.import();
 
-    expect(logger.warning).not.toHaveBeenCalledWith(
-      'associated_museums id=4 has no project_id, assigning default legacy project ISL',
-      undefined
-    );
     expect(attachPartnerToCollectionWithLevelMock).toHaveBeenCalledWith(
       'abc-collection-uuid',
       'partner-uuid',
@@ -149,7 +152,8 @@ describe('PartnerHierarchyImporter', () => {
     expect(result.warnings).toEqual([]);
   });
 
-  it('keeps the failure explicit when the default ISL project cannot be resolved', async () => {
+  it('skips the row, reported, when neither it nor its museum has a project; no project is assumed', async () => {
+    tracker.set('mwnf3:projects:ISL', 'isl-collection-uuid', 'collection');
     queryMock.mockImplementation(async (sql: string) => {
       if (sql.includes('FROM mwnf3.associated_museums')) {
         return [
@@ -159,6 +163,7 @@ describe('PartnerHierarchyImporter', () => {
             project_id: null,
             museum_id: 'Mus01',
             country_id: 'jo',
+            museum_project_id: null,
           },
         ];
       }
@@ -169,22 +174,12 @@ describe('PartnerHierarchyImporter', () => {
     const importer = new PartnerHierarchyImporter(context);
     const result = await importer.import();
 
-    expect(logger.warning).toHaveBeenNthCalledWith(
-      1,
-      'associated_museums id=5 has no project_id, assigning default legacy project ISL',
-      undefined
-    );
-    expect(logger.warning).toHaveBeenNthCalledWith(
-      2,
-      'Collection not found for project ISL, skipping partner hierarchy entry',
-      undefined
-    );
     expect(attachPartnerToCollectionWithLevelMock).not.toHaveBeenCalled();
     expect(result.success).toBe(true);
     expect(result.imported).toBe(0);
     expect(result.skipped).toBe(1);
     expect(result.warnings).toEqual([
-      'associated_museums id=5 has no project_id, assigning default legacy project ISL',
+      'associated_museums id=5 has no project_id, and museum Mus01:jo has none either; skipped',
     ]);
   });
 });

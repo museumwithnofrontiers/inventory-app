@@ -204,8 +204,9 @@ export class ShChronologyImporter extends BaseImporter {
             displayOrder++;
           } else {
             const from = year(activity.rea_from_year);
-            const to = year(activity.rea_to_year) ?? from;
-            if (from === null || to === null) {
+            // No end year in legacy stays none, not the start year (M16 G3 #2699).
+            const to = year(activity.rea_to_year);
+            if (from === null) {
               this.logWarning(`Activity ${activity.activity_id} has no year; skipped`);
               result.skipped++;
               continue;

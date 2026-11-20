@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { ThgGalleryContentImporter } from '../../src/importers/phase-10/thg-gallery-content-importer.js';
+import {
+  ThgGalleryContentImporter,
+  exhibitionPartnerTranslationExtra,
+} from '../../src/importers/phase-10/thg-gallery-content-importer.js';
 import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
 import type { IWriteStrategy } from '../../src/core/strategy.js';
@@ -487,5 +490,109 @@ describe('ThgGalleryContentImporter', () => {
       expect(writeContributorMock).not.toHaveBeenCalled();
       expect(result.errors).toHaveLength(0);
     });
+
+    it('maps each translation column to one place: address, website, one contact (M16 G3 #2699)', async () => {
+      const partnerRow = {
+        partner_id: 4,
+        gallery_id: 5,
+        category_id: 3,
+        display_order: 1,
+        entity_name: 'UN Alliance of Civilisations',
+        entity_location: '730 Third Avenue, 20th Floor, New York, New York 10017',
+        entity_country: null,
+        title: 'UN Alliance of Civilisations ',
+        link: 'https://www.unaoc.org/',
+        description: null,
+        logo: null,
+        visible: 'Y',
+        contact_title: 'High Representative',
+        contact_name: 'H.E. Mr. Miguel Ángel Moratinos',
+        contact_email: 'contactaoc@unops.org',
+        contact_phone: '+1-929-274-6217',
+        contact_fax: '+1-866-673-0791',
+        further_reading: null,
+      };
+      queryMock.mockImplementation(async (sql: string) => {
+        if (sql.includes('INNER JOIN mwnf3_thematic_gallery.thg_projects')) {
+          return [{ gallery_id: 5, is_gallery: 0, is_exhibition: 1 }];
+        }
+        if (sql.includes('FROM mwnf3_thematic_gallery.exhibition_partner_i18n')) {
+          return [
+            {
+              partner_id: 4,
+              language_id: 'en',
+              entity_name: partnerRow.entity_name,
+              entity_location: partnerRow.entity_location,
+              entity_country: null,
+              title: null,
+              link: partnerRow.link,
+              description: null,
+              logo: null,
+              contact_title: partnerRow.contact_title,
+              contact_name: partnerRow.contact_name,
+              contact_email: partnerRow.contact_email,
+              contact_phone: partnerRow.contact_phone,
+              contact_fax: partnerRow.contact_fax,
+              further_reading: null,
+            },
+          ];
+        }
+        if (sql.includes('FROM mwnf3_thematic_gallery.exhibition_partner')) {
+          return [partnerRow];
+        }
+        return [];
+      });
+
+      const result = await new ThgGalleryContentImporter(context).import();
+
+      expect(result.errors).toHaveLength(0);
+      const written = writePartnerTranslationMock.mock.calls[0]![0] as Record<string, unknown>;
+      expect(written).toMatchObject({
+        name: 'UN Alliance of Civilisations',
+        address: '730 Third Avenue, 20th Floor, New York, New York 10017',
+        contact_website: 'https://www.unaoc.org/',
+      });
+      expect(written.city_display).toBeUndefined();
+      expect(written.contact_phone).toBeUndefined();
+      expect(written.contact_email_general).toBeUndefined();
+      expect(JSON.parse(written.extra as string)).toEqual({
+        contact_person_1: {
+          title: 'High Representative',
+          name: 'H.E. Mr. Miguel Ángel Moratinos',
+          email: 'contactaoc@unops.org',
+          phone: '+1-929-274-6217',
+          fax: '+1-866-673-0791',
+        },
+      });
+    });
+  });
+});
+
+describe('exhibitionPartnerTranslationExtra (M16 G3 #2699)', () => {
+  const empty = {
+    entity_country: null,
+    further_reading: null,
+    contact_title: null,
+    contact_name: null,
+    contact_email: null,
+    contact_phone: null,
+    contact_fax: null,
+  };
+
+  it('is null when every column is empty', () => {
+    expect(exhibitionPartnerTranslationExtra({ ...empty, contact_name: '  ' })).toBeNull();
+  });
+
+  it('keeps entity_country and further_reading next to the contact', () => {
+    expect(
+      JSON.parse(
+        exhibitionPartnerTranslationExtra({
+          ...empty,
+          entity_country: 'us',
+          further_reading: 'Reading',
+          contact_email: 'a@b.org',
+        })!
+      )
+    ).toEqual({ entity_country: 'us', further_reading: 'Reading', contact_person_1: { email: 'a@b.org' } });
   });
 });

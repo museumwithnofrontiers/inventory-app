@@ -17,6 +17,7 @@ import {
   transformAuthorCv,
   transformShAuthorCv,
 } from '../../domain/transformers/index.js';
+import type { TransformedAuthorTranslation } from '../../domain/transformers/author-transformer.js';
 import type {
   LegacyAuthor,
   LegacyAuthorCv,
@@ -327,6 +328,11 @@ export class AuthorImporter extends BaseImporter {
 
   private async importAuthorCvs(): Promise<ImportResult> {
     const result = this.createResult();
+    // The CV written for each author, language and context in this run, with
+    // the legacy row it came from. Two legacy authors merged into one (by name)
+    // can both have a CV for the same language; the outcome must not depend on
+    // the order of the rows (M16 G3 #2699).
+    const written = new Map<string, { text: string; source: string }>();
 
     // 2a. Import mwnf3 CVs
     const mwnf3Cvs = await this.context.legacyDb.query<LegacyAuthorCv>(
@@ -335,10 +341,8 @@ export class AuthorImporter extends BaseImporter {
     this.logInfo(`Found ${mwnf3Cvs.length} mwnf3 author CVs`);
 
     for (const legacy of mwnf3Cvs) {
+      const source = `mwnf3 author CV ${legacy.author_id}:${legacy.project_id}:${legacy.lang_id}`;
       try {
-        const transformed = transformAuthorCv(legacy, 'mwnf3');
-
-        // Resolve author UUID
         const authorBackwardCompat = `mwnf3:authors:${legacy.author_id}`;
         const authorId = await this.getEntityUuidAsync(authorBackwardCompat, 'author');
         if (!authorId) {
@@ -348,7 +352,6 @@ export class AuthorImporter extends BaseImporter {
           continue;
         }
 
-        // Resolve language
         const languageId = await this.getLanguageIdByLegacyCodeAsync(legacy.lang_id);
         if (!languageId) {
           this.logWarning(
@@ -359,65 +362,30 @@ export class AuthorImporter extends BaseImporter {
           continue;
         }
 
-        // Resolve context from project_id
-        const projectBackwardCompat = `mwnf3:projects:${legacy.project_id}`;
-        const contextId = await this.getContextIdForProjectAsync(projectBackwardCompat);
+        // The project's context, else the default one.
+        const contextId =
+          (await this.getContextIdForProjectAsync(`mwnf3:projects:${legacy.project_id}`)) ??
+          (await this.getDefaultContextIdAsync());
         if (!contextId) {
-          // Fall back to default context
-          const defaultContextId = await this.getDefaultContextIdAsync();
-          if (!defaultContextId) {
-            this.logWarning(
-              `No default context available for author CV ${legacy.author_id}:${legacy.project_id}`
-            );
-            result.skipped++;
-            this.showSkipped();
-            continue;
-          }
-          // Use default context
-          if (this.isDryRun || this.isSampleOnlyMode) {
-            result.imported++;
-            this.showProgress();
-            continue;
-          }
-
-          await this.context.strategy.writeAuthorTranslation({
-            ...transformed.data,
-            author_id: authorId,
-            language_id: languageId,
-            context_id: defaultContextId,
-          });
-          result.imported++;
-          this.showProgress();
-          continue;
-        }
-
-        if (this.isDryRun || this.isSampleOnlyMode) {
-          result.imported++;
-          this.showProgress();
-          continue;
-        }
-
-        await this.context.strategy.writeAuthorTranslation({
-          ...transformed.data,
-          author_id: authorId,
-          language_id: languageId,
-          context_id: contextId,
-        });
-        result.imported++;
-        this.showProgress();
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (message.includes('Duplicate')) {
-          this.logSkip(`mwnf3 author CV ${legacy.author_id}: duplicate, skipping`);
+          this.logWarning(
+            `No default context available for author CV ${legacy.author_id}:${legacy.project_id}`
+          );
           result.skipped++;
           this.showSkipped();
-        } else {
-          result.errors.push(
-            `mwnf3 author CV ${legacy.author_id}:${legacy.project_id}:${legacy.lang_id}: ${message}`
-          );
-          this.logError(`mwnf3 author CV ${legacy.author_id}`, message);
-          this.showError();
+          continue;
         }
+
+        await this.writeCv(
+          transformAuthorCv(legacy, 'mwnf3').data,
+          authorId,
+          languageId,
+          contextId,
+          source,
+          written,
+          result
+        );
+      } catch (error) {
+        this.recordCvError(source, error, result);
       }
     }
 
@@ -428,9 +396,8 @@ export class AuthorImporter extends BaseImporter {
     this.logInfo(`Found ${shCvs.length} SH author CVs`);
 
     for (const legacy of shCvs) {
+      const source = `SH author CV ${legacy.author_id}:${legacy.project_id}:${legacy.lang}`;
       try {
-        const transformed = transformShAuthorCv(legacy);
-
         // Resolve author UUID (try SH backward_compatibility first, then via bridge)
         const shBackwardCompat = `mwnf3_sharing_history:sh_authors:${legacy.author_id}`;
         const authorId = await this.getEntityUuidAsync(shBackwardCompat, 'author');
@@ -453,45 +420,101 @@ export class AuthorImporter extends BaseImporter {
         }
 
         const projectBackwardCompat = `mwnf3_sharing_history:sh_projects:${legacy.project_id}`;
-        let contextId = await this.getContextIdForProjectAsync(projectBackwardCompat);
-        if (!contextId) {
-          contextId = await this.getDefaultContextIdAsync();
-        }
+        const contextId =
+          (await this.getContextIdForProjectAsync(projectBackwardCompat)) ??
+          (await this.getDefaultContextIdAsync());
         if (!contextId) {
           result.skipped++;
           this.showSkipped();
           continue;
         }
 
-        if (this.isDryRun || this.isSampleOnlyMode) {
-          result.imported++;
-          this.showProgress();
-          continue;
-        }
-
-        await this.context.strategy.writeAuthorTranslation({
-          ...transformed.data,
-          author_id: authorId,
-          language_id: languageId,
-          context_id: contextId,
-        });
-        result.imported++;
-        this.showProgress();
+        await this.writeCv(
+          transformShAuthorCv(legacy).data,
+          authorId,
+          languageId,
+          contextId,
+          source,
+          written,
+          result
+        );
       } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        if (message.includes('Duplicate')) {
-          this.logSkip(`SH author CV ${legacy.author_id}: duplicate, skipping`);
-          result.skipped++;
-          this.showSkipped();
-        } else {
-          result.errors.push(`SH author CV ${legacy.author_id}: ${message}`);
-          this.logError(`SH author CV ${legacy.author_id}`, message);
-          this.showError();
-        }
+        this.recordCvError(source, error, result);
       }
     }
 
     return result;
+  }
+
+  /**
+   * Writes one legacy CV, whatever order the rows come in (M16 G3 #2699):
+   * - an empty CV is not a CV: nothing is written (legacy shows nothing);
+   * - a second CV for the same author, language and context with the same
+   *   text is already there: skipped;
+   * - a second one with a different text is reported as an error naming both
+   *   legacy rows, and neither replaces the other silently.
+   */
+  private async writeCv(
+    data: TransformedAuthorTranslation['data'],
+    authorId: string,
+    languageId: string,
+    contextId: string,
+    source: string,
+    written: Map<string, { text: string; source: string }>,
+    result: ImportResult
+  ): Promise<void> {
+    const text = data.curriculum ?? '';
+    if (text.trim() === '') {
+      result.skipped++;
+      this.showSkipped();
+      return;
+    }
+
+    const key = `${authorId}|${languageId}|${contextId}`;
+    const earlier = written.get(key);
+    if (earlier) {
+      if (earlier.text === text) {
+        this.logInfo(`${source}: the same CV as ${earlier.source} (merged author), skipping`);
+        result.skipped++;
+        this.showSkipped();
+        return;
+      }
+      const message = `${source}: a different CV than ${earlier.source} for the same author and language (merged author); not written`;
+      result.errors.push(message);
+      this.logError(source, message);
+      this.showError();
+      return;
+    }
+    written.set(key, { text, source });
+
+    if (this.isDryRun || this.isSampleOnlyMode) {
+      result.imported++;
+      this.showProgress();
+      return;
+    }
+
+    await this.context.strategy.writeAuthorTranslation({
+      ...data,
+      author_id: authorId,
+      language_id: languageId,
+      context_id: contextId,
+    });
+    result.imported++;
+    this.showProgress();
+  }
+
+  private recordCvError(source: string, error: unknown, result: ImportResult): void {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes('Duplicate')) {
+      // Written by an earlier run.
+      this.logSkip(`${source}: duplicate, skipping`);
+      result.skipped++;
+      this.showSkipped();
+      return;
+    }
+    result.errors.push(`${source}: ${message}`);
+    this.logError(source, message);
+    this.showError();
   }
 
   // ===========================================================================

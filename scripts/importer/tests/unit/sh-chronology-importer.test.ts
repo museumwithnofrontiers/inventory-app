@@ -184,6 +184,21 @@ describe('ShChronologyImporter', () => {
     });
   });
 
+  it('gives an activity with no end year none, not its start year (M16 G3 #2699)', async () => {
+    const open = [activities[0]!, { ...activities[1]!, rea_to_year: '', rea_to_month: '', rea_to_day: '' }];
+    (context.legacyDb.query as ReturnType<typeof vi.fn>).mockImplementation(async (sql: string) =>
+      sql.includes('act_activities_files') ? [] : open
+    );
+
+    await new ShChronologyImporter(context).import();
+
+    expect(strategy.writeTimelineEvent!.mock.calls[0]![0]).toMatchObject({
+      year_from: 2012,
+      year_to: null,
+      date_to: null,
+    });
+  });
+
   it('writes its pictures in their order, for image-sync to copy', async () => {
     await new ShChronologyImporter(context).import();
 

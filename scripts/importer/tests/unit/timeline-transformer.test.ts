@@ -5,7 +5,27 @@ import {
   transformHcrEventTranslation,
   transformShHcrEvent,
 } from '../../src/domain/transformers/timeline-transformer.js';
-import type { LegacyHcrEvent, ShLegacyHcr } from '../../src/domain/types/index.js';
+import type { LegacyHcr, LegacyHcrEvent, ShLegacyHcr } from '../../src/domain/types/index.js';
+
+const mwnf3Hcr = (to_ad: number): LegacyHcr => ({
+  hcr_id: 7,
+  country_id: 'pt',
+  name: 'Reign',
+  from_ad: 1500,
+  to_ad,
+  from_ah: 0,
+  to_ah: 0,
+});
+
+describe('transformHcrEvent end year (M16 G3 #2699)', () => {
+  it("gives no end year for legacy's 0", () => {
+    expect(transformHcrEvent(mwnf3Hcr(0)).data.year_to).toBeNull();
+  });
+
+  it('keeps an end year as written', () => {
+    expect(transformHcrEvent(mwnf3Hcr(1580)).data.year_to).toBe(1580);
+  });
+});
 
 const shHcr = (overrides: Partial<ShLegacyHcr> = {}): ShLegacyHcr => ({
   hcr_id: 1497,

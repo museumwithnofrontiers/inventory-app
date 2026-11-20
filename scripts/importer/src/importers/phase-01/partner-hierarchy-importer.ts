@@ -34,8 +34,6 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 
-const DEFAULT_ASSOCIATED_MUSEUM_PROJECT_ID = 'ISL';
-
 interface LegacyPartnerMuseum {
   partner_id: number;
   project_id: string;
@@ -49,6 +47,8 @@ interface LegacyAssociatedMuseum {
   project_id: string | null;
   museum_id: string;
   country_id: string;
+  /** The museum's own project (`museums.project_id`), joined in. */
+  museum_project_id: string | null;
 }
 
 interface LegacyFurtherAssociatedMuseum {
@@ -150,7 +150,11 @@ export class PartnerHierarchyImporter extends BaseImporter {
     this.logInfo('Importing tier 2: associated_museums...');
 
     const rows = await this.context.legacyDb.query<LegacyAssociatedMuseum>(
-      'SELECT associated_id, partner_id, project_id, museum_id, country_id FROM mwnf3.associated_museums ORDER BY associated_id'
+      `SELECT a.associated_id, a.partner_id, a.project_id, a.museum_id, a.country_id,
+              m.project_id AS museum_project_id
+       FROM mwnf3.associated_museums a
+       LEFT JOIN mwnf3.museums m ON m.museum_id = a.museum_id AND m.country = a.country_id
+       ORDER BY a.associated_id`
     );
 
     this.logInfo(`Found ${rows.length} associated_museums rows`);
@@ -158,6 +162,11 @@ export class PartnerHierarchyImporter extends BaseImporter {
     for (const row of rows) {
       try {
         const projectId = this.resolveAssociatedMuseumProjectId(row, result);
+        if (!projectId) {
+          result.skipped++;
+          this.showSkipped();
+          continue;
+        }
 
         const imported = await this.attachPartnerToProject(
           projectId,
@@ -197,21 +206,35 @@ export class PartnerHierarchyImporter extends BaseImporter {
     }
   }
 
+  /**
+   * The row's project, else the museum's own (`museums.project_id`): five rows
+   * have none, all "Further Associated Museums" whose museum row is ISL
+   * (M16 G3 #2699). With neither, the row is skipped, reported; no project is
+   * assumed.
+   */
   private resolveAssociatedMuseumProjectId(
     row: LegacyAssociatedMuseum,
     result: ImportResult
-  ): string {
-    if (row.project_id) {
-      return row.project_id;
+  ): string | null {
+    const ownProject = row.project_id?.trim();
+    if (ownProject) {
+      return ownProject;
+    }
+
+    const museumProject = row.museum_project_id?.trim();
+    if (museumProject) {
+      this.logInfo(
+        `associated_museums id=${row.associated_id} has no project_id; using its museum's project ${museumProject}`
+      );
+      return museumProject;
     }
 
     const warning =
       `associated_museums id=${row.associated_id} has no project_id, ` +
-      `assigning default legacy project ${DEFAULT_ASSOCIATED_MUSEUM_PROJECT_ID}`;
+      `and museum ${row.museum_id}:${row.country_id} has none either; skipped`;
     this.logWarning(warning);
     result.warnings.push(warning);
-
-    return DEFAULT_ASSOCIATED_MUSEUM_PROJECT_ID;
+    return null;
   }
 
   private async importFurtherAssociatedMuseums(result: ImportResult): Promise<void> {
