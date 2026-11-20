@@ -137,7 +137,6 @@ export function transformShObjectTranslation(
   // own: the description here, the second one, the second and third names in
   // extra below. Each site prints the ones its legacy sheet printed.
   const description = text.description?.trim() ? convertHtmlToMarkdown(text.description) : '';
-  const alternateName = text.name2?.trim() ? convertHtmlToMarkdown(text.name2) : null;
 
   // Build dates string
   const datesParts: string[] = [];
@@ -163,6 +162,10 @@ export function transformShObjectTranslation(
   // Build extra JSON for translation-specific fields
   const extra: Record<string, unknown> = {};
   if (text.archival) extra.archival = convertHtmlToMarkdown(text.archival);
+  // Sharing History's "Also known as" (name2, one text in legacy) is a listed
+  // one-off: its other name (second_name, below) is the `alternate_name`
+  // column (M16 B7, #2690), so name2 stays here, as written.
+  if (text.name2?.trim()) extra.name2 = convertHtmlToMarkdown(text.name2);
   if (text.province?.trim()) extra.province = convertHtmlToMarkdown(text.province);
   const credits = creditsAsWritten(text);
   if (credits) extra.credits_as_written = credits;
@@ -216,7 +219,8 @@ export function transformShObjectTranslation(
     language_id: languageId,
     name: convertHtmlToMarkdown(name),
     description,
-    alternate_name: alternateName,
+    // Filled from extra.second_name by the item-translation-columns step.
+    alternate_name: null,
     type,
     holder,
     owner,

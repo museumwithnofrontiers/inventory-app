@@ -148,6 +148,7 @@ describe('the column list', () => {
       'archival→archival_reference',
       'holding_institution_org→holder_original_name',
       'external_sources→external_sources',
+      'second_name→alternate_name',
     ])
     expect(
       itemColumnsSelect('it').startsWith(
@@ -156,7 +157,7 @@ describe('the column list', () => {
           'it.artist_birth_date, it.artist_birth_place, it.artist_death_date, it.artist_death_place, it.workshop, it.scribe, ' +
           'it.patrons, it.architects, it.catalogue_references, it.notice, it.external_notice, it.status, it.original_name, it.archival_reference, ' +
           'it.holder_original_name, it.external_sources, ' +
-          'it.backward_compatibility AS item_columns_source, '
+          'it.backward_compatibility AS item_columns_source, it.alternate_name AS item_columns_scoped_alternate_name, '
       )
     ).toBe(true)
     // F1: the picture image's fields, read through the translation's item.
@@ -230,6 +231,40 @@ describe("an object's catalogue page (F3)", () => {
       extra: { binding_desc: 'x', catalogue_holding_link: 'https://museum.example.org/1' },
     })
     expect(itemColumnsSelect('it')).toContain("ic_l.type = 'catalogue' AND ic_l.language_id = it.language_id")
+  })
+})
+
+describe("Sharing History's second name and Also known as (B7)", () => {
+  const sh = 'mwnf3_sharing_history:sh_objects:awe:es:31:eng'
+
+  it('gives a Sharing History alternate_name back as second_name and name2 back as alternate_name', () => {
+    const [row] = restoreItemColumns([
+      { item_id: 'i1', alternate_name: 'Russian kettle', extra: '{"name2": "Kettle", "keywords": "tea"}', item_columns_source: sh, item_columns_scoped_alternate_name: 'Russian kettle' },
+    ])
+    expect(row).toEqual({ item_id: 'i1', alternate_name: 'Kettle', extra: { keywords: 'tea', second_name: 'Russian kettle' } })
+    expect(Object.keys(row!.extra as unknown as Record<string, unknown>)).toEqual(['keywords', 'second_name'])
+  })
+
+  it('leaves a Sharing History text without a name2 with no alternate_name', () => {
+    const [row] = restoreItemColumns([
+      { item_id: 'i1', alternate_name: 'Imaret of Mohammed Ali', extra: null, item_columns_source: sh, item_columns_scoped_alternate_name: 'Imaret of Mohammed Ali' },
+    ])
+    expect(row).toEqual({ item_id: 'i1', alternate_name: null, extra: { second_name: 'Imaret of Mohammed Ali' } })
+  })
+
+  it("takes the one name2 off extra, leaving null when it was the only key", () => {
+    const [row] = restoreItemColumns([
+      { item_id: 'i1', alternate_name: null, extra: { name2: 'Moorish Sketches' }, item_columns_source: sh, item_columns_scoped_alternate_name: null },
+    ])
+    expect(row).toEqual({ item_id: 'i1', alternate_name: 'Moorish Sketches', extra: null })
+  })
+
+  it("leaves any other text's alternate_name and extra as they are", () => {
+    const extra = '{"name2": "x"}'
+    const [row] = restoreItemColumns([
+      { item_id: 'i1', alternate_name: 'Kurşunlu Mosque', extra, item_columns_source: 'mwnf3:monuments:ISL;al;1;1:eng', item_columns_scoped_alternate_name: 'Kurşunlu Mosque' },
+    ])
+    expect(row).toEqual({ item_id: 'i1', alternate_name: 'Kurşunlu Mosque', extra })
   })
 })
 
