@@ -75,6 +75,21 @@ import type { CollectionItemTranslationColumns } from '../utils/collection-item-
 import type { ExploreMonumentPlan } from '../utils/explore-monuments.js';
 
 /**
+ * What the project-shell cleanup removed, and the shells it kept with what
+ * still refers to them (M16 J1, #2708).
+ */
+export interface ProjectShellCleanup {
+  collections: Array<{ id: string; backward_compatibility: string }>;
+  contexts: Array<{ id: string; backward_compatibility: string | null }>;
+  kept: Array<{
+    kind: 'collection' | 'context';
+    id: string;
+    backward_compatibility: string;
+    referencedBy: string[];
+  }>;
+}
+
+/**
  * Strategy interface for writing entities to the target system
  *
  * Each method returns the UUID of the created/found entity.
@@ -158,6 +173,19 @@ export interface IWriteStrategy {
   ): Promise<
     Array<{ id: string; backward_compatibility: string | null; internal_name: string | null }>
   >;
+
+  /**
+   * Delete the root collection of every legacy project whose project row is
+   * gone, when no row refers to it, then its context when no row refers to
+   * that either (M16 J1, #2708). With `dryRun` the deletes are rolled back.
+   */
+  deleteProjectShells(dryRun?: boolean): Promise<ProjectShellCleanup>;
+
+  /**
+   * Delete the authors with no legacy key that no row refers to (M16 J4,
+   * #2711). With `dryRun` the deletes are rolled back.
+   */
+  deleteOrphanFreeTextAuthors(dryRun?: boolean): Promise<Array<{ id: string; name: string }>>;
 
   // =========================================================================
   // Partners
@@ -271,6 +299,16 @@ export interface IWriteStrategy {
     partnerId: string,
     collectionType: string,
     level: string
+  ): Promise<void>;
+
+  /**
+   * Record the partner a project partner belongs to on its project-tier row
+   * (legacy's associated partners, M16 J2 #2709).
+   */
+  setProjectPartnerParent(
+    collectionId: string,
+    partnerId: string,
+    parentPartnerId: string
   ): Promise<void>;
 
   // =========================================================================

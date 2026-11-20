@@ -9,8 +9,7 @@
  * Art dataset — projects ISL (Discover Islamic Art) and EPM (Explore
  * Islamic Art Collections) together, as `@museumwnf/islamicart-data`. The
  * scope is not configurable: ISL and EPM are one dataset, and an ISL-only
- * export would silently drop the EPM project collection and every
- * `partner_group:museums:*` collection.
+ * export would silently drop the EPM project collection and its partners.
  *
  * Usage:
  *   npm run export -- [options]

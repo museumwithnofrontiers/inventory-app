@@ -68,6 +68,7 @@ class CollectionParticipationsRelationManager extends RelationManager
                     ->sortable(),
                 CollectionPartnerPivot::levelColumn(),
                 CollectionPartnerPivot::visibleColumn(),
+                CollectionPartnerPivot::parentPartnerColumn(),
                 TextColumn::make('type')
                     ->sortable(),
                 TextColumn::make('internal_name')

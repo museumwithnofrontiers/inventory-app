@@ -365,7 +365,7 @@ not an exhaustive enumeration:
 | 7 | `mwnf3_travels` | Travels: contexts, trails, itineraries, locations, monuments, and their images/translations |
 | 8 | `mwnf3` | Item media and documents |
 | 10 | `mwnf3_thematic_gallery` | Thematic Galleries: galleries, themes, contributors, tags, timelines, gallery content, and cross-schema links from galleries to items originating in every other legacy schema above |
-| 11 | (post-import) | Collection media (needs THG collections), partner-monument linking, project exhibition-root keying (see below), project cleanup (drops projects left with no items) |
+| 11 | (post-import) | Collection media (needs THG collections), partner-monument linking, project exhibition-root keying (see below), project cleanup (drops projects left with no items), then the project-shell and orphan-author cleanups (see below) |
 
 ### Project exhibition-root keying (standalone-friendly)
 
@@ -393,6 +393,30 @@ It is idempotent (existing roots/parents are skipped) and only needs the
 `.legacy-database/` dumps is sufficient if the live legacy DB is unreachable.
 Sharing History and Explore use different keyspaces and are future extensions
 of this step (#1464, #1465).
+
+### Residual structure: what the import no longer leaves behind (M16 Epic J)
+
+Every legacy project gets a context, a root collection and a project
+(`project`, `sh-project`). `project-cleanup` deletes the projects with neither
+items nor publications, but only their `projects` row. Two post-import steps
+then remove the rows no site uses. Both run last, read nothing from legacy,
+and are idempotent:
+
+- `project-shell-cleanup` (#2708) removes the root collection of every deleted
+  project, with its translations, when no row refers to it any more. It then
+  removes the project's context when no row of any table refers to that. A root
+  with children (Sharing History rus and usa) or a context that still holds a
+  row (CLO's author CVs) is kept and reported.
+- `orphan-author-cleanup` (#2711) deletes the authors with no legacy key that
+  nothing refers to: the ones made from credit text that the credit junction
+  later replaced with legacy's own author.
+
+Two more rows are no longer written at all:
+- the `collection_item` row that repeated each item's `items.collection_id`
+  on its project's root collection (#2710);
+- the `partner_group:*` collections (#2709). The partner a legacy associated
+  museum or institution belongs to is now the `parent_partner_id` of its
+  project-tier `collection_partner` row.
 
 ### Museum → project link (legacy MWNF-384)
 

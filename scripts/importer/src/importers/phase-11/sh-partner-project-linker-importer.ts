@@ -15,7 +15,7 @@
  * Legacy lists ALL sh_partners on its Partners page grouped by country
  * (`modules/pm_partner_list.php:26`), with the associated tiers as flat
  * per-project flags — there is no parent↔child grouping, so no
- * `partner_group` collections are created (unlike the mwnf3 hierarchy).
+ * `parent_partner_id` is set (unlike the mwnf3 hierarchy).
  *
  * Only projects legacy actually renders are linked (`show='Y' AND
  * category='SP'` — `libs/class.project.inc.php:48`): in practice AWE.

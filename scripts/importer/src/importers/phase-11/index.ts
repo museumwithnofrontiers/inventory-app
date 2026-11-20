@@ -35,3 +35,5 @@ export { CollectionFlagsImporter } from './collection-flags-importer.js';
 export { SiteConfigurationOutImporter } from './site-configuration-out-importer.js';
 export { ImageTextsImporter } from './image-texts-importer.js';
 export { LinksImporter } from './links-importer.js';
+export { ProjectShellCleanupImporter } from './project-shell-cleanup-importer.js';
+export { OrphanAuthorCleanupImporter } from './orphan-author-cleanup-importer.js';

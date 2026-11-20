@@ -7,6 +7,7 @@ import type {
   PartnerUrl,
 } from '../core/types.js'
 import { partnerWebsites } from '../../../shared/partner-websites.mjs'
+import { partnerParents } from '../../../shared/partner-parents.mjs'
 import { BaseExporter } from './base-exporter.js'
 import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 
@@ -73,12 +74,6 @@ interface PartnerLevelRow {
   partner_id: string
   level: string | null
   project_id: string
-}
-
-interface GroupMembershipRow {
-  collection_id: string
-  partner_id: string
-  level: string | null
 }
 
 // The exported item set this partner shape's item_count sums over mirrors
@@ -220,24 +215,12 @@ export class PartnerExporter extends BaseExporter {
     ])
     const translations = restorePartnerColumns(partnerTranslations)
 
-    // Per-context hierarchy: partner-hierarchy-importer.ts / institution-hierarchy-importer.ts
-    // give each tier-1 partner_museums/partner_institutions row its own "group" collection
-    // (collection_type='collection', internal_name 'partner_group:...') and attach that
-    // partner plus every associated/further-associated museum or institution legacy links
-    // to it via `associated_museums.partner_id` to that same collection. The member with
-    // level='partner' in a group is that group's owner (the legacy top-level partner); every
-    // other member's parent_id is that owner's id. A partner can own or belong to at most one
-    // group per project (mirrors legacy: one partner_museums/partner_institutions row per
-    // museum/institution per project).
-    const groupMemberships = await this.db.query<GroupMembershipRow>(
-      `SELECT cp.collection_id, cp.partner_id, cp.level
-       FROM collection_partner cp
-       JOIN collections c ON c.id = cp.collection_id
-       WHERE cp.collection_type = 'collection'
-         AND c.internal_name LIKE 'partner_group:%'
-         AND c.context_id IN (SELECT p.context_id FROM projects p WHERE p.id IN (${ph}))
-         AND cp.partner_id IN (${partnerPh})`,
-      [...this.projectIds, ...partnerIds]
+    // The partner each member belongs to in these projects (legacy's associated
+    // partners): the project-tier row's parent_partner_id (M16 J2).
+    const parentMap = await partnerParents(
+      (sql, params) => this.db.query(sql, params),
+      this.projectIds,
+      partnerIds
     )
 
     // partner_id -> item_count, defaulting to 0 for a partner holding none.
@@ -322,20 +305,6 @@ export class PartnerExporter extends BaseExporter {
       }
       if (!projectUuidsMap.has(row.partner_id)) projectUuidsMap.set(row.partner_id, new Set())
       projectUuidsMap.get(row.partner_id)!.add(row.project_id)
-    }
-
-    // collection_id -> owner partner_id (the member with level='partner')
-    const groupOwnerMap = new Map<string, string>()
-    for (const row of groupMemberships) {
-      if (row.level === 'partner') groupOwnerMap.set(row.collection_id, row.partner_id)
-    }
-    // partner_id -> parent partner_id (the owner of the group(s) this partner belongs to,
-    // excluding the group(s) it owns itself)
-    const parentMap = new Map<string, string>()
-    for (const row of groupMemberships) {
-      if (row.level === 'partner') continue
-      const owner = groupOwnerMap.get(row.collection_id)
-      if (owner && owner !== row.partner_id) parentMap.set(row.partner_id, owner)
     }
 
     const output: Partner[] = partners.map(p => ({

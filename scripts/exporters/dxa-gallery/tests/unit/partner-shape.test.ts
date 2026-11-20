@@ -63,7 +63,7 @@ describe('PartnerExporter — shared partner shape', () => {
   const stubDb = (rows: {
     partners: unknown[]
     levels?: unknown[]
-    groupMemberships?: unknown[]
+    parents?: unknown[]
     heldItems?: unknown[]
     translations?: unknown[]
     ownProjects?: unknown[]
@@ -84,8 +84,8 @@ describe('PartnerExporter — shared partner shape', () => {
         }
         if (sql.includes('FROM partner_images')) return []
         if (sql.includes('FROM partner_logos')) return []
+        if (sql.includes('cp.parent_partner_id IS NOT NULL')) return rows.parents ?? []
         if (sql.includes("cp.collection_type = 'project'")) return rows.levels ?? []
-        if (sql.includes("cp.collection_type = 'collection'")) return rows.groupMemberships ?? []
         if (sql.includes('AS item_id')) return rows.heldItems ?? []
         return []
       },
@@ -183,17 +183,14 @@ describe('PartnerExporter — shared partner shape', () => {
 
     expect(readOutput()[0]?.contact_persons).toEqual([])
   })
-  it('derives level and parent_id from the curated partner_group hierarchy', async () => {
+  it('derives level and parent_id from the curated hierarchy (parent_partner_id, M16 J2)', async () => {
     const db = stubDb({
       partners: [partnerRow('owner', 2), partnerRow('member', 0)],
       levels: [
         { partner_id: 'owner', level: 'partner' },
         { partner_id: 'member', level: 'associated_partner' },
       ],
-      groupMemberships: [
-        { collection_id: 'group-1', partner_id: 'owner', level: 'partner' },
-        { collection_id: 'group-1', partner_id: 'member', level: 'associated_partner' },
-      ],
+      parents: [{ partner_id: 'member', parent_partner_id: 'owner' }],
     })
     await new PartnerExporter(context(db, 'project-dca-uuid')).export()
 
@@ -220,7 +217,7 @@ describe('PartnerExporter — shared partner shape', () => {
     await new PartnerExporter(context(db, null)).export()
 
     expect(queries.some(q => q.sql.includes("cp.collection_type = 'project'") && !q.sql.includes('AS own_project_id'))).toBe(false)
-    expect(queries.some(q => q.sql.includes("cp.collection_type = 'collection'"))).toBe(false)
+    expect(queries.some(q => q.sql.includes('cp.parent_partner_id'))).toBe(false)
   })
 
   // Epic #1727 decision 4: project_uuids derives from the held items' own

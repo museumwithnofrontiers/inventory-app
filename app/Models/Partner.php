@@ -164,7 +164,7 @@ class Partner extends Model
     public function collections(): BelongsToMany
     {
         return $this->belongsToMany(Collection::class, 'collection_partner')
-            ->withPivot(['collection_type', 'level', 'visible'])
+            ->withPivot(['collection_type', 'level', 'visible', 'parent_partner_id'])
             ->withTimestamps()
             ->using(CollectionPartner::class);
     }

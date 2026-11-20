@@ -52,7 +52,7 @@ describe('PartnerExporter — shared partner shape', () => {
     partners: unknown[]
     translations: unknown[]
     levels?: unknown[]
-    groupMemberships?: unknown[]
+    parents?: unknown[]
     itemCounts?: unknown[]
   }): Database =>
     ({
@@ -69,7 +69,7 @@ describe('PartnerExporter — shared partner shape', () => {
         if (sql.includes('FROM partner_images')) return []
         if (sql.includes('FROM partner_logos')) return []
         if (sql.includes('cp.level, proj.id AS project_id')) return rows.levels ?? []
-        if (sql.includes("internal_name LIKE 'partner_group:%'")) return rows.groupMemberships ?? []
+        if (sql.includes('cp.parent_partner_id IS NOT NULL')) return rows.parents ?? []
         if (sql.includes('FROM items')) return rows.itemCounts ?? []
         return []
       },
@@ -246,10 +246,7 @@ describe('PartnerExporter — shared partner shape', () => {
         { partner_id: 'owner', level: 'partner', project_id: 'project-awe' },
         { partner_id: 'member', level: 'associated_partner', project_id: 'project-awe' },
       ],
-      groupMemberships: [
-        { collection_id: 'group-1', partner_id: 'owner', level: 'partner' },
-        { collection_id: 'group-1', partner_id: 'member', level: 'associated_partner' },
-      ],
+      parents: [{ partner_id: 'member', parent_partner_id: 'owner' }],
     })
     await new PartnerExporter(context(db)).export()
 
