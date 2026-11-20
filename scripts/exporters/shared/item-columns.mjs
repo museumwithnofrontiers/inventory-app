@@ -29,6 +29,11 @@
  *   is `hidden` (an entry with `values` maps a flag, not a text).
  * - F3 (inventory-app#2653): an object's `catalogue_holding_link` is the item's
  *   `catalogue` link in the translation's language; it goes back to that row.
+ * - B7 (inventory-app#2690): Sharing History's `third_name`, `archival` and
+ *   `holding_institution_org`; and its `second_name`, which is the
+ *   `alternate_name` column on Sharing History texts only (an entry with
+ *   `sources`). Their one "Also known as" (legacy `name2`) stays in `extra` and
+ *   goes back to the row's `alternate_name`, so the package reads as before.
  *
  * Types are in `item-columns.d.mts`.
  */
@@ -69,6 +74,10 @@ export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
   Object.freeze({ key: 'archival', column: 'archival_reference' }),
   Object.freeze({ key: 'holding_institution_org', column: 'holder_original_name' }),
   Object.freeze({ key: 'external_sources', column: 'external_sources' }),
+  // B7 (inventory-app#2690), Pascal's decision: Sharing History's other name is the item's
+  // alternate name. `sources` scopes it: every other text's alternate_name is its own (mwnf3's
+  // name2), selected and shipped by the exporters as before.
+  Object.freeze({ key: 'second_name', column: 'alternate_name', sources: Object.freeze(['mwnf3_sharing_history:']) }),
 ])
 
 /** The translation's legacy key, selected next to the columns under this name. */
@@ -77,7 +86,18 @@ const SOURCE = 'item_columns_source'
 /** Legacy keys of the texts whose author credit was `prepared_by`. */
 const PREPARED_BY_SOURCES = Object.freeze(['mwnf3_explore:', 'mwnf3_travels:'])
 
-const COLUMNS = [...new Set(ITEM_TRANSLATION_COLUMNS.map(({ column }) => column))]
+/** The columns only some texts gave their key to: selected under their own name, so the exporter's own stays. */
+const SCOPED = Object.freeze(ITEM_TRANSLATION_COLUMNS.filter(entry => 'sources' in entry))
+
+/** @param {string} column */
+const scopedName = column => `item_columns_scoped_${column}`
+
+const COLUMNS = [...new Set(ITEM_TRANSLATION_COLUMNS.filter(entry => !('sources' in entry)).map(({ column }) => column))]
+
+const SCOPED_NAMES = [...new Set(SCOPED.map(({ column }) => scopedName(column)))]
+
+/** Legacy keys of the Sharing History texts. */
+const SHARING_HISTORY = 'mwnf3_sharing_history:'
 
 /** The picture image's fields and the "a row keeps its own" flags, selected under these names. */
 const PICTURE = Object.freeze({
@@ -204,6 +224,7 @@ export function itemColumnsSelect(alias) {
   return [
     ...COLUMNS.map(column => `${alias}.${column}`),
     `${alias}.backward_compatibility AS ${SOURCE}`,
+    ...SCOPED_NAMES.map(name => `${alias}.${name.slice('item_columns_scoped_'.length)} AS ${name}`),
     ...pictureSelect(alias),
     `${alias}.image_rights`,
     catalogueSelect(alias),
@@ -218,8 +239,36 @@ export function itemColumnsSelect(alias) {
  * @returns {string}
  */
 function authorCreditKey(row) {
-  const source = typeof row[SOURCE] === 'string' ? /** @type {string} */ (row[SOURCE]) : ''
-  return PREPARED_BY_SOURCES.some(prefix => source.startsWith(prefix)) ? 'prepared_by' : 'credits_as_written.author'
+  return PREPARED_BY_SOURCES.some(prefix => sourceOf(row).startsWith(prefix)) ? 'prepared_by' : 'credits_as_written.author'
+}
+
+/**
+ * The row's legacy key, or '' when it wasn't selected.
+ *
+ * @param {Record<string, unknown>} row
+ * @returns {string}
+ */
+function sourceOf(row) {
+  return typeof row[SOURCE] === 'string' ? /** @type {string} */ (row[SOURCE]) : ''
+}
+
+/**
+ * A Sharing History row's "Also known as" (legacy `name2`, a listed `extra`
+ * key there since its `alternate_name` holds the second name, B7) goes back to
+ * the row's `alternate_name`, if the exporter selected it, and leaves `extra`.
+ * Any other row is left as it is.
+ *
+ * @param {Record<string, unknown>} record
+ */
+function restoreAlsoKnownAs(record) {
+  if (!sourceOf(record).startsWith(SHARING_HISTORY)) return
+  const parsed = typeof record.extra === 'string' ? JSON.parse(record.extra) : record.extra
+  const name2 = isObject(parsed) && Object.prototype.hasOwnProperty.call(parsed, 'name2') ? parsed.name2 : undefined
+  if (Object.prototype.hasOwnProperty.call(record, 'alternate_name')) record.alternate_name = name2 ?? null
+  if (name2 === undefined || !isObject(parsed)) return
+  const rest = { ...parsed }
+  Reflect.deleteProperty(rest, 'name2')
+  record.extra = Object.keys(rest).length > 0 ? rest : null
 }
 
 /**
@@ -235,8 +284,11 @@ function authorCreditKey(row) {
 export function withItemTranslationColumns(extra, row) {
   /** @type {Record<string, unknown>} */
   const texts = {}
-  for (const { key, column, values } of ITEM_TRANSLATION_COLUMNS) {
-    let value = row[column]
+  for (const entry of ITEM_TRANSLATION_COLUMNS) {
+    const { key, column, values } = entry
+    const sources = 'sources' in entry ? entry.sources : undefined
+    if (sources !== undefined && !sources.some(prefix => sourceOf(row).startsWith(prefix))) continue
+    let value = sources !== undefined ? row[scopedName(column)] : row[column]
     if (typeof value !== 'string') continue
     if (values !== undefined) {
       const legacy = Object.keys(values).find(legacyValue => values[legacyValue] === value)
@@ -278,7 +330,8 @@ export function restoreItemColumns(rows) {
   for (const row of rows) {
     const record = /** @type {Record<string, unknown>} */ (/** @type {unknown} */ (row))
     record.extra = withVisitInformation(withItemTranslationColumns(record.extra, record), record)
-    for (const column of [...COLUMNS, SOURCE, ...Object.values(PICTURE), 'image_rights', CATALOGUE, VISIT_INFORMATION_COLUMN]) delete record[column]
+    restoreAlsoKnownAs(record)
+    for (const column of [...COLUMNS, ...SCOPED_NAMES, SOURCE, ...Object.values(PICTURE), 'image_rights', CATALOGUE, VISIT_INFORMATION_COLUMN]) delete record[column]
   }
   return rows
 }

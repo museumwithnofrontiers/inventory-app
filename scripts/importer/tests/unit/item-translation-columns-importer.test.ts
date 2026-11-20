@@ -171,6 +171,7 @@ describe('splitItemTranslationColumns', () => {
       'archival→archival_reference',
       'holding_institution_org→holder_original_name',
       'external_sources→external_sources',
+      'second_name→alternate_name',
     ]);
     expect(ITEM_TRANSLATION_COLUMN_KEYS).toEqual([
       'materials',
@@ -199,7 +200,23 @@ describe('splitItemTranslationColumns', () => {
       'archival',
       'holding_institution_org',
       'external_sources',
+      'second_name',
     ]);
+  });
+
+  it("moves Sharing History's second name to alternate_name, as written", () => {
+    expect(splitItemTranslationColumns({ second_name: 'Russian kettle', keywords: 'tea' })).toEqual(
+      {
+        extra: null,
+        columns: { keywords: 'tea', alternate_name: 'Russian kettle' },
+        kept: [],
+      }
+    );
+    expect(splitItemTranslationColumns({ name2: 'Moorish Sketches' })).toEqual({
+      extra: { name2: 'Moorish Sketches' },
+      columns: {},
+      kept: [],
+    });
   });
 });
 

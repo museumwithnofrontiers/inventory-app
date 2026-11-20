@@ -4,6 +4,7 @@ export const ITEM_TRANSLATION_COLUMNS: readonly {
   readonly key: string
   readonly column: string
   readonly values?: Readonly<Record<string, string>>
+  readonly sources?: readonly string[]
 }[]
 
 export function itemColumnsSelect(alias: string): string

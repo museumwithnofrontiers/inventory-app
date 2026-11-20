@@ -115,6 +115,7 @@
                 "linkcatalogs": 0,
                 "materials": 0,
                 "monument_contact": 0,
+                "name2": 1,
                 "notice": 0,
                 "notice_c": 0,
                 "patrons": 0,
@@ -123,6 +124,7 @@
                 "prepared_by": 0,
                 "province": 0,
                 "scriber": 0,
+                "second_name": 0,
                 "third_name": 0,
                 "workshop": 0
             }

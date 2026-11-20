@@ -96,8 +96,11 @@ describe('Sharing History fields kept apart', () => {
     } as ShLegacyObjectText);
 
     expect(result?.data.description).toBe('A reliquary.');
-    expect(result?.data.alternate_name).toBe('Ornament with prophylactic intention');
+    // M16 B7: second_name becomes alternate_name in the item-translation-columns
+    // step; the "Also known as" (name2) stays in extra, as written.
+    expect(result?.data.alternate_name).toBeNull();
     expect(extraOf(result)).toMatchObject({
+      name2: 'Ornament with prophylactic intention',
       description2: 'Throughout the 19th century in Macedonia…',
       second_name: 'Other',
       third_name: 'Third',

@@ -16,6 +16,9 @@
  * - B5 (#2639), B6 (#2640): `linkcatalogs` → `catalogue_references`, `notice`,
  *   `notice_c` → `external_notice`; `legacy_display_status` N → `status` hidden
  *   (runs after `sh-item-display-status`, which writes it).
+ * - B7 (#2690): Sharing History's `third_name` → `original_name`, `archival` →
+ *   `archival_reference`, `holding_institution_org` → `holder_original_name`,
+ *   `second_name` → `alternate_name`.
  *
  * The mwnf3, Sharing History, Explore and Travels object and monument
  * importers write these keys, and later steps move translations between

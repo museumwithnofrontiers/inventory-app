@@ -136,7 +136,6 @@ export function transformShMonumentTranslation(
   // own: the description here; the second one, the history and the second and
   // third names in extra below. Each site prints the ones its legacy sheet printed.
   const description = text.description?.trim() ? convertHtmlToMarkdown(text.description) : '';
-  const alternateName = text.name2?.trim() ? convertHtmlToMarkdown(text.name2) : null;
 
   // Build dates string
   const datesParts: string[] = [];
@@ -159,6 +158,9 @@ export function transformShMonumentTranslation(
 
   // Build extra JSON for translation-specific fields
   const extra: Record<string, unknown> = {};
+  // As on objects: "Also known as" (name2, empty on every monument text in
+  // legacy) is a listed one-off; second_name becomes `alternate_name`.
+  if (text.name2?.trim()) extra.name2 = convertHtmlToMarkdown(text.name2);
   if (text.province?.trim()) extra.province = convertHtmlToMarkdown(text.province);
   const credits = creditsAsWritten(text);
   if (credits) extra.credits_as_written = credits;
@@ -221,7 +223,8 @@ export function transformShMonumentTranslation(
     language_id: languageId,
     name: convertHtmlToMarkdown(name),
     description,
-    alternate_name: alternateName,
+    // Filled from extra.second_name by the item-translation-columns step.
+    alternate_name: null,
     type,
     holder,
     owner: null,

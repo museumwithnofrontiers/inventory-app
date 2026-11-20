@@ -17,6 +17,8 @@
  * - B6 (#2640): the Sharing History notices `notice` and `notice_c` →
  *   `notice`, `external_notice`, as written; and `legacy_display_status` N →
  *   `status` hidden. That one is a flag, not a text, so its entry maps values.
+ * - B7 (#2690): Sharing History's `third_name`, `archival`,
+ *   `holding_institution_org` and `second_name` (→ `alternate_name`).
  *
  * A key is a top-level `extra` key, or `parent.child` for a key inside an
  * object (`credits_as_written.author`).
@@ -35,6 +37,12 @@ export interface ItemTranslationColumn {
    * becomes. A value missing here stays in `extra`.
    */
   values?: Readonly<Record<string, string>>;
+  /**
+   * For a column other texts fill on their own: the legacy-key prefixes of the
+   * texts whose key it holds. The importer finds the key only on those texts;
+   * the exporters give it back only to them.
+   */
+  sources?: readonly string[];
 }
 
 export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
@@ -69,6 +77,10 @@ export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
   { key: 'archival', column: 'archival_reference' },
   { key: 'holding_institution_org', column: 'holder_original_name' },
   { key: 'external_sources', column: 'external_sources' },
+  // B7 (#2690), Pascal's decision: Sharing History's other name ("Other name of the Object (second
+  // name)") is the item's alternate name, the column mwnf3's `name2` fills. No Sharing History
+  // text has both; its one `name2` stays in extra (see the Sharing History transformers).
+  { key: 'second_name', column: 'alternate_name', sources: ['mwnf3_sharing_history:'] },
 ];
 
 /** The top-level `extra` keys that hold a mapped text, for finding the rows. */
