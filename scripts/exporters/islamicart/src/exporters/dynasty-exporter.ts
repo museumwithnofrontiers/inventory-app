@@ -127,13 +127,22 @@ export class DynastyExporter extends BaseExporter {
     const dynastyImages = await this.db.query<DynastyImageRow>(
       `SELECT idyn.dynasty_id, pic.parent_id AS item_id, ii.path, pic.display_order
        FROM item_dynasty idyn
+       JOIN items parent ON parent.id = idyn.item_id
        JOIN items pic ON pic.parent_id = idyn.item_id AND pic.type = 'picture'
          -- A custom exhibition photo is the exhibition's picture, not one of the item's own.
          AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
                          WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
        JOIN item_images ii ON ii.item_id = pic.id
        WHERE idyn.dynasty_id IN (${this.placeholders(dynastyIds.length)})
-       ORDER BY idyn.dynasty_id, pic.display_order`,
+       -- Legacy's order of a dynasty's items (Discover Islamic Art, pclist_all.php: start_date * 1, project,
+       -- country, partner, number), then each item's first picture; the ids only break what is left.
+       ORDER BY idyn.dynasty_id,
+         COALESCE(parent.start_date, 0),
+         SUBSTRING_INDEX(SUBSTRING_INDEX(parent.backward_compatibility, ':', 3), ':', -1),
+         SUBSTRING_INDEX(SUBSTRING_INDEX(parent.backward_compatibility, ':', 4), ':', -1),
+         SUBSTRING_INDEX(SUBSTRING_INDEX(parent.backward_compatibility, ':', 5), ':', -1),
+         CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(parent.backward_compatibility, ':', 6), ':', -1) AS UNSIGNED),
+         parent.id, pic.display_order, pic.id, ii.display_order, ii.id`,
       dynastyIds
     )
 
