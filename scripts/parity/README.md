@@ -532,6 +532,8 @@ regressions. None of the 14 regressions above is left:
 - **Gone:** The Hijaz Railway's `site.liveDate` (1) and one `site.hidden` (2 → 1). Legacy's API and the package now give the same gallery dates.
 - **The legacy cache:** legacy data fixed in production that afternoon (#2339: "2o11", malformed HTML in five bibliographies and one provenance) and the Hijaz Railway's two new pictures were newer than the cached answers. A first run on the export listed those 13 fields as regressions. The 694 cached answers for the affected records and for The Hijaz Railway were moved to `tmp/parity/cache-stale-2026-11-20` and fetched again; nothing else in the cache changed.
 
+`baselines/2026-11-20b` is the run after reimport 19 (data-packages#37, 2 packages) and its propagation to Islamic Art and Baroque Art. That reimport verified M16 Epic J (#2707): the project root collections and the `partner_group` stubs left the two packages' collections, and three markers now have no parent. It counts 24 real differences, as before, with no regression: no compared field reads those rows.
+
 ## The global search box
 
 Legacy sites that link to the overall database search (legacy's `goToFullSearch`, "Search Overall MWNF Database", or
