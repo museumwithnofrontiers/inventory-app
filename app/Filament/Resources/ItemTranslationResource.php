@@ -250,6 +250,15 @@ class ItemTranslationResource extends Resource
                         Textarea::make('external_sources')
                             ->label('External sources')
                             ->rows(3),
+                        Textarea::make('original_name')
+                            ->label('Name in the original language')
+                            ->rows(1),
+                        Textarea::make('holder_original_name')
+                            ->label('Holding institution (original language)')
+                            ->rows(1),
+                        Textarea::make('archival_reference')
+                            ->label('Archival reference')
+                            ->rows(2),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -390,6 +399,9 @@ class ItemTranslationResource extends Resource
                         TranslationInfolistSchema::markdownEntry('external_notice', 'External notice'),
                         TranslationInfolistSchema::markdownEntry('image_rights', 'Image rights'),
                         TranslationInfolistSchema::markdownEntry('external_sources', 'External sources'),
+                        TranslationInfolistSchema::markdownEntry('original_name', 'Name in the original language'),
+                        TranslationInfolistSchema::markdownEntry('holder_original_name', 'Holding institution (original language)'),
+                        TranslationInfolistSchema::markdownEntry('archival_reference', 'Archival reference'),
                     ])
                     ->columns(2)
                     ->collapsible()

@@ -30,6 +30,9 @@ class ImageTranslationResource extends JsonResource
             'date' => $this->date,
             'museum' => $this->museum,
             'location' => $this->location,
+            // The picture's own credit and photographer in this language, as written
+            'copyright' => $this->copyright,
+            'photographer' => $this->photographer,
             'backward_compatibility' => $this->backward_compatibility,
             'language' => new LanguageResource($this->whenLoaded('language')),
             'created_at' => $this->created_at,

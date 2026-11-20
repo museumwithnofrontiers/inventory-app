@@ -107,6 +107,12 @@ class ItemTranslationResource extends JsonResource
             'image_rights' => $this->image_rights,
             // External sources as legacy wrote them (a text, links included)
             'external_sources' => $this->external_sources,
+            // The name in the item's original language, as written (Sharing History)
+            'original_name' => $this->original_name,
+            // The holding institution's name in its own language, as written
+            'holder_original_name' => $this->holder_original_name,
+            // The archival reference or source citation, as written
+            'archival_reference' => $this->archival_reference,
             'backward_compatibility' => $this->backward_compatibility,
             // Extra data for translation (object, may be null)
             'extra' => $this->extra,

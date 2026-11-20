@@ -68,10 +68,10 @@ describe('planPictureCredits', () => {
       { id: 't1', extra: { legacy_type: 'd' } },
       { id: 't2', extra: { legacy_type: 'd' } },
     ]);
-    expect(plan.kept).toEqual([]);
+    expect(plan.imageCredits).toEqual([]);
   });
 
-  it('keeps texts that differ by language, or miss in a language, and stores the default one', () => {
+  it('gives each language its own text on the image translation where they differ or miss (B7), the image keeps the default', () => {
     const plan = planPictureCredits(
       [
         row('t1', 'eng', { photographer: 'Ana', copyright: 'Museo X' }),
@@ -84,14 +84,20 @@ describe('planPictureCredits', () => {
     expect(plan.images).toEqual([
       { image_id: 'img-1', photographer: 'Ana', credit: null, clear_copyright: false },
     ]);
-    expect(plan.translations).toEqual([]);
-    expect(plan.kept).toEqual([
-      { item_id: 'pic-1', key: 'photographer' },
-      { item_id: 'pic-1', key: 'copyright' },
+    expect(plan.translations).toEqual([
+      { id: 't1', extra: null },
+      { id: 't2', extra: null },
+      { id: 't3', extra: null },
+    ]);
+    expect(plan.imageCredits).toEqual([
+      { image_id: 'img-1', language_id: 'eng', key: 'photographer', text: 'Ana' },
+      { image_id: 'img-1', language_id: 'ita', key: 'photographer', text: 'Anna' },
+      { image_id: 'img-1', language_id: 'eng', key: 'copyright', text: 'Museo X' },
+      { image_id: 'img-1', language_id: 'ita', key: 'copyright', text: 'Museo X' },
     ]);
   });
 
-  it('moves one key and keeps the other', () => {
+  it('moves a uniform key to the image and a differing one to the image translations', () => {
     const plan = planPictureCredits(
       [
         row('t1', 'eng', { photographer: 'Ana', copyright: 'Museo X' }),
@@ -101,10 +107,13 @@ describe('planPictureCredits', () => {
     );
 
     expect(plan.translations).toEqual([
-      { id: 't1', extra: { copyright: 'Museo X' } },
-      { id: 't2', extra: { copyright: 'Museo X (Roma)' } },
+      { id: 't1', extra: null },
+      { id: 't2', extra: null },
     ]);
-    expect(plan.kept).toEqual([{ item_id: 'pic-1', key: 'copyright' }]);
+    expect(plan.imageCredits).toEqual([
+      { image_id: 'img-1', language_id: 'eng', key: 'copyright', text: 'Museo X' },
+      { image_id: 'img-1', language_id: 'ita', key: 'copyright', text: 'Museo X (Roma)' },
+    ]);
   });
 
   it('puts an ISL or IAM picture own text in credit and lets the project line burn', () => {
@@ -185,7 +194,16 @@ describe('planPictureCredits', () => {
       credit: null,
       clear_copyright: false,
     });
-    expect(plan.translations).toEqual([]);
+    expect(plan.translations).toEqual([
+      { id: 't1', extra: null },
+      { id: 't2', extra: null },
+    ]);
+    expect(plan.imageCredits.map((c) => `${c.language_id}:${c.key}:${c.text}`)).toEqual([
+      'fra:photographer:Jean',
+      'ita:photographer:Gianni',
+      'fra:copyright:Musee X',
+      'ita:copyright:Museo X',
+    ]);
   });
 
   it('moves a text every row carries alike, whatever the languages', () => {
@@ -249,7 +267,7 @@ describe('planPictureCredits', () => {
   it('leaves a picture with no text alone, and ignores values that are not texts', () => {
     const plan = planPictureCredits([row('t1', 'eng', { photographer: ['x'] })], 'eng');
 
-    expect(plan).toEqual({ images: [], translations: [], kept: [] });
+    expect(plan).toEqual({ images: [], translations: [], imageCredits: [] });
   });
 });
 
@@ -326,6 +344,8 @@ describe('PictureCreditsImporter', () => {
       setPartnerImagePhotographer: vi.fn().mockResolvedValue(undefined),
       findImageRightsRows: vi.fn().mockResolvedValue([]),
       setItemTranslationImageRights: vi.fn().mockResolvedValue(undefined),
+      setItemImageTranslationCredit: vi.fn().mockResolvedValue(undefined),
+      findLegacyTypeRows: vi.fn().mockResolvedValue([]),
     };
     context = {
       legacyDb,
@@ -397,6 +417,28 @@ describe('PictureCreditsImporter', () => {
 
     expect(result.skipped).toBe(1);
     expect(strategy.setPartnerImagePhotographer).not.toHaveBeenCalled();
+  });
+
+  it('writes the per-language texts and drops legacy_type where the tag is there (B7)', async () => {
+    strategy.findPictureCreditRows!.mockResolvedValue([
+      row('t1', 'eng', { copyright: 'Benaki Museum' }),
+      row('t2', 'ell', { copyright: 'Μουσείο Μπενάκη' }),
+      row('t3', 'ara', null),
+    ]);
+    strategy.findLegacyTypeRows!.mockResolvedValue([
+      { id: 'p1', extra: { legacy_type: 'plan', copyright: 'X' }, image_type_tags: ['plan'] },
+      { id: 'p2', extra: { legacy_type: 'security' }, image_type_tags: [] },
+    ]);
+
+    const result = await new PictureCreditsImporter(context).import();
+
+    expect(result.success).toBe(true);
+    expect(strategy.setItemImageTranslationCredit!.mock.calls).toEqual([
+      ['img-1', 'eng', 'copyright', 'Benaki Museum'],
+      ['img-1', 'ell', 'copyright', 'Μουσείο Μπενάκη'],
+    ]);
+    expect(strategy.setItemTranslationColumnsAsStoredById!.mock.calls).toContainEqual(['p1', {}, JSON.stringify({ copyright: 'X' })]);
+    expect(strategy.setItemTranslationColumnsAsStoredById!.mock.calls.some((call) => call[0] === 'p2')).toBe(false);
   });
 
   it('reports a failed write and carries on', async () => {

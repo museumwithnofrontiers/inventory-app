@@ -36,6 +36,8 @@ class StoreImageTranslationRequest extends FormRequest
             'date' => ['nullable', 'string'],
             'museum' => ['nullable', 'string'],
             'location' => ['nullable', 'string'],
+            'copyright' => ['nullable', 'string'],
+            'photographer' => ['nullable', 'string'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
         ];
     }

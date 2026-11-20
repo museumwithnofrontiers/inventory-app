@@ -117,6 +117,9 @@ class ItemTranslationTest extends TestCase
             'notice' => 'This is an unedited Database entry.',
             'external_notice' => 'Cet objet est disponible aussi sur Gallica.',
             'image_rights' => 'Copyright image: Soprintendenza per i Beni Archeologici',
+            'original_name' => 'Capa con capucha (*Burnous*)',
+            'holder_original_name' => 'Museo Nacional de Antropología',
+            'archival_reference' => 'ACS, Ministero armi e munizioni, fasc. 148, foto 2039',
             'external_sources' => 'Virtual visit: [https://example.org/tour](https://example.org/tour)',
         ];
 

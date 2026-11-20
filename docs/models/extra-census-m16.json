@@ -89,6 +89,7 @@
         "item_translations": {
             "keys": {
                 "architects": 0,
+                "archival": 0,
                 "artist": 0,
                 "artist_birthdate": 0,
                 "artist_birthplace": 0,
@@ -96,7 +97,7 @@
                 "artist_deathplace": 0,
                 "catalogue_holding_link": 0,
                 "contact": 0,
-                "copyright": 2622,
+                "copyright": 0,
                 "credits_as_written": 0,
                 "datation_method": 0,
                 "description2": 0,
@@ -105,10 +106,12 @@
                 "external_sources": 0,
                 "further_readings": 42,
                 "history": 0,
+                "holding_institution_org": 0,
                 "how_to_reach": 0,
                 "info": 0,
                 "keywords": 0,
                 "legacy_display_status": 0,
+                "legacy_type": 0,
                 "linkcatalogs": 0,
                 "materials": 0,
                 "monument_contact": 0,
@@ -116,10 +119,11 @@
                 "notice_c": 0,
                 "patrons": 0,
                 "period_activity": 0,
-                "photographer": 341,
+                "photographer": 0,
                 "prepared_by": 0,
                 "province": 0,
                 "scriber": 0,
+                "third_name": 0,
                 "workshop": 0
             }
         },

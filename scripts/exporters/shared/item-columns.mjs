@@ -63,6 +63,11 @@ export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
   Object.freeze({ key: 'notice', column: 'notice' }),
   Object.freeze({ key: 'notice_c', column: 'external_notice' }),
   Object.freeze({ key: 'legacy_display_status', column: 'status', values: Object.freeze({ N: 'hidden' }) }),
+  // B7 (inventory-app#2690): Sharing History's original-language name, archival reference and
+  // the holding institution's own-language name, as written.
+  Object.freeze({ key: 'third_name', column: 'original_name' }),
+  Object.freeze({ key: 'archival', column: 'archival_reference' }),
+  Object.freeze({ key: 'holding_institution_org', column: 'holder_original_name' }),
   Object.freeze({ key: 'external_sources', column: 'external_sources' }),
 ])
 
@@ -81,6 +86,12 @@ const PICTURE = Object.freeze({
   copyright: 'item_columns_picture_copyright',
   photographerKept: 'item_columns_picture_photographer_kept',
   copyrightKept: 'item_columns_picture_copyright_kept',
+  // B7 (inventory-app#2690): the picture's own text in the row's language, and
+  // whether the picture has per-language texts at all.
+  photographerOwn: 'item_columns_picture_photographer_own',
+  copyrightOwn: 'item_columns_picture_copyright_own',
+  photographerPerLanguage: 'item_columns_picture_photographer_per_language',
+  copyrightPerLanguage: 'item_columns_picture_copyright_per_language',
 })
 
 /** @param {unknown} value @returns {value is Record<string, unknown>} */
@@ -102,12 +113,25 @@ function pictureSelect(alias) {
   const kept = key =>
     `EXISTS (SELECT 1 FROM item_translations ic_t WHERE ic_t.item_id = ${alias}.item_id` +
     ` AND JSON_CONTAINS_PATH(ic_t.extra, 'one', '$.${key}'))`
+  const imageId = image('id')
+  /** @param {string} column */
+  const own = column =>
+    `(SELECT ic_tr.${column} FROM image_translations ic_tr WHERE ic_tr.image_type = 'item_image'` +
+    ` AND ic_tr.image_id = ${imageId} AND ic_tr.language_id = ${alias}.language_id LIMIT 1)`
+  /** @param {string} column */
+  const perLanguage = column =>
+    `EXISTS (SELECT 1 FROM image_translations ic_tr WHERE ic_tr.image_type = 'item_image'` +
+    ` AND ic_tr.image_id = ${imageId} AND ic_tr.${column} IS NOT NULL)`
   return [
     `${image('photographer')} AS ${PICTURE.photographer}`,
     `${image('credit')} AS ${PICTURE.credit}`,
     `${image('copyright')} AS ${PICTURE.copyright}`,
     `${kept('photographer')} AS ${PICTURE.photographerKept}`,
     `${kept('copyright')} AS ${PICTURE.copyrightKept}`,
+    `${own('photographer')} AS ${PICTURE.photographerOwn}`,
+    `${own('copyright')} AS ${PICTURE.copyrightOwn}`,
+    `${perLanguage('photographer')} AS ${PICTURE.photographerPerLanguage}`,
+    `${perLanguage('copyright')} AS ${PICTURE.copyrightPerLanguage}`,
   ]
 }
 
@@ -152,10 +176,20 @@ function catalogueSelect(alias) {
 function pictureTexts(row) {
   /** @type {Record<string, string>} */
   const texts = {}
-  const photographer = textOf(row[PICTURE.photographer])
-  if (photographer !== null && !isSet(row[PICTURE.photographerKept])) texts.photographer = photographer
-  const credit = textOf(row[PICTURE.credit]) ?? withoutCopyrightMark(textOf(row[PICTURE.copyright]))
-  if (credit !== null && !isSet(row[PICTURE.copyrightKept])) texts.copyright = credit
+  // B7: a picture with per-language texts gets only its own language's back,
+  // as written; a language legacy left empty stays empty.
+  if (isSet(row[PICTURE.photographerPerLanguage])) {
+    if (typeof row[PICTURE.photographerOwn] === 'string') texts.photographer = row[PICTURE.photographerOwn]
+  } else {
+    const photographer = textOf(row[PICTURE.photographer])
+    if (photographer !== null && !isSet(row[PICTURE.photographerKept])) texts.photographer = photographer
+  }
+  if (isSet(row[PICTURE.copyrightPerLanguage])) {
+    if (typeof row[PICTURE.copyrightOwn] === 'string') texts.copyright = row[PICTURE.copyrightOwn]
+  } else {
+    const credit = textOf(row[PICTURE.credit]) ?? withoutCopyrightMark(textOf(row[PICTURE.copyright]))
+    if (credit !== null && !isSet(row[PICTURE.copyrightKept])) texts.copyright = credit
+  }
   return texts
 }
 

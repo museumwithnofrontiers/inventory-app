@@ -64,6 +64,7 @@ import type {
 import type { ImageTextData, ImageTextRow } from '../utils/image-texts.js';
 import type {
   ImageRightsRow,
+  LegacyTypeRow,
   PictureCreditRow,
   PictureParentImageRow,
 } from '../utils/picture-credits.js';
@@ -764,6 +765,21 @@ export interface IWriteStrategy {
     imageRights: string,
     extra: string | null
   ): Promise<void>;
+
+  /**
+   * Set a picture image's own text in one language (M16 B7) on its translation
+   * row (`image_translations`, created if missing), as given; the row's other
+   * texts are kept.
+   */
+  setItemImageTranslationCredit(
+    imageId: string,
+    languageId: string,
+    key: 'photographer' | 'copyright',
+    text: string
+  ): Promise<void>;
+
+  /** Picture translations holding `legacy_type`, with their picture's image-type tags (M16 B7). */
+  findLegacyTypeRows(): Promise<LegacyTypeRow[]>;
 
   /**
    * Set an item image's `photographer` and `credit`, and clear its

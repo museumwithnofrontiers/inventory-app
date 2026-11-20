@@ -55,6 +55,9 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $external_notice
  * @property string|null $image_rights
  * @property string|null $external_sources
+ * @property string|null $original_name
+ * @property string|null $holder_original_name
+ * @property string|null $archival_reference
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
@@ -173,6 +176,10 @@ class ItemTranslation extends Model
         'external_notice',
         'image_rights',
         'external_sources',
+        // M16 B7: Sharing History's original-language name, holder name and archival reference
+        'original_name',
+        'holder_original_name',
+        'archival_reference',
         'backward_compatibility',
         'extra',
     ];

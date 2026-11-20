@@ -63,6 +63,11 @@ export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
   { key: 'notice', column: 'notice' },
   { key: 'notice_c', column: 'external_notice' },
   { key: 'legacy_display_status', column: 'status', values: { N: 'hidden' } },
+  // B7 (#2690): Sharing History's original-language name, archival reference and the holding
+  // institution's own-language name, as written.
+  { key: 'third_name', column: 'original_name' },
+  { key: 'archival', column: 'archival_reference' },
+  { key: 'holding_institution_org', column: 'holder_original_name' },
   { key: 'external_sources', column: 'external_sources' },
 ];
 

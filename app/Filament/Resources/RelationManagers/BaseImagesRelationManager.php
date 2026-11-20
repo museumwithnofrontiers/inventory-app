@@ -249,6 +249,11 @@ abstract class BaseImagesRelationManager extends RelationManager
                                         TextInput::make('date'),
                                         TextInput::make('museum'),
                                         TextInput::make('location'),
+                                        TextInput::make('copyright')
+                                            ->label('Credit in this language')
+                                            ->helperText('Where the picture\'s credit differs by language, as written.'),
+                                        TextInput::make('photographer')
+                                            ->label('Photographer in this language'),
                                     ])
                                     ->columns(2)
                                     ->defaultItems(0)

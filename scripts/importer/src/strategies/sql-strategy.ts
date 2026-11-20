@@ -16,6 +16,7 @@ import { ITEM_TRANSLATION_COLUMNS } from '../utils/item-translation-columns.js';
 import { COLLECTION_TRANSLATION_COLUMNS } from '../utils/collection-translation-columns.js';
 import type {
   ImageRightsRow,
+  LegacyTypeRow,
   PictureCreditRow,
   PictureParentImageRow,
 } from '../utils/picture-credits.js';
@@ -2396,6 +2397,48 @@ export class SqlWriteStrategy implements IWriteStrategy {
       this.now,
       id,
     ]);
+  }
+
+  async setItemImageTranslationCredit(
+    imageId: string,
+    languageId: string,
+    key: 'photographer' | 'copyright',
+    text: string
+  ): Promise<void> {
+    const column = key === 'photographer' ? 'photographer' : 'copyright';
+    await this.db.execute(
+      `INSERT INTO image_translations (id, image_type, image_id, language_id, ${column}, created_at, updated_at)
+       VALUES (?, 'item_image', ?, ?, ?, ?, ?)
+       ON DUPLICATE KEY UPDATE ${column} = VALUES(${column}), updated_at = VALUES(updated_at)`,
+      [
+        deterministicUuid(`image_translation:item_image:${imageId}:${languageId}`),
+        imageId,
+        languageId,
+        text,
+        this.now,
+        this.now,
+      ]
+    );
+  }
+
+  async findLegacyTypeRows(): Promise<LegacyTypeRow[]> {
+    const [rows] = await this.db.execute<RowDataPacket[]>(
+      `SELECT it.id, it.extra,
+              (SELECT JSON_ARRAYAGG(t.internal_name) FROM item_tag x JOIN tags t ON t.id = x.tag_id
+               WHERE x.item_id = it.item_id AND t.category = 'image-type') AS image_type_tags
+       FROM item_translations it
+       WHERE it.extra IS NOT NULL AND JSON_CONTAINS_PATH(it.extra, 'one', '$.legacy_type')
+       ORDER BY it.id`
+    );
+    return rows.map((row) => {
+      const extra = typeof row.extra === 'string' ? JSON.parse(row.extra) : row.extra;
+      const tags = typeof row.image_type_tags === 'string' ? JSON.parse(row.image_type_tags) : row.image_type_tags;
+      return {
+        id: row.id as string,
+        extra: extra as Record<string, unknown>,
+        image_type_tags: Array.isArray(tags) ? (tags as string[]) : [],
+      };
+    });
   }
 
   async setItemImagePictureCredit(

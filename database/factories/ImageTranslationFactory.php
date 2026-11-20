@@ -32,6 +32,8 @@ class ImageTranslationFactory extends Factory
             'date' => null,
             'museum' => null,
             'location' => null,
+            'copyright' => null,
+            'photographer' => null,
             'backward_compatibility' => null,
         ];
     }

@@ -144,6 +144,9 @@ describe('the column list', () => {
       'notice→notice',
       'notice_c→external_notice',
       'legacy_display_status→status',
+      'third_name→original_name',
+      'archival→archival_reference',
+      'holding_institution_org→holder_original_name',
       'external_sources→external_sources',
     ])
     expect(
@@ -151,7 +154,8 @@ describe('the column list', () => {
         'it.materials, it.short_description, it.dynasty, it.region, it.history, it.author_credit, it.copy_editor_credit, ' +
           'it.translator_credit, it.translation_copy_editor_credit, it.keywords, it.artist, it.artist_period_of_activity, ' +
           'it.artist_birth_date, it.artist_birth_place, it.artist_death_date, it.artist_death_place, it.workshop, it.scribe, ' +
-          'it.patrons, it.architects, it.catalogue_references, it.notice, it.external_notice, it.status, it.external_sources, ' +
+          'it.patrons, it.architects, it.catalogue_references, it.notice, it.external_notice, it.status, it.original_name, it.archival_reference, ' +
+          'it.holder_original_name, it.external_sources, ' +
           'it.backward_compatibility AS item_columns_source, '
       )
     ).toBe(true)
@@ -226,5 +230,39 @@ describe("an object's catalogue page (F3)", () => {
       extra: { binding_desc: 'x', catalogue_holding_link: 'https://museum.example.org/1' },
     })
     expect(itemColumnsSelect('it')).toContain("ic_l.type = 'catalogue' AND ic_l.language_id = it.language_id")
+  })
+})
+
+describe("a picture's per-language credits (B7)", () => {
+  const picture = (fields: Record<string, unknown>) => ({
+    item_id: 'pic-1',
+    extra: null,
+    item_columns_picture_photographer: 'Ana',
+    item_columns_picture_credit: null,
+    item_columns_picture_copyright: '© Benaki Museum',
+    item_columns_picture_photographer_kept: 0,
+    item_columns_picture_copyright_kept: 0,
+    item_columns_picture_photographer_own: null,
+    item_columns_picture_copyright_own: null,
+    item_columns_picture_photographer_per_language: 0,
+    item_columns_picture_copyright_per_language: 0,
+    ...fields,
+  })
+
+  it("give each language only its own text, as written, not the image's", () => {
+    const [greek] = restoreItemColumns([
+      picture({ item_columns_picture_copyright_per_language: 1, item_columns_picture_copyright_own: 'Μουσείο Μπενάκη' }),
+    ])
+    expect(greek!.extra).toEqual({ copyright: 'Μουσείο Μπενάκη', photographer: 'Ana' })
+  })
+
+  it('leave a language legacy left empty without a credit', () => {
+    const [arabic] = restoreItemColumns([picture({ item_columns_picture_copyright_per_language: 1 })])
+    expect(arabic!.extra).toEqual({ photographer: 'Ana' })
+  })
+
+  it("keep F1's rule for a picture without per-language texts", () => {
+    const [row] = restoreItemColumns([picture({})])
+    expect(row!.extra).toEqual({ copyright: 'Benaki Museum', photographer: 'Ana' })
   })
 })
