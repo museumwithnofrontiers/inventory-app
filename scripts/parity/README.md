@@ -528,6 +528,10 @@ regressions. None of the 14 regressions above is left:
 - **The tool:** the Books' legacy record date (`work.date`, 28) is no longer shipped (I6, #2654). No site shows it, including legacy's Books client, so the comparer now counts its absence as expected. The first run of this reimport listed all 28 as regressions.
 - **Accepted, its 1 regression:** The Hijaz Railway `site.liveDate`. Legacy's API now gives the gallery 2026-11-18, the day of this run. The package has 2026-11-16, which the inventory copied from the legacy mirror before legacy changed it. The Water gallery's date flips between the same two days (E4, #2650).
 
+`baselines/2026-11-20` is the run after reimport 18 (data-packages#36, 60 packages) and its propagation to 61 sites. That reimport verified all of M16 on a full import (G1, #2655): the rest of the `extra` keys moved into the model, and every package difference is named by a decision there. It counts 24 real differences, down from 26. What moved:
+- **Gone:** The Hijaz Railway's `site.liveDate` (1) and one `site.hidden` (2 → 1). Legacy's API and the package now give the same gallery dates.
+- **The legacy cache:** legacy data fixed in production that afternoon (#2339: "2o11", malformed HTML in five bibliographies and one provenance) and the Hijaz Railway's two new pictures were newer than the cached answers. A first run on the export listed those 13 fields as regressions. The 694 cached answers for the affected records and for The Hijaz Railway were moved to `tmp/parity/cache-stale-2026-11-20` and fetched again; nothing else in the cache changed.
+
 ## The global search box
 
 Legacy sites that link to the overall database search (legacy's `goToFullSearch`, "Search Overall MWNF Database", or
