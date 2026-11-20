@@ -125,7 +125,7 @@ interface LegacyExhibitionPartner {
   further_reading: string | null;
 }
 
-interface LegacyExhibitionPartnerI18n {
+export interface LegacyExhibitionPartnerI18n {
   partner_id: number;
   language_id: string | null;
   entity_name: string | null;
@@ -237,18 +237,46 @@ function isTruthyFlag(value: number | boolean | string | null): boolean {
   return value === true || value === 1 || value === '1' || value === 'Y';
 }
 
-function buildExtra(fields: Record<string, string | number | null | undefined>): string | null {
-  const extra: Record<string, string | number> = {};
-  for (const [key, value] of Object.entries(fields)) {
-    if (typeof value === 'number') {
-      extra[key] = value;
-      continue;
-    }
+/**
+ * The `extra` of an exhibition partner's translation (M16 G3 #2699): the five
+ * `contact_*` columns describe one contact person, so they go together as
+ * `contact_person_1` (title, name, email, phone, fax, as written), which the
+ * partner-columns step moves to `partner_contacts` (M16 D2). `entity_country`
+ * and `further_reading` stay (both empty on legacy today).
+ */
+export function exhibitionPartnerTranslationExtra(
+  translation: Pick<
+    LegacyExhibitionPartnerI18n,
+    | 'entity_country'
+    | 'further_reading'
+    | 'contact_title'
+    | 'contact_name'
+    | 'contact_email'
+    | 'contact_phone'
+    | 'contact_fax'
+  >
+): string | null {
+  const extra: Record<string, unknown> = {};
+  for (const [key, value] of [
+    ['entity_country', translation.entity_country],
+    ['further_reading', translation.further_reading],
+  ] as const) {
     const trimmed = trimToNull(value);
-    if (trimmed) {
-      extra[key] = trimmed;
-    }
+    if (trimmed) extra[key] = trimmed;
   }
+
+  const contact: Record<string, string> = {};
+  for (const [field, value] of [
+    ['title', translation.contact_title],
+    ['name', translation.contact_name],
+    ['email', translation.contact_email],
+    ['phone', translation.contact_phone],
+    ['fax', translation.contact_fax],
+  ] as const) {
+    const trimmed = trimToNull(value);
+    if (trimmed) contact[field] = trimmed;
+  }
+  if (Object.keys(contact).length > 0) extra.contact_person_1 = contact;
 
   return Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
 }
@@ -1069,17 +1097,10 @@ export class ThgGalleryContentImporter extends BaseImporter implements SiteConfi
         backward_compatibility: backwardCompatibility,
         name: convertHtmlToMarkdown(name),
         description: description ? this.markdownOf(description, partner.gallery_id) : null,
-        city_display: trimToNull(translation.entity_location),
+        // entity_location holds a postal address, not a city (M16 G3 #2699).
+        address: trimToNull(translation.entity_location),
         contact_website: trimToNull(translation.link),
-        contact_phone: trimToNull(translation.contact_phone),
-        contact_email_general: trimToNull(translation.contact_email),
-        extra: buildExtra({
-          entity_country: translation.entity_country,
-          contact_title: translation.contact_title,
-          contact_name: translation.contact_name,
-          contact_fax: translation.contact_fax,
-          further_reading: translation.further_reading,
-        }),
+        extra: exhibitionPartnerTranslationExtra(translation),
       };
 
       if (!this.isDryRun && !this.isSampleOnlyMode) {

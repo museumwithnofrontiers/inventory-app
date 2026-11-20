@@ -43,7 +43,9 @@ export function transformHcrEvent(legacy: LegacyHcr): TransformedTimelineEvent {
     data: {
       internal_name: legacy.name || `hcr-${legacy.hcr_id}`,
       year_from: legacy.from_ad,
-      year_to: legacy.to_ad,
+      // Legacy's to_ad is NOT NULL DEFAULT 0, and 0 there means no end year
+      // (1,010 of 1,075 rows; the sites read it so): none (M16 G3 #2699).
+      year_to: legacy.to_ad === 0 ? null : legacy.to_ad,
       year_from_ah: legacy.from_ah ?? null,
       year_to_ah: legacy.to_ah ?? null,
       date_from: null,
