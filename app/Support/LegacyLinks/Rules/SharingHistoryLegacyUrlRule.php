@@ -86,15 +86,89 @@ class SharingHistoryLegacyUrlRule implements LegacyUrlRule
                     LegacyLink::backoffice('Sharing History project back-office record', $this->backofficeUrl('sh/sh_projects', '1;'.strtoupper((string) $reference->part(0))), LegacyLinkConfidence::EXACT, $reference->raw),
                 ]
                 : [],
-            'sh_exhibitions' => $reference->hasParts(1)
-                ? [
-                    LegacyLink::public('Sharing History exhibition items', "{$host}/exh_items.php?eId={$reference->part(0)}&lan={$legacyLanguage}", LegacyLinkConfidence::INFERRED, $reference->raw),
-                    LegacyLink::backoffice('Sharing History exhibition back-office record', $this->backofficeUrl('sh/sh_exhibitions', "1;{$reference->part(0)}"), LegacyLinkConfidence::EXACT, $reference->raw),
-                ]
-                : [],
+            'sh_exhibitions' => $reference->part(0) === 'root'
+                ? $this->resolveRoot($collection, $reference, '/exhibitions/AWE/index.php?lan=', 'Sharing History virtual exhibitions page', $legacyLanguage)
+                : $this->resolveExhibition($collection, $reference, $legacyLanguage),
             'sh_exhibition_themes' => $this->resolveThemeCollection($collection, $reference, $legacyLanguage),
+            'sh_exhibition_subthemes' => $this->resolveSubthemeCollection($collection, $reference, $legacyLanguage),
+            'sh_national_context_exhibitions' => $this->resolveNationalContext($collection, $reference, $legacyLanguage),
+            'sh_project_about_historical_background' => $reference->part(0) === 'root'
+                ? $this->resolveRoot($collection, $reference, '/historical_background_pages.php?lng=', 'Sharing History historical background page', $legacyLanguage)
+                : $this->resolveAboutPage($collection, $reference, $legacyLanguage, 'historical_background'),
+            'sh_project_about_topics' => $reference->part(0) === 'root'
+                ? $this->resolveRoot($collection, $reference, '/historical_background_readmore.php?lng=', 'Sharing History "read more" page', $legacyLanguage)
+                : $this->resolveAboutPage($collection, $reference, $legacyLanguage, 'topics'),
+            'sh_countries_historicalbackground' => $reference->part(0) === 'root'
+                ? $this->resolveRoot($collection, $reference, '/historical_background_insight.php?lng=', 'Sharing History historical profiles page', $legacyLanguage)
+                : $this->resolveHistoricalProfile($collection, $reference, $legacyLanguage),
+            'sh_countries_historicalbackground_pages' => $this->resolveHistoricalProfilePage($collection, $reference, $legacyLanguage),
             default => [],
         };
+    }
+
+    /**
+     * The legacy site shows one Sharing History project only (its PROJECTID,
+     * AWE); the records of the other projects have no public page.
+     */
+    private function isPublicProject(?string $project): bool
+    {
+        return $project !== null
+            && strcasecmp($project, Config::string('legacy.links.sharing_history_project', 'AWE')) === 0;
+    }
+
+    private function projectOf(Collection $collection): ?string
+    {
+        $reference = $this->ancestorReference($collection, 'mwnf3_sharing_history', 'sh_projects');
+
+        return $reference === null ? null : (string) $reference->part(0);
+    }
+
+    private function notPublic(LegacyReference $reference, string $label, ?string $project): LegacyLink
+    {
+        $project = $project === null ? 'unknown' : strtoupper($project);
+
+        return LegacyLink::diagnostic($label, LegacyLinkConfidence::UNSUPPORTED, $reference->raw, "The legacy site shows the AWE project only; this record belongs to project {$project}.");
+    }
+
+    /**
+     * A marker collection the importer adds (…:root:<project>): the page that
+     * lists its children.
+     *
+     * @return array<int, LegacyLink>
+     */
+    private function resolveRoot(Collection $collection, LegacyReference $reference, string $path, string $label, string $legacyLanguage): array
+    {
+        $project = $reference->part(1) ?? $this->projectOf($collection);
+
+        if (! $this->isPublicProject($project)) {
+            return [$this->notPublic($reference, $label, $project)];
+        }
+
+        return [
+            LegacyLink::public($label, $this->host('sharing_history').$path.$legacyLanguage, LegacyLinkConfidence::INFERRED, $reference->raw, 'The marker collection resolves to the page that lists its records.'),
+        ];
+    }
+
+    /** @return array<int, LegacyLink> */
+    private function resolveExhibition(Collection $collection, LegacyReference $reference, string $legacyLanguage): array
+    {
+        if (! $reference->hasParts(1)) {
+            return [];
+        }
+
+        $project = $this->projectOf($collection);
+
+        return [
+            $this->isPublicProject($project)
+                ? LegacyLink::public('Sharing History exhibition page', $this->exhibitionUrl((string) $reference->part(0), $legacyLanguage), LegacyLinkConfidence::EXACT, $reference->raw)
+                : $this->notPublic($reference, 'Sharing History exhibition page', $project),
+            LegacyLink::backoffice('Sharing History exhibition back-office record', $this->backofficeUrl('sh/sh_exhibitions', "1;{$reference->part(0)}"), LegacyLinkConfidence::EXACT, $reference->raw),
+        ];
+    }
+
+    private function exhibitionUrl(string $exhibition, string $legacyLanguage): string
+    {
+        return $this->host('sharing_history')."/exhibitions/AWE/exh_items.php?eId={$exhibition}&lan={$legacyLanguage}";
     }
 
     /** @return array<int, LegacyLink> */
@@ -102,26 +176,160 @@ class SharingHistoryLegacyUrlRule implements LegacyUrlRule
     {
         $parentReference = LegacyReference::parse($collection->parent?->backward_compatibility);
 
-        if (! $parentReference?->is('mwnf3_sharing_history', 'sh_exhibitions') || ! $parentReference->hasParts(1)) {
+        if (! $reference->hasParts(1) || ! $parentReference?->is('mwnf3_sharing_history', 'sh_exhibitions') || ! $parentReference->hasParts(1)) {
             return [LegacyLink::diagnostic('Sharing History theme page', LegacyLinkConfidence::REQUIRES_LOOKUP, $reference->raw, 'Theme URLs need the parent exhibition id.')];
         }
 
+        $project = $this->projectOf($collection);
+
         return [
-            LegacyLink::public(
-                label: 'Sharing History exhibition items',
-                url: $this->host('sharing_history')."/exh_items.php?eId={$parentReference->part(0)}&lan={$legacyLanguage}",
-                confidence: LegacyLinkConfidence::INFERRED,
-                source: $reference->raw,
-                note: 'Theme collections resolve to their parent exhibition item list.',
-            ),
-            LegacyLink::backoffice(
-                label: 'Sharing History exhibition theme back-office record',
-                url: $this->backofficeUrl('sh/sh_exhibitions', "1;{$parentReference->part(0)};{$reference->part(0)}"),
-                confidence: LegacyLinkConfidence::INFERRED,
-                source: $reference->raw,
-                note: 'Theme collections resolve through their parent exhibition record.',
-            ),
+            $this->isPublicProject($project)
+                ? LegacyLink::public('Sharing History exhibition theme page', $this->host('sharing_history')."/exhibitions/AWE/theme_items.php?tId={$reference->part(0)}&lan={$legacyLanguage}", LegacyLinkConfidence::EXACT, $reference->raw)
+                : $this->notPublic($reference, 'Sharing History exhibition theme page', $project),
+            LegacyLink::backoffice('Sharing History exhibition theme back-office record', $this->backofficeUrl('sh/sh_exhibitions', "2;{$parentReference->part(0)};{$reference->part(0)}"), LegacyLinkConfidence::EXACT, $reference->raw),
         ];
+    }
+
+    /** @return array<int, LegacyLink> */
+    private function resolveSubthemeCollection(Collection $collection, LegacyReference $reference, string $legacyLanguage): array
+    {
+        $theme = $collection->parent;
+        $themeReference = LegacyReference::parse($theme?->backward_compatibility);
+        $exhibitionReference = LegacyReference::parse($theme?->parent?->backward_compatibility);
+
+        if (! $reference->hasParts(1)
+            || ! $themeReference?->is('mwnf3_sharing_history', 'sh_exhibition_themes') || ! $themeReference->hasParts(1)
+            || ! $exhibitionReference?->is('mwnf3_sharing_history', 'sh_exhibitions') || ! $exhibitionReference->hasParts(1)) {
+            return [LegacyLink::diagnostic('Sharing History subtheme page', LegacyLinkConfidence::REQUIRES_LOOKUP, $reference->raw, 'Subtheme URLs need the parent theme and exhibition ids.')];
+        }
+
+        $project = $this->projectOf($collection);
+
+        return [
+            $this->isPublicProject($project)
+                ? LegacyLink::public('Sharing History exhibition subtheme page', $this->host('sharing_history')."/exhibitions/AWE/subtheme_items.php?tId={$themeReference->part(0)}&sId={$reference->part(0)}&lan={$legacyLanguage}", LegacyLinkConfidence::EXACT, $reference->raw)
+                : $this->notPublic($reference, 'Sharing History exhibition subtheme page', $project),
+            LegacyLink::backoffice('Sharing History exhibition subtheme back-office record', $this->backofficeUrl('sh/sh_exhibitions', "3;{$exhibitionReference->part(0)};{$themeReference->part(0)};{$reference->part(0)}"), LegacyLinkConfidence::EXACT, $reference->raw),
+        ];
+    }
+
+    /**
+     * A national context (sh_national_context_exhibitions:<country>:<exhibition>)
+     * has no page of its own: the site shows it with its exhibition.
+     *
+     * @return array<int, LegacyLink>
+     */
+    private function resolveNationalContext(Collection $collection, LegacyReference $reference, string $legacyLanguage): array
+    {
+        if (! $reference->hasParts(2)) {
+            return [];
+        }
+
+        [$country, $exhibition] = array_slice($reference->parts, 0, 2);
+        $project = $this->projectOf($collection);
+
+        return [
+            $this->isPublicProject($project)
+                ? LegacyLink::public('Sharing History parent exhibition page', $this->exhibitionUrl($exhibition, $legacyLanguage), LegacyLinkConfidence::INFERRED, $reference->raw, 'National contexts have no page of their own; they resolve to their exhibition.')
+                : $this->notPublic($reference, 'Sharing History parent exhibition page', $project),
+            LegacyLink::backoffice('Sharing History national context back-office record', $this->backofficeUrl('sh/sh_nc_countries', "21;{$country};{$exhibition}"), LegacyLinkConfidence::EXACT, $reference->raw),
+        ];
+    }
+
+    /**
+     * The project's "about" pages: historical background (…:<project>:<page_id>)
+     * and its "read more" topics (…:<project>:<topic_id>).
+     *
+     * @param  'historical_background'|'topics'  $kind
+     * @return array<int, LegacyLink>
+     */
+    private function resolveAboutPage(Collection $collection, LegacyReference $reference, string $legacyLanguage, string $kind): array
+    {
+        if (! $reference->hasParts(2)) {
+            return [];
+        }
+
+        $project = strtoupper((string) $reference->part(0));
+        $id = (string) $reference->part(1);
+        $label = $kind === 'topics' ? 'Sharing History historical background topic' : 'Sharing History historical background page';
+        $url = $kind === 'topics'
+            ? $this->host('sharing_history')."/about_hb_topics.php?tId={$id}&pId={$project}&lng={$legacyLanguage}"
+            : $this->host('sharing_history')."/historical_background_pages.php?page={$id}&lng={$legacyLanguage}";
+
+        return [
+            $this->isPublicProject($project)
+                ? LegacyLink::public($label, $url, LegacyLinkConfidence::EXACT, $reference->raw)
+                : $this->notPublic($reference, $label, $project),
+            LegacyLink::backoffice("{$label} back-office record", $this->backofficeUrl('sh/sh_projects', ($kind === 'topics' ? '9' : '8').";{$project};{$id}"), LegacyLinkConfidence::EXACT, $reference->raw),
+        ];
+    }
+
+    /**
+     * A historical profile (sh_countries_historicalbackground:<hb_id>): the
+     * site lists it by its country, or as "gn" for the general text, which
+     * has no country.
+     *
+     * @return array<int, LegacyLink>
+     */
+    private function resolveHistoricalProfile(Collection $collection, LegacyReference $reference, string $legacyLanguage): array
+    {
+        if (! $reference->hasParts(1)) {
+            return [];
+        }
+
+        $project = $this->projectOf($collection);
+        $country = $this->legacyCountryCode($collection->country);
+        $links = [];
+
+        if (! $this->isPublicProject($project)) {
+            $links[] = $this->notPublic($reference, 'Sharing History historical profile', $project);
+        } elseif ($country === null) {
+            $links[] = LegacyLink::public('Sharing History general historical profile', $this->host('sharing_history')."/hb_result.php?country=gn&page=1&lng={$legacyLanguage}", LegacyLinkConfidence::INFERRED, $reference->raw, 'A profile with no country is the general one.');
+        } else {
+            $links[] = LegacyLink::public('Sharing History historical profile', $this->host('sharing_history')."/hb_result.php?country={$country}&page=1&lng={$legacyLanguage}", LegacyLinkConfidence::EXACT, $reference->raw);
+        }
+
+        $links[] = LegacyLink::backoffice('Sharing History historical profile back-office record', $this->backofficeUrl('sh/sh_hb', "1;{$reference->part(0)}"), LegacyLinkConfidence::EXACT, $reference->raw);
+
+        return $links;
+    }
+
+    /**
+     * A page of a historical profile: hb_result.php addresses it by its
+     * 1-based position (legacy lists the pages ORDER BY sort_order, which the
+     * importer keeps as display_order).
+     *
+     * @return array<int, LegacyLink>
+     */
+    private function resolveHistoricalProfilePage(Collection $collection, LegacyReference $reference, string $legacyLanguage): array
+    {
+        $profile = $collection->parent;
+        $profileReference = LegacyReference::parse($profile?->backward_compatibility);
+        $position = $this->siblingPosition($collection, 'mwnf3_sharing_history', 'sh_countries_historicalbackground_pages');
+
+        if ($profile === null || ! $reference->hasParts(1) || ! $profileReference?->is('mwnf3_sharing_history', 'sh_countries_historicalbackground') || ! $profileReference->hasParts(1) || $position === null) {
+            return [LegacyLink::diagnostic('Sharing History historical profile page', LegacyLinkConfidence::REQUIRES_LOOKUP, $reference->raw, 'Profile page URLs need the parent profile and the page order.')];
+        }
+
+        $project = $this->projectOf($collection);
+        $country = $this->legacyCountryCode($profile->country);
+        $links = [];
+
+        if (! $this->isPublicProject($project)) {
+            $links[] = $this->notPublic($reference, 'Sharing History historical profile page', $project);
+        } else {
+            $links[] = LegacyLink::public(
+                'Sharing History historical profile page',
+                $this->host('sharing_history').'/hb_result.php?country='.($country ?? 'gn')."&page={$position}&lng={$legacyLanguage}",
+                $country === null ? LegacyLinkConfidence::INFERRED : LegacyLinkConfidence::EXACT,
+                $reference->raw,
+                $country === null ? 'A profile with no country is the general one.' : null,
+            );
+        }
+
+        $links[] = LegacyLink::backoffice('Sharing History historical profile page back-office record', $this->backofficeUrl('sh/sh_hb', "3;{$profileReference->part(0)};{$reference->part(0)}"), LegacyLinkConfidence::EXACT, $reference->raw);
+
+        return $links;
     }
 
     /** @return array<int, LegacyLink> */

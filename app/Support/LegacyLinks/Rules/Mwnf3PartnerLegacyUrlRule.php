@@ -24,6 +24,15 @@ class Mwnf3PartnerLegacyUrlRule implements LegacyUrlRule
             return [];
         }
 
+        if ($reference->table === 'schools' && $reference->hasParts(2)) {
+            [$school, $country] = array_slice($reference->parts, 0, 2);
+
+            return [
+                LegacyLink::diagnostic('Legacy school page', LegacyLinkConfidence::UNSUPPORTED, $reference->raw, 'The legacy sites have no public page for schools.'),
+                LegacyLink::backoffice('Legacy school back-office record', $this->backofficeUrl('database/school', "1;{$school};{$country}"), LegacyLinkConfidence::EXACT, $reference->raw),
+            ];
+        }
+
         if (! in_array($reference->table, ['museums', 'institutions'], true) || ! $reference->hasParts(2)) {
             return [];
         }

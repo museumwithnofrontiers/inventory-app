@@ -3,6 +3,8 @@
 namespace App\Support\LegacyLinks\Rules;
 
 use App\Enums\LegacyLinkConfidence;
+use App\Enums\LegacyLinkType;
+use App\Models\Collection;
 use App\Models\Item;
 use App\Support\LegacyLinks\LegacyLink;
 use App\Support\LegacyLinks\LegacyReference;
@@ -30,9 +32,65 @@ class Mwnf3ItemLegacyUrlRule implements LegacyUrlRule
             'monuments' => $this->resolveDatabaseItem($record, $reference, 'monument', 'database/dba_monuments', $legacyLanguage, 4),
             'objects_pictures' => $this->resolvePictureParent($record, $reference, 'object', 'database/dba_objects', $legacyLanguage),
             'monuments_pictures' => $this->resolvePictureParent($record, $reference, 'monument', 'database/dba_monuments', $legacyLanguage),
-            'monument_details' => [LegacyLink::diagnostic('Legacy monument detail', LegacyLinkConfidence::UNSUPPORTED, $reference->raw, 'Monument details usually appear inside the parent monument page; no direct public URL rule is verified yet.')],
+            'monument_details' => $this->resolveDetailParent($record, $reference, $legacyLanguage, 5, 'Monument details resolve to the parent monument page, which shows them.'),
+            'monument_detail_pictures' => $this->resolveDetailParent($record, $reference, $legacyLanguage, 6, 'Monument detail pictures resolve to the parent monument page, which shows the details.'),
+            'exhibition_custom_pictures', 'exhibition_page_image_details' => $this->resolvePlacements($record, $reference, $legacyLanguage),
             default => [],
         };
+    }
+
+    /**
+     * A custom exhibition picture or detail view is an item the importer made
+     * for a photo legacy only showed on an exhibition page: it resolves to the
+     * pages that place it.
+     *
+     * @return array<int, LegacyLink>
+     */
+    private function resolvePlacements(Item $record, LegacyReference $reference, string $legacyLanguage): array
+    {
+        $collectionRule = new Mwnf3CollectionLegacyUrlRule;
+
+        $links = $record->attachedToCollections()
+            ->with('parent.parent')
+            ->get()
+            ->flatMap(function (Collection $placement) use ($collectionRule, $legacyLanguage): array {
+                $placementReference = LegacyReference::parse($placement->backward_compatibility);
+
+                if ($placementReference === null || ! $collectionRule->supports($placement, $placementReference)) {
+                    return [];
+                }
+
+                return array_values(array_filter(
+                    $collectionRule->resolve($placement, $placementReference, $legacyLanguage),
+                    fn (LegacyLink $link): bool => $link->type === LegacyLinkType::PUBLIC,
+                ));
+            })
+            ->map(fn (LegacyLink $link): LegacyLink => new LegacyLink($link->label, $link->url, $link->type, LegacyLinkConfidence::INFERRED, $link->source, 'Legacy shows this picture on the page that places it; it has no record of its own.'))
+            ->values()
+            ->all();
+
+        return $links !== []
+            ? $links
+            : [LegacyLink::diagnostic('Legacy exhibition picture', LegacyLinkConfidence::UNSUPPORTED, $reference->raw, 'Legacy shows this picture only on the exhibition page that places it, and it has no placement.')];
+    }
+
+    /**
+     * A monument detail (…:project:country:institution:monument:detail) or one
+     * of its pictures has no page of its own: legacy shows the details on the
+     * monument's page.
+     *
+     * @return array<int, LegacyLink>
+     */
+    private function resolveDetailParent(Item $record, LegacyReference $reference, string $legacyLanguage, int $requiredParts, string $note): array
+    {
+        if (! $reference->hasParts($requiredParts)) {
+            return [];
+        }
+
+        return array_map(
+            fn (LegacyLink $link): LegacyLink => new LegacyLink($link->label.' parent', $link->url, $link->type, $link->url === null ? $link->confidence : LegacyLinkConfidence::INFERRED, $reference->raw, $link->note ?? $note),
+            $this->resolveDatabaseItem($record, $reference, 'monument', 'database/dba_monuments', $legacyLanguage, 4),
+        );
     }
 
     /**
@@ -45,6 +103,7 @@ class Mwnf3ItemLegacyUrlRule implements LegacyUrlRule
         }
 
         [$project, $country, $holder, $number] = array_slice($reference->parts, 0, 4);
+        $project = $this->canonicalProjectCode($project) ?? $project;
         $host = $this->projectHost($project);
         $links = [];
 
