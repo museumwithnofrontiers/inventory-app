@@ -105,3 +105,21 @@
   height: 100%;
   width: auto;
 }
+
+/*
+ * Native dropdowns. Filament's forms.css gives every native `select` its
+ * chevron as a background image, and expects the rest from the Tailwind forms
+ * plugin that its own default theme is built with: no native arrow, one
+ * chevron at the right, and room for it. This Tailwind v4 theme has no forms
+ * plugin, so without these the chevron tiled across the text, next to the
+ * browser's own arrow. Unlayered on purpose: it must win over a padding
+ * utility (`px-2`) on the select.
+ */
+select:not(.choices):not([multiple]):not([size]) {
+  appearance: none;
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  print-color-adjust: exact;
+}
