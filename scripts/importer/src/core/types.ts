@@ -531,7 +531,8 @@ export interface TimelineEventData {
   timeline_id: string;
   internal_name: string;
   year_from: number;
-  year_to: number;
+  /** Null when legacy has no end year (M16 G2 #2697). */
+  year_to: number | null;
   year_from_ah?: number | null;
   year_to_ah?: number | null;
   date_from?: string | null;

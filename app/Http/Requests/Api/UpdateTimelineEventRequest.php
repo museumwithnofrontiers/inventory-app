@@ -22,7 +22,7 @@ class UpdateTimelineEventRequest extends FormRequest
             'timeline_id' => ['sometimes', 'string', 'exists:timelines,id'],
             'internal_name' => ['sometimes', 'string', 'max:255'],
             'year_from' => ['sometimes', 'integer'],
-            'year_to' => ['sometimes', 'integer'],
+            'year_to' => ['sometimes', 'nullable', 'integer'],
             'year_from_ah' => ['nullable', 'integer'],
             'year_to_ah' => ['nullable', 'integer'],
             'date_from' => ['nullable', 'date'],

@@ -185,7 +185,7 @@ export class ThgTimelineImporter extends BaseImporter {
                 timeline_id: timelineId,
                 internal_name: hcr.name || `hcr_${hcr.hcr_id}`,
                 year_from: hcr.from_ad ?? 0,
-                year_to: hcr.to_ad ?? 0,
+                year_to: hcr.to_ad ?? null,
                 year_from_ah: hcr.from_ah ?? null,
                 year_to_ah: hcr.to_ah ?? null,
                 date_from: null,

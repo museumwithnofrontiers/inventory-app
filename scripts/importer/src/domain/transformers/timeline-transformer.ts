@@ -113,13 +113,14 @@ export function transformShHcrEvent(legacy: ShLegacyHcr): TransformedTimelineEve
   const backwardCompatibility = `mwnf3_sharing_history:sh_hcr:${legacy.hcr_id}`;
 
   const yearFrom = parseInt(legacy.date_from_year, 10) || 0;
-  const yearTo = parseInt(legacy.date_to_year, 10) || 0;
+  // An empty end year stays empty (M16 G2 #2697); legacy leaves it out on 1497.
+  const yearTo = parseInt(legacy.date_to_year, 10);
 
   return {
     data: {
       internal_name: legacy.name || `sh-hcr-${legacy.hcr_id}`,
       year_from: yearFrom,
-      year_to: yearTo,
+      year_to: Number.isNaN(yearTo) ? null : yearTo,
       year_from_ah: null, // SH does not have AH dates
       year_to_ah: null,
       date_from: buildShDate(legacy.date_from_year, legacy.date_from_month, legacy.date_from_date),

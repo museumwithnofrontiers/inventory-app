@@ -34927,7 +34927,10 @@
                         "type": "integer"
                     },
                     "year_to": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "year_from_ah": {
                         "type": [
@@ -34978,8 +34981,7 @@
                 "required": [
                     "timeline_id",
                     "internal_name",
-                    "year_from",
-                    "year_to"
+                    "year_from"
                 ],
                 "title": "StoreTimelineEventRequest"
             },
@@ -35375,7 +35377,10 @@
                         "type": "integer"
                     },
                     "year_to": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "year_from_ah": {
                         "type": [
@@ -38632,7 +38637,10 @@
                         "type": "integer"
                     },
                     "year_to": {
-                        "type": "integer"
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
                     },
                     "year_from_ah": {
                         "type": [

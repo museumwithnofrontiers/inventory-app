@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Resources\TimelineEventResource\Pages\CreateTimelineEvent;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
 use App\Filament\Resources\TimelineEventResource\Pages\ListTimelineEvent;
@@ -112,6 +113,39 @@ class TimelineEventResourceTest extends TestCase
         $this->assertDatabaseMissing('timeline_events', [
             'id' => $event->id,
         ]);
+    }
+
+    public function test_an_event_can_have_no_end_year(): void
+    {
+        $user = $this->createCrudUser();
+        $timeline = Timeline::factory()->create(['internal_name' => 'Test Timeline']);
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CreateTimelineEvent::class)
+            ->fillForm([
+                'timeline_id' => $timeline->id,
+                'internal_name' => 'Open-ended Event',
+                'year_from' => 1701,
+                'year_to' => null,
+                'display_order' => 1,
+            ])
+            ->call('create')
+            ->assertHasNoFormErrors();
+
+        $this->assertDatabaseHas('timeline_events', [
+            'internal_name' => 'Open-ended Event',
+            'year_from' => 1701,
+            'year_to' => null,
+        ]);
+
+        $event = TimelineEvent::query()->where('internal_name', 'Open-ended Event')->firstOrFail();
+
+        $this->actingAs($user)
+            ->get(TimelineEventResource::getUrl('view', ['record' => $event]))
+            ->assertOk()
+            ->assertSee('Open-ended Event');
     }
 
     public function test_translations_relation_manager_renders(): void
