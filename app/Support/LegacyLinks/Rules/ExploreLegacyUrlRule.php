@@ -52,6 +52,7 @@ class ExploreLegacyUrlRule implements LegacyUrlRule
                 : [],
             'location' => $this->resolveLocation($collection, $reference),
             'itinerary' => $this->resolveItinerary($collection, $reference),
+            'root' => $this->rootLandingLinks('mwnf3_explore', 'Explore home page', $reference),
             default => [],
         };
     }
@@ -97,6 +98,10 @@ class ExploreLegacyUrlRule implements LegacyUrlRule
     /** @return array<int, LegacyLink> */
     private function resolveItem(Item $item, LegacyReference $reference): array
     {
+        if ($reference->table === 'monument_picture') {
+            return $this->resolvePictureParent($item, $reference);
+        }
+
         if ($reference->table !== 'monument' || ! $reference->hasParts(1)) {
             return [];
         }
@@ -117,5 +122,26 @@ class ExploreLegacyUrlRule implements LegacyUrlRule
             LegacyLink::public('Explore monument page', $this->host('explore')."/countries/c-{$country}/l-{$collectionReference->part(0)}/m-{$reference->part(0)}", LegacyLinkConfidence::INFERRED, $reference->raw),
             LegacyLink::backoffice('Explore monument back-office record', $this->backofficeUrl('explore/explore_monuments', "1;{$reference->part(0)}"), LegacyLinkConfidence::EXACT, $reference->raw),
         ];
+    }
+
+    /**
+     * A monument picture (mwnf3_explore:monument_picture:<monument>:…) has no
+     * page of its own: it resolves to its parent monument.
+     *
+     * @return array<int, LegacyLink>
+     */
+    private function resolvePictureParent(Item $picture, LegacyReference $reference): array
+    {
+        $parent = $picture->parent;
+        $parentReference = LegacyReference::parse($parent?->backward_compatibility);
+
+        if ($parent === null || ! $parentReference?->is('mwnf3_explore', 'monument')) {
+            return [LegacyLink::diagnostic('Explore monument page', LegacyLinkConfidence::REQUIRES_LOOKUP, $reference->raw, 'Picture URLs need the parent monument.')];
+        }
+
+        return array_map(
+            fn (LegacyLink $link): LegacyLink => new LegacyLink($link->label.' parent', $link->url, $link->type, $link->url === null ? $link->confidence : LegacyLinkConfidence::INFERRED, $reference->raw, $link->note ?? 'Picture items resolve to the parent legacy record.'),
+            $this->resolveItem($parent, $parentReference),
+        );
     }
 }

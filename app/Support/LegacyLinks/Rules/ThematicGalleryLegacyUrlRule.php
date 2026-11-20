@@ -28,6 +28,8 @@ class ThematicGalleryLegacyUrlRule implements LegacyUrlRule
         return match ($reference->table) {
             'thg_gallery' => $this->resolveGallery($record, $reference, $legacyLanguage),
             'theme' => $this->resolveTheme($reference, $legacyLanguage),
+            'galleries_root' => $this->rootLandingLinks('thg_galleries', 'MWNF Galleries home page', $reference),
+            'exhibitions_root' => $this->rootLandingLinks('thg_exhibitions', 'MWNF Exhibitions home page', $reference),
             default => [],
         };
     }

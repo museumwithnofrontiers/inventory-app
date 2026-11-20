@@ -42,6 +42,65 @@ return [
 
         'sharing_history_project' => 'AWE',
 
+        // The landing page of the projects that had a site of their own.
+        'project_landing_pages' => [
+            'ISL' => 'https://islamicart.museumwnf.org/index.php',
+            'BAR' => 'https://baroqueart.museumwnf.org/index.php',
+        ],
+
+        // The folder of each mwnf3 exhibition (legacy exhibitions.exh_link,
+        // which the inventory does not keep). Each folder pins its id in
+        // libs/config.inc.php ($_SESSION["exhibition"]).
+        'mwnf3_exhibitions' => [
+            '10' => 'https://islamicart.museumwnf.org/exhibitions/ISL/the_umayyads',
+            '13' => 'https://islamicart.museumwnf.org/exhibitions/ISL/the_abbasids',
+            '15' => 'https://islamicart.museumwnf.org/exhibitions/ISL/the_ayyubids',
+            '16' => 'https://islamicart.museumwnf.org/exhibitions/ISL/fatimids',
+            '17' => 'https://islamicart.museumwnf.org/exhibitions/ISL/the_mamluks',
+            '18' => 'https://islamicart.museumwnf.org/exhibitions/ISL/the_ottomans',
+            '19' => 'https://islamicart.museumwnf.org/exhibitions/ISL/arabic_calligraphy',
+            '20' => 'https://islamicart.museumwnf.org/exhibitions/ISL/figural',
+            '21' => 'https://islamicart.museumwnf.org/exhibitions/ISL/geometric',
+            '22' => 'https://islamicart.museumwnf.org/exhibitions/ISL/water',
+            '23' => 'https://islamicart.museumwnf.org/exhibitions/ISL/women',
+            '24' => 'https://islamicart.museumwnf.org/exhibitions/ISL/crusader',
+            '25' => 'https://islamicart.museumwnf.org/exhibitions/ISL/siculo_norman',
+            '26' => 'https://islamicart.museumwnf.org/exhibitions/ISL/mudejar_art',
+            '27' => 'https://islamicart.museumwnf.org/exhibitions/ISL/muslim_west',
+            '28' => 'https://islamicart.museumwnf.org/exhibitions/ISL/floral',
+            '29' => 'https://islamicart.museumwnf.org/exhibitions/ISL/pilgrimage',
+            '42' => 'https://islamicart.museumwnf.org/exhibitions/ISL/western_influence',
+            '43' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/ephemera',
+            '44' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/travelling_and_exotism',
+            '45' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/enlightenment',
+            '46' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/absolutism',
+            '47' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/devotion',
+            '48' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/languages_baroque',
+            '49' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/academia',
+            '50' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/bourgeoisie',
+            '51' => 'https://baroqueart.museumwnf.org/exhibitions/BAR/reformation',
+        ],
+
+        // The list of a project's mwnf3 exhibitions (mwnf3:exhibitions:root[:CODE]).
+        'mwnf3_exhibition_lists' => [
+            'ISL' => 'https://islamicart.museumwnf.org/exhibitions/ISL',
+            'BAR' => 'https://baroqueart.museumwnf.org/exhibitions/BAR',
+        ],
+
+        // The folder of each mwnf3 artistic introduction (gai/<project>, which
+        // pins its id in libs/config.inc.php).
+        'mwnf3_artintros' => [
+            '1' => 'https://islamicart.museumwnf.org/gai/ISL',
+        ],
+
+        // Landing pages of the sites the importer's marker collections stand for.
+        'root_landing_pages' => [
+            'mwnf3_explore' => 'https://explore.museumwnf.org/',
+            'mwnf3_travels' => 'https://travels.museumwnf.org/',
+            'thg_galleries' => 'https://galleries.museumwnf.org/',
+            'thg_exhibitions' => 'https://exhibitions.museumwnf.org/index.php/en/',
+        ],
+
         'thematic_galleries' => [
             '4' => [
                 'base_url' => 'https://amulets.museumwnf.org',

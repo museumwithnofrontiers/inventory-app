@@ -9,6 +9,7 @@ use App\Support\LegacyLinks\LegacyLinkSet;
 use App\Support\LegacyLinks\LegacyReference;
 use App\Support\LegacyLinks\Rules\ExploreLegacyUrlRule;
 use App\Support\LegacyLinks\Rules\LegacyUrlRule;
+use App\Support\LegacyLinks\Rules\Mwnf3CollectionLegacyUrlRule;
 use App\Support\LegacyLinks\Rules\Mwnf3ItemLegacyUrlRule;
 use App\Support\LegacyLinks\Rules\Mwnf3PartnerLegacyUrlRule;
 use App\Support\LegacyLinks\Rules\SharingHistoryLegacyUrlRule;
@@ -29,6 +30,7 @@ class LegacyUrlResolver
         $this->rules = $rules ?? [
             new Mwnf3ItemLegacyUrlRule,
             new Mwnf3PartnerLegacyUrlRule,
+            new Mwnf3CollectionLegacyUrlRule,
             new SharingHistoryLegacyUrlRule,
             new ExploreLegacyUrlRule,
             new TravelsLegacyUrlRule,
