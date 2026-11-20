@@ -1536,6 +1536,8 @@ const UPDATED_AT = 'updated_at';
 | `date` | text | Unknown | Unknown |  |
 | `museum` | text | Unknown | Unknown |  |
 | `location` | text | Unknown | Unknown |  |
+| `copyright` | text | Unknown | Unknown |  |
+| `photographer` | text | Unknown | Unknown |  |
 | `backward_compatibility` | varchar | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -1543,7 +1545,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['language_id', 'caption', 'name', 'date', 'museum', 'location', 'backward_compatibility']
+['language_id', 'caption', 'name', 'date', 'museum', 'location', 'copyright', 'photographer', 'backward_compatibility']
 ```
 
 ### Model Constants
@@ -1977,10 +1979,12 @@ const UPDATED_AT = 'updated_at';
 | `status` | varchar | Unknown | Unknown |  |
 | `name` | varchar | Unknown | Unknown |  |
 | `alternate_name` | text | Unknown | Unknown |  |
+| `original_name` | text | Unknown | Unknown |  |
 | `description` | text | Unknown | Unknown |  |
 | `short_description` | text | Unknown | Unknown |  |
 | `type` | text | Unknown | Unknown |  |
 | `holder` | text | Unknown | Unknown |  |
+| `holder_original_name` | text | Unknown | Unknown |  |
 | `owner` | text | Unknown | Unknown |  |
 | `initial_owner` | text | Unknown | Unknown |  |
 | `dates` | text | Unknown | Unknown |  |
@@ -2008,6 +2012,7 @@ const UPDATED_AT = 'updated_at';
 | `provenance` | text | Unknown | Unknown |  |
 | `obtention` | text | Unknown | Unknown |  |
 | `bibliography` | text | Unknown | Unknown |  |
+| `archival_reference` | text | Unknown | Unknown |  |
 | `history` | text | Unknown | Unknown |  |
 | `catalogue_references` | text | Unknown | Unknown |  |
 | `notice` | text | Unknown | Unknown |  |
@@ -2028,7 +2033,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'status', 'catalogue_references', 'notice', 'external_notice', 'image_rights', 'external_sources', 'backward_compatibility', 'extra']
+['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'status', 'catalogue_references', 'notice', 'external_notice', 'image_rights', 'external_sources', 'original_name', 'holder_original_name', 'archival_reference', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting

@@ -29,6 +29,8 @@ class UpdateImageTranslationRequest extends FormRequest
             'date' => ['sometimes', 'nullable', 'string'],
             'museum' => ['sometimes', 'nullable', 'string'],
             'location' => ['sometimes', 'nullable', 'string'],
+            'copyright' => ['sometimes', 'nullable', 'string'],
+            'photographer' => ['sometimes', 'nullable', 'string'],
             'backward_compatibility' => ['sometimes', 'nullable', 'string', 'max:255'],
         ];
     }

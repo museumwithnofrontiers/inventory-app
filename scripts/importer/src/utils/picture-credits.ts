@@ -4,12 +4,14 @@
  * belong to the picture, so they move to its image row's `photographer` and
  * `credit` columns.
  *
- * - A key leaves the picture translations' `extra` only when every row of the
- *   picture carries the same text: the packages ship it per language, and the
- *   exporters give the image's value back to each row. Where the rows differ,
- *   or some have none, the image takes the default language's (English) text,
- *   or none when the English row has none, and the rows keep theirs until an
- *   editor has reviewed them.
+ * - Where every row of the picture carries the same text, the key moves to the
+ *   image row, and the exporters give the image's value back to each row.
+ * - Where the rows differ, or some have none (M16 B7, #2690), the image takes
+ *   the default language's (English) text, or none when the English row has
+ *   none, and each language legacy wrote a text for keeps it on the image's
+ *   translation row (`image_translations.copyright` / `photographer`), as
+ *   written. A language legacy left empty stays empty: the exporters give
+ *   those pictures only their per-language texts back.
  * - `copyright` stays the text burned on the picture (image → Project →
  *   fallback, untouched). `credit` holds the picture's own text where the
  *   sheets can't read it back from `copyright`: on ISL and IAM pictures,
@@ -65,11 +67,23 @@ export interface PictureTranslationUpdate {
   extra: Record<string, unknown> | null;
 }
 
+/**
+ * A picture's own text in one language (M16 B7, #2690): where its language
+ * rows were not all equal, each language legacy wrote one for gets its text
+ * on the image's translation row, as written.
+ */
+export interface PictureImageCredit {
+  image_id: string;
+  language_id: string;
+  key: PictureCreditKey;
+  text: string;
+}
+
 export interface PicturePlan {
   images: PictureImageUpdate[];
   translations: PictureTranslationUpdate[];
-  /** Pictures whose rows keep their own texts, per key, for review. */
-  kept: Array<{ item_id: string; key: PictureCreditKey }>;
+  /** Per-language texts of the pictures whose rows were not all equal (B7). */
+  imageCredits: PictureImageCredit[];
 }
 
 const MARK_AND_SPACE = '© ';
@@ -106,9 +120,9 @@ export function planPictureCredits(
     byItem.set(row.item_id, group);
   }
 
-  const plan: PicturePlan = { images: [], translations: [], kept: [] };
+  const plan: PicturePlan = { images: [], translations: [], imageCredits: [] };
 
-  for (const [itemId, group] of byItem) {
+  for (const group of byItem.values()) {
     // A picture has one image; the rows repeat per image if it had more.
     const imageIds = [...new Set(group.map((row) => row.image_id))];
     const translations = new Map<string, PictureCreditRow>();
@@ -135,7 +149,16 @@ export function planPictureCredits(
         (row) => row.language_id === defaultLanguageId && text(row.extra, key) !== null
       );
       chosen[key] = defaultRow ? text(defaultRow.extra, key) : null;
-      plan.kept.push({ item_id: itemId, key });
+      // B7: each language's own text goes to the image's translation row, as
+      // written; a language legacy left empty gets none.
+      for (const row of rowsOfPicture) {
+        const value = text(row.extra, key);
+        if (value === null) continue;
+        for (const imageId of imageIds) {
+          plan.imageCredits.push({ image_id: imageId, language_id: row.language_id, key, text: value });
+        }
+      }
+      moved.add(key);
     }
 
     if (held.size === 0) continue;
@@ -191,6 +214,36 @@ export function planParentImage(row: PictureParentImageRow): PictureImageUpdate 
     credit: row.credit,
     clear_copyright: clear,
   };
+}
+
+/** A picture translation holding `legacy_type`, with its picture's image-type tags. */
+export interface LegacyTypeRow {
+  id: string;
+  extra: Record<string, unknown>;
+  image_type_tags: readonly string[];
+}
+
+/**
+ * `legacy_type` (`plan`, `security`) repeats the picture's `image-type` tag,
+ * which the same importers write (M16 B7, #2690): it is dropped where the
+ * picture carries that tag, and left (for review) where it doesn't.
+ */
+export function planLegacyTypes(rows: readonly LegacyTypeRow[]): {
+  updates: Array<{ id: string; extra: Record<string, unknown> | null }>;
+  kept: string[];
+} {
+  const updates: Array<{ id: string; extra: Record<string, unknown> | null }> = [];
+  const kept: string[] = [];
+  for (const row of rows) {
+    const value = row.extra['legacy_type'];
+    if (typeof value !== 'string' || !row.image_type_tags.includes(value)) {
+      kept.push(row.id);
+      continue;
+    }
+    const rest = Object.fromEntries(Object.entries(row.extra).filter(([key]) => key !== 'legacy_type'));
+    updates.push({ id: row.id, extra: Object.keys(rest).length > 0 ? rest : null });
+  }
+  return { updates, kept };
 }
 
 /** An object's or monument's translation still holding its rights line. */

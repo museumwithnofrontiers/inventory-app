@@ -78,6 +78,9 @@ class ItemTranslationFactory extends Factory
             'external_notice' => $this->faker->optional()->sentence,
             'image_rights' => $this->faker->optional()->company,
             'external_sources' => null,
+            'original_name' => null,
+            'holder_original_name' => null,
+            'archival_reference' => null,
             'extra' => $this->faker->optional()->passthrough(
                 json_encode($this->faker->randomElements(['key1' => 'value1', 'key2' => 'value2'], null, false))
             ),

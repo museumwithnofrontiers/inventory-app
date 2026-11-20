@@ -25,6 +25,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $date
  * @property string|null $museum
  * @property string|null $location
+ * @property string|null $copyright
+ * @property string|null $photographer
  * @property string|null $backward_compatibility
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -41,6 +43,9 @@ class ImageTranslation extends Model
         'date',
         'museum',
         'location',
+        // A picture's own credit and photographer in this language, as written (M16 B7)
+        'copyright',
+        'photographer',
         'backward_compatibility',
     ];
 

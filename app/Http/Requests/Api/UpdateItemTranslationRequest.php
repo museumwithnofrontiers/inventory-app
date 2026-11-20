@@ -97,6 +97,9 @@ class UpdateItemTranslationRequest extends FormRequest
             'external_notice' => ['nullable', 'string'],
             'image_rights' => ['nullable', 'string'],
             'external_sources' => ['nullable', 'string'],
+            'original_name' => ['nullable', 'string'],
+            'holder_original_name' => ['nullable', 'string'],
+            'archival_reference' => ['nullable', 'string'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
             'extra' => ['nullable', 'json'],
         ];

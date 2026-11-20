@@ -27,6 +27,7 @@ import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import {
   planImageRights,
+  planLegacyTypes,
   planParentImage,
   planPictureCredits,
 } from '../../utils/picture-credits.js';
@@ -52,8 +53,20 @@ export class PictureCreditsImporter extends BaseImporter {
       const plan = planPictureCredits(rows, DEFAULT_LANGUAGE_ID);
       this.logInfo(
         `Found ${plan.images.length} image(s) and ${plan.translations.length} translation(s) to update; ` +
-          `${plan.kept.length} picture text(s) differ by language and stay in extra`
+          `${plan.imageCredits.length} per-language picture text(s) for the image translations`
       );
+
+      // B7: a picture's per-language texts, before its rows lose the keys.
+      for (const credit of plan.imageCredits) {
+        await this.apply(result, `Image ${credit.image_id} (${credit.language_id})`, preview, tag, () =>
+          this.context.strategy.setItemImageTranslationCredit(
+            credit.image_id,
+            credit.language_id,
+            credit.key,
+            credit.text
+          )
+        );
+      }
 
       for (const image of plan.images) {
         await this.apply(result, `Item image ${image.image_id}`, preview, tag, () =>
@@ -110,6 +123,21 @@ export class PictureCreditsImporter extends BaseImporter {
           this.context.strategy.setItemTranslationImageRights(
             update.id,
             update.image_rights,
+            update.extra === null ? null : JSON.stringify(update.extra)
+          )
+        );
+      }
+
+      // B7: `legacy_type` repeats the picture's image-type tag; it goes where the tag is there.
+      const legacy = planLegacyTypes(await this.context.strategy.findLegacyTypeRows());
+      for (const id of legacy.kept) {
+        this.logWarning(`Item translation ${id}: 'legacy_type' has no matching image-type tag, left in extra`);
+      }
+      for (const update of legacy.updates) {
+        await this.apply(result, `Item translation ${update.id}`, preview, tag, () =>
+          this.context.strategy.setItemTranslationColumnsAsStoredById(
+            update.id,
+            {},
             update.extra === null ? null : JSON.stringify(update.extra)
           )
         );

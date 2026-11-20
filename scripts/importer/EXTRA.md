@@ -33,13 +33,23 @@ These keys are written here first, then moved to columns of their own by
 - M16 B5 (#2639), B6 (#2640): `linkcatalogs` → `catalogue_references` (codes and citations as written; the Book
   links come from the codes, separately), the Sharing History `notice` → `notice` and `notice_c` →
   `external_notice`, as written; and `legacy_display_status` N → `status` = `hidden`, a flag, not a text.
+- M16 B7 (#2690): Sharing History's `third_name` → `original_name` (the name in the item's original language),
+  `archival` → `archival_reference`, `holding_institution_org` → `holder_original_name` (the holding institution's
+  own-language name, next to `holder`), as written.
 
 The pictures' `photographer` and `copyright` (M16 F1, #2651) move to the picture's image row instead, by
-`importers/phase-11/picture-credits-importer.ts`: `photographer` → `item_images.photographer`; `copyright` → `item_images.credit`
-where the burned `copyright` can't give it back (ISL and IAM pictures, which burn their project's line, and texts
-legacy wrote with the mark). A key leaves `extra` only where every row of the picture carries the same text; where
-the rows differ or some have none, the image takes the default language's text and the rows keep theirs until
-reviewed. The parent object's or monument's copy of the image takes the same values.
+`importers/phase-11/picture-credits-importer.ts`:
+- `photographer` → `item_images.photographer`.
+- `copyright` → `item_images.credit`, where the burned `copyright` can't give it back: ISL and IAM pictures, which burn
+  their project's line, and texts legacy wrote with the mark.
+- Where every row of the picture carries the same text, the image row holds it.
+- Where the rows differ or some have none (M16 B7, #2690), the image takes the default language's text. Each language
+  legacy wrote a text for keeps it on the image's translation row (`image_translations.copyright` /
+  `photographer`, `image_type` `item_image`), as written, and a language legacy left empty stays empty.
+- The parent object's or monument's copy of the image takes the same values.
+
+The same step drops `legacy_type` (`plan`, `security`) where the picture carries the same `image-type` tag, which the
+picture importers write next to it (M16 B7). One without the tag stays and is reported.
 
 None stays after a full import. After re-running one of their writers on its own, run `--only item-translation-columns` again. The exporters give the keys back to the packages
 (`scripts/exporters/shared/item-columns.mjs`); the two lists in `utils/item-translation-columns.ts` and

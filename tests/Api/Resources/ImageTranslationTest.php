@@ -57,6 +57,13 @@ class ImageTranslationTest extends TestCase
         $this->patchJson(route('image-translation.update', $id), ['caption' => '1815'])
             ->assertOk()
             ->assertJsonPath('data.caption', '1815')
+            ->assertJsonPath('data.copyright', null);
+
+        // M16 B7: a picture's own credit and photographer in this language, as written
+        $this->patchJson(route('image-translation.update', $id), ['copyright' => 'Μουσείο Μπενάκη', 'photographer' => 'Ε. Παπαδόπουλος'])
+            ->assertOk()
+            ->assertJsonPath('data.copyright', 'Μουσείο Μπενάκη')
+            ->assertJsonPath('data.photographer', 'Ε. Παπαδόπουλος')
             ->assertJsonPath('data.name', 'Map of Spain, with provinces');
 
         $this->patchJson(route('image-translation.update', $id), ['language_id' => $language->id])
