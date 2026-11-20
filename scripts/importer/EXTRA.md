@@ -304,6 +304,13 @@ through `item-columns.mjs`, `collection-columns.mjs` and the Explore and Travels
 | timeline_event_item  | `texts.{lang}.{name, sname, name_detail, detail_justification, date, dynasty, museum, location, artist, material}`                                                                  | sh_hcr_image_texts                                                             | importers/phase-05/timeline-importer.ts                                                                              |
 | timelines            | `bibliography`, `disabled_bibliography`                                                                                                                                             | rel_sh_bibliography_hcr_country, sh_bibliography(_langs)                       | importers/phase-05/timeline-importer.ts                                                                              |
 
+Image types are tags, not `extra`. The legacy picture type (`mwnf3.picture_type`) is an `image-type` tag:
+- the monument pictures' `plan` and `security`, on the picture item;
+- the Sharing History history-page images' `map`, on the collection image;
+- since M16 B8 (#2691), the Travels trail pictures' `cover`, `map` and `title` (`tr_trails_pictures.type`) and the
+  itinerary pictures' `sketch`, on their collection images
+  (`importers/phase-07/travels-trail-picture-importer.ts`, `travels-itinerary-picture-importer.ts`).
+
 ## Publications (phase 12)
 
 | Table                      | Key                                                                                                                                                                                                               | Legacy source                    | Written by                                          |
