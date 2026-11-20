@@ -20,6 +20,7 @@ import type { ImportResult, CollectionImageData } from '../../core/types.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import { pickImageCopyright } from '../../utils/image-copyright.js';
 import { legacyKey } from '../../utils/legacy-key.js';
+import { TagHelper } from '../../helpers/tag-helper.js';
 import path from 'path';
 
 /**
@@ -84,6 +85,30 @@ export function itineraryMainPictures(rows: MainPictureRow[]): MainPictureRow[] 
 }
 
 export class TravelsItineraryPictureImporter extends BaseImporter {
+  private tagHelper: TagHelper | null = null;
+
+  private getTagHelper(): TagHelper {
+    this.tagHelper ??= new TagHelper(
+      this.context.strategy,
+      this.context.tracker,
+      this.context.logger
+    );
+    return this.tagHelper;
+  }
+
+  /**
+   * The itinerary picture's legacy picture type (M16 B8, #2691) as an `image-type` tag on
+   * its collection image, as written: the same category the monument pictures
+   * (plan, security) and the Sharing History images (map) use. No type, no tag.
+   */
+  private async tagImageType(imageId: string, type: string): Promise<void> {
+    const value = type.trim();
+    if (value === '') return;
+    const language = this.context.tracker.getMetadata('default_language_id') ?? 'eng';
+    const tagId = await this.getTagHelper().findOrCreate(value, 'image-type', language);
+    if (tagId) await this.getTagHelper().attachToCollectionImage(imageId, [tagId]);
+  }
+
   getName(): string {
     return 'TravelsItineraryPictureImporter';
   }
@@ -245,7 +270,8 @@ export class TravelsItineraryPictureImporter extends BaseImporter {
       display_order: displayOrder,
     };
 
-    await this.context.strategy.writeCollectionImage(imageData);
+    const imageId = await this.context.strategy.writeCollectionImage(imageData);
+    await this.tagImageType(imageId, group.type);
 
     // Register in tracker
     this.registerEntity(backwardCompat, imageKey, 'image');
