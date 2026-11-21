@@ -37,6 +37,8 @@ class DatabaseSeeder extends Seeder
             ImageUploadSeeder::class,
             AvailableImageSeeder::class,
             AuthorSeeder::class,
+            ArtistSeeder::class,
+            DynastySeeder::class,
             MapTagSeeder::class,
         ]);
     }

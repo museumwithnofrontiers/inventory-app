@@ -3,6 +3,8 @@
 namespace Tests\Filament;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Resources\ArtistResource\Pages\EditArtist;
+use App\Filament\Resources\ArtistResource\RelationManagers\ItemsRelationManager as ArtistItemsRelationManager;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ChildCollectionsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\ContributorsRelationManager as CollectionContributorsRelationManager;
@@ -21,6 +23,9 @@ use App\Filament\Resources\ContributorResource\RelationManagers\ImagesRelationMa
 use App\Filament\Resources\ContributorResource\RelationManagers\TranslationsRelationManager as ContributorTranslationsRelationManager;
 use App\Filament\Resources\CountryResource\Pages\EditCountry;
 use App\Filament\Resources\CountryResource\RelationManagers\TranslationsRelationManager as CountryTranslationsRelationManager;
+use App\Filament\Resources\DynastyResource\Pages\EditDynasty;
+use App\Filament\Resources\DynastyResource\RelationManagers\ItemsRelationManager as DynastyItemsRelationManager;
+use App\Filament\Resources\DynastyResource\RelationManagers\TranslationsRelationManager as DynastyTranslationsRelationManager;
 use App\Filament\Resources\GlossaryResource\Pages\EditGlossary;
 use App\Filament\Resources\GlossaryResource\RelationManagers\SpellingsRelationManager as GlossarySpellingsRelationManager;
 use App\Filament\Resources\GlossaryResource\RelationManagers\SynonymsRelationManager as GlossarySynonymsRelationManager;
@@ -85,11 +90,13 @@ use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationM
 use App\Filament\Resources\TimelineEventResource\RelationManagers\TranslationsRelationManager as TimelineEventTranslationsRelationManager;
 use App\Filament\Resources\TimelineResource\Pages\EditTimeline;
 use App\Filament\Resources\TimelineResource\RelationManagers\EventsRelationManager as TimelineEventsRelationManagerForTimeline;
+use App\Models\Artist;
 use App\Models\Collection;
 use App\Models\CollectionTranslation;
 use App\Models\Context;
 use App\Models\Contributor;
 use App\Models\Country;
+use App\Models\Dynasty;
 use App\Models\Glossary;
 use App\Models\Item;
 use App\Models\ItemItemLink;
@@ -227,6 +234,9 @@ class RelationManagerConventionTest extends TestCase
         TagsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
         ArtistsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
         DynastiesRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => false],
+        // The other side of the item's Artists and Dynasties managers
+        ArtistItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'artist', 'edit' => false],
+        DynastyItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'dynasty', 'edit' => false],
         TimelineEventsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'item', 'edit' => true, 'bcColumn' => true],
         CollectionParticipationsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'partner', 'edit' => true],
         TimelineEventItemsRelationManager::class => ['kind' => self::KIND_PIVOT, 'owner' => 'timelineevent', 'edit' => true, 'bcColumn' => true],
@@ -352,6 +362,10 @@ class RelationManagerConventionTest extends TestCase
         ],
         ContributorTranslationsRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'contributor',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
+        DynastyTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'dynasty',
             'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
         ],
 
@@ -574,13 +588,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 8 has-many + 21 pivot + 4 translations + 8 inline + 24 pinned = 65.
+        // 8 has-many + 23 pivot + 4 translations + 8 inline + 25 pinned = 68.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(65, self::allManagers());
+        $this->assertCount(68, self::allManagers());
     }
 
     private function classify(string $class): array
@@ -1086,6 +1100,8 @@ class RelationManagerConventionTest extends TestCase
             'timeline' => EditTimeline::class,
             'timelineevent' => EditTimelineEvent::class,
             'contributor' => EditContributor::class,
+            'artist' => EditArtist::class,
+            'dynasty' => EditDynasty::class,
             'country' => EditCountry::class,
             'language' => EditLanguage::class,
             'glossary' => EditGlossary::class,
@@ -1108,6 +1124,8 @@ class RelationManagerConventionTest extends TestCase
             'timeline' => $this->makeTimeline(),
             'timelineevent' => $this->makeTimelineEvent(),
             'contributor' => $this->makeContributor(),
+            'artist' => Artist::factory()->create(),
+            'dynasty' => Dynasty::factory()->create(),
             'country' => $this->makeCountry(),
             'language' => $this->makeLanguage(),
             'glossary' => $this->makeGlossary(),
@@ -1136,6 +1154,8 @@ class RelationManagerConventionTest extends TestCase
     {
         return match ($owner) {
             'country', 'language', 'glossary' => $this->createReferenceDataUser(),
+            // An artist's or dynasty's items manager also needs `view data` (ItemPolicy)
+            'artist', 'dynasty' => $this->createReferenceDataCrudUser(),
             'role' => $this->createRoleManagerUser(),
             default => $this->createCrudUser(),
         };

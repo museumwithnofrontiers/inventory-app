@@ -107,6 +107,9 @@ class AllowList
             'available_image' => [
                 // AvailableImage model has no relationships
             ],
+            'artist' => [
+                'items',
+            ],
             'dynasty' => [
                 'translations', 'items',
             ],

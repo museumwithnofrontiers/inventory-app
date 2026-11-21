@@ -3,6 +3,7 @@
 namespace Tests\Filament\Resources;
 
 use App\Enums\Permission;
+use App\Filament\Resources\ArtistResource;
 use App\Filament\Resources\AuthorResource;
 use App\Filament\Resources\AvailableImageResource;
 use App\Filament\Resources\AvailableImageResource\Pages\ListAvailableImage;
@@ -11,6 +12,7 @@ use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\ContextResource\Pages\ListContext;
 use App\Filament\Resources\CountryResource;
+use App\Filament\Resources\DynastyResource;
 use App\Filament\Resources\GlossaryResource;
 use App\Filament\Resources\ItemItemLinkResource;
 use App\Filament\Resources\ItemResource;
@@ -90,6 +92,8 @@ class NavigationConsistencyTest extends TestCase
             'Tag → Shared Data' => [TagResource::class, 'Shared Data'],
             'Author → Shared Data' => [AuthorResource::class, 'Shared Data'],
             'Glossary → Shared Data' => [GlossaryResource::class, 'Shared Data'],
+            'Artist → Shared Data' => [ArtistResource::class, 'Shared Data'],
+            'Dynasty → Shared Data' => [DynastyResource::class, 'Shared Data'],
             'AvailableImage → Available Images' => [AvailableImageResource::class, 'Available Images'],
             'ItemTranslation → Translations' => [ItemTranslationResource::class, 'Translations'],
             'CollectionTranslation → Translations' => [CollectionTranslationResource::class, 'Translations'],

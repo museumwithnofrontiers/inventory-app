@@ -2,64 +2,82 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Api\IndexArtistRequest;
+use App\Http\Requests\Api\ShowArtistRequest;
+use App\Http\Requests\Api\StoreArtistRequest;
+use App\Http\Requests\Api\UpdateArtistRequest;
+use App\Http\Resources\ArtistResource;
 use App\Models\Artist;
-use Illuminate\Http\Request;
+use App\Support\Includes\AllowList;
+use App\Support\Includes\IncludeParser;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Http\Response;
 
 class ArtistController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): void
+    public function index(IndexArtistRequest $request): AnonymousResourceCollection
     {
-        //
-    }
+        $includes = $request->getIncludeParams();
+        $pagination = $request->getPaginationParams();
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create(): void
-    {
-        //
+        $paginator = Artist::query()
+            ->with($includes)
+            ->orderBy('name')
+            ->paginate(
+                $pagination['per_page'],
+                ['*'],
+                'page',
+                $pagination['page']
+            );
+
+        return ArtistResource::collection($paginator);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request): void
+    public function store(StoreArtistRequest $request): ArtistResource
     {
-        //
+        $artist = Artist::create($request->validated());
+        $artist->refresh();
+        $artist->load(IncludeParser::fromRequest($request, AllowList::for('artist')));
+
+        return new ArtistResource($artist);
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(Artist $artist): void
+    public function show(ShowArtistRequest $request, Artist $artist): ArtistResource
     {
-        //
-    }
+        $artist->load($request->getIncludeParams());
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Artist $artist): void
-    {
-        //
+        return new ArtistResource($artist);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Artist $artist): void
+    public function update(UpdateArtistRequest $request, Artist $artist): ArtistResource
     {
-        //
+        $artist->update($request->validated());
+        $artist->refresh();
+        $artist->load(IncludeParser::fromRequest($request, AllowList::for('artist')));
+
+        return new ArtistResource($artist);
     }
 
     /**
-     * Remove the specified resource from storage.
+     * Remove the specified resource from storage. Its links to items go with
+     * it (the artist_item rows cascade); the items themselves stay.
      */
-    public function destroy(Artist $artist): void
+    public function destroy(Artist $artist): Response
     {
-        //
+        $artist->delete();
+
+        return response()->noContent();
     }
 }

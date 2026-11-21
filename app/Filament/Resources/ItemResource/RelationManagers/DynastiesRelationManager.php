@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
+use App\Filament\Resources\DynastyResource;
 use App\Filament\Support\DynastyDisplayLabel;
 use App\Filament\Support\RecordSelect;
 use App\Models\Dynasty;
@@ -33,7 +34,8 @@ class DynastiesRelationManager extends RelationManager
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->columns([
-                DynastyDisplayLabel::displayLabelColumn(),
+                DynastyDisplayLabel::displayLabelColumn()
+                    ->url(fn (Dynasty $record): ?string => self::dynastyUrl($record)),
                 TextColumn::make('from_ad')
                     ->label('From (AD)')
                     ->sortable(),
@@ -63,11 +65,11 @@ class DynastiesRelationManager extends RelationManager
                 $this->pivotAttachAction(RecordSelect::DYNASTIES, []),
             ])
             ->actions([
-                // Dynasty has no Filament Resource of its own (M7 story A2.4,
-                // #1903) — see ArtistsRelationManager's row 'view' comment for
-                // why a plain ViewAction (rather than pivotViewAction()) is
-                // correct here and needs no extra authorization wiring.
+                // Opens DynastyResource's View page for a user who may open
+                // it; anyone else allowed to view the dynasty keeps the
+                // read-only modal. See ArtistsRelationManager's row 'view'.
                 ViewAction::make()
+                    ->url(fn (Dynasty $record): ?string => self::dynastyUrl($record))
                     ->modalHeading('Dynasty')
                     ->infolist(fn (Dynasty $record): array => [
                         TextEntry::make('display_label')->label('Dynasty'),
@@ -82,5 +84,15 @@ class DynastiesRelationManager extends RelationManager
             ->bulkActions([
                 $this->pivotDetachBulkAction(),
             ]);
+    }
+
+    /**
+     * The dynasty's View page, when the signed-in user may open it.
+     */
+    private static function dynastyUrl(Dynasty $record): ?string
+    {
+        return DynastyResource::canAccess() && DynastyResource::canView($record)
+            ? DynastyResource::getUrl('view', ['record' => $record])
+            : null;
     }
 }
