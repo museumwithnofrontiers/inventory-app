@@ -33,7 +33,7 @@ nav_order: 4
 
 ## Things to know
 
-- **Hiding an exhibition.** **Visible** off on an exhibition hides it and everything under it, as on Islamic Art.
+- **Hiding an exhibition.** **Draft** on an exhibition hides it and everything under it, as on Islamic Art.
 - **No status filter on items.**
 
 ## Settings outside the panel

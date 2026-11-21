@@ -2,7 +2,6 @@ import { bannerRefToBackwardCompatibility } from '../core/banner-reference.js'
 import { parseJson } from '../core/database.js'
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
-import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 
 /** The `thg_gallery` fields the importer copies onto every language row of the hub's collection. */
@@ -39,8 +38,7 @@ export class GalleryRecordExporter extends BaseExporter {
           `SELECT collection_id, language_id, title, extra FROM collection_translations WHERE collection_id = ? ORDER BY language_id`,
           [this.hub.id]
         )
-        .then(restoreSiteTranslations)
-        .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows)),
+        .then(restoreSiteTranslations),
     ])
 
     const names: Record<string, string> = {}

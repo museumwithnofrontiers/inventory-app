@@ -28488,6 +28488,10 @@
                         ],
                         "description": "A Travels itinerary's number of days"
                     },
+                    "draft": {
+                        "type": "boolean",
+                        "description": "Not ready for any site: no site shows a draft collection or anything under it (legacy's hidden exhibitions and Explore themes)"
+                    },
                     "visible": {
                         "type": "boolean",
                         "description": "Whether the sites show the collection (legacy's exhibition show flag, Explore theme status)"
@@ -28656,6 +28660,7 @@
                     "extra",
                     "cover_item_id",
                     "days",
+                    "draft",
                     "visible",
                     "featured",
                     "published_at",
@@ -33417,6 +33422,9 @@
                         "minimum": 1,
                         "maximum": 365
                     },
+                    "draft": {
+                        "type": "boolean"
+                    },
                     "visible": {
                         "type": "boolean"
                     },
@@ -37262,6 +37270,9 @@
                         ],
                         "minimum": 1,
                         "maximum": 365
+                    },
+                    "draft": {
+                        "type": "boolean"
                     },
                     "visible": {
                         "type": "boolean"

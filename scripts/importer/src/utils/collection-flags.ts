@@ -1,16 +1,20 @@
 /**
  * The collection flags and legacy codes that leave `collection_translations.extra`
- * (M16 E4a, #2650, decision 6).
+ * (M16 E4a, #2650; M17 A1, #2742).
  *
- * Flags, to `collections` columns (the same on every translation of a
- * collection, or the collection is left as it is):
- * - `legacy_exhibition.show` (`y`/`n`) → `visible`;
- * - `legacy_status` (Explore themes: `e` shown, `i` not) → `visible`;
- * - `thg_gallery.featured` (legacy `enum('A','H')`: `A` among the featured
- *   galleries, `H` not) → `featured`;
- * - `thg_gallery.live_date` (an ISO date at midnight UTC) → `published_at`.
- * A flag inside `legacy_exhibition` or `thg_gallery` moves only when the
- * block keeps other keys, as the exporters put it back into the block.
+ * The importers set `collections.draft` themselves (M17 A1): an exhibition
+ * legacy hides (`show = 'n'`) and an Explore theme it doesn't offer
+ * (`status = 'i'`) are drafts. This step only cleans what an older database
+ * still holds in `extra`. A flag moves to `draft` when every translation of the
+ * collection holds the same value, or the collection is left as it is:
+ * - `legacy_exhibition.show` (`y`/`n`): `n` is a draft;
+ * - `legacy_status` (Explore themes: `e` offered, `i` not): `i` is a draft.
+ * A flag inside `legacy_exhibition` moves only when the block keeps other keys,
+ * as the exporters put it back into the block.
+ *
+ * A gallery's `featured` flag and live date are site configuration (M17 A2,
+ * #2743): `site-config` writes them into the gallery's instance file, in its
+ * texts' `thg_gallery` block.
  *
  * Legacy codes nothing reads, dropped: `introd_type`, `et_title`,
  * `et_introduction`, `showOnMonument`, `hb_type`, `hb_general_type`,
@@ -33,23 +37,16 @@ export const DROPPED_CODE_KEYS: readonly string[] = [
 export const COLLECTION_FLAG_KEYS: readonly string[] = [
   'legacy_exhibition',
   'legacy_status',
-  'thg_gallery',
   ...DROPPED_CODE_KEYS,
 ];
 
-const LIVE_DATE = /^(\d{4}-\d{2}-\d{2})T00:00:00\.000Z$/;
-
 export interface CollectionFlags {
-  visible?: boolean;
-  featured?: boolean;
-  published_at?: string;
+  draft?: boolean;
 }
 
 interface FlagValues {
   show?: unknown;
   status?: unknown;
-  featured?: unknown;
-  liveDate?: unknown;
 }
 
 const isObject = (value: unknown): value is Record<string, unknown> =>
@@ -63,14 +60,6 @@ function flagValues(extra: Record<string, unknown>): FlagValues {
     values.show = exhibition['show'];
   }
   if ('legacy_status' in extra) values.status = extra['legacy_status'];
-  const gallery = extra['thg_gallery'];
-  if (isObject(gallery)) {
-    const moving = ['featured', 'live_date'].filter((key) => key in gallery);
-    if (Object.keys(gallery).length > moving.length) {
-      if ('featured' in gallery) values.featured = gallery['featured'];
-      if ('live_date' in gallery) values.liveDate = gallery['live_date'];
-    }
-  }
   return values;
 }
 
@@ -100,26 +89,15 @@ export function planCollectionFlags(extras: Record<string, unknown>[]): FlagPlan
 
   const show = agreed(rows.map((r) => r.show));
   const status = agreed(rows.map((r) => r.status));
-  const featured = agreed(rows.map((r) => r.featured));
-  const liveDate = agreed(rows.map((r) => r.liveDate));
 
   if (show !== undefined && status !== undefined) problems.push('both an exhibition show flag and a theme status');
   if (show !== undefined) {
-    if (show === 'y' || show === 'n') columns.visible = show === 'y';
+    if (show === 'y' || show === 'n') columns.draft = show === 'n';
     else problems.push(`legacy_exhibition.show ${JSON.stringify(show)}`);
   }
   if (status !== undefined) {
-    if (status === 'e' || status === 'i') columns.visible = status === 'e';
+    if (status === 'e' || status === 'i') columns.draft = status === 'i';
     else problems.push(`legacy_status ${JSON.stringify(status)}`);
-  }
-  if (featured !== undefined) {
-    if (featured === 'A' || featured === 'H') columns.featured = featured === 'A';
-    else problems.push(`thg_gallery.featured ${JSON.stringify(featured)}`);
-  }
-  if (liveDate !== undefined) {
-    const match = typeof liveDate === 'string' ? LIVE_DATE.exec(liveDate) : null;
-    if (match) columns.published_at = match[1]!;
-    else problems.push(`thg_gallery.live_date ${JSON.stringify(liveDate)}`);
   }
   return { columns: problems.length > 0 ? {} : columns, problems };
 }
@@ -138,11 +116,6 @@ export function stripCollectionFlags(
     if (moveFlags && key === 'legacy_status') continue;
     if (moveFlags && key === 'legacy_exhibition' && isObject(value) && Object.keys(value).length > 1) {
       out[key] = Object.fromEntries(Object.entries(value).filter(([k]) => k !== 'show'));
-      continue;
-    }
-    if (moveFlags && key === 'thg_gallery' && isObject(value)) {
-      const rest = Object.entries(value).filter(([k]) => k !== 'featured' && k !== 'live_date');
-      out[key] = rest.length > 0 ? Object.fromEntries(rest) : value;
       continue;
     }
     out[key] = value;

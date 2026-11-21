@@ -118,13 +118,14 @@ code (`ix`, `px`) or an id that resolves to nothing stays, reported. After re-ru
 its own, run `--only collection-relations` again. The exporters give the keys back
 (`scripts/exporters/shared/collection-relations.mjs`, `country-codes.mjs`).
 
-The editorial flags below move to `collections` columns by `importers/phase-11/collection-flags-importer.ts`
-(M16 E4a, #2650, decision 6): `legacy_exhibition.show` and `legacy_status` → `visible`, `thg_gallery.featured`
-(`A`/`H`) → `featured`, `thg_gallery.live_date` → `published_at`. A flag stays when the translations of its
-collection disagree. The same step drops the legacy codes nothing reads: `introd_type`, `et_title`,
-`et_introduction`, `showOnMonument`, `hb_type`, `hb_general_type`, `territory_level`. Run `--only
-collection-flags` again after re-running one of their writers on its own. The exporters give the flags back
-(`scripts/exporters/shared/collection-flags.mjs`).
+A collection legacy hides is a draft (`collections.draft`, M17 A1, #2742): the exhibition importers set it from
+`show = 'n'`, the Explore theme importer from `status = 'i'`, and neither writes the flag into `extra` any more.
+`importers/phase-11/collection-flags-importer.ts` moves a `legacy_exhibition.show` or `legacy_status` an older
+database still holds to `draft`; a flag stays when the translations of its collection disagree. The same step
+drops the legacy codes nothing reads: `introd_type`, `et_title`, `et_introduction`, `showOnMonument`, `hb_type`,
+`hb_general_type`, `territory_level`. The exporters give the flags back
+(`scripts/exporters/shared/collection-flags.mjs`). A gallery's `thg_gallery.featured` and `thg_gallery.live_date`
+are site configuration (M17 A2, #2743), in the gallery's instance file with the rest of `thg_gallery`.
 
 `thg_gallery`, `thg_gallery_lang`, `legacy_exhibition` and `exhibition_i18n` below, and `thg_gallery`,
 `logos`, `explore_home`, `explore_travel` and `explore_itinerary` on `collections.extra`, are site
@@ -165,7 +166,6 @@ collection no instance file takes.
 | `additional_regions`                                                                                                                                                                                         | regionlocations, regions.type                                                                  | importers/phase-06/explore-region-location-linker.ts                                                       |
 | `how_to_reach`, `info`, `contact`, `description_1`, `prepared_by`, `showOnMonument`                                                                                                                          | locationtranslated, explorelocation                                                            | importers/phase-06/explore-location-translation-importer.ts                                                |
 | `contacts[].{name, address, phone, fax, email, website}`                                                                                                                                                     | locations_contact                                                                              | importers/phase-06/explore-location-translation-importer.ts                                                |
-| `legacy_status`                                                                                                                                                                                              | thematiccycle.status                                                                           | importers/phase-06/explore-thematiccycle-importer.ts                                                       |
 | `country_ids`, `country_texts[].{countryId, langId, text}`                                                                                                                                                   | thematiccyclecountries, thematiccycle_country_texts                                            | importers/phase-06/explore-thematiccycle-translation-importer.ts                                           |
 | `author`, `about`, `prepared_by`                                                                                                                                                                             | mwnf3_travels.tr_locations                                                                     | importers/phase-07/travels-location-translation-importer.ts                                                |
 | `subtitle`, `curated_by`, `local_coordinator`, `photo_by`, `region_territory`                                                                                                                                | mwnf3_travels.trails                                                                           | importers/phase-07/travels-trail-translation-importer.ts                                                   |

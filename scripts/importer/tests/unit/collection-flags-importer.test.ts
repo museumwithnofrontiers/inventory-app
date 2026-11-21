@@ -13,30 +13,34 @@ describe('planCollectionFlags', () => {
         { legacy_exhibition: { show: 'n', project_id: 'ISL' } },
         { legacy_exhibition: { show: 'n', project_id: 'ISL' } },
       ])
-    ).toEqual({ columns: { visible: false }, problems: [] });
+    ).toEqual({ columns: { draft: true }, problems: [] });
+    expect(planCollectionFlags([{ legacy_exhibition: { show: 'y', project_id: 'ISL' } }]).columns).toEqual({
+      draft: false,
+    });
   });
 
-  it("reads a gallery's featured flag (A: featured) and live date", () => {
+  it("leaves a gallery's featured flag and live date alone: they are site configuration (M17 A2)", () => {
     expect(
       planCollectionFlags([
         { thg_gallery: { featured: 'A', live_date: '2026-03-24T00:00:00.000Z', has_timeline: false } },
       ])
-    ).toEqual({ columns: { featured: true, published_at: '2026-03-24' }, problems: [] });
+    ).toEqual({ columns: {}, problems: [] });
   });
 
   it('reads an Explore theme status', () => {
-    expect(planCollectionFlags([{ legacy_status: 'i' }]).columns).toEqual({ visible: false });
+    expect(planCollectionFlags([{ legacy_status: 'i' }]).columns).toEqual({ draft: true });
+    expect(planCollectionFlags([{ legacy_status: 'e' }]).columns).toEqual({ draft: false });
   });
 
   it('keeps the flags when the translations disagree or a value is unknown', () => {
     expect(
       planCollectionFlags([
-        { thg_gallery: { featured: 'A', image: 'a' } },
-        { thg_gallery: { featured: 'H', image: 'a' } },
+        { legacy_exhibition: { show: 'y', project_id: 'ISL' } },
+        { legacy_exhibition: { show: 'n', project_id: 'ISL' } },
       ]).problems
     ).toHaveLength(1);
     expect(planCollectionFlags([{ legacy_exhibition: { show: 'x', project_id: 'ISL' } }]).problems).toHaveLength(1);
-    expect(planCollectionFlags([{ thg_gallery: { live_date: '2026-03-24T23:00:00.000Z', image: 'a' } }]).problems).toHaveLength(1);
+    expect(planCollectionFlags([{ legacy_status: 'x' }]).problems).toHaveLength(1);
   });
 
   it('leaves a flag that is all its block holds', () => {
@@ -60,7 +64,7 @@ describe('stripCollectionFlags', () => {
       )
     ).toEqual({
       legacy_exhibition: { project_id: 'ISL' },
-      thg_gallery: { image: 'a.jpg' },
+      thg_gallery: { featured: 'H', live_date: 'x', image: 'a.jpg' },
       duration: 'One day',
     });
   });
@@ -133,7 +137,7 @@ describe('CollectionFlagsImporter', () => {
 
     expect(result.success).toBe(true);
     expect(strategy.setCollectionFlags).toHaveBeenCalledTimes(1);
-    expect(strategy.setCollectionFlags).toHaveBeenCalledWith('c1', { visible: false });
+    expect(strategy.setCollectionFlags).toHaveBeenCalledWith('c1', { draft: true });
     expect(strategy.setCollectionTranslationExtraAsStoredById).toHaveBeenCalledWith(
       't1',
       JSON.stringify({ legacy_exhibition: { project_id: 'ISL' } })
@@ -148,7 +152,7 @@ describe('CollectionFlagsImporter', () => {
 
     const result = await new CollectionFlagsImporter(context).import();
 
-    expect(strategy.setCollectionFlags).toHaveBeenCalledWith('c1', { visible: true });
+    expect(strategy.setCollectionFlags).toHaveBeenCalledWith('c1', { draft: false });
     expect(strategy.setCollectionFlags).not.toHaveBeenCalledWith('c2', expect.anything());
     expect(result.errors).toHaveLength(1);
   });

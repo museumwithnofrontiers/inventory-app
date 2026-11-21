@@ -45,6 +45,7 @@ class StoreCollectionRequest extends FormRequest
             'extra' => ['nullable', 'array'],
             'cover_item_id' => ['nullable', 'uuid', 'exists:items,id'],
             'days' => ['nullable', 'integer', 'min:1', 'max:365'],
+            'draft' => ['sometimes', 'boolean'],
             'visible' => ['sometimes', 'boolean'],
             'featured' => ['sometimes', 'boolean'],
             'published_at' => ['nullable', 'date'],

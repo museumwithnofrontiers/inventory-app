@@ -16,6 +16,8 @@
       },
       "translation_extra": {
         "thg_gallery": {
+          "featured": "H",
+          "live_date": "2022-12-01T00:00:00.000Z",
           "has_timeline": false,
           "has_country_timeline": false
         }
@@ -32,6 +34,8 @@
       },
       "translation_extra": {
         "thg_gallery": {
+          "featured": "H",
+          "live_date": "2022-12-01T00:00:00.000Z",
           "has_timeline": false,
           "has_country_timeline": false
         }
@@ -49,6 +53,8 @@
       "translation_extra": {
         "thg_gallery": {
           "image": "thematic_gallery/thg_galleries/15/1.jpg",
+          "featured": "H",
+          "live_date": "2022-12-01T00:00:00.000Z",
           "banner_item": "mwnf#obj#BAR;pt;Mus11_A;23",
           "banner_image": "thematic_gallery/thg_galleries/15/banner.jpg",
           "has_timeline": false,
@@ -67,6 +73,8 @@
       },
       "translation_extra": {
         "thg_gallery": {
+          "featured": "H",
+          "live_date": "2022-12-01T00:00:00.000Z",
           "has_timeline": false,
           "has_country_timeline": false
         }
@@ -83,6 +91,8 @@
       },
       "translation_extra": {
         "thg_gallery": {
+          "featured": "H",
+          "live_date": "2022-12-01T00:00:00.000Z",
           "banner_item": "mwnf#obj#GALLERIES;sw;Mus01;42",
           "banner_image": "thematic_gallery/thg_galleries/45/banner.jpg",
           "has_timeline": false,

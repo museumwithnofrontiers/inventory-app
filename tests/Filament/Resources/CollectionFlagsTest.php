@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use App\Filament\Resources\CollectionResource\Pages\CreateCollection;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\Pages\ListCollection;
 use App\Models\Collection;
@@ -11,40 +12,47 @@ use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
- * M16 E4a (#2650): a collection's editorial flags in the panel.
+ * M17 A1 (#2742): a collection's draft flag in the panel.
  */
 class CollectionFlagsTest extends TestCase
 {
     use InteractsWithAdminPanel;
     use RefreshDatabase;
 
-    public function test_the_form_sets_the_flags(): void
+    public function test_a_new_collection_starts_as_a_draft(): void
     {
-        $collection = Collection::factory()->create();
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($this->createCrudUser())
+            ->test(CreateCollection::class)
+            ->assertFormSet(['draft' => true]);
+    }
+
+    public function test_the_form_sets_the_draft_flag(): void
+    {
+        $collection = Collection::factory()->create(['draft' => false]);
         $this->setCurrentPanel();
 
         Livewire::actingAs($this->createCrudUser())
             ->test(EditCollection::class, ['record' => $collection->getRouteKey()])
-            ->fillForm(['visible' => false, 'featured' => true, 'published_at' => '2026-03-24'])
+            ->assertFormSet(['draft' => false])
+            ->fillForm(['draft' => true])
             ->call('save')
             ->assertHasNoFormErrors();
 
-        $collection->refresh();
-        $this->assertFalse($collection->visible);
-        $this->assertTrue($collection->featured);
-        $this->assertSame('2026-03-24', $collection->published_at?->format('Y-m-d'));
+        $this->assertTrue($collection->refresh()->draft);
     }
 
-    public function test_the_list_filters_by_visibility(): void
+    public function test_the_list_filters_the_drafts(): void
     {
-        $shown = Collection::factory()->create(['visible' => true]);
-        $hidden = Collection::factory()->create(['visible' => false]);
+        $ready = Collection::factory()->create(['draft' => false]);
+        $draft = Collection::factory()->create(['draft' => true]);
         $this->setCurrentPanel();
 
         Livewire::actingAs($this->createCrudUser())
             ->test(ListCollection::class)
-            ->filterTable('visible', false)
-            ->assertCanSeeTableRecords([$hidden])
-            ->assertCanNotSeeTableRecords([$shown]);
+            ->filterTable('draft', true)
+            ->assertCanSeeTableRecords([$draft])
+            ->assertCanNotSeeTableRecords([$ready]);
     }
 }

@@ -23,8 +23,9 @@
  * `siteConfiguration()` builds, for the `site-config` command and the
  * gallery's instance file:
  * - `translation_extra.thg_gallery`: the gallery's settings, the same on every
- *   text (non-empty source fields without a column; `featured` and
- *   `live_date` are the collection's columns since M16 E4a);
+ *   text (non-empty source fields without a column, `featured` and
+ *   `live_date` included: they are how the galleries' sites behave, not
+ *   facts about the collection, M17 A2 #2743);
  * - `translations.<language>.thg_gallery_lang`: `mouse_over_text`, `keywords`.
  *
  * has_timeline and has_country_timeline are MySQL bit(1) columns and are stored
@@ -70,13 +71,15 @@ interface LegacyThgGalleryExtra {
   new_expire_date: string | null;
   landing_url: string | null;
   portal_image: string | null;
-  live_date: string | null;
+  /** A legacy DATE: the driver reads it as a Date at midnight UTC. */
+  live_date: Date | string | null;
   homepage_image: string | null;
   homepage_item: number | null;
   /** MySQL bit(1) — mysql2 hands these back as Buffers, see bitToBoolean. */
   has_timeline: unknown;
   has_country_timeline: unknown;
-  featured: number | null;
+  /** legacy enum('A','H'): A = among the featured galleries */
+  featured: string | null;
   mwnf3_project_id: string | null;
 }
 
@@ -295,7 +298,7 @@ export class ThgGalleryLangImporter extends BaseImporter implements SiteConfigBu
       const galleryFields: Array<keyof LegacyThgGalleryExtra> = [
         'image', 'banner_image', 'banner_item', 'new_expire_date',
         'landing_url', 'portal_image', 'homepage_image', 'homepage_item',
-        'has_timeline', 'has_country_timeline',
+        'has_timeline', 'has_country_timeline', 'featured', 'live_date',
       ];
       for (const field of galleryFields) {
         const isBitField = (GALLERY_BIT_FIELDS as readonly string[]).includes(field);

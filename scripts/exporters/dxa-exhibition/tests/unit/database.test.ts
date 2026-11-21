@@ -51,8 +51,6 @@ describe('Database.resolveExhibition', () => {
       .mockResolvedValueOnce([
         { language_id: 'eng', extra: { thg_gallery: { featured: 'A', status: 'A' } } },
       ])
-      // loadCollectionFlags (M16 E4a)
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'project-exhcolour-uuid' }])
 
     await db.resolveExhibition('exhibition-uuid')
@@ -72,8 +70,6 @@ describe('Database.resolveExhibition', () => {
         { language_id: 'eng', extra: { thg_gallery: { featured: 'A', status: 'A' } } },
       ])
       // resolveProjectId
-      // loadCollectionFlags (M16 E4a)
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'project-exhcolour-uuid' }])
 
     const exhibition = await db.resolveExhibition('exhibition-uuid')
@@ -88,7 +84,7 @@ describe('Database.resolveExhibition', () => {
     // The legacy code is turned into the inventory project UUID here, so the
     // MWNF-384 partner branch compares ids rather than a hardcoded code.
     expect(exhibition.projectId).toBe('project-exhcolour-uuid')
-    expect(querySpy.mock.calls[3]?.[1]).toEqual(['mwnf3:projects:EXHCOLOUR'])
+    expect(querySpy.mock.calls[2]?.[1]).toEqual(['mwnf3:projects:EXHCOLOUR'])
   })
 
   /**
@@ -115,8 +111,6 @@ describe('Database.resolveExhibition', () => {
           },
         },
       ])
-      // loadCollectionFlags (M16 E4a)
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'project-exhcolour-uuid' }])
 
     const exhibition = await db.resolveExhibition('exhibition-uuid')
@@ -148,8 +142,6 @@ describe('Database.resolveExhibition', () => {
         { language_id: 'deu', extra: { something_else: true } },
         { language_id: 'eng', extra: { thg_gallery: { banner_item: 'sh#obj#AWE;pt;21' } } },
       ])
-      // loadCollectionFlags (M16 E4a)
-      .mockResolvedValueOnce([])
       .mockResolvedValueOnce([{ id: 'project-exhcolour-uuid' }])
 
     const exhibition = await db.resolveExhibition('exhibition-uuid')

@@ -54,6 +54,7 @@ describe('ExploreThematicCycleImporter', () => {
       writeCollection: vi.fn().mockResolvedValue('cycle-11'),
       writeCollectionTranslation: vi.fn().mockResolvedValue('translation-uuid'),
       updateCollectionDisplayOrder: vi.fn().mockResolvedValue(undefined),
+      setCollectionFlags: vi.fn().mockResolvedValue(undefined),
     } as unknown as IWriteStrategy;
   });
 
@@ -93,6 +94,26 @@ describe('ExploreThematicCycleImporter', () => {
       })
     );
     expect(strategy.updateCollectionDisplayOrder).toHaveBeenCalledWith('cycle-1', 2);
+  });
+
+  it('makes a theme legacy does not offer (status i) a draft, with no status left in extra (M17 A1)', async () => {
+    const rows = () => [{ ...cycles()[0]!, status: 'i' }, cycles()[1]!];
+    const result = await new ExploreThematicCycleImporter(contextFor(strategy, tracker, rows)).import();
+
+    expect(result.success).toBe(true);
+    expect(strategy.setCollectionFlags).toHaveBeenCalledWith('cycle-11', { draft: true });
+    expect(strategy.setCollectionFlags).toHaveBeenCalledWith('cycle-1', { draft: false });
+    expect(strategy.writeCollectionTranslation).toHaveBeenCalledWith(
+      expect.objectContaining({ backward_compatibility: 'mwnf3_explore:thematiccycle:11:translation:eng', extra: null })
+    );
+  });
+
+  it('leaves draft off on a status that is neither e nor i', async () => {
+    const rows = () => [{ ...cycles()[0]!, status: 'x' }];
+    await new ExploreThematicCycleImporter(contextFor(strategy, tracker, rows)).import();
+
+    expect(strategy.setCollectionFlags).not.toHaveBeenCalled();
+    expect(logger.warning).toHaveBeenCalled();
   });
 });
 

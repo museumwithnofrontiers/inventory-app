@@ -226,8 +226,8 @@ export class Mwnf3ExhibitionTranslationImporter extends BaseImporter implements 
         if (fields['exh_subtitle']) extra.subtitle = convertHtmlToMarkdown(fields['exh_subtitle']);
 
         // The exhibition's list metadata from mwnf3.exhibitions is site
-        // configuration (M16 E4b, see siteConfiguration); its show flag is
-        // the collection's `visible` (M16 E4a).
+        // configuration (M16 E4b, see siteConfiguration). An exhibition
+        // legacy hides (`show = 'n'`) is a draft (M17 A1, #2742).
         const meta = this.exhibitionMetadataMap?.get(entityId);
 
         const extraJson = Object.keys(extra).length > 0 ? JSON.stringify(extra) : null;
@@ -239,7 +239,7 @@ export class Mwnf3ExhibitionTranslationImporter extends BaseImporter implements 
         }
 
         if (meta && (meta.show === 'y' || meta.show === 'n')) {
-          await this.context.strategy.setCollectionFlags(collectionId, { visible: meta.show === 'y' });
+          await this.context.strategy.setCollectionFlags(collectionId, { draft: meta.show === 'n' });
         }
 
         await this.context.strategy.writeCollectionTranslation({

@@ -53,6 +53,8 @@
       "translation_extra": {
         "thg_gallery": {
           "link": "the_table_is_set",
+          "featured": "A",
+          "live_date": "1978-08-05T00:00:00.000Z",
           "banner_item": "mwnf#obj#DCA;hr;Mus31;25",
           "landing_url": "https://www.lacma.org/",
           "banner_image": "thematic_gallery/thg_galleries/52/banner.jpg",

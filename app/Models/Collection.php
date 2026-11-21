@@ -33,6 +33,7 @@ use Illuminate\Support\Carbon;
  * @property object|null $extra
  * @property string|null $cover_item_id
  * @property int|null $days
+ * @property bool $draft
  * @property bool $visible
  * @property bool $featured
  * @property Carbon|null $published_at
@@ -158,6 +159,8 @@ class Collection extends Model
         'cover_item_id',
         // A Travels itinerary's number of days
         'days',
+        // Not ready for any site (M17, #2741): a draft and its subtree ship nowhere
+        'draft',
         // Editorial flags (decision 6): shown on the sites, featured, live since
         'visible',
         'featured',
@@ -176,6 +179,7 @@ class Collection extends Model
         'longitude' => 'decimal:8',
         'map_zoom' => 'integer',
         'days' => 'integer',
+        'draft' => 'boolean',
         'visible' => 'boolean',
         'featured' => 'boolean',
         'published_at' => 'date',

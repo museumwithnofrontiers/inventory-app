@@ -26,7 +26,7 @@ Each website is built by one **exporter**, and sites built by the same exporter 
 
 ## Settings that are not in the panel
 
-The inventory keeps content and three editorial flags (**Visible**, **Featured**, **Published**). A site's own settings live elsewhere ([ADR 006]({{ '/adr/006-what-goes-in-extra' | relative_url }}), rule 4):
+The inventory keeps content, and one flag on a collection: **Draft**, not ready for the sites ([Collections]({{ '/user-manual/master/collections' | relative_url }}#draft)). A site's own settings live elsewhere ([ADR 006]({{ '/adr/006-what-goes-in-extra' | relative_url }}), rule 4):
 
 - **The instance files**, one per site, in the inventory repository (`scripts/exporters/instances/<site>.json`). They say which collection or project a site is built from, which partners a mini-site credits, and they keep the site configuration legacy held: a gallery's banner and home picture, an exhibition's subtitle, About text and logos, Explore's home page and itinerary settings. Part of each file is written from legacy by the import and must not be edited by hand.
 - **The website repositories**, one per site: the labels and menus, the About and Credits pages, the colours and layout.
