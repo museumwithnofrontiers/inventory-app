@@ -9,6 +9,7 @@ import type {
 import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { partnerParents } from '../../../shared/partner-parents.mjs'
 import { BaseExporter } from './base-exporter.js'
+import { itemIdShipped } from '../../../shared/drafts.mjs'
 import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 import { restoreVisitInformation, visitInformationSelect } from '../../../shared/visit-information.mjs'
 
@@ -137,7 +138,8 @@ export class PartnerExporter extends BaseExporter {
         ? []
         : await this.db.query<PartnerRow>(
             `SELECT p.id, p.type, p.internal_name, p.backward_compatibility,
-                    p.country_id, p.latitude, p.longitude, p.map_zoom, p.monument_item_id
+                    p.country_id, p.latitude, p.longitude, p.map_zoom,
+                    CASE WHEN ${itemIdShipped('p.monument_item_id', 'dr_monument')} THEN p.monument_item_id END AS monument_item_id
              FROM partners p
              WHERE ${reached.join(' OR ')}
              ORDER BY p.type, p.internal_name, p.id`,

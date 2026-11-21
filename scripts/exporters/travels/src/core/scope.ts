@@ -1,4 +1,5 @@
 import type { Database } from './database.js'
+import { itemShipped, loadDraftCollectionIds } from '../../../shared/drafts.mjs'
 
 /**
  * What the Travels package ships, resolved once and shared by every exporter.
@@ -93,12 +94,17 @@ export async function resolveScope(db: Pick<Database, 'query'>): Promise<Travels
      ORDER BY id`,
     [travelsContextId]
   )
+  // A draft collection and everything under it ship nowhere (M17 B3).
+  const drafts = await loadDraftCollectionIds((sql, params) => db.query(sql, params))
   const roots = rows.filter(r => r.purpose === TRAVELS_ROOT_PURPOSE)
   if (roots.length !== 1) {
     throw new Error(`Expected one collection with purpose '${TRAVELS_ROOT_PURPOSE}', found ${roots.length}`)
   }
   const rootId = roots[0]!.id
-  const tree = shippedTree(rootId, rows)
+  const tree = shippedTree(
+    rootId,
+    rows.filter(r => !drafts.has(r.id))
+  )
   const collectionIds = tree.map(c => c.id)
   const trailIds = tree.filter(c => c.type === TRAIL_TYPE).map(c => c.id)
   const locationIds = tree.filter(c => c.type === 'location').map(c => c.id)
@@ -114,6 +120,7 @@ export async function resolveScope(db: Pick<Database, 'query'>): Promise<Travels
            JOIN items i ON i.id = ci.item_id
            WHERE ci.collection_id IN (${marks(locationIds)})
              AND i.type IN ('object', 'monument', 'detail')
+             AND ${itemShipped('i')}
            ORDER BY i.id`,
           locationIds
         )
@@ -123,7 +130,7 @@ export async function resolveScope(db: Pick<Database, 'query'>): Promise<Travels
       ? []
       : await db.query<{ id: string; project_id: string | null }>(
           `SELECT id, project_id FROM items
-           WHERE parent_id IN (${marks(memberIds)}) AND type = 'detail'
+           WHERE parent_id IN (${marks(memberIds)}) AND type = 'detail' AND ${itemShipped('items')}
            ORDER BY id`,
           memberIds
         )
@@ -142,6 +149,7 @@ export async function resolveScope(db: Pick<Database, 'query'>): Promise<Travels
            JOIN items i ON i.id = ci.item_id
            WHERE ci.collection_id IN (${marks(trailIds)})
              AND i.type IN ('object', 'monument')
+             AND ${itemShipped('i')}
            ORDER BY ci.collection_id, ci.display_order IS NULL, ci.display_order, ci.item_id`,
           trailIds
         )

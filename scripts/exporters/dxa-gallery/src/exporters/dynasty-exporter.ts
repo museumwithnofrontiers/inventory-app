@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 interface DynastyRow {
   id: string
@@ -95,6 +96,7 @@ export class DynastyExporter extends BaseExporter {
          JOIN item_images ii ON ii.item_id = pic.id
          WHERE idyn.dynasty_id IN (${dynastyPh})
            AND idyn.item_id IN (${itemPh})
+           AND ${itemShipped('pic')}
          -- Legacy's order of a dynasty's items (Discover Islamic Art, pclist_all.php: start_date * 1, project,
          -- country, partner, number), then each item's first picture; the ids only break what is left.
          ORDER BY idyn.dynasty_id,

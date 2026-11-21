@@ -164,9 +164,36 @@ imported by relative path:
 - [`references.mjs`](shared/references.mjs) — an item as a reference (id,
   names, first picture, sites), never a copy of its sheet;
 - [`links.mjs`](shared/links.mjs) — a link to a publication on the
-  Publications site or a trail on the Travels site.
+  Publications site or a trail on the Travels site;
+- [`drafts.mjs`](shared/drafts.mjs) — what a draft leaves out (below).
 
-Their tests run in the `publications` exporter's suite.
+Their tests run in the `publications` exporter's suite (`drafts.mjs`'s in
+`travels`).
+
+### Drafts
+
+A record not ready for any site is a draft (M17, #2746). No exporter ships
+it, and the search payload leaves it out:
+
+- **Item** (`items.draft`): neither the item nor its details and pictures
+  (its descendants by `parent_id`) ship, and no reference to it does: no
+  member, related or see-also link, cover, banner, homepage or monument item,
+  dynasty image, partner count, timeline entry, tag count or glossary term.
+  The queries say it with `itemShipped(alias)` (the item, its parent and its
+  grandparent: the hierarchy is three levels deep) and `itemIdShipped(column,
+  alias)` for an item id held in a column.
+- **Text** (`item_translations.draft`): that text doesn't ship
+  (`textShipped(alias)`); the item still ships with its other texts.
+- **Collection** (`collections.draft`): the collection and every collection
+  under it ship nowhere (`loadDraftCollectionIds`), one rule for every
+  exporter. Sharing History is the one exception: a draft Sharing History
+  exhibition keeps shipping its titles and placements with
+  `published: false`, as legacy's unpublished exhibitions always did. A
+  draft gallery or exhibition has no package: its exporter refuses it.
+
+The guard: after writing a package and before any publish step, each
+exporter calls `assertNoDraftItems`, which fails the export when a draft
+item's id appears in any file it wrote. `/pub` images are untouched.
 
 ## Package layout
 

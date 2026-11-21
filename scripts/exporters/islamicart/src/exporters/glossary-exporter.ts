@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { itemShipped, textShipped } from '../../../shared/drafts.mjs'
 
 interface GlossaryRow {
   id: string
@@ -49,7 +50,7 @@ export class GlossaryExporter extends BaseExporter {
            FROM glossary_spellings gs
            JOIN item_translation_spelling its ON its.spelling_id = gs.id
            JOIN item_translations it ON it.id = its.item_translation_id
-           WHERE it.item_id IN (${this.placeholders(Math.max(scope.itemIds.length, 1))})`,
+           WHERE it.item_id IN (${this.placeholders(Math.max(scope.itemIds.length, 1))}) AND ${textShipped('it')}`,
           [...scope.collectionIds, ...(scope.itemIds.length > 0 ? scope.itemIds : [''])]
         )
       : await this.db.query<{ id: string }>(
@@ -60,6 +61,7 @@ export class GlossaryExporter extends BaseExporter {
        JOIN items i ON i.id = it.item_id
        WHERE i.project_id IN (${ph})
          AND i.type IN ('object', 'monument', 'detail')
+         AND ${itemShipped('i')} AND ${textShipped('it')}
 
        UNION
 

@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { loadSiteConfiguration } from '../../../shared/site-configuration.mjs'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 interface TimelineRow {
   id: string
@@ -171,6 +172,7 @@ export class TimelineExporter extends BaseExporter {
          WHERE tei.timeline_event_id IN (${eventPh})
            AND i.project_id IN (${ph})
            AND i.type IN ('object', 'monument', 'detail')
+           AND ${itemShipped('i')}
          ORDER BY tei.timeline_event_id, tei.display_order`,
         [...eventIds, ...this.projectIds]
       ),

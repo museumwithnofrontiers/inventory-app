@@ -7,11 +7,13 @@ import type {
   ExhibitionI18n,
   Theme,
 } from './types.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 interface CollectionRow {
   id: string
   backward_compatibility: string
   type: string
+  draft?: number | boolean | null
   extra: unknown
 }
 
@@ -33,6 +35,7 @@ interface ThemeRow {
   display_order: number | null
   parent_id: string | null
   cover_item_id?: string | null
+  draft?: number | boolean | null
   extra: unknown
 }
 
@@ -77,7 +80,7 @@ export class Database {
    */
   async resolveExhibition(collectionId: string): Promise<Exhibition> {
     const rows = await this.query<CollectionRow>(
-      `SELECT id, backward_compatibility, type, extra
+      `SELECT id, backward_compatibility, type, draft, extra
        FROM collections
        WHERE id = ?`,
       [collectionId]
@@ -97,6 +100,11 @@ export class Database {
         `${collectionId} is a '${row.type}', not an 'exhibition'. ` +
           `Galleries have no curated theme layer — use scripts/exporters/dxa-gallery instead.`
       )
+    }
+
+    // A draft exhibition ships nowhere (M17 B3): there is no package to export.
+    if (row.draft === true || Number(row.draft) === 1) {
+      throw new Error(`Exhibition ${collectionId} is a draft (collections.draft): it ships nowhere`)
     }
 
     // The anchor is site configuration, in the instance files (M16 E4b).
@@ -198,7 +206,7 @@ export class Database {
   async resolveThemes(collectionId: string): Promise<Theme[]> {
     const rows = await this.query<ThemeRow>(
       `SELECT c.id, c.internal_name, c.backward_compatibility, c.display_order,
-              c.parent_id, c.cover_item_id, c.extra
+              c.parent_id, c.cover_item_id, c.extra, c.draft
        FROM collections c
        WHERE c.type = 'theme'
          AND (c.parent_id = ?
@@ -209,14 +217,20 @@ export class Database {
       [collectionId, collectionId]
     )
 
-    return rows.map(row => ({
-      id: row.id,
-      backwardCompatibility: row.backward_compatibility,
-      internalName: row.internal_name,
-      displayOrder: row.display_order ?? 0,
-      parentId: row.parent_id,
-      coverPictureItemId: row.cover_item_id ?? coverPictureItemId(row.extra),
-    }))
+    // A draft theme and the sub-themes under it ship nowhere (M17 B3); a draft
+    // cover picture is left out where themes.json is written.
+    const isSet = (flag: number | boolean | null | undefined) => flag === true || Number(flag) === 1
+    const drafts = new Set(rows.filter(row => isSet(row.draft)).map(row => row.id))
+    return rows
+      .filter(row => !drafts.has(row.id) && !(row.parent_id !== null && drafts.has(row.parent_id)))
+      .map(row => ({
+        id: row.id,
+        backwardCompatibility: row.backward_compatibility,
+        internalName: row.internal_name,
+        displayOrder: row.display_order ?? 0,
+        parentId: row.parent_id,
+        coverPictureItemId: row.cover_item_id ?? coverPictureItemId(row.extra),
+      }))
   }
 
   /**
@@ -237,6 +251,7 @@ export class Database {
        JOIN items i ON i.id = ci.item_id
        WHERE ci.collection_id = ?
          AND i.type IN ('object', 'monument')
+         AND ${itemShipped('i')}
        ORDER BY i.type, i.display_order, i.internal_name`,
       [collectionId]
     )

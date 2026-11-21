@@ -138,7 +138,7 @@ describe('PartnerExporter — shared partner shape', () => {
     ).export()
 
     const partnerQuery = queries.find(q => q.sql.includes('FROM partners p'))
-    expect(partnerQuery?.sql).not.toContain('FROM items')
+    expect(partnerQuery?.sql).not.toContain('SELECT partner_id FROM items')
     expect(partnerQuery?.params).toEqual(['partner-start'])
   })
 

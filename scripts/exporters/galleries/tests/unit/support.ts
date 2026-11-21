@@ -9,6 +9,9 @@ import type { ExportContext } from '../../src/core/types.js'
 /** A route of the fake database: the first route whose pattern matches the SQL answers it. */
 export type Route = [RegExp, (params: unknown[]) => unknown[]]
 
+/** The drafts' own queries (shared/drafts.mjs): with no route of their own, the database holds no draft. */
+const NO_DRAFTS = /SELECT id, parent_id, draft FROM collections|SELECT id FROM items WHERE draft = 1/
+
 /** A Database stand-in that answers each query from the first matching route, and records every call. */
 export function fakeDb(routes: Route[]): Database & { calls: { sql: string; params: unknown[] }[] } {
   const calls: { sql: string; params: unknown[] }[] = []
@@ -17,6 +20,7 @@ export function fakeDb(routes: Route[]): Database & { calls: { sql: string; para
     query: async (sql: string, params: unknown[] = []) => {
       calls.push({ sql, params })
       const route = routes.find(([pattern]) => pattern.test(sql))
+      if (!route && NO_DRAFTS.test(sql)) return []
       if (!route) throw new Error(`Unrouted query: ${sql}`)
       return route[1](params)
     },

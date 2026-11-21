@@ -2,6 +2,7 @@ import type { ExportResult } from '../core/types.js'
 import { bannerRefToBackwardCompatibility } from '../core/banner-reference.js'
 import { BaseExporter } from './base-exporter.js'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
+import { itemShipped, loadDraftCollectionIds } from '../../../shared/drafts.mjs'
 
 interface TranslationRow {
   collection_id: string
@@ -287,10 +288,16 @@ export class ExhibitionExporter extends BaseExporter {
       return null
     }
 
-    const rows = await this.db.query<{ id: string }>(
-      `SELECT id FROM items WHERE backward_compatibility = ?`,
+    const rows = await this.db.query<{ id: string; shipped: number | boolean | null }>(
+      `SELECT id, ${itemShipped('items')} AS shipped FROM items WHERE backward_compatibility = ?`,
       [backwardCompatibility]
     )
+
+    // A draft item (or one under a draft) ships nowhere: no banner or homepage item (M17 B3).
+    if (rows[0] && (rows[0].shipped === false || Number(rows[0].shipped) === 0)) {
+      this.logger.warning(`Item reference is a draft, dropped: ${backwardCompatibility}`)
+      return null
+    }
 
     if (!rows[0]) {
       this.logger.warning(`Item reference does not resolve: ${backwardCompatibility}`)
@@ -309,7 +316,7 @@ export class ExhibitionExporter extends BaseExporter {
    * resolved yet.
    */
   private async exportSiblings(langCodeMap: Map<string, string>): Promise<unknown[]> {
-    const siblings = await this.db.query<SiblingRow>(
+    const allSiblings = await this.db.query<SiblingRow>(
       `SELECT id, backward_compatibility, type, extra
        FROM collections
        WHERE type IN ('gallery', 'exhibition')
@@ -319,6 +326,9 @@ export class ExhibitionExporter extends BaseExporter {
       [this.exhibition.id]
     )
 
+    // A draft gallery or exhibition (or one under a draft) ships nowhere: no sibling (M17 B3).
+    const drafts = await loadDraftCollectionIds((sql, params) => this.db.query(sql, params))
+    const siblings = allSiblings.filter(s => !drafts.has(s.id))
     if (siblings.length === 0) return []
 
     const siblingIds = siblings.map(s => s.id)

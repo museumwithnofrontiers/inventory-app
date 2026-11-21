@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { textShipped } from '../../../shared/drafts.mjs'
 
 interface GlossaryRow {
   id: string
@@ -50,7 +51,7 @@ export class GlossaryExporter extends BaseExporter {
        FROM glossary_spellings gs
        JOIN item_translation_spelling its ON its.spelling_id = gs.id
        JOIN item_translations it ON it.id = its.item_translation_id
-       WHERE it.item_id IN (${itemPh})`,
+       WHERE it.item_id IN (${itemPh}) AND ${textShipped('it')}`,
       this.memberItemIds
     )
 

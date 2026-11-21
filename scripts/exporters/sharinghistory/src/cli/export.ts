@@ -26,6 +26,7 @@
  */
 
 import dotenv from 'dotenv'
+import { assertNoDraftItems } from '../../../shared/drafts.mjs'
 import { resolve } from 'path'
 import { existsSync, mkdirSync, rmSync } from 'fs'
 import { Command } from 'commander'
@@ -221,6 +222,15 @@ program
             logger.error(`${exporter.getName()} failed: ${message}`)
             results.push({ name: exporter.getName(), file: '', count: 0, error: message })
           }
+        }
+
+        // M17 B3: the export fails if a draft item's id appears in any file it wrote.
+        try {
+          await assertNoDraftItems((sql, params) => db.query(sql, params), outputDir)
+        } catch (err) {
+          const message = err instanceof Error ? err.message : String(err)
+          logger.error(message)
+          results.push({ name: 'DraftGuard', file: '', count: 0, error: message })
         }
 
         const hasErrors = results.some(r => r.error !== null)

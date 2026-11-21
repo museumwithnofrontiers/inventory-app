@@ -21,6 +21,7 @@
 
 import { mysqlJsonOrder } from './credits.mjs'
 import { legacyCountryCode } from './country-codes.mjs'
+import { itemShipped } from './drafts.mjs'
 
 /** Each translation key, its link kind and the legacy key its ids sit under. */
 export const TRANSLATION_LINK_KEYS = Object.freeze([
@@ -75,7 +76,10 @@ export async function loadCollectionRelations(query, collectionIds) {
     const ids = unique.slice(start, start + CHUNK)
     const collections = /** @type {{ id: string, context_id: string | null, cover_item_id: string | null, cover_backward_compatibility: string | null, days: number | null }[]} */ (
       await query(
-        `SELECT c.id, c.context_id, c.cover_item_id, i.backward_compatibility AS cover_backward_compatibility, c.days
+        // A draft cover item (or one under a draft) is no cover.
+        `SELECT c.id, c.context_id,
+                CASE WHEN i.id IS NOT NULL AND NOT ${itemShipped('i')} THEN NULL ELSE c.cover_item_id END AS cover_item_id,
+                i.backward_compatibility AS cover_backward_compatibility, c.days
          FROM collections c
          LEFT JOIN items i ON i.id = c.cover_item_id
          WHERE c.id IN (${marks(ids)})

@@ -2,6 +2,7 @@ import { existsSync, mkdirSync, rmSync } from 'fs'
 import { resolve } from 'path'
 import chalk from 'chalk'
 import { Database } from '../core/database.js'
+import { assertNoDraftItems } from '../../../shared/drafts.mjs'
 import { Logger } from '../core/logger.js'
 import { PublishManager, assertPublishableBaseUrl } from '../core/publish-manager.js'
 import type { ExportContext } from '../core/types.js'
@@ -93,6 +94,8 @@ export async function runMinisite(ref: string, options: MinisiteOptions, project
       const result = await exporter.export()
       console.log(chalk.green(`  ✓ ${result.file} (${result.count})`))
     }
+    // M17 B3: the export fails if a draft item's id appears in any file it wrote.
+    await assertNoDraftItems((sql, params) => db.query(sql, params), outputDir)
   } finally {
     await db.disconnect()
   }

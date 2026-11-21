@@ -25,6 +25,7 @@ import { buildDocuments, shardDocuments } from '../core/documents.js'
 import { readInput } from '../core/reader.js'
 import { PACKAGE_NAME, manifestFile, sitesFile } from '../core/package-files.js'
 import { loadSites } from '../../../shared/sites.mjs'
+import { assertNoDraftItems } from '../../../shared/drafts.mjs'
 
 dotenv.config({ path: resolve(process.cwd(), '.env') })
 
@@ -108,6 +109,9 @@ program
         console.log(chalk.green(`  ✓ ${documents.length} documents, ${excludedNoSite} items on no site left out`))
         console.log(chalk.green(`  ✓ languages: ${manifest.languages.join(', ')}`))
         console.log(chalk.green(`  ✓ ${sitesJson.sites.length} sites in sites.json`))
+
+        // M17 B3: the export fails if a draft item's id appears in any file it wrote.
+        await assertNoDraftItems((sql, params) => db.query(sql, params), outputDir)
 
         if (options.publish) {
           const staged = publishManager.stage(options.packageVersion)

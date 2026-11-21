@@ -6,6 +6,7 @@
 import { resolveItemSites, type Query, type Site } from '../../../shared/sites.mjs'
 import { resolveItemPages } from '../../../shared/pages.mjs'
 import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs'
+import { itemShipped, textShipped } from '../../../shared/drafts.mjs'
 import type { BuildInput, ItemRow, NameRow, TagRow, TranslationRow } from './documents.js'
 
 /** The item types that have a page of their own on a site. Pictures are an item's images, not results. */
@@ -30,7 +31,7 @@ export async function readInput(query: Query, sites: Site[], baseUrl: string): P
   const items = await q<ItemRow>(
     `SELECT id, type, parent_id, backward_compatibility, mwnf_reference, owner_reference,
             start_date, end_date, partner_id, country_id
-     FROM items WHERE type IN (${marks(SEARCHED_TYPES)}) ORDER BY id`,
+     FROM items WHERE type IN (${marks(SEARCHED_TYPES)}) AND ${itemShipped('items')} ORDER BY id`,
     SEARCHED_TYPES
   )
   const ids = items.map(i => i.id)
@@ -49,7 +50,7 @@ export async function readInput(query: Query, sites: Site[], baseUrl: string): P
          JOIN items i ON i.id = it.item_id
          JOIN languages l ON l.id = it.language_id
          LEFT JOIN projects p ON p.id = i.project_id
-         WHERE it.item_id IN (${marks(part)}) AND l.backward_compatibility IS NOT NULL
+         WHERE it.item_id IN (${marks(part)}) AND l.backward_compatibility IS NOT NULL AND ${textShipped('it')}
          ORDER BY it.item_id, l.backward_compatibility, it.context_id, it.id`,
         part
       ))
@@ -72,6 +73,7 @@ export async function readInput(query: Query, sites: Site[], baseUrl: string): P
        JOIN item_images ii ON ii.item_id = pic.id
        WHERE pic.type = 'picture'
          AND pic.parent_id IN (${marks(part)})
+         AND ${itemShipped('pic')}
          AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
                          WHERE ct.item_id = pic.id AND t.category = 'image-type'
                            AND t.internal_name = 'custom exhibition picture')

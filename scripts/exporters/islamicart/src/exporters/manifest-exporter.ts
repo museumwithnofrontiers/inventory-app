@@ -1,5 +1,6 @@
 import type { ExportResult, ExportScope } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { itemShipped, textShipped } from '../../../shared/drafts.mjs'
 
 interface LanguageNameRow {
   language_id: string
@@ -114,7 +115,8 @@ export class ManifestExporter extends BaseExporter {
        JOIN languages l ON l.id = it.language_id
        LEFT JOIN language_translations lt
          ON lt.language_id = l.id AND lt.display_language_id = l.id
-       WHERE i.project_id IN (${ph}) AND l.backward_compatibility IS NOT NULL`,
+       WHERE i.project_id IN (${ph}) AND l.backward_compatibility IS NOT NULL
+         AND ${itemShipped('i')} AND ${textShipped('it')}`,
       this.projectIds
     )
     return rows

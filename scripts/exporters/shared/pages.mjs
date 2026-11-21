@@ -32,6 +32,7 @@
  * Types are in `pages.d.mts`.
  */
 
+import { itemShipped } from './drafts.mjs'
 import { exploreMonumentsSelect, restoreExploreMonuments } from './explore-monuments.mjs'
 import { siteLink } from './sites.mjs'
 
@@ -168,7 +169,7 @@ export async function resolveItemPages(query, links, sites, parents) {
             await query(
               `SELECT ci.collection_id, ci.item_id, ci.display_order, i.backward_compatibility, ci.extra, ${exploreMonumentsSelect('ci')}
                FROM collection_item ci JOIN items i ON i.id = ci.item_id
-               WHERE ci.collection_id IN (${marks(part)}) ORDER BY ci.collection_id, ci.item_id`,
+               WHERE ci.collection_id IN (${marks(part)}) AND ${itemShipped('i')} ORDER BY ci.collection_id, ci.item_id`,
               part
             )
           )

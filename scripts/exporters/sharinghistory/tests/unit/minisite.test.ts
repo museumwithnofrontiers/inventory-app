@@ -4,6 +4,7 @@ import { buildCollectionImageEntry, mergePlacements } from '../../src/exporters/
 import { minisiteLanguages } from '../../src/exporters/manifest-exporter.js'
 import type { MinisiteInstance } from '../../src/minisite/instance.js'
 import { resolveScope } from '../../src/minisite/scope.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 /**
  * A Sharing History mini-site's package is read from the database, narrowed
@@ -79,6 +80,22 @@ describe('resolveScope', () => {
     const scope = await resolveScope(db, instance)
     expect(scope.itemIds).toEqual(['detail', 'monument', 'painting'])
     expect(scope.partnerIds).toEqual([MUSEUM])
+  })
+
+  it('asks only for shipped items, and keeps its collections whatever their draft flag (M17 B3, the Sharing History exception)', async () => {
+    const asked: string[] = []
+    const scope = await resolveScope(
+      {
+        query: async <T>(sql: string, params: unknown[] = []): Promise<T[]> => {
+          asked.push(sql)
+          return db.query<T>(sql, params)
+        },
+      },
+      instance
+    )
+    expect(scope.collectionIds).toEqual([ROOT, 'theme', 'subtheme'])
+    expect(asked.find(sql => sql.includes('FROM collection_item'))).toContain(itemShipped('i'))
+    expect(asked.some(sql => sql.includes('draft FROM collections'))).toBe(false)
   })
 
   it('fails on a partner the database does not have', async () => {

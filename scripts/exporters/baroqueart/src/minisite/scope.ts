@@ -1,6 +1,7 @@
 import type { Database } from '../core/database.js'
 import type { ExportScope } from '../core/types.js'
 import type { MinisiteInstance } from './instance.js'
+import { itemShipped, loadDraftCollectionIds } from '../../../shared/drafts.mjs'
 
 type Query = Pick<Database, 'query'>
 
@@ -20,13 +21,15 @@ export async function resolveScope(db: Query, instance: MinisiteInstance): Promi
   const [root] = await db.query<{ id: string }>(`SELECT id FROM collections WHERE id = ?`, [instance.collectionId])
   if (!root) throw new Error(`No collection ${instance.collectionId}`)
 
+  // A draft collection below the root and its subtree ship nowhere (M17 B3).
+  const drafts = await loadDraftCollectionIds((sql, params) => db.query(sql, params))
   const collectionIds = [root.id]
   for (let level = [root.id]; level.length > 0; ) {
     const children = await db.query<{ id: string }>(
       `SELECT id FROM collections WHERE parent_id IN (${placeholders(level)}) ORDER BY id`,
       level
     )
-    level = children.map(c => c.id).filter(id => !collectionIds.includes(id))
+    level = children.map(c => c.id).filter(id => !collectionIds.includes(id) && !drafts.has(id))
     collectionIds.push(...level)
   }
 
@@ -34,7 +37,7 @@ export async function resolveScope(db: Query, instance: MinisiteInstance): Promi
     `SELECT DISTINCT IF(i.type = 'picture' AND i.parent_id IS NOT NULL, i.parent_id, i.id) AS id
      FROM collection_item ci
      JOIN items i ON i.id = ci.item_id
-     WHERE ci.collection_id IN (${placeholders(collectionIds)})`,
+     WHERE ci.collection_id IN (${placeholders(collectionIds)}) AND ${itemShipped('i')}`,
     collectionIds
   )
   const itemIds = new Set(placed.map(r => r.id).filter((id): id is string => !!id))

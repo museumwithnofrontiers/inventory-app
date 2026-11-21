@@ -1,5 +1,6 @@
 import mysql from 'mysql2/promise'
 import type { Hub } from './types.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 /** A member item and its project. */
 export interface MemberRow {
@@ -65,6 +66,7 @@ export class Database {
          AND p.project_id = ?
          AND p.type = 'museum'
          AND i.type IN ('object', 'monument')
+         AND ${itemShipped('i')}
        ORDER BY i.type, i.display_order, i.internal_name`,
       [projectId, projectId]
     )
