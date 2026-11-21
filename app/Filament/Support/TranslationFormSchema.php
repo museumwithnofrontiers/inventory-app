@@ -4,6 +4,7 @@ namespace App\Filament\Support;
 
 use App\Models\Author;
 use App\Models\Context;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -74,12 +75,14 @@ class TranslationFormSchema
                 ->orderBy('name')
                 ->limit(50)
                 ->pluck('name', 'id')
+                ->map(fn (mixed $name): string => MarkdownText::plain($name))
                 ->all()
             )
-            ->getOptionLabelUsing(function (mixed $v): string {
-                $author = Author::query()->whereKey($v)->first();
+            // Filament injects closure parameters by name: the selected key is `$value`.
+            ->getOptionLabelUsing(function (mixed $value): string {
+                $author = Author::query()->whereKey($value)->first();
 
-                return $author !== null ? $author->name : (is_scalar($v) ? (string) $v : '');
+                return $author !== null ? MarkdownText::plain($author->name) : (is_scalar($value) ? (string) $value : '');
             });
     }
 
