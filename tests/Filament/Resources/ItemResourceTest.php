@@ -6,6 +6,7 @@ use App\Enums\ItemType;
 use App\Enums\Permission;
 use App\Filament\Pages\BrowseItemTree;
 use App\Filament\Resources\CountryResource;
+use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemResource\Pages\CreateItem;
 use App\Filament\Resources\ItemResource\Pages\EditItem;
 use App\Filament\Resources\ItemResource\Pages\ListItem;
@@ -778,6 +779,21 @@ class ItemResourceTest extends TestCase
                 fn (TextColumn $column): bool => $column->getUrl() === ProjectResource::getUrl('view', ['record' => $project]),
                 $item
             );
+    }
+
+    public function test_item_view_page_shows_the_project(): void
+    {
+        // The record title (heading, breadcrumb) is resolved on the page's own
+        // record before the infolist: it must not leave the project half loaded.
+        $user = $this->createCrudUser();
+        $project = Project::factory()->create(['internal_name' => 'Temple catalogue']);
+        $item = Item::factory()->Object()->create(['project_id' => $project->id]);
+
+        $this->actingAs($user)
+            ->get(ItemResource::getUrl('view', ['record' => $item]))
+            ->assertOk()
+            ->assertSee('Temple catalogue')
+            ->assertSee(ProjectResource::getUrl('view', ['record' => $project]), false);
     }
 
     public function test_item_table_parent_column_renders_plain_text_when_parent_is_null(): void
