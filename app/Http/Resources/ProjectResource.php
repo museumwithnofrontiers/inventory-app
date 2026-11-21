@@ -39,6 +39,8 @@ class ProjectResource extends BaseJsonResource
             'context' => new ContextResource($this->whenLoaded('context')),
             // The default language used within the project (LanguageResource)
             'language' => new LanguageResource($this->whenLoaded('language')),
+            // The project's name in each language (ProjectTranslationResource[])
+            'translations' => ProjectTranslationResource::collection($this->whenLoaded('translations')),
             // The date of creation of the resource (managed by the system)
             'created_at' => $this->resource->created_at,
             // The date of last modification of the resource (managed by the system)

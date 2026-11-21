@@ -81,6 +81,16 @@ class Project extends Model
     }
 
     /**
+     * The project's name in each language.
+     *
+     * @return HasMany<ProjectTranslation, $this>
+     */
+    public function translations(): HasMany
+    {
+        return $this->hasMany(ProjectTranslation::class);
+    }
+
+    /**
      * Get the items associated with the Project.
      *
      * @return HasMany<Item, $this>

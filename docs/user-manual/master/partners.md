@@ -56,8 +56,9 @@ A partner appears in a site's partner list through its **participation** in the 
 |---|---|
 | **Level** | *Partner* (provides content directly), *Associated Partner* (supports the collection), *Minor Contributor*. The project sites list only partners with a level. |
 | **Visible** | Off: the partner is left out of the list. Its items still show. |
+| **Parent partner** | Optional: another partner of the same collection that this partner takes part through (an associated museum under its main partner). Only the collection's own partners are offered. |
 
-**Attach** adds a participation, **Edit** changes its level or visibility, **Detach** removes it. You can do the same from the collection's **Partners** tab.
+**Attach** adds a participation, **Edit** changes its level, visibility or parent partner, **Detach** removes it. You can do the same from the collection's **Partners** tab.
 
 ### Contacts
 

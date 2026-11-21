@@ -14,6 +14,7 @@ use App\Filament\Resources\ProjectResource\Pages\ViewProject;
 use App\Filament\Resources\ProjectResource\RelationManagers\CollectionsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager;
+use App\Filament\Resources\ProjectResource\RelationManagers\TranslationsRelationManager;
 use App\Models\Context;
 use App\Models\Language;
 use App\Models\Project;
@@ -274,6 +275,7 @@ class ProjectResource extends Resource
     public static function getRelations(): array
     {
         return [
+            TranslationsRelationManager::class,
             ItemsRelationManager::class,
             CollectionsRelationManager::class,
             PartnersRelationManager::class,

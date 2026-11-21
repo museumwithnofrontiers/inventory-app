@@ -42,6 +42,7 @@ use App\Http\Controllers\PartnerLogoController;
 use App\Http\Controllers\PartnerTranslationController;
 use App\Http\Controllers\PartnerTranslationImageController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectTranslationController;
 use App\Http\Controllers\PublicationController;
 use App\Http\Controllers\PublicationDocumentController;
 use App\Http\Controllers\PublicationEditionController;
@@ -101,6 +102,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('project/enabled', [ProjectController::class, 'enabled'])->name('project.enabled');
         Route::get('project/{project}', [ProjectController::class, 'show'])->name('project.show');
         Route::get('project', [ProjectController::class, 'index'])->name('project.index');
+        Route::get('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'show'])->name('project-translation.show');
+        Route::get('project-translation', [ProjectTranslationController::class, 'index'])->name('project-translation.index');
 
         // Country routes (read)
         Route::get('country/{country}', [CountryController::class, 'show'])->name('country.show');
@@ -345,6 +348,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('item-item-link', [ItemItemLinkController::class, 'store'])->name('item-item-link.store');
         Route::post('item-item-link-translation', [ItemItemLinkTranslationController::class, 'store'])->name('item-item-link-translation.store');
         Route::post('project', [ProjectController::class, 'store'])->name('project.store');
+        Route::post('project-translation', [ProjectTranslationController::class, 'store'])->name('project-translation.store');
         Route::post('image-upload', [ImageUploadController::class, 'store'])->name('image-upload.store');
         Route::post('item-translation', [ItemTranslationController::class, 'store'])->name('item-translation.store');
         Route::post('collection-translation', [CollectionTranslationController::class, 'store'])->name('collection-translation.store');
@@ -389,6 +393,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::patch('project/{project}/enabled', [ProjectController::class, 'setEnabled'])->name('project.setEnabled');
         Route::patch('project/{project}', [ProjectController::class, 'update'])->name('project.update');
         Route::put('project/{project}', [ProjectController::class, 'update']);
+        Route::patch('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'update'])->name('project-translation.update');
+        Route::put('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'update']);
 
         Route::patch('country/{country}', [CountryController::class, 'update'])->name('country.update');
         Route::put('country/{country}', [CountryController::class, 'update']);
@@ -592,6 +598,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('collection-image/{collectionImage}', [CollectionImageController::class, 'destroy'])->name('collection-image.destroy');
         Route::post('collection-image/{collectionImage}/detach', [CollectionImageController::class, 'detachToAvailable'])->name('collection-image.detach');
         Route::delete('project/{project}', [ProjectController::class, 'destroy'])->name('project.destroy');
+        Route::delete('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'destroy'])->name('project-translation.destroy');
         Route::delete('image-upload/{image_upload}', [ImageUploadController::class, 'destroy'])->name('image-upload.destroy');
         Route::delete('available-image/{available_image}', [AvailableImageController::class, 'destroy'])->name('available-image.destroy');
         Route::patch('available-image/{available_image}', [AvailableImageController::class, 'update'])->name('available-image.update');

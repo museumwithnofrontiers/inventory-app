@@ -350,6 +350,233 @@ class CollectionPartnerPivotTest extends TestCase
         ]);
     }
 
+    // ── The parent partner: the partner a partner takes part through ─────────
+
+    public function test_collection_side_edit_sets_a_parent_partner_from_the_same_collection(): void
+    {
+        $collection = $this->makeCollection();
+        $main = Partner::factory()->create(['internal_name' => 'Main museum']);
+        $associated = Partner::factory()->create();
+        $collection->partners()->attach($main->id, ['collection_type' => 'collection', 'level' => 'partner']);
+        $collection->partners()->attach($associated->id, ['collection_type' => 'collection', 'level' => 'associated_partner']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PartnersRelationManager::class, [
+                'ownerRecord' => $collection,
+                'pageClass' => ViewCollection::class,
+            ])
+            ->mountTableAction('edit', $associated)
+            ->setTableActionData([
+                'level' => 'associated_partner',
+                'visible' => true,
+                'parent_partner_id' => $main->id,
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $associated->id,
+            'collection_type' => 'collection',
+            'parent_partner_id' => $main->id,
+        ]);
+
+        Livewire::actingAs($user)
+            ->test(PartnersRelationManager::class, [
+                'ownerRecord' => $collection,
+                'pageClass' => ViewCollection::class,
+            ])
+            ->assertTableColumnFormattedStateSet('pivot.parent_partner_id', 'Main museum', $associated->getKey());
+    }
+
+    public function test_the_parent_partner_is_offered_from_the_collections_other_partners_only(): void
+    {
+        $collection = $this->makeCollection();
+        $main = Partner::factory()->create();
+        $associated = Partner::factory()->create();
+        $elsewhere = Partner::factory()->create();
+        $collection->partners()->attach($main->id, ['collection_type' => 'collection', 'level' => 'partner']);
+        $collection->partners()->attach($associated->id, ['collection_type' => 'collection', 'level' => 'associated_partner']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        $component = Livewire::actingAs($user)
+            ->test(PartnersRelationManager::class, [
+                'ownerRecord' => $collection,
+                'pageClass' => ViewCollection::class,
+            ])
+            ->mountTableAction('edit', $associated);
+
+        $form = $component->instance()->getMountedTableActionForm();
+        $this->assertNotNull($form);
+        $options = $form->getFlatFields()['parent_partner_id']->getSearchResults('');
+
+        $this->assertArrayHasKey($main->id, $options);
+        $this->assertArrayNotHasKey($associated->id, $options);
+        $this->assertArrayNotHasKey($elsewhere->id, $options);
+    }
+
+    public function test_a_parent_partner_outside_the_collection_or_the_partner_itself_is_refused(): void
+    {
+        $collection = $this->makeCollection();
+        $associated = Partner::factory()->create();
+        $elsewhere = Partner::factory()->create();
+        $collection->partners()->attach($associated->id, ['collection_type' => 'collection', 'level' => 'associated_partner']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        foreach ([$elsewhere->id, $associated->id] as $parentId) {
+            Livewire::actingAs($user)
+                ->test(PartnersRelationManager::class, [
+                    'ownerRecord' => $collection,
+                    'pageClass' => ViewCollection::class,
+                ])
+                ->mountTableAction('edit', $associated)
+                ->setTableActionData([
+                    'level' => 'associated_partner',
+                    'visible' => true,
+                    'parent_partner_id' => $parentId,
+                ])
+                ->callMountedTableAction()
+                ->assertHasTableActionErrors(['parent_partner_id']);
+        }
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $associated->id,
+            'parent_partner_id' => null,
+        ]);
+    }
+
+    public function test_attach_can_name_the_parent_partner_at_once(): void
+    {
+        $collection = $this->makeCollection();
+        $main = Partner::factory()->create();
+        $associated = Partner::factory()->create();
+        $collection->partners()->attach($main->id, ['collection_type' => 'collection', 'level' => 'partner']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PartnersRelationManager::class, [
+                'ownerRecord' => $collection,
+                'pageClass' => ViewCollection::class,
+            ])
+            ->mountTableAction('attach')
+            ->setTableActionData([
+                'recordId' => $associated->id,
+                'level' => 'associated_partner',
+                'visible' => true,
+                'parent_partner_id' => $main->id,
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $associated->id,
+            'parent_partner_id' => $main->id,
+        ]);
+    }
+
+    public function test_partner_side_edit_sets_a_parent_partner_from_the_same_collection(): void
+    {
+        $collection = $this->makeCollection();
+        $main = Partner::factory()->create();
+        $associated = Partner::factory()->create();
+        $collection->partners()->attach($main->id, ['collection_type' => 'collection', 'level' => 'partner']);
+        $collection->partners()->attach($associated->id, ['collection_type' => 'collection', 'level' => 'associated_partner']);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionParticipationsRelationManager::class, [
+                'ownerRecord' => $associated,
+                'pageClass' => ViewPartner::class,
+            ])
+            ->mountTableAction('edit', $collection->getKey())
+            ->setTableActionData([
+                'level' => 'associated_partner',
+                'visible' => true,
+                'parent_partner_id' => $main->id,
+            ])
+            ->callMountedTableAction()
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $associated->id,
+            'parent_partner_id' => $main->id,
+        ]);
+    }
+
+    public function test_detaching_the_parent_partner_clears_the_parent_of_the_collections_rows(): void
+    {
+        $collection = $this->makeCollection();
+        $main = Partner::factory()->create();
+        $associated = Partner::factory()->create();
+        $collection->partners()->attach($main->id, ['collection_type' => 'collection', 'level' => 'partner']);
+        $collection->partners()->attach($associated->id, [
+            'collection_type' => 'collection',
+            'level' => 'associated_partner',
+            'parent_partner_id' => $main->id,
+        ]);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(PartnersRelationManager::class, [
+                'ownerRecord' => $collection,
+                'pageClass' => ViewCollection::class,
+            ])
+            ->callTableAction(DetachAction::class, $main)
+            ->assertHasNoTableActionErrors();
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $associated->id,
+            'parent_partner_id' => null,
+        ]);
+    }
+
+    public function test_the_parent_partner_leaving_from_its_own_page_clears_the_parent_too(): void
+    {
+        $collection = $this->makeCollection();
+        $main = Partner::factory()->create();
+        $associated = Partner::factory()->create();
+        $collection->partners()->attach($main->id, ['collection_type' => 'collection', 'level' => 'partner']);
+        $collection->partners()->attach($associated->id, [
+            'collection_type' => 'collection',
+            'level' => 'associated_partner',
+            'parent_partner_id' => $main->id,
+        ]);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionParticipationsRelationManager::class, [
+                'ownerRecord' => $main,
+                'pageClass' => ViewPartner::class,
+            ])
+            ->callTableBulkAction(DetachBulkAction::class, [$collection])
+            ->assertHasNoTableBulkActionErrors();
+
+        $this->assertDatabaseHas('collection_partner', [
+            'collection_id' => $collection->id,
+            'partner_id' => $associated->id,
+            'parent_partner_id' => null,
+        ]);
+    }
+
     private function makeCollection(): Collection
     {
         $context = Context::factory()->create();
