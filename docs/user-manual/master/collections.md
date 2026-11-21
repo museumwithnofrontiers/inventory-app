@@ -78,7 +78,7 @@ The **Publishing** section of the collection's form holds the only site settings
 | **Featured** | A gallery among the featured galleries. |
 | **Published** | A gallery's live date. |
 
-Not every site reads every flag. The [site family manuals]({{ '/site-families/' | relative_url }}) say which flag matters where. A flag that a site doesn't read changes nothing on it.
+Not every site reads every flag. The [site family manuals]({{ '/user-manual/sites/' | relative_url }}) say which flag matters where. A flag that a site doesn't read changes nothing on it.
 
 ## Placements: the items of a collection
 

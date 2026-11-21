@@ -4,12 +4,12 @@ title: Master manual
 parent: User Manual
 nav_order: 1
 has_children: true
-permalink: /master-manual/
+permalink: /user-manual/master/
 ---
 
 # Master manual
 
-This manual covers what is common to every website. Read it before the manual of your [site family]({{ '/site-families/' | relative_url }}).
+This manual covers what is common to every website. Read it before the manual of your [site family]({{ '/user-manual/sites/' | relative_url }}).
 
 | Chapter | What it covers |
 |---|---|

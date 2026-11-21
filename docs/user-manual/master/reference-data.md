@@ -20,24 +20,45 @@ Records that many items and collections share: tags, artists, dynasties, the glo
 
 ![The Tags list]({{ '/user-manual/images/tags.png' | relative_url }})
 
-Tags drive the search facets and filters of the sites. Each family uses its own categories: the galleries use their own facet tags, Explore its *filter* tags, the Books site its *subject*, *theme* and *audience* tags. The [site family manuals]({{ '/site-families/' | relative_url }}) say which.
+Tags drive the search facets and filters of the sites. Each family uses its own categories: the galleries use their own facet tags, Explore its *filter* tags, the Books site its *subject*, *theme* and *audience* tags. The [site family manuals]({{ '/user-manual/sites/' | relative_url }}) say which.
 
 - To tag an item, open the item's **Content** tab, then **Tags → Attach**. To tag many items, select them in the **Items** list and use the bulk action **Attach tag**.
 - The **keyword line** an item sheet prints is a text in the item's translation, not the tags. Changing the tags doesn't change the line ([Texts and links stay apart]({{ '/user-manual/master/items' | relative_url }}#texts-and-links-stay-apart)).
 
 ## Artists
 
-**Shared Data → Artists** lists the artists. An artist has a **name**, a **period of activity**, places and dates of **birth** and **death**, and the **Items** linked to it.
+**Shared Data → Artists** lists the artists, with the number of items linked to each. Type in **Search** to find one by name.
+
+![The Artists list, searched for Bernini]({{ '/user-manual/images/artists.png' | relative_url }})
+
+An artist has a **name**, a **period of activity**, and the place and date of **birth** and of **death**. Its page lists the **Items** linked to it.
+
+![An artist's page]({{ '/user-manual/images/artist-view.png' | relative_url }})
+
+![The items linked to an artist]({{ '/user-manual/images/artist-items.png' | relative_url }})
 
 - **Edit** corrects the artist's record. The change reaches every item linked to it, on the pages that use the links (artist indexes, filters).
-- The artist **lines** printed on an item sheet are texts in each item's translation ([Artist section]({{ '/user-manual/master/items' | relative_url }}#which-field-is-which-text)). Correcting the artist record doesn't rewrite them, and they don't rename the artist.
-- To link an item to an artist, use the item's **Origin** tab, or the artist's **Items** tab. Linking is attach only: an artist is never created from a text.
+- **Attach** on the **Items** tab links an existing item to the artist; **Detach** removes the link and keeps both records. The item's **Origin** tab does the same from the item's side.
+- The artist **lines** printed on an item sheet are texts in each item's translation ([Artist section]({{ '/user-manual/master/items' | relative_url }}#which-field-is-which-text)). Correcting the artist record doesn't rewrite them, and editing a line doesn't rename the artist.
+- Many artist records came from legacy lines that are not a single name ("(1680–1758)", "workshop of…"). Clean them up here, then check the items linked to them. An artist is never created from a text by the inventory itself.
 
 ## Dynasties
 
-**Shared Data → Dynasties** lists the dynasties. A dynasty has its years **from** and **to**, in the Common Era (AD) and the Hijri calendar (AH); **Translations** per language with its **name**, **Also known as**, the **date descriptions** (AD and AH) as written, its **area**, its **history** and its credits; and the **Items** linked to it.
+**Shared Data → Dynasties** lists the dynasties, with their years, their number of translations and of linked items.
 
-Discover Islamic Art's dynasty browser shows every dynasty, with its texts and its items. The dynasty **line** on an item sheet is the item translation's own text, as for artists.
+![The Dynasties list, searched for Mamluk]({{ '/user-manual/images/dynasties.png' | relative_url }})
+
+A dynasty has its years **from** and **to**, in the Common Era (**AD**) and the Hijri calendar (**AH**). Its page has two tabs:
+
+![A dynasty's page]({{ '/user-manual/images/dynasty-view.png' | relative_url }})
+
+- **Translations**: one per language, with the dynasty's **name**, **Also known as**, the **date descriptions** (AD and AH) as written, its **area**, its **history**, and the authors of its text (author, text copy editor, translator, translation copy editor). **New dynasty translation** adds a language; **Edit** changes one.
+
+  ![The translations of the Mamluks]({{ '/user-manual/images/dynasty-translations.png' | relative_url }})
+
+- **Items**: the items linked to the dynasty. **Attach** and **Detach** work as for artists.
+
+Discover Islamic Art's dynasty browser shows every dynasty, with its texts and its items ([Discover Islamic Art]({{ '/user-manual/sites/islamicart' | relative_url }})). The dynasty **line** on an item sheet is the item translation's own text, as for artists.
 
 ## Glossary
 

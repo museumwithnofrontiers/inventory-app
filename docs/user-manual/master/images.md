@@ -46,7 +46,7 @@ On the pool's list, **Edit** lets you fill in, before you attach it, a **Comment
 4. Optionally type an **Alt text**: a short description for readers who can't see the picture.
 5. Select **Submit**. The image is attached and leaves the pool.
 
-![The Images table of an item, with its row actions]({{ '/user-manual/images/item-images.png' | relative_url }})
+![The Images table of an item: the preview, the file name, and the row actions (View image, Download, Edit, Detach, Delete permanently) further right]({{ '/user-manual/images/item-images.png' | relative_url }})
 
 On an item sheet, the pictures are the item's **picture items**, each with its own image ([Pictures]({{ '/user-manual/master/items' | relative_url }}#pictures)). So attach a new picture to a new picture item, not to the object itself.
 
