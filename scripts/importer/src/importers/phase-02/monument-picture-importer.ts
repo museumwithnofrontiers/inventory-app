@@ -9,7 +9,7 @@
  *
  * Each picture Item gets:
  * - ItemTranslations for each language row (caption → name, copyright → extra)
- * - Artist relationships (photographer → Artist)
+ * - The photographer line, kept as written on the translation (no Artist record)
  * - Legacy type stored in Item.extra if not empty
  */
 

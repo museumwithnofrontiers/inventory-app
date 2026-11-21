@@ -28,8 +28,8 @@ These keys are written here first, then moved to columns of their own by
 - M16 B2 (#2636), B3 (#2637): `keywords`, `artist`, `period_activity` → `artist_period_of_activity`,
   `artist_birthdate` → `artist_birth_date`, `artist_birthplace` → `artist_birth_place`,
   `artist_deathdate` → `artist_death_date`, `artist_deathplace` → `artist_death_place`, `workshop`,
-  `scriber` → `scribe`, `patrons`, `architects`. They are display texts: the keyword Tags and the
-  Artist links the object importers create stay as they are, and nothing is derived from the texts.
+  `scriber` → `scribe`, `patrons`, `architects`. They are display texts: the keyword Tags stay as they
+  are, the importer makes no Artist from the artist lines (#2734), and nothing is derived from the texts.
 - M16 B5 (#2639), B6 (#2640): `linkcatalogs` → `catalogue_references` (codes and citations as written; the Book
   links come from the codes, separately), the Sharing History `notice` → `notice` and `notice_c` →
   `external_notice`, as written; and `legacy_display_status` N → `status` = `hidden`, a flag, not a text.

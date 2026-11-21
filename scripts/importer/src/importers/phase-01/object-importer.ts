@@ -5,7 +5,11 @@
  * Handles:
  * - Denormalized data (multiple language rows per object)
  * - EPM description2 handling
- * - Tags, authors, and artists
+ * - Tags and authors
+ *
+ * The artist line stays on each translation as written. The importer makes no
+ * Artist record or item-Artist link from it (ADR 006 rule 2, #2734): Artists
+ * are editorial records, linked in the panel.
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
@@ -15,7 +19,6 @@ import {
   transformObject,
   transformObjectTranslation,
   extractObjectTags,
-  extractObjectArtists,
   planTranslations,
 } from '../../domain/transformers/index.js';
 import type { LegacyObject, ObjectGroup } from '../../domain/types/index.js';
@@ -23,12 +26,10 @@ import { formatBackwardCompatibility } from '../../utils/backward-compatibility.
 import { mapLanguageCode } from '../../utils/code-mappings.js';
 import { TagHelper } from '../../helpers/tag-helper.js';
 import { AuthorHelper } from '../../helpers/author-helper.js';
-import { ArtistHelper } from '../../helpers/artist-helper.js';
 
 export class ObjectImporter extends BaseImporter {
   private tagHelper!: TagHelper;
   private authorHelper!: AuthorHelper;
-  private artistHelper!: ArtistHelper;
 
   getName(): string {
     return 'ObjectImporter';
@@ -48,12 +49,6 @@ export class ObjectImporter extends BaseImporter {
       this.context.tracker,
       this.context.logger
     );
-    this.artistHelper = new ArtistHelper(
-      this.context.strategy,
-      this.context.tracker,
-      this.context.logger
-    );
-
     try {
       this.logInfo('Importing objects...');
 
@@ -291,22 +286,6 @@ export class ObjectImporter extends BaseImporter {
 
     if (allTagIds.length > 0) {
       await this.tagHelper.attachToItem(itemId, allTagIds);
-    }
-
-    // Create artists (from first translation — artist entity is not language-scoped)
-    const firstTranslation = group.translations[0];
-    if (firstTranslation) {
-      const extractedArtists = extractObjectArtists(firstTranslation);
-      const artistIds: string[] = [];
-
-      for (const artistData of extractedArtists) {
-        const artistId = await this.artistHelper.findOrCreate(artistData.name);
-        if (artistId) artistIds.push(artistId);
-      }
-
-      if (artistIds.length > 0) {
-        await this.artistHelper.attachToItem(itemId, artistIds);
-      }
     }
 
     // The item's home is items.collection_id; no collection_item row repeats

@@ -37,13 +37,11 @@ export {
   transformObject,
   transformObjectTranslation,
   extractObjectTags,
-  extractObjectArtists,
   parseTagString,
   planTranslations,
   type TransformedObject,
   type TransformedObjectTranslation,
   type ExtractedTags,
-  type ExtractedArtist,
   type TranslationPlan,
 } from './object-transformer.js';
 
@@ -64,10 +62,8 @@ export {
   isBlankMonumentDetailGroup,
   transformMonumentDetail,
   transformMonumentDetailTranslation,
-  extractMonumentDetailTags,
   type TransformedMonumentDetail,
   type TransformedMonumentDetailTranslation,
-  type ExtractedMonumentDetailTags,
 } from './monument-detail-transformer.js';
 
 // Sharing History (SH) Transformers

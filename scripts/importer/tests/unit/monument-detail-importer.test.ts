@@ -76,8 +76,6 @@ describe('MonumentDetailImporter', () => {
       findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
       writeItem: writeItemMock,
       writeItemTranslation: writeItemTranslationMock,
-      writeArtist: vi.fn().mockResolvedValue('artist-uuid'),
-      attachArtistsToItem: vi.fn().mockResolvedValue(undefined),
     } as unknown as IWriteStrategy;
 
     context = {
@@ -212,6 +210,49 @@ describe('MonumentDetailImporter', () => {
     expect(result.errors).toHaveLength(1);
     expect(result.errors[0]).toContain('missing required name field in all translations');
     expect(writeItemMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps each language artist line as written and makes no Artist from it', async () => {
+    tracker.set('mwnf3:monuments:BAR:cz:Ins01:Mon11', 'parent-item-uuid', 'item');
+    queryMock.mockImplementation(async (sql: string) => {
+      if (sql.includes('FROM mwnf3.monument_details')) {
+        return [
+          {
+            ...detailRow,
+            lang_id: 'de',
+            artist: 'Skulpturen: Ignaz Günther, Johann Baptist Straub',
+          },
+          {
+            ...detailRow,
+            lang_id: 'en',
+            artist: 'Sculptures: Ignaz Günther, Johann Baptist Straub',
+          },
+        ];
+      }
+      return [];
+    });
+    // Record every strategy method the importer reaches for.
+    const reached: string[] = [];
+    const recording = new Proxy(strategy as object, {
+      get(target, property, receiver) {
+        reached.push(String(property));
+        return Reflect.get(target, property, receiver);
+      },
+    }) as IWriteStrategy;
+
+    const importer = new MonumentDetailImporter({ ...context, strategy: recording });
+    const result = await importer.import();
+
+    expect(result.success).toBe(true);
+    expect(result.warnings).toHaveLength(0);
+    const artistLines = writeItemTranslationMock.mock.calls.map(
+      ([data]) => JSON.parse((data as { extra: string }).extra).artist
+    );
+    expect(artistLines).toEqual([
+      'Skulpturen: Ignaz Günther, Johann Baptist Straub',
+      'Sculptures: Ignaz Günther, Johann Baptist Straub',
+    ]);
+    expect(reached.filter((name) => /artist/i.test(name))).toEqual([]);
   });
 
   it('still fails fast when project context is missing', async () => {

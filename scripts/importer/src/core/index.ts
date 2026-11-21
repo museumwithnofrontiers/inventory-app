@@ -27,7 +27,6 @@ export type {
   ItemTranslationData,
   TagData,
   AuthorData,
-  ArtistData,
   PartnerLogoData,
 } from './types.js';
 

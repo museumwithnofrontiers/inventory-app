@@ -28,7 +28,6 @@ import type {
   TagData,
   AuthorData,
   AuthorTranslationData,
-  ArtistData,
   ItemImageData,
   PartnerImageData,
   PartnerLogoData,
@@ -262,13 +261,6 @@ export interface IWriteStrategy {
   attachTagsToItem(itemId: string, tagIds: string[]): Promise<void>;
 
   /**
-   * Attach artists to an item
-   * @param itemId The item UUID
-   * @param artistIds Array of artist UUIDs
-   */
-  attachArtistsToItem(itemId: string, artistIds: string[]): Promise<void>;
-
-  /**
    * Attach items to a collection via many-to-many relationship
    * @param collectionId The collection UUID
    * @param itemIds Array of item UUIDs
@@ -339,19 +331,6 @@ export interface IWriteStrategy {
    * Write an author translation record
    */
   writeAuthorTranslation(data: AuthorTranslationData): Promise<void>;
-
-  /**
-   * Write an artist record
-   * @returns The artist UUID
-   */
-  writeArtist(data: ArtistData): Promise<string>;
-
-  /**
-   * Find an artist by exact name match.
-   * Used by ArtistHelper for free-text artist references that have no legacy ID.
-   * @returns An object with the artist UUID or null if not found
-   */
-  findArtistByName(name: string): Promise<{ id: string } | null>;
 
   /**
    * Write an item image record
