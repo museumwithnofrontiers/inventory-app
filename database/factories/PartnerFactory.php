@@ -33,8 +33,6 @@ class PartnerFactory extends Factory
             // Relationships
             'project_id' => null,
             'monument_item_id' => null,
-            // Visibility
-            'visible' => $this->faker->boolean(70), // 70% visible by default
         ];
     }
 
@@ -111,25 +109,5 @@ class PartnerFactory extends Factory
                 'monument_item_id' => Item::factory()->Monument(),
             ];
         });
-    }
-
-    /**
-     * Indicate that the partner should be visible.
-     */
-    public function visible(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'visible' => true,
-        ]);
-    }
-
-    /**
-     * Indicate that the partner should be hidden.
-     */
-    public function hidden(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'visible' => false,
-        ]);
     }
 }

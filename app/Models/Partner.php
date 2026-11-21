@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Enums\PartnerCategory;
 use App\Traits\HasLinks;
 use Database\Factories\PartnerFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,7 +22,6 @@ use Illuminate\Support\Carbon;
  * @property string|null $latitude
  * @property string|null $longitude
  * @property int $map_zoom
- * @property bool $visible
  * @property PartnerCategory|null $category
  * @property bool $featured
  * @property string|null $city
@@ -54,8 +52,6 @@ class Partner extends Model
         // Relationships
         'project_id',
         'monument_item_id',
-        // Visibility
-        'visible',
         // M16 D2 (decision 7)
         'category',
         'featured',
@@ -71,7 +67,6 @@ class Partner extends Model
         'latitude' => 'decimal:8',
         'longitude' => 'decimal:8',
         'map_zoom' => 'integer',
-        'visible' => 'boolean',
         'category' => PartnerCategory::class,
         'featured' => 'boolean',
     ];
@@ -167,17 +162,6 @@ class Partner extends Model
             ->withPivot(['collection_type', 'level', 'visible', 'parent_partner_id'])
             ->withTimestamps()
             ->using(CollectionPartner::class);
-    }
-
-    /**
-     * Scope a query to only include visible partners.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeVisible(Builder $query): Builder
-    {
-        return $query->where('visible', true);
     }
 
     /**

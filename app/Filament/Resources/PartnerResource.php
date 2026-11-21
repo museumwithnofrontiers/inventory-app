@@ -43,11 +43,9 @@ use Filament\Resources\Resource;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -123,14 +121,12 @@ class PartnerResource extends Resource
                                 modifyQueryUsing: fn (Builder $query): Builder => $query->where('type', ItemType::MONUMENT->value),
                             )
                             ->searchable(),
-                        Toggle::make('visible')
-                            ->default(true),
                         Select::make('category')
                             ->options(PartnerCategory::options())
                             ->placeholder('None')
                             ->helperText('Legacy\'s partner category (Sharing History).'),
                         Toggle::make('featured')
-                            ->helperText('The Portal\'s own selection: shown in the featured strip, whether visible or not.')
+                            ->helperText('The Portal\'s own selection: shown in its featured strip.')
                             ->default(false),
                         TextInput::make('city')
                             ->helperText('As the Sharing History partner list prints it, for every language.')
@@ -183,9 +179,6 @@ class PartnerResource extends Resource
                     ->url(fn (Partner $record): ?string => $record->project
                         ? (auth()->user()?->can('view', $record->project) ? ProjectResource::getUrl('view', ['record' => $record->project]) : null)
                         : null),
-                IconColumn::make('visible')
-                    ->boolean()
-                    ->sortable(),
                 static::backwardCompatibilityColumn(),
                 static::uuidColumn(),
                 ...static::timestampsColumns(),
@@ -222,10 +215,6 @@ class PartnerResource extends Resource
                     )
                     ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Project::find($value)->internal_name ?? $value) : '')
                     ->searchable(),
-                TernaryFilter::make('visible')
-                    ->label('Visibility')
-                    ->trueLabel('Visible only')
-                    ->falseLabel('Hidden only'),
             ])
             ->filtersFormColumns(2)
             ->filtersLayout(FiltersLayout::AboveContentCollapsible)
@@ -246,7 +235,6 @@ class PartnerResource extends Resource
                         ->schema([
                             $filters['country_id'],
                             $filters['project_id'],
-                            $filters['visible'],
                         ])
                         ->columns(2),
                 ];
@@ -283,8 +271,6 @@ class PartnerResource extends Resource
                             ->url(fn (Partner $record): ?string => $record->monumentItem
                                 ? (auth()->user()?->can('view', $record->monumentItem) ? ItemResource::getUrl('view', ['record' => $record->monumentItem]) : null)
                                 : null),
-                        IconEntry::make('visible')
-                            ->boolean(),
                         TextEntry::make('category')
                             ->formatStateUsing(fn (?PartnerCategory $state): ?string => $state?->label())
                             ->placeholder('—'),

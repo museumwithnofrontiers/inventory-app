@@ -27,7 +27,6 @@ The same museum can appear more than once in the **Partners** list, once per leg
 | **Type** | Museum, institution, individual… |
 | **Country**, **Project** | |
 | **Monument item** | For a partner that is a monument: the monument item. |
-| **Visible** | Kept from legacy. Whether a site lists the partner is decided per collection, by the participation's **Visible** switch (below). |
 | **Category** | Legacy's partner category, used by Sharing History. |
 | **Featured** | The Portal's own selection: the partner is shown in the featured strip of Explore and the galleries. |
 | **City** | The city as Sharing History's partner list prints it, for every language. |

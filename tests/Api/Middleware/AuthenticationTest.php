@@ -223,12 +223,9 @@ class AuthenticationTest extends TestCase
             // Project routes
             ['GET', 'project.index', null],
             ['POST', 'project.store', null],
-            ['GET', 'project.enabled', null],
             ['GET', 'project.show', Project::class],
             ['PATCH', 'project.update', Project::class],
             ['DELETE', 'project.destroy', Project::class],
-            ['PATCH', 'project.setEnabled', Project::class],
-            ['PATCH', 'project.setLaunched', Project::class],
 
             // Tag routes
             ['GET', 'tag.index', null],

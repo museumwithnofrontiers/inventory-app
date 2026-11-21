@@ -32,8 +32,6 @@ class ProjectFactory extends Factory
             'internal_name' => $this->faker->unique()->words('3', true),
             'backward_compatibility' => $this->faker->lexify('???'),
             'launch_date' => null,
-            'is_launched' => false,
-            'is_enabled' => false,
             'site_url' => null,
             'related_database_url' => null,
             'artistic_introduction_url' => null,
@@ -43,17 +41,12 @@ class ProjectFactory extends Factory
         ];
     }
 
-    public function withEnabled(): Factory
+    /**
+     * The date MWNF started the work.
+     */
+    public function withLaunchDate(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'is_enabled' => true,
-        ]);
-    }
-
-    public function withLaunched(): Factory
-    {
-        return $this->state(fn (array $attributes) => [
-            'is_launched' => true,
             'launch_date' => $this->faker->date(),
         ]);
     }

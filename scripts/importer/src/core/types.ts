@@ -192,8 +192,6 @@ export interface ProjectData extends BaseEntityData {
   context_id: string;
   language_id: string; // Required: ISO 639-3 code
   launch_date?: string | null;
-  is_launched?: boolean;
-  is_enabled?: boolean;
   site_url?: string | null;
   related_database_url?: string | null;
   artistic_introduction_url?: string | null;
@@ -223,7 +221,6 @@ export interface PartnerData extends BaseEntityData {
   country_id?: string | null;
   project_id?: string | null;
   monument_item_id?: string | null;
-  visible?: boolean | null;
 }
 
 /**

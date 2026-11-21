@@ -166,7 +166,6 @@ export function transformShPartner(legacy: ShLegacyPartner): TransformedShPartne
     latitude,
     longitude,
     map_zoom: mapZoom,
-    visible: true,
   };
 
   return {

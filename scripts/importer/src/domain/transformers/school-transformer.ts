@@ -90,7 +90,6 @@ export function transformSchool(legacy: LegacySchool): TransformedSchool {
     country_id: legacy.country ? mapCountryCode(legacy.country) : null,
     project_id: null, // Resolved in the importer via lookup
     monument_item_id: null,
-    visible: true,
   };
 
   return {

@@ -200,11 +200,11 @@ describe('SqlWriteStrategy — deterministic IDs are stable across separate runs
     // None of the bound parameters should be `undefined` - mysql2 rejects that.
     expect(values).not.toContain(undefined);
     // id(0) internal_name(1) context_id(2) language_id(3) launch_date(4)
-    // is_launched(5) is_enabled(6) site_url(7) related_database_url(8)
-    // artistic_introduction_url(9)
+    // site_url(5) related_database_url(6) artistic_introduction_url(7)
+    // (M17 C2: no is_launched or is_enabled column)
+    expect(values[5]).toBeNull();
+    expect(values[6]).toBeNull();
     expect(values[7]).toBeNull();
-    expect(values[8]).toBeNull();
-    expect(values[9]).toBeNull();
   });
 
   it('writeItemImage: same path attached to two different owning items yields distinct ids (first-image case)', async () => {

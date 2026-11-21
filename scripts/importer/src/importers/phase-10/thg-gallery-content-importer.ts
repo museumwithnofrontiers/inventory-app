@@ -626,6 +626,8 @@ export class ThgGalleryContentImporter extends BaseImporter implements SiteConfi
         }
 
         if (!this.isDryRun && !this.isSampleOnlyMode) {
+          // Legacy's `exhibition_partner.visible` is not imported: legacy's
+          // exhibitions client never reads it, and lists every partner (M17 C1).
           await this.context.strategy.attachPartnerToCollectionWithLevel(
             collectionId,
             partnerId,
@@ -1006,7 +1008,6 @@ export class ThgGalleryContentImporter extends BaseImporter implements SiteConfi
       internal_name: internalName,
       backward_compatibility: backwardCompatibility,
       country_id: countryId,
-      visible: partner.visible === 'Y',
     };
 
     this.collectSample(

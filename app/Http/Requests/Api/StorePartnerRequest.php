@@ -38,7 +38,6 @@ class StorePartnerRequest extends FormRequest
             'project_id' => ['nullable', 'uuid', 'exists:projects,id'],
             'monument_item_id' => ['nullable', 'uuid', 'exists:items,id'],
             // Visibility
-            'visible' => ['sometimes', 'boolean'],
             // M16 D2 (decision 7)
             'category' => ['nullable', Rule::enum(PartnerCategory::class)],
             'featured' => ['sometimes', 'boolean'],
