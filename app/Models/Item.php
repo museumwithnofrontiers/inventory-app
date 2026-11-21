@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
  * @property string $internal_name
  * @property string|null $backward_compatibility
  * @property ItemType $type
+ * @property bool $draft
  * @property string|null $parent_id
  * @property string $collection_id
  * @property string|null $project_id
@@ -100,6 +101,8 @@ class Item extends Model
         'parent_id',
         'internal_name',
         'type',
+        // Not ready for any site (M17, #2741): no exporter ships a draft item
+        'draft',
         'backward_compatibility',
         'country_id',
         'project_id',
@@ -118,6 +121,7 @@ class Item extends Model
 
     protected $casts = [
         'type' => ItemType::class,
+        'draft' => 'boolean',
         'display_order' => 'integer',
         'start_date' => 'integer',
         'end_date' => 'integer',

@@ -91,13 +91,13 @@ describe('ShItemDisplayStatusImporter', () => {
       'obj-uuid',
       'eng',
       'awe-context-uuid',
-      JSON.stringify({ legacy_display_status: 'N' })
+      JSON.stringify({ sh_display_status: 'N' })
     );
     expect(setExtraMock).toHaveBeenCalledWith(
       'mon-uuid',
       'fra',
       'awe-context-uuid',
-      JSON.stringify({ legacy_display_status: 'N' })
+      JSON.stringify({ sh_display_status: 'N' })
     );
     expect(result.imported).toBe(2);
   });
@@ -110,7 +110,7 @@ describe('ShItemDisplayStatusImporter', () => {
 
     const extra = JSON.parse(setExtraMock.mock.calls[0][3] as string) as Record<string, unknown>;
     expect(extra.structured_bibliography).toEqual({ eng: 'bib' });
-    expect(extra.legacy_display_status).toBe('N');
+    expect(extra.sh_display_status).toBe('N');
   });
 
   it('skips cleanly when the SH project context is missing', async () => {
@@ -140,7 +140,7 @@ describe('ShItemDisplayStatusImporter', () => {
   });
 
   it('is a no-op on a second run (flag already present)', async () => {
-    getExtraMock.mockResolvedValue({ legacy_display_status: 'N' });
+    getExtraMock.mockResolvedValue({ sh_display_status: 'N' });
 
     const importer = new ShItemDisplayStatusImporter(context);
     const result = await importer.import();

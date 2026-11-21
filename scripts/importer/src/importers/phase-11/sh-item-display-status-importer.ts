@@ -2,15 +2,16 @@
  * Sharing History Item Display-Status Importer
  *
  * Stamps the legacy `display_status = 'N'` flag ("HB/HCR illustration only")
- * into `item_translations.extra.legacy_display_status` for the affected SH
- * objects and monuments.
+ * into `item_translations.extra.sh_display_status` of the affected SH objects'
+ * and monuments' Sharing History texts (M17 B2, #2745). The Sharing History
+ * exporter reads it there.
  *
  * Why: legacy excludes `display_status='N'` items from database search and
  * Permanent Collection browsing (`modules/database_results.php:444,458`)
  * while still using them to illustrate Historical Background and timeline
- * pages. ShObjectImporter/ShMonumentImporter read the column but never
- * persisted it (`items` has no extra column), leaving the ~462 `N` items
- * indistinguishable in the inventory DB.
+ * pages. It is how one site lists an item, not a draft: the items are shown
+ * on Sharing History's pages, and one on Explore. `items` has no extra column,
+ * so the flag goes on the item's Sharing History texts, the ~462 `N` items'.
  *
  * Only `N` is stamped — `A` (active) is the implied default, keeping the
  * touch surface minimal. The flag is MERGED into each translation row's
@@ -102,7 +103,7 @@ export class ShItemDisplayStatusImporter extends BaseImporter {
 
     if (this.isDryRun || this.isSampleOnlyMode) {
       this.logInfo(
-        `[${this.isSampleOnlyMode ? 'SAMPLE' : 'DRY-RUN'}] Would stamp legacy_display_status=N on ${itemBackwardCompat}`
+        `[${this.isSampleOnlyMode ? 'SAMPLE' : 'DRY-RUN'}] Would stamp sh_display_status=N on ${itemBackwardCompat}`
       );
       result.imported++;
       this.showProgress();
@@ -151,7 +152,7 @@ export class ShItemDisplayStatusImporter extends BaseImporter {
       // does not preserve insertion order, so `existing`'s keys rarely
       // match a freshly-built object's own order even when every value is
       // identical — a plain JSON.stringify comparison never converges.
-      const raw = { ...(existing || {}), legacy_display_status: 'N' };
+      const raw = { ...(existing || {}), sh_display_status: 'N' };
       const merged = sanitizeJsonField(raw);
 
       // Idempotency: skip the write when nothing would change.

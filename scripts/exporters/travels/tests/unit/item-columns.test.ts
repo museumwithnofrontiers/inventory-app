@@ -102,17 +102,17 @@ describe('the keyword and artist lines (B2, B3)', () => {
   })
 })
 
-describe('the status (B6)', () => {
-  it('goes back as legacy_display_status N when hidden', () => {
-    expect(withItemTranslationColumns({ copyright: 'MWNF' }, { status: 'hidden' })).toEqual({
-      copyright: 'MWNF',
-      legacy_display_status: 'N',
-    })
+describe("Sharing History's display status (M17 B2)", () => {
+  it('goes back as legacy_display_status, in MySQL JSON key order', () => {
+    const extra = withItemTranslationColumns({ copyright: 'MWNF', sh_display_status: 'N' }, {}) as Record<string, unknown>
+    expect(extra).toEqual({ copyright: 'MWNF', legacy_display_status: 'N' })
+    expect(Object.keys(extra)).toEqual(['copyright', 'legacy_display_status'])
+    expect(withItemTranslationColumns('{"sh_display_status": "N"}', {})).toEqual({ legacy_display_status: 'N' })
   })
 
-  it('adds nothing for a published or unedited translation', () => {
-    expect(withItemTranslationColumns(null, { status: 'published' })).toBeNull()
-    expect(withItemTranslationColumns(null, { status: 'unedited' })).toBeNull()
+  it('adds nothing to a text without it, whatever its status column says', () => {
+    expect(withItemTranslationColumns(null, { status: 'hidden' })).toBeNull()
+    expect(withItemTranslationColumns(null, {})).toBeNull()
   })
 })
 
@@ -143,7 +143,6 @@ describe('the column list', () => {
       'linkcatalogs→catalogue_references',
       'notice→notice',
       'notice_c→external_notice',
-      'legacy_display_status→status',
       'third_name→original_name',
       'archival→archival_reference',
       'holding_institution_org→holder_original_name',
@@ -155,7 +154,7 @@ describe('the column list', () => {
         'it.materials, it.short_description, it.dynasty, it.region, it.history, it.author_credit, it.copy_editor_credit, ' +
           'it.translator_credit, it.translation_copy_editor_credit, it.keywords, it.artist, it.artist_period_of_activity, ' +
           'it.artist_birth_date, it.artist_birth_place, it.artist_death_date, it.artist_death_place, it.workshop, it.scribe, ' +
-          'it.patrons, it.architects, it.catalogue_references, it.notice, it.external_notice, it.status, it.original_name, it.archival_reference, ' +
+          'it.patrons, it.architects, it.catalogue_references, it.notice, it.external_notice, it.original_name, it.archival_reference, ' +
           'it.holder_original_name, it.external_sources, ' +
           'it.backward_compatibility AS item_columns_source, it.alternate_name AS item_columns_scoped_alternate_name, '
       )

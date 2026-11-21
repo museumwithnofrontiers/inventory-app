@@ -15,8 +15,8 @@
  * - B5 (#2639): `linkcatalogs` → `catalogue_references`, codes and citations
  *   as written (the Book links come from the codes, separately).
  * - B6 (#2640): the Sharing History notices `notice` and `notice_c` →
- *   `notice`, `external_notice`, as written; and `legacy_display_status` N →
- *   `status` hidden. That one is a flag, not a text, so its entry maps values.
+ *   `notice`, `external_notice`, as written. (Sharing History's display status
+ *   is no column: it stays in `extra` as `sh_display_status`, M17 B2 #2745.)
  * - B7 (#2690): Sharing History's `third_name`, `archival`,
  *   `holding_institution_org` and `second_name` (→ `alternate_name`).
  *
@@ -70,7 +70,6 @@ export const ITEM_TRANSLATION_COLUMNS: readonly ItemTranslationColumn[] = [
   { key: 'linkcatalogs', column: 'catalogue_references' },
   { key: 'notice', column: 'notice' },
   { key: 'notice_c', column: 'external_notice' },
-  { key: 'legacy_display_status', column: 'status', values: { N: 'hidden' } },
   // B7 (#2690): Sharing History's original-language name, archival reference and the holding
   // institution's own-language name, as written.
   { key: 'third_name', column: 'original_name' },

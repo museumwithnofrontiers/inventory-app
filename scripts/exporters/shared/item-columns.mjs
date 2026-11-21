@@ -24,9 +24,10 @@
  *   the image's `credit`, else its `copyright` without the mark the importer
  *   added for the burn.
  * - B5 (inventory-app#2639) and B6 (inventory-app#2640): the catalogue
- *   references and the two Sharing History notices, as written; and the
- *   `status` column, which goes back as `legacy_display_status: 'N'` when it
- *   is `hidden` (an entry with `values` maps a flag, not a text).
+ *   references and the two Sharing History notices, as written.
+ * - M17 B2 (inventory-app#2745): Sharing History's display status is
+ *   `sh_display_status` in a Sharing History text's `extra`; it goes back
+ *   under its legacy name, `legacy_display_status`.
  * - F3 (inventory-app#2653): an object's `catalogue_holding_link` is the item's
  *   `catalogue` link in the translation's language; it goes back to that row.
  * - B7 (inventory-app#2690): Sharing History's `third_name`, `archival` and
@@ -67,7 +68,6 @@ export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
   Object.freeze({ key: 'linkcatalogs', column: 'catalogue_references' }),
   Object.freeze({ key: 'notice', column: 'notice' }),
   Object.freeze({ key: 'notice_c', column: 'external_notice' }),
-  Object.freeze({ key: 'legacy_display_status', column: 'status', values: Object.freeze({ N: 'hidden' }) }),
   // B7 (inventory-app#2690): Sharing History's original-language name, archival reference and
   // the holding institution's own-language name, as written.
   Object.freeze({ key: 'third_name', column: 'original_name' }),
@@ -79,6 +79,10 @@ export const ITEM_TRANSLATION_COLUMNS = Object.freeze([
   // name2), selected and shipped by the exporters as before.
   Object.freeze({ key: 'second_name', column: 'alternate_name', sources: Object.freeze(['mwnf3_sharing_history:']) }),
 ])
+
+/** Sharing History's display status in a text's `extra` (M17 B2), and the key the packages ship it under. */
+const SH_DISPLAY_STATUS = 'sh_display_status'
+const LEGACY_DISPLAY_STATUS = 'legacy_display_status'
 
 /** The translation's legacy key, selected next to the columns under this name. */
 const SOURCE = 'item_columns_source'
@@ -305,9 +309,15 @@ export function withItemTranslationColumns(extra, row) {
   if (typeof row.image_rights === 'string') texts.copyright = row.image_rights
   const catalogue = textOf(row[CATALOGUE])
   if (catalogue !== null) texts.catalogue_holding_link = catalogue
-  if (Object.keys(texts).length === 0) return extra
   const parsed = typeof extra === 'string' ? JSON.parse(extra) : extra
-  const base = isObject(parsed) ? parsed : {}
+  /** @type {Record<string, unknown>} */
+  const base = isObject(parsed) ? { ...parsed } : {}
+  // M17 B2: Sharing History's display status goes back under its legacy name.
+  if (Object.prototype.hasOwnProperty.call(base, SH_DISPLAY_STATUS)) {
+    texts[LEGACY_DISPLAY_STATUS] = base[SH_DISPLAY_STATUS]
+    Reflect.deleteProperty(base, SH_DISPLAY_STATUS)
+  }
+  if (Object.keys(texts).length === 0) return extra
   /** @type {Record<string, unknown>} */
   const merged = { ...base }
   for (const [key, value] of Object.entries(texts)) {

@@ -49,6 +49,7 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $scribe
  * @property string|null $patrons
  * @property string|null $architects
+ * @property bool $draft
  * @property ItemTranslationStatus $status
  * @property string|null $catalogue_references
  * @property string|null $notice
@@ -170,6 +171,8 @@ class ItemTranslation extends Model
         'scribe',
         'patrons',
         'architects',
+        // Not ready for any site (M17, #2741): no exporter ships a draft text
+        'draft',
         'status',
         'catalogue_references',
         'notice',
@@ -191,6 +194,7 @@ class ItemTranslation extends Model
      */
     protected $casts = [
         'extra' => 'object',
+        'draft' => 'boolean',
         'status' => ItemTranslationStatus::class,
     ];
 

@@ -124,19 +124,11 @@ describe('splitItemTranslationColumns', () => {
     });
   });
 
-  it('maps legacy_display_status N to the hidden status', () => {
-    expect(splitItemTranslationColumns({ legacy_display_status: 'N', copyright: 'MWNF' })).toEqual({
-      extra: { copyright: 'MWNF' },
-      columns: { status: 'hidden' },
-      kept: [],
-    });
-  });
-
-  it('keeps a legacy_display_status it has no status for in extra', () => {
-    expect(splitItemTranslationColumns({ legacy_display_status: 'A' })).toEqual({
-      extra: { legacy_display_status: 'A' },
+  it("leaves Sharing History's display status in extra: it is no column (M17 B2)", () => {
+    expect(splitItemTranslationColumns({ sh_display_status: 'N', copyright: 'MWNF' })).toEqual({
+      extra: { sh_display_status: 'N', copyright: 'MWNF' },
       columns: {},
-      kept: ['legacy_display_status'],
+      kept: [],
     });
   });
 
@@ -166,7 +158,6 @@ describe('splitItemTranslationColumns', () => {
       'linkcatalogs→catalogue_references',
       'notice→notice',
       'notice_c→external_notice',
-      'legacy_display_status→status',
       'third_name→original_name',
       'archival→archival_reference',
       'holding_institution_org→holder_original_name',
@@ -195,7 +186,6 @@ describe('splitItemTranslationColumns', () => {
       'linkcatalogs',
       'notice',
       'notice_c',
-      'legacy_display_status',
       'third_name',
       'archival',
       'holding_institution_org',

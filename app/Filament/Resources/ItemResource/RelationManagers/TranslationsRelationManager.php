@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
-use App\Enums\ItemTranslationStatus;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemTranslationResource;
 use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Item;
+use Filament\Forms\Components\Toggle;
 use Filament\Tables\Actions\Action;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -49,10 +50,8 @@ class TranslationsRelationManager extends BaseOwnerTranslationsRelationManager
                 ->formatStateUsing(MarkdownState::inline())
                 ->label('Alternate name')
                 ->toggleable(),
-            TextColumn::make('status')
-                ->badge()
-                ->formatStateUsing(fn (ItemTranslationStatus $state): string => $state->label())
-                ->color(fn (ItemTranslationStatus $state): string => $state->color()),
+            IconColumn::make('draft')
+                ->boolean(),
         ];
     }
 
@@ -64,7 +63,16 @@ class TranslationsRelationManager extends BaseOwnerTranslationsRelationManager
             TranslationFormSchema::nameField(),
             TranslationFormSchema::alternateNameField(),
             TranslationFormSchema::descriptionField(),
+            // M17 (#2741): a new text starts as a draft.
+            Toggle::make('draft')
+                ->helperText('Not ready for the sites: no site shows this text.')
+                ->default(true),
         ];
+    }
+
+    protected static function defaultTranslationFormState(): array
+    {
+        return ['draft' => true];
     }
 
     protected function translationsRelation(): HasMany

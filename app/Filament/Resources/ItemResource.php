@@ -45,7 +45,9 @@ use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Section as FiltersSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -182,6 +184,10 @@ class ItemResource extends Resource
                                     ->all()
                             )
                             ->required(),
+                        Toggle::make('draft')
+                            ->helperText('Not ready for the sites: no site shows it, its details or its pictures.')
+                            ->default(true)
+                            ->inline(false),
                         RecordSelect::forItems(
                             name: 'parent_id',
                             label: 'Parent item',
@@ -406,6 +412,11 @@ class ItemResource extends Resource
                                 ? $q->withAnyTags($tagValues)
                                 : $q;
                     }),
+                TernaryFilter::make('draft')
+                    ->label('Draft')
+                    ->placeholder('All items')
+                    ->trueLabel('Drafts')
+                    ->falseLabel('Ready for the sites'),
                 TernaryFilter::make('top_level_only')
                     ->label('Hierarchy')
                     ->trueLabel('Top-level only')
@@ -439,6 +450,7 @@ class ItemResource extends Resource
                             $filters['project_id'],
                             $filters['country_id'],
                             $filters['tags'],
+                            $filters['draft'],
                             $filters['top_level_only'],
                         ])
                         ->columns(2),
@@ -502,6 +514,8 @@ class ItemResource extends Resource
                     ->schema([
                         TextEntry::make('type')
                             ->formatStateUsing(fn (?ItemType $state): ?string => $state?->label()),
+                        IconEntry::make('draft')
+                            ->boolean(),
                         TextEntry::make('parent_display_label')
                             ->label('Parent')
                             ->getStateUsing(fn (Item $record): ?string => $record->parent
