@@ -7,7 +7,7 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Language;
 use App\Models\TimelineEvent;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -49,8 +49,8 @@ class TranslationsRelationManager extends RelationManager
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
-                Textarea::make('description')
-                    ->rows(4)
+                MarkdownEditor::make('description')
+                    ->minHeight('7.5rem')
                     ->nullable()
                     ->columnSpanFull(),
                 TextInput::make('date_from_description')

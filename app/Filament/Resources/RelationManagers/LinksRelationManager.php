@@ -9,8 +9,8 @@ use App\Filament\Support\ExtraJsonField;
 use App\Filament\Support\MarkdownState;
 use App\Models\Link;
 use App\Models\PublicationEdition;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -76,11 +76,11 @@ class LinksRelationManager extends RelationManager
                     ->relationship('language', 'internal_name')
                     ->searchable()
                     ->nullable(),
-                Textarea::make('description')
-                    ->rows(3)
+                MarkdownEditor::make('description')
+                    ->minHeight('6rem')
                     ->columnSpanFull(),
-                Textarea::make('authors')
-                    ->rows(2)
+                MarkdownEditor::make('authors')
+                    ->minHeight('4.5rem')
                     ->columnSpanFull(),
                 TextInput::make('category')
                     ->label('Category')
@@ -101,9 +101,9 @@ class LinksRelationManager extends RelationManager
                     ->label('Country code')
                     ->maxLength(16)
                     ->nullable(),
-                Textarea::make('further_reading')
+                MarkdownEditor::make('further_reading')
                     ->label('Further reading')
-                    ->rows(3)
+                    ->minHeight('6rem')
                     ->columnSpanFull(),
                 TextInput::make('display_order')
                     ->label('Display order')

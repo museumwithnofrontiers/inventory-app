@@ -8,7 +8,7 @@ use App\Filament\Support\TranslationFormSchema;
 use App\Models\Context;
 use App\Models\Contributor;
 use App\Models\Language;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -57,8 +57,8 @@ class TranslationsRelationManager extends RelationManager
                 TextInput::make('name')
                     ->maxLength(255)
                     ->nullable(),
-                Textarea::make('description')
-                    ->rows(6)
+                MarkdownEditor::make('description')
+                    ->minHeight('10.5rem')
                     ->nullable()
                     ->columnSpanFull(),
                 TextInput::make('link')
