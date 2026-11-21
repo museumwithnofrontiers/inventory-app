@@ -2,7 +2,7 @@ import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { travelBooksByCountry } from '../core/travel-books.js'
 import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs'
-import { itemIdShipped, itemShipped, loadDraftCollectionIds, textShipped } from '../../../shared/drafts.mjs'
+import { itemIdShipped, itemShipped, loadDraftCollectionIds, loadDraftItemIds, textShipped } from '../../../shared/drafts.mjs'
 
 // The monument's address, which the importer files with its visitor contact
 // details (extra.monument_contact.address).
@@ -183,7 +183,10 @@ export class ItemExporter extends BaseExporter {
     // among them, the custom exhibition photos placed with no item behind
     // them, each a picture of its own with no parent.
     const scope = this.context.scope
-    const items = await this.db.query<ItemRow>(
+    // Drafts are dropped here, not in SQL: the query's order has ties, and a
+    // different plan would reorder items.json (M17 B3).
+    const draftItemIds = await loadDraftItemIds((sql, params) => this.db.query(sql, params))
+    const items = (await this.db.query<ItemRow>(
       `SELECT id, type, internal_name, backward_compatibility, parent_id,
               partner_id, country_id, collection_id, project_id,
               owner_reference, mwnf_reference, start_date, end_date,
@@ -191,10 +194,9 @@ export class ItemExporter extends BaseExporter {
        FROM items
        WHERE ${scope ? `id IN (${this.placeholders(Math.max(scope.itemIds.length, 1))})` : `project_id IN (${ph})`}
          AND (type IN ('object', 'monument')${scope ? ` OR (type = 'picture' AND parent_id IS NULL)` : ''})
-         AND ${itemShipped('items')}
        ORDER BY type, display_order, internal_name`,
       scope ? (scope.itemIds.length > 0 ? scope.itemIds : ['']) : this.projectIds
-    )
+    )).filter(i => !draftItemIds.has(i.id))
 
     if (items.length === 0) {
       await this.writeJson('items.json', [])

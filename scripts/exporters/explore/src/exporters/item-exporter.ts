@@ -2,7 +2,7 @@ import type { ExportResult } from "../core/types.js";
 import { languageKeyer, rekeyIfMap } from "../core/language-keys.js";
 import { BaseExporter } from "./base-exporter.js";
 import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs';
-import { itemIdShipped, itemShipped, loadDraftCollectionIds, textShipped } from '../../../shared/drafts.mjs';
+import { itemIdShipped, loadDraftCollectionIds, loadDraftItemIds, textShipped } from '../../../shared/drafts.mjs';
 
 /** The item texts' `extra` keys whose value is keyed by language. */
 const LANGUAGE_KEYED_EXTRA = new Set([
@@ -264,7 +264,10 @@ export class ItemExporter extends BaseExporter {
     //   - item_images.path     → the file path
     //   - item_translations.description (caption, per language)
     //   - item_translations.extra JSON { photographer, copyright }
-    const allPictureItems = await this.db.query<
+    // Drafts are dropped here, not in SQL: the query's order has ties, and a
+    // different plan would reorder an item's pictures (M17 B3).
+    const draftItemIds = await loadDraftItemIds((sql, params) => this.db.query(sql, params));
+    const allPictureItems = (await this.db.query<
       PictureItemRow & { explore_picture: number }
     >(
       `SELECT pic.id AS picture_id, pic.parent_id AS item_id,
@@ -279,10 +282,9 @@ export class ItemExporter extends BaseExporter {
          -- A picture legacy names without a file: its gallery shows nothing for it.
          AND ii.path <> ''
          AND pic.parent_id IN (${itemPh})
-         AND ${itemShipped('pic')}
        ORDER BY pic.parent_id, pic.display_order`,
       itemIds,
-    );
+    )).filter((p) => !draftItemIds.has(p.picture_id) && !draftItemIds.has(p.item_id));
     // Legacy Explore shows a monument's Explore pictures (Explore has no project), and
     // only when it has none, the pictures of the record it points to (Monument::
     // getAllImages: Travels, then DIA, museums, SH). A record merged into the Travels
