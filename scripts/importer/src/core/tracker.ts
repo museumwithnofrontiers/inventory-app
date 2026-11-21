@@ -139,7 +139,6 @@ export class UnifiedTracker implements ITracker {
       tag: 0,
       author: 0,
       author_translation: 0,
-      artist: 0,
       dynasty: 0,
       dynasty_translation: 0,
       timeline: 0,

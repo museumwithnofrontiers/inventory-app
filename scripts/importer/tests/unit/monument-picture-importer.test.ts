@@ -14,7 +14,6 @@ describe('MonumentPictureImporter', () => {
   let writeItemMock: ReturnType<typeof vi.fn>;
   let writeItemTranslationMock: ReturnType<typeof vi.fn>;
   let writeItemImageMock: ReturnType<typeof vi.fn>;
-  let findOrCreateArtistMock: ReturnType<typeof vi.fn>;
 
   const logger: ILogger = {
     info: vi.fn(),
@@ -124,7 +123,6 @@ describe('MonumentPictureImporter', () => {
     writeItemMock = vi.fn().mockResolvedValue('new-picture-item-uuid');
     writeItemTranslationMock = vi.fn().mockResolvedValue(undefined);
     writeItemImageMock = vi.fn().mockResolvedValue(undefined);
-    findOrCreateArtistMock = vi.fn().mockResolvedValue('artist-uuid');
 
     strategy = {
       exists: vi.fn().mockResolvedValue(false),
@@ -132,9 +130,6 @@ describe('MonumentPictureImporter', () => {
       writeItem: writeItemMock,
       writeItemTranslation: writeItemTranslationMock,
       writeItemImage: writeItemImageMock,
-      writeArtist: vi.fn().mockResolvedValue('artist-uuid'),
-      attachArtistsToItem: vi.fn().mockResolvedValue(undefined),
-      findArtistByInternalName: findOrCreateArtistMock,
     } as unknown as IWriteStrategy;
 
     context = {

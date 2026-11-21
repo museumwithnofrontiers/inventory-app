@@ -40,14 +40,6 @@ export interface TransformedMonumentDetailTranslation {
 }
 
 /**
- * Tag extraction result for monument details
- */
-export interface ExtractedMonumentDetailTags {
-  artists: string[];
-  languageId: string;
-}
-
-/**
  * Group denormalized monument detail rows by non-lang PK columns
  */
 export function groupMonumentDetailsByPK(details: LegacyMonumentDetail[]): MonumentDetailGroup[] {
@@ -198,7 +190,7 @@ export function transformMonumentDetailTranslation(
   const descriptionMarkdown = hasDescription ? convertHtmlToMarkdown(detail.description) : null;
   const locationMarkdown = detail.location ? convertHtmlToMarkdown(detail.location) : null;
   const datesMarkdown = detail.date ? convertHtmlToMarkdown(detail.date) : null;
-  // The artist line as this language prints it; the artist entities are language-independent.
+  // The artist line as this language prints it, kept as written. No Artist is made from it.
   const artistMarkdown = detail.artist?.trim() ? convertHtmlToMarkdown(detail.artist) : null;
 
   // backward_compatibility matches parent item
@@ -246,32 +238,5 @@ export function transformMonumentDetailTranslation(
   return {
     data,
     warnings,
-  };
-}
-
-/**
- * Extract artists from monument detail data
- * Artists are stored as text that may contain multiple artists
- */
-export function extractMonumentDetailTags(
-  detail: LegacyMonumentDetail
-): ExtractedMonumentDetailTags {
-  const languageId = mapLanguageCode(detail.lang_id);
-
-  // Parse artist field (similar to keywords but for artists)
-  const artists: string[] = [];
-  if (detail.artist && detail.artist.trim()) {
-    // Split by common delimiters including Arabic equivalents, but not inside brackets:
-    // "Heinrich Reinhart (Erzgie\u00DFer, 1575-1629)" is one artist.
-    const rawArtists = detail.artist
-      .split(/[;,\n\u060C\u061B](?![^()]*\))/)
-      .map((a) => a.trim())
-      .filter((a) => a.length > 0);
-    artists.push(...rawArtists);
-  }
-
-  return {
-    artists,
-    languageId,
   };
 }

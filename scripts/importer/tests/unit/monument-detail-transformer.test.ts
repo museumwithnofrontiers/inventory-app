@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  extractMonumentDetailTags,
   isBlankMonumentDetailGroup,
   transformMonumentDetail,
   transformMonumentDetailTranslation,
@@ -156,20 +155,5 @@ describe('transformMonumentDetailTranslation', () => {
     expect(JSON.parse(result?.data.extra ?? '{}').artist).toBe(
       'Hubert Gerhard (um 1545-1623); Heinrich Reinhart (Erzgießer, 1575-1629)'
     );
-  });
-});
-
-describe('extractMonumentDetailTags', () => {
-  it('does not split an artist at a comma inside brackets', () => {
-    const { artists } = extractMonumentDetailTags(
-      translation({
-        artist: 'Hubert Gerhard (um 1545-1623); Heinrich Reinhart (Erzgießer, 1575-1629)',
-      })
-    );
-
-    expect(artists).toEqual([
-      'Hubert Gerhard (um 1545-1623)',
-      'Heinrich Reinhart (Erzgießer, 1575-1629)',
-    ]);
   });
 });

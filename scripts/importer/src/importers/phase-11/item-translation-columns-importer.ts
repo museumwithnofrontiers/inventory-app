@@ -11,8 +11,8 @@
  * - B2 (#2636), B3 (#2637): `keywords`, `artist` and the artist's life data
  *   (`artist_birthdate` → `artist_birth_date`, …, `period_activity` →
  *   `artist_period_of_activity`), `workshop`, `scriber` → `scribe`, `patrons`,
- *   `architects`. Display texts only: the Tags and Artist links stay as
- *   imported.
+ *   `architects`. Display texts only: this step touches no Tag or Artist
+ *   link.
  * - B5 (#2639), B6 (#2640): `linkcatalogs` → `catalogue_references`, `notice`,
  *   `notice_c` → `external_notice`; `legacy_display_status` N → `status` hidden
  *   (runs after `sh-item-display-status`, which writes it).

@@ -136,7 +136,7 @@ src/
 │   └── transformers/       # Business logic (pure functions, per entity)
 ├── strategies/
 │   └── sql-strategy.ts     # SQL-based write strategy
-├── helpers/                 # Shared helper classes (tags, authors, artists)
+├── helpers/                 # Shared helper classes (tags, authors)
 ├── importers/                # Importer implementations, one directory per phase
 │   ├── phase-00/            # Reference data (languages, countries, default context)
 │   ├── phase-01/            # Core mwnf3 data (projects, partners, items, authors, dynasties)
@@ -213,7 +213,6 @@ Business logic is written once in transformers:
 - HTML to Markdown conversion
 - Field truncation and validation
 - Tag parsing logic
-- Artist extraction
 
 ## Usage
 
@@ -577,14 +576,15 @@ an expected outcome, not an error.
 map automatically. Add an entry (or correct a placeholder null) whenever a
 new legacy project/site is confirmed.
 
-### Artist & Tag Extraction
+### Artist Lines & Tag Extraction
 
 Legacy data contains artists and tags in text fields:
 
-- **Artists**: Legacy has no artist table. Artist records are split from the
-  mwnf3 object and monument detail artist lines and keyed `mwnf3:artists:{name}`.
-  A record gets the name only: the artist's life data stays on the item
-  translation as written (`artist_birth_date`, …), with the artist line itself.
+- **Artists**: Legacy has no artist table. The importer creates no Artist
+  record and no item-Artist link (ADR 006 rule 2, #2734). Each language's
+  artist line and the artist's life data stay on the item translation as
+  written (`artist`, `artist_birth_date`, …). Artists are editorial records,
+  created and linked in the panel.
 - **Tags**: Parsed from delimited strings, categorized (material, keyword, etc.)
 
 ### HTML to Markdown

@@ -40,7 +40,7 @@ An artist has a **name**, a **period of activity**, and the place and date of **
 - **Edit** corrects the artist's record. The change reaches every item linked to it, on the pages that use the links (artist indexes, filters).
 - **Attach** on the **Items** tab links an existing item to the artist; **Detach** removes the link and keeps both records. The item's **Origin** tab does the same from the item's side.
 - The artist **lines** printed on an item sheet are texts in each item's translation ([Artist section]({{ '/user-manual/master/items' | relative_url }}#which-field-is-which-text)). Correcting the artist record doesn't rewrite them, and editing a line doesn't rename the artist.
-- Many artist records came from legacy lines that are not a single name ("(1680–1758)", "workshop of…"). Clean them up here, then check the items linked to them. An artist is never created from a text by the inventory itself.
+- Legacy has no artist records, so the import creates none: an artist is created here, by an editor, and linked to its items. An artist is never created from a text by the inventory itself.
 
 ## Dynasties
 

@@ -364,6 +364,8 @@ Artists are linked to items through a many-to-many relationship. An item can hav
 
 The artist, workshop, scribe, patron and architect lines that the sheets print are display texts on the item translation, as legacy wrote them. They are kept next to the Artist links, and neither is derived from the other (ADR 006).
 
+Artists are editorial records. Legacy has none, and the importer creates none: editors create them and link them to items in the panel.
+
 ---
 
 ## Glossary

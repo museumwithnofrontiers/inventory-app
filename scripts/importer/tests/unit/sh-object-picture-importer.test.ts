@@ -110,9 +110,6 @@ describe('ShObjectPictureImporter', () => {
       writeItem: writeItemMock,
       writeItemTranslation: writeItemTranslationMock,
       writeItemImage: writeItemImageMock,
-      writeArtist: vi.fn().mockResolvedValue('artist-uuid'),
-      attachArtistsToItem: vi.fn().mockResolvedValue(undefined),
-      findArtistByInternalName: vi.fn().mockResolvedValue('artist-uuid'),
     } as unknown as IWriteStrategy;
 
     context = {

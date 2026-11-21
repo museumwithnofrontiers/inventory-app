@@ -417,7 +417,6 @@ export abstract class BaseImporter {
       tag: 'tags',
       author: 'authors',
       author_translation: 'author_translations',
-      artist: 'artists',
       glossary: 'glossaries',
       glossary_translation: 'glossary_translations',
       glossary_spelling: 'glossary_spellings',
