@@ -6,7 +6,7 @@
  * - Denormalized data (multiple language rows per object)
  * - EPM description2 handling
  * - HTML to Markdown conversion
- * - Tag and artist extraction
+ * - Tag extraction
  */
 
 import { creditsAsWritten } from './credits-as-written.js';
@@ -66,14 +66,6 @@ export interface ExtractedTags {
   materials: string[];
   keywords: string[];
   languageId: string;
-}
-
-/**
- * Artist extraction result: a name only. The artist's life data stays on the
- * item translation, as this language writes it.
- */
-export interface ExtractedArtist {
-  name: string;
 }
 
 /**
@@ -271,10 +263,9 @@ export function transformObjectTranslation(
   if (obj.province?.trim()) extraData.province = convertHtmlToMarkdown(obj.province);
   const credits = creditsAsWritten(obj);
   if (credits) extraData.credits_as_written = credits;
-  // The artist line as this language's sheet prints it. The Artist records
-  // are shared across languages and made from one row, so they can't stand
-  // in for another language's line. Same key as the Sharing History
-  // transformer.
+  // The artist line as this language's sheet prints it, kept as written. No
+  // Artist record is made from it (ADR 006 rule 2, #2734). Same key as the
+  // Sharing History transformer.
   if (obj.artist?.trim()) extraData.artist = convertHtmlToMarkdown(obj.artist);
   if (obj.workshop) extraData.workshop = obj.workshop;
   // Rights statement. `copyright` is the column this used to read on its own,
@@ -303,16 +294,14 @@ export function transformObjectTranslation(
   if (obj.keywords?.trim()) extraData.keywords = convertHtmlToMarkdown(obj.keywords);
   // The artist's life data as this language's sheet prints it after the
   // artist line. Legacy keeps it per object and per language (one language
-  // may hold it all in the birth date), so the shared Artist record, which
-  // keeps the first object's values, can't stand in for it. Same keys as the
-  // Sharing History transformer.
+  // may hold it all in the birth date). Same keys as the Sharing History
+  // transformer.
   if (obj.birthdate?.trim()) extraData.artist_birthdate = obj.birthdate.trim();
   if (obj.birthplace?.trim()) extraData.artist_birthplace = convertHtmlToMarkdown(obj.birthplace);
   if (obj.deathdate?.trim()) extraData.artist_deathdate = obj.deathdate.trim();
   if (obj.deathplace?.trim()) extraData.artist_deathplace = convertHtmlToMarkdown(obj.deathplace);
-  // The Period of activity row legacy prints, per language. The Artist record's
-  // period_of_activity keeps one object's first-language value, for the same
-  // reason as the life data above. Same key as the Sharing History transformer.
+  // The Period of activity row legacy prints, per language. Same key as the
+  // Sharing History transformer.
   if (obj.period_activity?.trim())
     extraData.period_activity = convertHtmlToMarkdown(obj.period_activity);
   const extraField = Object.keys(extraData).length > 0 ? JSON.stringify(extraData) : null;
@@ -375,31 +364,6 @@ export function extractObjectTags(obj: LegacyObject): ExtractedTags {
     keywords: parseTagString(obj.keywords),
     languageId,
   };
-}
-
-/**
- * Extract artists from object data.
- *
- * Splits where legacy separates people, as parseTagString does: at semicolons
- * only. A comma belongs to one person's entry, holding their life data, role
- * or other name ("Albin Schweri, design, (1885 Ramsen, Switzerland \u2013 \u2026)").
- * HTML tags (e.g. <br/>) are stripped before splitting.
- */
-export function extractObjectArtists(obj: LegacyObject): ExtractedArtist[] {
-  if (!obj.artist || obj.artist.trim() === '') {
-    return [];
-  }
-
-  // Strip HTML tags before splitting
-  const cleaned = obj.artist
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
-  if (!cleaned) return [];
-
-  const artistNames = parseTagString(cleaned);
-
-  return artistNames.map((name) => ({ name }));
 }
 
 /**

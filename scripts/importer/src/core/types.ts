@@ -57,7 +57,6 @@ export type EntityType =
   | 'tag'
   | 'author'
   | 'author_translation'
-  | 'artist'
   | 'dynasty'
   | 'dynasty_translation'
   | 'timeline'
@@ -345,18 +344,6 @@ export interface AuthorTranslationData {
   curriculum?: string | null;
   backward_compatibility?: string | null;
   extra?: string | null;
-}
-
-/**
- * Artist data for write operations
- */
-export interface ArtistData extends BaseEntityData {
-  name: string;
-  place_of_birth?: string | null;
-  place_of_death?: string | null;
-  date_of_birth?: string | null;
-  date_of_death?: string | null;
-  period_of_activity?: string | null;
 }
 
 /**

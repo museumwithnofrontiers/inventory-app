@@ -43,7 +43,6 @@ import type {
   TagData,
   AuthorData,
   AuthorTranslationData,
-  ArtistData,
   ItemImageData,
   PartnerImageData,
   PartnerLogoData,
@@ -104,7 +103,6 @@ const tableEntityMap: Record<string, EntityType> = {
   tags: 'tag',
   authors: 'author',
   author_translations: 'author_translation',
-  artists: 'artist',
   language_translations: 'language_translation',
   country_translations: 'country_translation',
   glossaries: 'glossary',
@@ -842,20 +840,6 @@ export class SqlWriteStrategy implements IWriteStrategy {
     }
   }
 
-  async attachArtistsToItem(itemId: string, artistIds: string[]): Promise<void> {
-    for (const artistId of artistIds) {
-      try {
-        await this.db.execute(
-          `INSERT IGNORE INTO artist_item (item_id, artist_id, created_at, updated_at)
-           VALUES (?, ?, ?, ?)`,
-          [itemId, artistId, this.now, this.now]
-        );
-      } catch {
-        // Ignore duplicates
-      }
-    }
-  }
-
   async attachItemsToCollection(collectionId: string, itemIds: string[]): Promise<void> {
     for (const itemId of itemIds) {
       try {
@@ -1055,14 +1039,6 @@ export class SqlWriteStrategy implements IWriteStrategy {
     return rows.length > 0 ? (rows[0].id as string) : null;
   }
 
-  async findArtistByName(name: string): Promise<{ id: string } | null> {
-    const [rows] = await this.db.execute<RowDataPacket[]>(
-      'SELECT id FROM artists WHERE name = ? LIMIT 1',
-      [name]
-    );
-    return rows.length > 0 ? { id: rows[0].id as string } : null;
-  }
-
   async writeAuthorTranslation(data: AuthorTranslationData): Promise<void> {
     const sanitized = sanitizeAllStrings(data);
     const bc = sanitized.backward_compatibility ?? null;
@@ -1086,53 +1062,6 @@ export class SqlWriteStrategy implements IWriteStrategy {
         this.now,
       ]
     );
-  }
-
-  async writeArtist(data: ArtistData): Promise<string> {
-    const sanitized = sanitizeAllStrings(data);
-    const id = deterministicUuid(`artist:${sanitized.backward_compatibility.toLowerCase()}`);
-    try {
-      await this.db.execute(
-        `INSERT INTO artists (id, name, internal_name, place_of_birth, place_of_death, date_of_birth, date_of_death, period_of_activity, backward_compatibility, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [
-          id,
-          sanitized.name,
-          sanitized.internal_name,
-          sanitized.place_of_birth,
-          sanitized.place_of_death,
-          sanitized.date_of_birth,
-          sanitized.date_of_death,
-          sanitized.period_of_activity,
-          sanitized.backward_compatibility,
-          this.now,
-          this.now,
-        ]
-      );
-      this.tracker.set(sanitized.backward_compatibility, id, 'artist');
-      return id;
-    } catch (error) {
-      // Duplicate entry - try to find existing record
-      // This is expected when the same artist is imported multiple times
-      const existing = await this.findByBackwardCompatibility(
-        'artists',
-        sanitized.backward_compatibility
-      );
-      if (existing) {
-        return existing;
-      }
-      // Retry by name in case backward_compatibility doesn't match
-      const byName = await this.findArtistByName(sanitized.name ?? '');
-      if (byName) {
-        return byName.id;
-      }
-      // If we can't find it after the error, re-throw with context
-      const message = error instanceof Error ? error.message : String(error);
-      throw new Error(
-        `Failed to create or find artist: ${sanitized.backward_compatibility}. Original error: ${message}`,
-        { cause: error }
-      );
-    }
   }
 
   /**

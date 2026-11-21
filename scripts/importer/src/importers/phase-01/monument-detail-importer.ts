@@ -3,6 +3,9 @@
  *
  * Imports monument details (items) from legacy database.
  * Monument details are child items of monuments with simpler structure.
+ *
+ * The artist line stays on each translation as written. The importer makes no
+ * Artist record or item-Artist link from it (ADR 006 rule 2, #2734).
  */
 
 import { BaseImporter } from '../../core/base-importer.js';
@@ -12,29 +15,18 @@ import {
   isBlankMonumentDetailGroup,
   transformMonumentDetail,
   transformMonumentDetailTranslation,
-  extractMonumentDetailTags,
 } from '../../domain/transformers/index.js';
 import type { LegacyMonumentDetail, MonumentDetailGroup } from '../../domain/types/index.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { mapLanguageCode } from '../../utils/code-mappings.js';
-import { ArtistHelper } from '../../helpers/artist-helper.js';
 
 export class MonumentDetailImporter extends BaseImporter {
-  private artistHelper!: ArtistHelper;
-
   getName(): string {
     return 'MonumentDetailImporter';
   }
 
   async import(): Promise<ImportResult> {
     const result = this.createResult();
-
-    // Initialize helpers
-    this.artistHelper = new ArtistHelper(
-      this.context.strategy,
-      this.context.tracker,
-      this.context.logger
-    );
 
     try {
       this.logInfo('Importing monument details...');
@@ -245,21 +237,6 @@ export class MonumentDetailImporter extends BaseImporter {
           translator_id: null,
           translation_copy_editor_id: null,
         });
-
-        // Handle artists from this translation
-        const extractedTags = extractMonumentDetailTags(detail);
-        if (extractedTags.artists.length > 0) {
-          const artistIds: string[] = [];
-
-          for (const artistName of extractedTags.artists) {
-            const artistId = await this.artistHelper.findOrCreate(artistName);
-            if (artistId) artistIds.push(artistId);
-          }
-
-          if (artistIds.length > 0) {
-            await this.context.strategy.attachArtistsToItem(itemId, artistIds);
-          }
-        }
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         const warning = `Failed to create translation for detail ${group.detail_id} lang ${detail.lang_id}: ${message}`;

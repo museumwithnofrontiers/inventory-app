@@ -51,6 +51,7 @@ The panel can't edit `extra` as fields. An editor can't correct the dynasty line
 | 2026-11-20 | Explore's `period_from`/`period_to` | Into those monuments' `start_date`/`end_date` (G2, #2697). |
 | 2026-11-20 | A timeline event with no end year | `year_to` is nullable: no end year, not 0 (G2, #2697; G3, #2699). |
 | 2026-11-20 | Object start and end years written as a decade ("1960s") | Kept as legacy's API reads them (the leading integer), the text as written in `dates`; typos are fixed in legacy (#2339). |
+| 2026-11-21 | The Artists the importer split from the artist lines (legacy has no artist table) | The importer makes no Artist and no item-Artist link from the lines (rule 2). Artists are editorial records, created and linked in the panel. The packages keep `artist_names`, filled from those links (#2734). |
 
 ### Result
 
