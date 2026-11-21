@@ -9,6 +9,7 @@ use App\Filament\Resources\CollectionResource;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -16,6 +17,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\HtmlString;
 
 /**
  * The collections a collection links to, by kind (`collection_collection`,
@@ -47,7 +49,7 @@ class RelatedCollectionsRelationManager extends RelationManager
                     ->label('Order'),
                 TextColumn::make('internal_name')
                     ->label('Collection')
-                    ->formatStateUsing(fn (Collection $record): string => CollectionDisplayLabel::resolveLabel($record->id) ?: $record->internal_name)
+                    ->formatStateUsing(fn (Collection $record): HtmlString => MarkdownText::inline(CollectionDisplayLabel::resolveForRecord($record)))
                     ->searchable()
                     ->url(fn (Collection $record): ?string => auth()->user()?->can('view', $record)
                         ? CollectionResource::getUrl('view', ['record' => $record])

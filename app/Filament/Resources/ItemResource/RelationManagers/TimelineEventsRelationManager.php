@@ -6,6 +6,7 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Resources\TimelineResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TimelineEventDisplayLabel;
 use App\Filament\Support\TimelineEventItemPivot;
@@ -40,6 +41,7 @@ class TimelineEventsRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('timeline.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Timeline')
                     ->sortable()
                     ->url(fn (TimelineEvent $record): ?string => $record->timeline && auth()->user()?->can('view', $record->timeline)
@@ -61,6 +63,7 @@ class TimelineEventsRelationManager extends RelationManager
                 TimelineEventItemPivot::displayOrderColumn(),
                 TimelineEventItemPivot::backwardCompatibilityColumn(),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Internal name')
                     ->searchable()
                     ->sortable()

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\RelationManagers;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Context;
 use App\Models\Language;
@@ -167,6 +168,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
                     ->trueColor('warning')
                     ->falseColor('gray'),
                 TextColumn::make($titleAttr)
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 ...static::extraColumns(),

@@ -28,11 +28,13 @@ use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ExtraJsonField;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Country;
 use App\Models\Partner;
 use App\Models\Project;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section as FiltersSection;
@@ -135,8 +137,8 @@ class CollectionResource extends Resource
             ->get()
             ->mapWithKeys(fn (Collection $collection): array => [
                 $collection->id => $collection->display_label !== $collection->internal_name
-                    ? $collection->display_label.' ['.$collection->internal_name.']'
-                    : $collection->internal_name,
+                    ? MarkdownText::plain($collection->display_label).' ['.MarkdownText::plain($collection->internal_name).']'
+                    : MarkdownText::plain($collection->internal_name),
             ])->all();
     }
 
@@ -167,7 +169,7 @@ class CollectionResource extends Resource
 
         $record->loadMissing(['translations']);
 
-        return CollectionDisplayLabel::resolveForRecord($record);
+        return MarkdownText::plain(CollectionDisplayLabel::resolveForRecord($record));
     }
 
     public static function getGloballySearchableAttributes(): array
@@ -305,6 +307,7 @@ class CollectionResource extends Resource
 
                         return CollectionDisplayLabel::resolveForRecord($record->parent);
                     })
+                    ->formatStateUsing(MarkdownState::inline())
                     ->sortable(false)
                     ->toggleable()
                     ->url(fn (Collection $record): ?string => $record->parent
@@ -349,8 +352,8 @@ class CollectionResource extends Resource
                             ->limit(50)
                     )->get()->mapWithKeys(fn (Collection $c): array => [
                         $c->id => $c->display_label !== $c->internal_name
-                            ? $c->display_label.' ['.$c->internal_name.']'
-                            : $c->internal_name,
+                            ? MarkdownText::plain($c->display_label).' ['.MarkdownText::plain($c->internal_name).']'
+                            : MarkdownText::plain($c->internal_name),
                     ])->all())
                     ->getOptionLabelUsing(fn (mixed $value): string => CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''))
                     ->searchable(),
@@ -363,9 +366,10 @@ class CollectionResource extends Resource
                         ->orderBy('internal_name')
                         ->limit(50)
                         ->pluck('internal_name', 'id')
+                        ->map(MarkdownText::plain(...))
                         ->all()
                     )
-                    ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Partner::find($value)->internal_name ?? $value) : '')
+                    ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? MarkdownText::plain(Partner::find($value)->internal_name ?? $value) : '')
                     ->searchable()
                     ->query(fn (Builder $query, array $data): Builder => $data['value']
                         ? $query->whereHas('partners', fn (Builder $q): Builder => $q->where('partners.id', $data['value']))
@@ -456,9 +460,10 @@ class CollectionResource extends Resource
                             ->placeholder('None'),
                         TextEntry::make('parent_display_label')
                             ->label('Parent')
-                            ->getStateUsing(fn (Collection $record): ?string => $record->parent_id
-                                ? CollectionDisplayLabel::resolveLabel($record->parent_id)
+                            ->getStateUsing(fn (Collection $record): ?string => $record->parent
+                                ? CollectionDisplayLabel::resolveForRecord($record->parent)
                                 : null)
+                            ->formatStateUsing(MarkdownState::inline())
                             ->url(fn (Collection $record): ?string => $record->parent
                                 ? (auth()->user()?->can('view', $record->parent) ? static::getUrl('view', ['record' => $record->parent]) : null)
                                 : null),
@@ -501,6 +506,7 @@ class CollectionResource extends Resource
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Internal name'),
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code'),

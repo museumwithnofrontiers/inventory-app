@@ -6,6 +6,7 @@ use App\Enums\ItemType;
 use App\Models\CollectionItem;
 use App\Models\Item;
 use App\Models\Language;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -143,7 +144,7 @@ class CollectionItemAppearance
                     $text = $descriptions !== [] ? reset($descriptions) : null;
                 }
 
-                return $text !== null ? mb_substr((string) $text, 0, 80).(mb_strlen((string) $text) > 80 ? '…' : '') : null;
+                return $text !== null ? MarkdownText::excerpt($text, 80) : null;
             })
             ->placeholder('—')
             ->toggleable();
@@ -217,6 +218,8 @@ class CollectionItemAppearance
                         $entries[] = TextEntry::make('desc_'.$langId)
                             ->label('Contextual description')
                             ->state((string) $text)
+                            ->formatStateUsing(MarkdownState::block())
+                            ->prose()
                             ->columnSpanFull();
                     }
 

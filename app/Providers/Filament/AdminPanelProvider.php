@@ -27,6 +27,7 @@ use App\Http\Controllers\Filament\TimelineEventImageController as FilamentTimeli
 use App\Http\Controllers\Filament\VerifyEmailController;
 use App\Http\Middleware\Filament\EnsureTwoFactorEnrolled;
 use App\Http\Middleware\VerifyCsrfToken;
+use App\Support\Markdown\MarkdownText;
 use Filament\Enums\ThemeMode;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -37,6 +38,7 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\Tables\Table;
 use Illuminate\Auth\Notifications\VerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -61,6 +63,19 @@ class AdminPanelProvider extends PanelProvider
         Livewire::component('app.filament.auth.request-password-reset', RequestPasswordReset::class);
         Livewire::component('app.filament.auth.reset-password', ResetPassword::class);
         Livewire::component('app.filament.auth.password-reset-mfa-challenge', PasswordResetMfaChallenge::class);
+
+        // Stored text is Markdown (see MarkdownText). A table's record title,
+        // which action headings, confirmations and notifications print, reads
+        // the title attribute as plain text. A table that sets its own
+        // recordTitle() (a resource's list page, RecordSelect) replaces this.
+        Table::configureUsing(function (Table $table): void {
+            $table->recordTitle(function (Model $record) use ($table): ?string {
+                $attribute = $table->getRecordTitleAttribute();
+                $value = filled($attribute) ? $record->getAttributeValue($attribute) : null;
+
+                return is_string($value) ? MarkdownText::plain($value) : null;
+            });
+        });
 
         // Every verification message links to the panel's own route: the one
         // Laravel sends on registration, the one an administrator resends from

@@ -6,6 +6,7 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Support\CollectionDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\PublicationPivot;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
@@ -52,6 +53,7 @@ class CollectionsRelationManager extends RelationManager
                     ->label('Context')
                     ->toggleable(),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Internal name')
                     ->searchable()
                     ->sortable()

@@ -14,6 +14,7 @@ use App\Models\Publication;
 use App\Models\Tag;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
+use App\Support\Markdown\MarkdownText;
 use Closure;
 use Filament\Forms\Components\Select;
 use Filament\Tables\Actions\AssociateAction;
@@ -363,7 +364,7 @@ class RecordSelect
                 ->orderBy('from_ad')
                 ->limit(self::RESULT_LIMIT)
                 ->get()
-                ->mapWithKeys(fn (Dynasty $dynasty): array => [$dynasty->id => $dynasty->display_label])
+                ->mapWithKeys(fn (Dynasty $dynasty): array => [$dynasty->id => MarkdownText::plain($dynasty->display_label)])
                 ->all())
             ->getOptionLabelUsing(fn (mixed $value): string => DynastyDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''));
 
@@ -430,7 +431,7 @@ class RecordSelect
             self::DYNASTIES => $action
                 ->recordSelectSearchColumns(self::ID_BC)
                 ->recordSelectOptionsQuery(fn (Builder $query): Builder => self::applyScope(DynastyDisplayLabel::withDisplayLabel($query)->orderBy('from_ad'), $scope))
-                ->recordTitle(fn (Dynasty $record): string => $record->display_label),
+                ->recordTitle(fn (Dynasty $record): string => MarkdownText::plain($record->display_label)),
 
             self::GLOSSARIES => $action
                 ->recordSelectSearchColumns(self::ID_INTERNAL_NAME_BC)
@@ -568,15 +569,18 @@ class RecordSelect
     private static function compositeLabel(string $displayLabel, string $internalName, ?string $backwardCompatibility): string
     {
         return $displayLabel !== $internalName
-            ? "{$displayLabel} [{$internalName}]"
+            ? MarkdownText::plain($displayLabel).' ['.MarkdownText::plain($internalName).']'
             : self::legacyLabel($internalName, $backwardCompatibility);
     }
 
     /**
-     * Suffixes a name with its legacy code when one exists.
+     * Suffixes a name with its legacy code when one exists. The name is
+     * stored Markdown, shown as plain text: an option label can't hold HTML.
      */
     private static function legacyLabel(string $name, ?string $backwardCompatibility): string
     {
+        $name = MarkdownText::plain($name);
+
         return $backwardCompatibility
             ? "{$name} [{$backwardCompatibility}]"
             : $name;

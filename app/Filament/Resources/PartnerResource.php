@@ -8,6 +8,7 @@ use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasLegacyLinksInfolistSection;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasTranslationCoverageFilters;
 use App\Filament\Concerns\HasUuidColumn;
@@ -23,6 +24,7 @@ use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationMa
 use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Resources\PartnerResource\RelationManagers\VisitInformationRelationManager;
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\PartnerDisplayLabel;
 use App\Models\Country;
 use App\Models\Partner;
@@ -54,6 +56,7 @@ class PartnerResource extends Resource
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
     use HasLegacyLinksInfolistSection;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasTranslationCoverageFilters;
     use HasUuidColumn;
@@ -174,6 +177,7 @@ class PartnerResource extends Resource
                         ? (auth()->user()?->can('view', $record->country) ? CountryResource::getUrl('view', ['record' => $record->country]) : null)
                         : null),
                 TextColumn::make('project.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Project')
                     ->sortable()
                     ->url(fn (Partner $record): ?string => $record->project
@@ -268,11 +272,13 @@ class PartnerResource extends Resource
                                 ? (auth()->user()?->can('view', $record->country) ? CountryResource::getUrl('view', ['record' => $record->country]) : null)
                                 : null),
                         TextEntry::make('project.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Project')
                             ->url(fn (Partner $record): ?string => $record->project
                                 ? (auth()->user()?->can('view', $record->project) ? ProjectResource::getUrl('view', ['record' => $record->project]) : null)
                                 : null),
                         TextEntry::make('monumentItem.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Monument item')
                             ->url(fn (Partner $record): ?string => $record->monumentItem
                                 ? (auth()->user()?->can('view', $record->monumentItem) ? ItemResource::getUrl('view', ['record' => $record->monumentItem]) : null)
@@ -285,6 +291,7 @@ class PartnerResource extends Resource
                         IconEntry::make('featured')
                             ->boolean(),
                         TextEntry::make('city')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->placeholder('—'),
                         TextEntry::make('latitude'),
                         TextEntry::make('longitude'),
@@ -296,6 +303,7 @@ class PartnerResource extends Resource
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Internal name'),
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code'),

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Enums\Permission;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Resources\PartnerTranslationResource\Pages\CreatePartnerTranslation;
 use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
@@ -10,6 +11,7 @@ use App\Filament\Resources\PartnerTranslationResource\Pages\ListPartnerTranslati
 use App\Filament\Resources\PartnerTranslationResource\Pages\ViewPartnerTranslation;
 use App\Filament\Resources\PartnerTranslationResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\PartnerTranslationResource\RelationManagers\SiblingTranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\PartnerTranslation;
@@ -38,6 +40,7 @@ use Illuminate\Validation\Rules\Unique;
 
 class PartnerTranslationResource extends Resource
 {
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
 
     protected static ?string $model = PartnerTranslation::class;
@@ -213,6 +216,7 @@ class PartnerTranslationResource extends Resource
                 InfolistSection::make('Translation For')
                     ->schema([
                         TextEntry::make('partner.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Partner')
                             ->url(fn (PartnerTranslation $record): ?string => $record->partner
                                 ? (auth()->user()?->can('view', $record->partner) ? PartnerResource::getUrl('view', ['record' => $record->partner]) : null)
@@ -293,6 +297,7 @@ class PartnerTranslationResource extends Resource
             ]))
             ->columns([
                 TextColumn::make('partner.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Partner')
                     ->sortable()
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query
@@ -333,6 +338,7 @@ class PartnerTranslationResource extends Resource
                     ->trueColor('warning')
                     ->falseColor('gray'),
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('backward_compatibility')

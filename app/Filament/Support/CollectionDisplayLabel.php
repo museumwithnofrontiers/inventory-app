@@ -5,6 +5,7 @@ namespace App\Filament\Support;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Language;
+use App\Support\Markdown\MarkdownText;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -141,7 +142,7 @@ class CollectionDisplayLabel
      * getOptionLabelUsing() callbacks where only a single value is needed.
      *
      * @param  mixed  $value  The collection UUID.
-     * @return string The resolved display label, or the raw value if not found.
+     * @return string The resolved display label as plain text (Markdown removed, for option labels), or the raw value if not found.
      */
     public static function resolveLabel(mixed $value): string
     {
@@ -156,7 +157,7 @@ class CollectionDisplayLabel
 
         $collection->load('translations');
 
-        return static::resolveForRecord($collection);
+        return MarkdownText::plain(static::resolveForRecord($collection));
     }
 
     /**
@@ -169,6 +170,7 @@ class CollectionDisplayLabel
     public static function displayLabelColumn(): TextColumn
     {
         return TextColumn::make('display_label')
+            ->formatStateUsing(MarkdownState::inline())
             ->label('Title')
             ->searchable(false)
             ->sortable(false);

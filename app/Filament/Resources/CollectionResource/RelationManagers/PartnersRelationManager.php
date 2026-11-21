@@ -7,6 +7,7 @@ use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CountryResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\CollectionPartnerPivot;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\PartnerDisplayLabel;
 use App\Filament\Support\RecordSelect;
 use App\Models\Partner;
@@ -57,6 +58,7 @@ class PartnersRelationManager extends RelationManager
                         ? (auth()->user()?->can('view', $record->country) ? CountryResource::getUrl('view', ['record' => $record->country]) : null)
                         : null),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

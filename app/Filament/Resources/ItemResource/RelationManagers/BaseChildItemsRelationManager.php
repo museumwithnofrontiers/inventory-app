@@ -9,6 +9,7 @@ use App\Filament\Resources\CountryResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Item;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -120,6 +121,7 @@ abstract class BaseChildItemsRelationManager extends RelationManager
                         ->formatStateUsing(fn (?ItemType $state): ?string => $state?->label())
                         ->sortable(),
                     TextColumn::make('partner.internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->label('Partner')
                         ->sortable()
                         ->url(fn (Item $record): ?string => $record->partner
@@ -135,6 +137,7 @@ abstract class BaseChildItemsRelationManager extends RelationManager
                         ->label('Order')
                         ->sortable(),
                     TextColumn::make('internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->searchable()
                         ->sortable()
                         ->toggleable(isToggledHiddenByDefault: true),

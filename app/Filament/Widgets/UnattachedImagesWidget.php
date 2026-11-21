@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Enums\Permission;
 use App\Filament\Resources\AvailableImageResource;
+use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\ImageColumn;
@@ -46,7 +47,7 @@ class UnattachedImagesWidget extends BaseWidget
                     ->url(fn (AvailableImage $record): string => AvailableImageResource::getUrl('view', ['record' => $record])),
                 TextColumn::make('comment')
                     ->label('Comment')
-                    ->limit(50)
+                    ->formatStateUsing(MarkdownState::excerpt(50))
                     ->sortable(false),
                 TextColumn::make('created_at')
                     ->label('Uploaded')

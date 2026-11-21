@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\TimelineEventResource\Pages\CreateTimelineEvent;
@@ -15,10 +16,12 @@ use App\Filament\Resources\TimelineEventResource\RelationManagers\ImagesRelation
 use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\TimelineEventResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TimelineEventDisplayLabel;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
@@ -39,6 +42,7 @@ class TimelineEventResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -139,6 +143,7 @@ class TimelineEventResource extends Resource
                 TimelineEventDisplayLabel::displayLabelColumn()
                     ->url(fn (TimelineEvent $record): ?string => auth()->user()?->can('view', $record) ? static::getUrl('view', ['record' => $record]) : null),
                 TextColumn::make('timeline.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Timeline')
                     ->sortable(),
                 TextColumn::make('year_from')
@@ -175,7 +180,7 @@ class TimelineEventResource extends Resource
                         ->pluck('internal_name', 'id')
                         ->all()
                     )
-                    ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Timeline::find($value)->internal_name ?? $value) : '')
+                    ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? MarkdownText::plain(Timeline::find($value)->internal_name ?? $value) : '')
                     ->searchable(),
             ]);
     }
@@ -188,6 +193,7 @@ class TimelineEventResource extends Resource
                 InfolistSection::make('Core Information')
                     ->schema([
                         TextEntry::make('timeline.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Timeline'),
                         TextEntry::make('year_from')
                             ->label('Year from'),
@@ -211,6 +217,7 @@ class TimelineEventResource extends Resource
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Internal name'),
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code'),

@@ -5,6 +5,7 @@ namespace App\Filament\Support;
 use App\Models\Context;
 use App\Models\Language;
 use App\Models\Partner;
+use App\Support\Markdown\MarkdownText;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -146,7 +147,7 @@ class PartnerDisplayLabel
      * getOptionLabelUsing() callbacks where only a single value is needed.
      *
      * @param  mixed  $value  The partner UUID.
-     * @return string The resolved display label, or the raw value if not found.
+     * @return string The resolved display label as plain text (Markdown removed, for option labels), or the raw value if not found.
      */
     public static function resolveLabel(mixed $value): string
     {
@@ -161,7 +162,7 @@ class PartnerDisplayLabel
 
         $partner->load(['translations', 'project:id,context_id']);
 
-        return static::resolveForRecord($partner);
+        return MarkdownText::plain(static::resolveForRecord($partner));
     }
 
     /**
@@ -174,6 +175,7 @@ class PartnerDisplayLabel
     public static function displayLabelColumn(): TextColumn
     {
         return TextColumn::make('display_label')
+            ->formatStateUsing(MarkdownState::inline())
             ->label('Name')
             ->searchable(false)
             ->sortable(false);

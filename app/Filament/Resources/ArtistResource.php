@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\ArtistResource\Pages\CreateArtist;
@@ -12,6 +13,7 @@ use App\Filament\Resources\ArtistResource\Pages\EditArtist;
 use App\Filament\Resources\ArtistResource\Pages\ListArtist;
 use App\Filament\Resources\ArtistResource\Pages\ViewArtist;
 use App\Filament\Resources\ArtistResource\RelationManagers\ItemsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Models\Artist;
 use App\Policies\ArtistPolicy;
 use Filament\Forms\Components\Section;
@@ -41,6 +43,7 @@ class ArtistResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -125,9 +128,11 @@ class ArtistResource extends Resource
             ->defaultSort('name', 'asc')
             ->columns([
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('period_of_activity')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Period of activity')
                     ->searchable()
                     ->toggleable(),
@@ -161,17 +166,20 @@ class ArtistResource extends Resource
             ->schema([
                 InfolistSection::make('Core Information')
                     ->schema([
-                        TextEntry::make('name'),
+                        TextEntry::make('name')->formatStateUsing(MarkdownState::inline()),
                         TextEntry::make('period_of_activity')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Period of activity')
                             ->placeholder('—'),
                         TextEntry::make('place_of_birth')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Place of birth')
                             ->placeholder('—'),
                         TextEntry::make('date_of_birth')
                             ->label('Date of birth')
                             ->placeholder('—'),
                         TextEntry::make('place_of_death')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Place of death')
                             ->placeholder('—'),
                         TextEntry::make('date_of_death')
@@ -183,6 +191,7 @@ class ArtistResource extends Resource
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Internal name'),
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code')

@@ -7,6 +7,7 @@ use App\Enums\PublicationStatus;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\PublicationResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\PublicationPivot;
 use App\Filament\Support\RecordSelect;
 use App\Models\Publication;
@@ -45,6 +46,7 @@ abstract class BasePublicationsRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Publication')
                     ->searchable()
                     ->sortable()

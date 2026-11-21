@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\ArtistResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Artist;
 use Filament\Infolists\Components\TextEntry;
@@ -32,15 +33,18 @@ class ArtistsRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Name')
                     ->searchable()
                     ->sortable()
                     ->url(fn (Artist $record): ?string => self::artistUrl($record)),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('period_of_activity')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Period')
                     ->sortable()
                     ->toggleable(),
@@ -66,11 +70,11 @@ class ArtistsRelationManager extends RelationManager
                     ->url(fn (Artist $record): ?string => self::artistUrl($record))
                     ->modalHeading('Artist')
                     ->infolist(fn (Artist $record): array => [
-                        TextEntry::make('name')->label('Name'),
-                        TextEntry::make('internal_name')->label('Internal name'),
-                        TextEntry::make('period_of_activity')->label('Period of activity'),
-                        TextEntry::make('place_of_birth')->label('Place of birth'),
-                        TextEntry::make('place_of_death')->label('Place of death'),
+                        TextEntry::make('name')->formatStateUsing(MarkdownState::inline())->label('Name'),
+                        TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline())->label('Internal name'),
+                        TextEntry::make('period_of_activity')->formatStateUsing(MarkdownState::inline())->label('Period of activity'),
+                        TextEntry::make('place_of_birth')->formatStateUsing(MarkdownState::inline())->label('Place of birth'),
+                        TextEntry::make('place_of_death')->formatStateUsing(MarkdownState::inline())->label('Place of death'),
                         TextEntry::make('date_of_birth')->label('Date of birth'),
                         TextEntry::make('date_of_death')->label('Date of death'),
                         TextEntry::make('backward_compatibility')->label('Legacy code'),

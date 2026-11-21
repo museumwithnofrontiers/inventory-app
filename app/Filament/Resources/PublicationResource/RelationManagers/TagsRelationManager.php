@@ -6,6 +6,7 @@ use App\Enums\Permission;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\TagResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -39,12 +40,14 @@ class TagsRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('description')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Tag')
                     ->sortable()
                     ->url(fn ($record): ?string => auth()->user()?->can('view', $record)
                         ? TagResource::getUrl('view', ['record' => $record])
                         : null),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

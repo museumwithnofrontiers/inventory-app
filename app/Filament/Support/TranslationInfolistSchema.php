@@ -2,31 +2,23 @@
 
 namespace App\Filament\Support;
 
-use App\Services\MarkdownService;
+use App\Support\Markdown\MarkdownText;
 use Filament\Infolists\Components\TextEntry;
+use Illuminate\Support\HtmlString;
 
 class TranslationInfolistSchema
 {
     /**
-     * Returns a TextEntry that renders its value as Markdown HTML.
-     * When the record's language_id is 'ara', the rendered HTML is wrapped
-     * in a right-to-left container so Arabic text displays correctly.
+     * Returns a TextEntry that renders a long text, which is Markdown, as
+     * block HTML ({@see MarkdownText::block()}: raw HTML escaped, unsafe links
+     * refused). When the record's language_id is 'ara', the HTML is wrapped in
+     * a right-to-left container so Arabic text displays correctly.
      */
     public static function markdownEntry(string $name, ?string $label = null, bool $columnSpanFull = false): TextEntry
     {
         $entry = TextEntry::make($name)
-            ->html()
-            ->formatStateUsing(function (?string $state, mixed $record): string {
-                if (! filled($state)) {
-                    return '';
-                }
-                // MarkdownService strips all HTML input (html_input='strip') and disallows
-                // unsafe links, so its output is safe to render with ->html().
-                $html = app(MarkdownService::class)->markdownToHtml($state);
-                $langId = is_object($record) && is_string($record->language_id ?? null) ? $record->language_id : null;
-
-                return self::wrapForDirection($html, $langId, wrapInProse: true);
-            });
+            ->prose()
+            ->formatStateUsing(fn (mixed $state, mixed $record): HtmlString => self::wrapForDirection(MarkdownText::block($state), $record, block: true));
 
         if ($label !== null) {
             $entry->label($label);
@@ -40,21 +32,13 @@ class TranslationInfolistSchema
     }
 
     /**
-     * Returns a TextEntry that applies RTL direction for Arabic records.
-     * The value is HTML-escaped so it is displayed as plain text.
+     * Returns a TextEntry for a short text, which is Markdown, rendered on one
+     * line ({@see MarkdownText::inline()}), right-to-left for Arabic records.
      */
     public static function rtlTextEntry(string $name, ?string $label = null): TextEntry
     {
         $entry = TextEntry::make($name)
-            ->html()
-            ->formatStateUsing(function (?string $state, mixed $record): string {
-                if (! filled($state)) {
-                    return '';
-                }
-                $langId = is_object($record) && is_string($record->language_id ?? null) ? $record->language_id : null;
-
-                return self::wrapForDirection(e($state), $langId, wrapInProse: false);
-            });
+            ->formatStateUsing(fn (mixed $state, mixed $record): HtmlString => self::wrapForDirection(MarkdownText::inline($state), $record, block: false));
 
         if ($label !== null) {
             $entry->label($label);
@@ -72,22 +56,19 @@ class TranslationInfolistSchema
     }
 
     /**
-     * Wraps the given HTML content in an appropriate direction container
-     * when the language is Arabic ('ara').
+     * Wraps rendered HTML in a right-to-left container when the record's
+     * language is Arabic ('ara').
      */
-    private static function wrapForDirection(string $content, ?string $languageId, bool $wrapInProse): string
+    private static function wrapForDirection(HtmlString $html, mixed $record, bool $block): HtmlString
     {
-        if ($languageId === 'ara') {
-            $class = $wrapInProse ? 'text-right prose max-w-none' : 'block text-right';
-            $tag = $wrapInProse ? 'div' : 'span';
+        $languageId = is_object($record) && is_string($record->language_id ?? null) ? $record->language_id : null;
 
-            return "<{$tag} dir=\"rtl\" class=\"{$class}\">{$content}</{$tag}>";
+        if ($languageId !== 'ara' || $html->isEmpty()) {
+            return $html;
         }
 
-        if ($wrapInProse) {
-            return '<div class="prose max-w-none">'.$content.'</div>';
-        }
-
-        return $content;
+        return new HtmlString($block
+            ? '<div dir="rtl" class="text-right">'.$html->toHtml().'</div>'
+            : '<span dir="rtl" class="block text-right">'.$html->toHtml().'</span>');
     }
 }

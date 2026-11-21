@@ -13,8 +13,10 @@ use App\Filament\Resources\DynastyResource\Pages\ViewDynasty;
 use App\Filament\Resources\DynastyResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\DynastyResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\DynastyDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Models\Dynasty;
 use App\Policies\DynastyPolicy;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -89,7 +91,7 @@ class DynastyResource extends Resource
             return parent::getRecordTitle($record);
         }
 
-        $label = DynastyDisplayLabel::resolveForRecord($record);
+        $label = MarkdownText::plain(DynastyDisplayLabel::resolveForRecord($record));
 
         return $label !== '' ? $label : (string) $record->getKey();
     }
@@ -153,6 +155,7 @@ class DynastyResource extends Resource
             ->defaultSort('from_ad', 'asc')
             ->columns([
                 TextColumn::make('display_label')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Name')
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query->whereHas(
                         'translations',
@@ -202,6 +205,7 @@ class DynastyResource extends Resource
                         TextEntry::make('display_label')
                             ->label('Name')
                             ->state(fn (Dynasty $record): string => DynastyDisplayLabel::resolveForRecord($record))
+                            ->formatStateUsing(MarkdownState::inline())
                             ->placeholder('—'),
                         TextEntry::make('from_ad')
                             ->label('From (AD)')

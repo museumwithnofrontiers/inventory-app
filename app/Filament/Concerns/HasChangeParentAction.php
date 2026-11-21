@@ -3,6 +3,7 @@
 namespace App\Filament\Concerns;
 
 use App\Filament\Support\RecordSelect;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Tables\Actions\Action;
@@ -50,7 +51,7 @@ trait HasChangeParentAction
      */
     protected static function changeParentSearchResults(Builder $query): array
     {
-        return $query->pluck('internal_name', 'id')->all();
+        return $query->pluck('internal_name', 'id')->map(MarkdownText::plain(...))->all();
     }
 
     /**
@@ -61,7 +62,7 @@ trait HasChangeParentAction
     {
         $modelClass = static::changeParentModelClass();
 
-        return $modelClass::find($value)?->internal_name ?? (is_scalar($value) ? (string) $value : '');
+        return MarkdownText::plain($modelClass::find($value)?->internal_name ?? (is_scalar($value) ? (string) $value : ''));
     }
 
     protected static function changeParentAction(): Action
@@ -144,7 +145,7 @@ trait HasChangeParentAction
                             'error' => $e->getMessage(),
                         ]);
                         $nameRaw = $record->getAttribute('internal_name');
-                        $errors[] = is_scalar($nameRaw) ? (string) $nameRaw : '';
+                        $errors[] = MarkdownText::plain($nameRaw);
                     }
                 }
 

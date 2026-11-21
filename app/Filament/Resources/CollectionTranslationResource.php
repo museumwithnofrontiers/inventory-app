@@ -3,12 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Enums\Permission;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Resources\CollectionTranslationResource\Pages\CreateCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\Pages\ListCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\Pages\ViewCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\RelationManagers\SiblingTranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\CollectionTranslation;
@@ -36,6 +38,7 @@ use Illuminate\Validation\Rules\Unique;
 
 class CollectionTranslationResource extends Resource
 {
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
 
     protected static ?string $model = CollectionTranslation::class;
@@ -144,6 +147,7 @@ class CollectionTranslationResource extends Resource
                 InfolistSection::make('Translation For')
                     ->schema([
                         TextEntry::make('collection.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Collection')
                             ->url(fn (CollectionTranslation $record): ?string => $record->collection
                                 ? (auth()->user()?->can('view', $record->collection) ? CollectionResource::getUrl('view', ['record' => $record->collection]) : null)
@@ -204,6 +208,7 @@ class CollectionTranslationResource extends Resource
             ]))
             ->columns([
                 TextColumn::make('collection.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Collection')
                     ->sortable()
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query
@@ -244,6 +249,7 @@ class CollectionTranslationResource extends Resource
                     ->trueColor('warning')
                     ->falseColor('gray'),
                 TextColumn::make('title')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('backward_compatibility')

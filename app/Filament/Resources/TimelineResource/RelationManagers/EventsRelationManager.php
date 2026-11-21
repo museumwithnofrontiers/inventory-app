@@ -4,6 +4,7 @@ namespace App\Filament\Resources\TimelineResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\TimelineEventResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\ResourceCreateUrl;
 use App\Models\TimelineEvent;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -44,6 +45,7 @@ class EventsRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('year_from')

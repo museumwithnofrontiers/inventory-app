@@ -9,6 +9,7 @@ use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Item;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -74,18 +75,21 @@ class ItemsRelationManager extends RelationManager
                         ->formatStateUsing(fn (?ItemType $state): ?string => $state?->label())
                         ->sortable(),
                     TextColumn::make('partner.internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->label('Partner')
                         ->sortable()
                         ->url(fn (Item $record): ?string => $record->partner
                             ? (auth()->user()?->can('view', $record->partner) ? PartnerResource::getUrl('view', ['record' => $record->partner]) : null)
                             : null),
                     TextColumn::make('collection.internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->label('Collection')
                         ->sortable()
                         ->url(fn (Item $record): ?string => $record->collection
                             ? (auth()->user()?->can('view', $record->collection) ? CollectionResource::getUrl('view', ['record' => $record->collection]) : null)
                             : null),
                     TextColumn::make('internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->searchable()
                         ->sortable()
                         ->toggleable(isToggledHiddenByDefault: true),

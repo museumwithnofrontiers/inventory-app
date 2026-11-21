@@ -4,6 +4,7 @@ namespace App\Filament\Resources\GlossaryResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\GlossarySpelling;
 use Filament\Forms\Components\TextInput;
@@ -51,6 +52,7 @@ class SpellingsRelationManager extends RelationManager
                         ? (auth()->user()?->can('view', $record->language) ? LanguageResource::getUrl('view', ['record' => $record->language]) : null)
                         : null),
                 TextColumn::make('spelling')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('created_at')

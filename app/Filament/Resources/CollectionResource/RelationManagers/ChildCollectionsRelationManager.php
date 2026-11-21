@@ -8,6 +8,7 @@ use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\CollectionDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -99,6 +100,7 @@ class ChildCollectionsRelationManager extends RelationManager
                             ? (auth()->user()?->can('view', $record->language) ? LanguageResource::getUrl('view', ['record' => $record->language]) : null)
                             : null),
                     TextColumn::make('internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->label('Internal name')
                         ->searchable()
                         ->sortable()

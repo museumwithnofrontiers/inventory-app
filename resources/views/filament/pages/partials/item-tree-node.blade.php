@@ -37,10 +37,10 @@
             href="{{ \App\Filament\Resources\ItemResource::getUrl('view', ['record' => $node->id]) }}"
             class="text-sm font-medium text-gray-900 dark:text-white hover:underline truncate block"
         >
-            {{ $node->display_label ?? $node->internal_name }}
+            {{ \App\Support\Markdown\MarkdownText::inline($node->display_label ?? $node->internal_name) }}
         </a>
         @if (isset($node->display_label) && $node->display_label !== $node->internal_name)
-            <span class="text-xs text-gray-400 dark:text-gray-500 truncate block">{{ $node->internal_name }}</span>
+            <span class="text-xs text-gray-400 dark:text-gray-500 truncate block">{{ \App\Support\Markdown\MarkdownText::inline($node->internal_name) }}</span>
         @endif
     </div>
 

@@ -3,12 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Enums\Permission;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Resources\PublicationTranslationResource\Pages\CreatePublicationTranslation;
 use App\Filament\Resources\PublicationTranslationResource\Pages\EditPublicationTranslation;
 use App\Filament\Resources\PublicationTranslationResource\Pages\ListPublicationTranslation;
 use App\Filament\Resources\PublicationTranslationResource\Pages\ViewPublicationTranslation;
 use App\Filament\Resources\PublicationTranslationResource\RelationManagers\SiblingTranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
@@ -37,6 +39,7 @@ use Illuminate\Validation\Rules\Unique;
 
 class PublicationTranslationResource extends Resource
 {
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
 
     protected static ?string $model = PublicationTranslation::class;
@@ -142,6 +145,7 @@ class PublicationTranslationResource extends Resource
                 InfolistSection::make('Translation For')
                     ->schema([
                         TextEntry::make('publication.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Publication')
                             ->url(fn (PublicationTranslation $record): ?string => $record->publication
                                 ? (auth()->user()?->can('view', $record->publication) ? PublicationResource::getUrl('view', ['record' => $record->publication]) : null)
@@ -205,6 +209,7 @@ class PublicationTranslationResource extends Resource
             ]))
             ->columns([
                 TextColumn::make('publication.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Publication')
                     ->sortable()
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query
@@ -233,9 +238,11 @@ class PublicationTranslationResource extends Resource
                     ->trueColor('warning')
                     ->falseColor('gray'),
                 TextColumn::make('title')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('subtitle')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('backward_compatibility')
                     ->label('Legacy ID')

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\TimelineEventResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Language;
 use App\Models\TimelineEvent;
@@ -87,6 +88,7 @@ class TranslationsRelationManager extends RelationManager
                     ->sortable()
                     ->badge(),
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('created_at')

@@ -6,6 +6,7 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\DynastyResource;
 use App\Filament\Support\DynastyDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Dynasty;
 use Filament\Infolists\Components\TextEntry;
@@ -72,7 +73,7 @@ class DynastiesRelationManager extends RelationManager
                     ->url(fn (Dynasty $record): ?string => self::dynastyUrl($record))
                     ->modalHeading('Dynasty')
                     ->infolist(fn (Dynasty $record): array => [
-                        TextEntry::make('display_label')->label('Dynasty'),
+                        TextEntry::make('display_label')->formatStateUsing(MarkdownState::inline())->label('Dynasty'),
                         TextEntry::make('from_ad')->label('From (AD)'),
                         TextEntry::make('to_ad')->label('To (AD)'),
                         TextEntry::make('from_ah')->label('From (AH)'),

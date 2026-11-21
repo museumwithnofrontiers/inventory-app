@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\ProjectResource\Pages\CreateProject;
@@ -15,6 +16,7 @@ use App\Filament\Resources\ProjectResource\RelationManagers\CollectionsRelationM
 use App\Filament\Resources\ProjectResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Models\Context;
 use App\Models\Language;
 use App\Models\Project;
@@ -44,6 +46,7 @@ class ProjectResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -218,7 +221,7 @@ class ProjectResource extends Resource
             ->schema([
                 InfolistSection::make('Core Information')
                     ->schema([
-                        TextEntry::make('internal_name'),
+                        TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline()),
                         TextEntry::make('launch_date')
                             ->label('Launch date')
                             ->date(),

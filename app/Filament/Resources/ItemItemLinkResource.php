@@ -11,6 +11,7 @@ use App\Filament\Resources\ItemItemLinkResource\Pages\EditItemItemLink;
 use App\Filament\Resources\ItemItemLinkResource\Pages\ListItemItemLink;
 use App\Filament\Resources\ItemItemLinkResource\Pages\ViewItemItemLink;
 use App\Filament\Resources\ItemItemLinkResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\ItemItemLink;
 use Filament\Forms\Form;
@@ -77,6 +78,7 @@ class ItemItemLinkResource extends Resource
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('source.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Source item')
                     ->sortable()
                     ->searchable()
@@ -89,6 +91,7 @@ class ItemItemLinkResource extends Resource
                     ->formatStateUsing(fn (mixed $state): string => $state instanceof ItemType ? $state->label() : (is_scalar($state) ? (string) $state : ''))
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('target.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Target item')
                     ->sortable()
                     ->searchable()
@@ -130,11 +133,13 @@ class ItemItemLinkResource extends Resource
                 InfolistSection::make('Link Details')
                     ->schema([
                         TextEntry::make('source.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Source item')
                             ->url(fn (ItemItemLink $record): ?string => $record->source
                                 ? (auth()->user()?->can('view', $record->source) ? ItemResource::getUrl('view', ['record' => $record->source]) : null)
                                 : null),
                         TextEntry::make('target.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Target item')
                             ->url(fn (ItemItemLink $record): ?string => $record->target
                                 ? (auth()->user()?->can('view', $record->target) ? ItemResource::getUrl('view', ['record' => $record->target]) : null)

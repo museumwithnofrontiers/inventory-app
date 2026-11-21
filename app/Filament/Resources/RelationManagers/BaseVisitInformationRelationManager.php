@@ -4,6 +4,7 @@ namespace App\Filament\Resources\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Textarea;
@@ -86,14 +87,14 @@ abstract class BaseVisitInformationRelationManager extends RelationManager
                     ->label('Context')
                     ->sortable(),
                 TextColumn::make('institution')
-                    ->limit(40)
+                    ->formatStateUsing(MarkdownState::excerpt(40))
                     ->placeholder('—'),
                 TextColumn::make('how_to_reach')
                     ->label('How to reach')
-                    ->limit(60)
+                    ->formatStateUsing(MarkdownState::excerpt(60))
                     ->placeholder('—'),
                 TextColumn::make('address')
-                    ->limit(40)
+                    ->formatStateUsing(MarkdownState::excerpt(40))
                     ->placeholder('—')
                     ->toggleable(),
                 TextColumn::make('backward_compatibility')

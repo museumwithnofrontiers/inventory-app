@@ -5,6 +5,7 @@ namespace App\Filament\Resources\GlossaryResource\RelationManagers;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\GlossaryResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -30,6 +31,7 @@ class SynonymsRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->url(fn ($record): ?string => auth()->user()?->can('view', $record)

@@ -4,9 +4,11 @@ namespace App\Filament\Resources\ItemItemLinkResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\MarkdownState;
 use App\Models\ItemItemLink;
 use App\Models\ItemItemLinkTranslation;
 use App\Models\Language;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -92,12 +94,12 @@ class TranslationsRelationManager extends RelationManager
                         : null),
                 TextColumn::make('description')
                     ->label('Description')
-                    ->limit(60)
-                    ->tooltip(fn (ItemItemLinkTranslation $record): ?string => strlen((string) $record->description) > 60 ? $record->description : null),
+                    ->formatStateUsing(MarkdownState::excerpt(60))
+                    ->tooltip(fn (ItemItemLinkTranslation $record): ?string => strlen((string) $record->description) > 60 ? MarkdownText::plain($record->description) : null),
                 TextColumn::make('reciprocal_description')
                     ->label('Reciprocal description')
-                    ->limit(60)
-                    ->tooltip(fn (ItemItemLinkTranslation $record): ?string => strlen((string) $record->reciprocal_description) > 60 ? $record->reciprocal_description : null),
+                    ->formatStateUsing(MarkdownState::excerpt(60))
+                    ->tooltip(fn (ItemItemLinkTranslation $record): ?string => strlen((string) $record->reciprocal_description) > 60 ? MarkdownText::plain($record->reciprocal_description) : null),
                 TextColumn::make('backward_compatibility')
                     ->label('Legacy code')
                     ->toggleable(isToggledHiddenByDefault: true),

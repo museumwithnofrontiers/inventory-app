@@ -5,12 +5,14 @@ namespace App\Filament\Resources;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\AuthorResource\Pages\CreateAuthor;
 use App\Filament\Resources\AuthorResource\Pages\EditAuthor;
 use App\Filament\Resources\AuthorResource\Pages\ListAuthor;
 use App\Filament\Resources\AuthorResource\Pages\ViewAuthor;
+use App\Filament\Support\MarkdownState;
 use App\Models\Author;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -28,6 +30,7 @@ class AuthorResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -83,6 +86,7 @@ class AuthorResource extends Resource
                     ->searchable(['internal_name', 'name']),
                 static::backwardCompatibilityColumn(),
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Name')
                     ->searchable()
                     ->sortable()
@@ -104,8 +108,8 @@ class AuthorResource extends Resource
             ->schema([
                 InfolistSection::make('Core Information')
                     ->schema([
-                        TextEntry::make('name'),
-                        TextEntry::make('internal_name'),
+                        TextEntry::make('name')->formatStateUsing(MarkdownState::inline()),
+                        TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline()),
                     ])
                     ->columns(2),
                 InfolistSection::make('System Information')
