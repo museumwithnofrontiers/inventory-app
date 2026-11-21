@@ -391,9 +391,27 @@ describe('extractObjectArtists', () => {
 
     const result = extractObjectArtists(obj);
 
-    expect(result.length).toBe(1);
-    expect(result[0]?.name).toBe('Imhotep');
-    expect(result[0]?.birthplace).toBe('Memphis');
+    // A name only: the life data is the translation's display text, kept on
+    // the item translation (ADR 006 rule 2).
+    expect(result).toEqual([{ name: 'Imhotep' }]);
+  });
+
+  it('gives no person of a split line the life data of the line', () => {
+    const obj: LegacyObject = {
+      project_id: 'BAR',
+      country: 'pt',
+      museum_id: 'Mus11',
+      number: '1',
+      lang: 'en',
+      artist: 'artist: Manuel Vieira; interior design of cabin: Pedro Alexandrino de Carvalho',
+      birthdate: 'Unknown',
+      period_activity: '18th century',
+    };
+
+    expect(extractObjectArtists(obj)).toEqual([
+      { name: 'artist: Manuel Vieira' },
+      { name: 'interior design of cabin: Pedro Alexandrino de Carvalho' },
+    ]);
   });
 
   it('should extract multiple artists', () => {

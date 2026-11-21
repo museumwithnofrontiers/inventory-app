@@ -56,6 +56,22 @@ describe('ArtistHelper', () => {
     expect(written.name).toBe(sanitizedName);
   });
 
+  it('writes a name only, never life data', async () => {
+    const strategy = {
+      findByBackwardCompatibility: vi.fn().mockResolvedValue(null),
+      writeArtist: vi.fn().mockResolvedValue('artist-uuid-2'),
+    } as unknown as IWriteStrategy;
+
+    const helper = new ArtistHelper(strategy, makeTracker(), makeLogger());
+    await helper.findOrCreate('Johann Baptist Zimmermann');
+
+    expect(strategy.writeArtist).toHaveBeenCalledWith({
+      name: 'Johann Baptist Zimmermann',
+      internal_name: 'Johann Baptist Zimmermann',
+      backward_compatibility: 'mwnf3:artists:Johann Baptist Zimmermann',
+    });
+  });
+
   it('truncates name to 255 characters before writing', async () => {
     const longName = 'A'.repeat(300);
 
