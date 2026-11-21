@@ -4,12 +4,12 @@ title: Site families
 parent: User Manual
 nav_order: 2
 has_children: true
-permalink: /site-families/
+permalink: /user-manual/sites/
 ---
 
 # Site families
 
-Each website is built by one **exporter**, and sites built by the same exporter form a **family**. The pages below add only what is specific to each family. Read the [master manual]({{ '/master-manual/' | relative_url }}) first.
+Each website is built by one **exporter**, and sites built by the same exporter form a **family**. The pages below add only what is specific to each family. Read the [master manual]({{ '/user-manual/master/' | relative_url }}) first.
 
 | Family | Sites | Built from |
 |---|---|---|

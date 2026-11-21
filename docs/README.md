@@ -16,6 +16,10 @@ Generated references remain available for detailed lookup:
 - `_model/` contains generated Laravel model documentation.
 - `_docs/` contains generated commit-history documentation.
 
+## Theme and navigation
+
+The site uses the [Just the Docs](https://just-the-docs.com) theme (`theme: just-the-docs` in `_config.yml`). The sidebar, the breadcrumbs and the search come from each page's front matter: `title`, `parent`, `grand_parent`, `nav_order` and `has_children`. A child page names its parent by the parent's `title`.
+
 ## Manual content
 
 | Directory/File | Purpose |

@@ -23,7 +23,7 @@ panel (you)  ──save──▶  inventory
                         websites              rebuilt and deployed
 ```
 
-1. **Export.** One exporter per site family reads the inventory and writes the site's data package: its items, collections, partners, texts and image addresses. The [site family manuals]({{ '/site-families/' | relative_url }}) explain what each exporter reads.
+1. **Export.** One exporter per site family reads the inventory and writes the site's data package: its items, collections, partners, texts and image addresses. The [site family manuals]({{ '/user-manual/sites/' | relative_url }}) explain what each exporter reads.
 2. **Publish.** The team reviews the differences and publishes the new package versions.
 3. **Propagate.** Each website receives a pull request that moves it to the new version. When it is merged, the site is rebuilt and deployed.
 
