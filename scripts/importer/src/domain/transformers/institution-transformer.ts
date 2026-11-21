@@ -93,7 +93,6 @@ export function transformInstitution(legacy: LegacyInstitution): TransformedInst
     country_id: legacy.country ? mapCountryCode(legacy.country) : null,
     project_id: null,
     monument_item_id: null,
-    visible: false, // Default to false
   };
 
   return {

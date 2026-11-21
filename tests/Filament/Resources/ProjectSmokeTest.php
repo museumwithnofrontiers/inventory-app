@@ -74,8 +74,6 @@ class ProjectSmokeTest extends TestCase
             ->sequence(fn (Sequence $sequence): array => [
                 'internal_name' => sprintf('Project %05d', $sequence->index),
                 'backward_compatibility' => sprintf('prj-%05d', $sequence->index),
-                'is_enabled' => $sequence->index % 2 === 0,
-                'is_launched' => $sequence->index % 3 === 0,
                 'launch_date' => Carbon::create(2025, 1, 1)->addDays($sequence->index)->toDateString(),
             ])
             ->make()

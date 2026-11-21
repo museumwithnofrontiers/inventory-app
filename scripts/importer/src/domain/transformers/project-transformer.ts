@@ -96,7 +96,6 @@ export function transformProject(
     backward_compatibility: projectBackwardCompat,
     language_id: defaultLanguageId,
     launch_date: sanitizeDateValue(legacy.launchdate),
-    is_launched: legacy.active === 1 || legacy.active === true,
     ...projectUrls,
     copyright: mwnf3ProjectCopyright(legacy.project_id),
   };

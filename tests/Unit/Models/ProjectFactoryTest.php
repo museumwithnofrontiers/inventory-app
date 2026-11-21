@@ -46,8 +46,7 @@ class ProjectFactoryTest extends TestCase
         $this->assertInstanceOf(Project::class, $project);
         $this->assertNotEmpty($project->id);
         $this->assertNotEmpty($project->internal_name);
-        $this->assertFalse($project->is_enabled);
-        $this->assertFalse($project->is_launched);
+        $this->assertNull($project->launch_date);
         $this->assertNull($project->site_url);
         $this->assertNull($project->related_database_url);
         $this->assertNull($project->artistic_introduction_url);
@@ -65,19 +64,23 @@ class ProjectFactoryTest extends TestCase
         $this->assertNotFalse(filter_var($project->artistic_introduction_url, FILTER_VALIDATE_URL));
     }
 
-    public function test_factory_with_enabled_sets_enabled_flag(): void
+    public function test_factory_with_launch_date_sets_the_date_the_work_started(): void
     {
-        $project = Project::factory()->withEnabled()->create();
+        $project = Project::factory()->withLaunchDate()->create();
 
-        $this->assertTrue($project->is_enabled);
+        $this->assertNotNull($project->launch_date);
     }
 
-    public function test_factory_with_launched_sets_launched_state(): void
+    /**
+     * M17 C2 (#2748): a project has no launched or enabled flag; the
+     * inventory doesn't work out whether a project is visible.
+     */
+    public function test_a_project_has_no_visibility_flags(): void
     {
-        $project = Project::factory()->withLaunched()->create();
+        $project = Project::factory()->create();
 
-        $this->assertTrue($project->is_launched);
-        $this->assertNotNull($project->launch_date);
+        $this->assertArrayNotHasKey('is_launched', $project->getAttributes());
+        $this->assertArrayNotHasKey('is_enabled', $project->getAttributes());
     }
 
     public function test_factory_with_context_creates_context_relationship(): void

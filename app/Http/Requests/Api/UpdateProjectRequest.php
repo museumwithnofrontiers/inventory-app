@@ -27,8 +27,6 @@ class UpdateProjectRequest extends FormRequest
             'internal_name' => ['required', 'string'],
             'backward_compatibility' => ['nullable', 'string'],
             'launch_date' => ['nullable', 'date'],
-            'is_launched' => ['boolean'],
-            'is_enabled' => ['boolean'],
             'site_url' => ['nullable', 'url', 'max:255'],
             'related_database_url' => ['nullable', 'url', 'max:255'],
             'artistic_introduction_url' => ['nullable', 'url', 'max:255'],

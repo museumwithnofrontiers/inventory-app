@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Database\Factories\ProjectFactory;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -16,8 +15,6 @@ use Illuminate\Support\Carbon;
  * @property string $internal_name
  * @property string|null $backward_compatibility
  * @property Carbon|null $launch_date
- * @property bool $is_launched
- * @property bool $is_enabled
  * @property string|null $site_url
  * @property string|null $related_database_url
  * @property string|null $artistic_introduction_url
@@ -39,9 +36,8 @@ class Project extends Model
         // 'id',
         'internal_name',
         'backward_compatibility',
+        // The date MWNF started the work (M17, #2748): a fact, never a go-live gate.
         'launch_date',
-        'is_launched',
-        'is_enabled',
         'site_url',
         'related_database_url',
         'artistic_introduction_url',
@@ -128,61 +124,5 @@ class Project extends Model
      */
     protected $casts = [
         'launch_date' => 'datetime:Y-m-d',
-        'is_launched' => 'boolean',
-        'is_enabled' => 'boolean',
     ];
-
-    /**
-     * Scope a query to only include enabled projects.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeIsEnabled(Builder $query): Builder
-    {
-        return $query->where('is_enabled', true);
-    }
-
-    /**
-     * Scope a query to only include launched projects.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeIsLaunched(Builder $query): Builder
-    {
-        return $query->where('is_launched', true);
-    }
-
-    /**
-     * Scope a query to only include projects with launch_date passed.
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeIsLaunchDatePassed(Builder $query): Builder
-    {
-        return $query->whereDate('launch_date', '<=', now());
-    }
-
-    /**
-     * Scope a query to only include visible projects (enabled, launched, and launch_date passed).
-     *
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeVisible(Builder $query): Builder
-    {
-        return $query->isEnabled()->isLaunched()->isLaunchDatePassed();
-    }
-
-    /**
-     * @param  Builder<static>  $query
-     * @return Builder<static>
-     */
-    public function scopeEnabled(Builder $query): Builder
-    {
-        return $query->where('is_enabled', true)
-            ->where('is_launched', true);
-    }
 }

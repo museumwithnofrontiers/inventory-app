@@ -464,9 +464,11 @@ describe('ThgGalleryContentImporter', () => {
           internal_name: 'UN Alliance of Civilisations',
           backward_compatibility: 'mwnf3_thematic_gallery:exhibition_partner:2',
           country_id: 'usa',
-          visible: false,
         })
       );
+      // M17 C1: legacy's visible = 'N' is not imported (its client never reads
+      // it); the partner has no visible flag and the participation stays listed.
+      expect(writePartnerMock.mock.calls[0]![0]).not.toHaveProperty('visible');
       expect(attachPartnerToCollectionWithLevelMock).toHaveBeenCalledWith(
         'collection-uuid-5',
         'partner-uuid',

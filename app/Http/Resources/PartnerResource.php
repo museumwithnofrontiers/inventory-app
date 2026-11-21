@@ -37,8 +37,6 @@ class PartnerResource extends BaseJsonResource
             'images' => PartnerImageResource::collection($this->whenLoaded('partnerImages')),
             'collections' => CollectionResource::collection($this->whenLoaded('collections')),
             'links' => LinkResource::collection($this->whenLoaded('links')),
-            // Visibility
-            'visible' => $this->resource->visible,
             // Legacy's partner category (Sharing History), or null
             'category' => $this->resource->category?->value,
             // The Portal's own selection: shown in the featured strip

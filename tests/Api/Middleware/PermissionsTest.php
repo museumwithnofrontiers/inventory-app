@@ -235,12 +235,9 @@ class PermissionsTest extends TestCase
             // Project routes
             ['GET', 'project.index', Permission::VIEW_DATA, null],
             ['POST', 'project.store', Permission::CREATE_DATA, null],
-            ['GET', 'project.enabled', Permission::VIEW_DATA, null],
             ['GET', 'project.show', Permission::VIEW_DATA, Project::class],
             ['PATCH', 'project.update', Permission::UPDATE_DATA, Project::class],
             ['DELETE', 'project.destroy', Permission::DELETE_DATA, Project::class],
-            ['PATCH', 'project.setEnabled', Permission::UPDATE_DATA, Project::class],
-            ['PATCH', 'project.setLaunched', Permission::UPDATE_DATA, Project::class],
 
             // Publication routes
             ['GET', 'publication.index', Permission::VIEW_DATA, null],

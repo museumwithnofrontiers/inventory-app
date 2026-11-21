@@ -51,7 +51,6 @@ class PartnerResourceTest extends TestCase
             'country_id' => $country->id,
             'project_id' => $project->id,
             'monument_item_id' => $monument->id,
-            'visible' => true,
         ]);
         $ownedItem = Item::factory()->Object()->create([
             'partner_id' => $partner->id,
@@ -127,7 +126,6 @@ class PartnerResourceTest extends TestCase
             'country_id' => $country->id,
             'project_id' => $project->id,
             'monument_item_id' => $monument->id,
-            'visible' => false,
         ]);
 
         $this->setCurrentPanel();
@@ -144,7 +142,6 @@ class PartnerResourceTest extends TestCase
                 'map_zoom' => 12,
                 'project_id' => $project->id,
                 'monument_item_id' => $monument->id,
-                'visible' => true,
             ])
             ->call('create')
             ->assertHasNoFormErrors();
@@ -156,7 +153,6 @@ class PartnerResourceTest extends TestCase
             'country_id' => $country->id,
             'project_id' => $project->id,
             'monument_item_id' => $monument->id,
-            'visible' => true,
         ]);
 
         Livewire::actingAs($user)
@@ -169,7 +165,6 @@ class PartnerResourceTest extends TestCase
                 'country_id' => $country->id,
                 'project_id' => $project->id,
                 'monument_item_id' => $monument->id,
-                'visible' => false,
             ])
             ->fillForm([
                 'internal_name' => 'Jordan Heritage Museum',
@@ -181,7 +176,6 @@ class PartnerResourceTest extends TestCase
                 'map_zoom' => 13,
                 'project_id' => $project->id,
                 'monument_item_id' => $monument->id,
-                'visible' => true,
             ])
             ->call('save')
             ->assertHasNoFormErrors();
@@ -190,7 +184,6 @@ class PartnerResourceTest extends TestCase
             'id' => $partner->id,
             'internal_name' => 'Jordan Heritage Museum',
             'backward_compatibility' => 'par-11',
-            'visible' => true,
         ]);
 
         Livewire::actingAs($user)

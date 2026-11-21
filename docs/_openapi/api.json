@@ -20366,44 +20366,6 @@
                 }
             }
         },
-        "/project/enabled": {
-            "get": {
-                "operationId": "project.enabled",
-                "summary": "Get all visible projects.\nThe project becomes \"visible\" when all conditions are matched:\n- is_enabled is true\n- is_launched is true\n- current date >= launch_date",
-                "tags": [
-                    "Project"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Array of `ProjectResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "type": "array",
-                                            "items": {
-                                                "$ref": "#/components/schemas/ProjectResource"
-                                            }
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    }
-                }
-            }
-        },
         "/project/{project}": {
             "get": {
                 "operationId": "project.show",
@@ -20848,132 +20810,6 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            }
-        },
-        "/project/{project}/launched": {
-            "patch": {
-                "operationId": "project.setLaunched",
-                "summary": "Toggle Launched/not-launched on a project.\nImportant: It is independant from the `launch_date` value. It is an idicator showing that\nthe project is to be considered 'laucnhed' as soon as the launch date it reached",
-                "tags": [
-                    "Project"
-                ],
-                "parameters": [
-                    {
-                        "name": "project",
-                        "in": "path",
-                        "required": true,
-                        "description": "The project ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SetLaunchedProjectRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ProjectResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ProjectResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    }
-                }
-            }
-        },
-        "/project/{project}/enabled": {
-            "patch": {
-                "operationId": "project.setEnabled",
-                "summary": "Toggle Enable/disable on a project",
-                "tags": [
-                    "Project"
-                ],
-                "parameters": [
-                    {
-                        "name": "project",
-                        "in": "path",
-                        "required": true,
-                        "description": "The project ID",
-                        "schema": {
-                            "type": "string",
-                            "format": "uuid"
-                        }
-                    }
-                ],
-                "requestBody": {
-                    "required": true,
-                    "content": {
-                        "application/json": {
-                            "schema": {
-                                "$ref": "#/components/schemas/SetEnabledProjectRequest"
-                            }
-                        }
-                    }
-                },
-                "responses": {
-                    "200": {
-                        "description": "`ProjectResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "properties": {
-                                        "data": {
-                                            "$ref": "#/components/schemas/ProjectResource"
-                                        }
-                                    },
-                                    "required": [
-                                        "data"
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "422": {
-                        "$ref": "#/components/responses/ValidationException"
                     },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
@@ -31602,10 +31438,6 @@
                             "$ref": "#/components/schemas/LinkResource"
                         }
                     },
-                    "visible": {
-                        "type": "boolean",
-                        "description": "Visibility"
-                    },
                     "category": {
                         "type": [
                             "string",
@@ -31649,7 +31481,6 @@
                     "latitude",
                     "longitude",
                     "map_zoom",
-                    "visible",
                     "category",
                     "featured",
                     "city",
@@ -31966,14 +31797,6 @@
                         "format": "date-time",
                         "description": "Launch date of the project, nullable"
                     },
-                    "is_launched": {
-                        "type": "boolean",
-                        "description": "Indicates if the project has been launched already"
-                    },
-                    "is_enabled": {
-                        "type": "boolean",
-                        "description": "Indicates if the project is enabled (active)"
-                    },
                     "site_url": {
                         "type": [
                             "string",
@@ -32046,8 +31869,6 @@
                     "internal_name",
                     "backward_compatibility",
                     "launch_date",
-                    "is_launched",
-                    "is_enabled",
                     "site_url",
                     "related_database_url",
                     "artistic_introduction_url",
@@ -32885,30 +32706,6 @@
                     "is_default"
                 ],
                 "title": "SetDefaultLanguageRequest"
-            },
-            "SetEnabledProjectRequest": {
-                "type": "object",
-                "properties": {
-                    "is_enabled": {
-                        "type": "boolean"
-                    }
-                },
-                "required": [
-                    "is_enabled"
-                ],
-                "title": "SetEnabledProjectRequest"
-            },
-            "SetLaunchedProjectRequest": {
-                "type": "object",
-                "properties": {
-                    "is_launched": {
-                        "type": "boolean"
-                    }
-                },
-                "required": [
-                    "is_launched"
-                ],
-                "title": "SetLaunchedProjectRequest"
             },
             "StoreArtistRequest": {
                 "type": "object",
@@ -35155,10 +34952,6 @@
                         ],
                         "format": "uuid"
                     },
-                    "visible": {
-                        "type": "boolean",
-                        "description": "Visibility"
-                    },
                     "category": {
                         "anyOf": [
                             {
@@ -35424,12 +35217,6 @@
                             "null"
                         ],
                         "format": "date-time"
-                    },
-                    "is_launched": {
-                        "type": "boolean"
-                    },
-                    "is_enabled": {
-                        "type": "boolean"
                     },
                     "site_url": {
                         "type": [
@@ -38960,10 +38747,6 @@
                         ],
                         "format": "uuid"
                     },
-                    "visible": {
-                        "type": "boolean",
-                        "description": "Visibility"
-                    },
                     "category": {
                         "anyOf": [
                             {
@@ -39243,12 +39026,6 @@
                             "null"
                         ],
                         "format": "date-time"
-                    },
-                    "is_launched": {
-                        "type": "boolean"
-                    },
-                    "is_enabled": {
-                        "type": "boolean"
                     },
                     "site_url": {
                         "type": [
