@@ -10,7 +10,7 @@ title: Generated Model Documentation
 
 ## Overview
 
-- ** Total Models:** 58
+- ** Total Models:** 59
 - ** Database Connection:** mysql
 - ** Laravel Version:** 12.72.0
 
@@ -58,6 +58,7 @@ title: Generated Model Documentation
 - [PartnerTranslation](#partnertranslation)
 - [PartnerTranslationImage](#partnertranslationimage)
 - [Project](#project)
+- [ProjectTranslation](#projecttranslation)
 - [Publication](#publication)
 - [PublicationCollection](#publicationcollection)
 - [PublicationDocument](#publicationdocument)
@@ -2794,6 +2795,7 @@ const UPDATED_AT = 'updated_at';
 - **`language()`**: BelongsTo [Language](#language)
 
 #### Has Many
+- **`translations()`**: HasMany [ProjectTranslation](#projecttranslation)
 - **`items()`**: HasMany [Item](#item)
 - **`partners()`**: HasMany [Partner](#partner)
 
@@ -2807,6 +2809,55 @@ const UPDATED_AT = 'updated_at';
 - **`isLaunchDatePassed()`**
 - **`visible()`**
 - **`enabled()`**
+
+
+## ProjectTranslation {#projecttranslation}
+
+**Namespace:** `App\Models\ProjectTranslation`
+
+### Database Table
+
+| Property | Value |
+|----------|-------|
+| **Table Name** | `project_translations` |
+| **Primary Key** | `id` |
+| **Key Type** | String (UUID) |
+| **Incrementing** | No |
+| **Timestamps** | Yes (`created_at`, `updated_at`) |
+
+### Database Schema
+
+| Column | Type | Nullable | Default | Extra |
+|--------|------|----------|---------|-------|
+| `id` | char | Unknown | Unknown |  |
+| `project_id` | char | Unknown | Unknown |  |
+| `language_id` | varchar | Unknown | Unknown |  |
+| `name` | varchar | Unknown | Unknown |  |
+| `created_at` | timestamp | Unknown | Unknown |  |
+| `updated_at` | timestamp | Unknown | Unknown |  |
+
+### Fillable Fields
+
+```php
+['project_id', 'language_id', 'name']
+```
+
+### Model Constants
+
+```php
+const CREATED_AT = 'created_at';
+const UPDATED_AT = 'updated_at';
+```
+
+### Relationships
+
+#### Belongs To
+- **`project()`**: BelongsTo [Project](#project)
+- **`language()`**: BelongsTo [Language](#language)
+
+### Query Scopes
+
+- **`forLanguage()`**
 
 
 ## Publication {#publication}

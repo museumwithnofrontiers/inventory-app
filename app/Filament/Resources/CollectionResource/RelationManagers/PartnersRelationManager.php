@@ -14,6 +14,8 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
+use Illuminate\Database\Eloquent\Model;
 
 class PartnersRelationManager extends RelationManager
 {
@@ -47,6 +49,7 @@ class PartnersRelationManager extends RelationManager
                     ->sortable(),
                 CollectionPartnerPivot::levelColumn(),
                 CollectionPartnerPivot::visibleColumn(),
+                CollectionPartnerPivot::parentPartnerColumn(),
                 TextColumn::make('country.internal_name')
                     ->label('Country')
                     ->sortable()
@@ -64,15 +67,36 @@ class PartnersRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                $this->pivotAttachAction(RecordSelect::PARTNERS, CollectionPartnerPivot::attachFormFields()),
+                $this->pivotAttachAction(RecordSelect::PARTNERS, CollectionPartnerPivot::attachFormFields(CollectionPartnerPivot::OWNER_COLLECTION)),
             ])
             ->actions([
                 $this->pivotViewAction(PartnerResource::class),
-                $this->pivotEditAction(CollectionPartnerPivot::pivotFormFields()),
-                $this->pivotDetachAction(),
+                $this->pivotEditAction(CollectionPartnerPivot::pivotFormFields(CollectionPartnerPivot::OWNER_COLLECTION)),
+                $this->pivotDetachAction()
+                    ->after(fn (Model $record) => $this->clearParentReferencesTo([$record->getKey()])),
             ])
             ->bulkActions([
-                $this->pivotDetachBulkAction(),
+                $this->pivotDetachBulkAction()
+                    ->after(fn (EloquentCollection $records) => $this->clearParentReferencesTo($records->modelKeys())),
             ]);
+    }
+
+    /**
+     * These partners left the collection: the rows that named one of them as
+     * their parent no longer have one.
+     *
+     * @param  array<int, mixed>  $partnerIds
+     */
+    private function clearParentReferencesTo(array $partnerIds): void
+    {
+        $collectionId = $this->getOwnerRecord()->getKey();
+        if (! is_string($collectionId)) {
+            return;
+        }
+
+        CollectionPartnerPivot::clearParentReferences(
+            $collectionId,
+            array_values(array_filter($partnerIds, 'is_string')),
+        );
     }
 }

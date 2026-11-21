@@ -30,7 +30,7 @@ This manual covers what is common to every website. Read it before the manual of
 | **Item** | Something a site describes: an object, a monument, a detail of a monument, or a picture. |
 | **Translation** | One set of texts of a record in one language and one context. An item has one translation per language and context. |
 | **Context** | The site family a text was written for, for example *Discover Islamic Art* or *Explore Islamic Art Collections*. The same object can carry a different text in each context. |
-| **Project** | The legacy programme a record belongs to (Discover Islamic Art, Discover Baroque Art, Sharing History, MWNF Galleries…). It decides the context of an item's main text and the copyright burned on its pictures. |
+| **Project** | The legacy programme a record belongs to (Discover Islamic Art, Discover Baroque Art, Sharing History, MWNF Galleries…). It decides the context of an item's main text and the copyright burned on its pictures. Its name in each language is on the project's **Translations** tab. |
 | **Collection** | A group of items: a gallery, an exhibition, a theme, an itinerary, a location… Collections nest. |
 | **Placement** | One item in one collection, with its order and, where the site needs them, its own texts for that collection. |
 | **Partner** | A museum, institution or other organisation that provides content. |

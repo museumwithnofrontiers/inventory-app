@@ -429,9 +429,19 @@ export class SqlWriteStrategy implements IWriteStrategy {
     return id;
   }
 
-  async writeProjectTranslation(_data: ProjectTranslationData): Promise<void> {
-    // No-op: project_translations table does not exist in current schema
-    // The old importer does not create project translations
+  async writeProjectTranslation(data: ProjectTranslationData): Promise<void> {
+    // A project's name in one language, as written (legacy `projectnames`).
+    // A project's name doesn't depend on a context, so `context_id` is not
+    // stored, and legacy has no description to keep.
+    const sanitized = sanitizeAllStrings(data);
+    const id = deterministicUuid(
+      `project_translation:${sanitized.project_id}:${sanitized.language_id}`
+    );
+    await this.db.execute(
+      `INSERT INTO project_translations (id, project_id, language_id, name, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [id, sanitized.project_id, sanitized.language_id, sanitized.name, this.now, this.now]
+    );
   }
 
   async deleteProjectsWithoutItems(

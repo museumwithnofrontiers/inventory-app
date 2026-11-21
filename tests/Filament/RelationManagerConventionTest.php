@@ -70,6 +70,7 @@ use App\Filament\Resources\ProjectResource\Pages\EditProject;
 use App\Filament\Resources\ProjectResource\RelationManagers\CollectionsRelationManager as ProjectCollectionsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\ItemsRelationManager as ProjectItemsRelationManager;
 use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager as ProjectPartnersRelationManager;
+use App\Filament\Resources\ProjectResource\RelationManagers\TranslationsRelationManager as ProjectTranslationsRelationManager;
 use App\Filament\Resources\PublicationResource\Pages\EditPublication;
 use App\Filament\Resources\PublicationResource\RelationManagers\CollectionsRelationManager as PublicationCollectionsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\DocumentsRelationManager as PublicationDocumentsRelationManager;
@@ -368,6 +369,10 @@ class RelationManagerConventionTest extends TestCase
             'kind' => self::KIND_PINNED, 'owner' => 'dynasty',
             'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
         ],
+        ProjectTranslationsRelationManager::class => [
+            'kind' => self::KIND_PINNED, 'owner' => 'project',
+            'pinnedHeader' => ['create'], 'pinnedRow' => ['edit', 'delete'], 'pinnedBulk' => [],
+        ],
 
         // ── pinned: Project's rollup of the collections that appear via its own items — a derived,
         // read-only BelongsToMany over the items table (no collection_project pivot), not a real FK
@@ -588,13 +593,13 @@ class RelationManagerConventionTest extends TestCase
 
     public function test_the_admin_panel_registers_the_expected_number_of_relation_managers(): void
     {
-        // 8 has-many + 23 pivot + 4 translations + 8 inline + 25 pinned = 68.
+        // 8 has-many + 23 pivot + 4 translations + 8 inline + 26 pinned = 69.
         // A change here means a manager was added or removed on some Resource
         // registered on the admin panel — classify it in
         // self::CLASSIFICATION (and, if it isn't yet convention-compliant,
         // list it on self::PENDING or self::PINNED_PENDING) rather than
         // letting this count silently drift.
-        $this->assertCount(68, self::allManagers());
+        $this->assertCount(69, self::allManagers());
     }
 
     private function classify(string $class): array

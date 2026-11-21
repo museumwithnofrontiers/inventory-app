@@ -82,24 +82,46 @@ class CollectionParticipationsRelationManager extends RelationManager
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->headerActions([
-                $this->pivotAttachAction(RecordSelect::COLLECTIONS, CollectionPartnerPivot::attachFormFields()),
+                $this->pivotAttachAction(RecordSelect::COLLECTIONS, CollectionPartnerPivot::attachFormFields(CollectionPartnerPivot::OWNER_PARTNER)),
             ])
             ->actions([
                 $this->pivotViewAction(CollectionResource::class),
-                $this->pivotEditAction(CollectionPartnerPivot::pivotFormFields())
+                $this->pivotEditAction(CollectionPartnerPivot::pivotFormFields(CollectionPartnerPivot::OWNER_PARTNER))
                     ->visible(fn (Model $record): bool => self::isCollectionLink($record)),
                 $this->pivotDetachAction()
                     ->visible(fn (Model $record): bool => self::isCollectionLink($record))
                     ->using(function (Model $record): void {
                         $this->collectionLinks()->detach($record->getKey());
+                        $this->clearParentReferencesTo([$record->getKey()]);
                     }),
             ])
             ->bulkActions([
                 $this->pivotDetachBulkAction()
                     ->using(function (EloquentCollection $records): void {
                         $this->collectionLinks()->detach($records->modelKeys());
+                        $this->clearParentReferencesTo($records->modelKeys());
                     }),
             ]);
+    }
+
+    /**
+     * The partner left these collections: their rows that named it as their
+     * parent no longer have one.
+     *
+     * @param  array<int, mixed>  $collectionIds
+     */
+    private function clearParentReferencesTo(array $collectionIds): void
+    {
+        $partnerId = $this->getOwnerRecord()->getKey();
+        if (! is_string($partnerId)) {
+            return;
+        }
+
+        foreach ($collectionIds as $collectionId) {
+            if (is_string($collectionId)) {
+                CollectionPartnerPivot::clearParentReferences($collectionId, [$partnerId]);
+            }
+        }
     }
 
     /**

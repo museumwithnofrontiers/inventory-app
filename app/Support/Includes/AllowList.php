@@ -84,7 +84,10 @@ class AllowList
                 'language', 'displayLanguage',
             ],
             'project' => [
-                'context', 'language',
+                'context', 'language', 'translations',
+            ],
+            'project_translation' => [
+                'project', 'language',
             ],
             'contact' => [
                 'translations',
