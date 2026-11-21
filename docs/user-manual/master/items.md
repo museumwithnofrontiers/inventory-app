@@ -77,6 +77,14 @@ The form is in folded sections. Select a section's heading to unfold it.
 
 ![The folded sections of a translation's form]({{ '/user-manual/images/item-translation-sections.png' | relative_url }})
 
+### Writing a text
+
+The texts are written in Markdown, and every text box in the panel formats it while you type: `*italic*` shows in italics, `**bold**` in bold, a `# heading` larger. The marks stay visible, and what is saved is exactly the text in the box. The buttons above a box (bold, italic, strikethrough, link, heading, quote, code, lists, table, undo, redo) only type those marks for you.
+
+- A text box never takes a picture: pictures go through the image pipeline (see [Images and documents]({{ '/user-manual/master/images' | relative_url }})).
+- HTML typed in a text, such as `<i>`, is not applied: the panel and the websites show it as typed.
+- One-line fields, such as **Name**, stay plain boxes.
+
 ### Which field is which text
 
 Each field holds one text, **as the site prints it**. Nothing is computed from another field, and no field is filled from another one.

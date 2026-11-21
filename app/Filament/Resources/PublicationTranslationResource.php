@@ -15,9 +15,9 @@ use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\PublicationTranslation;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -100,13 +100,13 @@ class PublicationTranslationResource extends Resource
                         TextInput::make('subtitle')
                             ->maxLength(255)
                             ->nullable(),
-                        Textarea::make('description')
+                        MarkdownEditor::make('description')
                             ->helperText('About this publication (Markdown).')
-                            ->rows(4)
+                            ->minHeight('7.5rem')
                             ->columnSpanFull(),
-                        Textarea::make('introduction')
+                        MarkdownEditor::make('introduction')
                             ->helperText('More about this publication (Markdown).')
-                            ->rows(4)
+                            ->minHeight('7.5rem')
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
@@ -114,15 +114,15 @@ class PublicationTranslationResource extends Resource
                 Section::make('Credits')
                     ->description('The credit lines as printed.')
                     ->schema([
-                        Textarea::make('author_credit')
+                        MarkdownEditor::make('author_credit')
                             ->label('Author credit')
-                            ->rows(2),
-                        Textarea::make('photography_credit')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('photography_credit')
                             ->label('Photography credit')
-                            ->rows(2),
-                        Textarea::make('coordination_credit')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('coordination_credit')
                             ->label('Coordination credit')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                     ])
                     ->columns(3),
 

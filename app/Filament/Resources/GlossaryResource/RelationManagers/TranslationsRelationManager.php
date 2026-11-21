@@ -7,7 +7,7 @@ use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\GlossaryTranslation;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\CreateAction;
@@ -30,9 +30,9 @@ class TranslationsRelationManager extends RelationManager
         return $form
             ->schema([
                 TranslationFormSchema::languageField(),
-                Textarea::make('definition')
+                MarkdownEditor::make('definition')
                     ->required()
-                    ->rows(4)
+                    ->minHeight('7.5rem')
                     ->columnSpanFull(),
             ]);
     }

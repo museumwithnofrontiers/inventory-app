@@ -4,9 +4,9 @@ namespace App\Filament\Support;
 
 use App\Models\CollectionItemTranslation;
 use Filament\Forms\Components\Component;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
@@ -43,13 +43,13 @@ final class CollectionItemTranslationForm
                     TextInput::make('title')
                         ->helperText('A detail view\'s name.')
                         ->maxLength(255),
-                    Textarea::make('description')
+                    MarkdownEditor::make('description')
                         ->helperText('The item\'s text on this collection (Markdown).')
-                        ->rows(4)
+                        ->minHeight('7.5rem')
                         ->columnSpanFull(),
-                    Textarea::make('caption')
+                    MarkdownEditor::make('caption')
                         ->helperText('The image caption.')
-                        ->rows(2)
+                        ->minHeight('4.5rem')
                         ->columnSpanFull(),
                 ])
                 ->columns(2),
@@ -61,7 +61,7 @@ final class CollectionItemTranslationForm
                     TextInput::make('item_location')->label('Location'),
                     TextInput::make('item_museum')->label('Museum'),
                     TextInput::make('item_dynasty')->label('Dynasty'),
-                    Textarea::make('item_artist')->label('Artist')->rows(2),
+                    MarkdownEditor::make('item_artist')->label('Artist')->minHeight('4.5rem'),
                     TextInput::make('item_material')->label('Material'),
                 ])
                 ->columns(2)
@@ -69,12 +69,12 @@ final class CollectionItemTranslationForm
             Section::make('Justifications')
                 ->description('Why the item was selected.')
                 ->schema([
-                    Textarea::make('curator_justification')->label('Curator')->rows(3),
-                    Textarea::make('partner_justification')->label('Partner')->rows(3),
-                    Textarea::make('justification')
+                    MarkdownEditor::make('curator_justification')->label('Curator')->minHeight('6rem'),
+                    MarkdownEditor::make('partner_justification')->label('Partner')->minHeight('6rem'),
+                    MarkdownEditor::make('justification')
                         ->label('National Context')
                         ->helperText('Sharing History\'s National Context gives one justification.')
-                        ->rows(3)
+                        ->minHeight('6rem')
                         ->columnSpanFull(),
                 ])
                 ->columns(2)

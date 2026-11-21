@@ -5,6 +5,7 @@ namespace App\Filament\Support;
 use App\Models\Author;
 use App\Models\Context;
 use App\Support\Markdown\MarkdownText;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -36,16 +37,16 @@ class TranslationFormSchema
             ->maxLength(255);
     }
 
-    public static function alternateNameField(): Textarea
+    public static function alternateNameField(): MarkdownEditor
     {
-        return Textarea::make('alternate_name')
-            ->rows(2);
+        return MarkdownEditor::make('alternate_name')
+            ->minHeight('4.5rem');
     }
 
-    public static function descriptionField(): Textarea
+    public static function descriptionField(): MarkdownEditor
     {
-        return Textarea::make('description')
-            ->rows(4)
+        return MarkdownEditor::make('description')
+            ->minHeight('7.5rem')
             ->columnSpanFull();
     }
 
@@ -155,7 +156,7 @@ class TranslationFormSchema
     }
 
     /**
-     * @return array<int, Select|Textarea|TextInput>
+     * @return array<int, MarkdownEditor|Select|TextInput>
      */
     public static function make(): array
     {
