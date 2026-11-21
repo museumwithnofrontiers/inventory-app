@@ -110,7 +110,6 @@ export function transformShProject(
     backward_compatibility: backwardCompat,
     language_id: defaultLanguageId,
     launch_date: sanitizeDateValue(legacy.addeddate),
-    is_launched: legacy.show === 'Y',
     ...projectUrls,
     copyright: SHARING_HISTORY_COPYRIGHT,
   };
