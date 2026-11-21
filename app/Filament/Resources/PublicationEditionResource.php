@@ -6,6 +6,7 @@ use App\Enums\Permission;
 use App\Enums\PublicationFormat;
 use App\Filament\Resources\PublicationEditionResource\Pages\ViewPublicationEdition;
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Models\PublicationEdition;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
@@ -66,6 +67,7 @@ class PublicationEditionResource extends Resource
                 InfolistSection::make('Edition')
                     ->schema([
                         TextEntry::make('publication.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Publication')
                             ->url(fn (PublicationEdition $record): ?string => $record->publication
                                 && (auth()->user()?->can('view', $record->publication) ?? false)
@@ -76,6 +78,7 @@ class PublicationEditionResource extends Resource
                         TextEntry::make('format')
                             ->formatStateUsing(fn (?PublicationFormat $state): ?string => $state?->label()),
                         TextEntry::make('edition')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->placeholder('—'),
                         TextEntry::make('publish_year')
                             ->label('Publish year')
@@ -84,6 +87,7 @@ class PublicationEditionResource extends Resource
                             ->label('ISBN')
                             ->placeholder('—'),
                         TextEntry::make('publisher')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->placeholder('—'),
                     ])
                     ->columns(2),

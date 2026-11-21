@@ -4,6 +4,7 @@ namespace App\Filament\Support;
 
 use App\Models\Language;
 use App\Models\TimelineEvent;
+use App\Support\Markdown\MarkdownText;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -99,7 +100,7 @@ class TimelineEventDisplayLabel
      * getOptionLabelUsing() callbacks where only a single value is needed.
      *
      * @param  mixed  $value  The timeline event UUID.
-     * @return string The resolved display label, or the raw value if not found.
+     * @return string The resolved display label as plain text (Markdown removed, for option labels), or the raw value if not found.
      */
     public static function resolveLabel(mixed $value): string
     {
@@ -114,7 +115,7 @@ class TimelineEventDisplayLabel
 
         $event->load('translations');
 
-        return static::resolveForRecord($event);
+        return MarkdownText::plain(static::resolveForRecord($event));
     }
 
     /**
@@ -127,6 +128,7 @@ class TimelineEventDisplayLabel
     public static function displayLabelColumn(): TextColumn
     {
         return TextColumn::make('display_label')
+            ->formatStateUsing(MarkdownState::inline())
             ->label('Name')
             ->searchable(false)
             ->sortable(false);

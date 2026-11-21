@@ -8,6 +8,7 @@ use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\PublicationPivot;
 use App\Filament\Support\RecordSelect;
 use App\Models\Item;
@@ -52,12 +53,14 @@ class ItemsRelationManager extends RelationManager
                     ->sortable(),
                 PublicationPivot::displayOrderColumn(),
                 TextColumn::make('partner.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Partner')
                     ->toggleable()
                     ->url(fn (Item $record): ?string => $record->partner
                         ? (auth()->user()?->can('view', $record->partner) ? PartnerResource::getUrl('view', ['record' => $record->partner]) : null)
                         : null),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Internal name')
                     ->searchable()
                     ->sortable()

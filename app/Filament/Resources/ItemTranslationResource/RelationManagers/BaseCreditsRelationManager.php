@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ItemTranslationResource\RelationManagers;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\AuthorResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
@@ -34,6 +35,7 @@ abstract class BaseCreditsRelationManager extends RelationManager
                 TextColumn::make('pivot.display_order')
                     ->label('Order'),
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Name')
                     ->searchable(),
                 TextColumn::make('originalname')

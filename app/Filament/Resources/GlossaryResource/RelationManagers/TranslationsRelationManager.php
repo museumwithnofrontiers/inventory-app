@@ -4,6 +4,7 @@ namespace App\Filament\Resources\GlossaryResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\GlossaryTranslation;
 use Filament\Forms\Components\Textarea;
@@ -52,6 +53,7 @@ class TranslationsRelationManager extends RelationManager
                         ? (auth()->user()?->can('view', $record->language) ? LanguageResource::getUrl('view', ['record' => $record->language]) : null)
                         : null),
                 TextColumn::make('definition')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->wrap()
                     ->searchable(),
                 TextColumn::make('created_at')

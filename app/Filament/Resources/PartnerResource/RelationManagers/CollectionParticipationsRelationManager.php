@@ -7,6 +7,7 @@ use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\CollectionPartnerPivot;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\CollectionPartner;
@@ -72,6 +73,7 @@ class CollectionParticipationsRelationManager extends RelationManager
                 TextColumn::make('type')
                     ->sortable(),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

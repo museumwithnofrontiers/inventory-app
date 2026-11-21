@@ -4,6 +4,7 @@ namespace App\Filament\Support;
 
 use App\Models\Dynasty;
 use App\Models\Language;
+use App\Support\Markdown\MarkdownText;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -100,7 +101,7 @@ class DynastyDisplayLabel
      * getOptionLabelUsing() callbacks where only a single value is needed.
      *
      * @param  mixed  $value  The dynasty UUID.
-     * @return string The resolved display label, or the raw value if not found.
+     * @return string The resolved display label as plain text (Markdown removed, for option labels), or the raw value if not found.
      */
     public static function resolveLabel(mixed $value): string
     {
@@ -115,7 +116,7 @@ class DynastyDisplayLabel
 
         $dynasty->load('translations');
 
-        return static::resolveForRecord($dynasty);
+        return MarkdownText::plain(static::resolveForRecord($dynasty));
     }
 
     /**
@@ -128,6 +129,7 @@ class DynastyDisplayLabel
     public static function displayLabelColumn(): TextColumn
     {
         return TextColumn::make('display_label')
+            ->formatStateUsing(MarkdownState::inline())
             ->label('Name')
             ->searchable(false)
             ->sortable(false);

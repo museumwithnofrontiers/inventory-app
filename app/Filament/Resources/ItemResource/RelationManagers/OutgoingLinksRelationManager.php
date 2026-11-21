@@ -7,6 +7,7 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\ItemItemLinkResource;
 use App\Filament\Resources\ItemResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\ItemItemLink;
 use Filament\Forms\Form;
@@ -50,6 +51,7 @@ class OutgoingLinksRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('target.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Target item')
                     ->sortable()
                     ->url(fn (ItemItemLink $record): ?string => $record->target

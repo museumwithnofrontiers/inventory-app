@@ -6,6 +6,7 @@ use App\Events\DocumentUploadEvent;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\MarkdownState;
 use App\Models\DocumentUpload;
 use App\Models\Item;
 use App\Models\ItemDocument;
@@ -48,6 +49,7 @@ class DocumentsRelationManager extends RelationManager
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('title')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('mime_type')

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\TimelineResource\Pages\CreateTimeline;
@@ -14,10 +15,12 @@ use App\Filament\Resources\TimelineResource\Pages\ViewTimeline;
 use App\Filament\Resources\TimelineResource\RelationManagers\EventsRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Country;
 use App\Models\Timeline;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -37,6 +40,7 @@ class TimelineResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -116,6 +120,7 @@ class TimelineResource extends Resource
                     ->sortable()
                     ->toggleable(),
                 TextColumn::make('collection.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Collection')
                     ->sortable()
                     ->toggleable(),
@@ -152,8 +157,8 @@ class TimelineResource extends Resource
                             ->limit(50)
                     )->get()->mapWithKeys(fn (Collection $c): array => [
                         $c->id => $c->display_label !== $c->internal_name
-                            ? $c->display_label.' ['.$c->internal_name.']'
-                            : $c->internal_name,
+                            ? MarkdownText::plain($c->display_label).' ['.MarkdownText::plain($c->internal_name).']'
+                            : MarkdownText::plain($c->internal_name),
                     ])->all())
                     ->getOptionLabelUsing(fn (mixed $value): string => CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''))
                     ->searchable(),
@@ -167,10 +172,11 @@ class TimelineResource extends Resource
             ->schema([
                 InfolistSection::make('Core Information')
                     ->schema([
-                        TextEntry::make('internal_name'),
+                        TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline()),
                         TextEntry::make('country.internal_name')
                             ->label('Country'),
                         TextEntry::make('collection.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Collection'),
                     ])
                     ->columns(2),

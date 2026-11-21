@@ -7,6 +7,7 @@ use App\Events\ImageUploadEvent;
 use App\Filament\Resources\AvailableImageResource\Pages\EditAvailableImage;
 use App\Filament\Resources\AvailableImageResource\Pages\ListAvailableImage;
 use App\Filament\Resources\AvailableImageResource\Pages\ViewAvailableImage;
+use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
 use App\Models\ImageUpload;
 use Filament\Forms\Components\FileUpload;
@@ -110,14 +111,18 @@ class AvailableImageResource extends Resource
                             ->label('Size (bytes)')
                             ->numeric(),
                         TextEntry::make('comment')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Comment / Alt text'),
                         TextEntry::make('copyright')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Burned on the picture')
                             ->placeholder('Inherited once attached'),
                         TextEntry::make('credit')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Picture credit')
                             ->placeholder('—'),
                         TextEntry::make('photographer')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Photographer')
                             ->placeholder('—'),
                     ])
@@ -177,7 +182,7 @@ class AvailableImageResource extends Resource
                     ->toggleable(),
                 TextColumn::make('comment')
                     ->label('Comment')
-                    ->limit(50)
+                    ->formatStateUsing(MarkdownState::excerpt(50))
                     ->searchable()
                     ->toggleable(),
                 TextColumn::make('id')

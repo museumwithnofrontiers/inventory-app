@@ -3,6 +3,8 @@
 namespace App\Filament\Support;
 
 use App\Models\CollectionItemExploreMonument;
+use App\Models\Partner;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Repeater;
@@ -47,6 +49,7 @@ final class CollectionItemExploreMonumentForm
                     Select::make('partners')
                         ->label('Museums')
                         ->relationship('partners', 'internal_name')
+                        ->getOptionLabelFromRecordUsing(fn (Partner $record): string => MarkdownText::plain($record->internal_name))
                         ->multiple()
                         ->searchable(['internal_name', 'backward_compatibility'])
                         ->columnSpanFull(),
@@ -73,7 +76,7 @@ final class CollectionItemExploreMonumentForm
         if ($monument->latitude !== null && $monument->longitude !== null) {
             $parts[] = sprintf('%s, %s', $monument->latitude, $monument->longitude);
         }
-        $museums = $monument->partners->pluck('internal_name')->filter()->implode(', ');
+        $museums = $monument->partners->pluck('internal_name')->filter()->map(MarkdownText::plain(...))->implode(', ');
         if ($museums !== '') {
             $parts[] = 'museums: '.$museums;
         }

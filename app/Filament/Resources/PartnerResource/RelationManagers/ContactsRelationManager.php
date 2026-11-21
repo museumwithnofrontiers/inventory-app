@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\PartnerResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\MarkdownState;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -62,10 +63,10 @@ class ContactsRelationManager extends RelationManager
                     ->label('Order')
                     ->sortable(),
                 TextColumn::make('name')
-                    ->limit(40)
+                    ->formatStateUsing(MarkdownState::excerpt(40))
                     ->placeholder('—'),
                 TextColumn::make('title')
-                    ->limit(40)
+                    ->formatStateUsing(MarkdownState::excerpt(40))
                     ->placeholder('—'),
                 TextColumn::make('email')
                     ->label('E-mail')

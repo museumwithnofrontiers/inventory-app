@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ContributorResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Context;
 use App\Models\Contributor;
@@ -95,9 +96,9 @@ class TranslationsRelationManager extends RelationManager
                     ->toggleable(),
                 TextColumn::make('name')
                     ->searchable()
-                    ->limit(60),
+                    ->formatStateUsing(MarkdownState::excerpt(60)),
                 TextColumn::make('description')
-                    ->limit(60)
+                    ->formatStateUsing(MarkdownState::excerpt(60))
                     ->toggleable(),
                 TextColumn::make('created_at')
                     ->label('Created')

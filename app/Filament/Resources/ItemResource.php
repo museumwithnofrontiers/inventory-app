@@ -32,6 +32,7 @@ use App\Filament\Resources\ItemResource\RelationManagers\VisitInformationRelatio
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Country;
@@ -39,6 +40,7 @@ use App\Models\Item;
 use App\Models\Partner;
 use App\Models\Project;
 use App\Models\Tag;
+use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Section as FiltersSection;
 use Filament\Forms\Components\Select;
@@ -115,8 +117,8 @@ class ItemResource extends Resource
             ->get()
             ->mapWithKeys(fn (Item $item): array => [
                 $item->id => $item->display_label !== $item->internal_name
-                    ? $item->display_label.' ['.$item->internal_name.']'
-                    : $item->internal_name,
+                    ? MarkdownText::plain($item->display_label).' ['.MarkdownText::plain($item->internal_name).']'
+                    : MarkdownText::plain($item->internal_name),
             ])->all();
     }
 
@@ -147,7 +149,7 @@ class ItemResource extends Resource
 
         $record->loadMissing(['translations', 'collection:id,context_id', 'project:id,context_id']);
 
-        return ItemDisplayLabel::resolveForRecord($record);
+        return MarkdownText::plain(ItemDisplayLabel::resolveForRecord($record));
     }
 
     public static function getGloballySearchableAttributes(): array
@@ -270,12 +272,14 @@ class ItemResource extends Resource
 
                         return ItemDisplayLabel::resolveForRecord($record->parent);
                     })
+                    ->formatStateUsing(MarkdownState::inline())
                     ->sortable(false)
                     ->toggleable()
                     ->url(fn (Item $record): ?string => $record->parent
                         ? (auth()->user()?->can('view', $record->parent) ? static::getUrl('view', ['record' => $record->parent]) : null)
                         : null),
                 TextColumn::make('partner.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Partner')
                     ->sortable()
                     ->toggleable()
@@ -290,6 +294,7 @@ class ItemResource extends Resource
                         ? (auth()->user()?->can('view', $record->country) ? CountryResource::getUrl('view', ['record' => $record->country]) : null)
                         : null),
                 TextColumn::make('project.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Project')
                     ->sortable()
                     ->toggleable()
@@ -321,9 +326,10 @@ class ItemResource extends Resource
                         ->orderBy('internal_name')
                         ->limit(50)
                         ->pluck('internal_name', 'id')
+                        ->map(MarkdownText::plain(...))
                         ->all()
                     )
-                    ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Partner::find($value)->internal_name ?? $value) : '')
+                    ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? MarkdownText::plain(Partner::find($value)->internal_name ?? $value) : '')
                     ->searchable(),
                 SelectFilter::make('collection')
                     ->label('Collection')
@@ -336,8 +342,8 @@ class ItemResource extends Resource
                             ->limit(50)
                     )->get()->mapWithKeys(fn (Collection $c): array => [
                         $c->id => $c->display_label !== $c->internal_name
-                            ? $c->display_label.' ['.$c->internal_name.']'
-                            : $c->internal_name,
+                            ? MarkdownText::plain($c->display_label).' ['.MarkdownText::plain($c->internal_name).']'
+                            : MarkdownText::plain($c->internal_name),
                     ])->all())
                     ->getOptionLabelUsing(fn (mixed $value): string => CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : ''))
                     ->searchable()
@@ -382,10 +388,10 @@ class ItemResource extends Resource
                         ->orderBy('description')
                         ->limit(50)
                         ->get()
-                        ->mapWithKeys(fn (Tag $tag): array => [$tag->id => "{$tag->description} [{$tag->internal_name}]"])
+                        ->mapWithKeys(fn (Tag $tag): array => [$tag->id => MarkdownText::plain($tag->description)." [{$tag->internal_name}]"])
                         ->all()
                     )
-                    ->getOptionLabelUsing(fn ($value): string => ($tag = Tag::find(is_scalar($value) ? (string) $value : '')) instanceof Tag ? "{$tag->description} [{$tag->internal_name}]" : (is_scalar($value) ? (string) $value : ''))
+                    ->getOptionLabelUsing(fn ($value): string => ($tag = Tag::find(is_scalar($value) ? (string) $value : '')) instanceof Tag ? MarkdownText::plain($tag->description)." [{$tag->internal_name}]" : (is_scalar($value) ? (string) $value : ''))
                     ->query(function (Builder $query, array $data): Builder {
                         /** @var Builder<Item> $q */
                         $q = $query;
@@ -495,13 +501,15 @@ class ItemResource extends Resource
                             ->formatStateUsing(fn (?ItemType $state): ?string => $state?->label()),
                         TextEntry::make('parent_display_label')
                             ->label('Parent')
-                            ->getStateUsing(fn (Item $record): ?string => $record->parent_id
-                                ? ItemDisplayLabel::resolveLabel($record->parent_id)
+                            ->getStateUsing(fn (Item $record): ?string => $record->parent
+                                ? ItemDisplayLabel::resolveForRecord($record->parent)
                                 : null)
+                            ->formatStateUsing(MarkdownState::inline())
                             ->url(fn (Item $record): ?string => $record->parent
                                 ? (auth()->user()?->can('view', $record->parent) ? static::getUrl('view', ['record' => $record->parent]) : null)
                                 : null),
                         TextEntry::make('partner.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Partner')
                             ->url(fn (Item $record): ?string => $record->partner
                                 ? (auth()->user()?->can('view', $record->partner) ? PartnerResource::getUrl('view', ['record' => $record->partner]) : null)
@@ -512,6 +520,7 @@ class ItemResource extends Resource
                                 ? (auth()->user()?->can('view', $record->country) ? CountryResource::getUrl('view', ['record' => $record->country]) : null)
                                 : null),
                         TextEntry::make('project.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Project')
                             ->url(fn (Item $record): ?string => $record->project
                                 ? (auth()->user()?->can('view', $record->project) ? ProjectResource::getUrl('view', ['record' => $record->project]) : null)
@@ -528,6 +537,7 @@ class ItemResource extends Resource
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Internal name'),
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code'),

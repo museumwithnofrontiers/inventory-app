@@ -6,6 +6,7 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TimelineEventItemPivot;
 use App\Models\Item;
@@ -49,6 +50,7 @@ class ItemsRelationManager extends RelationManager
                 TimelineEventItemPivot::displayOrderColumn(),
                 TimelineEventItemPivot::backwardCompatibilityColumn(),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

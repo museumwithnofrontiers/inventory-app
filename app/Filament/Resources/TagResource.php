@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\TagResource\Pages\CreateTag;
@@ -11,6 +12,7 @@ use App\Filament\Resources\TagResource\Pages\EditTag;
 use App\Filament\Resources\TagResource\Pages\ListTag;
 use App\Filament\Resources\TagResource\Pages\ViewTag;
 use App\Filament\Support\EntityColor;
+use App\Filament\Support\MarkdownState;
 use App\Models\Language;
 use App\Models\Tag;
 use Filament\Forms\Components\Select;
@@ -31,6 +33,7 @@ use Illuminate\Database\Eloquent\Builder;
 class TagResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -103,6 +106,7 @@ class TagResource extends Resource
             ->defaultSort('description', 'asc')
             ->columns([
                 TextColumn::make('description')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Tag')
                     ->badge()
                     ->color(fn (Tag $record): array => EntityColor::palette($record->category ?? 'tags'))
@@ -114,6 +118,7 @@ class TagResource extends Resource
                     ->color(fn (Tag $record): array => EntityColor::palette($record->category ?? 'tags'))
                     ->sortable(),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -159,10 +164,11 @@ class TagResource extends Resource
                 InfolistSection::make('Core Information')
                     ->schema([
                         TextEntry::make('description')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Tag'),
                         TextEntry::make('category')
                             ->formatStateUsing(fn (?string $state): string => $state !== null ? (static::categoryOptions()[$state] ?? 'Uncategorised') : 'Uncategorised'),
-                        TextEntry::make('internal_name'),
+                        TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline()),
                         TextEntry::make('language.internal_name')
                             ->label('Language')
                             ->url(fn (Tag $record): ?string => $record->language

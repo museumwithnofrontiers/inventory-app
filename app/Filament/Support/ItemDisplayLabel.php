@@ -5,6 +5,7 @@ namespace App\Filament\Support;
 use App\Models\Context;
 use App\Models\Item;
 use App\Models\Language;
+use App\Support\Markdown\MarkdownText;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -297,6 +298,7 @@ class ItemDisplayLabel
         $defaultContextId = is_string($ctxIdRaw) ? $ctxIdRaw : null;
 
         return TextColumn::make('picture_label')
+            ->formatStateUsing(MarkdownState::inline())
             ->label('Name')
             ->getStateUsing(fn (Item $record): string => static::resolvePictureLabel($record, $defaultLangId, $defaultContextId))
             ->searchable(false)
@@ -310,7 +312,7 @@ class ItemDisplayLabel
      * getOptionLabelUsing() callbacks where only a single value is needed.
      *
      * @param  mixed  $value  The item UUID.
-     * @return string The resolved display label, or the raw value if not found.
+     * @return string The resolved display label as plain text (Markdown removed, for option labels), or the raw value if not found.
      */
     public static function resolveLabel(mixed $value): string
     {
@@ -325,7 +327,7 @@ class ItemDisplayLabel
 
         $item->load(['translations', 'collection:id,context_id', 'project:id,context_id']);
 
-        return static::resolveForRecord($item);
+        return MarkdownText::plain(static::resolveForRecord($item));
     }
 
     /**
@@ -338,6 +340,7 @@ class ItemDisplayLabel
     public static function displayLabelColumn(): TextColumn
     {
         return TextColumn::make('display_label')
+            ->formatStateUsing(MarkdownState::inline())
             ->label('Name')
             ->searchable(false)
             ->sortable(false);

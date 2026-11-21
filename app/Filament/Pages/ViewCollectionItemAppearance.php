@@ -9,6 +9,7 @@ use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\CollectionItemExploreMonumentForm;
 use App\Filament\Support\CollectionItemTranslationForm;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Models\Collection;
 use App\Models\CollectionItem;
 use App\Models\CollectionItemTranslation;
@@ -112,13 +113,15 @@ class ViewCollectionItemAppearance extends Page implements HasTable
                     ->badge()
                     ->sortable(),
                 TextColumn::make('title')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->placeholder('—')
                     ->toggleable(),
                 TextColumn::make('description')
                     ->placeholder('—')
                     ->wrap()
-                    ->limit(200),
+                    ->formatStateUsing(MarkdownState::excerpt(200)),
                 TextColumn::make('item_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Caption name')
                     ->placeholder('—')
                     ->wrap()

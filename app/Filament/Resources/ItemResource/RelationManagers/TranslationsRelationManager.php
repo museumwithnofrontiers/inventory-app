@@ -6,6 +6,7 @@ use App\Enums\ItemTranslationStatus;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\ItemTranslationResource;
 use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Item;
 use Filament\Tables\Actions\Action;
@@ -45,6 +46,7 @@ class TranslationsRelationManager extends BaseOwnerTranslationsRelationManager
     {
         return [
             TextColumn::make('alternate_name')
+                ->formatStateUsing(MarkdownState::inline())
                 ->label('Alternate name')
                 ->toggleable(),
             TextColumn::make('status')

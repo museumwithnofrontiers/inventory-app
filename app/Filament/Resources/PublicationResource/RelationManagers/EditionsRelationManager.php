@@ -7,6 +7,7 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Resources\PublicationEditionResource;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\MarkdownState;
 use App\Models\PublicationEdition;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -123,6 +124,7 @@ class EditionsRelationManager extends RelationManager
                     ->formatStateUsing(fn (?PublicationFormat $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('edition')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->sortable(),
                 TextColumn::make('publish_year')
                     ->label('Year')
@@ -131,6 +133,7 @@ class EditionsRelationManager extends RelationManager
                     ->label('ISBN')
                     ->searchable(),
                 TextColumn::make('publisher')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->toggleable(),
                 IconColumn::make('visible')

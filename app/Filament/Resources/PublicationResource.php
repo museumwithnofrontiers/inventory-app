@@ -8,6 +8,7 @@ use App\Enums\PublicationImageKind;
 use App\Enums\PublicationStatus;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\PublicationResource\Pages\CreatePublication;
@@ -22,6 +23,7 @@ use App\Filament\Resources\PublicationResource\RelationManagers\ItemsRelationMan
 use App\Filament\Resources\PublicationResource\RelationManagers\TagsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\MarkdownState;
 use App\Models\Country;
 use App\Models\Project;
 use App\Models\Publication;
@@ -46,6 +48,7 @@ class PublicationResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -144,6 +147,7 @@ class PublicationResource extends Resource
                     ->formatStateUsing(fn (?PublicationCategory $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('project.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Project')
                     ->sortable()
                     ->toggleable()
@@ -236,6 +240,7 @@ class PublicationResource extends Resource
                                 ? (auth()->user()?->can('view', $record->language) ? LanguageResource::getUrl('view', ['record' => $record->language]) : null)
                                 : null),
                         TextEntry::make('project.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Project')
                             ->placeholder('None')
                             ->url(fn (Publication $record): ?string => $record->project
@@ -265,6 +270,7 @@ class PublicationResource extends Resource
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Internal name'),
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code'),

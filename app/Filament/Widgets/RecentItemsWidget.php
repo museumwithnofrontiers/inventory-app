@@ -9,6 +9,7 @@ use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\PartnerDisplayLabel;
 use App\Models\Collection;
 use App\Models\Item;
@@ -61,6 +62,7 @@ class RecentItemsWidget extends BaseWidget
                     ->formatStateUsing(fn (?ItemType $state): ?string => $state?->label())
                     ->sortable(false),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Internal name')
                     ->searchable(false)
                     ->sortable(false),
@@ -95,6 +97,7 @@ class RecentItemsWidget extends BaseWidget
                     ->badge()
                     ->sortable(false),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Internal name')
                     ->searchable(false)
                     ->sortable(false),
@@ -129,6 +132,7 @@ class RecentItemsWidget extends BaseWidget
                     ->badge()
                     ->sortable(false),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Internal name')
                     ->searchable(false)
                     ->sortable(false),

@@ -10,6 +10,7 @@ use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\CollectionItemAppearance;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Item;
@@ -51,6 +52,7 @@ class CollectionAppearancesRelationManager extends RelationManager
                     ->badge()
                     ->sortable(),
                 TextColumn::make('parent.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Parent collection')
                     ->sortable()
                     ->toggleable()
@@ -76,6 +78,7 @@ class CollectionAppearancesRelationManager extends RelationManager
                         ? $this->getAuthorizedUrl($record->language, LanguageResource::class)
                         : null),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Internal name')
                     ->searchable()
                     ->sortable()

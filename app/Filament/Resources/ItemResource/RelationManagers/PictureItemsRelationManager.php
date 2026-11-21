@@ -6,6 +6,7 @@ use App\Enums\ItemType;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
 use App\Filament\Support\ItemDisplayLabel;
+use App\Filament\Support\MarkdownState;
 use App\Models\Item;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -106,6 +107,7 @@ class PictureItemsRelationManager extends BaseChildItemsRelationManager
                         ->label('Legacy code')
                         ->toggleable(),
                     TextColumn::make('partner.internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->label('Partner')
                         ->sortable()
                         ->url(fn (Item $record): ?string => $record->partner
@@ -115,6 +117,7 @@ class PictureItemsRelationManager extends BaseChildItemsRelationManager
                         ->label('Order')
                         ->sortable(),
                     TextColumn::make('internal_name')
+                        ->formatStateUsing(MarkdownState::inline())
                         ->searchable()
                         ->sortable()
                         ->toggleable(isToggledHiddenByDefault: true),

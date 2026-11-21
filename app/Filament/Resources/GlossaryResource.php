@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasTranslationCoverageFilters;
 use App\Filament\Concerns\HasUuidColumn;
@@ -15,6 +16,7 @@ use App\Filament\Resources\GlossaryResource\Pages\ViewGlossary;
 use App\Filament\Resources\GlossaryResource\RelationManagers\SpellingsRelationManager;
 use App\Filament\Resources\GlossaryResource\RelationManagers\SynonymsRelationManager;
 use App\Filament\Resources\GlossaryResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Models\Glossary;
 use App\Models\Language;
 use Filament\Forms\Components\TextInput;
@@ -36,6 +38,7 @@ class GlossaryResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasTranslationCoverageFilters;
     use HasUuidColumn;
@@ -183,7 +186,7 @@ class GlossaryResource extends Resource
             ->schema([
                 InfolistSection::make('Core Information')
                     ->schema([
-                        TextEntry::make('internal_name'),
+                        TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline()),
                     ]),
                 InfolistSection::make('System Information')
                     ->schema([

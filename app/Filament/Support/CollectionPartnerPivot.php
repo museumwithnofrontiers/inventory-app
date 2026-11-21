@@ -5,6 +5,7 @@ namespace App\Filament\Support;
 use App\Enums\PartnerLevel;
 use App\Models\CollectionPartner;
 use App\Models\Partner;
+use App\Support\Markdown\MarkdownText;
 use Closure;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Hidden;
@@ -16,6 +17,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 
 /**
  * Shared Filament helpers for the collection_partner pivot (`level`,
@@ -98,7 +100,7 @@ class CollectionPartnerPivot
                 )
                     ->get()
                     ->mapWithKeys(fn (Partner $partner): array => [
-                        $partner->id => $partner->display_label ?: $partner->internal_name,
+                        $partner->id => MarkdownText::plain($partner->display_label ?: $partner->internal_name),
                     ])
                     ->all();
             })
@@ -190,8 +192,8 @@ class CollectionPartnerPivot
     {
         return TextColumn::make('pivot.parent_partner_id')
             ->label('Parent partner')
-            ->formatStateUsing(fn (?string $state): ?string => $state
-                ? Partner::query()->whereKey($state)->value('internal_name')
+            ->formatStateUsing(fn (?string $state): ?HtmlString => $state
+                ? MarkdownText::inline(Partner::query()->whereKey($state)->value('internal_name'))
                 : null)
             ->placeholder('—')
             ->toggleable();

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Language;
 use App\Models\Project;
@@ -67,6 +68,7 @@ class TranslationsRelationManager extends RelationManager
                     ->sortable()
                     ->badge(),
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('updated_at')

@@ -6,6 +6,7 @@ use App\Enums\LinkType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\ExtraJsonField;
+use App\Filament\Support\MarkdownState;
 use App\Models\Link;
 use App\Models\PublicationEdition;
 use Filament\Forms\Components\Select;
@@ -126,6 +127,7 @@ class LinksRelationManager extends RelationManager
                     ->formatStateUsing(fn (?LinkType $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('title')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable()
                     ->placeholder('—'),

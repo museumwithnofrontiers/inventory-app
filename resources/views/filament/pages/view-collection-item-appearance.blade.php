@@ -8,10 +8,10 @@
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
                     @if ($this->collectionUrl())
                         <a href="{{ $this->collectionUrl() }}" class="text-primary-600 hover:underline dark:text-primary-400">
-                            {{ $collection->display_label ?? $collection->internal_name }}
+                            {{ \App\Support\Markdown\MarkdownText::inline($collection->display_label ?? $collection->internal_name) }}
                         </a>
                     @else
-                        {{ $collection->display_label ?? $collection->internal_name }}
+                        {{ \App\Support\Markdown\MarkdownText::inline($collection->display_label ?? $collection->internal_name) }}
                     @endif
                 </dd>
             </div>
@@ -20,10 +20,10 @@
                 <dd class="mt-1 text-sm text-gray-900 dark:text-gray-100">
                     @if ($this->itemUrl())
                         <a href="{{ $this->itemUrl() }}" class="text-primary-600 hover:underline dark:text-primary-400">
-                            {{ $item->display_label ?? $item->internal_name }}
+                            {{ \App\Support\Markdown\MarkdownText::inline($item->display_label ?? $item->internal_name) }}
                         </a>
                     @else
-                        {{ $item->display_label ?? $item->internal_name }}
+                        {{ \App\Support\Markdown\MarkdownText::inline($item->display_label ?? $item->internal_name) }}
                     @endif
                 </dd>
             </div>

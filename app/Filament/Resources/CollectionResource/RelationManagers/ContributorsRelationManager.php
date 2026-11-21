@@ -4,6 +4,7 @@ namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContributorResource;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Contributor;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -47,6 +48,7 @@ class ContributorsRelationManager extends RelationManager
                     ->badge()
                     ->sortable(),
                 TextColumn::make('internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('translations_count')

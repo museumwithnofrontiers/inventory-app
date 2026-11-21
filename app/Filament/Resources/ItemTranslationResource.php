@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Enums\ItemTranslationStatus;
 use App\Enums\Permission;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Resources\ItemTranslationResource\Pages\CreateItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
@@ -14,6 +15,7 @@ use App\Filament\Resources\ItemTranslationResource\RelationManagers\SiblingTrans
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\TextCopyEditorCreditsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslationCopyEditorCreditsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslatorCreditsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\ItemTranslation;
@@ -42,6 +44,7 @@ use Illuminate\Validation\Rules\Unique;
 
 class ItemTranslationResource extends Resource
 {
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
 
     protected static ?string $model = ItemTranslation::class;
@@ -307,6 +310,7 @@ class ItemTranslationResource extends Resource
                 InfolistSection::make('Translation For')
                     ->schema([
                         TextEntry::make('item.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Item')
                             ->url(fn (ItemTranslation $record): ?string => $record->item
                                 ? (auth()->user()?->can('view', $record->item) ? ItemResource::getUrl('view', ['record' => $record->item]) : null)
@@ -415,6 +419,7 @@ class ItemTranslationResource extends Resource
                                 ? (auth()->user()?->can('view', $record->author) ? AuthorResource::getUrl('view', ['record' => $record->author]) : null)
                                 : null),
                         TextEntry::make('textCopyEditor.name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Text copy editor')
                             ->url(fn (ItemTranslation $record): ?string => $record->textCopyEditor
                                 ? (auth()->user()?->can('view', $record->textCopyEditor) ? AuthorResource::getUrl('view', ['record' => $record->textCopyEditor]) : null)
@@ -425,6 +430,7 @@ class ItemTranslationResource extends Resource
                                 ? (auth()->user()?->can('view', $record->translator) ? AuthorResource::getUrl('view', ['record' => $record->translator]) : null)
                                 : null),
                         TextEntry::make('translationCopyEditor.name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Translation copy editor')
                             ->url(fn (ItemTranslation $record): ?string => $record->translationCopyEditor
                                 ? (auth()->user()?->can('view', $record->translationCopyEditor) ? AuthorResource::getUrl('view', ['record' => $record->translationCopyEditor]) : null)
@@ -468,6 +474,7 @@ class ItemTranslationResource extends Resource
             ]))
             ->columns([
                 TextColumn::make('item.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Item')
                     ->sortable()
                     ->searchable(query: fn (Builder $query, string $search): Builder => $query
@@ -513,6 +520,7 @@ class ItemTranslationResource extends Resource
                     ->trueColor('warning')
                     ->falseColor('gray'),
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('backward_compatibility')

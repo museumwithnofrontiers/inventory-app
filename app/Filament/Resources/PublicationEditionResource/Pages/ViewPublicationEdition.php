@@ -34,7 +34,7 @@ class ViewPublicationEdition extends ViewRecord
 
         return [
             PublicationResource::getUrl('index') => PublicationResource::getBreadcrumb(),
-            PublicationResource::getUrl('view', ['record' => $publication]) => $publication->internal_name,
+            PublicationResource::getUrl('view', ['record' => $publication]) => (string) PublicationResource::getRecordTitle($publication),
             'Edition',
         ];
     }

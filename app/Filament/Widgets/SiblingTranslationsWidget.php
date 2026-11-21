@@ -6,6 +6,7 @@ use App\Enums\Permission;
 use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\ItemTranslationResource;
 use App\Filament\Resources\PartnerTranslationResource;
+use App\Filament\Support\MarkdownState;
 use App\Models\CollectionTranslation;
 use App\Models\ItemTranslation;
 use App\Models\PartnerTranslation;
@@ -76,7 +77,7 @@ class SiblingTranslationsWidget extends BaseWidget
                     ->falseColor('gray'),
                 TextColumn::make('name')
                     ->label('Name')
-                    ->limit(50),
+                    ->formatStateUsing(MarkdownState::excerpt(50)),
                 TextColumn::make('backward_compatibility')
                     ->label('Legacy ID')
                     ->placeholder('—'),
@@ -130,7 +131,7 @@ class SiblingTranslationsWidget extends BaseWidget
                     ->falseColor('gray'),
                 TextColumn::make('title')
                     ->label('Title')
-                    ->limit(50),
+                    ->formatStateUsing(MarkdownState::excerpt(50)),
                 TextColumn::make('backward_compatibility')
                     ->label('Legacy ID')
                     ->placeholder('—'),
@@ -184,7 +185,7 @@ class SiblingTranslationsWidget extends BaseWidget
                     ->falseColor('gray'),
                 TextColumn::make('name')
                     ->label('Name')
-                    ->limit(50),
+                    ->formatStateUsing(MarkdownState::excerpt(50)),
                 TextColumn::make('backward_compatibility')
                     ->label('Legacy ID')
                     ->placeholder('—'),

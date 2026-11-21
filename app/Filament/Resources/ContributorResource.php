@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
+use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\ContributorResource\Pages\CreateContributor;
@@ -12,6 +13,7 @@ use App\Filament\Resources\ContributorResource\Pages\ListContributor;
 use App\Filament\Resources\ContributorResource\Pages\ViewContributor;
 use App\Filament\Resources\ContributorResource\RelationManagers\ImagesRelationManager;
 use App\Filament\Resources\ContributorResource\RelationManagers\TranslationsRelationManager;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Contributor;
 use App\Policies\ContributorPolicy;
@@ -45,6 +47,7 @@ class ContributorResource extends Resource
 {
     use HasBackwardCompatibilityColumn;
     use HasInternalNameColumn;
+    use HasPlainTextRecordTitle;
     use HasTimestampsColumns;
     use HasUuidColumn;
 
@@ -156,6 +159,7 @@ class ContributorResource extends Resource
                 static::internalNameColumn()
                     ->label('Internal name'),
                 TextColumn::make('collection.internal_name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Collection')
                     ->sortable(),
                 TextColumn::make('category')
@@ -190,6 +194,7 @@ class ContributorResource extends Resource
                 InfolistSection::make('Core Information')
                     ->schema([
                         TextEntry::make('collection.internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Collection')
                             ->url(fn (Contributor $record): ?string => auth()->user()?->can('view', $record->collection)
                                 ? CollectionResource::getUrl('view', ['record' => $record->collection_id])
@@ -206,6 +211,7 @@ class ContributorResource extends Resource
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
+                            ->formatStateUsing(MarkdownState::inline())
                             ->label('Internal name'),
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code'),

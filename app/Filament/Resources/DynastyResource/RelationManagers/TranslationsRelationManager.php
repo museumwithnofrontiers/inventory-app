@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DynastyResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Dynasty;
 use App\Models\Language;
@@ -107,13 +108,15 @@ class TranslationsRelationManager extends RelationManager
                     ->sortable()
                     ->badge(),
                 TextColumn::make('name')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->searchable()
                     ->sortable(),
                 TextColumn::make('also_known_as')
                     ->label('Also known as')
-                    ->limit(60)
+                    ->formatStateUsing(MarkdownState::excerpt(60))
                     ->toggleable(),
                 TextColumn::make('date_description_ad')
+                    ->formatStateUsing(MarkdownState::inline())
                     ->label('Dates (AD)')
                     ->toggleable(),
                 TextColumn::make('author.name')

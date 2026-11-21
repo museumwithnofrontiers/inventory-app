@@ -36,7 +36,7 @@
             href="{{ \App\Filament\Resources\TimelineResource::getUrl('view', ['record' => $node->id]) }}"
             class="text-sm font-medium text-gray-900 dark:text-white hover:underline truncate block"
         >
-            {{ $node->internal_name }}
+            {{ \App\Support\Markdown\MarkdownText::inline($node->internal_name) }}
         </a>
     </div>
 
@@ -66,10 +66,10 @@
                     href="{{ \App\Filament\Resources\TimelineEventResource::getUrl('view', ['record' => $event->id]) }}"
                     class="text-sm text-gray-700 dark:text-gray-300 hover:underline truncate block"
                 >
-                    {{ $event->display_label ?? $event->internal_name }}
+                    {{ \App\Support\Markdown\MarkdownText::inline($event->display_label ?? $event->internal_name) }}
                 </a>
                 @if (isset($event->display_label) && $event->display_label !== $event->internal_name)
-                    <span class="text-xs text-gray-400 dark:text-gray-500 truncate block">{{ $event->internal_name }}</span>
+                    <span class="text-xs text-gray-400 dark:text-gray-500 truncate block">{{ \App\Support\Markdown\MarkdownText::inline($event->internal_name) }}</span>
                 @endif
             </div>
         </div>

@@ -5,6 +5,7 @@ namespace App\Filament\Resources\RelationManagers;
 use App\Contracts\DetachableImage;
 use App\Contracts\StreamableImageFile;
 use App\Filament\Concerns\AuthorizesRelationMutations;
+use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Repeater;
@@ -111,7 +112,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                 ...$this->extraImageColumns(),
                 TextColumn::make('alt_text')
                     ->label('Alt text')
-                    ->limit(50)
+                    ->formatStateUsing(MarkdownState::excerpt(50))
                     ->toggleable(),
                 TextColumn::make('display_order')
                     ->label('Order')
