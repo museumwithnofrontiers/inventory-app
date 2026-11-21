@@ -55,9 +55,6 @@ interface LegacyThgGallery {
   mwnf3_project_id: string | null;
   i18n_group_id: number | null;
   i18n_common_group_id: number | null;
-  /** legacy enum('A','H'): A = among the featured galleries */
-  featured?: string | null;
-  live_date?: Date | string | null;
 }
 
 /**
@@ -165,7 +162,7 @@ export class ThgGalleryImporter extends BaseImporter implements SiteConfigBuilde
       // Query galleries from legacy database
       const galleries = await this.context.legacyDb.query<LegacyThgGallery>(
         `SELECT gallery_id, project_id, name, link, sort_order,
-                mwnf3_project_id, i18n_group_id, i18n_common_group_id, featured, live_date
+                mwnf3_project_id, i18n_group_id, i18n_common_group_id
          FROM mwnf3_thematic_gallery.thg_gallery
          ORDER BY sort_order, gallery_id`
       );
@@ -178,7 +175,6 @@ export class ThgGalleryImporter extends BaseImporter implements SiteConfigBuilde
 
           // Check if already exists as collection (use async for database fallback).
           if (await this.entityExistsAsync(backwardCompat, 'collection')) {
-            await this.writeFlags(backwardCompat, legacy);
             result.skipped++;
             this.showSkipped();
             continue;
@@ -257,7 +253,6 @@ export class ThgGalleryImporter extends BaseImporter implements SiteConfigBuilde
           });
 
           this.registerEntity(collectionId, backwardCompat, 'collection');
-          await this.writeFlags(backwardCompat, legacy);
 
           result.imported++;
           this.showProgress();
@@ -352,22 +347,6 @@ export class ThgGalleryImporter extends BaseImporter implements SiteConfigBuilde
     return anchor;
   }
 
-
-  /**
-   * The gallery's editorial flags (M16 E4a): featured (legacy's `A`) and its
-   * live date, the only settings the inventory keeps.
-   */
-  private async writeFlags(backwardCompat: string, legacy: LegacyThgGallery): Promise<void> {
-    if (this.isDryRun || this.isSampleOnlyMode) return;
-    const collectionId = await this.getEntityUuidAsync(backwardCompat, 'collection');
-    if (!collectionId) return;
-    const flags: { featured?: boolean; published_at?: string } = {};
-    if (legacy.featured === 'A' || legacy.featured === 'H') flags.featured = legacy.featured === 'A';
-    const published = galleryDate(legacy.live_date);
-    if (published) flags.published_at = published;
-    await this.context.strategy.setCollectionFlags(collectionId, flags);
-  }
-
   /**
    * Classify a thg_gallery row as gallery or exhibition using project type flags.
    * Returns { type } on success or { error } on failure.
@@ -409,15 +388,4 @@ export class ThgGalleryImporter extends BaseImporter implements SiteConfigBuilde
       .replace(/[\s_-]+/g, '_')
       .replace(/^-+|-+$/g, '');
   }
-}
-
-/**
- * A legacy DATE as the inventory stores it (Y-m-d). The driver reads it as a
- * Date at midnight UTC; a string is taken as written.
- */
-export function galleryDate(value: Date | string | null | undefined): string | null {
-  if (value === null || value === undefined || value === '') return null;
-  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value.toISOString().slice(0, 10);
-  const match = /^(d{4}-d{2}-d{2})/.exec(value);
-  return match ? match[1]! : null;
 }

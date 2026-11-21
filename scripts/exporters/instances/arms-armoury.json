@@ -18,6 +18,8 @@
       "translation_extra": {
         "thg_gallery": {
           "image": "thematic_gallery/thg_galleries/7/1.jpg",
+          "featured": "H",
+          "live_date": "2022-12-01T00:00:00.000Z",
           "banner_item": "mwnf#obj#EPM;us;Mus23;45",
           "banner_image": "thematic_gallery/thg_galleries/7/banner.jpg",
           "has_timeline": false,

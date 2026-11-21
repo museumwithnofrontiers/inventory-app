@@ -44,7 +44,7 @@ The main site keeps only the mini-site's exhibition and theme titles, and its pl
 
 ## Things to know
 
-- **Hiding an exhibition.** Turning **Visible** off on an exhibition hides it and everything under it, for the exhibitions whose settings came with a mini-site.
+- **Hiding an exhibition.** Turning **Draft** on for an exhibition hides it and everything under it, for the exhibitions whose settings came with a mini-site.
 - **Exhibition captions are the placement's.** Correct a caption on the placement, not on the item.
 - **No status filter on items.** Every object and monument of the projects is shown.
 

@@ -2,9 +2,7 @@
 import type { Query } from './sites.mjs'
 
 export interface CollectionFlags {
-  visible: boolean
-  featured: boolean
-  publishedAt: string | null
+  draft: boolean
   contextId: string | null
   backwardCompatibility: string | null
 }

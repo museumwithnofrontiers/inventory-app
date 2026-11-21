@@ -282,4 +282,35 @@ class CollectionTest extends TestCase
             ->assertJsonPath('data.featured', true)
             ->assertJsonPath('data.published_at', '2026-03-24');
     }
+
+    /**
+     * M17 A1 (#2742): `draft` is stored and served as given, and the API
+     * lists draft collections like any other.
+     */
+    public function test_stores_serves_and_lists_a_draft_collection(): void
+    {
+        $collection = Collection::factory()->create();
+
+        $this->putJson(route('collection.update', $collection), ['draft' => true])
+            ->assertOk()
+            ->assertJsonPath('data.draft', true);
+
+        $this->assertTrue($collection->refresh()->draft);
+
+        $this->getJson(route('collection.show', $collection))
+            ->assertOk()
+            ->assertJsonPath('data.draft', true);
+        $this->getJson(route('collection.index'))
+            ->assertOk()
+            ->assertJsonFragment(['id' => $collection->id, 'draft' => true]);
+    }
+
+    public function test_draft_must_be_a_boolean(): void
+    {
+        $collection = Collection::factory()->create();
+
+        $this->putJson(route('collection.update', $collection), ['draft' => 'maybe'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors(['draft']);
+    }
 }

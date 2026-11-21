@@ -1,18 +1,18 @@
 // @ts-check
 /**
- * Collection flags (M16 E4a, inventory-app#2650, decision 6): the editorial
- * flags that left `collection_translations.extra` for `collections.visible`,
- * `featured` and `published_at` (`scripts/importer/src/utils/collection-flags.ts`).
- * The packages still ship them in `extra`, so an exporter puts each back,
- * where it was:
+ * Collection flags (M16 E4a, inventory-app#2650; M17 A1, inventory-app#2742):
+ * a collection legacy hides is a draft (`collections.draft`). The packages
+ * still ship legacy's encoding of that flag in `extra`, so an exporter puts it
+ * back where it was:
  *
- * - `legacy_exhibition.show` (`y`/`n` from `visible`), into a translation's
- *   `legacy_exhibition`;
- * - `thg_gallery.featured` (`A`/`H`, legacy's enum) and `thg_gallery.live_date`
- *   (the date at midnight UTC, as the importer stored it), into a
- *   translation's `thg_gallery`;
- * - `legacy_status` (`e`/`i` from `visible`) on an Explore theme's English
+ * - `legacy_exhibition.show` (`n` for a draft, else `y`), into a
+ *   translation's `legacy_exhibition`;
+ * - `legacy_status` (`i` for a draft, else `e`) on an Explore theme's English
  *   text in its own context.
+ *
+ * A gallery's `thg_gallery.featured` and `thg_gallery.live_date` are site
+ * configuration (M17 A2, inventory-app#2743): the instance files give them
+ * back, with the rest of `thg_gallery` (`site-configuration.mjs`).
  *
  * A key the translation still holds (one the importer left, reported) is left
  * as it is.
@@ -34,9 +34,7 @@ const isObject = value => value !== null && typeof value === 'object' && !Array.
 
 /**
  * @typedef {{
- *   visible: boolean,
- *   featured: boolean,
- *   publishedAt: string | null,
+ *   draft: boolean,
  *   contextId: string | null,
  *   backwardCompatibility: string | null,
  * }} CollectionFlags
@@ -55,10 +53,9 @@ export async function loadCollectionFlags(query, collectionIds) {
   const unique = [...new Set(collectionIds)]
   for (let start = 0; start < unique.length; start += CHUNK) {
     const ids = unique.slice(start, start + CHUNK)
-    const rows = /** @type {{ id: string, visible: number | boolean, featured: number | boolean, published_at: string | null, context_id: string | null, backward_compatibility: string | null }[]} */ (
+    const rows = /** @type {{ id: string, draft: number | boolean, context_id: string | null, backward_compatibility: string | null }[]} */ (
       await query(
-        `SELECT id, visible, featured, DATE_FORMAT(published_at, '%Y-%m-%d') AS published_at,
-                context_id, backward_compatibility
+        `SELECT id, draft, context_id, backward_compatibility
          FROM collections
          WHERE id IN (${marks(ids)})
          ORDER BY id`,
@@ -67,9 +64,7 @@ export async function loadCollectionFlags(query, collectionIds) {
     )
     for (const row of rows) {
       out.set(row.id, {
-        visible: Boolean(Number(row.visible)),
-        featured: Boolean(Number(row.featured)),
-        publishedAt: row.published_at ?? null,
+        draft: Boolean(Number(row.draft)),
         contextId: row.context_id ?? null,
         backwardCompatibility: row.backward_compatibility ?? null,
       })
@@ -97,14 +92,7 @@ export function withCollectionFlags(extra, flags, translation) {
 
   const exhibition = base?.['legacy_exhibition']
   if (isObject(exhibition) && !('show' in exhibition)) {
-    changed['legacy_exhibition'] = mysqlJsonOrder({ ...exhibition, show: flags.visible ? 'y' : 'n' })
-  }
-  const gallery = base?.['thg_gallery']
-  if (isObject(gallery)) {
-    const restored = { ...gallery }
-    if (!('featured' in gallery)) restored['featured'] = flags.featured ? 'A' : 'H'
-    if (!('live_date' in gallery) && flags.publishedAt) restored['live_date'] = `${flags.publishedAt}T00:00:00.000Z`
-    if (Object.keys(restored).length !== Object.keys(gallery).length) changed['thg_gallery'] = mysqlJsonOrder(restored)
+    changed['legacy_exhibition'] = mysqlJsonOrder({ ...exhibition, show: flags.draft ? 'n' : 'y' })
   }
   const isTheme = (flags.backwardCompatibility ?? '').startsWith(THEME_KEY_PREFIX)
   if (
@@ -113,7 +101,7 @@ export function withCollectionFlags(extra, flags, translation) {
     translation.context_id === flags.contextId &&
     !(base && 'legacy_status' in base)
   ) {
-    changed['legacy_status'] = flags.visible ? 'e' : 'i'
+    changed['legacy_status'] = flags.draft ? 'i' : 'e'
   }
 
   if (Object.keys(changed).length === 0) return extra

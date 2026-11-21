@@ -68,17 +68,15 @@ The tabs under it:
 | **Duration** | A trail's duration, as written. |
 | **Cover caption** | The cover picture's caption, as written. |
 
-## The editorial flags
+## Draft
 
-The **Publishing** section of the collection's form holds the only site settings the inventory keeps. Everything else about a site's look belongs to the site ([ADR 006]({{ '/adr/006-what-goes-in-extra' | relative_url }}), rule 4).
+The **Publishing** section of the collection's form holds one switch, **Draft**: the collection isn't ready for the sites. A new collection starts as a draft. Turn it off when the collection is ready.
 
-| Flag | What it does |
-|---|---|
-| **Visible** | Shown on the sites. Where a site reads it, turning it off hides the collection and everything under it: an Islamic Art or Baroque Art exhibition, an Explore theme. On Sharing History, a non-visible exhibition keeps its titles and placements but is marked unpublished. |
-| **Featured** | A gallery among the featured galleries. |
-| **Published** | A gallery's live date. |
+A draft collection is left out of the sites' data, with everything under it: an Islamic Art or Baroque Art exhibition, an Explore theme. Sharing History is the one exception: a draft exhibition keeps its titles and placements there, marked unpublished, as legacy did for its exhibition 2. The API and the MCP server still return a draft collection, with its `draft` flag.
 
-Not every site reads every flag. The [site family manuals]({{ '/user-manual/sites/' | relative_url }}) say which flag matters where. A flag that a site doesn't read changes nothing on it.
+The collections legacy hid are drafts: the exhibitions it didn't show and the Explore themes it didn't offer.
+
+How a site shows a collection belongs to the site, not to the inventory ([ADR 006]({{ '/adr/006-what-goes-in-extra' | relative_url }}), rule 4). A gallery's featured flag and live date, for instance, are in the gallery's instance file with the rest of its site configuration.
 
 ## Placements: the items of a collection
 

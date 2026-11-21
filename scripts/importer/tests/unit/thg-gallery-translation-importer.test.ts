@@ -172,7 +172,7 @@ describe('ThgGalleryTranslationImporter', () => {
     expect(gallery).not.toHaveProperty('has_country_timeline');
   });
 
-  it('keeps the other thg_gallery fields, and leaves out status, featured and live_date', async () => {
+  it('keeps the other thg_gallery fields, featured and live_date included, and leaves out status', async () => {
     context = {
       ...context,
       legacyDb: makeLegacyDb(
@@ -182,7 +182,7 @@ describe('ThgGalleryTranslationImporter', () => {
             link: 'the_use_of_colours_in_art',
             status: 'A',
             featured: 'A',
-            live_date: '2010-01-01',
+            live_date: new Date('2010-01-01T00:00:00.000Z'),
             has_timeline: Buffer.from([1]),
           }),
         ]
@@ -190,7 +190,12 @@ describe('ThgGalleryTranslationImporter', () => {
     };
 
     const { gallery } = await builtEntry();
-    expect(gallery).toEqual({ link: 'the_use_of_colours_in_art', has_timeline: true });
+    expect(gallery).toEqual({
+      link: 'the_use_of_colours_in_art',
+      has_timeline: true,
+      featured: 'A',
+      live_date: new Date('2010-01-01T00:00:00.000Z'),
+    });
   });
 
   it('builds the exhibition_i18n fields by language, beside the gallery settings', async () => {

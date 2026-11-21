@@ -1344,7 +1344,7 @@ const ALL_IMPORTERS: ImporterConfig[] = [
     key: 'collection-flags',
     name: 'Collection Flags',
     description:
-      'Move the collection flags (exhibition show, Explore theme status, gallery featured and live date) out of collection_translations.extra to visible, featured and published_at, and drop the legacy codes nothing reads (M16 E4a, #2650)',
+      'Move an exhibition show flag or Explore theme status an older database still holds in collection_translations.extra to collections.draft, and drop the legacy codes nothing reads (M16 E4a #2650, M17 A1 #2742)',
     importerClass: CollectionFlagsImporter,
     // The exhibition, gallery and Explore importers write these keys.
     runsLast: true,

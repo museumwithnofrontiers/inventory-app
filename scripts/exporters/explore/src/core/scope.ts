@@ -200,7 +200,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
     (sql, params) => db.query(sql, params),
     rows.map(r => r.id)
   )
-  // A theme's `legacy_status` is its `visible` flag now (M16 E4a).
+  // A theme's `legacy_status` is its `draft` flag now (M17 A1): `i` for a draft.
   const flags = await loadCollectionFlags(
     (sql, params) => db.query(sql, params),
     rows.map(r => r.id)

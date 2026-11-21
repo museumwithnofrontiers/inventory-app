@@ -54,6 +54,8 @@
       "translation_extra": {
         "thg_gallery": {
           "link": "the_hijaz_railway",
+          "featured": "H",
+          "live_date": "2026-11-16T00:00:00.000Z",
           "banner_item": "mwnf#obj#GalEx5;jo;Mus92;4",
           "banner_image": "thematic_gallery/thg_galleries/55/banner.jpg",
           "has_timeline": false,
