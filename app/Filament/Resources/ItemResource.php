@@ -147,7 +147,9 @@ class ItemResource extends Resource
             return is_scalar($key) ? (string) $key : '';
         }
 
-        $record->loadMissing(['translations', 'collection:id,context_id', 'project:id,context_id']);
+        // Whole rows, never a column subset: this is the page's own record, and
+        // the infolist reads the same relations (project.internal_name) after it.
+        $record->loadMissing(['translations', 'collection', 'project']);
 
         return MarkdownText::plain(ItemDisplayLabel::resolveForRecord($record));
     }
@@ -250,7 +252,8 @@ class ItemResource extends Resource
                         'parent.project:id,context_id',
                         'partner:id,internal_name',
                         'country:id,internal_name',
-                        'project:id,internal_name',
+                        // context_id: the record title (action headings) picks the project's context.
+                        'project:id,internal_name,context_id',
                     ])
                 )
             ))
