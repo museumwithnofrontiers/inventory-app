@@ -72,7 +72,7 @@ The tabs under it:
 
 The **Publishing** section of the collection's form holds one switch, **Draft**: the collection isn't ready for the sites. A new collection starts as a draft. Turn it off when the collection is ready.
 
-A draft collection is left out of the sites' data, with everything under it: an Islamic Art or Baroque Art exhibition, an Explore theme. Sharing History is the one exception: a draft exhibition keeps its titles and placements there, marked unpublished, as legacy did for its exhibition 2. The API and the MCP server still return a draft collection, with its `draft` flag.
+A draft collection is left out of every site's data, with everything under it: an exhibition, a theme, a gallery's theme, a trail. Sharing History is the one exception: a draft exhibition keeps its titles and placements there, marked unpublished, as legacy did for its exhibition 2. The API and the MCP server still return a draft collection, with its `draft` flag.
 
 The collections legacy hid are drafts: the exhibitions it didn't show and the Explore themes it didn't offer.
 

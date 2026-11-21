@@ -30195,6 +30195,10 @@
                         "description": "The type of the item: 'object', 'monument', 'detail', or 'picture'.",
                         "$ref": "#/components/schemas/ItemType"
                     },
+                    "draft": {
+                        "type": "boolean",
+                        "description": "Not ready for any site: no site's data holds a draft item, its details or its pictures"
+                    },
                     "parent_id": {
                         "type": [
                             "string",
@@ -30363,6 +30367,7 @@
                     "internal_name",
                     "backward_compatibility",
                     "type",
+                    "draft",
                     "parent_id",
                     "display_order",
                     "owner_reference",
@@ -30660,6 +30665,10 @@
                             "null"
                         ]
                     },
+                    "draft": {
+                        "type": "boolean",
+                        "description": "Not ready for any site: no site's data holds a draft text"
+                    },
                     "status": {
                         "type": "string",
                         "description": "The editorial state: published, unedited or hidden"
@@ -30871,6 +30880,7 @@
                     "scribe",
                     "patrons",
                     "architects",
+                    "draft",
                     "status",
                     "catalogue_references",
                     "notice",
@@ -34307,6 +34317,9 @@
                             "picture"
                         ]
                     },
+                    "draft": {
+                        "type": "boolean"
+                    },
                     "parent_id": {
                         "type": [
                             "string",
@@ -34648,6 +34661,9 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "draft": {
+                        "type": "boolean"
                     },
                     "status": {
                         "$ref": "#/components/schemas/ItemTranslationStatus"
@@ -38111,6 +38127,9 @@
                             "picture"
                         ]
                     },
+                    "draft": {
+                        "type": "boolean"
+                    },
                     "parent_id": {
                         "type": [
                             "string",
@@ -38445,6 +38464,9 @@
                             "string",
                             "null"
                         ]
+                    },
+                    "draft": {
+                        "type": "boolean"
                     },
                     "status": {
                         "$ref": "#/components/schemas/ItemTranslationStatus"

@@ -1635,6 +1635,7 @@ const UPDATED_AT = 'updated_at';
 | `internal_name` | varchar | Unknown | Unknown |  |
 | `backward_compatibility` | varchar | Unknown | Unknown |  |
 | `type` | enum | Unknown | Unknown |  |
+| `draft` | tinyint | Unknown | Unknown |  |
 | `parent_id` | char | Unknown | Unknown |  |
 | `display_order` | int | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
@@ -1653,7 +1654,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['partner_id', 'parent_id', 'internal_name', 'type', 'backward_compatibility', 'country_id', 'project_id', 'collection_id', 'owner_reference', 'mwnf_reference', 'display_order', 'start_date', 'end_date', 'latitude', 'longitude', 'map_zoom']
+['partner_id', 'parent_id', 'internal_name', 'type', 'draft', 'backward_compatibility', 'country_id', 'project_id', 'collection_id', 'owner_reference', 'mwnf_reference', 'display_order', 'start_date', 'end_date', 'latitude', 'longitude', 'map_zoom']
 ```
 
 ### Attribute Casting
@@ -1661,6 +1662,7 @@ const UPDATED_AT = 'updated_at';
 | Attribute | Cast Type |
 |-----------|-----------|
 | `type` | `App\Enums\ItemType` |
+| `draft` | `boolean` |
 | `display_order` | `integer` |
 | `start_date` | `integer` |
 | `end_date` | `integer` |
@@ -1981,6 +1983,7 @@ const UPDATED_AT = 'updated_at';
 | `item_id` | char | Unknown | Unknown |  |
 | `language_id` | varchar | Unknown | Unknown |  |
 | `context_id` | char | Unknown | Unknown |  |
+| `draft` | tinyint | Unknown | Unknown |  |
 | `status` | varchar | Unknown | Unknown |  |
 | `name` | varchar | Unknown | Unknown |  |
 | `alternate_name` | text | Unknown | Unknown |  |
@@ -2038,7 +2041,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'status', 'catalogue_references', 'notice', 'external_notice', 'image_rights', 'external_sources', 'original_name', 'holder_original_name', 'archival_reference', 'backward_compatibility', 'extra']
+['item_id', 'language_id', 'context_id', 'name', 'alternate_name', 'description', 'short_description', 'type', 'holder', 'owner', 'initial_owner', 'dates', 'location', 'region', 'dimensions', 'materials', 'dynasty', 'place_of_production', 'method_for_datation', 'method_for_provenance', 'provenance', 'obtention', 'bibliography', 'history', 'author_id', 'text_copy_editor_id', 'translator_id', 'translation_copy_editor_id', 'author_credit', 'copy_editor_credit', 'translator_credit', 'translation_copy_editor_credit', 'keywords', 'artist', 'artist_period_of_activity', 'artist_birth_date', 'artist_birth_place', 'artist_death_date', 'artist_death_place', 'workshop', 'scribe', 'patrons', 'architects', 'draft', 'status', 'catalogue_references', 'notice', 'external_notice', 'image_rights', 'external_sources', 'original_name', 'holder_original_name', 'archival_reference', 'backward_compatibility', 'extra']
 ```
 
 ### Attribute Casting
@@ -2046,6 +2049,7 @@ const UPDATED_AT = 'updated_at';
 | Attribute | Cast Type |
 |-----------|-----------|
 | `extra` | `object` |
+| `draft` | `boolean` |
 | `status` | `App\Enums\ItemTranslationStatus` |
 
 ### Model Constants

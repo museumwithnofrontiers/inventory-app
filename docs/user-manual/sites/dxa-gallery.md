@@ -41,7 +41,7 @@ So, to add an object to a gallery, place it in the gallery's collection (**Attac
 ## Things to know
 
 - **Facet tags come from legacy.** The search facets use only the gallery tags imported from legacy (their legacy code starts with `thg:tags:`). A tag created in the panel is not offered as a facet. Ask the team if a new facet value is needed.
-- **No status filter.** Every placed object and monument is shown, whatever its translations' status ([The status]({{ '/user-manual/master/items' | relative_url }}#the-status)).
+- **Drafts are left out.** A draft object or monument, or a draft translation, is not shown ([Draft]({{ '/user-manual/master/items' | relative_url }}#draft)).
 - A gallery has a site when it has an instance file. **Draft** on the gallery collection doesn't remove a gallery site; it only matters to the sites that place the gallery's collection under one of theirs.
 - The home page shows galleries picked at random, so **Featured** doesn't decide what the home page shows.
 
