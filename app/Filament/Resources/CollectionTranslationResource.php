@@ -14,9 +14,9 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\CollectionTranslation;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -100,30 +100,30 @@ class CollectionTranslationResource extends Resource
                             ->url()
                             ->nullable()
                             ->maxLength(255),
-                        Textarea::make('subtitle')
-                            ->rows(2)
+                        MarkdownEditor::make('subtitle')
+                            ->minHeight('4.5rem')
                             ->nullable()
                             ->columnSpanFull(),
-                        Textarea::make('description')
-                            ->rows(4)
+                        MarkdownEditor::make('description')
+                            ->minHeight('7.5rem')
                             ->columnSpanFull(),
-                        Textarea::make('introduction')
+                        MarkdownEditor::make('introduction')
                             ->helperText('The introduction, as written (Markdown).')
-                            ->rows(6)
+                            ->minHeight('10.5rem')
                             ->columnSpanFull(),
-                        Textarea::make('quote')
+                        MarkdownEditor::make('quote')
                             ->placeholder('A representative quote or excerpt')
-                            ->rows(3)
+                            ->minHeight('6rem')
                             ->columnSpanFull(),
                         TextInput::make('duration')
                             ->placeholder('e.g., One day')
                             ->helperText('A trail\'s duration, as written.')
                             ->nullable()
                             ->maxLength(255),
-                        Textarea::make('cover_caption')
+                        MarkdownEditor::make('cover_caption')
                             ->label('Cover caption')
                             ->helperText('The cover picture\'s caption, as written.')
-                            ->rows(3)
+                            ->minHeight('6rem')
                             ->columnSpanFull(),
                     ])
                     ->columns(2),

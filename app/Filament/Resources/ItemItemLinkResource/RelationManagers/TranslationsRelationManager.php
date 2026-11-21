@@ -5,15 +5,18 @@ namespace App\Filament\Resources\ItemItemLinkResource\RelationManagers;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\MarkdownState;
+use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\ItemItemLink;
 use App\Models\ItemItemLinkTranslation;
 use App\Models\Language;
 use App\Support\Markdown\MarkdownText;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Actions\CreateAction;
 use Filament\Tables\Actions\DeleteAction;
@@ -60,17 +63,35 @@ class TranslationsRelationManager extends RelationManager
                         ignoreRecord: true,
                     )
                     ->validationMessages(['unique' => 'A translation for this link and language already exists.']),
-                Textarea::make('description')
+                MarkdownEditor::make('description')
                     ->label('Description (source → target)')
-                    ->rows(3)
+                    ->minHeight('6rem')
                     ->columnSpanFull(),
-                Textarea::make('reciprocal_description')
+                MarkdownEditor::make('reciprocal_description')
                     ->label('Reciprocal description (target → source)')
-                    ->rows(3)
+                    ->minHeight('6rem')
                     ->columnSpanFull(),
                 TextInput::make('backward_compatibility')
                     ->label('Legacy code')
                     ->maxLength(255),
+            ]);
+    }
+
+    /**
+     * The view shows the texts rendered by MarkdownText, raw HTML escaped,
+     * as every other view does, not the form's read-only Markdown preview.
+     */
+    public function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                TextEntry::make('language.internal_name')
+                    ->label('Language'),
+                TranslationInfolistSchema::markdownEntry('description', 'Description (source → target)', columnSpanFull: true),
+                TranslationInfolistSchema::markdownEntry('reciprocal_description', 'Reciprocal description (target → source)', columnSpanFull: true),
+                TextEntry::make('backward_compatibility')
+                    ->label('Legacy code')
+                    ->placeholder('—'),
             ]);
     }
 

@@ -29,6 +29,7 @@ use App\Http\Middleware\Filament\EnsureTwoFactorEnrolled;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Support\Markdown\MarkdownText;
 use Filament\Enums\ThemeMode;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -75,6 +76,18 @@ class AdminPanelProvider extends PanelProvider
 
                 return is_string($value) ? MarkdownText::plain($value) : null;
             });
+        });
+
+        // A Markdown field never takes a file: an attached picture would be
+        // written to a disk outside the image pipeline. Removing the button
+        // only hides it, since Filament still stores an upload sent to any
+        // MarkdownEditor, so the upload itself is refused as well.
+        MarkdownEditor::configureUsing(function (MarkdownEditor $editor): void {
+            $editor
+                ->disableToolbarButtons(['attachFiles'])
+                ->saveUploadedFileAttachmentsUsing(static function (): never {
+                    abort(403);
+                });
         });
 
         // Every verification message links to the panel's own route: the one

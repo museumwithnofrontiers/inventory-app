@@ -4,6 +4,7 @@ namespace App\Filament\Resources\PartnerResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\MarkdownState;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -40,8 +41,8 @@ class ContactsRelationManager extends RelationManager
                     ->integer()
                     ->minValue(1)
                     ->required(),
-                Textarea::make('name')->rows(1),
-                Textarea::make('title')->rows(1),
+                MarkdownEditor::make('name')->minHeight('3rem'),
+                MarkdownEditor::make('title')->minHeight('3rem'),
                 Textarea::make('email')->label('E-mail')->rows(1),
                 Textarea::make('phone')->rows(1),
                 Textarea::make('fax')->rows(1),

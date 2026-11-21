@@ -19,9 +19,9 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\ItemTranslation;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
@@ -108,24 +108,24 @@ class ItemTranslationResource extends Resource
                         TextInput::make('name')
                             ->required()
                             ->maxLength(255),
-                        Textarea::make('alternate_name')
-                            ->rows(2),
-                        Textarea::make('description')
-                            ->rows(4)
+                        MarkdownEditor::make('alternate_name')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('description')
+                            ->minHeight('7.5rem')
                             ->columnSpanFull(),
-                        Textarea::make('short_description')
+                        MarkdownEditor::make('short_description')
                             ->label('Short description')
                             ->helperText('A second, shorter text, as legacy wrote it')
-                            ->rows(3)
+                            ->minHeight('6rem')
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
 
                 Section::make('Object Details')
                     ->schema([
-                        Textarea::make('type')
+                        MarkdownEditor::make('type')
                             ->placeholder('e.g., painting, sculpture, monument')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                         TextInput::make('dates')
                             ->placeholder('e.g., 1920–1930, 18th century')
                             ->maxLength(255),
@@ -135,32 +135,32 @@ class ItemTranslationResource extends Resource
                         TextInput::make('dimensions')
                             ->placeholder('e.g., 100×80 cm, 2 m height')
                             ->maxLength(255),
-                        Textarea::make('materials')
+                        MarkdownEditor::make('materials')
                             ->placeholder('e.g., Bronze, cast and engraved')
-                            ->rows(2),
-                        Textarea::make('dynasty')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('dynasty')
                             ->helperText('As the sheet prints it. The Dynasty links are on the item.')
-                            ->rows(2),
-                        Textarea::make('keywords')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('keywords')
                             ->helperText('As the sheet prints it. The Tags are on the item.')
-                            ->rows(2),
-                        Textarea::make('region')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('region')
                             ->placeholder('Region or province')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                         TextInput::make('place_of_production')
                             ->label('Place of production')
                             ->placeholder('Where the item was created')
                             ->maxLength(255),
-                        Textarea::make('holder')
+                        MarkdownEditor::make('holder')
                             ->placeholder('Current holder of the item')
-                            ->rows(2),
-                        Textarea::make('owner')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('owner')
                             ->placeholder('Current owner of the item')
-                            ->rows(2),
-                        Textarea::make('initial_owner')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('initial_owner')
                             ->label('Initial owner')
                             ->placeholder('Original owner of the item')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -168,28 +168,28 @@ class ItemTranslationResource extends Resource
 
                 Section::make('Research & Provenance')
                     ->schema([
-                        Textarea::make('method_for_datation')
+                        MarkdownEditor::make('method_for_datation')
                             ->label('Method for datation')
                             ->placeholder('Method used to date the item')
-                            ->rows(3),
-                        Textarea::make('method_for_provenance')
+                            ->minHeight('6rem'),
+                        MarkdownEditor::make('method_for_provenance')
                             ->label('Method for provenance')
                             ->placeholder('Method used to determine provenance')
-                            ->rows(3),
-                        Textarea::make('provenance')
+                            ->minHeight('6rem'),
+                        MarkdownEditor::make('provenance')
                             ->placeholder('Provenance details')
-                            ->rows(3),
-                        Textarea::make('obtention')
+                            ->minHeight('6rem'),
+                        MarkdownEditor::make('obtention')
                             ->placeholder('How the item was obtained')
-                            ->rows(3),
-                        Textarea::make('bibliography')
+                            ->minHeight('6rem'),
+                        MarkdownEditor::make('bibliography')
                             ->placeholder('Bibliographic references')
-                            ->rows(4)
+                            ->minHeight('7.5rem')
                             ->columnSpanFull(),
-                        Textarea::make('catalogue_references')
+                        MarkdownEditor::make('catalogue_references')
                             ->label('Catalogue references')
                             ->helperText('As the sheet holds it: catalogue codes or citations. The Book links are on the item.')
-                            ->rows(2)
+                            ->minHeight('4.5rem')
                             ->columnSpanFull(),
                     ])
                     ->columns(2)
@@ -198,9 +198,9 @@ class ItemTranslationResource extends Resource
 
                 Section::make('Monument')
                     ->schema([
-                        Textarea::make('history')
+                        MarkdownEditor::make('history')
                             ->placeholder('The history of the monument')
-                            ->rows(5)
+                            ->minHeight('9rem')
                             ->columnSpanFull(),
                     ])
                     ->collapsible()
@@ -209,31 +209,31 @@ class ItemTranslationResource extends Resource
                 Section::make('Artist')
                     ->description('The lines as the sheet prints them. The Artist links are on the item.')
                     ->schema([
-                        Textarea::make('artist')
-                            ->rows(2),
-                        Textarea::make('artist_period_of_activity')
+                        MarkdownEditor::make('artist')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('artist_period_of_activity')
                             ->label('Period of activity')
-                            ->rows(2),
-                        Textarea::make('artist_birth_date')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('artist_birth_date')
                             ->label('Date of birth')
-                            ->rows(1),
-                        Textarea::make('artist_birth_place')
+                            ->minHeight('3rem'),
+                        MarkdownEditor::make('artist_birth_place')
                             ->label('Place of birth')
-                            ->rows(1),
-                        Textarea::make('artist_death_date')
+                            ->minHeight('3rem'),
+                        MarkdownEditor::make('artist_death_date')
                             ->label('Date of death')
-                            ->rows(1),
-                        Textarea::make('artist_death_place')
+                            ->minHeight('3rem'),
+                        MarkdownEditor::make('artist_death_place')
                             ->label('Place of death')
-                            ->rows(1),
-                        Textarea::make('workshop')
-                            ->rows(2),
-                        Textarea::make('scribe')
-                            ->rows(2),
-                        Textarea::make('patrons')
-                            ->rows(2),
-                        Textarea::make('architects')
-                            ->rows(2),
+                            ->minHeight('3rem'),
+                        MarkdownEditor::make('workshop')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('scribe')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('patrons')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('architects')
+                            ->minHeight('4.5rem'),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -242,26 +242,26 @@ class ItemTranslationResource extends Resource
                 Section::make('Notices and rights')
                     ->description('As the sheet prints them.')
                     ->schema([
-                        Textarea::make('notice')
-                            ->rows(2),
-                        Textarea::make('external_notice')
+                        MarkdownEditor::make('notice')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('external_notice')
                             ->label('External notice')
-                            ->rows(2),
-                        Textarea::make('image_rights')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('image_rights')
                             ->label('Image rights')
-                            ->rows(2),
-                        Textarea::make('external_sources')
+                            ->minHeight('4.5rem'),
+                        MarkdownEditor::make('external_sources')
                             ->label('External sources')
-                            ->rows(3),
-                        Textarea::make('original_name')
+                            ->minHeight('6rem'),
+                        MarkdownEditor::make('original_name')
                             ->label('Name in the original language')
-                            ->rows(1),
-                        Textarea::make('holder_original_name')
+                            ->minHeight('3rem'),
+                        MarkdownEditor::make('holder_original_name')
                             ->label('Holding institution (original language)')
-                            ->rows(1),
-                        Textarea::make('archival_reference')
+                            ->minHeight('3rem'),
+                        MarkdownEditor::make('archival_reference')
                             ->label('Archival reference')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                     ])
                     ->columns(2)
                     ->collapsible()
@@ -270,22 +270,22 @@ class ItemTranslationResource extends Resource
                 Section::make('Contributors')
                     ->schema([
                         TranslationFormSchema::authorSelectField('author_id', 'Author'),
-                        Textarea::make('author_credit')
+                        MarkdownEditor::make('author_credit')
                             ->label('Author, as printed')
                             ->helperText('The credit line as the sheet prints it')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                         TranslationFormSchema::authorSelectField('text_copy_editor_id', 'Text copy editor'),
-                        Textarea::make('copy_editor_credit')
+                        MarkdownEditor::make('copy_editor_credit')
                             ->label('Text copy editor, as printed')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                         TranslationFormSchema::authorSelectField('translator_id', 'Translator'),
-                        Textarea::make('translator_credit')
+                        MarkdownEditor::make('translator_credit')
                             ->label('Translator, as printed')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                         TranslationFormSchema::authorSelectField('translation_copy_editor_id', 'Translation copy editor'),
-                        Textarea::make('translation_copy_editor_credit')
+                        MarkdownEditor::make('translation_copy_editor_credit')
                             ->label('Translation copy editor, as printed')
-                            ->rows(2),
+                            ->minHeight('4.5rem'),
                     ])
                     ->columns(2)
                     ->collapsible()

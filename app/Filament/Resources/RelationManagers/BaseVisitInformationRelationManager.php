@@ -6,8 +6,8 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\ExtraJsonField;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -46,20 +46,20 @@ abstract class BaseVisitInformationRelationManager extends RelationManager
                 TranslationFormSchema::contextField(),
                 Section::make('Getting there')
                     ->schema([
-                        Textarea::make('how_to_reach')->label('How to reach')->rows(3)->columnSpanFull(),
-                        Textarea::make('address')->rows(2),
-                        Textarea::make('opening_hours')->label('Opening hours')->rows(2),
-                        Textarea::make('practical_information')
+                        MarkdownEditor::make('how_to_reach')->label('How to reach')->minHeight('6rem')->columnSpanFull(),
+                        MarkdownEditor::make('address')->minHeight('4.5rem'),
+                        MarkdownEditor::make('opening_hours')->label('Opening hours')->minHeight('4.5rem'),
+                        MarkdownEditor::make('practical_information')
                             ->label('Practical information')
                             ->helperText('Opening hours, fees, access, as legacy wrote them together.')
-                            ->rows(4)
+                            ->minHeight('7.5rem')
                             ->columnSpanFull(),
                     ])
                     ->columns(2),
                 Section::make('Contact')
                     ->schema([
-                        Textarea::make('institution')->rows(2),
-                        Textarea::make('contact')->rows(2),
+                        MarkdownEditor::make('institution')->minHeight('4.5rem'),
+                        MarkdownEditor::make('contact')->minHeight('4.5rem'),
                         TextInput::make('phone'),
                         TextInput::make('fax'),
                         TextInput::make('email')->label('E-mail'),

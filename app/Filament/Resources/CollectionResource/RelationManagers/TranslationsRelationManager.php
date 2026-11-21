@@ -7,7 +7,7 @@ use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Collection;
-use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
@@ -49,8 +49,8 @@ class TranslationsRelationManager extends BaseOwnerTranslationsRelationManager
             TextInput::make('title')
                 ->required()
                 ->maxLength(255),
-            Textarea::make('description')
-                ->rows(4)
+            MarkdownEditor::make('description')
+                ->minHeight('7.5rem')
                 ->columnSpanFull(),
             TextInput::make('url')
                 ->url()

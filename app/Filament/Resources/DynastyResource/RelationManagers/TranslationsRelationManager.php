@@ -7,8 +7,8 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Dynasty;
 use App\Models\Language;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -68,12 +68,12 @@ class TranslationsRelationManager extends RelationManager
                     ->label('Date description (AH)')
                     ->maxLength(255)
                     ->nullable(),
-                Textarea::make('area')
-                    ->rows(3)
+                MarkdownEditor::make('area')
+                    ->minHeight('6rem')
                     ->nullable()
                     ->columnSpanFull(),
-                Textarea::make('history')
-                    ->rows(8)
+                MarkdownEditor::make('history')
+                    ->minHeight('13.5rem')
                     ->nullable()
                     ->columnSpanFull(),
                 Section::make('Credits')

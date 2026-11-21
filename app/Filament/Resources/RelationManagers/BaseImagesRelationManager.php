@@ -8,10 +8,10 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
 use Filament\Forms\Components\Component;
+use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -243,8 +243,8 @@ abstract class BaseImagesRelationManager extends RelationManager
                                             ->searchable()
                                             ->required()
                                             ->distinct(),
-                                        Textarea::make('caption')
-                                            ->rows(2)
+                                        MarkdownEditor::make('caption')
+                                            ->minHeight('4.5rem')
                                             ->columnSpanFull(),
                                         TextInput::make('name'),
                                         TextInput::make('date'),
