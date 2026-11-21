@@ -300,14 +300,7 @@ export class ObjectImporter extends BaseImporter {
       const artistIds: string[] = [];
 
       for (const artistData of extractedArtists) {
-        const artistId = await this.artistHelper.findOrCreate(
-          artistData.name,
-          artistData.birthplace,
-          artistData.deathplace,
-          artistData.birthdate,
-          artistData.deathdate,
-          artistData.periodActivity
-        );
+        const artistId = await this.artistHelper.findOrCreate(artistData.name);
         if (artistId) artistIds.push(artistId);
       }
 

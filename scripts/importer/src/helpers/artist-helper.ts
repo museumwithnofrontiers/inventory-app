@@ -24,16 +24,16 @@ export class ArtistHelper {
   }
 
   /**
-   * Find or create an artist
+   * Find or create an artist by name.
+   *
+   * The record gets a name only. The artist's life data (places and dates of
+   * birth and death, period of activity) is display text: legacy writes it per
+   * object and per language, and the item translation columns keep it as
+   * written (`artist_birth_date`, …). Copying one language's text onto the
+   * shared record would derive the record from a display text (ADR 006 rule 2)
+   * and give every person split from one artist line the same life data.
    */
-  async findOrCreate(
-    name: string,
-    birthplace?: string | null,
-    deathplace?: string | null,
-    birthdate?: string | null,
-    deathdate?: string | null,
-    periodActivity?: string | null
-  ): Promise<string | null> {
+  async findOrCreate(name: string): Promise<string | null> {
     if (!name || name.trim() === '') {
       return null;
     }
@@ -64,11 +64,6 @@ export class ArtistHelper {
     const artistData: ArtistData = {
       name: sanitizedName,
       internal_name: sanitizedName,
-      place_of_birth: birthplace || null,
-      place_of_death: deathplace || null,
-      date_of_birth: birthdate || null,
-      date_of_death: deathdate || null,
-      period_of_activity: periodActivity || null,
       backward_compatibility: backwardCompat,
     };
 

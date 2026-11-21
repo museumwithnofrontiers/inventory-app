@@ -581,9 +581,11 @@ new legacy project/site is confirmed.
 
 Legacy data contains artists and tags in text fields:
 
-- **Artists**: Extracted, deduplicated, and created as Author entities
+- **Artists**: Legacy has no artist table. Artist records are split from the
+  mwnf3 object and monument detail artist lines and keyed `mwnf3:artists:{name}`.
+  A record gets the name only: the artist's life data stays on the item
+  translation as written (`artist_birth_date`, …), with the artist line itself.
 - **Tags**: Parsed from delimited strings, categorized (material, keyword, etc.)
-- **Backward compatibility**: Maintains links using `mwnf3:artists:{name}` format
 
 ### HTML to Markdown
 

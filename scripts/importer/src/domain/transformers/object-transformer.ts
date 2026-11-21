@@ -69,15 +69,11 @@ export interface ExtractedTags {
 }
 
 /**
- * Artist extraction result
+ * Artist extraction result: a name only. The artist's life data stays on the
+ * item translation, as this language writes it.
  */
 export interface ExtractedArtist {
   name: string;
-  birthplace: string | null;
-  deathplace: string | null;
-  birthdate: string | null;
-  deathdate: string | null;
-  periodActivity: string | null;
 }
 
 /**
@@ -403,14 +399,7 @@ export function extractObjectArtists(obj: LegacyObject): ExtractedArtist[] {
 
   const artistNames = parseTagString(cleaned);
 
-  return artistNames.map((name) => ({
-    name,
-    birthplace: obj.birthplace || null,
-    deathplace: obj.deathplace || null,
-    birthdate: obj.birthdate || null,
-    deathdate: obj.deathdate || null,
-    periodActivity: obj.period_activity || null,
-  }));
+  return artistNames.map((name) => ({ name }));
 }
 
 /**
