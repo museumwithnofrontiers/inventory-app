@@ -1,4 +1,4 @@
-remote_theme: just-the-docs/just-the-docs
+theme: just-the-docs
 
 title: MWNF Inventory
 description: >-
@@ -17,9 +17,6 @@ author:
   name: Pascal Havelange
   email: "havelangep [at] hotmail [dot] com"
 
-# Logo and favicon
-logo: "/assets/images/logo.png"
-favicon_ico: "/assets/images/favicon.ico"
 
 # Color scheme
 color_scheme: light
@@ -123,3 +120,12 @@ sass:
 aux_links:
   "View on GitHub":
     - "https://github.com/museumwithnofrontiers/inventory-app"
+
+# Callouts: {: .note } and {: .important } blocks
+callouts:
+  note:
+    title: Note
+    color: blue
+  important:
+    title: Important
+    color: yellow

@@ -58,7 +58,7 @@ Everything a site prints about an item, apart from its pictures and its links, i
 The **context** says which site family the text was written for. The *Aleppo Room* has two English texts: one in the *Discover Islamic Art* context and one in the *Explore Islamic Art Collections* context.
 
 - A site prints the translation in the context of the item's **project**. A gallery that borrows an Islamic Art object still prints its *Discover Islamic Art* text.
-- Some sites also read a second context. Explore and Travels, for example, read their own context for the texts written for them. The [site family manuals]({{ '/site-families/' | relative_url }}) say which.
+- Some sites also read a second context. Explore and Travels, for example, read their own context for the texts written for them. The [site family manuals]({{ '/user-manual/sites/' | relative_url }}) say which.
 - The **★** column marks the translation in the default language and the default context. Some items have none: their texts are all in a site context. **Create default translation** creates one. You don't need it to maintain a site.
 
 So **edit the translation in the context of the site you are maintaining**, and leave the other contexts' texts to their own sites.
@@ -142,6 +142,8 @@ The **Contributors** section has two fields per role. The link (**Author**, **Tr
 ## Pictures
 
 A picture item is a child of its object or monument. The **Pictures** table on the parent's **Content** tab lists them, in their **Order**. The item sheet shows the pictures in that order, each with the image attached to that picture item.
+
+![The Pictures table of the Aleppo Room, with their previews]({{ '/user-manual/images/item-pictures.png' | relative_url }})
 
 To add a picture to an item sheet:
 

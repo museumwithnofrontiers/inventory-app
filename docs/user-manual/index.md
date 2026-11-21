@@ -16,8 +16,8 @@ Every website and mini-site already exists: their content came from the legacy d
 
 | Manual | Read it when |
 |---|---|
-| [Master manual]({{ '/master-manual/' | relative_url }}) | Always first. It covers everything common to every site: signing in, finding records, items and their texts, images, collections and placements, partners, reference data, legacy links, and what happens after you save. |
-| [Site families]({{ '/site-families/' | relative_url }}) | You maintain one family of sites. Each page adds only what is specific to that family: which panel records make up the site, which texts it prints, and which settings live outside the panel. |
+| [Master manual]({{ '/user-manual/master/' | relative_url }}) | Always first. It covers everything common to every site: signing in, finding records, items and their texts, images, collections and placements, partners, reference data, legacy links, and what happens after you save. |
+| [Site families]({{ '/user-manual/sites/' | relative_url }}) | You maintain one family of sites. Each page adds only what is specific to that family: which panel records make up the site, which texts it prints, and which settings live outside the panel. |
 
 ## Three rules to keep in mind
 
@@ -27,4 +27,4 @@ Every website and mini-site already exists: their content came from the legacy d
 
 ## The examples
 
-The screenshots come from a test copy of the inventory, filled from a full import of the legacy databases. They use real records, such as the *Aleppo Room* of the Museum für Islamische Kunst or the *Water in Islam* exhibition, so that what you see matches what you will find in the panel. Your panel may show more or fewer menu entries, depending on your role.
+The screenshots come from test copies of the inventory, filled from a full import of the legacy databases. They use real records, such as the *Aleppo Room* of the Museum für Islamische Kunst or the *Water in Islam* exhibition, so that what you see matches what you will find in the panel. Your panel may show more or fewer menu entries, depending on your role.
