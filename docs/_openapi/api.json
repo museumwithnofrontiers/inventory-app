@@ -34,6 +34,455 @@
                 }
             }
         },
+        "/artist/{artist}": {
+            "get": {
+                "operationId": "artist.show",
+                "summary": "Display the specified resource",
+                "tags": [
+                    "Artist"
+                ],
+                "parameters": [
+                    {
+                        "name": "artist",
+                        "in": "path",
+                        "required": true,
+                        "description": "The artist ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `items`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "items"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`ArtistResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ArtistResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "patch": {
+                "operationId": "artist.update",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "Artist"
+                ],
+                "parameters": [
+                    {
+                        "name": "artist",
+                        "in": "path",
+                        "required": true,
+                        "description": "The artist ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateArtistRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ArtistResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ArtistResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "put": {
+                "operationId": "artist.update_221",
+                "summary": "Update the specified resource in storage",
+                "tags": [
+                    "Artist"
+                ],
+                "parameters": [
+                    {
+                        "name": "artist",
+                        "in": "path",
+                        "required": true,
+                        "description": "The artist ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateArtistRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ArtistResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ArtistResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "delete": {
+                "operationId": "artist.destroy",
+                "summary": "Remove the specified resource from storage. Its links to items go with\nit (the artist_item rows cascade); the items themselves stay",
+                "tags": [
+                    "Artist"
+                ],
+                "parameters": [
+                    {
+                        "name": "artist",
+                        "in": "path",
+                        "required": true,
+                        "description": "The artist ID",
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                }
+            }
+        },
+        "/artist": {
+            "get": {
+                "operationId": "artist.index",
+                "summary": "Display a listing of the resource",
+                "tags": [
+                    "Artist"
+                ],
+                "parameters": [
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "include",
+                        "in": "query",
+                        "description": "Comma-separated list of related resources to include. Valid values: `items`.",
+                        "schema": {
+                            "type": "string",
+                            "examples": [
+                                "items"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `ArtistResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/ArtistResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            },
+            "post": {
+                "operationId": "artist.store",
+                "summary": "Store a newly created resource in storage",
+                "tags": [
+                    "Artist"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreArtistRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`ArtistResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/ArtistResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                }
+            }
+        },
         "/author/{author}": {
             "get": {
                 "operationId": "author.show",
@@ -159,7 +608,7 @@
                 }
             },
             "put": {
-                "operationId": "author.update_222",
+                "operationId": "author.update_227",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Author"
@@ -610,7 +1059,7 @@
                 }
             },
             "put": {
-                "operationId": "authorTranslation.update_224",
+                "operationId": "authorTranslation.update_229",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AuthorTranslation"
@@ -1153,7 +1602,7 @@
                 }
             },
             "put": {
-                "operationId": "availableImage.update_372",
+                "operationId": "availableImage.update_378",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "AvailableImage"
@@ -1604,7 +2053,7 @@
                 }
             },
             "put": {
-                "operationId": "collection.update_299",
+                "operationId": "collection.update_304",
                 "summary": "Update the specified collection in storage",
                 "tags": [
                     "Collection"
@@ -2352,7 +2801,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionTranslation.update_297",
+                "operationId": "collectionTranslation.update_302",
                 "summary": "Update the specified collection translation",
                 "tags": [
                     "Collection Translations",
@@ -3068,7 +3517,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionImage.update_281",
+                "operationId": "collectionImage.update_286",
                 "summary": "Update the specified collection image",
                 "tags": [
                     "CollectionImage"
@@ -3776,7 +4225,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionItemExploreMonument.update_263",
+                "operationId": "collectionItemExploreMonument.update_268",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CollectionItemExploreMonument"
@@ -4242,7 +4691,7 @@
                 }
             },
             "put": {
-                "operationId": "collectionItemTranslation.update_261",
+                "operationId": "collectionItemTranslation.update_266",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CollectionItemTranslation"
@@ -4544,7 +4993,7 @@
                 }
             },
             "put": {
-                "operationId": "context.update_194",
+                "operationId": "context.update_197",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Context"
@@ -5055,7 +5504,7 @@
                 }
             },
             "put": {
-                "operationId": "contributor.update_286",
+                "operationId": "contributor.update_291",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Contributor"
@@ -5584,7 +6033,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorImage.update_290",
+                "operationId": "contributorImage.update_295",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorImage"
@@ -6286,7 +6735,7 @@
                 }
             },
             "put": {
-                "operationId": "contributorTranslation.update_288",
+                "operationId": "contributorTranslation.update_293",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ContributorTranslation"
@@ -6735,7 +7184,7 @@
                 }
             },
             "put": {
-                "operationId": "country.update_212",
+                "operationId": "country.update_215",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Country"
@@ -7183,7 +7632,7 @@
                 }
             },
             "put": {
-                "operationId": "countryTranslation.update_214",
+                "operationId": "countryTranslation.update_217",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "CountryTranslation"
@@ -7632,7 +8081,7 @@
                 }
             },
             "put": {
-                "operationId": "dynasty.update_218",
+                "operationId": "dynasty.update_223",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Dynasty"
@@ -8081,7 +8530,7 @@
                 }
             },
             "put": {
-                "operationId": "dynastyTranslation.update_220",
+                "operationId": "dynastyTranslation.update_225",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "DynastyTranslation"
@@ -8532,7 +8981,7 @@
                 }
             },
             "put": {
-                "operationId": "glossary.update_202",
+                "operationId": "glossary.update_205",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Glossary"
@@ -9127,7 +9576,7 @@
                 }
             },
             "put": {
-                "operationId": "glossarySpelling.update_206",
+                "operationId": "glossarySpelling.update_209",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossarySpelling"
@@ -9576,7 +10025,7 @@
                 }
             },
             "put": {
-                "operationId": "glossaryTranslation.update_204",
+                "operationId": "glossaryTranslation.update_207",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "GlossaryTranslation"
@@ -10122,7 +10571,7 @@
                 }
             },
             "put": {
-                "operationId": "imageTranslation.update_259",
+                "operationId": "imageTranslation.update_264",
                 "tags": [
                     "ImageTranslation"
                 ],
@@ -10988,7 +11437,7 @@
                 }
             },
             "put": {
-                "operationId": "item.update_256",
+                "operationId": "item.update_261",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Item"
@@ -11788,7 +12237,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLinkTranslation.update_279",
+                "operationId": "itemItemLinkTranslation.update_284",
                 "summary": "Update the specified item-item link translation",
                 "tags": [
                     "Item Item Link Translations",
@@ -12299,7 +12748,7 @@
                 }
             },
             "put": {
-                "operationId": "itemTranslation.update_295",
+                "operationId": "itemTranslation.update_300",
                 "summary": "Update the specified item translation",
                 "tags": [
                     "Item Translations",
@@ -12955,7 +13404,7 @@
                 }
             },
             "put": {
-                "operationId": "itemDocument.update_273",
+                "operationId": "itemDocument.update_278",
                 "summary": "Update the specified item document",
                 "tags": [
                     "ItemDocument"
@@ -13469,7 +13918,7 @@
                 }
             },
             "put": {
-                "operationId": "itemImage.update_264",
+                "operationId": "itemImage.update_269",
                 "summary": "Update the specified item image",
                 "tags": [
                     "ItemImage"
@@ -13908,7 +14357,7 @@
                 }
             },
             "put": {
-                "operationId": "itemItemLink.update_277",
+                "operationId": "itemItemLink.update_282",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "ItemItemLink"
@@ -14507,7 +14956,7 @@
                 }
             },
             "put": {
-                "operationId": "language.update_198",
+                "operationId": "language.update_201",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Language"
@@ -15006,7 +15455,7 @@
                 }
             },
             "put": {
-                "operationId": "languageTranslation.update_200",
+                "operationId": "languageTranslation.update_203",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "LanguageTranslation"
@@ -15882,7 +16331,7 @@
                 }
             },
             "put": {
-                "operationId": "link.update_269",
+                "operationId": "link.update_274",
                 "summary": "Update the specified link",
                 "tags": [
                     "Link"
@@ -16451,7 +16900,7 @@
                 }
             },
             "put": {
-                "operationId": "partner.update_236",
+                "operationId": "partner.update_241",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Partner"
@@ -16901,7 +17350,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerContact.update_315",
+                "operationId": "partnerContact.update_320",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerContact"
@@ -17437,7 +17886,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerImage.update_240",
+                "operationId": "partnerImage.update_245",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerImage"
@@ -18219,7 +18668,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerLogo.update_245",
+                "operationId": "partnerLogo.update_250",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerLogo"
@@ -18811,7 +19260,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslation.update_238",
+                "operationId": "partnerTranslation.update_243",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslation"
@@ -19340,7 +19789,7 @@
                 }
             },
             "put": {
-                "operationId": "partnerTranslationImage.update_250",
+                "operationId": "partnerTranslationImage.update_255",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PartnerTranslationImage"
@@ -20080,7 +20529,7 @@
                 }
             },
             "put": {
-                "operationId": "project.update_210",
+                "operationId": "project.update_213",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Project"
@@ -20656,7 +21105,7 @@
                 }
             },
             "put": {
-                "operationId": "publication.update_301",
+                "operationId": "publication.update_306",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Publication"
@@ -21972,7 +22421,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationDocument.update_327",
+                "operationId": "publicationDocument.update_332",
                 "summary": "Update the specified document's metadata",
                 "tags": [
                     "PublicationDocument"
@@ -22192,7 +22641,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationEdition.update_318",
+                "operationId": "publicationEdition.update_323",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationEdition"
@@ -22996,7 +23445,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationImage.update_321",
+                "operationId": "publicationImage.update_326",
                 "summary": "Update the specified publication image",
                 "tags": [
                     "PublicationImage"
@@ -23461,7 +23910,7 @@
                 }
             },
             "put": {
-                "operationId": "publicationTranslation.update_311",
+                "operationId": "publicationTranslation.update_316",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "PublicationTranslation"
@@ -24116,7 +24565,7 @@
                 }
             },
             "put": {
-                "operationId": "tag.update_216",
+                "operationId": "tag.update_219",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Tag"
@@ -24555,7 +25004,7 @@
                 }
             },
             "put": {
-                "operationId": "timeline.update_226",
+                "operationId": "timeline.update_231",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "Timeline"
@@ -25004,7 +25453,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEvent.update_228",
+                "operationId": "timelineEvent.update_233",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEvent"
@@ -25442,7 +25891,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventImage.update_232",
+                "operationId": "timelineEventImage.update_237",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventImage"
@@ -25739,7 +26188,7 @@
                 }
             },
             "put": {
-                "operationId": "timelineEventTranslation.update_230",
+                "operationId": "timelineEventTranslation.update_235",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "TimelineEventTranslation"
@@ -26040,7 +26489,7 @@
                 }
             },
             "put": {
-                "operationId": "visitInformation.update_313",
+                "operationId": "visitInformation.update_318",
                 "summary": "Update the specified resource in storage",
                 "tags": [
                     "VisitInformation"
@@ -31936,6 +32385,69 @@
                 ],
                 "title": "SetLaunchedProjectRequest"
             },
+            "StoreArtistRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "internal_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "place_of_birth": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "place_of_death": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "date_of_birth": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "date_of_death": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "required": [
+                    "name",
+                    "internal_name"
+                ],
+                "title": "StoreArtistRequest"
+            },
             "StoreAuthorRequest": {
                 "type": "object",
                 "properties": {
@@ -35653,6 +36165,65 @@
                     "updated_at"
                 ],
                 "title": "TimelineResource"
+            },
+            "UpdateArtistRequest": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "internal_name": {
+                        "type": "string",
+                        "maxLength": 255
+                    },
+                    "place_of_birth": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "place_of_death": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "date_of_birth": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "date_of_death": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "period_of_activity": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "backward_compatibility": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    }
+                },
+                "title": "UpdateArtistRequest"
             },
             "UpdateAuthorRequest": {
                 "type": "object",

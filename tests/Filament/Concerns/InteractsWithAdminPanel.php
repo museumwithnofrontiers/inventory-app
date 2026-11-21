@@ -45,6 +45,19 @@ trait InteractsWithAdminPanel
         return $user;
     }
 
+    /**
+     * The seeded "Regular User" shape: the data permissions and
+     * `manage-reference-data`, as needed to link shared data (artists,
+     * dynasties) to items from either side.
+     */
+    protected function createReferenceDataCrudUser(): User
+    {
+        $user = $this->createCrudUser();
+        $user->givePermissionTo(Permission::MANAGE_REFERENCE_DATA->value);
+
+        return $user;
+    }
+
     protected function createRoleManagerUser(): User
     {
         $user = User::factory()->create(['email_verified_at' => now()]);

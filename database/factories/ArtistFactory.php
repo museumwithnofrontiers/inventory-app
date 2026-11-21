@@ -30,7 +30,7 @@ class ArtistFactory extends Factory
                 'c. 1750-1800',
                 'First half of the 18th century',
             ]),
-            'internal_name' => $this->faker->lastName().'_'.$this->faker->firstName(),
+            'internal_name' => $this->faker->lastName().'_'.$this->faker->firstName().'_'.$this->faker->unique()->numberBetween(1, 9999999),
             'backward_compatibility' => $this->faker->optional(0.3)->uuid(),
         ];
     }

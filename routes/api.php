@@ -3,6 +3,7 @@
 use App\Enums\OAuthScope;
 use App\Enums\Permission;
 use App\Http\Controllers\Api\MarkdownController;
+use App\Http\Controllers\ArtistController;
 use App\Http\Controllers\AuthorController;
 use App\Http\Controllers\AuthorTranslationController;
 use App\Http\Controllers\AvailableImageController;
@@ -113,6 +114,10 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('tag/for-item/{item}', [TagController::class, 'forItem'])->name('tag.forItem');
         Route::get('tag/{tag}', [TagController::class, 'show'])->name('tag.show');
         Route::get('tag', [TagController::class, 'index'])->name('tag.index');
+
+        // Artist routes (read)
+        Route::get('artist/{artist}', [ArtistController::class, 'show'])->name('artist.show');
+        Route::get('artist', [ArtistController::class, 'index'])->name('artist.index');
 
         // Dynasty routes (read)
         Route::get('dynasty/{dynasty}', [DynastyController::class, 'show'])->name('dynasty.show');
@@ -305,6 +310,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('country', [CountryController::class, 'store'])->name('country.store');
         Route::post('country-translation', [CountryTranslationController::class, 'store'])->name('country-translation.store');
         Route::post('tag', [TagController::class, 'store'])->name('tag.store');
+        Route::post('artist', [ArtistController::class, 'store'])->name('artist.store');
         Route::post('dynasty', [DynastyController::class, 'store'])->name('dynasty.store');
         Route::post('dynasty-translation', [DynastyTranslationController::class, 'store'])->name('dynasty-translation.store');
         Route::post('author', [AuthorController::class, 'store'])->name('author.store');
@@ -393,6 +399,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::patch('tag/{tag}', [TagController::class, 'update'])->name('tag.update');
         Route::put('tag/{tag}', [TagController::class, 'update']);
 
+        Route::patch('artist/{artist}', [ArtistController::class, 'update'])->name('artist.update');
+        Route::put('artist/{artist}', [ArtistController::class, 'update']);
         Route::patch('dynasty/{dynasty}', [DynastyController::class, 'update'])->name('dynasty.update');
         Route::put('dynasty/{dynasty}', [DynastyController::class, 'update']);
 
@@ -553,6 +561,7 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('country/{country}', [CountryController::class, 'destroy'])->name('country.destroy');
         Route::delete('country-translation/{countryTranslation}', [CountryTranslationController::class, 'destroy'])->name('country-translation.destroy');
         Route::delete('tag/{tag}', [TagController::class, 'destroy'])->name('tag.destroy');
+        Route::delete('artist/{artist}', [ArtistController::class, 'destroy'])->name('artist.destroy');
         Route::delete('dynasty/{dynasty}', [DynastyController::class, 'destroy'])->name('dynasty.destroy');
         Route::delete('dynasty-translation/{dynastyTranslation}', [DynastyTranslationController::class, 'destroy'])->name('dynasty-translation.destroy');
         Route::delete('author/{author}', [AuthorController::class, 'destroy'])->name('author.destroy');

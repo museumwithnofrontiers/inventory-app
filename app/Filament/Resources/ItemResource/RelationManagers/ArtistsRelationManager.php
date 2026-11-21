@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ItemResource\RelationManagers;
 
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
+use App\Filament\Resources\ArtistResource;
 use App\Filament\Support\RecordSelect;
 use App\Models\Artist;
 use Filament\Infolists\Components\TextEntry;
@@ -33,7 +34,8 @@ class ArtistsRelationManager extends RelationManager
                 TextColumn::make('name')
                     ->label('Name')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->url(fn (Artist $record): ?string => self::artistUrl($record)),
                 TextColumn::make('internal_name')
                     ->searchable()
                     ->sortable()
@@ -55,15 +57,13 @@ class ArtistsRelationManager extends RelationManager
                 $this->pivotAttachAction(RecordSelect::ARTISTS, []),
             ])
             ->actions([
-                // Artist has no Filament Resource of its own (M7 story A2.4,
-                // #1903), so — unlike TagsRelationManager's pivotViewAction(),
-                // which navigates to TagResource — this is a plain ViewAction
-                // opening a read-only modal built from Artist's own fields.
-                // Filament's own default canView() (RelationManager::canView(),
-                // untouched by AuthorizesRelationMutations) already allows
-                // when a model has no policy of its own, which is the case
-                // here.
+                // Like TagsRelationManager's pivotViewAction(), this opens
+                // ArtistResource's View page, for a user who may open that
+                // resource (`manage-reference-data`). Anyone else allowed to
+                // view the artist (ArtistPolicy: `view data`) keeps the
+                // read-only modal they had before ArtistResource existed.
                 ViewAction::make()
+                    ->url(fn (Artist $record): ?string => self::artistUrl($record))
                     ->modalHeading('Artist')
                     ->infolist(fn (Artist $record): array => [
                         TextEntry::make('name')->label('Name'),
@@ -80,5 +80,15 @@ class ArtistsRelationManager extends RelationManager
             ->bulkActions([
                 $this->pivotDetachBulkAction(),
             ]);
+    }
+
+    /**
+     * The artist's View page, when the signed-in user may open it.
+     */
+    private static function artistUrl(Artist $record): ?string
+    {
+        return ArtistResource::canAccess() && ArtistResource::canView($record)
+            ? ArtistResource::getUrl('view', ['record' => $record])
+            : null;
     }
 }
