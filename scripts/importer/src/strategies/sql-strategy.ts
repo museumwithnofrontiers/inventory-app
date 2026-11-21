@@ -639,8 +639,8 @@ export class SqlWriteStrategy implements IWriteStrategy {
     const sanitized = sanitizeAllStrings(data);
     const id = deterministicUuid(`partner:${sanitized.backward_compatibility.toLowerCase()}`);
     await this.db.execute(
-      `INSERT INTO partners (id, type, internal_name, backward_compatibility, country_id, latitude, longitude, map_zoom, project_id, monument_item_id, visible, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO partners (id, type, internal_name, backward_compatibility, country_id, latitude, longitude, map_zoom, project_id, monument_item_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         id,
         sanitized.type,
@@ -652,7 +652,6 @@ export class SqlWriteStrategy implements IWriteStrategy {
         sanitized.map_zoom ?? 16, // default
         sanitized.project_id ?? null,
         sanitized.monument_item_id ?? null,
-        sanitized.visible ?? false, // default
         this.now,
         this.now,
       ]

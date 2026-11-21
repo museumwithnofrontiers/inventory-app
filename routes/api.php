@@ -99,7 +99,6 @@ Route::middleware(['auth:api'])->group(function () {
         Route::get('glossary-spelling', [GlossarySpellingController::class, 'index'])->name('glossary-spelling.index');
 
         // Project routes (read)
-        Route::get('project/enabled', [ProjectController::class, 'enabled'])->name('project.enabled');
         Route::get('project/{project}', [ProjectController::class, 'show'])->name('project.show');
         Route::get('project', [ProjectController::class, 'index'])->name('project.index');
         Route::get('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'show'])->name('project-translation.show');
@@ -389,8 +388,6 @@ Route::middleware(['auth:api'])->group(function () {
         Route::patch('glossary-spelling/{glossarySpelling}', [GlossarySpellingController::class, 'update'])->name('glossary-spelling.update');
         Route::put('glossary-spelling/{glossarySpelling}', [GlossarySpellingController::class, 'update']);
 
-        Route::patch('project/{project}/launched', [ProjectController::class, 'setLaunched'])->name('project.setLaunched');
-        Route::patch('project/{project}/enabled', [ProjectController::class, 'setEnabled'])->name('project.setEnabled');
         Route::patch('project/{project}', [ProjectController::class, 'update'])->name('project.update');
         Route::put('project/{project}', [ProjectController::class, 'update']);
         Route::patch('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'update'])->name('project-translation.update');

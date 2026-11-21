@@ -223,7 +223,6 @@ export interface PartnerData extends BaseEntityData {
   country_id?: string | null;
   project_id?: string | null;
   monument_item_id?: string | null;
-  visible?: boolean | null;
 }
 
 /**

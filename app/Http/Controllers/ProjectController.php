@@ -3,8 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Api\IndexProjectRequest;
-use App\Http\Requests\Api\SetEnabledProjectRequest;
-use App\Http\Requests\Api\SetLaunchedProjectRequest;
 use App\Http\Requests\Api\ShowProjectRequest;
 use App\Http\Requests\Api\StoreProjectRequest;
 use App\Http\Requests\Api\UpdateProjectRequest;
@@ -12,7 +10,6 @@ use App\Http\Resources\ProjectResource;
 use App\Models\Project;
 use App\Support\Includes\AllowList;
 use App\Support\Includes\IncludeParser;
-use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Http\Response;
 
@@ -87,51 +84,5 @@ class ProjectController extends Controller
         $project->delete();
 
         return response()->noContent();
-    }
-
-    /**
-     * Toggle Enable/disable on a project.
-     */
-    public function setEnabled(SetEnabledProjectRequest $request, Project $project): ProjectResource
-    {
-        $validated = $request->validated();
-
-        $project->update($validated);
-        $project->refresh();
-
-        return new ProjectResource($project);
-    }
-
-    /**
-     * Toggle Launched/not-launched on a project.
-     * Important: It is independant from the `launch_date` value. It is an idicator showing that
-     * the project is to be considered 'laucnhed' as soon as the launch date it reached.
-     */
-    public function setLaunched(SetLaunchedProjectRequest $request, Project $project): ProjectResource
-    {
-        $validated = $request->validated();
-
-        $project->update($validated);
-        $project->refresh();
-
-        return new ProjectResource($project);
-    }
-
-    /**
-     * Get all visible projects.
-     * The project becomes "visible" when all conditions are matched:
-     * - is_enabled is true
-     * - is_launched is true
-     * - current date >= launch_date
-     */
-    public function enabled(Request $request): AnonymousResourceCollection
-    {
-        $includes = IncludeParser::fromRequest($request, AllowList::for('project'));
-        $query = Project::visible();
-        if (! empty($includes)) {
-            $query->with($includes);
-        }
-
-        return ProjectResource::collection($query->get());
     }
 }

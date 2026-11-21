@@ -38,15 +38,6 @@ class PartnerFactoryTest extends TestCase
         $this->assertEquals('individual', $individual->type);
     }
 
-    public function test_factory_visible_and_hidden_states(): void
-    {
-        $visible = Partner::factory()->visible()->create();
-        $hidden = Partner::factory()->hidden()->create();
-
-        $this->assertTrue($visible->visible);
-        $this->assertFalse($hidden->visible);
-    }
-
     public function test_factory_with_country_creates_country_relationship(): void
     {
         $partner = Partner::factory()->withCountry()->create();

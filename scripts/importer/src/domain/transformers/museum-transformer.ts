@@ -131,7 +131,6 @@ export function transformMuseum(legacy: LegacyMuseum): TransformedMuseum {
     // not, so — exactly as school-transformer does — the importer resolves it.
     project_id: null, // Resolved in the importer via lookup
     monument_item_id: null, // Will be resolved later by importer if monumentReference exists
-    visible: false, // Default to false, can be updated later
   };
 
   return {

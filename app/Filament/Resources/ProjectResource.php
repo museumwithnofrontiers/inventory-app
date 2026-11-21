@@ -25,9 +25,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section as FiltersSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -35,11 +33,9 @@ use Filament\Resources\Resource;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class ProjectResource extends Resource
@@ -86,12 +82,8 @@ class ProjectResource extends Resource
                     ->label('Legacy code')
                     ->maxLength(255),
                 DatePicker::make('launch_date')
-                    ->label('Launch date'),
-                Toggle::make('is_launched')
-                    ->label('Launched'),
-                Toggle::make('is_enabled')
-                    ->label('Enabled')
-                    ->default(true),
+                    ->label('Launch date')
+                    ->helperText('The date MWNF started the work.'),
                 TextInput::make('site_url')
                     ->label('Public site URL')
                     ->url()
@@ -129,14 +121,6 @@ class ProjectResource extends Resource
             ->columns([
                 static::internalNameColumn(),
                 static::backwardCompatibilityColumn(),
-                IconColumn::make('is_enabled')
-                    ->label('Enabled')
-                    ->boolean()
-                    ->sortable(),
-                IconColumn::make('is_launched')
-                    ->label('Launched')
-                    ->boolean()
-                    ->sortable(),
                 TextColumn::make('launch_date')
                     ->label('Launch date')
                     ->date()
@@ -163,14 +147,6 @@ class ProjectResource extends Resource
                 DeleteAction::make(),
             ])
             ->filters([
-                TernaryFilter::make('is_enabled')
-                    ->label('Enabled')
-                    ->trueLabel('Enabled only')
-                    ->falseLabel('Disabled only'),
-                TernaryFilter::make('is_launched')
-                    ->label('Launched')
-                    ->trueLabel('Launched only')
-                    ->falseLabel('Not launched only'),
                 SelectFilter::make('context_id')
                     ->label('Context')
                     ->getSearchResultsUsing(fn (string $search): array => Context::query()
@@ -204,8 +180,6 @@ class ProjectResource extends Resource
                 return [
                     FiltersSection::make('Project Filters')
                         ->schema([
-                            $filters['is_enabled'],
-                            $filters['is_launched'],
                             $filters['context_id'],
                             $filters['language_id'],
                         ])
@@ -225,12 +199,6 @@ class ProjectResource extends Resource
                         TextEntry::make('launch_date')
                             ->label('Launch date')
                             ->date(),
-                        IconEntry::make('is_launched')
-                            ->label('Launched')
-                            ->boolean(),
-                        IconEntry::make('is_enabled')
-                            ->label('Enabled')
-                            ->boolean(),
                         TextEntry::make('context.internal_name')
                             ->label('Context')
                             ->url(fn (Project $record): ?string => $record->context

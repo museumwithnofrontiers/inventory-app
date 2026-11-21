@@ -23,12 +23,8 @@ class ProjectResource extends BaseJsonResource
             'internal_name' => $this->resource->internal_name,
             // The Id(s) of matching resource in the legacy system (if any).
             'backward_compatibility' => $this->resource->backward_compatibility,
-            // Launch date of the project, nullable
+            // The date MWNF started the work, nullable
             'launch_date' => $this->resource->launch_date,
-            // Indicates if the project has been launched already
-            'is_launched' => $this->resource->is_launched,
-            // Indicates if the project is enabled (active)
-            'is_enabled' => $this->resource->is_enabled,
             // The public URL of the project's website, nullable
             'site_url' => $this->resource->site_url,
             // The URL of a related external database, nullable

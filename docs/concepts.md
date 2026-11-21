@@ -92,10 +92,9 @@ A **Partner** is an institution, museum, or individual who contributes content t
 - **Country** — The country where the partner is based.
 - **Project** — The project the partner is primarily associated with (optional).
 - **Monument item** — A partner can optionally be linked to an item that represents their main monument or building. This is a direct reference to an Item of type `monument`.
-- **Visible** — A boolean flag controlling whether the partner is publicly visible. Partners with `visible = false` are typically hidden from public-facing outputs.
 - **GPS coordinates** — The geographic location of the partner institution.
 - **Category** — Legacy's partner category in Sharing History: museums, archives, cultural heritage authorities, libraries, universities or others. It is finer than the type, and empty for the other partners.
-- **Featured** — The Portal's own selection, shown in the home page's featured strip. It is independent of `visible`.
+- **Featured** — The Portal's own selection, shown in the home page's featured strip. Whether a site lists a partner is decided per collection, by its participation's `visible`.
 - **City** — The city as the Sharing History partner list prints it, one value for every language. Each translation still has its own `city_display`.
 - **Contacts** — The partner's contact persons (`App\Models\PartnerContact`), in legacy's order: name, title, e-mail, phone and fax, as written. They belong to the partner, not to a language. A translation's own contact fields remain the institution's contact.
 - **Also known as** — On a partner translation: the partner's other name in that language, as written.
@@ -223,17 +222,9 @@ Reading a publication needs `view data`; changing it, or any of its editions, im
 
 ### Project
 
-A **Project** represents a campaign or initiative under which content (items and collections) is created and published. It provides a way to group content that was produced as part of a specific effort and to control its public availability.
+A **Project** represents a campaign or initiative under which content (items and collections) is created and published. It provides a way to group content that was produced as part of a specific effort.
 
-#### Project visibility
-
-A project is publicly visible only when **all three** of the following conditions are met:
-
-1. `is_enabled` is `true` — the project has been administratively enabled.
-2. `is_launched` is `true` — the project has been explicitly launched by an editor.
-3. `launch_date` is in the past — the scheduled launch date has been reached.
-
-This three-condition model allows content to be prepared in advance and released on a scheduled date, while also allowing emergency disabling at any time.
+Its `launch_date` is the date MWNF started that work, a fact kept from legacy. The inventory doesn't decide whether a project is visible: the sites are built by the exporters from their own repositories (M17, #2748).
 
 #### Project association
 

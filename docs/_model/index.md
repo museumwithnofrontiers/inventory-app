@@ -2344,7 +2344,6 @@ const UPDATED_AT = 'updated_at';
 | `map_zoom` | int | Unknown | Unknown |  |
 | `project_id` | char | Unknown | Unknown |  |
 | `monument_item_id` | char | Unknown | Unknown |  |
-| `visible` | tinyint | Unknown | Unknown |  |
 | `featured` | tinyint | Unknown | Unknown |  |
 | `created_at` | timestamp | Unknown | Unknown |  |
 | `updated_at` | timestamp | Unknown | Unknown |  |
@@ -2354,7 +2353,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['internal_name', 'type', 'backward_compatibility', 'country_id', 'latitude', 'longitude', 'map_zoom', 'project_id', 'monument_item_id', 'visible', 'category', 'featured', 'city']
+['internal_name', 'type', 'backward_compatibility', 'country_id', 'latitude', 'longitude', 'map_zoom', 'project_id', 'monument_item_id', 'category', 'featured', 'city']
 ```
 
 ### Attribute Casting
@@ -2364,7 +2363,6 @@ const UPDATED_AT = 'updated_at';
 | `latitude` | `decimal:8` |
 | `longitude` | `decimal:8` |
 | `map_zoom` | `integer` |
-| `visible` | `boolean` |
 | `category` | `App\Enums\PartnerCategory` |
 | `featured` | `boolean` |
 
@@ -2756,8 +2754,6 @@ const UPDATED_AT = 'updated_at';
 | `internal_name` | varchar | Unknown | Unknown |  |
 | `backward_compatibility` | varchar | Unknown | Unknown |  |
 | `launch_date` | date | Unknown | Unknown |  |
-| `is_launched` | tinyint | Unknown | Unknown |  |
-| `is_enabled` | tinyint | Unknown | Unknown |  |
 | `site_url` | varchar | Unknown | Unknown |  |
 | `related_database_url` | varchar | Unknown | Unknown |  |
 | `artistic_introduction_url` | varchar | Unknown | Unknown |  |
@@ -2770,7 +2766,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['internal_name', 'backward_compatibility', 'launch_date', 'is_launched', 'is_enabled', 'site_url', 'related_database_url', 'artistic_introduction_url', 'copyright', 'context_id', 'language_id']
+['internal_name', 'backward_compatibility', 'launch_date', 'site_url', 'related_database_url', 'artistic_introduction_url', 'copyright', 'context_id', 'language_id']
 ```
 
 ### Attribute Casting
@@ -2778,8 +2774,6 @@ const UPDATED_AT = 'updated_at';
 | Attribute | Cast Type |
 |-----------|-----------|
 | `launch_date` | `datetime:Y-m-d` |
-| `is_launched` | `boolean` |
-| `is_enabled` | `boolean` |
 
 ### Model Constants
 
