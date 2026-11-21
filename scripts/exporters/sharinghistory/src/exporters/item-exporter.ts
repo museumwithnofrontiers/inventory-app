@@ -244,7 +244,13 @@ export class ItemExporter extends BaseExporter {
          AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
                          WHERE ct.item_id = pic.id AND t.category = 'image-type' AND t.internal_name = 'custom exhibition picture')
          AND pic.parent_id IN (${itemPh})
-       ORDER BY pic.parent_id, pic.display_order`,
+       -- Legacy's sheet lists a monument's pictures, then its plans (class.item.inc.php), each by
+       -- number; a plan and a picture can share a number, so the plan tag orders them, and the
+       -- ids only break what is left.
+       ORDER BY pic.parent_id,
+         EXISTS (SELECT 1 FROM item_tag pt JOIN tags ptt ON ptt.id = pt.tag_id
+                 WHERE pt.item_id = pic.id AND ptt.category = 'image-type' AND ptt.internal_name = 'plan'),
+         pic.display_order, pic.id`,
       itemIds
     )
 

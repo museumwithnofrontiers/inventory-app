@@ -94,6 +94,15 @@ describe('ItemExporter — deterministic list order (#1916)', () => {
     expect(queries.some(sql => sql.includes('ORDER BY picture_id, language_id'))).toBe(true)
   })
 
+  it('orders the pictures before the plans, then by display_order and id', async () => {
+    const db = stubDb()
+    await new ItemExporter(context(db)).export()
+    const sql = queries.find(q => q.includes("pic.type = 'picture'")) ?? ''
+    expect(sql).toMatch(/ORDER BY pic\.parent_id,\s+EXISTS \(SELECT 1 FROM item_tag pt JOIN tags ptt/)
+    expect(sql).toContain("ptt.internal_name = 'plan'")
+    expect(sql).toMatch(/pic\.display_order, pic\.id\s*$/)
+  })
+
   it('orders item_dynasty by item_id, dynasty_id', async () => {
     const db = stubDb()
     await new ItemExporter(context(db)).export()
