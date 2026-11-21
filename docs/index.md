@@ -21,6 +21,7 @@ The documentation starts with the business model and the import process because 
 | Audience | Start with | Purpose |
 |---|---|---|
 | Customers, content owners, and validators | [Understanding the Inventory](understanding/) | Learn what the new model means and how legacy content lands in it. |
+| Editors of the websites | [User Manual](user-manual/) | Maintain the content of every site in the `/admin` panel. |
 | Collaborators and developers | [Collaborator Guide](collaborators/) | Learn where the code lives and how the main systems fit together. |
 | API consumers | [Management API Reference](api/) | Inspect the authenticated management API and generated TypeScript client. |
 | Data model reviewers | [Database Models](models/) | Open generated model, field, and relationship reference pages. |

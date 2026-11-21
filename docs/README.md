@@ -4,9 +4,10 @@ The `/docs` directory contains the Jekyll source for the MWNF Inventory document
 
 ## Purpose
 
-The site has two primary manual documentation tracks:
+The site has three primary manual documentation tracks:
 
 - `understanding/` explains the Inventory model, import process, validation approach, and architecture for customers, content owners, and validators.
+- `user-manual/` guides editors through maintaining the websites' content in the `/admin` panel.
 - `collaborators/` orients developers and technical collaborators around the codebase, Filament back-office, importer, APIs, documentation, and validation workflow.
 
 Generated references remain available for detailed lookup:
@@ -21,6 +22,7 @@ Generated references remain available for detailed lookup:
 |---|---|
 | `index.md` | Site homepage and audience routing. |
 | `understanding/` | Customer and validation documentation. |
+| `user-manual/` | Editor manuals: the master manual and one manual per site family, with their screenshots in `user-manual/images/`. |
 | `collaborators/` | Developer and technical collaborator orientation. |
 | `api/` | Management API reference entry point. |
 | `models/` | Generated model reference entry point. |
