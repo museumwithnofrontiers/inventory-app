@@ -106,6 +106,8 @@
       "translation_extra": {
         "thg_gallery": {
           "link": "arts_in_dialogue",
+          "featured": "A",
+          "live_date": "2025-02-28T00:00:00.000Z",
           "banner_item": "mwnf#obj#EXAID;pl;Mus51;1",
           "banner_image": "thematic_gallery/thg_galleries/54/banner.jpg",
           "has_timeline": true,

@@ -318,14 +318,20 @@ describe('ThgGalleryImporter', () => {
       expect(setCollectionExtraMock).not.toHaveBeenCalled();
     });
 
-    it("sets an already-imported gallery's flags, not its extra", async () => {
+    it("writes neither an already-imported gallery's extra nor any flag (M17 A2: featured and live_date are site configuration)", async () => {
       tracker.set('mwnf3_thematic_gallery:thg_gallery:10', 'existing-uuid', 'collection');
       context = { ...context, tracker };
 
       await new ThgGalleryImporter(context).import();
 
       expect(setCollectionExtraMock).not.toHaveBeenCalled();
-      expect(strategy.setCollectionFlags).toHaveBeenCalledWith('existing-uuid', expect.any(Object));
+      expect(strategy.setCollectionFlags).not.toHaveBeenCalled();
+    });
+
+    it('writes no flag on a new gallery', async () => {
+      await new ThgGalleryImporter(context).import();
+
+      expect(strategy.setCollectionFlags).not.toHaveBeenCalled();
     });
   });
 });

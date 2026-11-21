@@ -36,13 +36,13 @@ So, to add an object to a gallery, place it in the gallery's collection (**Attac
 | The search facets (artist, dynasty, material, subject, type) | The gallery facet **tags** linked to the item. |
 | Partners | The partners holding the gallery's items, and the museums of the gallery's own project. |
 | Dynasties | The **Dynasties** linked to the gallery's items. |
-| Featured and live date | The gallery collection's **Featured** and **Published** flags. |
+| Featured and live date | Not in the panel: the gallery's instance file, as legacy set them. Ask the team. |
 
 ## Things to know
 
 - **Facet tags come from legacy.** The search facets use only the gallery tags imported from legacy (their legacy code starts with `thg:tags:`). A tag created in the panel is not offered as a facet. Ask the team if a new facet value is needed.
 - **No status filter.** Every placed object and monument is shown, whatever its translations' status ([The status]({{ '/user-manual/master/items' | relative_url }}#the-status)).
-- **Visible** on the gallery collection doesn't hide a gallery site. A gallery has a site when it has an instance file.
+- A gallery has a site when it has an instance file. **Draft** on the gallery collection doesn't remove a gallery site; it only matters to the sites that place the gallery's collection under one of theirs.
 - The home page shows galleries picked at random, so **Featured** doesn't decide what the home page shows.
 
 ## Settings outside the panel

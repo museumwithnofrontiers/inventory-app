@@ -36,7 +36,6 @@ use App\Models\Partner;
 use App\Models\Project;
 use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Component;
-use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section as FiltersSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -241,20 +240,12 @@ class CollectionResource extends Resource
                     ])
                     ->columns(2),
                 FiltersSection::make('Publishing')
-                    ->description('The editorial flags the inventory keeps; the rest of a site\'s configuration belongs to the site.')
+                    ->description('Whether the collection is ready for the sites. How a site shows it belongs to the site.')
                     ->schema([
-                        Toggle::make('visible')
-                            ->helperText('Shown on the sites.')
+                        Toggle::make('draft')
+                            ->helperText('Not ready for the sites: no site shows it or anything under it.')
                             ->default(true),
-                        Toggle::make('featured')
-                            ->helperText('Among the featured galleries.')
-                            ->default(false),
-                        DatePicker::make('published_at')
-                            ->label('Published')
-                            ->helperText('A gallery\'s live date.')
-                            ->nullable(),
-                    ])
-                    ->columns(3),
+                    ]),
                 FiltersSection::make('Technical identification')
                     ->description('System metadata used for technical identification and legacy imports.')
                     ->schema([
@@ -403,11 +394,11 @@ class CollectionResource extends Resource
                     )
                     ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Country::find($value)->internal_name ?? $value) : '')
                     ->searchable(),
-                TernaryFilter::make('visible')
-                    ->label('Visible')
+                TernaryFilter::make('draft')
+                    ->label('Draft')
                     ->placeholder('All collections')
-                    ->trueLabel('Shown on the sites')
-                    ->falseLabel('Hidden'),
+                    ->trueLabel('Drafts')
+                    ->falseLabel('Ready for the sites'),
             ])
             ->filtersFormColumns(2)
             ->filtersLayout(FiltersLayout::AboveContentCollapsible)
@@ -432,7 +423,7 @@ class CollectionResource extends Resource
                             $filters['partner'],
                             $filters['project'],
                             $filters['country_id'],
-                            $filters['visible'],
+                            $filters['draft'],
                         ])
                         ->columns(2),
                 ];
@@ -493,13 +484,8 @@ class CollectionResource extends Resource
                                 ? (auth()->user()?->can('view', $record->coverItem) ? ItemResource::getUrl('view', ['record' => $record->coverItem]) : null)
                                 : null),
                         TextEntry::make('days'),
-                        IconEntry::make('visible')
+                        IconEntry::make('draft')
                             ->boolean(),
-                        IconEntry::make('featured')
-                            ->boolean(),
-                        TextEntry::make('published_at')
-                            ->label('Published')
-                            ->date(),
                     ])
                     ->columns(2),
                 InfolistSection::make('System Information')

@@ -75,14 +75,14 @@ describe('ShExhibitionShowFlagImporter', () => {
     tracker.set('mwnf3_sharing_history:sh_exhibitions:3', 'exh-3-uuid', 'collection');
   });
 
-  it('sets each exhibition visible from its show flag', async () => {
+  it('sets each exhibition draft from its show flag (n is a draft)', async () => {
     const result = await new ShExhibitionShowFlagImporter(context).import();
 
     expect(result.success).toBe(true);
     expect(result.imported).toBe(3);
-    expect(setFlagsMock).toHaveBeenCalledWith('exh-1-uuid', { visible: true });
-    expect(setFlagsMock).toHaveBeenCalledWith('exh-2-uuid', { visible: false });
-    expect(setFlagsMock).toHaveBeenCalledWith('exh-3-uuid', { visible: true });
+    expect(setFlagsMock).toHaveBeenCalledWith('exh-1-uuid', { draft: false });
+    expect(setFlagsMock).toHaveBeenCalledWith('exh-2-uuid', { draft: true });
+    expect(setFlagsMock).toHaveBeenCalledWith('exh-3-uuid', { draft: false });
   });
 
   it('no longer writes legacy_exhibition into the translations', async () => {

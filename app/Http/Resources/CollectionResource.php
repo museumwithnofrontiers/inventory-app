@@ -49,6 +49,8 @@ class CollectionResource extends JsonResource
             'cover_item_id' => $this->cover_item_id,
             // A Travels itinerary's number of days
             'days' => $this->days,
+            // Not ready for any site: no site shows a draft collection or anything under it (legacy's hidden exhibitions and Explore themes)
+            'draft' => $this->draft,
             // Whether the sites show the collection (legacy's exhibition show flag, Explore theme status)
             'visible' => $this->visible,
             // Whether a gallery is among the featured ones

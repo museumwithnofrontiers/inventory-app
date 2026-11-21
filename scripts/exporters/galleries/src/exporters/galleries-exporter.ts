@@ -1,7 +1,6 @@
 import type { ExportResult, GalleryAnchor, GalleryChrome } from '../core/types.js'
 import { parseJson } from '../core/database.js'
 import { BaseExporter } from './base-exporter.js'
-import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 
 /** The purpose that marks the root every gallery hangs under (importer phase 10). */
@@ -81,7 +80,6 @@ export class GalleriesExporter extends BaseExporter {
       ids
     )
       .then(restoreSiteTranslations)
-      .then(rows => restoreCollectionFlags((sql, params) => this.db.query(sql, params), rows))
 
     const langCodeMap = await this.buildLangCodeMap()
     const namesById = new Map<string, Record<string, string>>()

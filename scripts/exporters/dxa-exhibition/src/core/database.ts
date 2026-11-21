@@ -1,5 +1,4 @@
 import mysql from 'mysql2/promise'
-import { restoreCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 import type {
   Exhibition,
@@ -154,18 +153,14 @@ export class Database {
     i18n: Map<string, ExhibitionI18n>
   }> {
     // The chrome and exhibition_i18n are site configuration, in the instance
-    // files (M16 E4b), and the featured flag and live date are columns (M16
-    // E4a): each row gets them back, so every text counts, whatever its own
-    // `extra`.
-    const rows = await restoreCollectionFlags(
-      (sql, params) => this.query(sql, params),
-      restoreSiteTranslations(
-        await this.query<{ collection_id: string; language_id: string; extra: unknown }>(
-          `SELECT collection_id, language_id, extra FROM collection_translations
-           WHERE collection_id = ?
-           ORDER BY language_id`,
-          [collectionId]
-        )
+    // files (M16 E4b), the featured flag and live date included (M17 A2):
+    // each row gets them back, so every text counts, whatever its own `extra`.
+    const rows = restoreSiteTranslations(
+      await this.query<{ collection_id: string; language_id: string; extra: unknown }>(
+        `SELECT collection_id, language_id, extra FROM collection_translations
+         WHERE collection_id = ?
+         ORDER BY language_id`,
+        [collectionId]
       )
     )
 

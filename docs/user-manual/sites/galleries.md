@@ -24,14 +24,14 @@ The galleries hub, the site that lists every thematic gallery and the museums of
 | On the site | In the panel |
 |---|---|
 | A gallery's name, in each language | The gallery collection's **Translations**: **Title**. |
-| A gallery's featured flag and live date | The gallery collection's **Featured** and **Published** flags. |
+| A gallery's featured flag and live date | Not in the panel: the gallery's instance file, as legacy set them. Ask the team. |
 | A partner's level | The partner's participation in the *MWNF Galleries* project: *Partner* shows as "Partner", no level as "Affiliate". |
 | A partner's texts, logos, pictures | The partner's **Translations**, **Logos** and **Images** ([Partners]({{ '/user-manual/master/partners' | relative_url }})). |
 
 ## Things to know
 
 - **The order** of the gallery list is alphabetical, by English name.
-- **Hiding a gallery** from the hub is not done with **Visible**: a gallery is listed when it has its own site (an instance file). Ask the team.
+- **Hiding a gallery** from the hub is not done in the panel: a gallery is listed when it has its own site (an instance file). Ask the team.
 - **Featured** is shipped, but the hub's home page shows galleries and partners picked at random.
 
 ## Settings outside the panel

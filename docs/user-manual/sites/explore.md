@@ -57,7 +57,7 @@ An itinerary doesn't hold its locations as child collections: it **links** them,
 
 ## Things to know
 
-- **Themes need Visible.** A theme is shown only when its **Visible** flag is on. A collection that isn't shown hides everything under it.
+- **A draft theme isn't shown.** A theme is shown only when **Draft** is off. A collection that isn't shown hides everything under it.
 - **Itineraries need their settings.** An itinerary is shown only if it has Explore's itinerary settings in the instance file (below).
 - **Linking a new collection breaks the export.** The related-collection links still travel under the linked collection's legacy code. Linking a collection that has none, for example one created in the panel, makes the export fail. Ask the team before linking a new collection.
 

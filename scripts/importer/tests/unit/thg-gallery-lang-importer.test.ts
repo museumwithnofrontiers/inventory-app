@@ -217,8 +217,8 @@ describe('ThgGalleryLangImporter', () => {
             image: 'header.jpg',
             has_timeline: 1,
             status: 'A',
-            featured: 1,
-            live_date: '2010-01-01',
+            featured: 'A',
+            live_date: new Date('2010-01-01T00:00:00.000Z'),
           }),
         ]
       );
@@ -228,9 +228,17 @@ describe('ThgGalleryLangImporter', () => {
       expect(entries).toEqual([
         {
           collection: GALLERY_KEY,
-          // Legacy's live/hidden status is the old sites' runtime state, and
-          // featured and live_date are collection columns: none is built.
-          translationExtra: { thg_gallery: { image: 'header.jpg', has_timeline: true } },
+          // Legacy's live/hidden status is the old sites' runtime state: it
+          // isn't built. The featured flag and live date are how the gallery's
+          // site behaves (M17 A2): they are built with the other settings.
+          translationExtra: {
+            thg_gallery: {
+              image: 'header.jpg',
+              has_timeline: true,
+              featured: 'A',
+              live_date: new Date('2010-01-01T00:00:00.000Z'),
+            },
+          },
         },
       ]);
     });

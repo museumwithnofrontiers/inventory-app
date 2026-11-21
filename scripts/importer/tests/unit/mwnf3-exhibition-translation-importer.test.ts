@@ -326,18 +326,18 @@ describe('Mwnf3ExhibitionTranslationImporter', () => {
       expect(extra.legacy_exhibition).toBeUndefined();
     });
 
-    it('sets the collection visible when legacy shows the exhibition', async () => {
+    it('leaves the collection out of draft when legacy shows the exhibition', async () => {
       await new Mwnf3ExhibitionTranslationImporter(context).import();
 
-      expect(setCollectionFlagsMock).toHaveBeenCalledWith('exhibition-uuid', { visible: true });
+      expect(setCollectionFlagsMock).toHaveBeenCalledWith('exhibition-uuid', { draft: false });
     });
 
-    it('hides the collection when legacy does not show the exhibition', async () => {
+    it('makes the collection a draft when legacy does not show the exhibition', async () => {
       withMeta({ ...EXHIBITION_META, show: 'n' });
 
       await new Mwnf3ExhibitionTranslationImporter(context).import();
 
-      expect(setCollectionFlagsMock).toHaveBeenCalledWith('exhibition-uuid', { visible: false });
+      expect(setCollectionFlagsMock).toHaveBeenCalledWith('exhibition-uuid', { draft: true });
     });
 
     it('leaves the flag alone when the show value is neither y nor n', async () => {

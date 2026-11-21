@@ -1,12 +1,12 @@
 /**
  * Sharing History Exhibition Show-Flag Importer
  *
- * Sets `collections.visible` from the legacy `sh_exhibitions.show` publication
- * flag (`y` shown, `n` not) on every SH exhibition collection, as
- * Mwnf3ExhibitionTranslationImporter does for mwnf3 exhibitions (M16 E4a).
- * Exporters leave an unpublished exhibition out of a package by that flag
- * (computeUnpublishedExhibitionSubtree), so hidden SH exhibitions (e.g. AWE
- * exhibition 2 "Political Context") never leak into a data-package.
+ * Sets `collections.draft` from the legacy `sh_exhibitions.show` publication
+ * flag (`n`, hidden, is a draft) on every SH exhibition collection, as
+ * Mwnf3ExhibitionTranslationImporter does for mwnf3 exhibitions (M17 A1,
+ * #2742). The Sharing History exporter ships a draft exhibition's titles and
+ * placements as unpublished (`published: false`): legacy exhibition 2
+ * "Political Context" is hidden while its timeline stays public.
  *
  * The rest of the exhibition's list metadata (`project_id`, `new_status`) is
  * site configuration (M16 E4b, decision 6): `siteConfiguration()` builds it
@@ -49,7 +49,7 @@ export class ShExhibitionShowFlagImporter extends BaseImporter implements SiteCo
     const result = this.createResult();
 
     try {
-      this.logInfo('Setting the SH exhibitions visible from their legacy show flag...');
+      this.logInfo('Setting the SH exhibitions draft from their legacy show flag...');
       const exhibitions = await this.exhibitions();
       this.logInfo(`Found ${exhibitions.length} SH exhibitions`);
 
@@ -71,7 +71,7 @@ export class ShExhibitionShowFlagImporter extends BaseImporter implements SiteCo
             continue;
           }
           if (!this.isDryRun && !this.isSampleOnlyMode) {
-            await this.context.strategy.setCollectionFlags(collectionId, { visible: legacy.show === 'y' });
+            await this.context.strategy.setCollectionFlags(collectionId, { draft: legacy.show === 'n' });
           }
           result.imported++;
           this.showProgress();
@@ -86,7 +86,7 @@ export class ShExhibitionShowFlagImporter extends BaseImporter implements SiteCo
       this.showSummary(result.imported, result.skipped, result.errors.length);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      result.errors.push(`Failed to set the SH exhibitions visible: ${message}`);
+      result.errors.push(`Failed to set the SH exhibitions draft: ${message}`);
       this.logError('ShExhibitionShowFlagImporter', message);
       this.showError();
     }

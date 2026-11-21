@@ -1,20 +1,20 @@
 /**
- * Collection Flags Importer (M16 E4a, #2650; decision 6)
+ * Collection Flags Importer (M16 E4a, #2650; M17 A1, #2742)
  *
- * Moves the editorial flags of a collection out of its translations' `extra`
- * to `collections.visible`, `featured` and `published_at`, and drops the
- * legacy codes nothing reads (see utils/collection-flags.ts).
+ * Cleans the collection texts' `extra` of what an older database still holds:
+ * a legacy show flag or Explore theme status moves to `collections.draft`, and
+ * the legacy codes nothing reads are dropped (see utils/collection-flags.ts).
+ * The importers set `draft` themselves since M17 A1, so on a fresh import only
+ * the codes are left to drop.
  *
  * A flag moves only when every translation of the collection holds the same
  * value, and an Explore theme's `legacy_status` only from its English text in
  * its own context (where the exporters give it back); otherwise the flags
  * stay and the collection is reported. The codes are dropped in every case.
  *
- * The exhibition, gallery and Explore importers write these keys, so the
- * move runs once, after every one of them (`runsLast`). It reads nothing from
- * the legacy database. Idempotent: a second run finds no key left. Run it
- * again with `--only collection-flags` after re-running one of the writers on
- * its own.
+ * It runs once, after every importer that writes these keys (`runsLast`). It
+ * reads nothing from the legacy database. Idempotent: a second run finds no
+ * key left.
  */
 
 import { BaseImporter } from '../../core/base-importer.js';

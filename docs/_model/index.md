@@ -337,6 +337,7 @@ const UPDATED_AT = 'updated_at';
 | `country_id` | varchar | Unknown | Unknown |  |
 | `cover_item_id` | char | Unknown | Unknown |  |
 | `days` | smallint | Unknown | Unknown |  |
+| `draft` | tinyint | Unknown | Unknown |  |
 | `visible` | tinyint | Unknown | Unknown |  |
 | `featured` | tinyint | Unknown | Unknown |  |
 | `published_at` | date | Unknown | Unknown |  |
@@ -346,7 +347,7 @@ const UPDATED_AT = 'updated_at';
 ### Fillable Fields
 
 ```php
-['internal_name', 'type', 'purpose', 'language_id', 'context_id', 'parent_id', 'display_order', 'backward_compatibility', 'extra', 'latitude', 'longitude', 'map_zoom', 'country_id', 'cover_item_id', 'days', 'visible', 'featured', 'published_at']
+['internal_name', 'type', 'purpose', 'language_id', 'context_id', 'parent_id', 'display_order', 'backward_compatibility', 'extra', 'latitude', 'longitude', 'map_zoom', 'country_id', 'cover_item_id', 'days', 'draft', 'visible', 'featured', 'published_at']
 ```
 
 ### Attribute Casting
@@ -359,6 +360,7 @@ const UPDATED_AT = 'updated_at';
 | `longitude` | `decimal:8` |
 | `map_zoom` | `integer` |
 | `days` | `integer` |
+| `draft` | `boolean` |
 | `visible` | `boolean` |
 | `featured` | `boolean` |
 | `published_at` | `date` |

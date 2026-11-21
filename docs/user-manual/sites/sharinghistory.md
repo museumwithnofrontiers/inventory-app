@@ -51,7 +51,7 @@ A mini-site is one exhibition published as a site of its own: the exhibition col
 ## Things to know
 
 - **The Hidden status matters here.** If **any** translation of an item has the status **Hidden**, the item becomes a "Historical Background illustration only" item: it is left out of the search and of the Permanent Collection, but the Historical Background and timeline pages that use it still show it. One hidden language hides the whole item there.
-- **A non-visible exhibition** is not removed: it keeps its titles and placements, marked unpublished, and its national contexts are left out. Its timelines become Permanent Collection timelines.
+- **A draft exhibition** is not removed: it keeps its titles and placements, marked unpublished, and its national contexts are left out. Its timelines become Permanent Collection timelines.
 - **Historical Background captions created in the panel.** The captions are read from the images imported from legacy. A caption on an image attached in the panel doesn't reach the site yet. Ask the team.
 
 ## Settings outside the panel

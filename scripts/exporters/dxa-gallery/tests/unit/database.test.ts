@@ -55,8 +55,6 @@ describe('Database.resolveGallery', () => {
       .mockResolvedValueOnce([galleryRow])
       .mockResolvedValueOnce([{ id: 'project-dca-uuid' }])
       .mockResolvedValueOnce([{ extra: { thg_gallery: { featured: 'A', status: 'A' } } }])
-      // loadCollectionFlags (M16 E4a)
-      .mockResolvedValueOnce([])
 
     await db.resolveGallery(collectionId)
 
@@ -76,8 +74,6 @@ describe('Database.resolveGallery', () => {
       .mockResolvedValueOnce([{ id: 'project-dca-uuid' }])
       // loadGalleryChrome
       .mockResolvedValueOnce([{ extra: { thg_gallery: { featured: 'A', status: 'A' } } }])
-      // loadCollectionFlags (M16 E4a)
-      .mockResolvedValueOnce([])
 
     const gallery = await db.resolveGallery(collectionId)
 
@@ -130,8 +126,6 @@ describe('Database.resolveGallery', () => {
         { extra: { something_else: true } },
         { extra: { thg_gallery: { banner_item: 'mwnf#obj#DCA;uk;Mus31;19' } } },
       ])
-      // loadCollectionFlags (M16 E4a)
-      .mockResolvedValueOnce([])
 
     const gallery = await db.resolveGallery(collectionId)
 

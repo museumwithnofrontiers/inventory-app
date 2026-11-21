@@ -16,6 +16,8 @@
  * - geoCoordinates → latitude, longitude (parsed from "lat,lon" format)
  * - order → display_order (legacy's order of the cycles on the home page)
  * - zoom → map_zoom
+ * - status → draft: `i`, a theme legacy doesn't offer, is a draft; `e` is not
+ *   (M17 A1, #2742)
  * - type = 'theme'
  * - parent_id = explore_by_theme root collection
  *
@@ -131,6 +133,7 @@ export class ExploreThematicCycleImporter extends BaseImporter {
           if (existingId) {
             if (!this.isDryRun && !this.isSampleOnlyMode) {
               await this.context.strategy.updateCollectionDisplayOrder(existingId, legacy.order);
+              await this.writeDraft(existingId, backwardCompat, legacy.status);
             }
             result.skipped++;
             this.showSkipped();
@@ -188,6 +191,8 @@ export class ExploreThematicCycleImporter extends BaseImporter {
 
           this.registerEntity(collectionId, backwardCompat, 'collection');
 
+          await this.writeDraft(collectionId, backwardCompat, legacy.status);
+
           // Create translation for the collection
           const translationBackwardCompat = `${backwardCompat}:translation:${this.defaultLanguageId}`;
 
@@ -198,7 +203,7 @@ export class ExploreThematicCycleImporter extends BaseImporter {
             backward_compatibility: translationBackwardCompat,
             title: legacy.cycleDescription || legacy.cycleLabel,
             description: legacy.cycleDescription || '',
-            extra: JSON.stringify({ legacy_status: legacy.status }),
+            extra: null,
           });
 
           result.imported++;
@@ -220,5 +225,16 @@ export class ExploreThematicCycleImporter extends BaseImporter {
     }
 
     return result;
+  }
+
+  /** The theme's draft flag from its legacy status: `i` is a draft, `e` is not. */
+  private async writeDraft(collectionId: string, backwardCompat: string, status: string): Promise<void> {
+    if (status === 'e' || status === 'i') {
+      await this.context.strategy.setCollectionFlags(collectionId, { draft: status === 'i' });
+      return;
+    }
+    this.logWarning(
+      `Explore thematic cycle ${backwardCompat} has status ${JSON.stringify(status)}, neither e nor i: draft left off`
+    );
   }
 }
