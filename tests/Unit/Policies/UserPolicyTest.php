@@ -2,12 +2,18 @@
 
 namespace Tests\Unit\Policies;
 
-use App\Enums\Permission;
+use App\Enums\Role;
 use App\Models\User;
 use App\Policies\UserPolicy;
+use App\Support\Authorization\UserRoles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+/**
+ * The account rules: user managers manage accounts; only the superadmin
+ * changes another user manager; nobody changes the superadmin in the panel,
+ * or their own role; the superadmin role is never given in the panel.
+ */
 class UserPolicyTest extends TestCase
 {
     use RefreshDatabase;
@@ -20,147 +26,124 @@ class UserPolicyTest extends TestCase
         $this->policy = new UserPolicy;
     }
 
-    private function userWithPermissions(string ...$permissions): User
+    private function withRole(?Role $role): User
     {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo($permissions);
+        $user = User::factory()->create(['email_verified_at' => now(), 'approved_at' => now()]);
 
-        return $user;
+        if ($role !== null) {
+            app(UserRoles::class)->assign($user, $role);
+        }
+
+        return $user->fresh() ?? $user;
     }
 
-    // ── viewAny ───────────────────────────────────────────────────────────────
-
-    public function test_view_any_returns_true_for_user_with_manage_users(): void
+    public function test_only_user_managers_see_accounts(): void
     {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-
-        $this->assertTrue($this->policy->viewAny($user));
+        $this->assertTrue($this->policy->viewAny($this->withRole(Role::USER_MANAGER)));
+        $this->assertTrue($this->policy->viewAny($this->withRole(Role::SUPERADMIN)));
+        $this->assertFalse($this->policy->viewAny($this->withRole(Role::DATA_MANAGER)));
+        $this->assertFalse($this->policy->viewAny($this->withRole(Role::VISITOR)));
+        $this->assertFalse($this->policy->viewAny($this->withRole(null)));
     }
 
-    public function test_view_any_returns_false_for_user_without_manage_users(): void
+    public function test_a_user_manager_manages_ordinary_accounts(): void
     {
-        $user = $this->userWithPermissions(Permission::VIEW_DATA->value);
+        $manager = $this->withRole(Role::USER_MANAGER);
+        $target = $this->withRole(Role::DATA_MANAGER);
 
-        $this->assertFalse($this->policy->viewAny($user));
+        $this->assertTrue($this->policy->update($manager, $target));
+        $this->assertTrue($this->policy->suspend($manager, $target));
+        $this->assertTrue($this->policy->reactivate($manager, $target));
+        $this->assertTrue($this->policy->delete($manager, $target));
+        $this->assertTrue($this->policy->approve($manager, $target));
+        $this->assertTrue($this->policy->resetTwoFactor($manager, $target));
+        $this->assertTrue($this->policy->assignRole($manager, $target, Role::VISITOR));
+        $this->assertTrue($this->policy->assignRole($manager, $target, null));
     }
 
-    // ── view ──────────────────────────────────────────────────────────────────
-
-    public function test_view_returns_true_for_user_with_manage_users(): void
+    public function test_a_user_manager_cannot_create_or_change_another_user_manager(): void
     {
-        $actor = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-        $target = User::factory()->create();
+        $manager = $this->withRole(Role::USER_MANAGER);
+        $peer = $this->withRole(Role::USER_MANAGER);
+        $target = $this->withRole(Role::DATA_MANAGER);
 
-        $this->assertTrue($this->policy->view($actor, $target));
+        $this->assertFalse($this->policy->update($manager, $peer));
+        $this->assertFalse($this->policy->suspend($manager, $peer));
+        $this->assertFalse($this->policy->delete($manager, $peer));
+        $this->assertFalse($this->policy->resetTwoFactor($manager, $peer));
+        $this->assertFalse($this->policy->assignRole($manager, $peer, Role::VISITOR));
+        $this->assertFalse($this->policy->assignRole($manager, $target, Role::USER_MANAGER));
     }
 
-    // ── create ────────────────────────────────────────────────────────────────
-
-    public function test_create_returns_true_for_user_with_manage_users(): void
+    public function test_nobody_changes_the_superadmin_in_the_panel(): void
     {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
+        $superadmin = $this->withRole(Role::SUPERADMIN);
+        $manager = $this->withRole(Role::USER_MANAGER);
 
-        $this->assertTrue($this->policy->create($user));
+        foreach ([$manager, $superadmin] as $actor) {
+            $this->assertFalse($this->policy->update($actor, $superadmin));
+            $this->assertFalse($this->policy->suspend($actor, $superadmin));
+            $this->assertFalse($this->policy->delete($actor, $superadmin));
+            $this->assertFalse($this->policy->resetTwoFactor($actor, $superadmin));
+            $this->assertFalse($this->policy->assignRole($actor, $superadmin, Role::USER_MANAGER));
+        }
     }
 
-    public function test_create_returns_false_for_user_without_manage_users(): void
+    public function test_the_superadmin_manages_the_other_user_managers(): void
     {
-        $user = $this->userWithPermissions(Permission::VIEW_DATA->value);
+        $superadmin = $this->withRole(Role::SUPERADMIN);
+        $manager = $this->withRole(Role::USER_MANAGER);
+        $target = $this->withRole(Role::VISITOR);
 
-        $this->assertFalse($this->policy->create($user));
+        $this->assertTrue($this->policy->update($superadmin, $manager));
+        $this->assertTrue($this->policy->suspend($superadmin, $manager));
+        $this->assertTrue($this->policy->delete($superadmin, $manager));
+        $this->assertTrue($this->policy->assignRole($superadmin, $manager, Role::DATA_MANAGER));
+        $this->assertTrue($this->policy->assignRole($superadmin, $target, Role::USER_MANAGER));
     }
 
-    // ── update ────────────────────────────────────────────────────────────────
-
-    public function test_update_returns_true_for_user_with_manage_users(): void
+    public function test_the_superadmin_role_is_never_given_in_the_panel(): void
     {
-        $actor = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-        $target = User::factory()->create();
+        $superadmin = $this->withRole(Role::SUPERADMIN);
+        $target = $this->withRole(Role::USER_MANAGER);
 
-        $this->assertTrue($this->policy->update($actor, $target));
+        $this->assertFalse($this->policy->assignRole($superadmin, $target, Role::SUPERADMIN));
+        $this->assertNotContains(Role::SUPERADMIN, $this->policy->assignableRoles($superadmin, $target));
     }
 
-    // ── delete ────────────────────────────────────────────────────────────────
-
-    public function test_delete_returns_true_for_user_with_assign_roles_deleting_another_user(): void
+    public function test_nobody_changes_their_own_role_suspends_or_deletes_themselves(): void
     {
-        $actor = $this->userWithPermissions(Permission::ASSIGN_ROLES->value);
-        $target = User::factory()->create();
+        foreach ([Role::USER_MANAGER, Role::SUPERADMIN] as $role) {
+            $actor = $this->withRole($role);
 
-        $this->assertTrue($this->policy->delete($actor, $target));
+            $this->assertFalse($this->policy->assignRole($actor, $actor, Role::VISITOR));
+            $this->assertFalse($this->policy->suspend($actor, $actor));
+            $this->assertFalse($this->policy->delete($actor, $actor));
+            $this->assertFalse($this->policy->resetTwoFactor($actor, $actor));
+            $this->assertSame([], $this->policy->assignableRoles($actor, $actor));
+        }
     }
 
-    public function test_delete_returns_false_for_user_trying_to_delete_themselves(): void
+    public function test_a_user_manager_may_edit_their_own_account_but_not_its_role(): void
     {
-        $user = $this->userWithPermissions(Permission::ASSIGN_ROLES->value);
+        $manager = $this->withRole(Role::USER_MANAGER);
 
-        $this->assertFalse($this->policy->delete($user, $user));
+        $this->assertTrue($this->policy->update($manager, $manager));
+        $this->assertFalse($this->policy->assignRole($manager, $manager, null));
     }
 
-    public function test_delete_returns_false_for_user_without_assign_roles(): void
+    public function test_assignable_roles_follow_the_actor(): void
     {
-        $actor = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-        $target = User::factory()->create();
+        $target = $this->withRole(Role::VISITOR);
 
-        $this->assertFalse($this->policy->delete($actor, $target));
-    }
-
-    // ── deleteAny ─────────────────────────────────────────────────────────────
-
-    public function test_delete_any_returns_true_for_user_with_assign_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::ASSIGN_ROLES->value);
-
-        $this->assertTrue($this->policy->deleteAny($user));
-    }
-
-    public function test_delete_any_returns_false_for_user_without_assign_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-
-        $this->assertFalse($this->policy->deleteAny($user));
-    }
-
-    // ── approve ───────────────────────────────────────────────────────────────
-
-    public function test_approve_returns_true_for_user_with_manage_users(): void
-    {
-        $actor = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-        $target = User::factory()->create();
-
-        $this->assertTrue($this->policy->approve($actor, $target));
-    }
-
-    public function test_approve_returns_false_for_user_without_manage_users(): void
-    {
-        $actor = $this->userWithPermissions(Permission::VIEW_DATA->value);
-        $target = User::factory()->create();
-
-        $this->assertFalse($this->policy->approve($actor, $target));
-    }
-
-    // ── suspend ───────────────────────────────────────────────────────────────
-
-    public function test_suspend_returns_true_for_user_with_manage_users_on_another_user(): void
-    {
-        $actor = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-        $target = User::factory()->create();
-
-        $this->assertTrue($this->policy->suspend($actor, $target));
-    }
-
-    public function test_suspend_returns_false_when_suspending_oneself(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-
-        $this->assertFalse($this->policy->suspend($user, $user));
-    }
-
-    public function test_suspend_returns_false_for_user_without_manage_users(): void
-    {
-        $actor = $this->userWithPermissions(Permission::VIEW_DATA->value);
-        $target = User::factory()->create();
-
-        $this->assertFalse($this->policy->suspend($actor, $target));
+        $this->assertSame(
+            [Role::VISITOR, Role::DATA_MANAGER],
+            $this->policy->assignableRoles($this->withRole(Role::USER_MANAGER), $target),
+        );
+        $this->assertSame(
+            [Role::VISITOR, Role::DATA_MANAGER, Role::USER_MANAGER],
+            $this->policy->assignableRoles($this->withRole(Role::SUPERADMIN), $target),
+        );
+        $this->assertSame([], $this->policy->assignableRoles($this->withRole(Role::DATA_MANAGER), $target));
     }
 }

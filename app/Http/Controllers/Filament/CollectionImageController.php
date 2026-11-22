@@ -12,6 +12,8 @@ class CollectionImageController extends Controller
 {
     public function view(Collection $collection, CollectionImage $collectionImage): InlineImageResponse
     {
+        $this->authorize('view', $collectionImage);
+
         if ($collectionImage->collection_id !== $collection->id) {
             abort(404);
         }
@@ -21,6 +23,8 @@ class CollectionImageController extends Controller
 
     public function download(Collection $collection, CollectionImage $collectionImage): DownloadImageResponse
     {
+        $this->authorize('view', $collectionImage);
+
         if ($collectionImage->collection_id !== $collection->id) {
             abort(404);
         }

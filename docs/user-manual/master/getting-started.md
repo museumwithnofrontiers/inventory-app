@@ -67,9 +67,9 @@ The menu on the left groups the panel's pages:
 | **Available Images** | Available Images: the pool of uploaded images waiting to be attached |
 | **Translations** | Item Translations, Collection Translations, Partner Translations, Publication Translations: every translation in one list, with filters |
 | **Reference Data** | Languages, Countries |
-| **Administration** | Users, roles and registration settings (administrators only) |
+| **Administration** | Users, roles, registration settings and the audit log (user managers only) |
 
-What you see depends on your role. A *Visitor* can read everything but change nothing. A *Regular User* can read, create, change and delete content, and maintain reference data such as Artists and Dynasties. A button you are not allowed to use is not shown.
+What you see depends on your role, and you hold exactly one. A *Visitor* can read everything, reference data included, but change nothing. A *Manager of Data* can read, create, change and delete all content, reference data such as Artists and Dynasties included. A *Manager of Users* manages accounts and their role, and sees no content; the *Superadmin* also manages the other user managers. A button you are not allowed to use is not shown.
 
 ### The pages of a record
 

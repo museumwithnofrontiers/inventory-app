@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\Permission;
 use App\Models\AvailableImage;
 use App\Models\ImageUpload;
 use App\Support\FileSize;
@@ -16,7 +15,7 @@ class StorageUsageWidget extends StatsOverviewWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', AvailableImage::class) ?? false;
     }
 
     protected function getStats(): array

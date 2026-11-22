@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use App\Enums\Permission;
 use App\Filament\Resources\DynastyResource;
 use App\Filament\Resources\DynastyResource\Pages\CreateDynasty;
 use App\Filament\Resources\DynastyResource\Pages\EditDynasty;
@@ -16,6 +17,7 @@ use App\Models\Dynasty;
 use App\Models\DynastyTranslation;
 use App\Models\Item;
 use App\Models\Language;
+use App\Models\User;
 use Filament\Tables\Actions\CreateAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DetachAction;
@@ -72,26 +74,27 @@ class DynastyResourceTest extends TestCase
             ->assertSee('Ottomans');
     }
 
-    public function test_users_without_reference_data_permission_cannot_open_the_resource(): void
+    public function test_a_visitor_reads_the_resource_but_cannot_change_it(): void
     {
         $dynasty = Dynasty::factory()->create();
         $this->setCurrentPanel();
+        $visitor = $this->createViewOnlyUser();
 
-        foreach ([$this->createViewOnlyUser(), $this->createCrudUser()] as $user) {
-            $this->actingAs($user)->get(DynastyResource::getUrl('index'))->assertForbidden();
-            $this->actingAs($user)->get(DynastyResource::getUrl('create'))->assertForbidden();
-            $this->actingAs($user)->get(DynastyResource::getUrl('view', ['record' => $dynasty]))->assertForbidden();
-            $this->actingAs($user)->get(DynastyResource::getUrl('edit', ['record' => $dynasty]))->assertForbidden();
-        }
+        $this->actingAs($visitor)->get(DynastyResource::getUrl('index'))->assertOk();
+        $this->actingAs($visitor)->get(DynastyResource::getUrl('view', ['record' => $dynasty]))->assertOk();
+        $this->actingAs($visitor)->get(DynastyResource::getUrl('create'))->assertForbidden();
+        $this->actingAs($visitor)->get(DynastyResource::getUrl('edit', ['record' => $dynasty]))->assertForbidden();
     }
 
-    public function test_navigation_follows_the_reference_data_permission(): void
+    public function test_navigation_follows_the_policy(): void
     {
-        $this->actingAs($this->createReferenceDataUser());
+        $this->actingAs($this->createViewOnlyUser());
         $this->assertTrue(DynastyResource::canViewAny());
         $this->assertTrue(DynastyResource::shouldRegisterNavigation());
 
-        $this->actingAs($this->createViewOnlyUser());
+        $panelOnly = User::factory()->create();
+        $panelOnly->givePermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
+        $this->actingAs($panelOnly);
         $this->assertFalse(DynastyResource::canViewAny());
         $this->assertFalse(DynastyResource::shouldRegisterNavigation());
 
@@ -305,7 +308,7 @@ class DynastyResourceTest extends TestCase
 
         $this->setCurrentPanel();
 
-        Livewire::actingAs($this->createCrudUser())
+        Livewire::actingAs($this->createViewOnlyUser())
             ->test(TranslationsRelationManager::class, ['ownerRecord' => $dynasty, 'pageClass' => ViewDynasty::class])
             ->assertTableActionHidden(CreateAction::class)
             ->assertTableActionHidden(EditAction::class, $translation)
@@ -352,7 +355,7 @@ class DynastyResourceTest extends TestCase
 
         $this->setCurrentPanel();
 
-        Livewire::actingAs($this->createCrudUser())
+        Livewire::actingAs($this->createViewOnlyUser())
             ->test(ItemsRelationManager::class, ['ownerRecord' => $dynasty, 'pageClass' => ViewDynasty::class])
             ->assertTableActionHidden('attach')
             ->assertTableActionHidden('detach', $item->getKey());
@@ -380,6 +383,6 @@ class DynastyResourceTest extends TestCase
         Livewire::actingAs($this->createViewOnlyUser())
             ->test(DynastiesRelationManager::class, ['ownerRecord' => $item, 'pageClass' => ViewItem::class])
             ->assertTableActionVisible(ViewAction::class, $dynasty->getKey())
-            ->assertTableActionDoesNotHaveUrl(ViewAction::class, DynastyResource::getUrl('view', ['record' => $dynasty]), $dynasty->getKey());
+            ->assertTableActionHasUrl(ViewAction::class, DynastyResource::getUrl('view', ['record' => $dynasty]), $dynasty->getKey());
     }
 }

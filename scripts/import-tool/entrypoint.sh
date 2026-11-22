@@ -229,8 +229,8 @@ snapshot_exists() {
     "test -f '$AUTH_SNAPSHOT_REMOTE'"
 }
 
-# Recreates exactly two accounts (one "Manager of Users" admin, one
-# "Regular User") when no snapshot exists to restore instead. Requires
+# Recreates exactly two accounts (the superadmin, and one "Manager of Data")
+# when no snapshot exists to restore instead. Requires
 # ADMIN_EMAIL/REGULAR_USER_EMAIL — never invented or defaulted. user:create
 # does not set a plaintext password; it emails a password-reset invitation
 # to that address.
@@ -238,10 +238,10 @@ create_fallback_accounts() {
   log "No snapshot to restore — recreating fallback accounts for ADMIN_EMAIL and REGULAR_USER_EMAIL instead"
   ssh_run "php artisan user:create '$ADMIN_EMAIL' '$ADMIN_EMAIL'"
   ssh_run "php artisan user:email-verification '$ADMIN_EMAIL' verify"
-  ssh_run "php artisan user:assign-role '$ADMIN_EMAIL' 'Manager of Users'"
+  ssh_run "php artisan user:superadmin '$ADMIN_EMAIL'"
   ssh_run "php artisan user:create '$REGULAR_USER_EMAIL' '$REGULAR_USER_EMAIL'"
   ssh_run "php artisan user:email-verification '$REGULAR_USER_EMAIL' verify"
-  ssh_run "php artisan user:assign-role '$REGULAR_USER_EMAIL' 'Regular User'"
+  ssh_run "php artisan user:set-role '$REGULAR_USER_EMAIL' 'Manager of Data'"
   log "Fallback accounts created — check $ADMIN_EMAIL and $REGULAR_USER_EMAIL for password-reset emails"
 }
 

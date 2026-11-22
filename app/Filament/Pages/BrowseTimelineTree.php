@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Enums\Permission;
 use App\Filament\Support\TimelineEventDisplayLabel;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
@@ -24,7 +23,7 @@ class BrowseTimelineTree extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', Timeline::class) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

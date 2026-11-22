@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\ItemType;
-use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
@@ -14,6 +13,7 @@ use App\Filament\Support\PartnerDisplayLabel;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Item;
+use App\Models\ItemTranslation;
 use App\Models\Language;
 use App\Models\Partner;
 use Filament\Tables\Actions\Action;
@@ -32,7 +32,7 @@ class MissingFallbackTranslationsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', ItemTranslation::class) ?? false;
     }
 
     public function table(Table $table): Table

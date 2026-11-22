@@ -16,5 +16,6 @@ Each record states a decision that shapes the codebase, the context that led to 
 | [ADR 004 — Publication PDFs on the document pipeline, served at /doc](004-public-publication-documents) | `PublicationDocument` reuses the document pipeline; `/doc/{filename}` serves publication PDFs only, unstamped; a document sync and `ship` carry the files. |
 | [ADR 005 — Global search, fed by a pinned public package](005-global-search) | Meilisearch, loaded only from a pinned `@museumwnf/search-data` that the export batch releases; only the search route is public; links take whitelisted slugs, never addresses. |
 | [ADR 006 — What goes in extra](006-what-goes-in-extra) | Display text as written in translation columns, structure in links, the legacy key in `backward_compatibility`, site configuration in the instance files; `extra` only for true one-offs. Records M16's seven decisions. |
+| [ADR 007 — Authorization model](007-authorization-model) | Four roles in code, one per user; the policies decide on the panel, the API and the MCP server; a break-glass Manager of Users and one superadmin; account changes and commands logged; suspension revokes sessions and tokens. |
 
 Numbers follow the plans that scheduled each record. 001 and 002 were never written.

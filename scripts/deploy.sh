@@ -223,6 +223,10 @@ run_migrations() {
     cd "$CURRENT"
     info "Running database migrations..."
     php artisan migrate --force
+    # The roles and permissions are defined in code (App\Enums\Role and
+    # App\Enums\Permission); every deploy makes the database match them
+    info "Syncing roles and permissions..."
+    php artisan permissions:sync
 }
 
 # --- 4. Warm caches ----------------------------------------------------------

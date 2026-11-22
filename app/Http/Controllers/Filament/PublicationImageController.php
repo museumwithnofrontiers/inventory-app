@@ -12,6 +12,8 @@ class PublicationImageController extends Controller
 {
     public function view(Publication $publication, PublicationImage $publicationImage): InlineImageResponse
     {
+        $this->authorize('view', $publicationImage);
+
         if ($publicationImage->publication_id !== $publication->id) {
             abort(404);
         }
@@ -21,6 +23,8 @@ class PublicationImageController extends Controller
 
     public function download(Publication $publication, PublicationImage $publicationImage): DownloadImageResponse
     {
+        $this->authorize('view', $publicationImage);
+
         if ($publicationImage->publication_id !== $publication->id) {
             abort(404);
         }

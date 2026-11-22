@@ -3,7 +3,6 @@
 namespace Tests\Filament\RelationManagers;
 
 use App\Enums\CreditRole;
-use App\Enums\Permission;
 use App\Filament\Resources\ItemTranslationResource\Pages\ViewItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\AuthorCreditsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslatorCreditsRelationManager;
@@ -114,15 +113,12 @@ class ItemTranslationCreditsTest extends TestCase
     }
 
     /**
-     * Credits list authors, which are reference data: seeing them takes
-     * manage-reference-data on top of editing the translation.
+     * Credits list authors, reference data the data rule covers: the editor
+     * is the Manager of Data.
      */
     private function createCreditsEditor(): User
     {
-        $user = $this->createCrudUser();
-        $user->givePermissionTo(Permission::MANAGE_REFERENCE_DATA->value);
-
-        return $user;
+        return $this->createCrudUser();
     }
 
     public function test_view_only_user_sees_no_credit_mutations(): void

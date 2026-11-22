@@ -55,26 +55,19 @@ class AdminPanelTest extends TestCase
         $response->assertForbidden();
     }
 
-    public function test_manager_role_is_seeded_with_admin_panel_permission(): void
+    public function test_every_role_is_seeded_with_admin_panel_permission(): void
     {
-        $role = Role::findByName('Manager of Users');
-
-        $this->assertTrue($role->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value));
+        foreach (['Visitor', 'Manager of Data', 'Manager of Users', 'Superadmin'] as $name) {
+            $this->assertTrue(Role::findByName($name)->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value), $name);
+        }
     }
 
-    public function test_visitor_role_is_seeded_with_admin_panel_permission(): void
+    public function test_a_suspended_user_cannot_enter_the_panel(): void
     {
-        $role = Role::findByName('Visitor');
+        $user = User::factory()->create(['suspended_at' => now()]);
+        $user->assignRole('Manager of Data');
 
-        $this->assertTrue($role->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value));
-    }
-
-    public function test_regular_user_role_is_seeded_with_filament_reference_data_access(): void
-    {
-        $role = Role::findByName('Regular User');
-
-        $this->assertTrue($role->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value));
-        $this->assertTrue($role->hasPermissionTo(Permission::MANAGE_REFERENCE_DATA->value));
+        $this->actingAs($user)->get('/admin')->assertForbidden();
     }
 
     public function test_filament_login_uses_filament_native_two_factor_flow(): void

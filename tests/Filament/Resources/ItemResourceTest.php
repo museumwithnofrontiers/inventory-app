@@ -724,28 +724,6 @@ class ItemResourceTest extends TestCase
             );
     }
 
-    public function test_item_table_country_column_is_plain_text_without_manage_reference_data_permission(): void
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-        ]);
-
-        $country = Country::factory()->create(['id' => 'jor', 'internal_name' => 'Jordan']);
-        $item = Item::factory()->Object()->create(['country_id' => $country->id]);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(ListItem::class)
-            ->assertTableColumnExists(
-                'country.internal_name',
-                fn (TextColumn $column): bool => $column->getUrl() === null,
-                $item
-            );
-    }
-
     public function test_item_table_country_column_links_to_country_resource_with_manage_reference_data_permission(): void
     {
         $user = $this->createViewAndReferenceDataUser();
@@ -818,7 +796,7 @@ class ItemResourceTest extends TestCase
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
             Permission::VIEW_DATA->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
+            ...Permission::dataOperations(),
         ]);
 
         return $user;

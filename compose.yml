@@ -488,14 +488,9 @@ services:
         php artisan permissions:sync
         php artisan db:seed --class=LocalUserSeeder --force \
           || echo "LocalUserSeeder did not run — the accounts almost certainly exist already."
-        # LocalUserSeeder gives the admin "Manager of Users", which carries no
-        # "view data" permission — so that account can administer users but gets
-        # Forbidden on every Item, Collection and Partner page. Fine for a dev
-        # box; useless here, where browsing the imported dataset is the entire
-        # point. Add the data role so one login can do everything.
-        ADMIN="$${APP_DEFAULT_ADMIN_EMAIL:-admin@example.com}"
-        php artisan user:assign-role "$$ADMIN" "Regular User" \
-          || echo "Could not add the Regular User role to $$ADMIN — it may already be assigned."
+        # One role per user: LocalUserSeeder's admin is the superadmin (accounts
+        # only), and its user is a Manager of Data. Browse the imported dataset
+        # with the user account.
     environment:
       APP_ENV: local
       APP_DEBUG: "true"

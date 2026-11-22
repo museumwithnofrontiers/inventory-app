@@ -28,18 +28,19 @@ You must:
 
 ## Authorization Model
 
-You must respect the 3-tier permission system:
+The policies (App\Policies\*) are the only authorization mechanism, on the panel, the REST API and the MCP server alike.
 
-1. Tier 1 — Panel Access:
-   1. access-admin-panel
-   2. controls entry to `/admin`.
-   3. access-mcp controls entry to the inventory MCP server; every role holding access-admin-panel holds it.
-2. Tier 2 — Navigation & Resource Visibility
-   1. Permissions like: view-data, manage-users, manage-roles, manage-settings, manage-reference-data
-   2. These drive: canViewAny(), shouldRegisterNavigation()
-3. Tier 3 — Record-level Authorization
-   1. Existing App\Policies\* must be used unchanged.
-   2. Never bypass or duplicate authorization logic.
+1. Roles: four, defined in `App\Enums\Role` and nowhere else; `RoleSync` keeps the database on it (seeders, migrations, `permissions:sync`, every deploy). A user holds exactly one role or none (a unique index enforces it); permissions are never given to a user directly.
+   1. Visitor: reads everything (`view data`), changes nothing.
+   2. Manager of Data: reads and changes all data, reference data included (`view data`, `create data`, `update data`, `delete data`).
+   3. Manager of Users: break-glass, accounts and their role only (`manage users`), no data.
+   4. Superadmin: one user; a Manager of Users who also manages the other user managers (`manage user managers`). It moves only with `php artisan user:superadmin`.
+2. Tier 1 — Entry: an active account (verified, approved, not suspended: `User::isActive()`) with `access-admin-panel` for `/admin`, `access-mcp` for the MCP server (every role holds both). The API and the MCP server check the account state too (`EnsureAccountIsActive`).
+3. Tier 2 — Navigation & resource visibility: `canViewAny()` returns `can('viewAny', static::getModel())`; `shouldRegisterNavigation()` returns `canViewAny()`. Never `hasPermissionTo` in a resource.
+4. Tier 3 — Records and actions: the model's policy. Every data model has one (`App\Policies\DataPolicy`); a missing policy denies, in Filament too. A custom action carries `->visible()` and `->authorize()` from its policy. The API asks the policies on every data route (`AuthorizeApiRequest`).
+5. Accounts (`UserPolicy`): only the superadmin changes another user manager; nobody changes the superadmin in the panel or their own role. Sensitive changes ask for the actor's password (`ConfirmPassword`). The API never edits users, roles or permissions; it only reads the signed-in user's own profile, role and permissions.
+6. Every account change, and every `user:`, `permissions:`, `auth:` and `passport:` command, is written to the audit log (`AuditLog`), which user managers read and nobody edits. Suspending a user revokes their sessions and tokens.
+7. Never bypass or duplicate authorization logic.
 
 ## Tokens: OAuth 2.1 only
 

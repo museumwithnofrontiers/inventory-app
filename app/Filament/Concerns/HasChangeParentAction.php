@@ -11,6 +11,7 @@ use Filament\Tables\Actions\BulkAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 /**
@@ -74,6 +75,8 @@ trait HasChangeParentAction
         return Action::make('changeParent')
             ->label('Change parent')
             ->icon('heroicon-o-arrow-uturn-up')
+            ->visible(fn (Model $record): bool => auth()->user()?->can('update', $record) ?? false)
+            ->authorize(fn (Model $record): bool => auth()->user()?->can('update', $record) ?? false)
             ->form(fn (Model $record): array => [
                 Select::make('parent_id')
                     ->label(static::changeParentSelectLabel())
@@ -122,6 +125,7 @@ trait HasChangeParentAction
         return BulkAction::make('moveToParent')
             ->label('Move to parent')
             ->icon('heroicon-o-arrow-uturn-up')
+            ->visible(fn (): bool => auth()->user()?->can('update', new $modelClass) ?? false)
             ->form([
                 Select::make('parent_id')
                     ->label(static::changeParentSelectLabel())
@@ -135,6 +139,10 @@ trait HasChangeParentAction
             ->action(function (EloquentCollection $records, array $data) use ($resourceName, $idKey, $pluralLabel): void {
                 $errors = [];
                 foreach ($records as $record) {
+                    if (Gate::denies('update', $record)) {
+                        continue;
+                    }
+
                     try {
                         $record->setAttribute('parent_id', $data['parent_id'] ?? null);
                         $record->save();

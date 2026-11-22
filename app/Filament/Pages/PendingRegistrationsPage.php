@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Enums\Permission;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -31,7 +30,7 @@ class PendingRegistrationsPage extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::MANAGE_USERS->value) ?? false;
+        return auth()->user()?->can('manageRegistrations', User::class) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -61,6 +60,8 @@ class PendingRegistrationsPage extends Page implements HasTable
                     ->label('Approve')
                     ->icon('heroicon-o-check')
                     ->color('success')
+                    ->visible(fn (User $record): bool => auth()->user()?->can('approve', $record) ?? false)
+                    ->authorize(fn (User $record): bool => auth()->user()?->can('approve', $record) ?? false)
                     ->requiresConfirmation()
                     ->action(function (User $record): void {
                         $record->forceFill(['approved_at' => now()])->save();
@@ -73,6 +74,8 @@ class PendingRegistrationsPage extends Page implements HasTable
                     ->requiresConfirmation()
                     ->modalHeading('Reject Registration')
                     ->modalDescription('This will permanently delete the user account. This action cannot be undone.')
+                    ->visible(fn (User $record): bool => auth()->user()?->can('delete', $record) ?? false)
+                    ->authorize(fn (User $record): bool => auth()->user()?->can('delete', $record) ?? false)
                     ->action(function (User $record): void {
                         $record->delete();
                         Notification::make()->success()->title('Registration rejected')->send();

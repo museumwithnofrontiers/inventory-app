@@ -1,7 +1,6 @@
 <?php
 
 use App\Enums\OAuthScope;
-use App\Enums\Permission;
 use App\Http\Controllers\Api\MarkdownController;
 use App\Http\Controllers\ArtistController;
 use App\Http\Controllers\AuthorController;
@@ -55,6 +54,8 @@ use App\Http\Controllers\TimelineEventImageController;
 use App\Http\Controllers\TimelineEventTranslationController;
 use App\Http\Controllers\UserPermissionsController;
 use App\Http\Controllers\VisitInformationController;
+use App\Http\Middleware\AuthorizeApiRequest;
+use App\Http\Middleware\EnsureAccountIsActive;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -63,18 +64,21 @@ Route::get('/info', [InfoController::class, 'index'])->name('info.index');
 Route::get('/health', [InfoController::class, 'health'])->name('info.health');
 Route::get('/version', [InfoController::class, 'version'])->name('info.version');
 
+// The signed-in user's own profile, role and permissions: the only account
+// data the API serves. Users, roles and permissions change in the panel only.
 Route::get('/user', function (Request $request) {
     return $request->user();
-})->middleware('auth:api');
+})->middleware(['auth:api', EnsureAccountIsActive::class, 'scope:'.OAuthScope::API_READ->value.','.OAuthScope::MCP->value]);
 
 Route::get('/user/permissions', [UserPermissionsController::class, 'index'])
     ->name('user.permissions')
-    ->middleware('auth:api');
+    ->middleware(['auth:api', EnsureAccountIsActive::class, 'scope:'.OAuthScope::API_READ->value.','.OAuthScope::MCP->value]);
 
-// Data operation routes - require appropriate permissions based on HTTP method
-Route::middleware(['auth:api'])->group(function () {
-    // READ operations - require VIEW_DATA permission
-    Route::middleware(['scopes:'.OAuthScope::API_READ->value, 'permission:'.Permission::VIEW_DATA->value])->group(function () {
+// Data routes. The scope limits the token; the model's policy decides, as on
+// the panel and the MCP server (AuthorizeApiRequest: read, create, update, delete)
+Route::middleware(['auth:api', EnsureAccountIsActive::class])->group(function () {
+    // READ operations: view / viewAny
+    Route::middleware(['scopes:'.OAuthScope::API_READ->value, AuthorizeApiRequest::class.':read'])->group(function () {
         // Context routes (read)
         Route::get('context/default', [ContextController::class, 'getDefault'])->name('context.getDefault');
         Route::get('context/{context}', [ContextController::class, 'show'])->name('context.show');
@@ -300,8 +304,8 @@ Route::middleware(['auth:api'])->group(function () {
 
     });
 
-    // CREATE operations - require CREATE_DATA permission
-    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, 'permission:'.Permission::CREATE_DATA->value])->group(function () {
+    // CREATE operations: create
+    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, AuthorizeApiRequest::class.':create'])->group(function () {
         Route::post('context', [ContextController::class, 'store'])->name('context.store');
         Route::post('language', [LanguageController::class, 'store'])->name('language.store');
         Route::post('language-translation', [LanguageTranslationController::class, 'store'])->name('language-translation.store');
@@ -364,8 +368,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::post('publication/{publication}/attach-image', [PublicationImageController::class, 'attachFromAvailable'])->name('publication.attachImage');
     });
 
-    // UPDATE operations - require UPDATE_DATA permission
-    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, 'permission:'.Permission::UPDATE_DATA->value])->group(function () {
+    // UPDATE operations: update
+    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, AuthorizeApiRequest::class.':update'])->group(function () {
         Route::patch('context/{context}/default', [ContextController::class, 'setDefault'])->name('context.setDefault');
         Route::delete('context/default', [ContextController::class, 'clearDefault'])->name('context.clearDefault');
         Route::patch('context/{context}', [ContextController::class, 'update'])->name('context.update');
@@ -552,8 +556,8 @@ Route::middleware(['auth:api'])->group(function () {
         Route::delete('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'destroy'])->name('publication-document.destroy');
     });
 
-    // DELETE operations - require DELETE_DATA permission
-    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, 'permission:'.Permission::DELETE_DATA->value])->group(function () {
+    // DELETE operations: delete (a detach: update)
+    Route::middleware(['scopes:'.OAuthScope::API_WRITE->value, AuthorizeApiRequest::class.':delete'])->group(function () {
         Route::delete('context/{context}', [ContextController::class, 'destroy'])->name('context.destroy');
         Route::delete('language/{language}', [LanguageController::class, 'destroy'])->name('language.destroy');
         Route::delete('language-translation/{languageTranslation}', [LanguageTranslationController::class, 'destroy'])->name('language-translation.destroy');

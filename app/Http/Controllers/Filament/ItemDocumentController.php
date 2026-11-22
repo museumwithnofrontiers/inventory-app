@@ -13,12 +13,9 @@ use Illuminate\Contracts\Support\Responsable;
  * document, registered in AdminPanelProvider::authenticatedRoutes() next to
  * the image routes.
  *
- * Unlike the existing Filament image controllers (which rely only on the
- * referential-integrity check below plus the panel's login requirement),
- * this route also requires `update` on the Item via ItemPolicy - #1907's own
- * rule ("Edit/Delete/Download require update on the Item via ItemPolicy"). A
- * `view data`-only user must not be able to pull a document off an Item they
- * can't edit.
+ * Downloading is reading: ItemDocumentPolicy's `view` decides, so a Visitor
+ * (who reads everything) may download it, as on the REST API. The document
+ * is never served publicly.
  */
 class ItemDocumentController extends Controller
 {
@@ -28,7 +25,7 @@ class ItemDocumentController extends Controller
             abort(404);
         }
 
-        $this->authorize('update', $item);
+        $this->authorize('view', $itemDocument);
 
         // Reuse the API controller's download logic rather than
         // reimplementing the disk/path/FileResponse handling.

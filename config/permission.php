@@ -136,7 +136,9 @@ return [
      *
      * To enable, set to true, and then create listeners to watch these events.
      */
-    'events_enabled' => false,
+    // On: every role given to or taken from a user goes to the audit log
+    // (App\Listeners\Audit\RecordRoleChange)
+    'events_enabled' => true,
 
     /*
      * Teams Feature.

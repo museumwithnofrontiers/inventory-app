@@ -7,6 +7,9 @@ use App\Models\User;
 use App\Services\UserPasswordResetService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -23,6 +26,23 @@ class CreateUser extends CreateRecord
         $data['password'] = Hash::make(Str::random(32));
 
         return $data;
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    protected function handleRecordCreation(array $data): Model
+    {
+        return DB::transaction(function () use ($data): User {
+            $user = User::query()->create(Arr::except($data, ['role']));
+
+            // No role picked: no access until a user manager gives one
+            if (filled($data['role'] ?? null)) {
+                UserResource::applyRole($user, $data['role']);
+            }
+
+            return $user;
+        });
     }
 
     protected function afterCreate(): void

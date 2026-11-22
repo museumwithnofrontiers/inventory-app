@@ -24,8 +24,10 @@ use App\Models\Link;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\User;
+use App\Observers\UserAuditObserver;
 use App\Policies\ItemItemLinkPolicy;
 use App\Policies\ItemItemLinkTranslationPolicy;
+use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
 use App\Policies\TimelineEventPolicy;
 use App\Policies\TimelinePolicy;
@@ -36,6 +38,8 @@ use Dedoc\Scramble\Scramble;
 use Dedoc\Scramble\Support\Generator\OpenApi;
 use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Dedoc\Scramble\Support\Generator\SecuritySchemes\OAuthFlow;
+use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Resources\Resource;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Http\Request;
@@ -44,6 +48,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -106,8 +111,22 @@ class AppServiceProvider extends ServiceProvider
             return $user !== null;
         });
 
+        // Account changes go to the audit log, and suspending a user revokes
+        // their sessions and tokens (UserAuditObserver). Role changes and the
+        // account commands reach it through App\Listeners\Audit\*, which
+        // Laravel's event discovery registers from their handle() type
+        User::observe(UserAuditObserver::class);
+
+        // The policies are the only authorization mechanism, on the panel,
+        // the API and the MCP server alike. Filament allows an action on a
+        // model with no policy by default; here a missing policy denies,
+        // exactly as the Gate does everywhere else
+        Resource::checkPolicyExistence(false);
+        RelationManager::checkPolicyExistence(false);
+
         Gate::policy(User::class, UserPolicy::class);
         Gate::policy(Role::class, RolePolicy::class);
+        Gate::policy(Permission::class, PermissionPolicy::class);
         Gate::policy(ItemItemLink::class, ItemItemLinkPolicy::class);
         Gate::policy(ItemItemLinkTranslation::class, ItemItemLinkTranslationPolicy::class);
         Gate::policy(Timeline::class, TimelinePolicy::class);

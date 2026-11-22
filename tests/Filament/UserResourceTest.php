@@ -17,7 +17,6 @@ class UserResourceTest extends TestCase
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
             Permission::MANAGE_USERS->value,
-            Permission::ASSIGN_ROLES->value,
         ]);
 
         $response = $this->actingAs($user)->get('/admin/users');
@@ -45,14 +44,8 @@ class UserResourceTest extends TestCase
             Permission::MANAGE_USERS->value,
         ]);
 
-        $target = User::factory()->create(['email_verified_at' => now()]);
-
-        $indexResponse = $this->actingAs($manager)->get('/admin/users');
-        $editResponse = $this->actingAs($manager)->get("/admin/users/{$target->getKey()}/edit");
-
-        $indexResponse
-            ->assertOk()
-            ->assertDontSee('Delete');
+        // Nobody deletes themselves (UserPolicy::delete)
+        $editResponse = $this->actingAs($manager)->get("/admin/users/{$manager->getKey()}/edit");
 
         $editResponse
             ->assertOk()

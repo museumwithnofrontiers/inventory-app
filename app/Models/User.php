@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Permission;
+use App\Enums\Role;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
@@ -151,25 +152,48 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, OAu
         return false;
     }
 
+    /**
+     * The user's one role, or null when they hold none (no access at all).
+     */
+    public function currentRole(): ?Role
+    {
+        $name = $this->roles->first()?->getAttribute('name');
+
+        return is_string($name) ? Role::tryFrom($name) : null;
+    }
+
+    public function isSuperadmin(): bool
+    {
+        return $this->currentRole() === Role::SUPERADMIN;
+    }
+
+    /**
+     * A user manager or the superadmin: an account only the superadmin may change.
+     */
+    public function isUserManager(): bool
+    {
+        return $this->currentRole()?->managesUsers() ?? false;
+    }
+
+    /**
+     * Whether the account may be used at all: e-mail verified, approved and
+     * not suspended. The panel, the REST API and the MCP server all check it
+     * (canAccessPanel, EnsureAccountIsActive, LocalUser).
+     */
+    public function isActive(): bool
+    {
+        return $this->hasVerifiedEmail()
+            && $this->approved_at !== null
+            && $this->suspended_at === null;
+    }
+
     public function canAccessPanel(Panel $panel): bool
     {
         if ($panel->getId() !== 'admin') {
             return false;
         }
 
-        // Enforce panel access in order: email verification, approval, suspension, permission.
-        if (! $this->hasVerifiedEmail()) {
-            return false;
-        }
-
-        if ($this->approved_at === null) {
-            return false;
-        }
-
-        if ($this->suspended_at !== null) {
-            return false;
-        }
-
-        return $this->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
+        return $this->isActive()
+            && $this->hasPermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
     }
 }

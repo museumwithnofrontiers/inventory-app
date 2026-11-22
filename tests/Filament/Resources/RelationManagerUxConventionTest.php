@@ -33,7 +33,7 @@ use App\Filament\Resources\PublicationResource\RelationManagers\ImagesRelationMa
 use App\Filament\Resources\PublicationResource\RelationManagers\ItemsRelationManager as PublicationItemsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\TagsRelationManager as PublicationTagsRelationManager;
 use App\Filament\Resources\PublicationResource\RelationManagers\TranslationsRelationManager as PublicationTranslationsRelationManager;
-use App\Filament\Resources\RoleResource\Pages\EditRole;
+use App\Filament\Resources\RoleResource\Pages\ViewRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
 use App\Models\Collection;
@@ -74,7 +74,7 @@ class RelationManagerUxConventionTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_ROLES->value,
+            Permission::MANAGE_USERS->value,
         ]);
 
         return $user;
@@ -425,7 +425,7 @@ class RelationManagerUxConventionTest extends TestCase
         Livewire::actingAs($user)
             ->test(PermissionsRelationManager::class, [
                 'ownerRecord' => $role,
-                'pageClass' => EditRole::class,
+                'pageClass' => ViewRole::class,
             ])
             ->assertTableColumnExists(
                 'name',
@@ -443,7 +443,7 @@ class RelationManagerUxConventionTest extends TestCase
         Livewire::actingAs($user)
             ->test(UsersRelationManager::class, [
                 'ownerRecord' => $role,
-                'pageClass' => EditRole::class,
+                'pageClass' => ViewRole::class,
             ])
             ->assertTableColumnExists(
                 'name',
@@ -545,21 +545,6 @@ class RelationManagerUxConventionTest extends TestCase
                 'pageClass' => EditCollection::class,
             ])
             ->assertTableActionsExistInOrder(['view', 'edit', 'detach', 'view_appearance']);
-    }
-
-    public function test_role_permissions_relation_manager_row_actions_are_in_convention_order(): void
-    {
-        $user = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Reviewer', 'guard_name' => 'web']);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(PermissionsRelationManager::class, [
-                'ownerRecord' => $role,
-                'pageClass' => EditRole::class,
-            ])
-            ->assertTableActionsExistInOrder(['edit', 'detach', 'deletePermission']);
     }
 
     // ── Convention 3: Bounded server-side attach search ───────────────────────
@@ -695,7 +680,7 @@ class RelationManagerUxConventionTest extends TestCase
         Livewire::actingAs($user)
             ->test(UsersRelationManager::class, [
                 'ownerRecord' => $role,
-                'pageClass' => EditRole::class,
+                'pageClass' => ViewRole::class,
             ])
             ->assertSuccessful();
     }

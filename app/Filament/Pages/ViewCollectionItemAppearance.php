@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Support\CollectionDisplayLabel;
@@ -52,7 +51,7 @@ class ViewCollectionItemAppearance extends Page implements HasTable
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', Collection::class) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

@@ -274,10 +274,9 @@ class BrowseToolsTest extends TestCase
         InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => []])->assertHasErrors();
     }
 
-    public function test_the_tag_tools_need_view_data_not_manage_reference_data(): void
+    public function test_the_tag_tools_need_view_data(): void
     {
         Item::factory()->Object()->create()->tags()->attach(Tag::factory()->create(['internal_name' => 'gold']));
-        $this->assertFalse($this->reader->hasPermissionTo(Permission::MANAGE_REFERENCE_DATA->value));
 
         InventoryServer::actingAs($this->reader)->tool(ListTags::class)->assertOk();
         InventoryServer::actingAs($this->reader)->tool(FindItemsByTags::class, ['tags' => ['gold']])->assertOk();

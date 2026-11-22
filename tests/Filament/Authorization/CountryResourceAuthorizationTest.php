@@ -32,7 +32,7 @@ class CountryResourceAuthorizationTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
+            ...Permission::dataOperations(),
         ]);
 
         $country = Country::factory()->create(['id' => 'jor', 'internal_name' => 'Jordan']);

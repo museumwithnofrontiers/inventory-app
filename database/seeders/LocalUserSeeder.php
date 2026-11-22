@@ -2,7 +2,9 @@
 
 namespace Database\Seeders;
 
+use App\Enums\Role;
 use App\Models\User;
+use App\Support\Authorization\UserRoles;
 use Illuminate\Database\Seeder;
 use Symfony\Component\Console\Formatter\OutputFormatterStyle;
 use Symfony\Component\Console\Output\ConsoleOutput;
@@ -22,7 +24,7 @@ class LocalUserSeeder extends Seeder
             return;
         }
 
-        // Create default user with "Regular User"
+        // Create default user with the "Manager of Data" role
         $defaultUserPassword = config('app.default_user.password', 'password');
         $defaultUser = User::factory()->create([
             'name' => config('app.default_user.name', 'user'),
@@ -31,7 +33,7 @@ class LocalUserSeeder extends Seeder
         ]);
         $defaultUser->save();
         $defaultUser->markEmailAsVerified();
-        $defaultUser->assignRole('Regular User');
+        $defaultUser->assignRole(Role::DATA_MANAGER->value);
 
         $consoleOutput = new ConsoleOutput;
         $consoleOutput->getFormatter()->setStyle('yellow', new OutputFormatterStyle('yellow', null, ['bold']));
@@ -39,7 +41,7 @@ class LocalUserSeeder extends Seeder
         $consoleOutput->writeln("\tThe application is running in LOCAL mode (<yellow>this is not suitable for production use</yellow>)!");
         $consoleOutput->writeln("\tTest user created: <yellow>'{$defaultUser->name}' (e-mail: '{$defaultUser->email}')</yellow>; password: <green>{$defaultUserPassword}</green>");
 
-        // Create default admin user with "Administrator" role
+        // Create default admin user: the superadmin
         $defaultAdminPassword = config('app.default_admin.password', 'password');
         $defaultAdmin = User::factory()->create([
             'name' => config('app.default_admin.name', 'admin'),
@@ -48,7 +50,7 @@ class LocalUserSeeder extends Seeder
         ]);
         $defaultAdmin->save();
         $defaultAdmin->markEmailAsVerified();
-        $defaultAdmin->assignRole('Manager of Users');
+        app(UserRoles::class)->assign($defaultAdmin, Role::SUPERADMIN);
 
         $consoleOutput = new ConsoleOutput;
         $consoleOutput->getFormatter()->setStyle('yellow', new OutputFormatterStyle('yellow', null, ['bold']));

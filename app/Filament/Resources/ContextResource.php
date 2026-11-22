@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasTimestampsColumns;
@@ -54,7 +53,7 @@ class ContextResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::MANAGE_REFERENCE_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

@@ -4,30 +4,25 @@ namespace App\Enums;
 
 /**
  * Central definition of all system permissions.
- * All permission checks must use these constants to ensure consistency.
+ *
+ * Permissions are the inputs of the policies (App\Policies\*), which are the
+ * only place that decides access, on the panel, the REST API and the MCP
+ * server alike. Users never hold a permission directly: they hold exactly one
+ * role ({@see Role}), and the role carries the permissions.
  */
 enum Permission: string
 {
-    // Data operation permissions
+    // Data: read everything, then create, change and delete records
     case VIEW_DATA = 'view data';
     case CREATE_DATA = 'create data';
     case UPDATE_DATA = 'update data';
     case DELETE_DATA = 'delete data';
 
-    // User management permissions
+    // Accounts: users, their role, the self-registration switch, the audit log
     case MANAGE_USERS = 'manage users';
-    case ASSIGN_ROLES = 'assign roles';
-    case VIEW_USER_MANAGEMENT = 'view user management';
 
-    // Role management permissions
-    case MANAGE_ROLES = 'manage roles';
-    case VIEW_ROLE_MANAGEMENT = 'view role management';
-
-    // System settings permissions
-    case MANAGE_SETTINGS = 'manage settings';
-
-    // Reference data management
-    case MANAGE_REFERENCE_DATA = 'manage-reference-data';
+    // Accounts of the other user managers (the superadmin only)
+    case MANAGE_USER_MANAGERS = 'manage user managers';
 
     // Filament admin panel access
     case ACCESS_ADMIN_PANEL = 'access-admin-panel';
@@ -61,51 +56,6 @@ enum Permission: string
     }
 
     /**
-     * Get user management permissions
-     *
-     * @return array<int, string>
-     */
-    public static function userManagement(): array
-    {
-        return [
-            self::MANAGE_USERS->value,
-            self::ASSIGN_ROLES->value,
-            self::VIEW_USER_MANAGEMENT->value,
-        ];
-    }
-
-    /**
-     * Get role management permissions
-     *
-     * @return array<int, string>
-     */
-    public static function roleManagement(): array
-    {
-        return [
-            self::MANAGE_ROLES->value,
-            self::VIEW_ROLE_MANAGEMENT->value,
-            self::ACCESS_ADMIN_PANEL->value,
-        ];
-    }
-
-    /**
-     * Get administrative permissions (user + role management + settings)
-     *
-     * @return array<int, string>
-     */
-    public static function administrative(): array
-    {
-        return array_merge(
-            self::userManagement(),
-            self::roleManagement(),
-            [
-                self::MANAGE_SETTINGS->value,
-                self::ACCESS_ADMIN_PANEL->value,
-            ]
-        );
-    }
-
-    /**
      * Get sensitive permissions that require MFA
      *
      * @return array<int, string>
@@ -114,10 +64,22 @@ enum Permission: string
     {
         return [
             self::MANAGE_USERS->value,
-            self::MANAGE_ROLES->value,
-            self::ASSIGN_ROLES->value,
-            self::MANAGE_SETTINGS->value,
+            self::MANAGE_USER_MANAGERS->value,
             self::ACCESS_ADMIN_PANEL->value,
         ];
+    }
+
+    public function description(): string
+    {
+        return match ($this) {
+            self::VIEW_DATA => 'Read all inventory data',
+            self::CREATE_DATA => 'Create inventory records',
+            self::UPDATE_DATA => 'Change inventory records',
+            self::DELETE_DATA => 'Delete inventory records',
+            self::MANAGE_USERS => 'Manage user accounts and their role, and read the audit log',
+            self::MANAGE_USER_MANAGERS => 'Manage the accounts of the other user managers',
+            self::ACCESS_ADMIN_PANEL => 'Access the Filament administration panel',
+            self::ACCESS_MCP => 'Browse the inventory through its read-only MCP server',
+        };
     }
 }

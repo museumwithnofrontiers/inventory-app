@@ -15,9 +15,8 @@ use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
 /**
- * Artists and dynasties are shared data: `manage-reference-data` changes
- * them, and `view data` still reads them, as it did before they had a policy
- * (the MCP server's read rule and the item's relation managers).
+ * Artists and dynasties are shared data under the data rule (DataPolicy):
+ * `view data` reads them, the data permissions change them.
  */
 class ArtistAndDynastyPolicyTest extends TestCase
 {
@@ -66,18 +65,17 @@ class ArtistAndDynastyPolicyTest extends TestCase
      * @param  class-string<Model>  $model
      */
     #[DataProvider('models')]
-    public function test_data_users_may_only_read(string $model): void
+    public function test_a_visitor_may_only_read(string $model): void
     {
         $record = $model::factory()->create(); // @phpstan-ignore staticMethod.notFound
+        $user = $this->createViewOnlyUser();
 
-        foreach ([$this->createViewOnlyUser(), $this->createCrudUser()] as $user) {
-            $this->assertTrue($user->can('viewAny', $model));
-            $this->assertTrue($user->can('view', $record));
-            $this->assertFalse($user->can('create', $model));
-            $this->assertFalse($user->can('update', $record));
-            $this->assertFalse($user->can('delete', $record));
-            $this->assertFalse($user->can('deleteAny', $model));
-        }
+        $this->assertTrue($user->can('viewAny', $model));
+        $this->assertTrue($user->can('view', $record));
+        $this->assertFalse($user->can('create', $model));
+        $this->assertFalse($user->can('update', $record));
+        $this->assertFalse($user->can('delete', $record));
+        $this->assertFalse($user->can('deleteAny', $model));
     }
 
     /**

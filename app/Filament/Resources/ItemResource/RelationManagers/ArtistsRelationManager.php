@@ -63,9 +63,8 @@ class ArtistsRelationManager extends RelationManager
             ->actions([
                 // Like TagsRelationManager's pivotViewAction(), this opens
                 // ArtistResource's View page, for a user who may open that
-                // resource (`manage-reference-data`). Anyone else allowed to
-                // view the artist (ArtistPolicy: `view data`) keeps the
-                // read-only modal they had before ArtistResource existed.
+                // resource. Anyone else allowed to view the artist keeps the
+                // read-only modal (ArtistPolicy decides both).
                 ViewAction::make()
                     ->url(fn (Artist $record): ?string => self::artistUrl($record))
                     ->modalHeading('Artist')

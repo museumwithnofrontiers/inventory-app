@@ -82,7 +82,7 @@ use App\Filament\Resources\PublicationResource\RelationManagers\TranslationsRela
 use App\Filament\Resources\PublicationTranslationResource\Pages\EditPublicationTranslation;
 use App\Filament\Resources\PublicationTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PublicationTranslationSiblingTranslationsRelationManager;
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
-use App\Filament\Resources\RoleResource\Pages\EditRole;
+use App\Filament\Resources\RoleResource\Pages\ViewRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
@@ -382,12 +382,11 @@ class RelationManagerConventionTest extends TestCase
             'pinnedHeader' => [], 'pinnedRow' => [], 'pinnedBulk' => [],
         ],
 
-        // ── pinned: Role permissions/users — named directly by Pascal (2026-09-27); Spatie's
-        // Permission/User models have no *DisplayLabel/RecordSelect entity and Permission has no
-        // Resource of its own to navigate to ──
+        // ── pinned: Role permissions/users — named directly by Pascal (2026-09-27); read-only since
+        // the roles are defined in code (App\Enums\Role) ──
         PermissionsRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'role',
-            'pinnedHeader' => ['attach', 'createPermission'], 'pinnedRow' => ['edit', 'detach', 'deletePermission'], 'pinnedBulk' => [],
+            'pinnedHeader' => [], 'pinnedRow' => [], 'pinnedBulk' => [],
         ],
         UsersRelationManager::class => [
             'kind' => self::KIND_PINNED, 'owner' => 'role',
@@ -1110,7 +1109,7 @@ class RelationManagerConventionTest extends TestCase
             'country' => EditCountry::class,
             'language' => EditLanguage::class,
             'glossary' => EditGlossary::class,
-            'role' => EditRole::class,
+            'role' => ViewRole::class,
             'itemitemlink' => EditItemItemLink::class,
             'collectiontranslation' => EditCollectionTranslation::class,
             'itemtranslation' => EditItemTranslation::class,
@@ -1147,13 +1146,9 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * The user a manager is mounted as. Country, Language and Glossary sit
-     * behind Tier-2 `manage-reference-data` rather than the ordinary CRUD
-     * permissions (see their Policies' viewAny()), and Role sits behind its
-     * own `manage-roles` — both gate every ability on that one permission, so
-     * {@see InteractsWithAdminPanel}'s matching helper covers create/update/
-     * delete too. Every other owner's Policy uses the ordinary view/create/
-     * update/delete-data permissions createCrudUser() already grants.
+     * The user a manager is mounted as. Every data owner's policy follows the
+     * data rule (App\Policies\DataPolicy), which createCrudUser() covers; Role
+     * is read by user managers (`manage users`).
      */
     private function userFor(string $owner): User
     {

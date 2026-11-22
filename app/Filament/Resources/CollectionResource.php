@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasChangeParentAction;
 use App\Filament\Concerns\HasInternalNameColumn;
@@ -178,7 +177,7 @@ class CollectionResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

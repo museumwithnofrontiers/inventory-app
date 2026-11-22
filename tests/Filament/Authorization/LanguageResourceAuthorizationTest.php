@@ -32,7 +32,7 @@ class LanguageResourceAuthorizationTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
+            ...Permission::dataOperations(),
         ]);
 
         $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);

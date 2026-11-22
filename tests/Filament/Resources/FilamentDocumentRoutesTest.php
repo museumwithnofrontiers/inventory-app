@@ -2,8 +2,10 @@
 
 namespace Tests\Filament\Resources;
 
+use App\Enums\Permission;
 use App\Models\Item;
 use App\Models\ItemDocument;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Storage;
@@ -45,7 +47,7 @@ class FilamentDocumentRoutesTest extends TestCase
         $this->assertStringContainsString('attachment', $response->headers->get('Content-Disposition') ?? '');
     }
 
-    public function test_filament_item_document_download_route_forbids_a_view_only_user(): void
+    public function test_filament_item_document_download_route_serves_a_view_only_user(): void
     {
         $disk = Config::string('localstorage.documents.disk');
         Storage::fake($disk);
@@ -59,6 +61,13 @@ class FilamentDocumentRoutesTest extends TestCase
         $user = $this->createViewOnlyUser();
 
         $this->actingAs($user)->get(
+            route('filament.admin.item-document.download', ['item' => $item, 'itemDocument' => $itemDocument])
+        )->assertOk();
+
+        $panelOnly = User::factory()->create();
+        $panelOnly->givePermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
+
+        $this->actingAs($panelOnly)->get(
             route('filament.admin.item-document.download', ['item' => $item, 'itemDocument' => $itemDocument])
         )->assertForbidden();
     }

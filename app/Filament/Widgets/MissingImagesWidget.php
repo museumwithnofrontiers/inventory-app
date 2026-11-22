@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\ItemType;
-use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Resources\PartnerResource;
@@ -30,7 +29,7 @@ class MissingImagesWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', Item::class) ?? false;
     }
 
     public function table(Table $table): Table

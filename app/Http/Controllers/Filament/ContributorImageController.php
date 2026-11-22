@@ -12,6 +12,8 @@ class ContributorImageController extends Controller
 {
     public function view(Contributor $contributor, ContributorImage $contributorImage): InlineImageResponse
     {
+        $this->authorize('view', $contributorImage);
+
         if ($contributorImage->contributor_id !== $contributor->id) {
             abort(404);
         }
@@ -21,6 +23,8 @@ class ContributorImageController extends Controller
 
     public function download(Contributor $contributor, ContributorImage $contributorImage): DownloadImageResponse
     {
+        $this->authorize('view', $contributorImage);
+
         if ($contributorImage->contributor_id !== $contributor->id) {
             abort(404);
         }

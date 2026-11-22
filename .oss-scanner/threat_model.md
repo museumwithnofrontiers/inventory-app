@@ -16,12 +16,13 @@ Start the site with `inventory-start`. It listens on `http://127.0.0.1:8000/`, a
 
 | Account | Password | Role | What it can do |
 | --- | --- | --- | --- |
-| `user@example.com` | `password` | Regular User | panel access, create/read/update/delete data, manage reference data; a Sanctum API token is printed when it is seeded |
-| `admin@example.com` | `password` | Manager of Users | user and role management only, no data access |
+| `user@example.com` | `password` | Manager of Data | panel access, create/read/update/delete all data, reference data included |
+| `admin@example.com` | `password` | Superadmin | user accounts and their role only (the other user managers included), no data access |
 | (anonymous) | | | the public endpoints listed below |
 
-`php artisan user:assign-role <email> "<role>"` changes a role. The other roles are `Visitor` (read-only data) and
-`Non-verified users` (self-registered, awaiting approval). Permission names are in `app/Enums/Permission.php`.
+A user holds exactly one role, or none (no access). `php artisan user:set-role <email> "<role>"` changes it; the other roles are
+`Visitor` (reads everything, changes nothing) and `Manager of Users` (accounts only). Roles and permissions are defined in
+`app/Enums/Role.php` and `app/Enums/Permission.php`.
 
 Run the tests with `php artisan test --testsuite=<Unit|Api|Filament|Configuration|Console|Event|Integration>`.
 `phpunit.xml` and `tests/bootstrap.php` force sqlite `:memory:` and fake the storage disks, so the tests never touch
@@ -36,12 +37,12 @@ the site's database or files.
     - `/api/markdown/*`: Markdown to and from HTML conversion and validation.
   - `/api.json`: the OpenAPI document.
   - The Filament login, registration, password-reset, e-mail-verification and MFA pages under `/admin` (`app/Filament/Auth/`, which call Fortify's actions directly; Fortify serves no route of its own).
-- **Authenticated users with low privilege.** A `Visitor` or a `Non-verified users` account must not reach data or actions beyond its permissions. The authorization model has three tiers:
-  1. `access-admin-panel` gates `/admin`.
-  2. Permissions such as `view-data`, `manage-users`, `manage-roles`, `manage-settings` and `manage-reference-data` gate the resources and navigation.
-  3. `App\Policies\*` decide record-level access.
+- **Authenticated users with low privilege.** A `Visitor` account, or an account with no role, must not reach data or actions beyond its role. The policies (`App\Policies\*`) are the only authorization mechanism, on the panel, the API and the MCP server alike:
+  1. `access-admin-panel` and `access-mcp` gate `/admin` and the MCP server, for active accounts only (verified, approved, not suspended).
+  2. The panel's navigation and resources ask the policies (`viewAny`); a model without a policy is denied.
+  3. The policies decide every record-level action. Account rules (`App\Policies\UserPolicy`): only the superadmin changes another user manager, nobody changes the superadmin or their own role.
 
-  The API gates each route group by permission middleware (`App\Http\Middleware\RequirePermission`) behind `auth:api` (OAuth bearer tokens issued by Passport) and an OAuth scope check (`api:read` for reads, `api:write` for writes).
+  The API asks the policies on every data route (`App\Http\Middleware\AuthorizeApiRequest`) behind `auth:api` (OAuth bearer tokens issued by Passport), an account-state check and an OAuth scope check (`api:read` for reads, `api:write` for writes). It serves no user, role or permission management.
 - **Uploaded files.** Images enter through `POST /api/image-upload` and the panel. The pipeline is `ImageUpload` (private `local` disk), then `ImageUploadEvent`, then `ImageUploadListener` (validates and re-encodes with GD, creates the `AvailableImage`), then `AvailableImageListener` (moves the file to the private originals disk). Documents (PDF) follow `DocumentUploadListener`. The client-supplied filename, extension and MIME type are untrusted.
 - **Stored content shown to other users.** This includes item and collection texts, translations, Markdown fields, glossary entries, partner data, tags and copyright strings. Copyright strings are also drawn into public images.
 
@@ -76,7 +77,7 @@ the site's database or files.
 
 - **Critical.** Remote code execution. Unauthenticated access to originals, private uploads or non-public data. Authentication bypass. Unauthenticated writes.
 - **High:**
-  - Privilege escalation from a low-privilege role (Visitor, Non-verified) to data writes or user/role management.
+  - Privilege escalation from a low-privilege role (Visitor, no role) to data writes or account management, or from a Manager of Users to data or to the superadmin.
   - Bypassing MFA.
   - Stored XSS reaching another user's panel session.
   - SQL injection behind authentication.

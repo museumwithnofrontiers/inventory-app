@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Events\ImageUploadEvent;
 use App\Filament\Resources\AvailableImageResource\Pages\EditAvailableImage;
 use App\Filament\Resources\AvailableImageResource\Pages\ListAvailableImage;
@@ -48,7 +47,7 @@ class AvailableImageResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function canCreate(): bool
@@ -198,6 +197,8 @@ class AvailableImageResource extends Resource
                 Action::make('upload')
                     ->label('Upload image')
                     ->icon('heroicon-o-arrow-up-tray')
+                    ->visible(fn (): bool => auth()->user()?->can('create', ImageUpload::class) ?? false)
+                    ->authorize(fn (): bool => auth()->user()?->can('create', ImageUpload::class) ?? false)
                     ->form([
                         FileUpload::make('file')
                             ->label('Image file')
