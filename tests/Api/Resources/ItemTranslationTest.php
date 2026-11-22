@@ -162,4 +162,27 @@ class ItemTranslationTest extends TestCase
             ->assertUnprocessable()
             ->assertJsonValidationErrors('status');
     }
+
+    /**
+     * M17 B1 (#2744): a text is not a draft unless it says so; the API stores,
+     * serves and lists a draft text like any other.
+     */
+    public function test_draft_is_stored_served_and_listed(): void
+    {
+        $resource = ItemTranslation::factory()->create();
+        $this->assertFalse($resource->fresh()?->draft);
+
+        $this->putJson(route('item-translation.update', $resource), ['draft' => true])
+            ->assertOk()
+            ->assertJsonPath('data.draft', true);
+        $this->assertTrue($resource->fresh()?->draft);
+
+        $this->getJson(route('item-translation.index'))
+            ->assertOk()
+            ->assertJsonFragment(['id' => $resource->id, 'draft' => true]);
+
+        $this->putJson(route('item-translation.update', $resource), ['draft' => 'maybe'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('draft');
+    }
 }

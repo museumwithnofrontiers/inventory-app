@@ -72,6 +72,7 @@ class ItemTranslationFactory extends Factory
             'scribe' => $this->faker->optional()->name,
             'patrons' => $this->faker->optional()->name,
             'architects' => $this->faker->optional()->name,
+            'draft' => false,
             'status' => 'published',
             'catalogue_references' => $this->faker->optional()->sentence,
             'notice' => $this->faker->optional()->sentence,

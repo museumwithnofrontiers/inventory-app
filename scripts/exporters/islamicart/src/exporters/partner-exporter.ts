@@ -10,6 +10,7 @@ import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { partnerParents } from '../../../shared/partner-parents.mjs'
 import { BaseExporter } from './base-exporter.js'
 import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
+import { itemIdShipped, itemShipped } from '../../../shared/drafts.mjs'
 
 interface PartnerRow {
   id: string
@@ -121,12 +122,14 @@ export class PartnerExporter extends BaseExporter {
     const partners = await this.db.query<PartnerRow>(
       scope
         ? `SELECT p.id, p.type, p.internal_name, p.backward_compatibility,
-                  p.country_id, p.latitude, p.longitude, p.map_zoom, p.monument_item_id
+                  p.country_id, p.latitude, p.longitude, p.map_zoom,
+                  CASE WHEN ${itemIdShipped('p.monument_item_id', 'dr_monument')} THEN p.monument_item_id END AS monument_item_id
            FROM partners p
            WHERE p.id IN (${this.placeholders(Math.max(scope.partnerIds.length, 1))})
            ORDER BY p.type, p.internal_name`
         : `SELECT DISTINCT p.id, p.type, p.internal_name, p.backward_compatibility,
-              p.country_id, p.latitude, p.longitude, p.map_zoom, p.monument_item_id
+              p.country_id, p.latitude, p.longitude, p.map_zoom,
+              CASE WHEN ${itemIdShipped('p.monument_item_id', 'dr_monument')} THEN p.monument_item_id END AS monument_item_id
        FROM partners p
        WHERE EXISTS (
          SELECT 1
@@ -206,6 +209,7 @@ export class PartnerExporter extends BaseExporter {
          FROM items
          WHERE project_id IN (${ph})
            AND type IN ('object', 'monument')
+           AND ${itemShipped('items')}
            AND partner_id IN (${partnerPh})
          GROUP BY partner_id`,
         [...this.projectIds, ...partnerIds]

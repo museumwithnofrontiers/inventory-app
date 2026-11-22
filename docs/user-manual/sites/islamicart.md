@@ -46,7 +46,7 @@ The main site keeps only the mini-site's exhibition and theme titles, and its pl
 
 - **Hiding an exhibition.** Turning **Draft** on for an exhibition hides it and everything under it, for the exhibitions whose settings came with a mini-site.
 - **Exhibition captions are the placement's.** Correct a caption on the placement, not on the item.
-- **No status filter on items.** Every object and monument of the projects is shown.
+- **Drafts are left out.** Every object and monument of the projects is shown, except a draft one; a draft translation is left out ([Draft]({{ '/user-manual/master/items' | relative_url }}#draft)).
 
 ## Settings outside the panel
 

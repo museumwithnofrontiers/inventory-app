@@ -15,6 +15,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\DeleteAction;
+use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -89,10 +90,21 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
     abstract protected static function defaultTranslationFormFields(): array;
 
     /**
-     * Columns only one parent's translations have, shown after the title
-     * column. Item adds `alternate_name`.
+     * Values the createDefaultTranslation form starts with, beside the
+     * default language and context. Item starts its text as a draft (M17).
      *
-     * @return array<int, TextColumn>
+     * @return array<string, mixed>
+     */
+    protected static function defaultTranslationFormState(): array
+    {
+        return [];
+    }
+
+    /**
+     * Columns only one parent's translations have, shown after the title
+     * column. Item adds `alternate_name` and `draft`.
+     *
+     * @return array<int, Column>
      */
     protected static function extraColumns(): array
     {
@@ -209,6 +221,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
                     ->fillForm(fn (): array => [
                         'language_id' => Language::default()->first()?->id,
                         'context_id' => Context::default()->first()?->id,
+                        ...static::defaultTranslationFormState(),
                     ])
                     ->visible(fn (): bool => $this->canCreate()
                         && ! $this->translationsRelation()

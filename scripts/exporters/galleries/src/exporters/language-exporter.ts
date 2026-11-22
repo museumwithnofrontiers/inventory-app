@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { GALLERIES_ROOT_PURPOSE } from './galleries-exporter.js'
+import { textShipped } from '../../../shared/drafts.mjs'
 
 interface LangRow {
   id: string
@@ -109,7 +110,7 @@ export class LanguageExporter extends BaseExporter {
         ? ''
         : `UNION
            SELECT DISTINCT language_id FROM item_translations
-           WHERE item_id IN (${this.placeholders(this.memberItemIds.length)})`
+           WHERE item_id IN (${this.placeholders(this.memberItemIds.length)}) AND ${textShipped('item_translations')}`
 
     const rows = await this.db.query<{ language_id: string }>(
       `SELECT DISTINCT ct.language_id

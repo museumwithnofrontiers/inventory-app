@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\ItemTranslationStatus;
 use App\Enums\Permission;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
@@ -23,8 +22,10 @@ use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
@@ -38,6 +39,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Validation\Rules\Unique;
@@ -97,11 +99,9 @@ class ItemTranslationResource extends Resource
                     ->searchable()
                     ->required(),
 
-                Select::make('status')
-                    ->options(ItemTranslationStatus::options())
-                    ->default(ItemTranslationStatus::PUBLISHED->value)
-                    ->helperText('Hidden: left out of lists and search; pages that link it still show it.')
-                    ->required(),
+                Toggle::make('draft')
+                    ->helperText('Not ready for the sites: no site shows this text.')
+                    ->default(true),
 
                 Section::make('Basic Text')
                     ->schema([
@@ -325,10 +325,8 @@ class ItemTranslationResource extends Resource
                             ->url(fn (ItemTranslation $record): ?string => $record->context
                                 ? (auth()->user()?->can('view', $record->context) ? ContextResource::getUrl('view', ['record' => $record->context]) : null)
                                 : null),
-                        TextEntry::make('status')
-                            ->badge()
-                            ->formatStateUsing(fn (ItemTranslationStatus $state): string => $state->label())
-                            ->color(fn (ItemTranslationStatus $state): string => $state->color()),
+                        IconEntry::make('draft')
+                            ->boolean(),
                     ])
                     ->columns(2),
 
@@ -506,10 +504,8 @@ class ItemTranslationResource extends Resource
                             ->orWhere('id', 'like', "%{$search}%")
                         )
                     ),
-                TextColumn::make('status')
-                    ->badge()
-                    ->formatStateUsing(fn (ItemTranslationStatus $state): string => $state->label())
-                    ->color(fn (ItemTranslationStatus $state): string => $state->color())
+                IconColumn::make('draft')
+                    ->boolean()
                     ->sortable(),
                 IconColumn::make('is_default_pair')
                     ->label('★')
@@ -542,8 +538,11 @@ class ItemTranslationResource extends Resource
                     ->label('Context')
                     ->relationship('context', 'internal_name')
                     ->searchable(),
-                SelectFilter::make('status')
-                    ->options(ItemTranslationStatus::options()),
+                TernaryFilter::make('draft')
+                    ->label('Draft')
+                    ->placeholder('All texts')
+                    ->trueLabel('Drafts')
+                    ->falseLabel('Ready for the sites'),
                 Filter::make('default_language')
                     ->label('Default language only')
                     ->query(fn (Builder $query): Builder => $query->whereHas('language', fn (Builder $q): Builder => $q->where('is_default', true))),

@@ -1,6 +1,7 @@
 import type { Database } from '../core/database.js'
 import type { ExportScope } from '../core/types.js'
 import type { MinisiteInstance } from './instance.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 type Query = Pick<Database, 'query'>
 
@@ -36,7 +37,7 @@ export async function resolveScope(db: Query, instance: MinisiteInstance): Promi
     `SELECT DISTINCT IF(i.type = 'picture' AND i.parent_id IS NOT NULL, i.parent_id, i.id) AS id
      FROM collection_item ci
      JOIN items i ON i.id = ci.item_id
-     WHERE ci.collection_id IN (${placeholders(collectionIds)})`,
+     WHERE ci.collection_id IN (${placeholders(collectionIds)}) AND ${itemShipped('i')}`,
     collectionIds
   )
   const itemIds = new Set(placed.map(r => r.id).filter((id): id is string => !!id))

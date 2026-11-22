@@ -29,6 +29,7 @@ class UpdateItemRequest extends FormRequest
             'internal_name' => ['sometimes', 'required', 'string', 'max:255'],
             'backward_compatibility' => ['sometimes', 'nullable', 'string', 'max:255'],
             'type' => ['sometimes', 'required', 'in:object,monument,detail,picture'],
+            'draft' => ['sometimes', 'boolean'],
             'parent_id' => ['sometimes', 'nullable', 'uuid', 'exists:items,id'],
             'display_order' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'country_id' => ['sometimes', 'nullable', 'string', 'size:3', 'exists:countries,id'],

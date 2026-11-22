@@ -2,6 +2,7 @@ import type { ExportResult, GalleryAnchor, GalleryChrome } from '../core/types.j
 import { parseJson } from '../core/database.js'
 import { BaseExporter } from './base-exporter.js'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
+import { loadDraftCollectionIds } from '../../../shared/drafts.mjs'
 
 /** The purpose that marks the root every gallery hangs under (importer phase 10). */
 export const GALLERIES_ROOT_PURPOSE = 'galleries-root'
@@ -53,7 +54,7 @@ export class GalleriesExporter extends BaseExporter {
   async export(): Promise<ExportResult> {
     this.logger.info('Exporting galleries.json...')
 
-    const galleries = await this.db.query<GalleryRow>(
+    const allGalleries = await this.db.query<GalleryRow>(
       `SELECT g.id, g.backward_compatibility, g.extra
        FROM collections g
        JOIN collections root ON root.id = g.parent_id
@@ -62,6 +63,9 @@ export class GalleriesExporter extends BaseExporter {
        ORDER BY g.backward_compatibility`,
       [GALLERIES_ROOT_PURPOSE]
     )
+    // A draft gallery (or one under a draft) ships nowhere (M17 B3).
+    const drafts = await loadDraftCollectionIds((sql, params) => this.db.query(sql, params))
+    const galleries = allGalleries.filter(g => !drafts.has(g.id))
 
     if (galleries.length === 0) {
       throw new Error(

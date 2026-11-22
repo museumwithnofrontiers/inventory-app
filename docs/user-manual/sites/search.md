@@ -34,7 +34,7 @@ Bibliographies, credits and copyright lines are not searched.
 
 ## Things to know
 
-- **No status filter.** Hidden and unedited translations are searched like published ones.
+- **Drafts are left out.** A draft item or a draft translation is not searched.
 - **The search changes last.** A change reaches the search only after the team has published the packages and reloaded the search index from them ([From the panel to the website]({{ '/user-manual/master/publishing-cycle' | relative_url }})).
 
 ## Settings outside the panel

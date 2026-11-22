@@ -11,6 +11,7 @@ import { partnerWebsites } from '../../../shared/partner-websites.mjs'
 import { partnerParents } from '../../../shared/partner-parents.mjs'
 import { BaseExporter } from './base-exporter.js'
 import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
+import { itemIdShipped } from '../../../shared/drafts.mjs'
 
 interface PartnerRow {
   id: string
@@ -105,7 +106,8 @@ export class PartnerExporter extends BaseExporter {
     const partnerPh = this.placeholders(partnerIds.length)
     const partners = await this.db.query<PartnerRow>(
       `SELECT id, type, internal_name, backward_compatibility,
-              country_id, latitude, longitude, map_zoom, monument_item_id
+              country_id, latitude, longitude, map_zoom,
+              CASE WHEN ${itemIdShipped('partners.monument_item_id', 'dr_monument')} THEN monument_item_id END AS monument_item_id
        FROM partners
        WHERE id IN (${partnerPh})
        ORDER BY country_id, internal_name`,

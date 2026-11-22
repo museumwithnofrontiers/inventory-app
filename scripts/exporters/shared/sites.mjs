@@ -45,6 +45,7 @@
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { itemShipped } from './drafts.mjs'
 
 /** The instance files this module reads by default. */
 export const INSTANCES_DIR = fileURLToPath(new URL('../instances/', import.meta.url))
@@ -286,7 +287,8 @@ export async function readItemFacts(query, itemIds) {
   const collections = new Map()
   for (const part of chunks(ids)) {
     const rows = /** @type {{ id: string, type: string, project_id: string | null }[]} */ (
-      await query(`SELECT id, type, project_id FROM items WHERE id IN (${marks(part)}) ORDER BY id`, part)
+      // A draft item (or one under a draft) is on no site.
+      await query(`SELECT id, type, project_id FROM items WHERE id IN (${marks(part)}) AND ${itemShipped('items')} ORDER BY id`, part)
     )
     for (const row of rows) items.set(row.id, { id: row.id, type: row.type, project_id: row.project_id, memberships: [] })
     const memberships = /** @type {{ item_id: string, collection_id: string, via_picture: number }[]} */ (
@@ -298,7 +300,7 @@ export async function readItemFacts(query, itemIds) {
          SELECT p.parent_id AS item_id, ci.collection_id, 1 AS via_picture
          FROM collection_item ci
          JOIN items p ON p.id = ci.item_id
-         WHERE p.type = 'picture' AND p.parent_id IN (${marks(part)})
+         WHERE p.type = 'picture' AND p.parent_id IN (${marks(part)}) AND ${itemShipped('p')}
          ORDER BY item_id, collection_id, via_picture`,
         [...part, ...part]
       )

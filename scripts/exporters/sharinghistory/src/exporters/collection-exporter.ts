@@ -7,6 +7,7 @@ import { restoreSiteTranslations } from '../../../shared/site-configuration.mjs'
 import { type LanguageKey, languageKeyer, rekeyIfMap, rekeyLanguages, rekeyNested } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 const SITE_KEY = 'sharinghistory'
 
@@ -173,6 +174,7 @@ export class CollectionExporter extends BaseExporter {
          JOIN items i ON i.id = ci.item_id
          LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
+           AND ${itemShipped('i')}
            AND ((i.type IN ('object', 'monument', 'detail') AND i.project_id IN (${ph}))
              OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph})))
          ORDER BY ci.collection_id, ci.display_order, ci.variant_order, item_id`,
@@ -191,7 +193,9 @@ export class CollectionExporter extends BaseExporter {
     // (exhibition 2): its gallery lists the records the exhibition places.
     // So an unpublished exhibition and its themes ship as their titles and
     // placements only, `published: false`; their National Context pages do
-    // not ship.
+    // not ship. A draft exhibition (`collections.draft`, whose encoding show='n'
+    // is) keeps this treatment: Sharing History is the one exception to the
+    // shared rule that a draft collection ships nowhere (shared/drafts.mjs, M17 B3).
     const unpublished = computeUnpublishedExhibitionSubtree(collections, allTranslations)
     const excludedIds = withinNationalContext(collections, unpublished)
     const hidden = new Set([...unpublished].filter(id => !excludedIds.has(id)))

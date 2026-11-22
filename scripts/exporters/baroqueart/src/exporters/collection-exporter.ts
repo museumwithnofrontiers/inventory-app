@@ -8,6 +8,7 @@ import { type LanguageKey, languageKeyer } from '../core/language-keys.js'
 import { loadMinisiteInstances } from '../minisite/instance.js'
 import { BaseExporter } from './base-exporter.js'
 import { dropProjectRoots, projectRootIds } from '../../../shared/project-roots.mjs'
+import { itemShipped, loadDraftCollectionIds } from '../../../shared/drafts.mjs'
 
 /** The site this exporter's own package is, as the mini-site instances name it. */
 const SITE_KEY = 'baroqueart'
@@ -202,6 +203,7 @@ export class CollectionExporter extends BaseExporter {
          LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
            AND ci.parent_variant_order IS NULL
+           AND ${itemShipped('i')}
            AND ((i.type IN ('object', 'monument') AND i.project_id IN (${ph}))
              OR (i.type = 'picture' AND parent.type IN ('object', 'monument') AND parent.project_id IN (${ph}))${
                scope ? `\n             OR (i.type = 'picture' AND i.parent_id IS NULL AND i.project_id IN (${ph}))` : ''
@@ -232,6 +234,7 @@ export class CollectionExporter extends BaseExporter {
          LEFT JOIN items parent ON parent.id = i.parent_id
          WHERE ci.collection_id IN (${colPh})
            AND ci.parent_variant_order IS NOT NULL
+           AND ${itemShipped('i')}
          ORDER BY ci.collection_id, ci.display_order, ci.parent_variant_order, ci.variant_order, ci.item_id`,
         collectionIds
       ),
@@ -262,7 +265,14 @@ export class CollectionExporter extends BaseExporter {
     // exhibitions — and their theme/page subtrees — stay in the inventory DB
     // as source of truth but must not ship in the data-package (e.g. BAR
     // exhibition 49 "Academia", which has themes but no content).
-    const excludedIds = computeUnpublishedExhibitionSubtree(collections, allTranslations)
+    // A draft collection and its subtree ship nowhere (shared/drafts.mjs, M17 B3);
+    // legacy's show='n' is a draft's encoding, so the two sets agree.
+    const excludedIds = new Set([
+      ...computeUnpublishedExhibitionSubtree(collections, allTranslations),
+      ...[...(await loadDraftCollectionIds((sql, params) => this.db.query(sql, params)))].filter(id =>
+        collectionIds.includes(id)
+      ),
+    ])
     const publishedCollections = collections.filter(c => !excludedIds.has(c.id))
     const translations = allTranslations.filter(t => !excludedIds.has(t.collection_id))
     if (excludedIds.size > 0) {

@@ -69,7 +69,7 @@ So **edit the translation in the context of the site you are maintaining**, and 
 2. Select **Edit translation** (at the end of the row). The panel opens the translation's own page.
 3. Change the texts, then select **Save changes**.
 
-You can also reach every translation from **Translations → Item Translations** in the menu, with filters on language, context and status.
+You can also reach every translation from **Translations → Item Translations** in the menu, with filters on language, context and draft.
 
 ![The top of a translation's form: item, language, context and status]({{ '/user-manual/images/item-translation-edit-top.png' | relative_url }})
 
@@ -131,15 +131,15 @@ The dynasty, keyword, artist and credit lines exist twice, on purpose:
 
 Correct each one where it is. Linking a Dynasty doesn't change the dynasty line, and rewording the line doesn't change the link. An item with a text and no link is normal: linking it is editorial work you can do on the **Origin** or **Content** tab.
 
-### The status
+### Draft
 
-Every translation has a **Status**:
+An item and each of its translations have a **Draft** switch: not ready for the sites. A new item or translation starts as a draft; turn it off when it is ready.
 
-| Status | Meaning |
-|---|---|
-| **Published** | The normal state. |
-| **Unedited** | The text exists but has not been reviewed yet. It is a marker for editors: no website reads it today, so an unedited text is shown like a published one. |
-| **Hidden** | Left out of lists and search; the pages that link to it still show it. Today only Sharing History acts on it: one hidden translation makes the whole item a "Historical Background illustration only" item there ([Sharing History]({{ '/user-manual/sites/sharinghistory' | relative_url }})). The other sites show it like a published one. |
+- A **draft item** is left out of every site's data, with its details and pictures, and nothing on a site points to it: no placement, related item, cover or banner. Its images stay reachable at their public address: draft is not a takedown.
+- A **draft translation** is left out of the sites' data: the item shows in its other languages.
+- The API and the MCP server still return drafts, with their `draft` flag.
+
+The items imported from legacy are not drafts.
 
 To take an item off a site, ask yourself first what makes it appear there: usually a **placement** in one of the site's collections ([chapter 4]({{ '/user-manual/master/collections' | relative_url }})). Detaching that placement is what removes it.
 

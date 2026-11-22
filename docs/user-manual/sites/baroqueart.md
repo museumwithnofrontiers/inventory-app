@@ -34,7 +34,7 @@ nav_order: 4
 ## Things to know
 
 - **Hiding an exhibition.** **Draft** on an exhibition hides it and everything under it, as on Islamic Art.
-- **No status filter on items.**
+- **Drafts are left out.** Every object and monument of the projects is shown, except a draft one; a draft translation is left out ([Draft]({{ '/user-manual/master/items' | relative_url }}#draft)).
 
 ## Settings outside the panel
 

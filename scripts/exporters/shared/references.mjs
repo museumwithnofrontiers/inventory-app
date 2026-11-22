@@ -17,6 +17,7 @@
  * Types are in `references.d.mts`.
  */
 
+import { itemShipped, textShipped } from './drafts.mjs'
 import { resolveItemPages } from './pages.mjs'
 import { resolveItemSites, loadSites } from './sites.mjs'
 
@@ -87,7 +88,11 @@ export async function resolveReferences(query, itemIds, options) {
 
   for (const part of chunks([...ids].sort())) {
     const rows = /** @type {{ id: string, type: string, backward_compatibility: string | null, parent_id: string | null }[]} */ (
-      await query(`SELECT id, type, backward_compatibility, parent_id FROM items WHERE id IN (${marks(part)}) ORDER BY id`, part)
+      // A draft item (or one under a draft) is not referenced: it is left out like an unknown id.
+      await query(
+        `SELECT id, type, backward_compatibility, parent_id FROM items WHERE id IN (${marks(part)}) AND ${itemShipped('items')} ORDER BY id`,
+        part
+      )
     )
     for (const row of rows) items.set(row.id, row)
 
@@ -101,7 +106,7 @@ export async function resolveReferences(query, itemIds, options) {
            JOIN items i ON i.id = it.item_id
            JOIN languages l ON l.id = it.language_id
            LEFT JOIN projects p ON p.id = i.project_id
-           WHERE it.item_id IN (${marks(part)}) AND l.backward_compatibility IS NOT NULL
+           WHERE it.item_id IN (${marks(part)}) AND l.backward_compatibility IS NOT NULL AND ${textShipped('it')}
            ORDER BY it.item_id, l.backward_compatibility, it.context_id`,
           part
         )
@@ -115,6 +120,7 @@ export async function resolveReferences(query, itemIds, options) {
          JOIN item_images ii ON ii.item_id = pic.id
          WHERE pic.type = 'picture'
            AND pic.parent_id IN (${marks(part)})
+           AND ${itemShipped('pic')}
            -- A custom exhibition photo is the exhibition's picture, not one of the item's own.
            AND NOT EXISTS (SELECT 1 FROM item_tag ct JOIN tags t ON t.id = ct.tag_id
                            WHERE ct.item_id = pic.id AND t.category = 'image-type'

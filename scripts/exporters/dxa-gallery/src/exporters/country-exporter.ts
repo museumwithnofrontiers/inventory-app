@@ -1,6 +1,7 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { GLOBAL_TIMELINE_LIKE_PATTERNS } from './timeline-exporter.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 interface CountryRow {
   id: string
@@ -79,7 +80,7 @@ export class CountryExporter extends BaseExporter {
          SELECT DISTINCT tgt.country_id
          FROM item_item_links iil
          JOIN items tgt ON tgt.id = iil.target_id
-         WHERE iil.source_id IN (${itemPh}) AND tgt.country_id IS NOT NULL
+         WHERE iil.source_id IN (${itemPh}) AND tgt.country_id IS NOT NULL AND ${itemShipped('tgt')}
 
          UNION
 

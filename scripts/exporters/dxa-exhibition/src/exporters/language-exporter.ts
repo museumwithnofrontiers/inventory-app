@@ -1,5 +1,6 @@
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { textShipped } from '../../../shared/drafts.mjs'
 
 interface LangRow {
   id: string
@@ -112,7 +113,7 @@ export class LanguageExporter extends BaseExporter {
     const rows = await this.db.query<{ language_id: string }>(
       `SELECT DISTINCT it.language_id
        FROM item_translations it
-       WHERE it.item_id IN (${itemPh})
+       WHERE it.item_id IN (${itemPh}) AND ${textShipped('it')}
 
        UNION
 

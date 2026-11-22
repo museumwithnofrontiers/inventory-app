@@ -1,6 +1,7 @@
 import { placementTranslationsSelect, restorePlacementTranslations } from '../../../shared/placement-translations.mjs'
 import type { ExportResult, Theme } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
+import { itemIdShipped, loadDraftItemIds } from '../../../shared/drafts.mjs'
 
 interface ThemeItemRow {
   collection_id: string
@@ -100,6 +101,7 @@ export class ThemeExporter extends BaseExporter {
         `SELECT ci.collection_id, ci.item_id, ci.display_order, ci.extra, ${placementTranslationsSelect('ci')}
          FROM collection_item ci
          WHERE ci.collection_id IN (${themePh})
+           AND ${itemIdShipped('ci.item_id', 'dr_selection')}
          ORDER BY ci.collection_id, ci.display_order`,
         themeIds
       ).then(restorePlacementTranslations),
@@ -123,6 +125,8 @@ export class ThemeExporter extends BaseExporter {
     // "Related Audio/Videos" on its page.
     const mediaByTheme = await this.loadThemeMedia(themeIds, langCodeMap)
 
+    // A draft picture (or one under a draft) is no cover (M17 B3).
+    const draftItems = await loadDraftItemIds((sql, params) => this.db.query(sql, params))
     const memberIds = new Set(this.memberItemIds)
     let orphanParents = 0
 
@@ -210,7 +214,8 @@ export class ThemeExporter extends BaseExporter {
       backward_compatibility: theme.backwardCompatibility,
       internal_name: theme.internalName,
       display_order: theme.displayOrder,
-      cover_picture_item_id: theme.coverPictureItemId,
+      cover_picture_item_id:
+        theme.coverPictureItemId !== null && draftItems.has(theme.coverPictureItemId) ? null : theme.coverPictureItemId,
       pictures: buildPictures(theme.id),
       media: mediaByTheme.get(theme.id) ?? [],
       ...(includeChildren
@@ -318,6 +323,7 @@ export class ThemeExporter extends BaseExporter {
        FROM item_item_links
        WHERE source_id IN (${picturePh})
          AND backward_compatibility LIKE 'mwnf3\\_thematic\\_gallery:theme\\_item\\_related:%'
+         AND ${itemIdShipped('item_item_links.target_id', 'dr_related')}
        ORDER BY backward_compatibility`,
       pictureIds
     )

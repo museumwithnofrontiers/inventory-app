@@ -113,7 +113,7 @@ describe('PartnerExporter — shared partner shape', () => {
     const output = readOutput()
     expect(output[0]?.item_count).toBe(3)
 
-    const itemCountQuery = queries.find(q => q.sql.includes('FROM items'))
+    const itemCountQuery = queries.find(q => q.sql.includes('COUNT(*) AS item_count'))
     expect(itemCountQuery?.sql).toContain("type IN ('object', 'monument')")
     expect(itemCountQuery?.sql).toContain('project_id IN')
   })

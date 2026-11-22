@@ -24,6 +24,8 @@ class ItemResource extends BaseJsonResource
             'backward_compatibility' => $this->resource->backward_compatibility,
             // The type of the item: 'object', 'monument', 'detail', or 'picture'.
             'type' => $this->resource->type,
+            // Not ready for any site: no site's data holds a draft item, its details or its pictures
+            'draft' => $this->resource->draft,
             // The parent item ID (for hierarchical relationships), nullable
             'parent_id' => $this->resource->parent_id,
             // Display order among siblings sharing the same parent, nullable

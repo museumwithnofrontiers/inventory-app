@@ -3,6 +3,7 @@ import { parseJson } from '../core/database.js'
 import type { ExportResult } from '../core/types.js'
 import { BaseExporter } from './base-exporter.js'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 /** The `thg_gallery` fields the importer copies onto every language row of the hub's collection. */
 interface HubChrome {
@@ -94,9 +95,15 @@ export class GalleryRecordExporter extends BaseExporter {
       if (reference) this.logger.warning(`Unparseable gallery item reference, dropped: ${reference}`)
       return null
     }
-    const rows = await this.db.query<{ id: string }>(`SELECT id FROM items WHERE backward_compatibility = ?`, [
-      backwardCompatibility,
-    ])
+    const rows = await this.db.query<{ id: string; shipped: number | boolean | null }>(
+      `SELECT id, ${itemShipped('items')} AS shipped FROM items WHERE backward_compatibility = ?`,
+      [backwardCompatibility]
+    )
+    // A draft item (or one under a draft) ships nowhere: no banner or homepage item (M17 B3).
+    if (rows[0] && (rows[0].shipped === false || Number(rows[0].shipped) === 0)) {
+      this.logger.warning(`Gallery item reference is a draft, dropped: ${backwardCompatibility}`)
+      return null
+    }
     if (!rows[0]) {
       this.logger.warning(`Gallery item reference does not resolve: ${backwardCompatibility}`)
       return null

@@ -53,4 +53,30 @@ class ItemTest extends TestCase
         $this->assertSame(-300000, $item->start_date);
         $this->assertSame(-8000, $item->end_date);
     }
+
+    /**
+     * M17 B1 (#2744): an item is not a draft unless it says so; the API
+     * stores, serves and lists a draft item like any other.
+     */
+    public function test_draft_is_stored_served_and_listed(): void
+    {
+        $item = Item::factory()->create();
+        $this->assertFalse($item->fresh()?->draft);
+
+        $this->putJson(route('item.update', $item), ['draft' => true])
+            ->assertOk()
+            ->assertJsonPath('data.draft', true);
+        $this->assertTrue($item->fresh()?->draft);
+
+        $this->getJson(route('item.show', $item))
+            ->assertOk()
+            ->assertJsonPath('data.draft', true);
+        $this->getJson(route('item.index'))
+            ->assertOk()
+            ->assertJsonFragment(['id' => $item->id, 'draft' => true]);
+
+        $this->putJson(route('item.update', $item), ['draft' => 'maybe'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('draft');
+    }
 }

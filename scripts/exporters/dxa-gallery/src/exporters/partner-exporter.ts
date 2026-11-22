@@ -12,6 +12,7 @@ import { partnerParents } from '../../../shared/partner-parents.mjs'
 import { BaseExporter } from './base-exporter.js'
 import { partnerColumnsSelect, restorePartnerColumns } from '../../../shared/partner-columns.mjs'
 import { galleryProjectCode } from '../../../shared/site-configuration.mjs'
+import { itemIdShipped } from '../../../shared/drafts.mjs'
 
 interface PartnerRow {
   id: string
@@ -177,7 +178,8 @@ export class PartnerExporter extends BaseExporter {
 
     const partners = await this.db.query<PartnerRow>(
       `SELECT p.id, p.type, p.internal_name, p.backward_compatibility,
-              p.country_id, p.latitude, p.longitude, p.map_zoom, p.monument_item_id,
+              p.country_id, p.latitude, p.longitude, p.map_zoom,
+              CASE WHEN ${itemIdShipped('p.monument_item_id', 'dr_monument')} THEN p.monument_item_id END AS monument_item_id,
               COUNT(i.id) AS item_count
        FROM partners p
        LEFT JOIN items i ON i.partner_id = p.id AND i.id IN (${itemPh})

@@ -27,6 +27,7 @@ class StoreItemRequest extends FormRequest
             'internal_name' => ['required', 'string', 'max:255'],
             'backward_compatibility' => ['nullable', 'string', 'max:255'],
             'type' => ['required', 'in:object,monument,detail,picture'],
+            'draft' => ['sometimes', 'boolean'],
             'parent_id' => ['nullable', 'uuid', 'exists:items,id'],
             'display_order' => ['nullable', 'integer', 'min:1'],
             'country_id' => ['nullable', 'string', 'size:3', 'exists:countries,id'],

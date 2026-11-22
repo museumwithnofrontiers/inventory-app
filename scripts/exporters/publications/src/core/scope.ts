@@ -1,4 +1,5 @@
 import type { Database } from './database.js'
+import { itemIdShipped, itemShipped, loadDraftCollectionIds } from '../../../shared/drafts.mjs'
 
 type Query = Pick<Database, 'query'>
 
@@ -49,14 +50,19 @@ export async function resolveScope(db: Query): Promise<PublicationsScope> {
   const publicationIds = publications.map(p => p.id)
   const projectIds = [...new Set(publications.map(p => p.project_id).filter((p): p is string => !!p))].sort()
 
-  const trailRows = await db.query<{ key: string; value: string }>(
+  const allTrailRows = await db.query<{ key: string; value: string }>(
     `SELECT publication_id AS \`key\`, collection_id AS value FROM publication_collection
      ORDER BY publication_id, display_order IS NULL, display_order, collection_id`
   )
   const catalogueRows = await db.query<{ key: string; value: string }>(
     `SELECT publication_id AS \`key\`, item_id AS value FROM publication_item
+     WHERE ${itemIdShipped('publication_item.item_id', 'dr_catalogue')}
      ORDER BY publication_id, display_order IS NULL, display_order, item_id`
   )
+  // A draft trail (or one under a draft) ships nowhere, and a draft item is
+  // no catalogue item or trail entry (M17 B3).
+  const drafts = await loadDraftCollectionIds((sql, params) => db.query(sql, params))
+  const trailRows = allTrailRows.filter(r => !drafts.has(r.value))
   const trailsByPublication = group(trailRows)
   const catalogueByPublication = group(catalogueRows)
   const trailIds = [...new Set(trailRows.map(r => r.value))].sort()
@@ -72,6 +78,7 @@ export async function resolveScope(db: Query): Promise<PublicationsScope> {
            JOIN items i ON i.id = ci.item_id
            WHERE ci.collection_id IN (${marks(trailIds)})
              AND i.type IN ('object', 'monument')
+             AND ${itemShipped('i')}
            ORDER BY ci.collection_id, ci.display_order IS NULL, ci.display_order, ci.item_id`,
           trailIds
         )

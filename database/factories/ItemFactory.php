@@ -28,6 +28,7 @@ class ItemFactory extends Factory
             'internal_name' => $this->faker->unique()->words(3, true),
             'backward_compatibility' => $this->faker->lexify('???'),
             'type' => $this->faker->randomElement([ItemType::OBJECT, ItemType::MONUMENT]), // Default to top-level types
+            'draft' => false,
             'display_order' => null,
             'project_id' => null, // This should be set to a valid project ID if needed
             'country_id' => null, // This should be set to a valid country ID if needed

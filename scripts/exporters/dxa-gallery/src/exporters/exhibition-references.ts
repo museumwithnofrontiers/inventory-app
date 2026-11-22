@@ -1,6 +1,7 @@
 import type { Database } from '../core/database.js'
 import type { ExhibitionSite } from '../core/instance.js'
 import { placementTranslationsSelect, restorePlacementTranslations } from '../../../shared/placement-translations.mjs'
+import { itemShipped, loadDraftCollectionIds } from '../../../shared/drafts.mjs'
 
 /**
  * Legacy's "On display in → Exhibition(s)" on the galleries' item sheet
@@ -52,6 +53,7 @@ interface VirtualRow {
   item_id: string
   root_id: string
   theme_id: string
+  page_id: string
   theme_order: number | null
   page_bc: string | null
   page_order: number | null
@@ -136,7 +138,7 @@ export async function buildExhibitionReferences(
   const exhibitionRoots = roots.filter(r => sites.get(r.id)?.kind === 'exhibition').map(r => r.id)
 
   const memberPh = placeholders(memberItemIds.length)
-  const [virtualRows, sharingHistoryRows, sharingHistoryTree, exhibitionRows] = await Promise.all([
+  const [allVirtualRows, sharingHistoryRows, sharingHistoryTree, allExhibitionRows] = await Promise.all([
     virtualRoots.length === 0
       ? Promise.resolve([] as VirtualRow[])
       : db.query<VirtualRow>(
@@ -144,13 +146,14 @@ export async function buildExhibitionReferences(
           // item itself when it showed none of its pictures.
           `SELECT CASE WHEN i.type = 'picture' AND i.parent_id IN (${memberPh}) THEN i.parent_id ELSE i.id END AS item_id,
                   th.parent_id AS root_id, th.id AS theme_id, th.display_order AS theme_order,
-                  pg.backward_compatibility AS page_bc, pg.display_order AS page_order
+                  pg.id AS page_id, pg.backward_compatibility AS page_bc, pg.display_order AS page_order
            FROM collection_item ci
            JOIN items i ON i.id = ci.item_id
            JOIN collections pg ON pg.id = ci.collection_id
            JOIN collections th ON th.id = pg.parent_id
            WHERE th.parent_id IN (${placeholders(virtualRoots.length)})
              AND (ci.item_id IN (${memberPh}) OR (i.type = 'picture' AND i.parent_id IN (${memberPh})))
+             AND ${itemShipped('i')}
            ORDER BY item_id, root_id, pg.backward_compatibility`,
           [...memberItemIds, ...virtualRoots, ...memberItemIds, ...memberItemIds]
         ),
@@ -199,11 +202,18 @@ export async function buildExhibitionReferences(
            JOIN collections pt ON pt.id = st.parent_id AND pt.type = 'theme'
            WHERE pt.parent_id IN (${placeholders(exhibitionRoots.length)})
              AND pic.parent_id IN (${memberPh})
+             AND ${itemShipped('pic')}
            ORDER BY item_id, root_id, pt.display_order, st.display_order, ci.display_order`,
           [...exhibitionRoots, ...memberItemIds]
         ),
   ])
-  restorePlacementTranslations(exhibitionRows)
+  restorePlacementTranslations(allExhibitionRows)
+  // A placement in a draft collection (or one under a draft) is on no site (M17 B3).
+  // Sharing History's themes keep theirs: a draft Sharing History exhibition
+  // still ships, the one exception to that rule.
+  const drafts = await loadDraftCollectionIds((sql, params) => db.query(sql, params))
+  const virtualRows = allVirtualRows.filter(r => ![r.root_id, r.theme_id, r.page_id].some(id => drafts.has(id)))
+  const exhibitionRows = allExhibitionRows.filter(r => ![r.root_id, r.theme_id, r.subtheme_id].some(id => drafts.has(id)))
 
   const titledIds = new Set<string>()
   for (const row of virtualRows) titledIds.add(row.root_id).add(row.theme_id)

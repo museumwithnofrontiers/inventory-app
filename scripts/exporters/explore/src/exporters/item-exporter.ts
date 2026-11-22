@@ -2,6 +2,7 @@ import type { ExportResult } from "../core/types.js";
 import { languageKeyer, rekeyIfMap } from "../core/language-keys.js";
 import { BaseExporter } from "./base-exporter.js";
 import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs';
+import { itemIdShipped, loadDraftCollectionIds, loadDraftItemIds, textShipped } from '../../../shared/drafts.mjs';
 
 /** The item texts' `extra` keys whose value is keyed by language. */
 const LANGUAGE_KEYED_EXTRA = new Set([
@@ -121,6 +122,7 @@ interface ItemMediaRow {
 
 interface ItemThgGalleryRow {
   item_id: string;
+  collection_id: string;
   name: string | null;
   internal_name: string;
 }
@@ -222,6 +224,7 @@ export class ItemExporter extends BaseExporter {
        LEFT JOIN authors a4 ON a4.id = it.translation_copy_editor_id
        WHERE it.item_id IN (${itemPh})
          AND it.context_id IN (${contextPh})
+         AND ${textShipped('it')}
        ORDER BY it.item_id, it.context_id`,
       [...itemIds, ...contextIds],
     ));
@@ -261,7 +264,10 @@ export class ItemExporter extends BaseExporter {
     //   - item_images.path     → the file path
     //   - item_translations.description (caption, per language)
     //   - item_translations.extra JSON { photographer, copyright }
-    const allPictureItems = await this.db.query<
+    // Drafts are dropped here, not in SQL: the query's order has ties, and a
+    // different plan would reorder an item's pictures (M17 B3).
+    const draftItemIds = await loadDraftItemIds((sql, params) => this.db.query(sql, params));
+    const allPictureItems = (await this.db.query<
       PictureItemRow & { explore_picture: number }
     >(
       `SELECT pic.id AS picture_id, pic.parent_id AS item_id,
@@ -278,7 +284,7 @@ export class ItemExporter extends BaseExporter {
          AND pic.parent_id IN (${itemPh})
        ORDER BY pic.parent_id, pic.display_order`,
       itemIds,
-    );
+    )).filter((p) => !draftItemIds.has(p.picture_id) && !draftItemIds.has(p.item_id));
     // Legacy Explore shows a monument's Explore pictures (Explore has no project), and
     // only when it has none, the pictures of the record it points to (Monument::
     // getAllImages: Travels, then DIA, museums, SH). A record merged into the Travels
@@ -301,7 +307,7 @@ export class ItemExporter extends BaseExporter {
         // byte-identical across two exports of one database.
         `SELECT item_id AS picture_id, language_id, description AS caption, extra, ${itemColumnsSelect('item_translations')}
          FROM item_translations
-         WHERE item_id IN (${this.placeholders(pictureIds.length)})
+         WHERE item_id IN (${this.placeholders(pictureIds.length)}) AND ${textShipped('item_translations')}
          ORDER BY picture_id, language_id`,
         pictureIds,
       ));
@@ -341,7 +347,7 @@ export class ItemExporter extends BaseExporter {
          FROM item_translation_spelling its
          JOIN item_translations it3 ON it3.id = its.item_translation_id
          JOIN glossary_spellings gs ON gs.id = its.spelling_id
-         WHERE it3.item_id IN (${itemPh})
+         WHERE it3.item_id IN (${itemPh}) AND ${textShipped('it3')}
          ORDER BY it3.item_id, gs.glossary_id`,
         itemIds,
       ),
@@ -365,7 +371,7 @@ export class ItemExporter extends BaseExporter {
       // is a lightweight, scoped-by-prefix lookup, not a full THG export.
       this.db.query<ItemThgGalleryRow>(
         // Row order is unspecified; sorted so two exports of one database are byte-identical.
-        `SELECT ci.item_id, ct.title AS name, c.internal_name
+        `SELECT ci.item_id, ci.collection_id, ct.title AS name, c.internal_name
          FROM collection_item ci
          JOIN collections c ON c.id = ci.collection_id
          LEFT JOIN collection_translations ct ON ct.collection_id = c.id AND ct.language_id = 'eng'
@@ -396,6 +402,7 @@ export class ItemExporter extends BaseExporter {
          FROM item_item_links iil
          LEFT JOIN item_item_link_translations iilt ON iilt.item_item_link_id = iil.id
          WHERE iil.source_id IN (${itemPh})
+           AND ${itemIdShipped('iil.target_id', 'dr_target')}
          ORDER BY iil.source_id, iil.target_id, iilt.language_id`,
         itemIds,
       ),
@@ -601,8 +608,11 @@ export class ItemExporter extends BaseExporter {
     }
 
     // item_id -> thg_galleries[]
+    // A draft gallery (or one under a draft) is on no site: not listed (M17 B3).
+    const draftCollections = await loadDraftCollectionIds((sql, params) => this.db.query(sql, params));
     const thgGalleryMap = new Map<string, { name: string }[]>();
     for (const row of thgGalleryLinks) {
+      if (draftCollections.has(row.collection_id)) continue;
       if (!thgGalleryMap.has(row.item_id)) thgGalleryMap.set(row.item_id, []);
       thgGalleryMap
         .get(row.item_id)!

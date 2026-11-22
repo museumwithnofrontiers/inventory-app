@@ -7,6 +7,7 @@ import {
 import { loadCollectionFlags, withCollectionFlags } from '../../../shared/collection-flags.mjs'
 import { exploreMonumentsSelect, restoreExploreMonuments } from '../../../shared/explore-monuments.mjs'
 import { withSiteCollectionExtra, withSiteTranslationExtra } from '../../../shared/site-configuration.mjs'
+import { itemIdShipped, itemShipped, loadDraftCollectionIds, textShipped } from '../../../shared/drafts.mjs'
 
 /**
  * What the Explore package ships, resolved once and shared by every exporter.
@@ -185,6 +186,9 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
      ORDER BY c.id`,
     [exploreContextId]
   )
+  // A draft collection and everything under it ship nowhere (M17 B3). A draft
+  // theme is also one `isShown` hides (its `legacy_status` is `i`).
+  const drafts = await loadDraftCollectionIds((sql, params) => db.query(sql, params))
   const roots = rows.filter(r => r.purpose === EXPLORE_ROOT_PURPOSE)
   if (roots.length !== 1) {
     throw new Error(
@@ -207,7 +211,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
   )
   const tree = shippedTree(
     rootId,
-    rows.map(r => {
+    rows.filter(r => !drafts.has(r.id)).map(r => {
       const own = relations.get(r.id)
       const english = { collection_id: r.id, language_id: 'eng', context_id: exploreContextId }
       return {
@@ -250,7 +254,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
   const backgroundByKey = new Map(backgrounds.map(c => [c.backward_compatibility, c.id]))
   const backgroundIds = keys
     .map(key => backgroundByKey.get(key))
-    .filter((id): id is string => id !== undefined && !treeIds.includes(id))
+    .filter((id): id is string => id !== undefined && !treeIds.includes(id) && !drafts.has(id))
   const collectionIds = [...treeIds, ...backgroundIds]
 
   const ph = treeIds.map(() => '?').join(', ')
@@ -260,6 +264,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
      JOIN items i ON i.id = ci.item_id
      WHERE ci.collection_id IN (${ph})
        AND i.type IN ('object', 'monument', 'detail')
+       AND ${itemShipped('i')}
      ORDER BY i.id`,
     treeIds
   )
@@ -272,7 +277,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
       ? []
       : await db.query<{ id: string; project_id: string | null }>(
           `SELECT id, project_id FROM items
-           WHERE parent_id IN (${memberIds.map(() => '?').join(', ')}) AND type = 'detail'
+           WHERE parent_id IN (${memberIds.map(() => '?').join(', ')}) AND type = 'detail' AND ${itemShipped('items')}
            ORDER BY id`,
           memberIds
         )
@@ -286,6 +291,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
            JOIN items i ON i.id = l.target_id
            WHERE l.source_id IN (${sourceIds.map(() => '?').join(', ')})
              AND i.type IN ('object', 'monument', 'detail')
+             AND ${itemShipped('i')}
            ORDER BY i.id`,
           sourceIds
         )
@@ -304,7 +310,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
       ? []
       : await db.query<{ context_id: string }>(
           `SELECT DISTINCT context_id FROM item_translations
-           WHERE item_id IN (${itemIds.map(() => '?').join(', ')})
+           WHERE item_id IN (${itemIds.map(() => '?').join(', ')}) AND ${textShipped('item_translations')}
            ORDER BY context_id`,
           itemIds
         )
@@ -318,6 +324,7 @@ export async function resolveScope(db: Database): Promise<ExploreScope> {
     await db.query<{ extra: unknown }>(
       `SELECT cm.extra, ${exploreMonumentsSelect('cm')} FROM collection_item cm
        WHERE cm.collection_id IN (${ph})
+         AND ${itemIdShipped('cm.item_id', 'dr_cm')}
          AND (cm.extra LIKE ? OR EXISTS (
            SELECT 1 FROM collection_item_explore_monuments sm
            JOIN collection_item_explore_monument_partner sp ON sp.collection_item_explore_monument_id = sm.id

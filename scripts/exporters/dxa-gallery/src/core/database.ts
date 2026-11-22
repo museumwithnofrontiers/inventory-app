@@ -1,11 +1,13 @@
 import mysql from 'mysql2/promise'
 import { restoreSiteTranslations, withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
 import type { Gallery, GalleryAnchor, GalleryChrome } from './types.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 interface GalleryRow {
   id: string
   backward_compatibility: string
   type: string
+  draft?: number | boolean | null
   extra: unknown
 }
 
@@ -59,7 +61,7 @@ export class Database {
    */
   async resolveGallery(collectionId: string): Promise<Gallery> {
     const rows = await this.query<GalleryRow>(
-      `SELECT id, backward_compatibility, type, extra
+      `SELECT id, backward_compatibility, type, draft, extra
        FROM collections
        WHERE id = ?`,
       [collectionId]
@@ -78,6 +80,11 @@ export class Database {
         `${collectionId} is a '${row.type}', not a 'gallery'. ` +
           `Exhibitions need the exhibition package shape (themes, curated texts) — use dxa-exhibition instead.`
       )
+    }
+
+    // A draft gallery ships nowhere (M17 B3): there is no package to export.
+    if (row.draft === true || Number(row.draft) === 1) {
+      throw new Error(`Gallery ${collectionId} is a draft (collections.draft): it ships nowhere`)
     }
 
     // The anchor is site configuration, in the instance files (M16 E4b).
@@ -162,6 +169,7 @@ export class Database {
        JOIN items i ON i.id = ci.item_id
        WHERE ci.collection_id = ?
          AND i.type IN ('object', 'monument')
+         AND ${itemShipped('i')}
        ORDER BY i.type, i.display_order, i.internal_name`,
       [collectionId]
     )

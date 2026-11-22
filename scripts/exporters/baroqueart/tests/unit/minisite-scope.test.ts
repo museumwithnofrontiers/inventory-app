@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { loadMinisiteInstance, type MinisiteInstance } from '../../src/minisite/instance.js'
 import { resolveScope } from '../../src/minisite/scope.js'
+import { itemShipped } from '../../../shared/drafts.mjs'
 
 /**
  * A mini-site's package is read from the database, narrowed to one collection
@@ -50,6 +51,7 @@ const placements = [
 const db = {
   query: async <T>(sql: string, params: unknown[] = []): Promise<T[]> => {
     const ids = new Set(params as string[])
+    if (sql.includes('SELECT id, parent_id, draft FROM collections')) return collections.map(c => ({ ...c, draft: 0 })) as T[]
     if (sql.includes('FROM collections WHERE id =')) return collections.filter(c => ids.has(c.id)).map(c => ({ id: c.id })) as T[]
     if (sql.includes('FROM collections WHERE parent_id')) return collections.filter(c => ids.has(c.parent_id)).map(c => ({ id: c.id })) as T[]
     if (sql.includes('FROM collection_item')) {
@@ -86,6 +88,23 @@ describe('resolveScope', () => {
       parentKey: 'parent',
       partnerIds: [CURATOR],
     })
+  })
+
+  it('leaves out a draft collection below the root and what it places, and asks only for shipped items (M17 B3)', async () => {
+    const asked: string[] = []
+    const withDraftTheme = {
+      query: async <T>(sql: string, params: unknown[] = []): Promise<T[]> => {
+        asked.push(sql)
+        if (sql.includes('SELECT id, parent_id, draft FROM collections')) {
+          return collections.map(c => ({ ...c, draft: c.id === 'theme' ? 1 : 0 })) as T[]
+        }
+        return db.query<T>(sql, params)
+      },
+    }
+    const scope = await resolveScope(withDraftTheme, instance)
+    expect(scope.collectionIds).toEqual([ROOT])
+    expect(scope.itemIds).toEqual(['coin'])
+    expect(asked.find(sql => sql.includes('FROM collection_item'))).toContain(itemShipped('i'))
   })
 
   it('fails on a collection or partner the database does not have', async () => {

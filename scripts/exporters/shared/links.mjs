@@ -9,6 +9,7 @@
  * Types are in `links.d.mts`.
  */
 
+import { loadDraftCollectionIds } from './drafts.mjs'
 import { PUBLICATION_PATH, TRAIL_PATH, loadSites, siteLink, siteOf } from './sites.mjs'
 
 /** @param {unknown[]} values */
@@ -92,7 +93,10 @@ export async function publicationLinks(query, ids, sites = loadSites()) {
  * @returns {Promise<import('./links.d.mts').TrailLink[]>}
  */
 export async function trailLinks(query, ids, sites = loadSites()) {
-  const unique = [...new Set(ids)]
+  if (ids.length === 0) return []
+  // A draft trail (or one under a draft) is on no site: no link to it.
+  const drafts = await loadDraftCollectionIds(query)
+  const unique = [...new Set(ids)].filter(id => !drafts.has(id))
   if (unique.length === 0) return []
   const site = siteOf('travels', sites)
   const rows = /** @type {{ id: string, backward_compatibility: string | null }[]} */ (

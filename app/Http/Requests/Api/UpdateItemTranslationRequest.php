@@ -91,6 +91,7 @@ class UpdateItemTranslationRequest extends FormRequest
             'scribe' => ['nullable', 'string'],
             'patrons' => ['nullable', 'string'],
             'architects' => ['nullable', 'string'],
+            'draft' => ['sometimes', 'boolean'],
             'status' => ['sometimes', Rule::enum(ItemTranslationStatus::class)],
             'catalogue_references' => ['nullable', 'string'],
             'notice' => ['nullable', 'string'],

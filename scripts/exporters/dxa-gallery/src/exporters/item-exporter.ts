@@ -3,6 +3,7 @@ import { BaseExporter } from './base-exporter.js'
 import { buildExhibitionReferences } from './exhibition-references.js'
 import { itemColumnsSelect, restoreItemColumns } from '../../../shared/item-columns.mjs'
 import { withSiteCollectionExtra } from '../../../shared/site-configuration.mjs'
+import { itemShipped, loadDraftCollectionIds, textShipped } from '../../../shared/drafts.mjs'
 
 // A Sharing History record shown in a gallery or exhibition: the fields the
 // galleries' sheet (dxa-api) reads from it that a mwnf3 record keeps elsewhere.
@@ -250,7 +251,7 @@ export class ItemExporter extends BaseExporter {
                 it.method_for_datation, it.method_for_provenance,
                 it.provenance, it.obtention, it.bibliography, it.extra, ${itemColumnsSelect('it')}
          FROM item_translations it
-         WHERE it.item_id IN (${itemPh})
+         WHERE it.item_id IN (${itemPh}) AND ${textShipped('it')}
          ORDER BY it.item_id, it.context_id`,
         this.memberItemIds
       ).then(restoreItemColumns),
@@ -268,6 +269,7 @@ export class ItemExporter extends BaseExporter {
            -- into this monument brings Explore's pictures, which legacy shows only on Explore.
            AND pic.project_id <=> parent.project_id
            AND pic.parent_id IN (${itemPh})
+           AND ${itemShipped('pic')}
          ORDER BY pic.parent_id, pic.display_order, pic.id`,
         this.memberItemIds
       ),
@@ -293,7 +295,7 @@ export class ItemExporter extends BaseExporter {
          FROM item_translation_spelling its
          JOIN item_translations it ON it.id = its.item_translation_id
          JOIN glossary_spellings gs ON gs.id = its.spelling_id
-         WHERE it.item_id IN (${itemPh})
+         WHERE it.item_id IN (${itemPh}) AND ${textShipped('it')}
          ORDER BY it.item_id, gs.glossary_id`,
         this.memberItemIds
       ),
@@ -330,6 +332,7 @@ export class ItemExporter extends BaseExporter {
          JOIN items tgt ON tgt.id = iil.target_id
          LEFT JOIN item_item_link_translations iilt ON iilt.item_item_link_id = iil.id
          WHERE iil.source_id IN (${itemPh})
+           AND ${itemShipped('tgt')}
          ORDER BY iil.source_id, iil.target_id, iilt.language_id`,
         this.memberItemIds
       ),
@@ -361,7 +364,7 @@ export class ItemExporter extends BaseExporter {
        FROM item_translation_author ita
        JOIN authors a ON a.id = ita.author_id
        JOIN item_translations it ON it.id = ita.item_translation_id
-       WHERE it.item_id IN (${itemPh})
+       WHERE it.item_id IN (${itemPh}) AND ${textShipped('it')}
        ORDER BY ita.item_translation_id, ita.role, ita.display_order, a.name`,
       this.memberItemIds
     )
@@ -528,7 +531,9 @@ export class ItemExporter extends BaseExporter {
 
     const relatedMap = this.buildRelatedMap(itemItemLinks, langCodeMap)
     await this.describeOutsideRelated(relatedMap, langCodeMap)
-    const galleryMap = this.buildGalleryMap(galleryLinks)
+    // A draft gallery or exhibition (or one under a draft) is on no site: not listed (M17 B3).
+    const draftCollections = await loadDraftCollectionIds((sql, params) => this.db.query(sql, params))
+    const galleryMap = this.buildGalleryMap(galleryLinks.filter(row => !draftCollections.has(row.collection_id)))
     const exhibitionMap = await buildExhibitionReferences(
       this.db,
       this.memberItemIds,
@@ -591,7 +596,7 @@ export class ItemExporter extends BaseExporter {
       // byte-identical across two exports of one database.
       `SELECT item_id AS picture_id, language_id, description AS caption, extra, ${itemColumnsSelect('item_translations')}
        FROM item_translations
-       WHERE item_id IN (${this.placeholders(pictureIds.length)})
+       WHERE item_id IN (${this.placeholders(pictureIds.length)}) AND ${textShipped('item_translations')}
        ORDER BY picture_id, language_id`,
       pictureIds
     ))
@@ -731,7 +736,7 @@ export class ItemExporter extends BaseExporter {
          FROM item_translations it
          JOIN items i ON i.id = it.item_id
          LEFT JOIN projects p ON p.id = i.project_id
-         WHERE it.item_id IN (${ph})
+         WHERE it.item_id IN (${ph}) AND ${textShipped('it')}
          ORDER BY it.item_id, it.language_id, own DESC, it.context_id`,
         ids
       ),
@@ -751,6 +756,7 @@ export class ItemExporter extends BaseExporter {
            -- into this monument brings Explore's pictures, which legacy shows only on Explore.
            AND pic.project_id <=> parent.project_id
            AND pic.parent_id IN (${ph})
+           AND ${itemShipped('pic')}
          ORDER BY pic.parent_id, pic.display_order, pic.id`,
         ids
       ),
