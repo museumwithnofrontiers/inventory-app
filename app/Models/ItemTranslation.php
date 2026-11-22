@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\CreditRole;
-use App\Enums\ItemTranslationStatus;
 use App\Events\ItemTranslationSaved;
 use App\Traits\HasJsonFields;
 use Database\Factories\ItemTranslationFactory;
@@ -50,7 +49,6 @@ use Illuminate\Support\Facades\DB;
  * @property string|null $patrons
  * @property string|null $architects
  * @property bool $draft
- * @property ItemTranslationStatus $status
  * @property string|null $catalogue_references
  * @property string|null $notice
  * @property string|null $external_notice
@@ -173,7 +171,6 @@ class ItemTranslation extends Model
         'architects',
         // Not ready for any site (M17, #2741): no exporter ships a draft text
         'draft',
-        'status',
         'catalogue_references',
         'notice',
         'external_notice',
@@ -195,16 +192,6 @@ class ItemTranslation extends Model
     protected $casts = [
         'extra' => 'object',
         'draft' => 'boolean',
-        'status' => ItemTranslationStatus::class,
-    ];
-
-    /**
-     * A new translation is published unless it says otherwise.
-     *
-     * @var array<string, mixed>
-     */
-    protected $attributes = [
-        'status' => 'published',
     ];
 
     /**

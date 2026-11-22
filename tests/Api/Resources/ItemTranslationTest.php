@@ -2,7 +2,6 @@
 
 namespace Tests\Api\Resources;
 
-use App\Enums\ItemTranslationStatus;
 use App\Models\ItemTranslation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\Api\Traits\AuthenticatesApiRequests;
@@ -145,22 +144,16 @@ class ItemTranslationTest extends TestCase
     }
 
     /**
-     * A translation is published unless it says otherwise (M16 B6); the
-     * status takes only its three values.
+     * M17 D1 (#2750): a translation has no status any more; `draft` replaced it.
      */
-    public function test_status_defaults_to_published_and_takes_only_its_values(): void
+    public function test_a_translation_has_no_status(): void
     {
         $resource = ItemTranslation::factory()->create();
-        $this->assertSame(ItemTranslationStatus::PUBLISHED, $resource->fresh()?->status);
 
-        $this->putJson(route('item-translation.update', $resource), ['status' => 'hidden'])
+        $this->getJson(route('item-translation.show', $resource))
             ->assertOk()
-            ->assertJsonPath('data.status', 'hidden');
-        $this->assertSame(ItemTranslationStatus::HIDDEN, $resource->fresh()?->status);
-
-        $this->putJson(route('item-translation.update', $resource), ['status' => 'draft'])
-            ->assertUnprocessable()
-            ->assertJsonValidationErrors('status');
+            ->assertJsonMissingPath('data.status');
+        $this->assertArrayNotHasKey('status', $resource->fresh()?->getAttributes() ?? []);
     }
 
     /**

@@ -266,21 +266,18 @@ class CollectionTest extends TestCase
     }
 
     /**
-     * M16 E4a: the editorial flags are columns, served as given.
+     * M17 D1 (#2750): `visible`, `featured` and `published_at` are gone;
+     * `draft` replaced the first, the instance files hold the other two.
      */
-    public function test_stores_and_serves_the_editorial_flags(): void
+    public function test_serves_no_site_flags(): void
     {
         $collection = Collection::factory()->create();
 
-        $this->putJson(route('collection.update', $collection), [
-            'visible' => false,
-            'featured' => true,
-            'published_at' => '2026-03-24',
-        ])
+        $this->getJson(route('collection.show', $collection))
             ->assertOk()
-            ->assertJsonPath('data.visible', false)
-            ->assertJsonPath('data.featured', true)
-            ->assertJsonPath('data.published_at', '2026-03-24');
+            ->assertJsonMissingPath('data.visible')
+            ->assertJsonMissingPath('data.featured')
+            ->assertJsonMissingPath('data.published_at');
     }
 
     /**

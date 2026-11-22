@@ -52,9 +52,6 @@ class CollectionFactory extends Factory
             'days' => null,
             // Editorial flags
             'draft' => false,
-            'visible' => true,
-            'featured' => false,
-            'published_at' => null,
         ];
     }
 

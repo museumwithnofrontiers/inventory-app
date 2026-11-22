@@ -24,7 +24,7 @@ The panel can't edit `extra` as fields. An editor can't correct the dynasty line
 1. **Translation columns hold the display text, as written.** `dates`, `location` and `holder` already do. Nothing is reworded or merged on the way in: legacy's text is what the sites print.
 2. **Links hold the structure, next to that text.** `start_date`, `country`, `partner`, the Dynasty and Artist links, and the Author links for credits. A link drives indexes and filters; the text is what a sheet prints. One doesn't replace the other, and neither is derived from the other: no link, Artist or Tag is made from a display text, and no display text is rebuilt from links (2026-11-19). An item with a text and no link is a normal state; linking it is editorial work in the panel.
 3. **The row's legacy key goes in `backward_compatibility`**, never in `extra`. The column holds one string. So another legacy code is dropped when it only repeats the key, and gets a home when an exporter needs it.
-4. **Site configuration belongs to the sites:** the instance files (`scripts/exporters/instances/*.json`) and the site repos. The inventory keeps only the editorial flags `visible`, `featured` and `published_at`.
+4. **Site configuration belongs to the sites:** the instance files (`scripts/exporters/instances/*.json`) and the site repos. The inventory keeps one fact about readiness, `draft` (on collections, items and item texts): the record isn't ready for any site. A gallery's featured flag and live date are site configuration (M17, #2741, amended 2026-11-22).
 5. **`extra` keeps only true one-offs.** A key gets a home in the model when more than one importer step writes it, or when an exporter reads it as content.
 6. **No legacy field is merged into another,** and no text is edited on the way in.
 
@@ -40,7 +40,7 @@ The panel can't edit `extra` as fields. An editor can't correct the dynasty line
 | 6 | Site configuration | **(a)** It goes to the instance files and site repos. A `site_settings` JSON column would be `extra` under another name. |
 | 7 | Partner category, portal display, city | Three columns on partners: `category`; `featured`, from `portal_display`, which Explore and the galleries ship as a partner's `featured` flag; `city`, one value for every language, which the Sharing History partner list prints. |
 
-### Decisions taken during M16 (Pascal)
+### Decisions taken during M16 and M17 (Pascal)
 
 | Date | Question | Decided |
 |---|---|---|
@@ -52,6 +52,9 @@ The panel can't edit `extra` as fields. An editor can't correct the dynasty line
 | 2026-11-20 | A timeline event with no end year | `year_to` is nullable: no end year, not 0 (G2, #2697; G3, #2699). |
 | 2026-11-20 | Object start and end years written as a decade ("1960s") | Kept as legacy's API reads them (the leading integer), the text as written in `dates`; typos are fixed in legacy (#2339). |
 | 2026-11-21 | The Artists the importer split from the artist lines (legacy has no artist table) | The importer makes no Artist and no item-Artist link from the lines (rule 2). Artists are editorial records, created and linked in the panel. The packages keep `artist_names`, filled from those links (#2734). |
+| 2026-11-21 | `visible`, `featured` and `published_at` on collections (M17, #2741) | `draft` replaces `visible`: a collection, item or item text not ready for any site; no exporter ships a draft or anything under it (Sharing History keeps shipping a draft exhibition as unpublished, as legacy did for its exhibition 2). `featured` and `published_at` (legacy `live_date`) are site configuration, in the gallery instance files. The API and the MCP server return drafts with their flag. A draft is not a takedown: `/pub` keeps serving its images. |
+| 2026-11-21 | Item text `status` (published, unedited, hidden) | Replaced by `draft`. `unedited` was never imported. `hidden`, Sharing History's "illustration only" flag (legacy `display_status = 'N'`), is how that one site lists an item, not a draft: it stays in `extra` as `sh_display_status` on the item's Sharing History texts, an exception to rule 4, for maintainability (an instance-file list of 462 items is not practical; `items` has no `extra`). |
+| 2026-11-21 | `partners.visible`, Project `is_launched` / `is_enabled` | Dropped: nothing read them, and the inventory doesn't work out whether a partner or a project is shown. A participation's `visible` stays. Project `launch_date` stays: the date MWNF started the work. Legacy's per-exhibition partner flag (UNAOC on Colours) is not imported, since legacy's client never reads it. |
 
 ### Result
 

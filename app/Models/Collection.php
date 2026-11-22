@@ -34,9 +34,6 @@ use Illuminate\Support\Carbon;
  * @property string|null $cover_item_id
  * @property int|null $days
  * @property bool $draft
- * @property bool $visible
- * @property bool $featured
- * @property Carbon|null $published_at
  * @property string|null $display_label
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -161,10 +158,6 @@ class Collection extends Model
         'days',
         // Not ready for any site (M17, #2741): a draft and its subtree ship nowhere
         'draft',
-        // Editorial flags (decision 6): shown on the sites, featured, live since
-        'visible',
-        'featured',
-        'published_at',
     ];
 
     /**
@@ -180,9 +173,6 @@ class Collection extends Model
         'map_zoom' => 'integer',
         'days' => 'integer',
         'draft' => 'boolean',
-        'visible' => 'boolean',
-        'featured' => 'boolean',
-        'published_at' => 'date',
     ];
 
     /**
