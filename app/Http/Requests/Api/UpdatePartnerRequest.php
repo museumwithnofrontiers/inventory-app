@@ -37,7 +37,6 @@ class UpdatePartnerRequest extends FormRequest
             // Relationships
             'project_id' => ['nullable', 'uuid', 'exists:projects,id'],
             'monument_item_id' => ['nullable', 'uuid', 'exists:items,id'],
-            // Visibility
             // M16 D2 (decision 7)
             'category' => ['nullable', Rule::enum(PartnerCategory::class)],
             'featured' => ['sometimes', 'boolean'],
