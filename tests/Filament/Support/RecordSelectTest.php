@@ -5,8 +5,6 @@ namespace Tests\Filament\Support;
 use App\Filament\Concerns\HasChangeParentAction;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
-use App\Filament\Resources\RoleResource\Pages\EditRole;
-use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Collection;
@@ -546,39 +544,6 @@ class RecordSelectTest extends TestCase
 
         $this->assertArrayHasKey($target->id, $select->getSearchResults($target->id));
         $this->assertArrayHasKey($target->id, $select->getSearchResults('ATTACH-001'));
-        $this->assertArrayHasKey($target->id, $select->getSearchResults('attach-target'));
-    }
-
-    /**
-     * The Role Permissions manager's mounted attach select goes through
-     * RecordSelect::recordSelectFor(): searchable by name, never preloaded.
-     */
-    public function test_role_permissions_attach_record_select_searches_by_name_and_never_preloads(): void
-    {
-        $user = $this->createRoleManagerUser();
-        $role = $this->makeRole();
-        $guard = config('fortify.guard', 'web');
-        $target = SpatiePermission::firstOrCreate(['name' => 'attach-target-permission', 'guard_name' => $guard]);
-        SpatiePermission::firstOrCreate(['name' => 'attach-noise-permission', 'guard_name' => $guard]);
-
-        $this->setCurrentPanel();
-
-        $component = Livewire::actingAs($user)->test(PermissionsRelationManager::class, [
-            'ownerRecord' => $role,
-            'pageClass' => EditRole::class,
-        ]);
-
-        $component->mountTableAction('attach');
-
-        $action = $component->instance()->getMountedTableAction();
-        $this->assertInstanceOf(AttachAction::class, $action);
-        $this->assertFalse($action->isRecordSelectPreloaded());
-
-        $form = $component->instance()->getMountedTableActionForm();
-        $this->assertNotNull($form);
-        $select = $form->getFlatFields()['recordId'];
-
-        $this->assertTrue($select->isSearchable());
         $this->assertArrayHasKey($target->id, $select->getSearchResults('attach-target'));
     }
 

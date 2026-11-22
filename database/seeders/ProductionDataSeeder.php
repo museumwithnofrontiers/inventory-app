@@ -2,14 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Enums\Permission as PermissionEnum;
 use App\Models\Country;
 use App\Models\Language;
+use App\Support\Authorization\RoleSync;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\File;
-use Spatie\Permission\Models\Permission;
-use Spatie\Permission\Models\Role;
-use Spatie\Permission\PermissionRegistrar;
 
 class ProductionDataSeeder extends Seeder
 {
@@ -27,104 +24,14 @@ class ProductionDataSeeder extends Seeder
     }
 
     /**
-     * Setup essential roles and permissions.
+     * The roles and permissions, from their only definition (App\Enums\Role
+     * and App\Enums\Permission, through RoleSync).
      */
     protected function setupRolesAndPermissions(): void
     {
-        // Reset cached roles and permissions
-        app()[PermissionRegistrar::class]->forgetCachedPermissions();
+        app(RoleSync::class)->sync();
 
-        // Create permissions
-        $permissions = [
-            // Data operation permissions
-            PermissionEnum::VIEW_DATA->value => 'Read access to all data models',
-            PermissionEnum::CREATE_DATA->value => 'Create new records in data models',
-            PermissionEnum::UPDATE_DATA->value => 'Modify existing records',
-            PermissionEnum::DELETE_DATA->value => 'Remove records from data models',
-
-            // User management permissions
-            PermissionEnum::MANAGE_USERS->value => 'Create, read, update, delete users',
-            PermissionEnum::ASSIGN_ROLES->value => 'Grant and revoke user roles',
-            PermissionEnum::VIEW_USER_MANAGEMENT->value => 'Access user management interfaces',
-
-            // Role management permissions
-            PermissionEnum::MANAGE_ROLES->value => 'Create, read, update roles and permissions',
-            PermissionEnum::VIEW_ROLE_MANAGEMENT->value => 'Access role management interfaces',
-
-            // System settings permissions
-            PermissionEnum::MANAGE_SETTINGS->value => 'Manage system settings and configuration',
-            PermissionEnum::MANAGE_REFERENCE_DATA->value => 'Manage reference-data resources in the Filament administration panel',
-            PermissionEnum::ACCESS_ADMIN_PANEL->value => 'Access the Filament administration panel',
-            PermissionEnum::ACCESS_MCP->value => 'Browse the inventory through its read-only MCP server',
-        ];
-
-        foreach ($permissions as $name => $description) {
-            Permission::firstOrCreate(
-                ['name' => $name],
-                ['description' => $description]
-            );
-        }
-
-        // Create "Non-verified users" role with no permissions
-        $nonVerifiedRole = Role::firstOrCreate(
-            ['name' => 'Non-verified users'],
-            ['description' => 'Self-registered users awaiting verification by administrators']
-        );
-
-        // Non-verified users get no permissions - they cannot do anything until verified
-        $nonVerifiedRole->syncPermissions([]);
-
-        // Create "Visitor" role with read-only data access
-        $visitorRole = Role::firstOrCreate(
-            ['name' => 'Visitor'],
-            ['description' => 'Read-only access to data (list and show operations only)']
-        );
-
-        $visitorRole->syncPermissions([
-            PermissionEnum::VIEW_DATA->value,
-        ]);
-
-        // Create "Regular User" role with data operation permissions
-        $regularUserRole = Role::firstOrCreate(
-            ['name' => 'Regular User'],
-            ['description' => 'Standard user with data operation access']
-        );
-
-        $regularUserRole->syncPermissions([
-            PermissionEnum::VIEW_DATA->value,
-            PermissionEnum::CREATE_DATA->value,
-            PermissionEnum::UPDATE_DATA->value,
-            PermissionEnum::DELETE_DATA->value,
-            PermissionEnum::ACCESS_ADMIN_PANEL->value,
-            PermissionEnum::ACCESS_MCP->value,
-            PermissionEnum::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        // Create "Manager of Users" role with only user/role management permissions
-        $managerRole = Role::firstOrCreate(
-            ['name' => 'Manager of Users'],
-            ['description' => 'User and role management access only (no data operations)']
-        );
-
-        $managerRole->syncPermissions([
-            // User management permissions
-            PermissionEnum::MANAGE_USERS->value,
-            PermissionEnum::ASSIGN_ROLES->value,
-            PermissionEnum::VIEW_USER_MANAGEMENT->value,
-
-            // Role management permissions
-            PermissionEnum::MANAGE_ROLES->value,
-            PermissionEnum::VIEW_ROLE_MANAGEMENT->value,
-
-            // System settings permissions
-            PermissionEnum::MANAGE_SETTINGS->value,
-            PermissionEnum::ACCESS_ADMIN_PANEL->value,
-            PermissionEnum::ACCESS_MCP->value,
-        ]);
-
-        $this->command->info('Roles and permissions setup completed!');
-        $this->command->info('Roles: Non-verified users, Visitor, Regular User, Manager of Users');
-        $this->command->info('Permissions: '.count($permissions).' created/verified');
+        $this->command->info('Roles and permissions match App\Enums\Role and App\Enums\Permission.');
     }
 
     /**

@@ -4,7 +4,6 @@ namespace App\Filament\Resources;
 
 use App\Enums\ItemType;
 use App\Enums\PartnerCategory;
-use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasLegacyLinksInfolistSection;
@@ -76,7 +75,7 @@ class PartnerResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

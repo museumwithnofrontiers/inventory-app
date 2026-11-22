@@ -148,7 +148,7 @@ class DocumentsRelationManagerTest extends TestCase
         $this->assertSame($expectedUrl, $actualUrl);
     }
 
-    public function test_download_row_action_is_hidden_for_a_view_only_user(): void
+    public function test_a_view_only_user_downloads_but_does_not_change_a_document(): void
     {
         $user = $this->createViewOnlyUser();
         $item = Item::factory()->Object()->create();
@@ -161,7 +161,7 @@ class DocumentsRelationManagerTest extends TestCase
                 'ownerRecord' => $item,
                 'pageClass' => ViewItem::class,
             ])
-            ->assertTableActionHidden('download', $itemDocument)
+            ->assertTableActionVisible('download', $itemDocument)
             ->assertTableActionHidden('edit', $itemDocument)
             ->assertTableActionHidden('delete', $itemDocument);
     }

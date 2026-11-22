@@ -12,6 +12,8 @@ class ItemImageController extends Controller
 {
     public function view(Item $item, ItemImage $itemImage): InlineImageResponse
     {
+        $this->authorize('view', $itemImage);
+
         if ($itemImage->item_id !== $item->id) {
             abort(404);
         }
@@ -21,6 +23,8 @@ class ItemImageController extends Controller
 
     public function download(Item $item, ItemImage $itemImage): DownloadImageResponse
     {
+        $this->authorize('view', $itemImage);
+
         if ($itemImage->item_id !== $item->id) {
             abort(404);
         }

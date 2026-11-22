@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\Permission;
 use App\Models\Collection;
 use App\Models\Item;
 use App\Models\Partner;
@@ -16,7 +15,7 @@ class InventoryOverviewWidget extends StatsOverviewWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', Item::class) ?? false;
     }
 
     protected function getStats(): array
@@ -30,7 +29,7 @@ class InventoryOverviewWidget extends StatsOverviewWidget
                 ->icon('heroicon-o-building-library'),
         ];
 
-        if (auth()->user()?->hasPermissionTo(Permission::MANAGE_USERS->value)) {
+        if (auth()->user()?->can('viewAny', User::class)) {
             $stats[] = Stat::make('Pending Registrations', (string) User::query()->whereNull('approved_at')->count())
                 ->icon('heroicon-o-clock')
                 ->color('warning');

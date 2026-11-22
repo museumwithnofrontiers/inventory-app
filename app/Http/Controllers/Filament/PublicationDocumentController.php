@@ -17,7 +17,7 @@ class PublicationDocumentController extends Controller
             abort(404);
         }
 
-        $this->authorize('update', $publication);
+        $this->authorize('view', $publicationDocument);
 
         // The API controller's download: one disk/path/FileResponse handling
         return (new ApiPublicationDocumentController)->download($request, $publicationDocument);

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\Permission;
 use App\Filament\Resources\AvailableImageResource;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
@@ -21,7 +20,7 @@ class UnattachedImagesWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', AvailableImage::class) ?? false;
     }
 
     public function table(Table $table): Table

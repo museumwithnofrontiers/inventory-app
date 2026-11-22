@@ -47,7 +47,7 @@ class ShowUser extends Command
 
         if ($user->roles->isEmpty()) {
             $this->error('⚠️  This user has no roles assigned!');
-            $this->line("Use 'php artisan user:assign-role {$email} \"Role Name\"' to assign a role.");
+            $this->line("Use 'php artisan user:set-role {$email} \"Role Name\"' to give them a role.");
         } else {
             $this->info('Assigned Roles:');
             foreach ($user->roles as $role) {

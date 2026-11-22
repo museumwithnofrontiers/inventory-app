@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\Permission;
 use App\Filament\Pages\PendingRegistrationsPage;
 use App\Models\User;
 use Filament\Notifications\Notification;
@@ -20,7 +19,7 @@ class PendingRegistrationsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::MANAGE_USERS->value) ?? false;
+        return auth()->user()?->can('manageRegistrations', User::class) ?? false;
     }
 
     public function table(Table $table): Table

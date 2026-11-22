@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Enums\PublicationCategory;
 use App\Enums\PublicationImageKind;
 use App\Enums\PublicationStatus;
@@ -69,7 +68,7 @@ class PublicationResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

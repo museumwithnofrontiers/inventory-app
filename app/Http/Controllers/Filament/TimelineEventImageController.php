@@ -12,6 +12,8 @@ class TimelineEventImageController extends Controller
 {
     public function view(TimelineEvent $timelineEvent, TimelineEventImage $timelineEventImage): InlineImageResponse
     {
+        $this->authorize('view', $timelineEventImage);
+
         if ($timelineEventImage->timeline_event_id !== $timelineEvent->id) {
             abort(404);
         }
@@ -21,6 +23,8 @@ class TimelineEventImageController extends Controller
 
     public function download(TimelineEvent $timelineEvent, TimelineEventImage $timelineEventImage): DownloadImageResponse
     {
+        $this->authorize('view', $timelineEventImage);
+
         if ($timelineEventImage->timeline_event_id !== $timelineEvent->id) {
             abort(404);
         }

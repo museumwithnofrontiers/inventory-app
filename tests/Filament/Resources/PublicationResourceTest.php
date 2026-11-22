@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager as CollectionPublicationsRelationManager;
 use App\Filament\Resources\ItemResource\Pages\EditItem;
@@ -28,6 +29,7 @@ use App\Models\PublicationEdition;
 use App\Models\PublicationImage;
 use App\Models\PublicationTranslation;
 use App\Models\Tag;
+use App\Models\User;
 use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -68,7 +70,8 @@ class PublicationResourceTest extends TestCase
 
     public function test_users_without_view_data_get_no_publications(): void
     {
-        $user = $this->createReferenceDataUser();
+        $user = User::factory()->create();
+        $user->givePermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
 
         $this->actingAs($user)->get('/admin/publications')->assertForbidden();
         $this->actingAs($user)->get('/admin/publication-translations')->assertForbidden();

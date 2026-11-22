@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Enums\Permission;
 use App\Filament\Support\ItemDisplayLabel;
 use App\Models\Item;
 use Filament\Pages\Page;
@@ -23,7 +22,7 @@ class BrowseItemTree extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', Item::class) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

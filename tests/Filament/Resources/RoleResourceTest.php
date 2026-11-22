@@ -3,199 +3,84 @@
 namespace Tests\Filament\Resources;
 
 use App\Enums\Permission;
-use App\Filament\Resources\RoleResource\Pages\CreateRole;
-use App\Filament\Resources\RoleResource\Pages\EditRole;
 use App\Filament\Resources\RoleResource\Pages\ListRole;
+use App\Filament\Resources\RoleResource\Pages\ViewRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Models\User;
-use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Spatie\Permission\Models\Permission as SpatiePermission;
 use Spatie\Permission\Models\Role;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
 
+/**
+ * The roles screen is read-only: the roles and their permissions are defined
+ * in code (App\Enums\Role) and kept in the database by RoleSync.
+ */
 class RoleResourceTest extends TestCase
 {
     use InteractsWithAdminPanel;
     use RefreshDatabase;
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
 
     protected function createManagerUser(): User
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_ROLES->value,
+            Permission::MANAGE_USERS->value,
         ]);
 
         return $user;
     }
 
-    // ── Page rendering ────────────────────────────────────────────────────────
-
-    public function test_authorized_users_can_render_all_role_resource_pages(): void
+    public function test_user_managers_can_list_and_view_roles(): void
     {
         $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Editor', 'guard_name' => 'web']);
+        $role = Role::findByName('Manager of Data', 'web');
 
         $this->actingAs($manager)->get('/admin/roles')
             ->assertOk()
-            ->assertSee('Roles');
-
-        $this->actingAs($manager)->get('/admin/roles/create')
-            ->assertOk();
-
-        $this->actingAs($manager)->get("/admin/roles/{$role->getKey()}/edit")
-            ->assertOk()
-            ->assertSee('Editor');
+            ->assertSee('Manager of Data');
 
         $this->actingAs($manager)->get("/admin/roles/{$role->getKey()}")
             ->assertOk()
-            ->assertSee('Editor');
+            ->assertSee('Manager of Data');
     }
 
-    // ── CRUD ──────────────────────────────────────────────────────────────────
-
-    public function test_authorized_users_can_create_a_role(): void
+    public function test_there_is_no_create_or_edit_page(): void
     {
         $manager = $this->createManagerUser();
+        $role = Role::findByName('Visitor', 'web');
 
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($manager)
-            ->test(CreateRole::class)
-            ->fillForm([
-                'name' => 'Custom Role',
-                'guard_name' => 'web',
-            ])
-            ->call('create')
-            ->assertHasNoFormErrors();
-
-        $this->assertDatabaseHas('roles', ['name' => 'Custom Role']);
+        $this->actingAs($manager)->get('/admin/roles/create')->assertNotFound();
+        $this->actingAs($manager)->get("/admin/roles/{$role->getKey()}/edit")->assertNotFound();
     }
 
-    public function test_authorized_users_can_edit_a_role(): void
+    public function test_the_list_offers_no_create_edit_or_delete_action(): void
     {
-        $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Old Name', 'guard_name' => 'web']);
-
         $this->setCurrentPanel();
+        $role = Role::findByName('Visitor', 'web');
 
-        Livewire::actingAs($manager)
-            ->test(EditRole::class, ['record' => $role->getRouteKey()])
-            ->fillForm([
-                'name' => 'New Name',
-                'guard_name' => 'web',
-            ])
-            ->call('save')
-            ->assertHasNoFormErrors();
-
-        $this->assertDatabaseHas('roles', [
-            'id' => $role->id,
-            'name' => 'New Name',
-        ]);
-    }
-
-    public function test_authorized_users_can_delete_a_role(): void
-    {
-        $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Deletable Role', 'guard_name' => 'web']);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($manager)
+        Livewire::actingAs($this->createManagerUser())
             ->test(ListRole::class)
-            ->callTableAction(DeleteAction::class, $role)
-            ->assertHasNoTableActionErrors();
-
-        $this->assertDatabaseMissing('roles', ['id' => $role->id]);
+            ->assertActionDoesNotExist('create')
+            ->assertTableActionDoesNotExist('edit')
+            ->assertTableActionDoesNotExist('delete')
+            ->assertCanSeeTableRecords([$role]);
     }
 
-    // ── PermissionsRelationManager ────────────────────────────────────────────
-
-    public function test_permissions_relation_manager_can_attach_and_detach_permissions(): void
+    public function test_the_permissions_of_a_role_are_read_only(): void
     {
-        $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Reviewer', 'guard_name' => 'web']);
-        $permission = SpatiePermission::firstOrCreate(['name' => 'custom-permission', 'guard_name' => 'web']);
-
         $this->setCurrentPanel();
+        $role = Role::findByName('Visitor', 'web');
 
-        Livewire::actingAs($manager)
-            ->test(PermissionsRelationManager::class, ['ownerRecord' => $role, 'pageClass' => EditRole::class])
-            ->callTableAction('attach', data: ['recordId' => $permission->id, 'record' => $permission->id])
-            ->assertHasNoTableActionErrors();
-
-        $this->assertTrue($role->fresh()->hasPermissionTo('custom-permission'));
-    }
-
-    public function test_permissions_relation_manager_can_create_a_new_permission(): void
-    {
-        $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Reviewer', 'guard_name' => 'web']);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($manager)
-            ->test(PermissionsRelationManager::class, ['ownerRecord' => $role, 'pageClass' => EditRole::class])
-            ->callTableAction('createPermission', data: ['name' => 'brand-new-permission'])
-            ->assertHasNoTableActionErrors();
-
-        $this->assertDatabaseHas('permissions', ['name' => 'brand-new-permission']);
-        $this->assertTrue($role->fresh()->hasPermissionTo('brand-new-permission'));
-    }
-
-    public function test_permissions_relation_manager_can_rename_a_permission(): void
-    {
-        $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Reviewer', 'guard_name' => 'web']);
-        $permission = SpatiePermission::firstOrCreate(['name' => 'renameable-permission', 'guard_name' => 'web']);
-        $role->givePermissionTo($permission);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($manager)
-            ->test(PermissionsRelationManager::class, ['ownerRecord' => $role, 'pageClass' => EditRole::class])
-            ->callTableAction('edit', $permission, data: ['name' => 'renamed-permission'])
-            ->assertHasNoTableActionErrors();
-
-        $this->assertDatabaseHas('permissions', ['id' => $permission->id, 'name' => 'renamed-permission']);
-    }
-
-    public function test_permissions_relation_manager_can_delete_non_critical_permission(): void
-    {
-        $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Reviewer', 'guard_name' => 'web']);
-        $permission = SpatiePermission::firstOrCreate(['name' => 'deletable-permission', 'guard_name' => 'web']);
-        $role->givePermissionTo($permission);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($manager)
-            ->test(PermissionsRelationManager::class, ['ownerRecord' => $role, 'pageClass' => EditRole::class])
-            ->callTableAction('deletePermission', $permission)
-            ->assertHasNoTableActionErrors();
-
-        $this->assertDatabaseMissing('permissions', ['id' => $permission->id]);
-    }
-
-    public function test_permissions_relation_manager_cannot_delete_critical_permissions(): void
-    {
-        $manager = $this->createManagerUser();
-        $role = Role::firstOrCreate(['name' => 'Reviewer', 'guard_name' => 'web']);
-        $criticalName = 'access-admin-panel';
-        $permission = SpatiePermission::firstOrCreate(['name' => $criticalName, 'guard_name' => 'web']);
-        $role->givePermissionTo($permission);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($manager)
-            ->test(PermissionsRelationManager::class, ['ownerRecord' => $role, 'pageClass' => EditRole::class])
-            ->assertTableActionDisabled('deletePermission', $permission);
-
-        $this->assertDatabaseHas('permissions', ['id' => $permission->id, 'name' => $criticalName]);
+        Livewire::actingAs($this->createManagerUser())
+            ->test(PermissionsRelationManager::class, ['ownerRecord' => $role, 'pageClass' => ViewRole::class])
+            ->assertOk()
+            ->assertTableActionDoesNotExist('attach')
+            ->assertTableActionDoesNotExist('edit')
+            ->assertTableActionDoesNotExist('detach')
+            ->assertTableActionDoesNotExist('createPermission')
+            ->assertTableActionDoesNotExist('deletePermission');
     }
 }

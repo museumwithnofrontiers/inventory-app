@@ -4,22 +4,20 @@ namespace Tests\Unit\Policies;
 
 use App\Enums\Permission;
 use App\Models\User;
+use App\Policies\PermissionPolicy;
 use App\Policies\RolePolicy;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Spatie\Permission\Models\Permission as PermissionModel;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
+/**
+ * Roles and permissions are defined in code: user managers may look at them,
+ * nobody creates, changes or deletes one in the panel.
+ */
 class RolePolicyTest extends TestCase
 {
     use RefreshDatabase;
-
-    private RolePolicy $policy;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-        $this->policy = new RolePolicy;
-    }
 
     private function userWithPermissions(string ...$permissions): User
     {
@@ -29,90 +27,38 @@ class RolePolicyTest extends TestCase
         return $user;
     }
 
-    private function role(): Role
+    public function test_user_managers_may_look_at_roles_and_permissions(): void
     {
-        return Role::firstOrCreate(['name' => 'Test Role', 'guard_name' => 'web']);
+        $manager = $this->userWithPermissions(Permission::MANAGE_USERS->value);
+        $role = Role::findByName('Visitor', 'web');
+        $permission = PermissionModel::findByName(Permission::VIEW_DATA->value, 'web');
+
+        $this->assertTrue((new RolePolicy)->viewAny($manager));
+        $this->assertTrue((new RolePolicy)->view($manager, $role));
+        $this->assertTrue((new PermissionPolicy)->viewAny($manager));
+        $this->assertTrue((new PermissionPolicy)->view($manager, $permission));
     }
 
-    // ── viewAny ───────────────────────────────────────────────────────────────
-
-    public function test_view_any_returns_true_for_user_with_manage_roles(): void
+    public function test_other_users_may_not(): void
     {
-        $user = $this->userWithPermissions(Permission::MANAGE_ROLES->value);
+        $reader = $this->userWithPermissions(Permission::VIEW_DATA->value);
 
-        $this->assertTrue($this->policy->viewAny($user));
+        $this->assertFalse((new RolePolicy)->viewAny($reader));
+        $this->assertFalse((new PermissionPolicy)->viewAny($reader));
     }
 
-    public function test_view_any_returns_false_for_user_without_manage_roles(): void
+    public function test_nobody_creates_changes_or_deletes_a_role_or_permission(): void
     {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
+        $manager = $this->userWithPermissions(Permission::MANAGE_USERS->value, Permission::MANAGE_USER_MANAGERS->value);
+        $role = Role::findByName('Visitor', 'web');
+        $permission = PermissionModel::findByName(Permission::VIEW_DATA->value, 'web');
 
-        $this->assertFalse($this->policy->viewAny($user));
-    }
-
-    // ── view ──────────────────────────────────────────────────────────────────
-
-    public function test_view_returns_true_for_user_with_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_ROLES->value);
-
-        $this->assertTrue($this->policy->view($user, $this->role()));
-    }
-
-    // ── create ────────────────────────────────────────────────────────────────
-
-    public function test_create_returns_true_for_user_with_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_ROLES->value);
-
-        $this->assertTrue($this->policy->create($user));
-    }
-
-    public function test_create_returns_false_for_user_without_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-
-        $this->assertFalse($this->policy->create($user));
-    }
-
-    // ── update ────────────────────────────────────────────────────────────────
-
-    public function test_update_returns_true_for_user_with_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_ROLES->value);
-
-        $this->assertTrue($this->policy->update($user, $this->role()));
-    }
-
-    // ── delete ────────────────────────────────────────────────────────────────
-
-    public function test_delete_returns_true_for_user_with_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_ROLES->value);
-
-        $this->assertTrue($this->policy->delete($user, $this->role()));
-    }
-
-    public function test_delete_returns_false_for_user_without_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-
-        $this->assertFalse($this->policy->delete($user, $this->role()));
-    }
-
-    // ── deleteAny ─────────────────────────────────────────────────────────────
-
-    public function test_delete_any_returns_true_for_user_with_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_ROLES->value);
-
-        $this->assertTrue($this->policy->deleteAny($user));
-    }
-
-    public function test_delete_any_returns_false_for_user_without_manage_roles(): void
-    {
-        $user = $this->userWithPermissions(Permission::MANAGE_USERS->value);
-
-        $this->assertFalse($this->policy->deleteAny($user));
+        $this->assertFalse((new RolePolicy)->create($manager));
+        $this->assertFalse((new RolePolicy)->update($manager, $role));
+        $this->assertFalse((new RolePolicy)->delete($manager, $role));
+        $this->assertFalse((new RolePolicy)->deleteAny($manager));
+        $this->assertFalse((new PermissionPolicy)->create($manager));
+        $this->assertFalse((new PermissionPolicy)->update($manager, $permission));
+        $this->assertFalse((new PermissionPolicy)->delete($manager, $permission));
     }
 }

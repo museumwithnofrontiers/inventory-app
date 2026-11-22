@@ -187,7 +187,7 @@ Builds the Laravel application and deploys it to a production environment using 
 3. **configure** - Configures Laravel application
    - Generates production `.env` file from `.env.example` using environment variables
    - Runs database migrations (`php artisan migrate --force`)
-   - Syncs permissions and roles (`php artisan permissions:sync --production`)
+   - Syncs the roles and permissions with their definitions in code (`php artisan permissions:sync`)
    - Caches configuration, routes, and views for performance
 
 **Environment Variables** (set in GitHub environment `MWNF-SVR`)

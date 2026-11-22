@@ -150,7 +150,7 @@ class DocumentsRelationManager extends RelationManager
                     ->label('Download')
                     ->icon('heroicon-o-arrow-down-tray')
                     ->color('gray')
-                    ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
+                    ->visible(fn (PublicationDocument $record): bool => auth()->user()?->can('view', $record) ?? false)
                     ->url(fn (PublicationDocument $record): string => route('filament.admin.publication-document.download', [
                         'publication' => $this->ownerPublication(),
                         'publicationDocument' => $record,

@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Enums\ItemType;
-use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasChangeParentAction;
 use App\Filament\Concerns\HasInternalNameColumn;
@@ -67,6 +66,7 @@ use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 
 class ItemResource extends Resource
 {
@@ -163,7 +163,7 @@ class ItemResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -467,13 +467,19 @@ class ItemResource extends Resource
                 BulkAction::make('attachToCollection')
                     ->label('Attach to collection')
                     ->icon('heroicon-o-archive-box')
+                    ->visible(fn (): bool => auth()->user()?->can('update', new Item) ?? false)
                     ->form([
                         RecordSelect::forCollections(),
                     ])
                     ->action(function (EloquentCollection $records, array $data): void {
                         $collectionId = $data['collection_id'];
+                        $collection = Collection::query()->find($collectionId);
+                        abort_unless($collection !== null && Gate::allows('update', $collection), 403);
                         foreach ($records as $record) {
                             /** @var Item $record */
+                            if (Gate::denies('update', $record)) {
+                                continue;
+                            }
                             $record->attachedToCollections()->syncWithoutDetaching([$collectionId]);
                         }
 
@@ -486,6 +492,7 @@ class ItemResource extends Resource
                 BulkAction::make('attachTag')
                     ->label('Attach tag')
                     ->icon('heroicon-o-tag')
+                    ->visible(fn (): bool => auth()->user()?->can('update', new Item) ?? false)
                     ->form([
                         RecordSelect::forTags(),
                     ])
@@ -493,6 +500,9 @@ class ItemResource extends Resource
                         $tagId = $data['tag_id'];
                         foreach ($records as $record) {
                             /** @var Item $record */
+                            if (Gate::denies('update', $record)) {
+                                continue;
+                            }
                             $record->tags()->syncWithoutDetaching([$tagId]);
                         }
 

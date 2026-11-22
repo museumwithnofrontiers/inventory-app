@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -32,8 +31,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * The artists items are linked to (the item's "Origin" tab). An artist is
- * shared data, managed with `manage-reference-data` like tags and authors
- * ({@see ArtistPolicy}).
+ * shared data: `view data` reads it and the Manager of Data changes it, like
+ * tags and authors ({@see ArtistPolicy}).
  *
  * Under ADR 006 an item's artist line is display text, kept as written in
  * its translations, next to these links. Nothing here rebuilds that text from
@@ -64,7 +63,7 @@ class ArtistResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::MANAGE_REFERENCE_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

@@ -32,6 +32,10 @@ final class LocalUser
             throw new RuntimeException("MCP_LOCAL_USER names no user: [{$email}].");
         }
 
+        if (! $user->isActive()) {
+            throw new RuntimeException("The user [{$email}] is not active (e-mail not verified, not approved, or suspended).");
+        }
+
         if (! $user->hasPermissionTo(Permission::ACCESS_MCP->value)) {
             throw new RuntimeException("The user [{$email}] lacks the access-mcp permission.");
         }

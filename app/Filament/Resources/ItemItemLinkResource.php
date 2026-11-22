@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Enums\ItemType;
-use App\Enums\Permission;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
 use App\Filament\Resources\ItemItemLinkResource\Pages\CreateItemItemLink;
@@ -46,7 +45,7 @@ class ItemItemLinkResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

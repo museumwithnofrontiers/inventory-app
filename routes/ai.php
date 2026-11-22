@@ -2,6 +2,7 @@
 
 use App\Enums\OAuthScope;
 use App\Enums\Permission;
+use App\Http\Middleware\EnsureAccountIsActive;
 use App\Mcp\Servers\InventoryServer;
 use Illuminate\Support\Facades\Route;
 use Laravel\Mcp\Facades\Mcp;
@@ -21,6 +22,7 @@ Route::post('oauth/register', OAuthRegisterController::class)
 Mcp::web('/mcp/inventory', InventoryServer::class)
     ->middleware([
         'auth:api',
+        EnsureAccountIsActive::class,
         'scopes:'.OAuthScope::MCP->value,
         'permission:'.Permission::ACCESS_MCP->value,
     ])

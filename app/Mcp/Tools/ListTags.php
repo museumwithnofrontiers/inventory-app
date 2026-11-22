@@ -3,7 +3,6 @@
 namespace App\Mcp\Tools;
 
 use App\Mcp\ReadAuthorization;
-use App\Models\Item;
 use App\Models\Tag;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Database\Eloquent\Builder;
@@ -23,10 +22,8 @@ class ListTags extends InventoryTool
 
     public function handle(Request $request): Response|ResponseFactory
     {
-        // Tags are read here as what items carry, which anyone who may read
-        // items sees on them; managing tags (TagPolicy) is not needed
-        if (! ReadAuthorization::mayViewAny($this->user($request), Item::class)) {
-            return Response::error('You may not read items.');
+        if (! ReadAuthorization::mayViewAny($this->user($request), Tag::class)) {
+            return Response::error('You may not read tags.');
         }
 
         $order = (string) $request->get('order', 'items');

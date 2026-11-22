@@ -21,11 +21,11 @@ Filament `/admin` is the application's only user interface, for content managers
 
 ## Authorization model
 
-Filament uses three authorization tiers:
+The policies in `app/Policies/` are the only authorization mechanism, on the panel, the REST API and the MCP server alike. A user holds exactly one role (`app/Enums/Role.php`: Visitor, Manager of Data, Manager of Users, Superadmin), and the role carries the permissions the policies read (`app/Enums/Permission.php`).
 
-1. Panel access uses the `access-admin-panel` permission.
-2. Navigation and resource visibility use feature permissions such as `view-data`, `manage-users`, `manage-roles`, `manage-settings`, and `manage-reference-data`.
-3. Record and action authorization uses existing policies in `app/Policies/`.
+1. Panel access needs an active account (verified, approved, not suspended) and the `access-admin-panel` permission.
+2. Navigation and resource visibility ask the policies: `canViewAny()` returns `can('viewAny', static::getModel())`.
+3. Records and actions ask the policies too. Every data model has a policy (`App\Policies\DataPolicy`); a model without one is denied, in Filament as everywhere else. A custom action carries `->visible()` and `->authorize()` from its policy.
 
 ## Authentication
 

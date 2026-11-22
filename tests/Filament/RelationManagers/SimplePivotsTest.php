@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\RelationManagers;
 
-use App\Enums\Permission;
 use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\ArtistsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
@@ -36,39 +35,17 @@ class SimplePivotsTest extends TestCase
     // ── Tags (Tag has its own Resource/policy) ───────────────────────────────
 
     /**
-     * Tag's own policy (TagPolicy) gates `view` on `manage-reference-data`,
-     * not on the generic data permissions `createCrudUser()`/
-     * `createViewOnlyUser()` grant (see
-     * AuthorizesRelationMutationsTest::test_item_tags_relation_manager_ignores_tags_own_policy_and_requires_host_update()
-     * for the equivalent Attach/Detach case). A user needs both: the generic
-     * data permissions to attach/detach (host Item's `update`), and
-     * `manage-reference-data` to be allowed to view Tag's own details.
+     * Tags follow the data rule (TagPolicy extends DataPolicy): the Manager of
+     * Data attaches and views them, a Visitor views them.
      */
     private function createCrudUserWithTagViewAccess(): User
     {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::CREATE_DATA->value,
-            Permission::UPDATE_DATA->value,
-            Permission::DELETE_DATA->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
+        return $this->createCrudUser();
     }
 
     private function createViewOnlyUserWithTagViewAccess(): User
     {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
+        return $this->createViewOnlyUser();
     }
 
     public function test_crud_user_attaches_views_and_detaches_a_tag_from_the_item_view_page(): void

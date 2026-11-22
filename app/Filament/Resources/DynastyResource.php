@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\Permission;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
@@ -35,8 +34,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * The dynasties items are linked to (the item's "Origin" tab). A dynasty is
- * shared data, managed with `manage-reference-data` like tags and authors
- * ({@see DynastyPolicy}). Its names, area, history and date
+ * shared data: `view data` reads it and the Manager of Data changes it, like
+ * tags and authors ({@see DynastyPolicy}). Its names, area, history and date
  * texts live in its translations, one per language, edited in the
  * Translations manager.
  *
@@ -98,7 +97,7 @@ class DynastyResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::MANAGE_REFERENCE_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

@@ -11,11 +11,15 @@ class AvailableImageController extends Controller
 {
     public function view(AvailableImage $availableImage): InlineImageResponse
     {
+        $this->authorize('view', $availableImage);
+
         return new InlineImageResponse($availableImage);
     }
 
     public function download(AvailableImage $availableImage): DownloadImageResponse
     {
+        $this->authorize('view', $availableImage);
+
         return new DownloadImageResponse($availableImage);
     }
 }

@@ -12,6 +12,8 @@ class PartnerImageController extends Controller
 {
     public function view(Partner $partner, PartnerImage $partnerImage): InlineImageResponse
     {
+        $this->authorize('view', $partnerImage);
+
         if ($partnerImage->partner_id !== $partner->id) {
             abort(404);
         }
@@ -21,6 +23,8 @@ class PartnerImageController extends Controller
 
     public function download(Partner $partner, PartnerImage $partnerImage): DownloadImageResponse
     {
+        $this->authorize('view', $partnerImage);
+
         if ($partnerImage->partner_id !== $partner->id) {
             abort(404);
         }

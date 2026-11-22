@@ -579,8 +579,8 @@ restores them:
    `backup-permissions`), it's restored exactly — every user, MFA setup, and
    role/permission assignment as they were.
 2. Otherwise, if both `ADMIN_EMAIL` and `REGULAR_USER_EMAIL` are set,
-   exactly those two accounts are recreated (`Manager of Users` and
-   `Regular User` roles respectively). Neither gets a plaintext password —
+   exactly those two accounts are recreated (`Superadmin` and
+   `Manager of Data` roles respectively). Neither gets a plaintext password —
    `user:create` emails a password-reset invitation, so outbound mail must
    work on the remote host.
 3. If neither applies, the run aborts right after the wipe, with a clear

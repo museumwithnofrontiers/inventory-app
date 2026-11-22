@@ -33,7 +33,7 @@ class ContextResourceAuthorizationTest extends TestCase
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
+            ...Permission::dataOperations(),
         ]);
 
         $context = Context::factory()->create(['internal_name' => 'Catalogue']);

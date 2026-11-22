@@ -25,42 +25,31 @@ class RoleResourceAuthorizationTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_users_with_manage_roles_permission_can_access_roles_index(): void
+    public function test_user_managers_can_access_roles_index_and_view_a_role(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_ROLES->value,
+            Permission::MANAGE_USERS->value,
         ]);
+
+        $role = Role::findByName('Visitor', 'web');
 
         $this->actingAs($user)->get('/admin/roles')
             ->assertOk();
-    }
 
-    public function test_users_with_manage_roles_permission_can_create_roles(): void
-    {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_ROLES->value,
-        ]);
-
-        $this->actingAs($user)->get('/admin/roles/create')
+        $this->actingAs($user)->get("/admin/roles/{$role->getKey()}")
             ->assertOk();
     }
 
-    public function test_users_with_manage_roles_permission_can_edit_roles(): void
+    public function test_data_users_cannot_see_roles(): void
     {
         $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_ROLES->value,
-        ]);
+        $user->givePermissionTo(Permission::dataOperations());
+        $user->givePermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
 
-        $role = Role::firstOrCreate(['name' => 'Test Role', 'guard_name' => 'web']);
-
-        $this->actingAs($user)->get("/admin/roles/{$role->getKey()}/edit")
-            ->assertOk();
+        $this->actingAs($user)->get('/admin/roles')
+            ->assertForbidden();
     }
 
     public function test_unauthenticated_users_are_redirected_to_login(): void

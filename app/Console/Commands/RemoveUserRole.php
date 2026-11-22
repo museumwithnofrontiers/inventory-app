@@ -3,56 +3,50 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Support\Authorization\UserRoles;
 use Illuminate\Console\Command;
-use Spatie\Permission\Models\Role;
 
 class RemoveUserRole extends Command
 {
     /**
-     * The name and signature of the console command.
-     *
      * @var string
      */
-    protected $signature = 'user:remove-role {email : User email address} {role : Role name to remove}';
+    protected $signature = 'user:remove-role {email : User email address}';
 
     /**
-     * The console command description.
-     *
      * @var string
      */
-    protected $description = 'Remove a role from a user';
+    protected $description = "Take a user's role away: with no role, the account has no access at all";
 
-    /**
-     * Execute the console command.
-     */
-    public function handle(): int
+    public function handle(UserRoles $roles): int
     {
-        $email = $this->argument('email');
-        $roleName = $this->argument('role');
+        $email = (string) $this->argument('email');
 
-        $user = User::where('email', $email)->first();
-        if (! $user) {
+        $user = User::query()->where('email', $email)->first();
+
+        if ($user === null) {
             $this->error("User with email '{$email}' not found.");
 
             return Command::FAILURE;
         }
 
-        $role = Role::where('name', $roleName)->first();
-        if (! $role) {
-            $this->error("Role '{$roleName}' not found.");
+        if ($user->isSuperadmin()) {
+            $this->error("'{$email}' is the superadmin. Give the role to someone else first: php artisan user:superadmin <email>");
 
             return Command::FAILURE;
         }
 
-        if (! $user->hasRole($roleName)) {
-            $this->info("User '{$user->name}' does not have role '{$roleName}'.");
+        $previous = $user->currentRole();
+
+        if ($previous === null) {
+            $this->info("'{$email}' holds no role.");
 
             return Command::SUCCESS;
         }
 
-        $user->removeRole($role);
+        $roles->clear($user);
 
-        $this->info("Successfully removed role '{$roleName}' from user '{$user->name}' ({$email}).");
+        $this->info("'{$email}' no longer holds the role '{$previous->value}'.");
 
         return Command::SUCCESS;
     }

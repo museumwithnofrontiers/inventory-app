@@ -88,23 +88,6 @@ class ProjectResourceTest extends TestCase
             ->assertSee(ContextResource::getUrl('view', ['record' => $context]));
     }
 
-    public function test_project_infolist_context_is_plain_text_without_manage_reference_data(): void
-    {
-        $user = $this->createCrudUser();
-
-        $context = Context::factory()->create(['internal_name' => 'Catalogue']);
-        $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
-        $project = Project::factory()->create([
-            'context_id' => $context->id,
-            'language_id' => $language->id,
-        ]);
-
-        $this->actingAs($user)
-            ->get("/admin/projects/{$project->getKey()}")
-            ->assertOk()
-            ->assertDontSee(ContextResource::getUrl('view', ['record' => $context]));
-    }
-
     public function test_project_items_relation_manager_display_label_links_to_item_resource(): void
     {
         $user = $this->createCrudUser();
@@ -165,7 +148,7 @@ class ProjectResourceTest extends TestCase
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
             Permission::VIEW_DATA->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
+            ...Permission::dataOperations(),
         ]);
 
         return $user;

@@ -122,10 +122,10 @@ trait AuthorizesRelationMutations
     }
 
     /**
-     * Whether $subject's own Tier-3 policy allows $ability. Related entities
-     * that don't have a policy of their own (or whose policy doesn't define
-     * that ability) have nothing to check here, so this allows by default —
-     * the caller has already required host `update`.
+     * Whether $subject's own Tier-3 policy allows $ability, on top of the host
+     * `update` the caller already required. A related model without a policy,
+     * or a policy without that ability, denies: the policies are the only
+     * authorization mechanism, and every model has one (App\Policies\DataPolicy).
      *
      * @param  Model|class-string<Model>  $subject
      */
@@ -135,7 +135,7 @@ trait AuthorizesRelationMutations
         $policy = Gate::getPolicyFor($class);
 
         if ($policy === null || ! method_exists($policy, $ability)) {
-            return true;
+            return false;
         }
 
         $user = auth()->user();

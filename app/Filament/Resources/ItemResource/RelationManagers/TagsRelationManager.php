@@ -2,12 +2,12 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
-use App\Enums\Permission;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\TagResource;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
+use App\Models\Tag;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -26,7 +26,7 @@ class TagsRelationManager extends RelationManager
 
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', Tag::class) ?? false;
     }
 
     public function table(Table $table): Table

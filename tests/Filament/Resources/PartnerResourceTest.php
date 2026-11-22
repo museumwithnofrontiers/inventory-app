@@ -363,23 +363,6 @@ class PartnerResourceTest extends TestCase
             );
     }
 
-    public function test_partner_table_country_column_is_plain_text_without_manage_reference_data(): void
-    {
-        $user = $this->createCrudUser();
-        $country = Country::factory()->create(['id' => 'jor', 'internal_name' => 'Jordan']);
-        $partner = Partner::factory()->create(['country_id' => $country->id]);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(ListPartner::class)
-            ->assertTableColumnExists(
-                'country.internal_name',
-                fn (TextColumn $column): bool => $column->getUrl() === null,
-                $partner
-            );
-    }
-
     public function test_partner_table_project_column_links_to_project_resource_for_authorized_user(): void
     {
         $user = $this->createCrudUser();
@@ -481,7 +464,7 @@ class PartnerResourceTest extends TestCase
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
             Permission::VIEW_DATA->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
+            ...Permission::dataOperations(),
         ]);
 
         return $user;

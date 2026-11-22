@@ -3,7 +3,9 @@
 namespace Tests\Filament\Authorization;
 
 use App\Enums\Permission;
+use App\Enums\Role;
 use App\Models\User;
+use App\Support\Authorization\UserRoles;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -36,29 +38,10 @@ class UserResourceAuthorizationTest extends TestCase
             ->assertOk();
     }
 
-    public function test_users_without_assign_roles_permission_cannot_delete_users(): void
+    public function test_user_managers_can_delete_other_users(): void
     {
         $manager = User::factory()->create(['email_verified_at' => now()]);
-        $manager->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_USERS->value,
-        ]);
-
-        $target = User::factory()->create(['email_verified_at' => now()]);
-
-        $this->actingAs($manager)->get("/admin/users/{$target->getKey()}/edit")
-            ->assertOk()
-            ->assertDontSee('Delete');
-    }
-
-    public function test_users_with_assign_roles_permission_can_delete_other_users(): void
-    {
-        $manager = User::factory()->create(['email_verified_at' => now()]);
-        $manager->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_USERS->value,
-            Permission::ASSIGN_ROLES->value,
-        ]);
+        $manager->assignRole(Role::USER_MANAGER->value);
 
         $target = User::factory()->create(['email_verified_at' => now()]);
 
@@ -67,16 +50,27 @@ class UserResourceAuthorizationTest extends TestCase
             ->assertSee('Delete');
     }
 
+    public function test_a_user_manager_cannot_open_the_superadmin_or_another_user_manager(): void
+    {
+        $manager = User::factory()->create(['email_verified_at' => now()]);
+        $manager->assignRole(Role::USER_MANAGER->value);
+
+        $peer = User::factory()->create(['email_verified_at' => now()]);
+        $peer->assignRole(Role::USER_MANAGER->value);
+
+        $superadmin = User::factory()->create(['email_verified_at' => now()]);
+        app(UserRoles::class)->assign($superadmin, Role::SUPERADMIN);
+
+        $this->actingAs($manager)->get("/admin/users/{$peer->getKey()}/edit")->assertForbidden();
+        $this->actingAs($manager)->get("/admin/users/{$superadmin->getKey()}/edit")->assertForbidden();
+    }
+
     public function test_user_cannot_delete_themselves(): void
     {
         $manager = User::factory()->create(['email_verified_at' => now()]);
-        $manager->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_USERS->value,
-            Permission::ASSIGN_ROLES->value,
-        ]);
+        $manager->assignRole(Role::USER_MANAGER->value);
 
-        $response = $this->actingAs($manager)->delete("/admin/users/{$manager->getKey()}");
+        $this->actingAs($manager)->delete("/admin/users/{$manager->getKey()}");
 
         $this->assertDatabaseHas('users', ['id' => $manager->id]);
     }

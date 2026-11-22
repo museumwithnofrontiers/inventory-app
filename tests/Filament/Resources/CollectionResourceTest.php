@@ -528,27 +528,6 @@ class CollectionResourceTest extends TestCase
             );
     }
 
-    public function test_collection_table_context_column_is_plain_text_without_manage_reference_data(): void
-    {
-        $user = $this->createCrudUser();
-        $context = Context::factory()->create(['internal_name' => 'Catalogue']);
-        $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
-        $collection = Collection::factory()->create([
-            'context_id' => $context->id,
-            'language_id' => $language->id,
-        ]);
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(ListCollection::class)
-            ->assertTableColumnExists(
-                'context.internal_name',
-                fn (TextColumn $column): bool => $column->getUrl() === null,
-                $collection
-            );
-    }
-
     public function test_collection_table_language_column_links_to_language_resource_for_authorized_user(): void
     {
         $user = $this->createViewAndReferenceDataUser();
@@ -577,7 +556,7 @@ class CollectionResourceTest extends TestCase
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
             Permission::VIEW_DATA->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
+            ...Permission::dataOperations(),
         ]);
 
         return $user;

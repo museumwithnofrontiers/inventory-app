@@ -93,7 +93,7 @@ class PublicationDocumentsRelationManagerTest extends TestCase
         Storage::disk($this->disk)->assertMissing($this->directory.'/'.$document->path);
     }
 
-    public function test_the_panel_download_serves_the_file_to_a_user_who_may_update_the_publication(): void
+    public function test_the_panel_download_serves_the_file_to_whoever_may_read_the_publication(): void
     {
         $user = $this->createCrudUser();
         $document = PublicationDocument::factory()->create(['path' => Str::uuid()->toString().'.pdf']);
@@ -105,7 +105,7 @@ class PublicationDocumentsRelationManagerTest extends TestCase
 
         $this->actingAs($this->createViewOnlyUser())
             ->get(route('filament.admin.publication-document.download', ['publication' => $document->publication_id, 'publicationDocument' => $document]))
-            ->assertForbidden();
+            ->assertOk();
     }
 
     public function test_view_only_users_cannot_change_the_documents(): void

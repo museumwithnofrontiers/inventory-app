@@ -236,7 +236,7 @@ The script executes in 8 phases with clear status reporting:
 ### Phase 7: Application Initialization
 
 - Runs database migrations (`php artisan migrate --force`)
-- Syncs permissions (`php artisan permissions:sync --production`)
+- Syncs the roles and permissions with their definitions in code (`php artisan permissions:sync`)
 - Caches configuration (`php artisan config:cache`)
 - Caches routes (`php artisan route:cache`)
 - Caches views (`php artisan view:cache`)

@@ -12,6 +12,8 @@ class PartnerTranslationImageController extends Controller
 {
     public function view(PartnerTranslation $partnerTranslation, PartnerTranslationImage $partnerTranslationImage): InlineImageResponse
     {
+        $this->authorize('view', $partnerTranslationImage);
+
         if ($partnerTranslationImage->partner_translation_id !== $partnerTranslation->id) {
             abort(404);
         }
@@ -21,6 +23,8 @@ class PartnerTranslationImageController extends Controller
 
     public function download(PartnerTranslation $partnerTranslation, PartnerTranslationImage $partnerTranslationImage): DownloadImageResponse
     {
+        $this->authorize('view', $partnerTranslationImage);
+
         if ($partnerTranslationImage->partner_translation_id !== $partnerTranslation->id) {
             abort(404);
         }

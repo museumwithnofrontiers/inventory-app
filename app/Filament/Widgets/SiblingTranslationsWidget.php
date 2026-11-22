@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Enums\Permission;
 use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\ItemTranslationResource;
 use App\Filament\Resources\PartnerTranslationResource;
@@ -29,7 +28,7 @@ class SiblingTranslationsWidget extends BaseWidget
 
     public static function canView(): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', ItemTranslation::class) ?? false;
     }
 
     public function table(Table $table): Table

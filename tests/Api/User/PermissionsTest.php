@@ -5,6 +5,7 @@ namespace Tests\Api\User;
 use App\Enums\Permission;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Laravel\Passport\Passport;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
@@ -31,7 +32,7 @@ class PermissionsTest extends TestCase
             Permission::CREATE_DATA->value,
         ]);
 
-        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
+        $response = $this->signedInWithToken($user)->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonStructure(['data' => ['permissions']])
@@ -52,7 +53,7 @@ class PermissionsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
+        $response = $this->signedInWithToken($user)->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJson(['data' => []]);
@@ -73,7 +74,7 @@ class PermissionsTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole($role);
 
-        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
+        $response = $this->signedInWithToken($user)->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonCount(2, 'data.permissions')
@@ -98,7 +99,7 @@ class PermissionsTest extends TestCase
         $user->assignRole($role);
         $user->givePermissionTo(Permission::CREATE_DATA->value);
 
-        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
+        $response = $this->signedInWithToken($user)->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonCount(2, 'data.permissions');
@@ -111,6 +112,20 @@ class PermissionsTest extends TestCase
     /**
      * Test that unauthenticated users cannot access the endpoint.
      */
+    public function test_a_token_without_a_read_scope_is_refused(): void
+    {
+        Passport::actingAs(User::factory()->create(), ['api:write']);
+
+        $this->getJson(route('user.permissions'))->assertForbidden();
+    }
+
+    public function test_a_suspended_user_is_refused(): void
+    {
+        $this->signedInWithToken(User::factory()->create(['suspended_at' => now()]))
+            ->getJson(route('user.permissions'))
+            ->assertForbidden();
+    }
+
     public function test_unauthenticated_user_cannot_access_permissions(): void
     {
         $response = $this->getJson(route('user.permissions'));
@@ -123,18 +138,15 @@ class PermissionsTest extends TestCase
      */
     public function test_duplicate_permissions_are_not_returned(): void
     {
-        // Create two roles with same permission
+        // One role (a user holds one) carrying the permission
         $role1 = Role::create(['name' => 'Role 1']);
         $role1->givePermissionTo(Permission::VIEW_DATA->value);
 
-        $role2 = Role::create(['name' => 'Role 2']);
-        $role2->givePermissionTo(Permission::VIEW_DATA->value);
-
         $user = User::factory()->create();
-        $user->assignRole([$role1, $role2]);
+        $user->assignRole($role1);
         $user->givePermissionTo(Permission::VIEW_DATA->value); // Direct assignment too
 
-        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
+        $response = $this->signedInWithToken($user)->getJson(route('user.permissions'));
 
         $response->assertOk();
         $permissions = $response->json('data.permissions');
@@ -152,7 +164,7 @@ class PermissionsTest extends TestCase
         $user = User::factory()->create();
         $user->givePermissionTo(Permission::VIEW_DATA->value);
 
-        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
+        $response = $this->signedInWithToken($user)->getJson(route('user.permissions'));
 
         $response->assertOk();
         $permissions = $response->json('data.permissions');
@@ -171,9 +183,19 @@ class PermissionsTest extends TestCase
     {
         $user = User::factory()->create();
 
-        $response = $this->actingAs($user, 'api')->getJson(route('user.permissions'));
+        $response = $this->signedInWithToken($user)->getJson(route('user.permissions'));
 
         $response->assertOk()
             ->assertJsonStructure(['data']);
+    }
+
+    /**
+     * A token of the user's, as an app gets it: the endpoint needs the api:read or mcp scope.
+     */
+    private function signedInWithToken(User $user): static
+    {
+        Passport::actingAs($user, ['api:read']);
+
+        return $this;
     }
 }

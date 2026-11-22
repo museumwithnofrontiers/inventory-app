@@ -3,190 +3,115 @@
 namespace Tests\Console;
 
 use App\Enums\Permission as PermissionEnum;
+use App\Enums\Role as RoleEnum;
+use App\Models\AuditLog;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\WithConsoleEvents;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\Models\Role;
 use Tests\TestCase;
 
+/**
+ * permissions:sync makes the database match App\Enums\Role and
+ * App\Enums\Permission (RoleSync), and never changes who holds which role.
+ */
 class SyncPermissionsCommandTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_command_creates_missing_permissions(): void
+    // Artisan's command events, which tests turn off and the audit log listens to
+    use WithConsoleEvents;
+
+    public function test_it_creates_every_permission_and_role_of_the_enums(): void
     {
-        // Delete all permissions first
+        Role::query()->delete();
         Permission::query()->delete();
 
-        $this->artisan('permissions:sync')
-            ->assertExitCode(0);
+        $this->artisan('permissions:sync')->assertExitCode(0);
 
-        // Verify all permissions from enum exist
         foreach (PermissionEnum::cases() as $permission) {
-            $this->assertDatabaseHas('permissions', [
-                'name' => $permission->value,
-            ]);
+            $this->assertDatabaseHas('permissions', ['name' => $permission->value, 'guard_name' => 'web']);
+        }
+
+        foreach (RoleEnum::cases() as $case) {
+            $role = Role::findByName($case->value, 'web');
+            $this->assertEqualsCanonicalizing($case->permissionNames(), $role->permissions->pluck('name')->all());
         }
     }
 
-    public function test_command_creates_standard_roles_without_production_flag(): void
+    public function test_the_four_roles_carry_the_decided_permissions(): void
     {
-        Role::query()->delete();
-
-        $this->artisan('permissions:sync')
-            ->assertExitCode(0);
-
-        // Should create 3 standard roles
-        $this->assertDatabaseHas('roles', ['name' => 'Non-verified users']);
-        $this->assertDatabaseHas('roles', ['name' => 'Regular User']);
-        $this->assertDatabaseHas('roles', ['name' => 'Manager of Users']);
-
-        // Should NOT create Visitor role without --production flag
-        $this->assertDatabaseMissing('roles', ['name' => 'Visitor']);
+        $this->assertEqualsCanonicalizing(['view data', 'access-admin-panel', 'access-mcp'], RoleEnum::VISITOR->permissionNames());
+        $this->assertEqualsCanonicalizing(
+            ['view data', 'create data', 'update data', 'delete data', 'access-admin-panel', 'access-mcp'],
+            RoleEnum::DATA_MANAGER->permissionNames(),
+        );
+        $this->assertEqualsCanonicalizing(['manage users', 'access-admin-panel', 'access-mcp'], RoleEnum::USER_MANAGER->permissionNames());
+        $this->assertEqualsCanonicalizing(
+            ['manage users', 'manage user managers', 'access-admin-panel', 'access-mcp'],
+            RoleEnum::SUPERADMIN->permissionNames(),
+        );
     }
 
-    public function test_command_creates_visitor_role_with_production_flag(): void
+    public function test_it_resets_a_role_whose_permissions_drifted(): void
     {
-        Role::query()->delete();
+        $visitor = Role::findByName(RoleEnum::VISITOR->value, 'web');
+        $visitor->givePermissionTo(PermissionEnum::DELETE_DATA->value);
 
-        $this->artisan('permissions:sync --production')
-            ->assertExitCode(0);
+        $this->artisan('permissions:sync')->assertExitCode(0);
 
-        // Should create all 4 roles including Visitor
-        $this->assertDatabaseHas('roles', ['name' => 'Non-verified users']);
-        $this->assertDatabaseHas('roles', ['name' => 'Visitor']);
-        $this->assertDatabaseHas('roles', ['name' => 'Regular User']);
-        $this->assertDatabaseHas('roles', ['name' => 'Manager of Users']);
+        $this->assertEqualsCanonicalizing(
+            RoleEnum::VISITOR->permissionNames(),
+            $visitor->fresh()?->permissions->pluck('name')->all() ?? [],
+        );
     }
 
-    public function test_command_syncs_role_permissions_correctly(): void
+    public function test_it_removes_permissions_and_unheld_roles_the_enums_no_longer_define(): void
     {
-        $this->artisan('permissions:sync --production')
-            ->assertExitCode(0);
+        Permission::create(['name' => 'manage roles', 'guard_name' => 'web']);
+        Role::create(['name' => 'Old Role', 'guard_name' => 'web']);
 
-        // Verify Non-verified users has no permissions
-        $nonVerifiedRole = Role::findByName('Non-verified users');
-        $this->assertCount(0, $nonVerifiedRole->permissions);
+        $this->artisan('permissions:sync')->assertExitCode(0);
 
-        // Verify Visitor has VIEW_DATA, ACCESS_ADMIN_PANEL and ACCESS_MCP
-        $visitorRole = Role::findByName('Visitor');
-        $this->assertCount(3, $visitorRole->permissions);
-        $this->assertTrue($visitorRole->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
-        $this->assertTrue($visitorRole->hasPermissionTo(PermissionEnum::VIEW_DATA->value));
-        $this->assertTrue($visitorRole->hasPermissionTo(PermissionEnum::ACCESS_ADMIN_PANEL->value));
-
-        // Verify Regular User has data operation permissions and Filament reference-data access
-        $regularRole = Role::findByName('Regular User');
-        $this->assertCount(7, $regularRole->permissions);
-        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
-        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::VIEW_DATA->value));
-        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::CREATE_DATA->value));
-        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::UPDATE_DATA->value));
-        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::DELETE_DATA->value));
-        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::ACCESS_ADMIN_PANEL->value));
-        $this->assertTrue($regularRole->hasPermissionTo(PermissionEnum::MANAGE_REFERENCE_DATA->value));
-
-        // Verify Manager has user/role management permissions
-        $managerRole = Role::findByName('Manager of Users');
-        $this->assertCount(8, $managerRole->permissions);
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::MANAGE_USERS->value));
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::ASSIGN_ROLES->value));
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::VIEW_USER_MANAGEMENT->value));
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::MANAGE_ROLES->value));
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::VIEW_ROLE_MANAGEMENT->value));
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::MANAGE_SETTINGS->value));
-        $this->assertTrue($managerRole->hasPermissionTo(PermissionEnum::ACCESS_ADMIN_PANEL->value));
+        $this->assertDatabaseMissing('permissions', ['name' => 'manage roles']);
+        $this->assertDatabaseMissing('roles', ['name' => 'Old Role']);
     }
 
-    public function test_command_is_idempotent(): void
+    public function test_it_refuses_to_remove_a_role_someone_still_holds(): void
     {
-        // Run command first time
-        $this->artisan('permissions:sync --production')
-            ->assertExitCode(0);
+        $role = Role::create(['name' => 'Old Role', 'guard_name' => 'web']);
+        User::factory()->create()->assignRole($role);
 
-        $firstRunPermissionCount = Permission::count();
-        $firstRunRoleCount = Role::count();
+        $this->artisan('permissions:sync')->assertExitCode(1);
 
-        // Run command second time
-        $this->artisan('permissions:sync --production')
-            ->assertExitCode(0);
-
-        // Counts should be the same
-        $this->assertEquals($firstRunPermissionCount, Permission::count());
-        $this->assertEquals($firstRunRoleCount, Role::count());
-
-        // Verify output indicates no changes
-        $this->artisan('permissions:sync --production')
-            ->expectsOutput('Syncing permissions and roles...')
-            ->assertExitCode(0);
+        $this->assertDatabaseHas('roles', ['name' => 'Old Role']);
     }
 
-    public function test_command_updates_permission_descriptions(): void
+    public function test_it_keeps_role_assignments(): void
     {
-        // First ensure all permissions exist
-        foreach (PermissionEnum::cases() as $permission) {
-            Permission::firstOrCreate(
-                ['name' => $permission->value],
-                ['description' => 'Old description']
-            );
-        }
+        $user = User::factory()->create();
+        $user->assignRole(RoleEnum::DATA_MANAGER->value);
 
-        // Manually update one permission's description to old value
-        $permission = Permission::where('name', PermissionEnum::VIEW_DATA->value)->first();
-        $permission->update(['description' => 'Old description']);
+        $this->artisan('permissions:sync')->assertExitCode(0);
+        $this->artisan('permissions:sync')->assertExitCode(0);
 
-        $this->artisan('permissions:sync')
-            ->assertExitCode(0);
-
-        // Verify description was updated
-        $permission->refresh();
-        $this->assertEquals('Read access to all data models', $permission->description);
+        $this->assertSame(RoleEnum::DATA_MANAGER, $user->fresh()?->currentRole());
     }
 
-    public function test_command_updates_role_descriptions(): void
+    public function test_it_is_idempotent_and_logs_only_real_changes(): void
     {
-        // Use the seeded role and set an old description
-        $role = Role::where('name', 'Regular User')->first();
-        $role->update(['description' => 'Old description']);
+        $synced = fn (): int => AuditLog::query()->where('action', 'roles.synced')->count();
+        $before = $synced();
 
-        $this->artisan('permissions:sync')
-            ->assertExitCode(0);
+        $this->artisan('permissions:sync')->expectsOutputToContain('already match')->assertExitCode(0);
 
-        // Verify description was updated
-        $role->refresh();
-        $this->assertEquals('Standard user with data operation access', $role->description);
-    }
+        $this->assertSame($before, $synced());
+        $this->assertTrue(AuditLog::query()->where('action', 'console.command')->exists());
 
-    public function test_command_updates_role_permissions_when_changed(): void
-    {
-        // Use the seeded role and reset to only VIEW_DATA (missing others)
-        $role = Role::where('name', 'Regular User')->first();
-        $role->permissions()->detach();
-        $role->givePermissionTo(PermissionEnum::VIEW_DATA->value);
+        Role::findByName(RoleEnum::VISITOR->value, 'web')->givePermissionTo(PermissionEnum::DELETE_DATA->value);
+        $this->artisan('permissions:sync')->assertExitCode(0);
 
-        $this->artisan('permissions:sync')
-            ->assertExitCode(0);
-
-        // Verify all expected permissions are now assigned
-        $role->refresh();
-        $this->assertCount(7, $role->permissions);
-        $this->assertTrue($role->hasPermissionTo(PermissionEnum::ACCESS_MCP->value));
-        $this->assertTrue($role->hasPermissionTo(PermissionEnum::VIEW_DATA->value));
-        $this->assertTrue($role->hasPermissionTo(PermissionEnum::CREATE_DATA->value));
-        $this->assertTrue($role->hasPermissionTo(PermissionEnum::UPDATE_DATA->value));
-        $this->assertTrue($role->hasPermissionTo(PermissionEnum::DELETE_DATA->value));
-        $this->assertTrue($role->hasPermissionTo(PermissionEnum::ACCESS_ADMIN_PANEL->value));
-        $this->assertTrue($role->hasPermissionTo(PermissionEnum::MANAGE_REFERENCE_DATA->value));
-    }
-
-    public function test_command_clears_permission_cache(): void
-    {
-        $this->artisan('permissions:sync')
-            ->assertExitCode(0);
-
-        // This test verifies the command completes without errors
-        // The cache clearing is tested implicitly - if cache wasn't cleared,
-        // subsequent permission checks would fail
-        $this->assertTrue(true);
+        $this->assertSame($before + 1, $synced());
     }
 }

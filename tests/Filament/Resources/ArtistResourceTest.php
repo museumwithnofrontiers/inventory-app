@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use App\Enums\Permission;
 use App\Filament\Resources\ArtistResource;
 use App\Filament\Resources\ArtistResource\Pages\CreateArtist;
 use App\Filament\Resources\ArtistResource\Pages\EditArtist;
@@ -12,6 +13,7 @@ use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\ArtistsRelationManager;
 use App\Models\Artist;
 use App\Models\Item;
+use App\Models\User;
 use Filament\Actions\DeleteAction as PageDeleteAction;
 use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Actions\DetachAction;
@@ -50,26 +52,27 @@ class ArtistResourceTest extends TestCase
             ->assertSee('Sinan the Architect');
     }
 
-    public function test_users_without_reference_data_permission_cannot_open_the_resource(): void
+    public function test_a_visitor_reads_the_resource_but_cannot_change_it(): void
     {
         $artist = Artist::factory()->create();
         $this->setCurrentPanel();
+        $visitor = $this->createViewOnlyUser();
 
-        foreach ([$this->createViewOnlyUser(), $this->createCrudUser()] as $user) {
-            $this->actingAs($user)->get(ArtistResource::getUrl('index'))->assertForbidden();
-            $this->actingAs($user)->get(ArtistResource::getUrl('create'))->assertForbidden();
-            $this->actingAs($user)->get(ArtistResource::getUrl('view', ['record' => $artist]))->assertForbidden();
-            $this->actingAs($user)->get(ArtistResource::getUrl('edit', ['record' => $artist]))->assertForbidden();
-        }
+        $this->actingAs($visitor)->get(ArtistResource::getUrl('index'))->assertOk();
+        $this->actingAs($visitor)->get(ArtistResource::getUrl('view', ['record' => $artist]))->assertOk();
+        $this->actingAs($visitor)->get(ArtistResource::getUrl('create'))->assertForbidden();
+        $this->actingAs($visitor)->get(ArtistResource::getUrl('edit', ['record' => $artist]))->assertForbidden();
     }
 
-    public function test_navigation_follows_the_reference_data_permission(): void
+    public function test_navigation_follows_the_policy(): void
     {
-        $this->actingAs($this->createReferenceDataUser());
+        $this->actingAs($this->createViewOnlyUser());
         $this->assertTrue(ArtistResource::canViewAny());
         $this->assertTrue(ArtistResource::shouldRegisterNavigation());
 
-        $this->actingAs($this->createCrudUser());
+        $panelOnly = User::factory()->create();
+        $panelOnly->givePermissionTo(Permission::ACCESS_ADMIN_PANEL->value);
+        $this->actingAs($panelOnly);
         $this->assertFalse(ArtistResource::canViewAny());
         $this->assertFalse(ArtistResource::shouldRegisterNavigation());
 
@@ -271,8 +274,8 @@ class ArtistResourceTest extends TestCase
 
         $this->setCurrentPanel();
 
-        // A data user may update items, but not the artist itself.
-        Livewire::actingAs($this->createCrudUser())
+        // A Visitor updates neither.
+        Livewire::actingAs($this->createViewOnlyUser())
             ->test(ItemsRelationManager::class, ['ownerRecord' => $artist, 'pageClass' => ViewArtist::class])
             ->assertTableActionHidden('attach')
             ->assertTableActionHidden('detach', $item->getKey());

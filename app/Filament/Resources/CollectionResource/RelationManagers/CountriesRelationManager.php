@@ -2,11 +2,11 @@
 
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
-use App\Enums\Permission;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CountryResource;
 use App\Filament\Support\RecordSelect;
+use App\Models\Country;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -29,13 +29,12 @@ class CountriesRelationManager extends RelationManager
     protected static ?string $title = 'Countries';
 
     /**
-     * Countries are reference data (their own screen needs
-     * manage-reference-data); a collection's countries are part of its data,
-     * shown to whoever views data, as the item's tags are.
+     * A collection's countries are part of its data, shown to whoever may view
+     * countries (CountryPolicy).
      */
     public static function canViewForRecord(Model $ownerRecord, string $pageClass): bool
     {
-        return auth()->user()?->hasPermissionTo(Permission::VIEW_DATA->value) ?? false;
+        return auth()->user()?->can('viewAny', Country::class) ?? false;
     }
 
     public function table(Table $table): Table

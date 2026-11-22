@@ -83,7 +83,7 @@ class ContributorResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('viewAny', Contributor::class) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool

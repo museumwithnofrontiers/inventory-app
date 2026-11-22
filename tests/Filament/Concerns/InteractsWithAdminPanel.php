@@ -34,28 +34,18 @@ trait InteractsWithAdminPanel
         return $user;
     }
 
+    /**
+     * Reference data follows the data rule (App\Policies\DataPolicy): the
+     * user who manages it is the Manager of Data.
+     */
     protected function createReferenceDataUser(): User
     {
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
-
-        return $user;
+        return $this->createCrudUser();
     }
 
-    /**
-     * The seeded "Regular User" shape: the data permissions and
-     * `manage-reference-data`, as needed to link shared data (artists,
-     * dynasties) to items from either side.
-     */
     protected function createReferenceDataCrudUser(): User
     {
-        $user = $this->createCrudUser();
-        $user->givePermissionTo(Permission::MANAGE_REFERENCE_DATA->value);
-
-        return $user;
+        return $this->createCrudUser();
     }
 
     protected function createRoleManagerUser(): User
@@ -63,7 +53,7 @@ trait InteractsWithAdminPanel
         $user = User::factory()->create(['email_verified_at' => now()]);
         $user->givePermissionTo([
             Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::MANAGE_ROLES->value,
+            Permission::MANAGE_USERS->value,
         ]);
 
         return $user;

@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\RelationManagers;
 
-use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ItemsRelationManager as CollectionItemsRelationManager;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager as CollectionPartnersRelationManager;
@@ -25,8 +24,6 @@ use App\Filament\Resources\PartnerResource\RelationManagers\TranslationsRelation
 use App\Filament\Resources\PartnerTranslationResource\Pages\EditPartnerTranslation;
 use App\Filament\Resources\PartnerTranslationResource\RelationManagers\SiblingTranslationsRelationManager as PartnerTranslationSiblingTranslationsRelationManager;
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
-use App\Filament\Resources\RoleResource\Pages\ViewRole;
-use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
 use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationManager as TimelineEventItemsRelationManager;
 use App\Models\Artist;
@@ -44,9 +41,9 @@ use App\Models\Tag;
 use App\Models\TimelineEvent;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Livewire\Livewire;
-use Spatie\Permission\Models\Permission as SpatiePermission;
 use Spatie\Permission\Models\Role;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
@@ -258,24 +255,16 @@ class AuthorizesRelationMutationsTest extends TestCase
     }
 
     /**
-     * Tag has its own policy (TagPolicy), keyed on `manage-reference-data`, not
-     * on the generic data permissions. Attach/Detach must ignore that policy
-     * entirely and gate purely on the host Item's `update` — a user who is
-     * fully authorized to manage tags directly still can't attach/detach one
-     * from an Item they can't update. Before this story, Filament's default
-     * `canAttach()`/`canDetach()` allowed this unconditionally, because
-     * TagPolicy doesn't define `attach`/`detach` methods.
+     * Attach/Detach ignore Tag's own policy and gate purely on the host Item's
+     * `update`: a user fully allowed to manage tags still can't attach/detach
+     * one from an Item they can't update (here, a policy refusing that Item).
      */
     public function test_item_tags_relation_manager_ignores_tags_own_policy_and_requires_host_update(): void
     {
         $item = Item::factory()->Object()->create();
         $tag = Tag::factory()->create();
-        $user = User::factory()->create(['email_verified_at' => now()]);
-        $user->givePermissionTo([
-            Permission::ACCESS_ADMIN_PANEL->value,
-            Permission::VIEW_DATA->value,
-            Permission::MANAGE_REFERENCE_DATA->value,
-        ]);
+        $user = $this->createCrudUser();
+        Gate::before(fn (User $actor, string $ability, array $arguments): ?bool => $ability === 'update' && ($arguments[0] ?? null) instanceof Item ? false : null);
 
         $this->setCurrentPanel();
 
@@ -899,59 +888,5 @@ class AuthorizesRelationMutationsTest extends TestCase
             ])
             ->assertTableActionVisible('viewTranslation', $sibling)
             ->assertTableActionVisible('editTranslation', $sibling);
-    }
-
-    // ── Role: PermissionsRelationManager (pinned) ─────────────────────────────
-    //
-    // RolePolicy gates every ability on `manage-roles`, so there is no user who
-    // can view a Role but not update it; the view-only user, who lacks
-    // `manage-roles`, stands in for one who can't update the Role.
-
-    public function test_role_permissions_relation_manager_hides_mutations_for_a_user_who_cannot_update_the_role(): void
-    {
-        $role = $this->makeRole();
-        $permission = SpatiePermission::firstOrCreate([
-            'name' => 'sample-permission-view-only',
-            'guard_name' => config('fortify.guard', 'web'),
-        ]);
-        $role->givePermissionTo($permission);
-        $user = $this->createViewOnlyUser();
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(PermissionsRelationManager::class, [
-                'ownerRecord' => $role,
-                'pageClass' => ViewRole::class,
-            ])
-            ->assertTableActionHidden('attach')
-            ->assertTableActionHidden('createPermission')
-            ->assertTableActionHidden('edit', $permission->getKey())
-            ->assertTableActionHidden('detach', $permission->getKey())
-            ->assertTableActionHidden('deletePermission', $permission->getKey());
-    }
-
-    public function test_role_permissions_relation_manager_keeps_mutations_for_role_manager_user(): void
-    {
-        $role = $this->makeRole();
-        $permission = SpatiePermission::firstOrCreate([
-            'name' => 'sample-permission-role-manager',
-            'guard_name' => config('fortify.guard', 'web'),
-        ]);
-        $role->givePermissionTo($permission);
-        $user = $this->createRoleManagerUser();
-
-        $this->setCurrentPanel();
-
-        Livewire::actingAs($user)
-            ->test(PermissionsRelationManager::class, [
-                'ownerRecord' => $role,
-                'pageClass' => ViewRole::class,
-            ])
-            ->assertTableActionVisible('attach')
-            ->assertTableActionVisible('createPermission')
-            ->assertTableActionVisible('edit', $permission->getKey())
-            ->assertTableActionVisible('detach', $permission->getKey())
-            ->assertTableActionVisible('deletePermission', $permission->getKey());
     }
 }

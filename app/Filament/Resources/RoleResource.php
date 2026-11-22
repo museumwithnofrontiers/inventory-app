@@ -2,25 +2,23 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\RoleResource\Pages\CreateRole;
-use App\Filament\Resources\RoleResource\Pages\EditRole;
 use App\Filament\Resources\RoleResource\Pages\ListRole;
 use App\Filament\Resources\RoleResource\Pages\ViewRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Spatie\Permission\Models\Role;
 
+/**
+ * The roles, read-only. They are defined in code (App\Enums\Role) and kept in
+ * the database by RoleSync; users get one in the Users screen.
+ */
 class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
@@ -40,27 +38,12 @@ class RoleResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('viewAny', Role::class) ?? false;
+        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
     }
 
     public static function shouldRegisterNavigation(): bool
     {
         return static::canViewAny();
-    }
-
-    public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                TextInput::make('name')
-                    ->required()
-                    ->maxLength(255),
-                TextInput::make('guard_name')
-                    ->label('Guard')
-                    ->default('web')
-                    ->required()
-                    ->maxLength(255),
-            ]);
     }
 
     public static function table(Table $table): Table
@@ -72,10 +55,8 @@ class RoleResource extends Resource
                 TextColumn::make('name')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('guard_name')
-                    ->label('Guard')
-                    ->badge()
-                    ->sortable(),
+                TextColumn::make('description')
+                    ->wrap(),
                 TextColumn::make('permissions_count')
                     ->label('Permissions')
                     ->counts('permissions')
@@ -84,16 +65,9 @@ class RoleResource extends Resource
                     ->label('Users')
                     ->counts('users')
                     ->sortable(),
-                TextColumn::make('created_at')
-                    ->label('Created')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->actions([
                 ViewAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
             ]);
     }
 
@@ -105,25 +79,12 @@ class RoleResource extends Resource
                 InfolistSection::make('Core Information')
                     ->schema([
                         TextEntry::make('name'),
-                        TextEntry::make('guard_name')
-                            ->label('Guard'),
+                        TextEntry::make('description'),
                         TextEntry::make('permissions.name')
                             ->label('Permissions')
                             ->badge(),
                     ])
-                    ->columns(2),
-                InfolistSection::make('System Information')
-                    ->schema([
-                        TextEntry::make('created_at')
-                            ->label('Created')
-                            ->dateTime(),
-                        TextEntry::make('updated_at')
-                            ->label('Updated')
-                            ->dateTime(),
-                    ])
-                    ->columns(2)
-                    ->collapsible()
-                    ->collapsed(),
+                    ->columns(1),
             ]);
     }
 
@@ -139,8 +100,6 @@ class RoleResource extends Resource
     {
         return [
             'index' => ListRole::route('/'),
-            'create' => CreateRole::route('/create'),
-            'edit' => EditRole::route('/{record}/edit'),
             'view' => ViewRole::route('/{record}'),
         ];
     }
