@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CustomRestrictedDocsAccess;
 use App\Support\Csp\ApiDocsPreset;
+use App\Support\Documentation\TypeToSchemaExtensions\FileResponseToSchema;
 use Spatie\Csp\AddCspHeaders;
 
 return [
@@ -20,7 +21,7 @@ return [
     /*
      * The path where your OpenAPI specification will be exported.
      */
-    'export_path' => 'api.json',
+    'export_path' => 'docs/_openapi/api.json',
 
     'info' => [
         /*
@@ -41,7 +42,7 @@ return [
         /*
          * Define the title of the documentation's website. App name is used when this config is `null`.
          */
-        'title' => null,
+        'title' => 'Inventory',
 
         /*
          * Define the theme of the documentation. Available options are `light` and `dark`.
@@ -87,7 +88,9 @@ return [
         AddCspHeaders::class.':'.ApiDocsPreset::class,
     ],
 
-    'extensions' => [],
+    'extensions' => [
+        FileResponseToSchema::class,
+    ],
 
     'enabled' => env('API_DOCS_ENABLED', false),
 ];

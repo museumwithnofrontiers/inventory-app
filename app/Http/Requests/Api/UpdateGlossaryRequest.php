@@ -5,6 +5,7 @@ namespace App\Http\Requests\Api;
 use App\Models\Glossary;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateGlossaryRequest extends FormRequest
 {
@@ -23,7 +24,7 @@ class UpdateGlossaryRequest extends FormRequest
 
         return [
             'id' => ['prohibited'],
-            'internal_name' => ['required', 'string', 'unique:glossaries,internal_name,'.$glossary->id],
+            'internal_name' => ['required', 'string', Rule::unique('glossaries', 'internal_name')->ignore($glossary)],
             'backward_compatibility' => ['nullable', 'string'],
         ];
     }

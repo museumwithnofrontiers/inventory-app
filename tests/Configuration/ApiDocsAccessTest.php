@@ -6,9 +6,17 @@ use Tests\TestCase;
 
 class ApiDocsAccessTest extends TestCase
 {
+    public function test_the_app_serves_no_public_api_json(): void
+    {
+        config(['app.env' => 'production', 'scramble.enabled' => false]);
+
+        $this->get('/api.json')->assertNotFound();
+        $this->get(route('scramble.docs.document'))->assertForbidden();
+    }
+
     public function test_api_json_is_valid(): void
     {
-        $response = $this->get(route('api.documentation'));
+        $response = $this->get(route('scramble.docs.document'));
 
         $response->assertOk();
         $response->assertHeader('Content-Type', 'application/json');
