@@ -7,7 +7,7 @@ nav_order: 3
 
 # ADR 003 — The Filament panel is the only UI
 
-- **Status:** Accepted
+- **Status:** Accepted; amended. Two of its points no longer hold: the personal API tokens page is gone, since OAuth 2.1 through Passport is the only way to get a token (M12), and the self-registration setting belongs to `manage users` alone, since `manage settings` no longer exists ([ADR 007](007-authorization-model)).
 - **Date:** 2026-10-02
 - **Milestone:** M8 — Retire /web — /admin is the root (epics #1868, #1869, #1870)
 

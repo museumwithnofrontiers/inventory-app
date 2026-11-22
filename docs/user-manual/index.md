@@ -16,7 +16,7 @@ Every website and mini-site already exists: their content came from the legacy d
 
 | Manual | Read it when |
 |---|---|
-| [Master manual]({{ '/user-manual/master/' | relative_url }}) | Always first. It covers everything common to every site: signing in, finding records, items and their texts, images, collections and placements, partners, reference data, legacy links, and what happens after you save. |
+| [Master manual]({{ '/user-manual/master/' | relative_url }}) | Always first. It covers everything common to every site: signing in, finding records, items and their texts, images, collections and placements, partners, reference data, legacy links, what happens after you save, and users and roles. |
 | [Site families]({{ '/user-manual/sites/' | relative_url }}) | You maintain one family of sites. Each page adds only what is specific to that family: which panel records make up the site, which texts it prints, and which settings live outside the panel. |
 
 ## Three rules to keep in mind

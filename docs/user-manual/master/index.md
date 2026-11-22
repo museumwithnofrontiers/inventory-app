@@ -14,13 +14,14 @@ This manual covers what is common to every website. Read it before the manual of
 | Chapter | What it covers |
 |---|---|
 | [1. Getting started]({{ '/user-manual/master/getting-started' | relative_url }}) | Signing in with two-factor authentication, the menu, the global search and the three tree browsers. |
-| [2. Items and their texts]({{ '/user-manual/master/items' | relative_url }}) | Objects, monuments, details and pictures; their translations, which column holds which text, the status, and credits as printed. |
+| [2. Items and their texts]({{ '/user-manual/master/items' | relative_url }}) | Objects, monuments, details and pictures; their translations, which column holds which text, draft, and credits as printed. |
 | [3. Images and documents]({{ '/user-manual/master/images' | relative_url }}) | Uploading through the image pipeline, attaching and detaching, the copyright burned on a picture, the picture credit, the photographer, image texts, and documents. |
 | [4. Collections and placements]({{ '/user-manual/master/collections' | relative_url }}) | Collections, themes, placements (order, variants, texts, picture shown, curator selection), related collections and the editorial flags. |
 | [5. Partners and visit information]({{ '/user-manual/master/partners' | relative_url }}) | Partners, their translations, contacts, logos, images and participations; visit information on partners, monuments and locations. |
 | [6. Reference data]({{ '/user-manual/master/reference-data' | relative_url }}) | Tags, artists, dynasties, glossary, contributors, authors and credits, timelines, links and publications. |
 | [7. Legacy links]({{ '/user-manual/master/legacy-links' | relative_url }}) | The links from a record to its legacy pages. |
 | [8. From the panel to the website]({{ '/user-manual/master/publishing-cycle' | relative_url }}) | What happens after you save. |
+| [9. Users and roles]({{ '/user-manual/master/users-and-roles' | relative_url }}) | The four roles, connected apps, and for user managers: accounts, registrations and the audit log. |
 
 ## Words used in these manuals
 
