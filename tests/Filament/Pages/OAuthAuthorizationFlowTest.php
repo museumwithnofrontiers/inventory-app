@@ -13,6 +13,7 @@ use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Str;
 use Laravel\Passport\Client;
+use Laravel\Passport\ClientRepository;
 use Livewire\Livewire;
 use Tests\TestCase;
 use Tests\Traits\CreatesTwoFactorUsers;
@@ -139,6 +140,60 @@ class OAuthAuthorizationFlowTest extends TestCase
 
         $this->assertSame(route('filament.admin.auth.login'), $panelLogin);
         $this->assertStringNotContainsString('/web', (string) $panelLogin);
+    }
+
+    public function test_an_app_approved_before_still_goes_through_the_consent_page(): void
+    {
+        $user = $this->panelUser();
+        $this->issueOAuthToken($user, $this->client, OAuthScope::API_READ->value);
+
+        $this->get($this->oauthAuthorizeUrl($this->client, $this->verifier, ['scope' => OAuthScope::API_READ->value]))
+            ->assertRedirect(AuthorizeApplicationPage::getUrl());
+    }
+
+    public function test_a_user_whose_mfa_was_reset_gets_no_code_for_an_app_approved_before(): void
+    {
+        $user = $this->panelUser();
+        $this->issueOAuthToken($user, $this->client, OAuthScope::API_READ->value);
+        $user->forceFill(['two_factor_secret' => null, 'two_factor_confirmed_at' => null])->save();
+
+        $this->get($this->oauthAuthorizeUrl($this->client, $this->verifier, ['scope' => OAuthScope::API_READ->value]))
+            ->assertRedirect(AuthorizeApplicationPage::getUrl());
+        $this->get(AuthorizeApplicationPage::getUrl())
+            ->assertRedirect(route('filament.admin.auth.two-factor-setup'));
+    }
+
+    public function test_a_confidential_client_must_send_a_pkce_challenge(): void
+    {
+        $confidential = app(ClientRepository::class)
+            ->createAuthorizationCodeGrantClient('Server app', [$this->oauthRedirectUri], true);
+        $this->actingAs($this->panelUser());
+
+        $response = $this->get($this->oauthAuthorizeUrl($confidential, $this->verifier, [
+            'code_challenge' => '',
+            'code_challenge_method' => '',
+        ]));
+
+        $response->assertStatus(400);
+        $this->assertSame('invalid_request', $response->json('error'));
+        $this->assertNull(session(AuthorizeApplicationPage::SESSION_KEY));
+
+        // With a challenge, it reaches the consent page like any client
+        $this->get($this->oauthAuthorizeUrl($confidential, $this->verifier))
+            ->assertRedirect(AuthorizeApplicationPage::getUrl());
+    }
+
+    public function test_the_plain_pkce_method_is_refused(): void
+    {
+        $this->actingAs($this->panelUser());
+
+        $response = $this->get($this->oauthAuthorizeUrl($this->client, $this->verifier, [
+            'code_challenge' => $this->verifier,
+            'code_challenge_method' => 'plain',
+        ]));
+
+        $response->assertStatus(400);
+        $this->assertSame('invalid_request', $response->json('error'));
     }
 
     private function panelUser(): User

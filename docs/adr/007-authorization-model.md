@@ -44,6 +44,7 @@ An assessment of the panel, the REST API and the MCP server (2026-11-22) found t
    - every revocation;
    - every run of a `user:`, `permissions:`, `auth:` or `passport:` command, with the server account that ran it.
 7. **Disabling an account cuts it off.** Suspending a user revokes their sessions, OAuth access and refresh tokens, and authorization codes. The API and the MCP server refuse any account that is not active.
+8. **Every OAuth authorization goes through the panel.** Passport would issue a code without asking again when the user already holds a token for the app, on a route that runs none of the panel's checks. The consent page, a panel page, now decides every time, so the account state, panel access and MFA enrolment apply there. Every client, confidential ones included, sends a PKCE challenge with S256 (OAuth 2.1).
 
 ## Consequences
 

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Enums\OAuthScope;
 use App\Filament\Pages\AuthorizeApplicationPage;
+use App\Http\Controllers\OAuth\AuthorizationController;
 use App\Support\OAuth\AuthorizationCodeClient;
 use Carbon\CarbonInterval;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -13,13 +14,15 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Passport\Client;
+use Laravel\Passport\Http\Controllers\AuthorizationController as PassportAuthorizationController;
 use Laravel\Passport\Passport;
 use Laravel\Passport\Scope;
 
 /**
  * The OAuth 2.1 authorization server (Passport): the only way to obtain a
- * token for this app. Authorization code with PKCE is the only grant; see
- * AuthorizationCodeClient for how the others are refused.
+ * token for this app. Authorization code with PKCE (S256, every client) is
+ * the only grant; see AuthorizationCodeClient for how the others are refused
+ * and AuthorizationController for PKCE and consent.
  */
 class OAuthServiceProvider extends ServiceProvider
 {
@@ -28,6 +31,10 @@ class OAuthServiceProvider extends ServiceProvider
         // Read when Passport loads its routes and builds the server, so it
         // must be set before Passport boots
         Passport::$deviceCodeGrantEnabled = false;
+
+        // Passport's authorize route, with PKCE for every client and the
+        // consent page every time
+        $this->app->bind(PassportAuthorizationController::class, AuthorizationController::class);
     }
 
     public function boot(): void
