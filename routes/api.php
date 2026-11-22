@@ -64,11 +64,13 @@ Route::get('/info', [InfoController::class, 'index'])->name('info.index');
 Route::get('/health', [InfoController::class, 'health'])->name('info.health');
 Route::get('/version', [InfoController::class, 'version'])->name('info.version');
 
-// The signed-in user's own profile, role and permissions: the only account
-// data the API serves. Users, roles and permissions change in the panel only.
+/**
+ * The signed-in user's own profile, role and permissions: the only account
+ * data the API serves. Users, roles and permissions change in the panel only.
+ */
 Route::get('/user', function (Request $request) {
     return $request->user();
-})->middleware(['auth:api', EnsureAccountIsActive::class, 'scope:'.OAuthScope::API_READ->value.','.OAuthScope::MCP->value]);
+})->middleware(['auth:api', EnsureAccountIsActive::class, 'scope:'.OAuthScope::API_READ->value.','.OAuthScope::MCP->value])->name('user.show');
 
 Route::get('/user/permissions', [UserPermissionsController::class, 'index'])
     ->name('user.permissions')
@@ -373,152 +375,152 @@ Route::middleware(['auth:api', EnsureAccountIsActive::class])->group(function ()
         Route::patch('context/{context}/default', [ContextController::class, 'setDefault'])->name('context.setDefault');
         Route::delete('context/default', [ContextController::class, 'clearDefault'])->name('context.clearDefault');
         Route::patch('context/{context}', [ContextController::class, 'update'])->name('context.update');
-        Route::put('context/{context}', [ContextController::class, 'update']);
+        Route::put('context/{context}', [ContextController::class, 'update'])->name('context.update.put');
 
         Route::patch('language/{language}/default', [LanguageController::class, 'setDefault'])->name('language.setDefault');
         Route::delete('language/default', [LanguageController::class, 'clearDefault'])->name('language.clearDefault');
         Route::patch('language/{language}', [LanguageController::class, 'update'])->name('language.update');
-        Route::put('language/{language}', [LanguageController::class, 'update']);
+        Route::put('language/{language}', [LanguageController::class, 'update'])->name('language.update.put');
 
         Route::patch('language-translation/{languageTranslation}', [LanguageTranslationController::class, 'update'])->name('language-translation.update');
-        Route::put('language-translation/{languageTranslation}', [LanguageTranslationController::class, 'update']);
+        Route::put('language-translation/{languageTranslation}', [LanguageTranslationController::class, 'update'])->name('language-translation.update.put');
 
         Route::patch('glossary/{glossary}', [GlossaryController::class, 'update'])->name('glossary.update');
-        Route::put('glossary/{glossary}', [GlossaryController::class, 'update']);
+        Route::put('glossary/{glossary}', [GlossaryController::class, 'update'])->name('glossary.update.put');
 
         Route::patch('glossary-translation/{glossaryTranslation}', [GlossaryTranslationController::class, 'update'])->name('glossary-translation.update');
-        Route::put('glossary-translation/{glossaryTranslation}', [GlossaryTranslationController::class, 'update']);
+        Route::put('glossary-translation/{glossaryTranslation}', [GlossaryTranslationController::class, 'update'])->name('glossary-translation.update.put');
 
         Route::patch('glossary-spelling/{glossarySpelling}', [GlossarySpellingController::class, 'update'])->name('glossary-spelling.update');
-        Route::put('glossary-spelling/{glossarySpelling}', [GlossarySpellingController::class, 'update']);
+        Route::put('glossary-spelling/{glossarySpelling}', [GlossarySpellingController::class, 'update'])->name('glossary-spelling.update.put');
 
         Route::patch('project/{project}', [ProjectController::class, 'update'])->name('project.update');
-        Route::put('project/{project}', [ProjectController::class, 'update']);
+        Route::put('project/{project}', [ProjectController::class, 'update'])->name('project.update.put');
         Route::patch('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'update'])->name('project-translation.update');
-        Route::put('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'update']);
+        Route::put('project-translation/{projectTranslation}', [ProjectTranslationController::class, 'update'])->name('project-translation.update.put');
 
         Route::patch('country/{country}', [CountryController::class, 'update'])->name('country.update');
-        Route::put('country/{country}', [CountryController::class, 'update']);
+        Route::put('country/{country}', [CountryController::class, 'update'])->name('country.update.put');
 
         Route::patch('country-translation/{countryTranslation}', [CountryTranslationController::class, 'update'])->name('country-translation.update');
-        Route::put('country-translation/{countryTranslation}', [CountryTranslationController::class, 'update']);
+        Route::put('country-translation/{countryTranslation}', [CountryTranslationController::class, 'update'])->name('country-translation.update.put');
 
         Route::patch('tag/{tag}', [TagController::class, 'update'])->name('tag.update');
-        Route::put('tag/{tag}', [TagController::class, 'update']);
+        Route::put('tag/{tag}', [TagController::class, 'update'])->name('tag.update.put');
 
         Route::patch('artist/{artist}', [ArtistController::class, 'update'])->name('artist.update');
-        Route::put('artist/{artist}', [ArtistController::class, 'update']);
+        Route::put('artist/{artist}', [ArtistController::class, 'update'])->name('artist.update.put');
         Route::patch('dynasty/{dynasty}', [DynastyController::class, 'update'])->name('dynasty.update');
-        Route::put('dynasty/{dynasty}', [DynastyController::class, 'update']);
+        Route::put('dynasty/{dynasty}', [DynastyController::class, 'update'])->name('dynasty.update.put');
 
         Route::patch('dynasty-translation/{dynastyTranslation}', [DynastyTranslationController::class, 'update'])->name('dynasty-translation.update');
-        Route::put('dynasty-translation/{dynastyTranslation}', [DynastyTranslationController::class, 'update']);
+        Route::put('dynasty-translation/{dynastyTranslation}', [DynastyTranslationController::class, 'update'])->name('dynasty-translation.update.put');
 
         Route::patch('author/{author}', [AuthorController::class, 'update'])->name('author.update');
-        Route::put('author/{author}', [AuthorController::class, 'update']);
+        Route::put('author/{author}', [AuthorController::class, 'update'])->name('author.update.put');
 
         Route::patch('author-translation/{authorTranslation}', [AuthorTranslationController::class, 'update'])->name('author-translation.update');
-        Route::put('author-translation/{authorTranslation}', [AuthorTranslationController::class, 'update']);
+        Route::put('author-translation/{authorTranslation}', [AuthorTranslationController::class, 'update'])->name('author-translation.update.put');
 
         Route::patch('timeline/{timeline}', [TimelineController::class, 'update'])->name('timeline.update');
-        Route::put('timeline/{timeline}', [TimelineController::class, 'update']);
+        Route::put('timeline/{timeline}', [TimelineController::class, 'update'])->name('timeline.update.put');
 
         Route::patch('timeline-event/{timelineEvent}', [TimelineEventController::class, 'update'])->name('timeline-event.update');
-        Route::put('timeline-event/{timelineEvent}', [TimelineEventController::class, 'update']);
+        Route::put('timeline-event/{timelineEvent}', [TimelineEventController::class, 'update'])->name('timeline-event.update.put');
 
         Route::patch('timeline-event-translation/{timelineEventTranslation}', [TimelineEventTranslationController::class, 'update'])->name('timeline-event-translation.update');
-        Route::put('timeline-event-translation/{timelineEventTranslation}', [TimelineEventTranslationController::class, 'update']);
+        Route::put('timeline-event-translation/{timelineEventTranslation}', [TimelineEventTranslationController::class, 'update'])->name('timeline-event-translation.update.put');
 
         Route::patch('timeline-event-image/{timelineEventImage}', [TimelineEventImageController::class, 'update'])->name('timeline-event-image.update');
-        Route::put('timeline-event-image/{timelineEventImage}', [TimelineEventImageController::class, 'update']);
+        Route::put('timeline-event-image/{timelineEventImage}', [TimelineEventImageController::class, 'update'])->name('timeline-event-image.update.put');
         Route::patch('timeline-event-image/{timelineEventImage}/move-up', [TimelineEventImageController::class, 'moveUp'])->name('timeline-event-image.moveUp');
         Route::patch('timeline-event-image/{timelineEventImage}/move-down', [TimelineEventImageController::class, 'moveDown'])->name('timeline-event-image.moveDown');
 
         Route::patch('partner/{partner}', [PartnerController::class, 'update'])->name('partner.update');
-        Route::put('partner/{partner}', [PartnerController::class, 'update']);
+        Route::put('partner/{partner}', [PartnerController::class, 'update'])->name('partner.update.put');
 
         Route::patch('partner-translation/{partnerTranslation}', [PartnerTranslationController::class, 'update'])->name('partner-translation.update');
-        Route::put('partner-translation/{partnerTranslation}', [PartnerTranslationController::class, 'update']);
+        Route::put('partner-translation/{partnerTranslation}', [PartnerTranslationController::class, 'update'])->name('partner-translation.update.put');
 
         Route::patch('partner-image/{partnerImage}', [PartnerImageController::class, 'update'])->name('partner-image.update');
-        Route::put('partner-image/{partnerImage}', [PartnerImageController::class, 'update']);
+        Route::put('partner-image/{partnerImage}', [PartnerImageController::class, 'update'])->name('partner-image.update.put');
         Route::patch('partner-image/{partnerImage}/move-up', [PartnerImageController::class, 'moveUp'])->name('partner-image.moveUp');
         Route::patch('partner-image/{partnerImage}/move-down', [PartnerImageController::class, 'moveDown'])->name('partner-image.moveDown');
         Route::patch('partner-image/{partnerImage}/tighten-ordering', [PartnerImageController::class, 'tightenOrdering'])->name('partner-image.tightenOrdering');
 
         Route::patch('partner-logo/{partnerLogo}', [PartnerLogoController::class, 'update'])->name('partner-logo.update');
-        Route::put('partner-logo/{partnerLogo}', [PartnerLogoController::class, 'update']);
+        Route::put('partner-logo/{partnerLogo}', [PartnerLogoController::class, 'update'])->name('partner-logo.update.put');
         Route::patch('partner-logo/{partnerLogo}/move-up', [PartnerLogoController::class, 'moveUp'])->name('partner-logo.moveUp');
         Route::patch('partner-logo/{partnerLogo}/move-down', [PartnerLogoController::class, 'moveDown'])->name('partner-logo.moveDown');
         Route::patch('partner-logo/{partnerLogo}/tighten-ordering', [PartnerLogoController::class, 'tightenOrdering'])->name('partner-logo.tightenOrdering');
 
         Route::patch('partner-translation-image/{partnerTranslationImage}', [PartnerTranslationImageController::class, 'update'])->name('partner-translation-image.update');
-        Route::put('partner-translation-image/{partnerTranslationImage}', [PartnerTranslationImageController::class, 'update']);
+        Route::put('partner-translation-image/{partnerTranslationImage}', [PartnerTranslationImageController::class, 'update'])->name('partner-translation-image.update.put');
         Route::patch('partner-translation-image/{partnerTranslationImage}/move-up', [PartnerTranslationImageController::class, 'moveUp'])->name('partner-translation-image.moveUp');
         Route::patch('partner-translation-image/{partnerTranslationImage}/move-down', [PartnerTranslationImageController::class, 'moveDown'])->name('partner-translation-image.moveDown');
         Route::patch('partner-translation-image/{partnerTranslationImage}/tighten-ordering', [PartnerTranslationImageController::class, 'tightenOrdering'])->name('partner-translation-image.tightenOrdering');
 
         Route::patch('item/{item}/tags', [ItemController::class, 'updateTags'])->name('item.updateTags');
         Route::patch('item/{item}', [ItemController::class, 'update'])->name('item.update');
-        Route::put('item/{item}', [ItemController::class, 'update']);
+        Route::put('item/{item}', [ItemController::class, 'update'])->name('item.update.put');
 
         Route::patch('item-image/{itemImage}', [ItemImageController::class, 'update'])->name('item-image.update');
         Route::patch('image-translation/{imageTranslation}', [ImageTranslationController::class, 'update'])->name('image-translation.update');
-        Route::put('image-translation/{imageTranslation}', [ImageTranslationController::class, 'update']);
+        Route::put('image-translation/{imageTranslation}', [ImageTranslationController::class, 'update'])->name('image-translation.update.put');
         Route::patch('collection-item-translation/{collectionItemTranslation}', [CollectionItemTranslationController::class, 'update'])->name('collection-item-translation.update');
-        Route::put('collection-item-translation/{collectionItemTranslation}', [CollectionItemTranslationController::class, 'update']);
+        Route::put('collection-item-translation/{collectionItemTranslation}', [CollectionItemTranslationController::class, 'update'])->name('collection-item-translation.update.put');
         Route::patch('collection-item-explore-monument/{collectionItemExploreMonument}', [CollectionItemExploreMonumentController::class, 'update'])->name('collection-item-explore-monument.update');
-        Route::put('collection-item-explore-monument/{collectionItemExploreMonument}', [CollectionItemExploreMonumentController::class, 'update']);
-        Route::put('item-image/{itemImage}', [ItemImageController::class, 'update']);
+        Route::put('collection-item-explore-monument/{collectionItemExploreMonument}', [CollectionItemExploreMonumentController::class, 'update'])->name('collection-item-explore-monument.update.put');
+        Route::put('item-image/{itemImage}', [ItemImageController::class, 'update'])->name('item-image.update.put');
         Route::patch('item-image/{itemImage}/move-up', [ItemImageController::class, 'moveUp'])->name('item-image.moveUp');
         Route::patch('item-image/{itemImage}/move-down', [ItemImageController::class, 'moveDown'])->name('item-image.moveDown');
         Route::patch('item-image/{itemImage}/tighten-ordering', [ItemImageController::class, 'tightenOrdering'])->name('item-image.tightenOrdering');
 
         Route::patch('link/{link}', [LinkController::class, 'update'])->name('link.update');
-        Route::put('link/{link}', [LinkController::class, 'update']);
+        Route::put('link/{link}', [LinkController::class, 'update'])->name('link.update.put');
         Route::patch('link/{link}/move-up', [LinkController::class, 'moveUp'])->name('link.moveUp');
         Route::patch('link/{link}/move-down', [LinkController::class, 'moveDown'])->name('link.moveDown');
 
         Route::patch('item-document/{itemDocument}', [ItemDocumentController::class, 'update'])->name('item-document.update');
-        Route::put('item-document/{itemDocument}', [ItemDocumentController::class, 'update']);
+        Route::put('item-document/{itemDocument}', [ItemDocumentController::class, 'update'])->name('item-document.update.put');
         Route::patch('item-document/{itemDocument}/move-up', [ItemDocumentController::class, 'moveUp'])->name('item-document.moveUp');
         Route::patch('item-document/{itemDocument}/move-down', [ItemDocumentController::class, 'moveDown'])->name('item-document.moveDown');
 
         Route::patch('item-item-link/{itemItemLink}', [ItemItemLinkController::class, 'update'])->name('item-item-link.update');
-        Route::put('item-item-link/{itemItemLink}', [ItemItemLinkController::class, 'update']);
+        Route::put('item-item-link/{itemItemLink}', [ItemItemLinkController::class, 'update'])->name('item-item-link.update.put');
 
         Route::patch('item-item-link-translation/{itemItemLinkTranslation}', [ItemItemLinkTranslationController::class, 'update'])->name('item-item-link-translation.update');
-        Route::put('item-item-link-translation/{itemItemLinkTranslation}', [ItemItemLinkTranslationController::class, 'update']);
+        Route::put('item-item-link-translation/{itemItemLinkTranslation}', [ItemItemLinkTranslationController::class, 'update'])->name('item-item-link-translation.update.put');
 
         Route::patch('collection-image/{collectionImage}', [CollectionImageController::class, 'update'])->name('collection-image.update');
-        Route::put('collection-image/{collectionImage}', [CollectionImageController::class, 'update']);
+        Route::put('collection-image/{collectionImage}', [CollectionImageController::class, 'update'])->name('collection-image.update.put');
         Route::patch('collection-image/{collectionImage}/move-up', [CollectionImageController::class, 'moveUp'])->name('collection-image.moveUp');
         Route::patch('collection-image/{collectionImage}/move-down', [CollectionImageController::class, 'moveDown'])->name('collection-image.moveDown');
         Route::patch('collection-image/{collectionImage}/tighten-ordering', [CollectionImageController::class, 'tightenOrdering'])->name('collection-image.tightenOrdering');
 
         Route::patch('contributor/{contributor}', [ContributorController::class, 'update'])->name('contributor.update');
-        Route::put('contributor/{contributor}', [ContributorController::class, 'update']);
+        Route::put('contributor/{contributor}', [ContributorController::class, 'update'])->name('contributor.update.put');
 
         Route::patch('contributor-translation/{contributorTranslation}', [ContributorTranslationController::class, 'update'])->name('contributor-translation.update');
-        Route::put('contributor-translation/{contributorTranslation}', [ContributorTranslationController::class, 'update']);
+        Route::put('contributor-translation/{contributorTranslation}', [ContributorTranslationController::class, 'update'])->name('contributor-translation.update.put');
 
         Route::patch('contributor-image/{contributorImage}', [ContributorImageController::class, 'update'])->name('contributor-image.update');
-        Route::put('contributor-image/{contributorImage}', [ContributorImageController::class, 'update']);
+        Route::put('contributor-image/{contributorImage}', [ContributorImageController::class, 'update'])->name('contributor-image.update.put');
         Route::patch('contributor-image/{contributorImage}/move-up', [ContributorImageController::class, 'moveUp'])->name('contributor-image.moveUp');
         Route::patch('contributor-image/{contributorImage}/move-down', [ContributorImageController::class, 'moveDown'])->name('contributor-image.moveDown');
         Route::patch('contributor-image/{contributorImage}/tighten-ordering', [ContributorImageController::class, 'tightenOrdering'])->name('contributor-image.tightenOrdering');
 
         Route::patch('item-translation/{item_translation}', [ItemTranslationController::class, 'update'])->name('item-translation.update');
-        Route::put('item-translation/{item_translation}', [ItemTranslationController::class, 'update']);
+        Route::put('item-translation/{item_translation}', [ItemTranslationController::class, 'update'])->name('item-translation.update.put');
 
         Route::patch('collection-translation/{collection_translation}', [CollectionTranslationController::class, 'update'])->name('collection-translation.update');
-        Route::put('collection-translation/{collection_translation}', [CollectionTranslationController::class, 'update']);
+        Route::put('collection-translation/{collection_translation}', [CollectionTranslationController::class, 'update'])->name('collection-translation.update.put');
 
         Route::patch('collection/{collection}', [CollectionController::class, 'update'])->name('collection.update');
-        Route::put('collection/{collection}', [CollectionController::class, 'update']);
+        Route::put('collection/{collection}', [CollectionController::class, 'update'])->name('collection.update.put');
 
         Route::patch('publication/{publication}', [PublicationController::class, 'update'])->name('publication.update');
-        Route::put('publication/{publication}', [PublicationController::class, 'update']);
+        Route::put('publication/{publication}', [PublicationController::class, 'update'])->name('publication.update.put');
 
         // The publication's links: changes to the publication, so update-data
         Route::post('publication/{publication}/attach-collection', [PublicationController::class, 'attachCollection'])->name('publication.attachCollection');
@@ -531,20 +533,20 @@ Route::middleware(['auth:api', EnsureAccountIsActive::class])->group(function ()
         Route::delete('publication/{publication}/detach-tags', [PublicationController::class, 'detachTags'])->name('publication.detachTags');
 
         Route::patch('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update'])->name('publication-translation.update');
-        Route::put('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update']);
+        Route::put('publication-translation/{publicationTranslation}', [PublicationTranslationController::class, 'update'])->name('publication-translation.update.put');
         Route::patch('visit-information/{visitInformation}', [VisitInformationController::class, 'update'])->name('visit-information.update');
-        Route::put('visit-information/{visitInformation}', [VisitInformationController::class, 'update']);
+        Route::put('visit-information/{visitInformation}', [VisitInformationController::class, 'update'])->name('visit-information.update.put');
         Route::patch('partner-contact/{partnerContact}', [PartnerContactController::class, 'update'])->name('partner-contact.update');
-        Route::put('partner-contact/{partnerContact}', [PartnerContactController::class, 'update']);
+        Route::put('partner-contact/{partnerContact}', [PartnerContactController::class, 'update'])->name('partner-contact.update.put');
 
         // Editions have no policy of their own: every mutation is an update of the publication
         Route::post('publication-edition', [PublicationEditionController::class, 'store'])->name('publication-edition.store');
         Route::patch('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'update'])->name('publication-edition.update');
-        Route::put('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'update']);
+        Route::put('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'update'])->name('publication-edition.update.put');
         Route::delete('publication-edition/{publicationEdition}', [PublicationEditionController::class, 'destroy'])->name('publication-edition.destroy');
 
         Route::patch('publication-image/{publicationImage}', [PublicationImageController::class, 'update'])->name('publication-image.update');
-        Route::put('publication-image/{publicationImage}', [PublicationImageController::class, 'update']);
+        Route::put('publication-image/{publicationImage}', [PublicationImageController::class, 'update'])->name('publication-image.update.put');
         Route::patch('publication-image/{publicationImage}/move-up', [PublicationImageController::class, 'moveUp'])->name('publication-image.moveUp');
         Route::patch('publication-image/{publicationImage}/move-down', [PublicationImageController::class, 'moveDown'])->name('publication-image.moveDown');
         Route::patch('publication-image/{publicationImage}/tighten-ordering', [PublicationImageController::class, 'tightenOrdering'])->name('publication-image.tightenOrdering');
@@ -552,7 +554,7 @@ Route::middleware(['auth:api', EnsureAccountIsActive::class])->group(function ()
         // Documents have no permission of their own: every change is an update of the publication
         Route::post('publication/{publication}/documents', [PublicationDocumentController::class, 'store'])->name('publication.documents.store');
         Route::patch('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'update'])->name('publication-document.update');
-        Route::put('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'update']);
+        Route::put('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'update'])->name('publication-document.update.put');
         Route::delete('publication-document/{publicationDocument}', [PublicationDocumentController::class, 'destroy'])->name('publication-document.destroy');
     });
 
@@ -603,7 +605,7 @@ Route::middleware(['auth:api', EnsureAccountIsActive::class])->group(function ()
         Route::delete('image-upload/{image_upload}', [ImageUploadController::class, 'destroy'])->name('image-upload.destroy');
         Route::delete('available-image/{available_image}', [AvailableImageController::class, 'destroy'])->name('available-image.destroy');
         Route::patch('available-image/{available_image}', [AvailableImageController::class, 'update'])->name('available-image.update');
-        Route::put('available-image/{available_image}', [AvailableImageController::class, 'update']);
+        Route::put('available-image/{available_image}', [AvailableImageController::class, 'update'])->name('available-image.update.put');
         Route::delete('item-translation/{item_translation}', [ItemTranslationController::class, 'destroy'])->name('item-translation.destroy');
         Route::delete('collection-translation/{collection_translation}', [CollectionTranslationController::class, 'destroy'])->name('collection-translation.destroy');
         Route::delete('collection/{collection}', [CollectionController::class, 'destroy'])->name('collection.destroy');

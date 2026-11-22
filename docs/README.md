@@ -45,7 +45,7 @@ The site uses the [Just the Docs](https://just-the-docs.com) theme (`theme: just
 | `development/scripts.md` | Jekyll plugin `copy_readme_files.rb` | Copy of `/scripts/README.md`. |
 | `development/workflows.md` | Jekyll plugin `copy_readme_files.rb` | Copy of `/.github/workflows/README.md`. |
 | `development/documentation-site.md` | Jekyll plugin `copy_readme_files.rb` | Copy of this README. |
-| `_openapi/api.json` | Laravel Scramble | OpenAPI specification. |
+| `_openapi/api.json` | `php artisan docs:openapi` (Scramble); CI fails when it is stale | OpenAPI specification. |
 | `_openapi/swagger-ui.html` | Manual static asset | Swagger UI shell. |
 | `_site/` | Jekyll build | Generated static site output. |
 

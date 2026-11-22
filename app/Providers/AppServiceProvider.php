@@ -32,6 +32,8 @@ use App\Policies\RolePolicy;
 use App\Policies\TimelineEventPolicy;
 use App\Policies\TimelinePolicy;
 use App\Policies\UserPolicy;
+use App\Support\Documentation\OperationTransformers\CreatedStatus;
+use App\Support\Documentation\OperationTransformers\RouteSecurity;
 use App\Support\Documentation\RuleTransformers\IncludeRuleTransformer;
 use App\Support\Images\AttachedImageRegistry;
 use Dedoc\Scramble\Scramble;
@@ -132,10 +134,15 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Timeline::class, TimelinePolicy::class);
         Gate::policy(TimelineEvent::class, TimelineEventPolicy::class);
 
-        // Register Scramble rule transformers for automatic API documentation
+        // The OpenAPI document is generated from the code (docs:openapi); these fill in what
+        // Scramble cannot infer by itself
         Scramble::configure()
             ->withRuleTransformers([
                 IncludeRuleTransformer::class,
+            ])
+            ->withOperationTransformers([
+                CreatedStatus::class,
+                RouteSecurity::class,
             ]);
 
         // The API accepts only OAuth tokens from the authorization-code flow

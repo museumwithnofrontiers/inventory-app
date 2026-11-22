@@ -168,9 +168,8 @@
             "git status --porcelain"
         ],
         "ci-openapi-doc": [
-            "@php -r \"if (!is_dir('docs/_openapi')) { mkdir('docs/_openapi', 0755, true); }\"",
             "@php artisan optimize:clear --ansi",
-            "@php artisan scramble:export --path=docs/_openapi/api.json --ansi"
+            "@php artisan docs:openapi --ansi"
         ],
         "ci-model-doc": [
             "@php artisan docs:models --force --ansi"

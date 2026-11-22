@@ -29,6 +29,9 @@ class ImageTranslationController extends Controller
         );
     }
 
+    /**
+     * Add an image's texts in one language.
+     */
     public function store(StoreImageTranslationRequest $request): ImageTranslationResource
     {
         $translation = new ImageTranslation($request->validated());
@@ -39,11 +42,17 @@ class ImageTranslationController extends Controller
         return new ImageTranslationResource($translation);
     }
 
+    /**
+     * The texts of an image in one language.
+     */
     public function show(ImageTranslation $imageTranslation): ImageTranslationResource
     {
         return new ImageTranslationResource($imageTranslation);
     }
 
+    /**
+     * Change an image's texts in one language.
+     */
     public function update(UpdateImageTranslationRequest $request, ImageTranslation $imageTranslation): ImageTranslationResource
     {
         $imageTranslation->update($request->validated());
@@ -52,6 +61,9 @@ class ImageTranslationController extends Controller
         return new ImageTranslationResource($imageTranslation);
     }
 
+    /**
+     * Remove an image's texts in one language.
+     */
     public function destroy(ImageTranslation $imageTranslation): Response
     {
         $imageTranslation->delete();

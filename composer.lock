@@ -567,16 +567,16 @@
         },
         {
             "name": "dedoc/scramble",
-            "version": "v0.13.49",
+            "version": "v0.13.55",
             "source": {
                 "type": "git",
                 "url": "https://github.com/dedoc/scramble.git",
-                "reference": "6c10396675a34c46a034b6ed3545485867cc836c"
+                "reference": "e698d00c77a620cf05200102695a0d4107be804d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/dedoc/scramble/zipball/6c10396675a34c46a034b6ed3545485867cc836c",
-                "reference": "6c10396675a34c46a034b6ed3545485867cc836c",
+                "url": "https://api.github.com/repos/dedoc/scramble/zipball/e698d00c77a620cf05200102695a0d4107be804d",
+                "reference": "e698d00c77a620cf05200102695a0d4107be804d",
                 "shasum": ""
             },
             "require": {
@@ -636,7 +636,7 @@
             ],
             "support": {
                 "issues": "https://github.com/dedoc/scramble/issues",
-                "source": "https://github.com/dedoc/scramble/tree/v0.13.49"
+                "source": "https://github.com/dedoc/scramble/tree/v0.13.55"
             },
             "funding": [
                 {
@@ -644,7 +644,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-10-18T10:48:30+00:00"
+            "time": "2026-11-16T14:41:39+00:00",
+            "published-time": "2026-11-16T14:56:16+00:00"
         },
         {
             "name": "defuse/php-encryption",
@@ -4550,7 +4551,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-08-11T10:17:44+00:00"
+            "time": "2026-08-11T10:17:44+00:00",
+            "published-time": "2026-08-11T10:29:20+00:00"
         },
         {
             "name": "nesbot/carbon",
@@ -4871,7 +4873,8 @@
                 "issues": "https://github.com/nikic/PHP-Parser/issues",
                 "source": "https://github.com/nikic/PHP-Parser/tree/v5.9.0"
             },
-            "time": "2026-09-13T18:51:52+00:00"
+            "time": "2026-09-13T18:51:52+00:00",
+            "published-time": "2026-09-13T18:53:16+00:00"
         },
         {
             "name": "nunomaduro/termwind",
@@ -5629,16 +5632,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.3.6",
+            "version": "2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "1427af4647235b4a73b13940b1f1258d3584f36e"
+                "reference": "af8e840551031d254cfdb3a18a62c3470a309c10"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/1427af4647235b4a73b13940b1f1258d3584f36e",
-                "reference": "1427af4647235b4a73b13940b1f1258d3584f36e",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/af8e840551031d254cfdb3a18a62c3470a309c10",
+                "reference": "af8e840551031d254cfdb3a18a62c3470a309c10",
                 "shasum": ""
             },
             "require": {
@@ -5670,9 +5673,10 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.6"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.4.1"
             },
-            "time": "2026-09-27T20:07:45+00:00"
+            "time": "2026-10-30T19:36:28+00:00",
+            "published-time": "2026-10-30T19:37:11+00:00"
         },
         {
             "name": "pragmarx/google2fa",
@@ -7010,7 +7014,8 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-09-28T07:16:50+00:00"
+            "time": "2026-09-28T07:16:50+00:00",
+            "published-time": "2026-09-28T07:17:01+00:00"
         },
         {
             "name": "spatie/laravel-permission",
@@ -14349,5 +14354,5 @@
     "platform-overrides": {
         "php": "8.5"
     },
-    "plugin-api-version": "2.9.0"
+    "plugin-api-version": "2.11.0"
 }
