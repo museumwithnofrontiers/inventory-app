@@ -351,7 +351,7 @@ return [
 
 ### config/passport.php
 
-OAuth 2.1 authorization server (Laravel Passport). The only grant is authorization code with PKCE (`App\Support\OAuth\AuthorizationCodeClient` refuses the others); the scopes are defined in `App\Enums\OAuthScope`.
+OAuth 2.1 authorization server (Laravel Passport). The only grant is authorization code with PKCE, S256, for every client, confidential ones included (`App\Support\OAuth\AuthorizationCodeClient` refuses the other grants). Every authorization goes through the panel's consent page; the scopes are defined in `App\Enums\OAuthScope`.
 
 ```php
 <?php

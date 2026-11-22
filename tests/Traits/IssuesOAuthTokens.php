@@ -60,16 +60,10 @@ trait IssuesOAuthTokens
         $verifier = Str::random(64);
         $this->actingAs($user, 'web');
 
-        $response = $this->get($this->oauthAuthorizeUrl($client, $verifier, ['scope' => $scope]));
-        $location = (string) $response->headers->get('Location');
-
-        // An app approved before for the same scopes is not asked again
-        if (! str_starts_with($location, $this->oauthRedirectUri)) {
-            $consent = session(AuthorizeApplicationPage::SESSION_KEY);
-            $authToken = is_array($consent) && is_string($consent['auth_token'] ?? null) ? $consent['auth_token'] : '';
-            $location = (string) $this->post(route('passport.authorizations.approve'), ['auth_token' => $authToken])
-                ->headers->get('Location');
-        }
+        // Every request goes through the consent page, even for an app approved before
+        $this->get($this->oauthAuthorizeUrl($client, $verifier, ['scope' => $scope]))
+            ->assertRedirect(AuthorizeApplicationPage::getUrl(panel: 'admin'));
+        $location = (string) $this->approveCurrentOAuthRequest()->headers->get('Location');
 
         $token = $this->post(route('passport.token'), [
             'grant_type' => 'authorization_code',

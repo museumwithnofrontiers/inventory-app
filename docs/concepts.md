@@ -399,7 +399,7 @@ All attached image records carry a `display_order` field. Images associated with
 
 The REST API is **switched off** unless `API_ENABLED` is set (`config/api.php`); while it is off, every `/api` URL answers 404. The Filament panel at `/admin` is the only UI and does not use the API.
 
-When the API is on, it authenticates with **OAuth 2.1** through Laravel Passport, which is the only way to obtain a token for this app. The only grant is authorization code with PKCE: a client sends the user to sign in on the panel (with MFA) and approve it, then receives a short-lived access token and a refresh token. All endpoints require a valid bearer token, except for a small number of informational endpoints (`/api/info`, `/api/health`, `/api/version`).
+When the API is on, it authenticates with **OAuth 2.1** through Laravel Passport, which is the only way to obtain a token for this app. The only grant is authorization code with PKCE (S256, for every client): a client sends the user to sign in on the panel (with MFA) and approve it, every time it asks, then receives a short-lived access token and a refresh token. All endpoints require a valid bearer token, except for a small number of informational endpoints (`/api/info`, `/api/health`, `/api/version`).
 
 A token carries scopes, which limit what it can be used for:
 
