@@ -100,8 +100,6 @@ class ItemTranslationResource extends JsonResource
             'architects' => $this->architects,
             // Not ready for any site: no site's data holds a draft text
             'draft' => $this->draft,
-            // The editorial state: published, unedited or hidden
-            'status' => $this->status->value,
             // The catalogue references, the notices and the image rights line, as legacy wrote them
             'catalogue_references' => $this->catalogue_references,
             'notice' => $this->notice,

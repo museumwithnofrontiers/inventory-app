@@ -3286,11 +3286,11 @@ export class SqlWriteStrategy implements IWriteStrategy {
 
   async setCollectionFlags(collectionId: string, flags: { draft?: boolean }): Promise<void> {
     if (flags.draft === undefined) return;
-    // `visible` is kept as the opposite of `draft` until M17 D1 (#2750) drops it.
-    await this.db.execute(
-      `UPDATE collections SET draft = ?, visible = ?, updated_at = ? WHERE id = ?`,
-      [flags.draft ? 1 : 0, flags.draft ? 0 : 1, this.now, collectionId]
-    );
+    await this.db.execute(`UPDATE collections SET draft = ?, updated_at = ? WHERE id = ?`, [
+      flags.draft ? 1 : 0,
+      this.now,
+      collectionId,
+    ]);
   }
 
   async getCollectionPurpose(collectionId: string): Promise<string | null> {

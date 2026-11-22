@@ -51,12 +51,6 @@ class CollectionResource extends JsonResource
             'days' => $this->days,
             // Not ready for any site: no site shows a draft collection or anything under it (legacy's hidden exhibitions and Explore themes)
             'draft' => $this->draft,
-            // Whether the sites show the collection (legacy's exhibition show flag, Explore theme status)
-            'visible' => $this->visible,
-            // Whether a gallery is among the featured ones
-            'featured' => $this->featured,
-            // A gallery's live date (Y-m-d)
-            'published_at' => $this->published_at?->format('Y-m-d'),
             // The date of creation of the resource (managed by the system)
             'created_at' => $this->created_at,
             // The date of last modification of the resource (managed by the system)

@@ -59,6 +59,6 @@ The M16 stories add columns and links where `extra` held content (ADR 006):
 | B3 #2637 | `artist`, `artist_period_of_activity`, `artist_birth_date`, `artist_birth_place`, `artist_death_date`, `artist_death_place`, `workshop`, `scribe`, `patrons`, `architects`, as written (the Artist links are unchanged; Workshop is removed) | objects, monuments |
 | B4 #2638 | `author_credit`, `copy_editor_credit`, `translator_credit`, `translation_copy_editor_credit` | objects, monuments |
 | B5 #2639 | `catalogue_references`, the catalogue codes and citations as written (the Book links are unchanged) | objects, monuments |
-| B6 #2640 | `status`: published, unedited, hidden; `notice`, `external_notice` as written | every type; the notices on Sharing History objects and monuments |
+| B6 #2640 | `notice`, `external_notice` as written (B6's `status` gave way to `draft`, M17 #2744/#2750) | every type; the notices on Sharing History objects and monuments |
 | D1 #2645 | VisitInformation (its own model) | monuments |
 | F1 #2651 | `photographer` and `credit` on the image, not the translation (`copyright` stays the text burned on it); a picture whose language rows differ keeps its texts on the translations until reviewed | pictures' images |
