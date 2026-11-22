@@ -45,7 +45,7 @@ The policies (App\Policies\*) are the only authorization mechanism, on the panel
 ## Tokens: OAuth 2.1 only
 
 - Laravel Passport is the only way to obtain a token. The only grant is authorization code with PKCE, S256, for every client (`App\Support\OAuth\AuthorizationCodeClient` refuses the other grants). Every authorization goes through the panel's consent page, even for an app approved before (`App\Http\Controllers\OAuth\AuthorizationController`). Never add personal access tokens, client credentials or a password grant.
-- Scopes (`App\Enums\OAuthScope`: `mcp`, `api:read`, `api:write`) limit a token; permissions and policies still apply to every request.
+- Scopes (`App\Enums\OAuthScope`: `mcp:use`, `api:read`, `api:write`) limit a token; permissions and policies still apply to every request.
 - Users sign in and approve apps on panel pages (the Filament login with MFA, `AuthorizeApplicationPage`); never a Blade auth view.
 - The REST API is off unless `API_ENABLED` is set (`EnsureApiEnabled` answers 404).
 
@@ -153,7 +153,7 @@ See docs/adr/006-what-goes-in-extra.md.
 - No hardcoded secrets — use environment variables.
 - Use Laravel abstractions (Storage, Config, etc.).
 - Routes use singular nouns: /api/context, /api/language, /api/item
-- Every new model must include: migration, factory, seeder, API resource, controller with Form Request validation, tests.
+- Every new model must include: migration, factory, seeder, API resource, controller with Form Request validation, tests. Exception: `AuditLog` has no API resource or controller, because the API serves no account data (ADR 007).
 
 **Models:**
 - UUID primary keys for all models except: Language (ISO code), Country (ISO code), User (integer)
