@@ -560,7 +560,7 @@ docker compose --env-file scripts/import-tool/.env --profile import run --rm --e
   meant to touch justifications.
 - `sh-monument`'s refresh (an already-imported monument's translations are
   recomputed from legacy on every run) also fully replaces `extra`, and its
-  own transformer never sets `legacy_display_status` — that flag belongs to
+  own transformer never sets `sh_display_status` (in `extra`) — that flag belongs to
   `sh-item-display-status`. Re-running `sh-monument` *after*
   `sh-item-display-status` silently erases the flag `sh-item-display-status`
   just stamped. Run `sh-item-display-status` **last** whenever both need a

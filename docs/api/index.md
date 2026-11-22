@@ -8,7 +8,7 @@ permalink: /api/
 
 # Management API Reference
 
-The current REST API is the authenticated management API. It lets trusted clients read and manage Inventory data programmatically. It is **switched off** unless `API_ENABLED` is set; while off, every `/api` URL answers 404. When on, all endpoints require an OAuth 2.1 bearer token (Laravel Passport, authorization code with PKCE, scope `api:read` or `api:write`), except for health and version checks. See [Authentication and Permissions]({{ '/concepts.html' | relative_url }}#authentication-and-permissions).
+The current REST API is the authenticated management API. It lets trusted clients read and manage Inventory data programmatically. It is **switched off** unless `API_ENABLED` is set; while off, every `/api` URL answers 404. When on, all endpoints require an OAuth 2.1 bearer token (Laravel Passport, authorization code with PKCE, scope `api:read` or `api:write`), except for the informational endpoints (`/api/info`, `/api/health`, `/api/version`) and the `/api/markdown` conversion helpers. The token acts as the user who approved it: their role and the policies decide every request. The API never edits users, roles or permissions; it only reads the signed-in user (`/api/user`, `/api/user/permissions`). See [Authentication and Permissions]({{ '/concepts.html' | relative_url }}#authentication-and-permissions).
 
 The future read-only API is a separate design area. It should optimize public content delivery and should not be confused with this management API.
 
@@ -32,7 +32,7 @@ The future read-only API is a separate design area. It should optimize public co
 
 ### System Endpoints
 
-- `GET /api/info` - Application information
+- `GET /api/info` - Application information (no auth required)
 - `GET /api/health` - Health check (no auth required)
 - `GET /api/version` - Current application version (no auth required)
 

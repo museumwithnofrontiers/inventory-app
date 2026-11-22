@@ -9,10 +9,23 @@ nav_order: 6
 # 6. Reference data
 {: .no_toc }
 
-Records that many items and collections share: tags, artists, dynasties, the glossary, contributors and authors, timelines, links and publications. A change to one of them reaches every site that uses it.
+Records that many items and collections share: projects, tags, artists, dynasties, the glossary, contributors and authors, timelines, links and publications. A change to one of them reaches every site that uses it.
 
 1. TOC
 {:toc}
+
+## Projects
+
+**Inventory → Projects** lists the programmes the records belong to (*Discover Islamic Art*, *Discover Baroque Art*, *Sharing History*, *MWNF Galleries*…). A project has:
+
+- its **context** and **language**: the context of its records' main texts ([Which translation a site uses]({{ '/user-manual/master/items' | relative_url }}#which-translation-a-site-uses));
+- its **launch date**: the date MWNF started the work;
+- its **copyright**: the line burned on the pictures of its records that don't set their own ([The image's own fields]({{ '/user-manual/master/images' | relative_url }}#the-images-own-fields)). Blank: "© Museum With No Frontiers";
+- legacy addresses (public site, related database, artistic introduction);
+- **Translations**: the project's **name** in each language;
+- tabs listing its **Collections**, **Items** and **Partners**.
+
+Which projects a site shows is decided by the site, not by the project record. No exporter reads the project names yet.
 
 ## Tags
 

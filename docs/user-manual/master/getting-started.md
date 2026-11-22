@@ -14,7 +14,7 @@ nav_order: 1
 
 ## Signing in
 
-The panel is at `/admin` on the inventory's address; the address itself redirects there. You need an account with the panel access permission. An administrator creates it, or approves it if self-registration is open.
+The panel is at `/admin` on the inventory's address; the address itself redirects there. You need an account that is verified, approved, not suspended, and holds a role. A user manager creates it, or approves it if self-registration is open, and gives it its role ([Users and roles]({{ '/user-manual/master/users-and-roles' | relative_url }})).
 
 ![The sign-in page]({{ '/user-manual/images/sign-in.png' | relative_url }})
 
@@ -22,7 +22,7 @@ The panel is at `/admin` on the inventory's address; the address itself redirect
 2. Tick **Remember me** only on your own computer.
 3. If you forgot your password, select **Forgot password?** The panel sends a reset link to your e-mail address. If two-factor authentication is on for your account, the reset asks for a code too.
 
-If your e-mail address is not verified yet, or an administrator has not approved your account yet, the sign-in page says so. It sends a new verification link when one is needed.
+If your e-mail address is not verified yet, or a user manager has not approved your account yet, the sign-in page says so. It sends a new verification link when one is needed.
 
 ### Two-factor authentication (MFA)
 
@@ -42,14 +42,14 @@ The panel protects every account with a second factor.
 | **Recovery code** | You don't have your phone. Each code works once. |
 | **Email code** | Select **Send code to my email**, then enter the six-digit code from the message. |
 
-If you have lost both your phone and your recovery codes, ask an administrator to reset your two-factor authentication.
+You can't turn two-factor authentication off yourself. If you have lost both your phone and your recovery codes, ask a user manager to reset it; you set it up again at your next sign-in.
 
 ### Your profile and connected apps
 
 The round button with your initial, at the top right, opens the user menu:
 
-- **Profile**: your name and e-mail address, **Change Password**, **Regenerate Recovery Codes** (the old ones stop working), and **Log Out Other Browser Sessions**.
-- **Connected apps**: applications you allowed to act for you, for example an AI assistant connected to the inventory's read-only MCP server ([MCP]({{ '/mcp' | relative_url }})). **Revoke** ends an app's access at once.
+- **Profile**: your name and e-mail address, **Change Password**, **Regenerate Recovery Codes** (the old ones stop working), **Log Out Other Browser Sessions** and **Delete Account**. Changing your e-mail address means verifying the new one before you can sign in again.
+- **Connected apps**: applications you approved to act for you, for example an AI assistant connected to the inventory's read-only MCP server ([MCP]({{ '/mcp' | relative_url }})). **Revoke** ends an app's access at once. See [Connected apps]({{ '/user-manual/master/users-and-roles' | relative_url }}#connected-apps) for approving an app.
 - **Sign out**.
 
 ## The dashboard and the menu
@@ -69,7 +69,7 @@ The menu on the left groups the panel's pages:
 | **Reference Data** | Languages, Countries |
 | **Administration** | Users, roles, registration settings and the audit log (user managers only) |
 
-What you see depends on your role, and you hold exactly one. A *Visitor* can read everything, reference data included, but change nothing. A *Manager of Data* can read, create, change and delete all content, reference data such as Artists and Dynasties included. A *Manager of Users* manages accounts and their role, and sees no content; the *Superadmin* also manages the other user managers. A button you are not allowed to use is not shown.
+What you see depends on your role, and you hold exactly one. A *Visitor* can read everything, reference data included, but change nothing. A *Manager of Data* can read, create, change and delete all content, reference data such as Artists and Dynasties included. A *Manager of Users* manages accounts and their role, and sees no content; the *Superadmin* also manages the other user managers. A button you are not allowed to use is not shown. [Users and roles]({{ '/user-manual/master/users-and-roles' | relative_url }}) has the details.
 
 ### The pages of a record
 

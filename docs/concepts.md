@@ -132,8 +132,9 @@ Independently of its `type`, a collection can carry a **purpose**: a value from 
 | `historical-background-root`                                                       | Parent of the general Historical Background essays (Sharing History)                          |
 | `topics-root`                                                                      | Parent of the Historical Background "Read more" topics (Sharing History)                      |
 | `historical-profiles-root`                                                         | Parent of the per-country Historical Profiles (Sharing History)                               |
-| `galleries-root` / `travels-root` / `explore-themes-root` / `explore-countries-root` / `explore-itineraries-root` | Parents of the corresponding Explore Islamic Art sections |
-| `explore-root`                                                                     | The Explore website: parent of its three section roots; its `extra` holds the site's own records (home banners, featured partnerships, travel information) |
+| `galleries-root` / `travels-root` | Parent of the thematic galleries / of the Exhibition Trails (Travels) |
+| `explore-themes-root` / `explore-countries-root` / `explore-itineraries-root` | Parents of the corresponding Explore sections |
+| `explore-root`                                                                     | The Explore website: parent of its three section roots. The site's own records (home banners, featured partnerships, travel information) are site configuration, in `scripts/exporters/instances/explore.json` (ADR 006, rule 4) |
 | `national-context`                                                                 | A National Context overlay collection (may occur many times)                                  |
 
 `*-root` purposes are unique per context; `national-context` may repeat. The purpose is assigned by the data importer when it creates these marker collections (and by its one-off `collection-purpose-backfill` step on databases populated before the field existed). Data exporters pass `purpose` through to the published data-packages, and the public viewers resolve their section anchors **exclusively** through it — it replaces the earlier practice of parsing `backward_compatibility` keys, which are now informational only.
@@ -399,7 +400,7 @@ All attached image records carry a `display_order` field. Images associated with
 
 The REST API is **switched off** unless `API_ENABLED` is set (`config/api.php`); while it is off, every `/api` URL answers 404. The Filament panel at `/admin` is the only UI and does not use the API.
 
-When the API is on, it authenticates with **OAuth 2.1** through Laravel Passport, which is the only way to obtain a token for this app. The only grant is authorization code with PKCE (S256, for every client): a client sends the user to sign in on the panel (with MFA) and approve it, every time it asks, then receives a short-lived access token and a refresh token. All endpoints require a valid bearer token, except for a small number of informational endpoints (`/api/info`, `/api/health`, `/api/version`).
+When the API is on, it authenticates with **OAuth 2.1** through Laravel Passport, which is the only way to obtain a token for this app. The only grant is authorization code with PKCE (S256, for every client): a client sends the user to sign in on the panel (with MFA) and approve it, every time it asks, then receives a short-lived access token and a refresh token. All endpoints require a valid bearer token, except for a small number of informational endpoints (`/api/info`, `/api/health`, `/api/version`) and the `/api/markdown` conversion helpers.
 
 A token carries scopes, which limit what it can be used for:
 
@@ -411,18 +412,18 @@ A token carries scopes, which limit what it can be used for:
 
 The scopes limit the token; the user's permissions and the policies still decide what the user may do, and a request needs both. Access to operations is controlled by the following permissions:
 
-| Permission        | Scope                                  |
-| ----------------- | -------------------------------------- |
-| `view data`       | Read any data                          |
-| `create data`     | Create new records                     |
-| `update data`     | Modify existing records                |
-| `delete data`     | Delete records                         |
-| `manage users`    | Create, edit, and delete user accounts |
-| `assign roles`    | Assign roles to users                  |
-| `manage roles`    | Create and modify roles                |
-| `manage settings` | Change system configuration            |
+| Permission             | Scope                                                                 |
+| ---------------------- | --------------------------------------------------------------------- |
+| `view data`            | Read any data, reference data included                                |
+| `create data`          | Create new records                                                    |
+| `update data`          | Modify existing records                                               |
+| `delete data`          | Delete records                                                        |
+| `manage users`         | User accounts and their role, self-registration, the audit log        |
+| `manage user managers` | The other user managers' accounts (the superadmin only)               |
+| `access-admin-panel`   | Enter the panel at `/admin`                                           |
+| `access-mcp`           | Use the inventory MCP server                                          |
 
-Permissions are assigned to users through roles (powered by Spatie Laravel Permission).
+A user never holds a permission directly: each user holds one role, or none, and the role carries the permissions. The four roles (Visitor, Manager of Data, Manager of Users, Superadmin) are defined in `App\Enums\Role` (Spatie Laravel Permission stores them). The policies in `App\Policies` decide every request from these permissions; see [ADR 007](adr/007-authorization-model).
 
 ---
 
