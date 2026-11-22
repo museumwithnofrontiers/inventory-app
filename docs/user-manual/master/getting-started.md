@@ -48,7 +48,7 @@ You can't turn two-factor authentication off yourself. If you have lost both you
 
 The round button with your initial, at the top right, opens the user menu:
 
-- **Profile**: your name and e-mail address, **Change Password**, **Regenerate Recovery Codes** (the old ones stop working), **Log Out Other Browser Sessions** and **Delete Account**. Changing your e-mail address means verifying the new one before you can sign in again.
+- **Profile**: your name and e-mail address, **Change Password**, **Regenerate Recovery Codes** (the old ones stop working), and **Log Out Other Browser Sessions**. Changing your e-mail address means verifying the new one before you can sign in again.
 - **Connected apps**: applications you approved to act for you, for example an AI assistant connected to the inventory's read-only MCP server ([MCP]({{ '/mcp' | relative_url }})). **Revoke** ends an app's access at once. See [Connected apps]({{ '/user-manual/master/users-and-roles' | relative_url }}#connected-apps) for approving an app.
 - **Sign out**.
 

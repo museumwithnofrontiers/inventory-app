@@ -3,10 +3,12 @@
 namespace Tests\Filament\Pages;
 
 use App\Enums\Permission;
+use App\Enums\Role;
 use App\Filament\Auth\Login as AdminLogin;
 use App\Filament\Auth\TwoFactorChallenge;
 use App\Filament\Pages\ProfilePage;
 use App\Models\User;
+use App\Support\Authorization\UserRoles;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -271,32 +273,22 @@ class ProfilePageTest extends TestCase
 
     // ── Delete account ───────────────────────────────────────────────────────
 
-    public function test_user_can_delete_own_account_with_correct_password(): void
+    public function test_no_role_can_delete_its_own_account_from_the_profile(): void
     {
-        $user = $this->createUserWithPanelAccess();
-        $userId = $user->id;
-
         $this->setPanel();
 
-        Livewire::actingAs($user)
-            ->test(ProfilePage::class)
-            ->callAction('deleteAccount', ['password' => 'password']);
+        foreach ([...Role::cases(), null] as $role) {
+            $user = $this->createUserWithPanelAccess();
+            if ($role !== null) {
+                app(UserRoles::class)->assign($user, $role);
+            }
 
-        $this->assertDatabaseMissing('users', ['id' => $userId]);
-    }
+            Livewire::actingAs($user)
+                ->test(ProfilePage::class)
+                ->assertActionDoesNotExist('deleteAccount');
 
-    public function test_delete_account_fails_with_wrong_password(): void
-    {
-        $user = $this->createUserWithPanelAccess();
-        $userId = $user->id;
-
-        $this->setPanel();
-
-        Livewire::actingAs($user)
-            ->test(ProfilePage::class)
-            ->callAction('deleteAccount', ['password' => 'wrongpassword']);
-
-        $this->assertDatabaseHas('users', ['id' => $userId]);
+            $this->assertDatabaseHas('users', ['id' => $user->id]);
+        }
     }
 
     // ── 2FA round-trip ───────────────────────────────────────────────────────

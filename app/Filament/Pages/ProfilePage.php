@@ -2,7 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use App\Actions\DeleteUser;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Models\User;
@@ -80,7 +79,6 @@ class ProfilePage extends EditProfile
             ...$twoFactorActions,
             $this->getConnectedAppsAction(),
             $this->getLogoutOtherBrowserSessionsAction(),
-            $this->getDeleteAccountAction(),
         ];
     }
 
@@ -323,51 +321,6 @@ class ProfilePage extends EditProfile
                     ->success()
                     ->title('Other browser sessions have been logged out.')
                     ->send();
-            });
-    }
-
-    protected function getDeleteAccountAction(): Action
-    {
-        return Action::make('deleteAccount')
-            ->label('Delete Account')
-            ->icon('heroicon-o-trash')
-            ->color('danger')
-            ->requiresConfirmation()
-            ->modalHeading('Delete Account')
-            ->modalDescription('Once your account is deleted, all of its resources and data will be permanently deleted. This action cannot be undone.')
-            ->modalSubmitActionLabel('Permanently Delete Account')
-            ->form([
-                TextInput::make('password')
-                    ->label('Password')
-                    ->password()
-                    ->revealable()
-                    ->required(),
-            ])
-            ->action(function (array $data): void {
-                /** @var User $user */
-                $user = $this->getUser();
-
-                $deletePasswordRaw = $data['password'] ?? '';
-                $deletePassword = is_string($deletePasswordRaw) ? $deletePasswordRaw : '';
-                if (! Hash::check($deletePassword, $user->getAuthPassword())) {
-                    Notification::make()
-                        ->danger()
-                        ->title('The provided password does not match your current password.')
-                        ->send();
-
-                    $this->halt();
-                }
-
-                Auth::guard(Filament::getAuthGuard())->logout();
-
-                app(DeleteUser::class)->delete($user);
-
-                if (request()->hasSession()) {
-                    request()->session()->invalidate();
-                    request()->session()->regenerateToken();
-                }
-
-                $this->redirect(Filament::getLoginUrl(), navigate: false);
             });
     }
 
