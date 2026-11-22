@@ -534,6 +534,13 @@ regressions. None of the 14 regressions above is left:
 
 `baselines/2026-11-20b` is the run after reimport 19 (data-packages#37, 2 packages) and its propagation to Islamic Art and Baroque Art. That reimport verified M16 Epic J (#2707): the project root collections and the `partner_group` stubs left the two packages' collections, and three markers now have no parent. It counts 24 real differences, as before, with no regression: no compared field reads those rows.
 
+`baselines/2026-11-21` is the run after reimport 20 (data-packages#38, 73 packages) and its propagation to 73 sites. That reimport carried three changes:
+- the artist lines no longer become artist records (#2734), so `artist_names` comes from the editorial links only;
+- Sharing History lists a monument's plans after its pictures, as legacy does (#2740);
+- one new partner logo appeared in the legacy files (`Mon01`, Portuguese).
+
+It counts 24 real differences, as before, with no regression. Two of the 88 sites, theatre and the package check, ran out of memory on the first pass, so the whole run was repeated on a warm cache. Reimport 21 (M17) exported all 89 packages unchanged, so this baseline also covers it.
+
 ## The global search box
 
 Legacy sites that link to the overall database search (legacy's `goToFullSearch`, "Search Overall MWNF Database", or
