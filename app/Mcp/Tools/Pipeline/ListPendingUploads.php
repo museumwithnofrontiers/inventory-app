@@ -25,7 +25,6 @@ class ListPendingUploads extends PipelineTool
         }
 
         $disk = Config::string('localstorage.uploads.images.disk');
-        $directory = trim(Config::string('localstorage.uploads.images.directory'), '/');
 
         $uploads = ImageUpload::query()->oldest()->get()->map(fn (ImageUpload $upload): array => [
             'id' => $upload->id,
@@ -34,7 +33,7 @@ class ListPendingUploads extends PipelineTool
             'size' => $upload->size,
             'uploaded_at' => $upload->created_at?->toIso8601String(),
             'age_minutes' => $upload->created_at !== null ? (int) $upload->created_at->diffInMinutes(now()) : null,
-            'file_present' => Storage::disk($disk)->exists($directory.'/'.$upload->path),
+            'file_present' => ($path = $upload->storagePath()) !== null && Storage::disk($disk)->exists($path),
         ])->all();
 
         return Response::structured(['uploads' => $this->capped($uploads, (int) $request->get('limit', 50))]);

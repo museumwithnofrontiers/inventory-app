@@ -37,7 +37,8 @@ class ImageUploadController extends Controller
         $file = $request->file('file');
         $storagePath = $file->store(Config::string('localstorage.uploads.images.directory'), Config::string('localstorage.uploads.images.disk'));
 
-        // Store only filename in database (no directory)
+        // Store only the filename (no directory): ImageUpload::storagePath()
+        // puts the uploads directory back
         $validated['path'] = basename((string) $storagePath);
 
         $imageUpload = ImageUpload::create($validated);
@@ -112,8 +113,9 @@ class ImageUploadController extends Controller
      */
     public function destroy(ImageUpload $imageUpload): Response
     {
-        if ($imageUpload->path !== null) {
-            Storage::delete($imageUpload->path);
+        $path = $imageUpload->storagePath();
+        if ($path !== null) {
+            Storage::disk(Config::string('localstorage.uploads.images.disk'))->delete($path);
         }
         $imageUpload->delete();
 
