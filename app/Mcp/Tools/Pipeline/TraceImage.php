@@ -34,7 +34,7 @@ class TraceImage extends PipelineTool
         $ref = trim((string) $request->get('ref'));
         $filename = basename((string) (parse_url($ref, PHP_URL_PATH) ?: $ref));
 
-        if ($upload = ImageUpload::query()->whereKey($ref)->orWhere('path', $filename)->first()) {
+        if ($upload = ImageUpload::query()->whereKey($ref)->orWhereIn('path', [$filename, trim(Config::string('localstorage.uploads.images.directory'), '/').'/'.$filename])->first()) {
             return Response::structured(['stage' => 'upload', ...$this->upload($upload)]);
         }
 
@@ -78,7 +78,7 @@ class TraceImage extends PipelineTool
     private function upload(ImageUpload $upload): array
     {
         $disk = Config::string('localstorage.uploads.images.disk');
-        $path = trim(Config::string('localstorage.uploads.images.directory'), '/').'/'.$upload->path;
+        $path = (string) $upload->storagePath();
 
         return [
             'id' => $upload->id,

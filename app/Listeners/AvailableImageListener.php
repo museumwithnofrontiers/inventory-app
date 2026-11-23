@@ -15,6 +15,9 @@ use Illuminate\Support\Facades\Storage;
  * It moves the image from the uploads disk to the private originals disk
  * (localstorage.available.images) and updates the database record accordingly.
  *
+ * ImageUploadListener already writes the processed original there, so in the canonical flow
+ * this listener only confirms it; it moves a file only when one is still on the uploads disk.
+ *
  * It is triggered after an image is uploaded, checked and processed. The original stays
  * private from then on, attached or not; the public sees only its burned rendition at /pub.
  */
@@ -53,10 +56,17 @@ class AvailableImageListener
         // Get filename (path should already be just filename)
         $filename = basename($file->path);
 
-        // Move the file from the source disk to the destination disk
+        // ImageUploadListener writes the processed original to the originals
+        // disk before it creates the AvailableImage, so it is normally there
+        // already, with nothing left to move.
+        if (Storage::disk($finalDisk)->exists($finalDir.'/'.$filename)) {
+            return;
+        }
+
+        // Otherwise move the file from the source disk to the destination disk
         $readStream = Storage::disk($uploadDisk)->readStream($uploadeDir.'/'.$filename);
         if ($readStream === null) {
-            Log::error('Failed to open read stream for available image.', ['filename' => $filename]);
+            Log::error('Available image has no original and no upload to move.', ['filename' => $filename]);
 
             return;
         }

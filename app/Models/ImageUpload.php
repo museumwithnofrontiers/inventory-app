@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Config;
 
 /**
  * @property string|null $path
@@ -40,5 +41,22 @@ class ImageUpload extends Model
     public function uniqueIds(): array
     {
         return ['id'];
+    }
+
+    /**
+     * Where the uploaded file sits on the uploads disk
+     * (`localstorage.uploads.images`), or null without a path.
+     *
+     * `path` holds the filename (the API stores it so), but the panel's
+     * FileUpload hands back `<directory>/<filename>`: both resolve to the
+     * same file in the configured uploads directory.
+     */
+    public function storagePath(): ?string
+    {
+        if ($this->path === null || $this->path === '') {
+            return null;
+        }
+
+        return trim(Config::string('localstorage.uploads.images.directory'), '/').'/'.basename($this->path);
     }
 }
