@@ -9,7 +9,7 @@ This monorepo contains the backend and frontend for the Museum With No Frontiers
 
 ### Components (in-scope):
 - Laravel 12 backend + API
-- Filament 3 admin panel (/admin), the application's only UI
+- Filament 5 admin panel (/admin, on Livewire 4), the application's only UI
 - Read-only inventory MCP server (app/Mcp/, routes/ai.php): see docs/mcp.md
 - Global search service (scripts/search/) and its exporter (scripts/exporters/search/): see docs/adr/005-global-search.md
 - Data importer scripts (scripts/importer/)
@@ -22,7 +22,7 @@ If unsure whether something is in-scope you must ask the question to the user.
 The Filament admin panel under /admin is the application's ONLY UI, and `/` redirects to it. Entry requires the `access-admin-panel` permission (see the Authorization Model).
 
 You must:
-1. Always use Filament patterns: Resources, Info Lists, Relation Managers, Pages, Forms & Tables, Actions
+1. Always use Filament patterns: Resources, Schemas (forms and infolists), Relation Managers, Pages, Tables, Actions
 2. Never add a UI outside the panel: no Blade pages, Livewire components or routes of their own for back-office features
 3. Build authentication pages (login, MFA, password reset, registration, e-mail verification) as Filament pages under `app/Filament/Auth/`. They call Laravel Fortify's actions directly; Fortify serves no route (`Fortify::ignoreRoutes()`), and none may be added. See docs/adr/003-filament-only-admin.md
 
@@ -36,7 +36,7 @@ The policies (App\Policies\*) are the only authorization mechanism, on the panel
    3. Manager of Users: break-glass, accounts and their role only (`manage users`), no data.
    4. Superadmin: one user; a Manager of Users who also manages the other user managers (`manage user managers`). It moves only with `php artisan user:superadmin`.
 2. Tier 1 — Entry: an active account (verified, approved, not suspended: `User::isActive()`) with `access-admin-panel` for `/admin`, `access-mcp` for the MCP server (every role holds both). The API and the MCP server check the account state too (`EnsureAccountIsActive`).
-3. Tier 2 — Navigation & resource visibility: `canViewAny()` returns `can('viewAny', static::getModel())`; `shouldRegisterNavigation()` returns `canViewAny()`. Never `hasPermissionTo` in a resource.
+3. Tier 2 — Navigation & resource visibility: `getViewAnyAuthorizationResponse()` returns `Gate::inspect('viewAny', static::getModel())`; `shouldRegisterNavigation()` returns `canViewAny()`. Filament reads the `get*AuthorizationResponse()` methods, so never override a `can*()` method on a resource or relation manager (a test enforces it). Never `hasPermissionTo` in a resource.
 4. Tier 3 — Records and actions: the model's policy. Every data model has one (`App\Policies\DataPolicy`); a missing policy denies, in Filament too. A custom action carries `->visible()` and `->authorize()` from its policy. The API asks the policies on every data route (`AuthorizeApiRequest`).
 5. Accounts (`UserPolicy`): only the superadmin changes another user manager; nobody changes the superadmin in the panel or their own role. Sensitive changes ask for the actor's password (`ConfirmPassword`). The API never edits users, roles or permissions; it only reads the signed-in user's own profile, role and permissions.
 6. Every account change, and every `user:`, `permissions:`, `auth:` and `passport:` command, is written to the audit log (`AuditLog`), which user managers read and nobody edits. Suspending a user revokes their sessions and tokens.

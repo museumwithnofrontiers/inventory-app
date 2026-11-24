@@ -203,23 +203,23 @@ class AdminPanelProvider extends PanelProvider
                 EnsureTwoFactorEnrolled::class,
             ])
             ->routes(function (): void {
-                Route::get('/two-factor-challenge', TwoFactorChallenge::class)
+                Route::livewire('/two-factor-challenge', TwoFactorChallenge::class)
                     ->name('auth.two-factor-challenge');
-                Route::get('/forgot-password', RequestPasswordReset::class)
+                Route::livewire('/forgot-password', RequestPasswordReset::class)
                     ->name('auth.password.request');
-                Route::get('/reset-password/{token}', ResetPassword::class)
+                Route::livewire('/reset-password/{token}', ResetPassword::class)
                     ->name('auth.password.reset');
-                Route::get('/reset-password-mfa', PasswordResetMfaChallenge::class)
+                Route::livewire('/reset-password-mfa', PasswordResetMfaChallenge::class)
                     ->name('auth.password.reset.mfa');
                 Route::get('/email-verification/verify/{id}/{hash}', VerifyEmailController::class)
                     ->middleware(['signed', 'throttle:6,1'])
                     ->name('auth.verify-email');
             })
             ->authenticatedRoutes(function (): void {
-                Route::get('/two-factor-setup', TwoFactorSetup::class)
+                Route::livewire('/two-factor-setup', TwoFactorSetup::class)
                     ->name('auth.two-factor-setup');
 
-                Route::get('/collections/{collection}/items/{item}/appearance', ViewCollectionItemAppearance::class)
+                Route::livewire('/collections/{collection}/items/{item}/appearance', ViewCollectionItemAppearance::class)
                     ->name('collection-item.appearance');
 
                 Route::get('/available-images/{availableImage}/view', [FilamentAvailableImageController::class, 'view'])

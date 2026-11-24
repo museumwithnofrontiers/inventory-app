@@ -7,7 +7,7 @@ nav_order: 2
 
 # Filament Back-Office
 
-Filament `/admin` is the application's only user interface, for content managers and administrators alike. `/` redirects to it.
+The Filament 5 panel at `/admin` (on Livewire 4) is the application's only user interface, for content managers and administrators alike. `/` redirects to it.
 
 ## Where to work
 
@@ -24,8 +24,20 @@ Filament `/admin` is the application's only user interface, for content managers
 The policies in `app/Policies/` are the only authorization mechanism, on the panel, the REST API and the MCP server alike. A user holds exactly one role (`app/Enums/Role.php`: Visitor, Manager of Data, Manager of Users, Superadmin), and the role carries the permissions the policies read (`app/Enums/Permission.php`).
 
 1. Panel access needs an active account (verified, approved, not suspended) and the `access-admin-panel` permission.
-2. Navigation and resource visibility ask the policies: `canViewAny()` returns `can('viewAny', static::getModel())`.
+2. Navigation and resource visibility ask the policies: a resource's `getViewAnyAuthorizationResponse()` returns `Gate::inspect('viewAny', static::getModel())`. Filament reads its `get*AuthorizationResponse()` methods and no longer calls `can*()` overrides, so a resource or relation manager overrides the response methods, never a `can*()` method.
 3. Records and actions ask the policies too. Every data model has a policy (`App\Policies\DataPolicy`); a model without one is denied, in Filament as everywhere else. A custom action carries `->visible()` and `->authorize()` from its policy.
+
+Relation managers use `App\Filament\Concerns\AuthorizesRelationMutations`: every mutation needs `update` on the record that owns the relation. Filament itself checks only `isReadOnly()` for Attach, Detach, Associate and Dissociate, so the concern routes those through the same check (`getDefaultActionAuthorizationResponse()`).
+
+## Panel defaults
+
+The panel keeps Filament 3's defaults where Filament 4 changed them (`AdminPanelProvider::keepFilament3Defaults()`):
+- sections, grids and fieldsets span the whole row;
+- table filters apply at once (not deferred);
+- the page size offers "All";
+- no primary-key sort is added behind a table's own sort;
+- `unique()` checks every record unless the field passes `ignoreRecord: true`;
+- an inline radio puts its label inline too.
 
 ## Authentication
 
