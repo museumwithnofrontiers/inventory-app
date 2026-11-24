@@ -576,36 +576,6 @@ export async function exportCollectionSite(
     'collection_partners.json',
     collectionPartners.map(cp => compact({ ...cp, visible: Boolean(cp['visible']) }))
   )
-  // A partner's own collections (R5): the top-level collections that list it, with
-  // its level there. They name the partner's home (its badge), not the site's scope.
-  const partnerCollections = await query<Row & { collection_id: string }>(
-    `SELECT cp.partner_id, cp.collection_id, cp.level, cp.visible FROM collection_partner cp
-       JOIN collections c ON c.id = cp.collection_id
-      WHERE c.parent_id IS NULL AND cp.partner_id IN (${inList(partnerIds)})
-      ORDER BY cp.partner_id, cp.collection_id`,
-    partnerIds
-  )
-  write('partner_collections.json', partnerCollections.map(pc => compact({ ...pc, visible: Boolean(pc['visible']) })))
-  const topCollectionIds = [...new Set(partnerCollections.map(pc => pc.collection_id))].sort()
-  const topCollections = await query<Row & { id: string; context_id: string }>(
-    `SELECT id, type, context_id FROM collections WHERE id IN (${inList(topCollectionIds)}) ORDER BY id`,
-    topCollectionIds
-  )
-  write('top_collections.json', topCollections.map(c => compact(c)))
-  const topTexts = await query<Row & { collection_id: string; language_id: string; context_id: string }>(
-    `SELECT collection_id, language_id, context_id, title FROM collection_translations
-      WHERE collection_id IN (${inList(topCollectionIds)}) ORDER BY collection_id, language_id, context_id`,
-    topCollectionIds
-  )
-  const topById = new Map(topCollections.map(c => [c.id, c]))
-  const topTextsByLanguage = new Map<string, Record<string, Row>>()
-  for (const [collectionId, texts] of groupBy(topTexts, t => t.collection_id)) {
-    for (const [language, text] of pickTexts(texts, [topById.get(collectionId)?.context_id ?? null, defaultContextId])) {
-      bucket(topTextsByLanguage, language)[collectionId] = { context_id: text.context_id, ...pick(text, ['title']) }
-    }
-  }
-  writeTexts('top_collections', topTextsByLanguage)
-
   const partnerTexts = await query<Row & { partner_id: string; language_id: string; context_id: string }>(
     `SELECT partner_id, language_id, context_id, ${PARTNER_TEXT_COLUMNS.join(', ')} FROM partner_translations
       WHERE partner_id IN (${inList(partnerIds)}) ORDER BY partner_id, language_id, context_id`,
@@ -615,9 +585,7 @@ export async function exportCollectionSite(
   const partnerTextsByLanguage = new Map<string, Record<string, Row>>()
   for (const [partnerId, texts] of groupBy(partnerTexts, t => t.partner_id)) {
     const order = contextOrderFor(partnerById.get(partnerId)?.project_id ?? null)
-    // A partner's text may sit in any context; after the rule's order, take the first one there is.
-    const fallback = [...new Set(texts.map(t => t.context_id))].sort()
-    for (const [language, text] of pickTexts(texts, [...order, ...fallback])) {
+    for (const [language, text] of pickTexts(texts, order)) {
       bucket(partnerTextsByLanguage, language)[partnerId] = { context_id: text.context_id, ...pick(text, PARTNER_TEXT_COLUMNS) }
     }
   }
@@ -690,16 +658,9 @@ export async function exportCollectionSite(
   writeTexts('timeline_events', eventTextsByLanguage)
 
   // --- R8: item links -----------------------------------------------------------------------
-  // (a) In the site's context, between items that ship: the site's own related pictures.
-  // (b) A member's links in the Default Context (the inventory's general "related to")
-  //     and in the context its text came from (its default-language text, else its
-  //     first): the related records its sheet lists, wherever they live.
-  const sheetContext = new Map<string, string>()
-  for (const memberId of members) {
-    const texts = chosenTexts.get(memberId)
-    const text = texts?.get(defaultLanguage?.id ?? '') ?? texts?.values().next().value
-    if (text) sheetContext.set(memberId, text.context_id)
-  }
+  // A link ships when its source ships and its context is one R3 reads the source's
+  // texts from: the site's context, the source's Project's context, the Default Context.
+  // A target outside the site ships as a reference (outside_items.json).
   const candidateLinks = await query<Row & { id: string; source_id: string; target_id: string; context_id: string }>(
     `SELECT l.id, l.source_id, l.target_id, l.context_id FROM item_item_links l JOIN items t ON t.id = l.target_id
       WHERE l.source_id IN (${inList(itemIds)}) AND ${itemShipped('t')}
@@ -707,11 +668,11 @@ export async function exportCollectionSite(
     itemIds
   )
   const shipped = new Set(itemIds)
-  const itemLinks = candidateLinks.filter(
-    l =>
-      (l.context_id === siteContextId && shipped.has(l.target_id)) ||
-      (memberSet.has(l.source_id) && (l.context_id === defaultContextId || sheetContext.get(l.source_id) === l.context_id))
-  )
+  const itemLinks = candidateLinks.filter(l => {
+    const source = itemById.get(l.source_id)
+    const projectId = source ? (source.project_id ?? topProject(source, itemById)) : null
+    return contextOrderFor(projectId).includes(l.context_id)
+  })
   const itemLinkIds = itemLinks.map(l => l.id)
 
   // The records those links point at outside the site: enough to show and link them.
