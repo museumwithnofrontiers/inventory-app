@@ -33,11 +33,11 @@ A button you are not allowed to use is not shown, and a page you may not open is
 
 ### What everyone can do on their own account
 
-Whatever your role, your **profile** (the round button with your initial, top right) lets you change your name, your e-mail address and your password, regenerate your recovery codes, sign out your other browser sessions, see your connected apps, and delete your own account.
+Whatever your role, your **profile** (the round button with your initial, top right) lets you change your name, your e-mail address and your password, regenerate your recovery codes, sign out your other browser sessions and see your connected apps.
 
 - Changing your **e-mail address** clears its verification: you must open the verification link sent to the new address before you can sign in again.
 - **Two-factor authentication can't be turned off** by its owner: every role holds the panel access permission, which requires it. Only a user manager can reset it ([Accounts](#working-on-an-account)).
-- **Delete Account** deletes your account at once, after your password. It can't be undone.
+- **Nobody deletes their own account.** A user manager deletes accounts ([Accounts](#working-on-an-account)); the Superadmin's account is deleted by nobody in the panel.
 
 ## Connected apps
 
@@ -79,7 +79,7 @@ The **Administration** group of the menu is visible to the Managers of Users and
 
 ### What you may not do
 
-- **Nobody changes their own role**, suspends or deletes themselves from the **Users** list.
+- **Nobody changes their own role**, suspends or deletes themselves, on the **Users** list or on their profile.
 - **Only the Superadmin** changes another Manager of Users, or gives someone the Manager of Users role.
 - **Nobody changes the Superadmin's account** in the panel. Its holder uses their own profile. The role moves to another person only with a command on the server, run by the development team (`php artisan user:superadmin`, see [Command-line user management]({{ '/deployment/command-line-user-management' | relative_url }})).
 - The **Superadmin role is never given** in the panel.

@@ -7,6 +7,7 @@ use App\Filament\Resources\UserResource;
 use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\Pages\EditUser;
 use App\Filament\Resources\UserResource\Pages\ListUser;
+use App\Filament\Resources\UserResource\Pages\ViewUser;
 use App\Models\User;
 use App\Notifications\AdminPasswordResetNotification;
 use App\Support\Authorization\UserRoles;
@@ -179,6 +180,39 @@ class UserResourceTest extends TestCase
             ->assertHasNoTableActionErrors();
 
         $this->assertDatabaseMissing('users', ['id' => $target->id]);
+    }
+
+    public function test_a_user_manager_cannot_delete_their_own_account(): void
+    {
+        $this->setCurrentPanel();
+
+        foreach ([$this->createManagerUser(), $this->createSuperadmin()] as $self) {
+            Livewire::actingAs($self)
+                ->test(ListUser::class)
+                ->assertTableActionHidden('delete', $self);
+            Livewire::actingAs($self)
+                ->test(ViewUser::class, ['record' => $self->getKey()])
+                ->assertActionHidden('delete');
+
+            $this->assertDatabaseHas('users', ['id' => $self->id]);
+        }
+    }
+
+    public function test_the_superadmin_cannot_delete_the_only_superadmin(): void
+    {
+        $superadmin = $this->createSuperadmin();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($superadmin)
+            ->test(ListUser::class)
+            ->assertTableActionHidden('delete', $superadmin);
+        Livewire::actingAs($superadmin)
+            ->test(ViewUser::class, ['record' => $superadmin->getKey()])
+            ->assertActionHidden('delete');
+
+        $this->assertSame(1, User::role(RoleEnum::SUPERADMIN->value)->count());
+        $this->assertTrue($superadmin->fresh()?->isSuperadmin());
     }
 
     public function test_user_resource_can_filter_by_role(): void
