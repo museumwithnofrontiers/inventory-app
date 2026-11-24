@@ -145,7 +145,7 @@ See docs/adr/006-what-goes-in-extra.md.
 - Site configuration goes in the instance files (`scripts/exporters/instances/`) and the site repos, not the inventory.
 - `extra` keeps only true one-offs. A key that more than one importer step writes, or that an exporter reads as content, gets a column, a link or a model, with its field in the panel.
 - Never merge legacy fields, and never edit text on the way in.
-- `inventory:extra-census` measures `extra`. A moved key must not reappear (`--expect`).
+- `inventory:extra-census` measures `extra`. `--expect docs/models/extra-census.json --strict` fails on a key above its ceiling, a moved key that reappears, or a key the file doesn't list.
 
 ## Code Rules
 

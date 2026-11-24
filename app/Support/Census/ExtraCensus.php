@@ -93,6 +93,32 @@ class ExtraCensus
     }
 
     /**
+     * The keys a census found that an expectation doesn't list, in any table. A strict
+     * check fails on them: a key that appears is reviewed before it is accepted.
+     *
+     * @param  Census  $census
+     * @param  array<mixed>  $expected
+     * @return list<string> one line per key the expectation doesn't list
+     */
+    public function unlisted(array $census, array $expected): array
+    {
+        $failures = [];
+        $tables = is_array($expected['tables'] ?? null) ? $expected['tables'] : [];
+
+        foreach ($census['tables'] as $table => $measured) {
+            $expectation = $tables[$table] ?? null;
+            $listed = is_array($expectation) && is_array($expectation['keys'] ?? null) ? $expectation['keys'] : [];
+            foreach ($measured['keys'] as $key => $count) {
+                if (! array_key_exists((string) $key, $listed)) {
+                    $failures[] = "{$table}.extra.{$key}: {$count} rows, not listed in the expectation";
+                }
+            }
+        }
+
+        return $failures;
+    }
+
+    /**
      * @return TableCensus
      */
     private function measure(string $table): array
