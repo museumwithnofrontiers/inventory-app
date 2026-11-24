@@ -76,11 +76,11 @@ abstract class BaseLinkedItemsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::ITEMS, []),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(ItemResource::class),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

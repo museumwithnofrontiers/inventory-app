@@ -30,7 +30,7 @@ use App\Models\PublicationImage;
 use App\Models\PublicationTranslation;
 use App\Models\Tag;
 use App\Models\User;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

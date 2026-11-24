@@ -5,21 +5,21 @@ namespace App\Filament\Pages;
 use App\Models\Setting;
 use App\Models\User;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 
 class SelfRegistrationSettingsPage extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
     protected static ?string $navigationLabel = 'Self-Registration';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 3;
 
-    protected static string $view = 'filament.pages.self-registration-settings-page';
+    protected string $view = 'filament.pages.self-registration-settings-page';
 
     protected static ?string $title = 'Self-Registration Settings';
 
@@ -40,10 +40,10 @@ class SelfRegistrationSettingsPage extends Page
         $this->self_registration_enabled = (bool) Setting::get('self_registration_enabled', false);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Toggle::make('self_registration_enabled')
                     ->label('Allow Self-Registration')
                     ->helperText('When enabled, new users can register themselves. They get no role and no access until a user manager approves them and gives them a role.'),

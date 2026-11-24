@@ -8,7 +8,7 @@ use App\Filament\Resources\PublicationResource\RelationManagers\DocumentsRelatio
 use App\Models\Publication;
 use App\Models\PublicationDocument;
 use App\Models\PublicationEdition;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;

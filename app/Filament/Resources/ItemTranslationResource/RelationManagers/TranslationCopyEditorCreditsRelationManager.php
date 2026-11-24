@@ -6,5 +6,7 @@ class TranslationCopyEditorCreditsRelationManager extends BaseCreditsRelationMan
 {
     protected static string $relationship = 'translationCopyEditorCredits';
 
+    protected static string $inverseCreditRelationship = 'itemTranslationsCreditedAsTranslationCopyEditor';
+
     protected static ?string $title = 'Translation copy editors';
 }

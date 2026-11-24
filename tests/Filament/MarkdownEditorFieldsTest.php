@@ -14,6 +14,7 @@ use App\Models\Language;
 use Filament\Forms\Components\MarkdownEditor;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
@@ -57,10 +58,10 @@ class MarkdownEditorFieldsTest extends TestCase
 
     public function test_a_markdown_editor_has_no_attach_files_button(): void
     {
-        $editor = MarkdownEditor::make('description');
+        $buttons = Arr::flatten(MarkdownEditor::make('description')->getToolbarButtons());
 
-        $this->assertNotContains('attachFiles', $editor->getToolbarButtons());
-        $this->assertContains('bold', $editor->getToolbarButtons());
+        $this->assertNotContains('attachFiles', $buttons);
+        $this->assertContains('bold', $buttons);
     }
 
     public function test_item_translation_texts_use_the_markdown_editor(): void
@@ -95,11 +96,17 @@ class MarkdownEditorFieldsTest extends TestCase
         Storage::fake('public');
         $this->setCurrentPanel();
 
-        Livewire::actingAs($this->createCrudUser())
+        $page = Livewire::actingAs($this->createCrudUser())
             ->test(EditItemTranslation::class, ['record' => $this->translation()->getRouteKey()])
-            ->set('componentFileAttachments.data.description', UploadedFile::fake()->image('picture.png'))
-            ->call('getFormComponentFileAttachmentUrl', 'data.description')
-            ->assertForbidden();
+            ->set('componentFileAttachments.data.description', UploadedFile::fake()->image('picture.png'));
+
+        $editor = $page->instance()->getSchemaComponent('form.description');
+        $this->assertInstanceOf(MarkdownEditor::class, $editor);
+        $this->assertFalse($editor->hasFileAttachments());
+
+        // The browser's upload call: Filament saves nothing when attachments
+        // are off (and then fails to build a URL for nothing)
+        rescue(fn () => $page->call('callSchemaComponentMethod', 'form.description', 'saveUploadedFileAttachmentAndGetUrl'), report: false);
 
         $this->assertSame([], Storage::disk('public')->allFiles());
     }
@@ -123,8 +130,8 @@ class MarkdownEditorFieldsTest extends TestCase
                 'pageClass' => EditItemItemLink::class,
             ])
             ->mountTableAction('view', $translation)
-            ->assertSeeHtml('<em>Marble</em>')
-            ->assertSeeHtml('&lt;i&gt;raw&lt;/i&gt;')
-            ->assertDontSeeHtml('<i>raw</i>');
+            ->assertMountedActionModalSeeHtml('<em>Marble</em>')
+            ->assertMountedActionModalSeeHtml('&lt;i&gt;raw&lt;/i&gt;')
+            ->assertMountedActionModalDontSeeHtml('<i>raw</i>');
     }
 }

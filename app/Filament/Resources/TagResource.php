@@ -14,20 +14,21 @@ use App\Filament\Support\EntityColor;
 use App\Filament\Support\MarkdownState;
 use App\Models\Language;
 use App\Models\Tag;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 class TagResource extends Resource
 {
@@ -51,9 +52,9 @@ class TagResource extends Resource
 
     protected static ?string $model = Tag::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
-    protected static ?string $navigationGroup = 'Shared Data';
+    protected static string|\UnitEnum|null $navigationGroup = 'Shared Data';
 
     protected static ?int $navigationSort = 2;
 
@@ -64,9 +65,9 @@ class TagResource extends Resource
         return ['id', 'internal_name', 'backward_compatibility', 'description', 'language.internal_name'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -74,10 +75,10 @@ class TagResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('internal_name')
                     ->required()
                     ->maxLength(255),
@@ -148,19 +149,19 @@ class TagResource extends Resource
                     ->getOptionLabelUsing(fn (mixed $value): string => is_string($value) ? (Language::find($value)->internal_name ?? $value) : '')
                     ->searchable(),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('description')
                             ->formatStateUsing(MarkdownState::inline())
@@ -175,7 +176,7 @@ class TagResource extends Resource
                                 : null),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('backward_compatibility')
@@ -193,7 +194,10 @@ class TagResource extends Resource
      */
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with('language');
+        /** @var Builder<Tag> $query */
+        $query = parent::getEloquentQuery();
+
+        return $query->with('language');
     }
 
     public static function getPages(): array

@@ -21,8 +21,8 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\User;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
@@ -210,7 +210,7 @@ class CollectionResourceTest extends TestCase
             'record' => $parent->getRouteKey(),
         ]);
 
-        $form = $component->instance()->getForm('form');
+        $form = $component->instance()->getSchema('form');
         $select = $form->getFlatFields()['parent_id'];
 
         $results = $select->getSearchResults('collection');
@@ -242,7 +242,7 @@ class CollectionResourceTest extends TestCase
             'record' => $collection->getRouteKey(),
         ]);
 
-        $form = $component->instance()->getForm('form');
+        $form = $component->instance()->getSchema('form');
 
         $results = $form->getFlatFields()['parent_id']->getSearchResults('col-legacy-01');
         $this->assertArrayHasKey($parent->id, $results);

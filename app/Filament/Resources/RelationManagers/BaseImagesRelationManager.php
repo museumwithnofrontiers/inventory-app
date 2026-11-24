@@ -7,21 +7,22 @@ use App\Contracts\StreamableImageFile;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
-use Filament\Forms\Components\Component;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseImagesRelationManager extends RelationManager
@@ -32,14 +33,14 @@ abstract class BaseImagesRelationManager extends RelationManager
 
     protected static ?string $title = 'Images';
 
-    protected function canCreate(): bool
+    protected function getCreateAuthorizationResponse(): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    protected function canDeleteAny(): bool
+    protected function getDeleteAnyAuthorizationResponse(): Response
     {
-        return false;
+        return Response::deny();
     }
 
     abstract protected function imageModelClass(): string;
@@ -135,7 +136,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                     ->label('Attach image')
                     ->icon('heroicon-o-paper-clip')
                     ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
-                    ->form([
+                    ->schema([
                         Select::make('available_image_id')
                             ->label('Available image')
                             ->required()
@@ -188,7 +189,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->send();
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('view_image')
                     ->label('View image')
                     ->icon('heroicon-o-eye')
@@ -201,7 +202,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                     ->color('gray')
                     ->url(fn (Model $record): string => route($this->imageDownloadRouteName(), $this->imageRouteParameters($record))),
                 EditAction::make()
-                    ->form([
+                    ->schema([
                         TextInput::make('alt_text')
                             ->label('Alt text')
                             ->maxLength(255)

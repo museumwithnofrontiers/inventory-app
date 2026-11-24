@@ -17,7 +17,7 @@ use App\Models\ItemImage;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerImage;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -142,13 +142,13 @@ class EntityImagesRelationManagerTest extends TestCase
             ])
             ->mountTableAction('edit', $image);
 
-        $translations = $component->get('mountedTableActionsData.0.translations');
+        $translations = $component->get('mountedActions.0.data.translations');
         $this->assertCount(1, $translations);
         $key = array_key_first($translations);
 
         $component
-            ->set("mountedTableActionsData.0.translations.{$key}.caption", 'New caption')
-            ->set("mountedTableActionsData.0.translations.{$key}.museum", 'National Museum of Romanticism')
+            ->set("mountedActions.0.data.translations.{$key}.caption", 'New caption')
+            ->set("mountedActions.0.data.translations.{$key}.museum", 'National Museum of Romanticism')
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors();
 

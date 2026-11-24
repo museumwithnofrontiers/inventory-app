@@ -6,7 +6,7 @@ use App\Filament\Resources\LanguageResource\Pages\CreateLanguage;
 use App\Filament\Resources\LanguageResource\Pages\EditLanguage;
 use App\Filament\Resources\LanguageResource\Pages\ListLanguage;
 use App\Models\Language;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

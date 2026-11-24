@@ -6,5 +6,7 @@ class TranslatorCreditsRelationManager extends BaseCreditsRelationManager
 {
     protected static string $relationship = 'translatorCredits';
 
+    protected static string $inverseCreditRelationship = 'itemTranslationsCreditedAsTranslator';
+
     protected static ?string $title = 'Translators';
 }

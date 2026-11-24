@@ -9,8 +9,8 @@ use App\Filament\Resources\GlossaryResource\RelationManagers\SpellingsRelationMa
 use App\Filament\Resources\GlossaryResource\RelationManagers\TranslationsRelationManager;
 use App\Models\Glossary;
 use App\Models\Language;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

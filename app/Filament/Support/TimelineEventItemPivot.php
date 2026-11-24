@@ -3,8 +3,8 @@
 namespace App\Filament\Support;
 
 use App\Models\TimelineEventItem;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 

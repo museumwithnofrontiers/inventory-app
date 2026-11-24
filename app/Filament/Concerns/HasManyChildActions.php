@@ -4,15 +4,15 @@ namespace App\Filament\Concerns;
 
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\ResourceCreateUrl;
-use Filament\Forms\Components\Component;
+use Filament\Actions\Action;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DissociateAction;
+use Filament\Actions\DissociateBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\AssociateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DissociateAction;
-use Filament\Tables\Actions\DissociateBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -54,7 +54,7 @@ trait HasManyChildActions
      * The child Resource class the header `Create`/row `View`/`Edit` actions
      * navigate to (e.g. CollectionResource::class).
      *
-     * @return class-string<\Filament\Resources\Resource>
+     * @return class-string<resource>
      */
     abstract protected static function hasManyChildResource(): string;
 
@@ -212,7 +212,7 @@ trait HasManyChildActions
         return $table
             ->inverseRelationship(static::hasManyChildInverseRelationship())
             ->headerActions($this->hasManyChildHeaderActions())
-            ->actions($this->hasManyChildRowActions())
-            ->bulkActions($this->hasManyChildBulkActions());
+            ->recordActions($this->hasManyChildRowActions())
+            ->toolbarActions($this->hasManyChildBulkActions());
     }
 }

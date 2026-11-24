@@ -10,7 +10,7 @@ use App\Filament\Resources\UserResource\Pages\ListUser;
 use App\Models\User;
 use App\Notifications\AdminPasswordResetNotification;
 use App\Support\Authorization\UserRoles;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Livewire\Livewire;

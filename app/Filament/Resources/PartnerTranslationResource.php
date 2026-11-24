@@ -14,27 +14,27 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\PartnerTranslation;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Unique;
 
 class PartnerTranslationResource extends Resource
@@ -44,9 +44,9 @@ class PartnerTranslationResource extends Resource
 
     protected static ?string $model = PartnerTranslation::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-language';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-language';
 
-    protected static ?string $navigationGroup = 'Translations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Translations';
 
     protected static ?string $navigationLabel = 'Partner Translations';
 
@@ -54,9 +54,9 @@ class PartnerTranslationResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -64,10 +64,10 @@ class PartnerTranslationResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TranslationFormSchema::partnerSelectField(includeIdInSearch: true),
                 Select::make('language_id')
                     ->label('Language')
@@ -207,12 +207,12 @@ class PartnerTranslationResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Translation For')
+            ->components([
+                Section::make('Translation For')
                     ->schema([
                         TextEntry::make('partner.internal_name')
                             ->formatStateUsing(MarkdownState::inline())
@@ -233,7 +233,7 @@ class PartnerTranslationResource extends Resource
                     ])
                     ->columns(2),
 
-                InfolistSection::make('Basic Information')
+                Section::make('Basic Information')
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('name'),
                         TranslationInfolistSchema::rtlTextEntry('city_display', 'City (display)'),
@@ -241,7 +241,7 @@ class PartnerTranslationResource extends Resource
                     ])
                     ->columns(2),
 
-                InfolistSection::make('Address')
+                Section::make('Address')
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('address_line_1', 'Address line 1'),
                         TranslationInfolistSchema::rtlTextEntry('address_line_2', 'Address line 2'),
@@ -252,7 +252,7 @@ class PartnerTranslationResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Contact Information')
+                Section::make('Contact Information')
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('contact_name', 'Contact name'),
                         TextEntry::make('contact_phone')->label('Phone'),
@@ -266,14 +266,14 @@ class PartnerTranslationResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Extra Data')
+                Section::make('Extra Data')
                     ->schema([
                         TranslationInfolistSchema::extraEntry(),
                     ])
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         TextEntry::make('id')->label('UUID')->copyable(),
                         TextEntry::make('backward_compatibility')->label('Legacy code'),
@@ -381,7 +381,7 @@ class PartnerTranslationResource extends Resource
                     ->label('Recently updated (30 days)')
                     ->query(fn (Builder $query): Builder => $query->where('updated_at', '>=', now()->subDays(30))),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 Action::make('viewPartner')
                     ->label('View partner')

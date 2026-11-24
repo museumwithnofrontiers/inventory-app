@@ -8,8 +8,8 @@ use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Item;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Toggle;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;

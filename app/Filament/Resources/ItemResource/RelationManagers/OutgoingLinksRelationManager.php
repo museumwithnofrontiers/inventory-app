@@ -10,12 +10,12 @@ use App\Filament\Resources\ItemResource;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\ItemItemLink;
-use Filament\Forms\Form;
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -30,10 +30,10 @@ class OutgoingLinksRelationManager extends RelationManager
 
     protected static ?string $title = 'Outgoing links';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TranslationFormSchema::itemSelectField(name: 'target_id', label: 'Target item'),
                 TranslationFormSchema::contextSelectField(required: false),
             ]);
@@ -76,7 +76,7 @@ class OutgoingLinksRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make(),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('viewLink')
                     ->label('View link')
                     ->icon('heroicon-o-arrow-top-right-on-square')

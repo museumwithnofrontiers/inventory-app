@@ -5,7 +5,7 @@ namespace App\Filament\Widgets;
 use App\Filament\Resources\AvailableImageResource;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;

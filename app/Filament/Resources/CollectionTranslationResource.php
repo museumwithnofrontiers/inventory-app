@@ -13,26 +13,26 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\CollectionTranslation;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Unique;
 
 class CollectionTranslationResource extends Resource
@@ -42,9 +42,9 @@ class CollectionTranslationResource extends Resource
 
     protected static ?string $model = CollectionTranslation::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-language';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-language';
 
-    protected static ?string $navigationGroup = 'Translations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Translations';
 
     protected static ?string $navigationLabel = 'Collection Translations';
 
@@ -52,9 +52,9 @@ class CollectionTranslationResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -62,10 +62,10 @@ class CollectionTranslationResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TranslationFormSchema::collectionSelectField(includeIdInSearch: true),
                 Select::make('language_id')
                     ->label('Language')
@@ -138,12 +138,12 @@ class CollectionTranslationResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Translation For')
+            ->components([
+                Section::make('Translation For')
                     ->schema([
                         TextEntry::make('collection.internal_name')
                             ->formatStateUsing(MarkdownState::inline())
@@ -164,7 +164,7 @@ class CollectionTranslationResource extends Resource
                     ])
                     ->columns(2),
 
-                InfolistSection::make('Content')
+                Section::make('Content')
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('title'),
                         TextEntry::make('url'),
@@ -177,14 +177,14 @@ class CollectionTranslationResource extends Resource
                     ])
                     ->columns(2),
 
-                InfolistSection::make('Extra Data')
+                Section::make('Extra Data')
                     ->schema([
                         TranslationInfolistSchema::extraEntry(),
                     ])
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         TextEntry::make('id')->label('UUID')->copyable(),
                         TextEntry::make('backward_compatibility')->label('Legacy code'),
@@ -292,7 +292,7 @@ class CollectionTranslationResource extends Resource
                     ->label('Recently updated (30 days)')
                     ->query(fn (Builder $query): Builder => $query->where('updated_at', '>=', now()->subDays(30))),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 Action::make('viewCollection')
                     ->label('View collection')

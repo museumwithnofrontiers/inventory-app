@@ -4,12 +4,11 @@ namespace App\Filament\Auth;
 
 use App\Models\Setting;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
-use Filament\Http\Responses\Auth\Contracts\RegistrationResponse;
 use Filament\Notifications\Notification;
-use Filament\Pages\Auth\Register as BaseRegister;
+use Filament\Schemas\Components\Component;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;
@@ -23,7 +22,7 @@ use Laravel\Fortify\Contracts\CreatesNewUsers;
  * doesn't sign the user in: it sends the verification link and returns to
  * the login page, which explains the state of the account at each attempt.
  */
-class Register extends BaseRegister
+class Register extends \Filament\Auth\Pages\Register
 {
     public static function isOpen(): bool
     {

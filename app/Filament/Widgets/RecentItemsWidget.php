@@ -13,7 +13,7 @@ use App\Filament\Support\PartnerDisplayLabel;
 use App\Models\Collection;
 use App\Models\Item;
 use App\Models\Partner;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;

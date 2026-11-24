@@ -9,12 +9,12 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Context;
 use App\Models\Language;
-use Filament\Forms\Components\Component;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -60,7 +60,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
     protected static ?string $title = 'Translations';
 
     /**
-     * @return class-string<\Filament\Resources\Resource>
+     * @return class-string<resource>
      */
     abstract protected static function translationResource(): string;
 
@@ -217,7 +217,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
                     ->label('Create default translation')
                     ->icon('heroicon-o-star')
                     ->color('warning')
-                    ->form(static::defaultTranslationFormFields())
+                    ->schema(static::defaultTranslationFormFields())
                     ->fillForm(fn (): array => [
                         'language_id' => Language::default()->first()?->id,
                         'context_id' => Context::default()->first()?->id,
@@ -253,7 +253,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
                             ->send();
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('viewTranslation')
                     ->label('View translation')
                     ->icon('heroicon-o-eye')

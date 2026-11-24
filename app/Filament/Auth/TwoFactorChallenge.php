@@ -2,31 +2,33 @@
 
 namespace App\Filament\Auth;
 
+use App\Filament\Auth\Concerns\RendersAuthForm;
 use App\Models\User;
 use App\Services\Filament\Auth\EmailTwoFactorCodeService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\Actions as FormActions;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Notifications\Notification;
-use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
+use Filament\Panel;
+use Filament\Schemas\Components\Actions;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use Laravel\Fortify\Fortify;
+use RuntimeException;
 
+/**
+ * @property-read Schema $form
+ */
 class TwoFactorChallenge extends SimplePage
 {
-    use InteractsWithFormActions;
-
-    protected static string $view = 'filament.auth.two-factor-challenge';
+    use RendersAuthForm;
 
     /**
      * @var array<string, mixed>|null
@@ -41,67 +43,55 @@ class TwoFactorChallenge extends SimplePage
             return;
         }
 
-        $this->getForm('form')?->fill();
+        $this->form->fill();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form;
-    }
-
-    /**
-     * @return array<int|string, string|Form>
-     */
-    protected function getForms(): array
-    {
-        return [
-            'form' => $this->form(
-                $this->makeForm()
-                    ->schema([
-                        Radio::make('method')
-                            ->label(__('Verification method'))
-                            ->options([
-                                'totp' => __('Authenticator app'),
-                                'recovery' => __('Recovery code'),
-                                'email' => __('Email code'),
-                            ])
-                            ->default('totp')
-                            ->inline()
-                            ->live(),
-                        TextInput::make('code')
-                            ->label(__('Authentication Code'))
-                            ->placeholder('000 000')
-                            ->maxLength(8)
-                            ->autocomplete('one-time-code')
-                            ->autofocus()
-                            ->hidden(fn (Get $get): bool => $get('method') !== 'totp')
-                            ->extraInputAttributes(['tabindex' => 1]),
-                        TextInput::make('recovery_code')
-                            ->label(__('Recovery Code'))
-                            ->placeholder('xxxxx-xxxxx')
-                            ->hidden(fn (Get $get): bool => $get('method') !== 'recovery')
-                            ->extraInputAttributes(['tabindex' => 2]),
-                        TextInput::make('email_code')
-                            ->label(__('Email Verification Code'))
-                            ->placeholder('000000')
-                            ->maxLength(6)
-                            ->autocomplete('one-time-code')
-                            ->hint(__('Enter the code sent to your email address.'))
-                            ->hidden(fn (Get $get): bool => $get('method') !== 'email')
-                            ->extraInputAttributes(['tabindex' => 3]),
-                        FormActions::make([
-                            FormAction::make('sendEmailCode')
-                                ->label(__('Send code to my email'))
-                                ->color('gray')
-                                ->outlined()
-                                ->action(fn (TwoFactorChallenge $livewire) => $livewire->sendEmailCode()),
-                        ])
-                            ->hidden(fn (Get $get): bool => $get('method') !== 'email')
-                            ->columnSpanFull(),
+        return $schema
+            ->components([
+                Radio::make('method')
+                    ->label(__('Verification method'))
+                    ->options([
+                        'totp' => __('Authenticator app'),
+                        'recovery' => __('Recovery code'),
+                        'email' => __('Email code'),
                     ])
-                    ->statePath('data'),
-            ),
-        ];
+                    ->default('totp')
+                    ->inline()
+                    ->live(),
+                TextInput::make('code')
+                    ->label(__('Authentication Code'))
+                    ->placeholder('000 000')
+                    ->maxLength(8)
+                    ->autocomplete('one-time-code')
+                    ->autofocus()
+                    ->hidden(fn (Get $get): bool => $get('method') !== 'totp')
+                    ->extraInputAttributes(['tabindex' => 1]),
+                TextInput::make('recovery_code')
+                    ->label(__('Recovery Code'))
+                    ->placeholder('xxxxx-xxxxx')
+                    ->hidden(fn (Get $get): bool => $get('method') !== 'recovery')
+                    ->extraInputAttributes(['tabindex' => 2]),
+                TextInput::make('email_code')
+                    ->label(__('Email Verification Code'))
+                    ->placeholder('000000')
+                    ->maxLength(6)
+                    ->autocomplete('one-time-code')
+                    ->hint(__('Enter the code sent to your email address.'))
+                    ->hidden(fn (Get $get): bool => $get('method') !== 'email')
+                    ->extraInputAttributes(['tabindex' => 3]),
+                Actions::make([
+                    Action::make('sendEmailCode')
+                        ->label(__('Send code to my email'))
+                        ->color('gray')
+                        ->outlined()
+                        ->action(fn (TwoFactorChallenge $livewire) => $livewire->sendEmailCode()),
+                ])
+                    ->hidden(fn (Get $get): bool => $get('method') !== 'email')
+                    ->columnSpanFull(),
+            ])
+            ->statePath('data');
     }
 
     public function sendEmailCode(): void
@@ -131,7 +121,7 @@ class TwoFactorChallenge extends SimplePage
                 ->success()
                 ->title(__('Verification code sent to your email address.'))
                 ->send();
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             throw ValidationException::withMessages([
                 'data.email_code' => [__('Unable to send verification code. Please try a different verification method.')],
             ]);
@@ -152,7 +142,7 @@ class TwoFactorChallenge extends SimplePage
 
             Notification::make()
                 ->danger()
-                ->title(__('filament-panels::pages/auth/login.notifications.throttled.title', [
+                ->title(__('filament-panels::auth/pages/login.notifications.throttled.title', [
                     'seconds' => $availableIn,
                     'minutes' => (int) ceil($availableIn / 60),
                 ]))
@@ -163,7 +153,7 @@ class TwoFactorChallenge extends SimplePage
             return;
         }
 
-        $data = $this->getForm('form')?->getState() ?? [];
+        $data = $this->form->getState();
 
         $methodRaw = $data['method'] ?? 'totp';
         $method = is_string($methodRaw) ? $methodRaw : 'totp';
@@ -259,11 +249,6 @@ class TwoFactorChallenge extends SimplePage
         ];
     }
 
-    protected function hasFullWidthFormActions(): bool
-    {
-        return true;
-    }
-
     public function getTitle(): string|Htmlable
     {
         return __('Two-Factor Authentication');
@@ -274,12 +259,12 @@ class TwoFactorChallenge extends SimplePage
         return __('Two-Factor Authentication');
     }
 
-    public static function getSlug(): string
+    public static function getSlug(?Panel $panel = null): string
     {
         return 'two-factor-challenge';
     }
 
-    public static function getRelativeRouteName(): string
+    public static function getRelativeRouteName(Panel $panel): string
     {
         return 'auth.two-factor-challenge';
     }

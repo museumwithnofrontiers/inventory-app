@@ -9,12 +9,13 @@ use App\Filament\Support\MarkdownState;
 use App\Models\CollectionTranslation;
 use App\Models\ItemTranslation;
 use App\Models\PartnerTranslation;
-use Filament\Tables\Actions\Action;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
+use InvalidArgumentException;
 
 class SiblingTranslationsWidget extends BaseWidget
 {
@@ -34,14 +35,14 @@ class SiblingTranslationsWidget extends BaseWidget
     public function table(Table $table): Table
     {
         if ($this->parentId === '') {
-            throw new \InvalidArgumentException('SiblingTranslationsWidget requires a non-empty parentId.');
+            throw new InvalidArgumentException('SiblingTranslationsWidget requires a non-empty parentId.');
         }
 
         return match ($this->parentType) {
             'item' => $this->itemTable($table),
             'collection' => $this->collectionTable($table),
             'partner' => $this->partnerTable($table),
-            default => throw new \InvalidArgumentException("Unsupported parentType: \"{$this->parentType}\"."),
+            default => throw new InvalidArgumentException("Unsupported parentType: \"{$this->parentType}\"."),
         };
     }
 
@@ -86,7 +87,7 @@ class SiblingTranslationsWidget extends BaseWidget
                     ->tooltip(fn (ItemTranslation $r): string => $r->id)
                     ->fontFamily('mono'),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('viewTranslation')
                     ->label('View')
                     ->icon('heroicon-o-eye')
@@ -140,7 +141,7 @@ class SiblingTranslationsWidget extends BaseWidget
                     ->tooltip(fn (CollectionTranslation $r): string => $r->id)
                     ->fontFamily('mono'),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('viewTranslation')
                     ->label('View')
                     ->icon('heroicon-o-eye')
@@ -194,7 +195,7 @@ class SiblingTranslationsWidget extends BaseWidget
                     ->tooltip(fn (PartnerTranslation $r): string => $r->id)
                     ->fontFamily('mono'),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('viewTranslation')
                     ->label('View')
                     ->icon('heroicon-o-eye')

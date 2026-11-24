@@ -12,23 +12,24 @@ use App\Filament\Resources\LanguageResource\Pages\ListLanguage;
 use App\Filament\Resources\LanguageResource\Pages\ViewLanguage;
 use App\Filament\Resources\LanguageResource\RelationManagers\TranslationsRelationManager;
 use App\Models\Language;
+use Filament\Actions\BulkAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Gate;
 
 class LanguageResource extends Resource
 {
@@ -39,9 +40,9 @@ class LanguageResource extends Resource
 
     protected static ?string $model = Language::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-language';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-language';
 
-    protected static ?string $navigationGroup = 'Reference Data';
+    protected static string|\UnitEnum|null $navigationGroup = 'Reference Data';
 
     protected static ?int $navigationSort = 1;
 
@@ -52,9 +53,9 @@ class LanguageResource extends Resource
         return ['id', 'internal_name', 'backward_compatibility'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -62,10 +63,10 @@ class LanguageResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('id')
                     ->label('ISO code')
                     ->length(3)
@@ -111,12 +112,12 @@ class LanguageResource extends Resource
                         blank: fn (Builder $query): Builder => $query,
                     ),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkAction::make('setDefault')
                     ->label('Set as default')
                     ->requiresConfirmation()
@@ -144,12 +145,12 @@ class LanguageResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('id')
                             ->label('ISO code'),
@@ -159,7 +160,7 @@ class LanguageResource extends Resource
                             ->boolean(),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         TextEntry::make('backward_compatibility')
                             ->label('Legacy code'),

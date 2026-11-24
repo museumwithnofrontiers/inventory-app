@@ -9,32 +9,33 @@ use App\Filament\Resources\AvailableImageResource\Pages\ViewAvailableImage;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
 use App\Models\ImageUpload;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\ImageEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class AvailableImageResource extends Resource
 {
     protected static ?string $model = AvailableImage::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-photo';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    protected static ?string $navigationGroup = 'Available Images';
+    protected static string|\UnitEnum|null $navigationGroup = 'Available Images';
 
     protected static ?int $navigationSort = 1;
 
@@ -45,14 +46,14 @@ class AvailableImageResource extends Resource
         return ['path', 'original_name', 'comment'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
-    public static function canCreate(): bool
+    public static function getCreateAuthorizationResponse(): Response
     {
-        return false;
+        return Response::deny();
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -60,10 +61,10 @@ class AvailableImageResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('comment')
                     ->label('Comment / Alt text')
                     ->maxLength(255)
@@ -88,11 +89,11 @@ class AvailableImageResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
+            ->components([
                 ImageEntry::make('preview')
                     ->label('Preview')
                     ->getStateUsing(fn (AvailableImage $record) => route('filament.admin.available-image.view', [
@@ -100,7 +101,7 @@ class AvailableImageResource extends Resource
                     ]))
                     ->height(200)
                     ->columnSpanFull(),
-                InfolistSection::make('Image Details')
+                Section::make('Image Details')
                     ->schema([
                         TextEntry::make('original_name')
                             ->label('Original name'),
@@ -126,7 +127,7 @@ class AvailableImageResource extends Resource
                             ->placeholder('—'),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         TextEntry::make('id')
                             ->label('UUID')
@@ -199,7 +200,7 @@ class AvailableImageResource extends Resource
                     ->icon('heroicon-o-arrow-up-tray')
                     ->visible(fn (): bool => auth()->user()?->can('create', ImageUpload::class) ?? false)
                     ->authorize(fn (): bool => auth()->user()?->can('create', ImageUpload::class) ?? false)
-                    ->form([
+                    ->schema([
                         FileUpload::make('file')
                             ->label('Image file')
                             ->disk('local')
@@ -240,7 +241,7 @@ class AvailableImageResource extends Resource
                         }
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('view_image')
                     ->label('View image')
                     ->icon('heroicon-o-eye')

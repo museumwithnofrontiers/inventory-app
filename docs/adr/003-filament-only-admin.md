@@ -16,7 +16,7 @@ nav_order: 3
 The application had two back-office interfaces:
 
 - **`/web`:** the first one, built from the Jetstream starter kit with Blade views and Livewire components. Its sign-in, registration, password-reset and e-mail verification pages were Laravel Fortify's Blade pages, served under `/web`.
-- **`/admin`:** the Filament 3 panel. It took over the back-office in later milestones, with its own login, two-factor, password-reset and profile pages. It is the interface people use and the one developed.
+- **`/admin`:** the Filament panel (Filament 3 then, Filament 5 since #2325). It took over the back-office in later milestones, with its own login, two-factor, password-reset and profile pages. It is the interface people use and the one developed.
 
 `/web` was no longer used or updated, but it still cost something:
 

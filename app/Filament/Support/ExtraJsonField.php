@@ -2,6 +2,7 @@
 
 namespace App\Filament\Support;
 
+use Closure;
 use Filament\Forms\Components\Textarea;
 use Filament\Infolists\Components\TextEntry;
 
@@ -64,8 +65,8 @@ class ExtraJsonField
                 return is_array($decoded) ? $decoded : null;
             })
             ->rules([
-                static function (): \Closure {
-                    return static function (string $attribute, mixed $value, \Closure $fail): void {
+                static function (): Closure {
+                    return static function (string $attribute, mixed $value, Closure $fail): void {
                         if (! filled($value)) {
                             return;
                         }

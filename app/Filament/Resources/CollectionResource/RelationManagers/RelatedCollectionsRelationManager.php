@@ -10,10 +10,10 @@ use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Support\Markdown\MarkdownText;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -38,6 +38,7 @@ class RelatedCollectionsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('relatingCollections')
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->columns([
@@ -70,12 +71,12 @@ class RelatedCollectionsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::COLLECTIONS, $this->pivotFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(CollectionResource::class),
                 $this->pivotEditAction([$this->orderField()]),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

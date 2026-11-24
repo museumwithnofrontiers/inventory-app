@@ -9,7 +9,7 @@ use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationM
 use App\Models\Item;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventItem;
-use Filament\Tables\Actions\DetachAction;
+use Filament\Actions\DetachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

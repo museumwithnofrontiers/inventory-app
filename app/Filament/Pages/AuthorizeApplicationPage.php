@@ -27,7 +27,7 @@ class AuthorizeApplicationPage extends Page
 
     protected static ?string $slug = 'oauth/authorize';
 
-    protected static string $view = 'filament.pages.authorize-application-page';
+    protected string $view = 'filament.pages.authorize-application-page';
 
     protected static bool $shouldRegisterNavigation = false;
 

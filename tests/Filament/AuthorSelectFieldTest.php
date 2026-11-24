@@ -12,7 +12,7 @@ use App\Models\DynastyTranslation;
 use App\Models\Item;
 use App\Models\ItemTranslation;
 use App\Models\Language;
-use Filament\Tables\Actions\EditAction;
+use Filament\Actions\EditAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
@@ -51,8 +51,8 @@ class AuthorSelectFieldTest extends TestCase
             ->test(EditItemTranslation::class, ['record' => $translation->getRouteKey()])
             ->instance();
 
-        $this->assertSame('Jane Author', $page->getFormSelectOptionLabel('data.author_id'));
-        $this->assertSame('Alice Translator', $page->getFormSelectOptionLabel('data.translator_id'));
+        $this->assertSame('Jane Author', $page->callSchemaComponentMethod('form.author_id', 'getOptionLabel'));
+        $this->assertSame('Alice Translator', $page->callSchemaComponentMethod('form.translator_id', 'getOptionLabel'));
     }
 
     public function test_dynasty_translation_edit_form_shows_the_credited_author(): void
@@ -73,6 +73,6 @@ class AuthorSelectFieldTest extends TestCase
             ->assertHasNoTableActionErrors()
             ->instance();
 
-        $this->assertSame('Ibn Khaldun', $manager->getFormSelectOptionLabel('mountedTableActionsData.0.author_id'));
+        $this->assertSame('Ibn Khaldun', $manager->callSchemaComponentMethod('mountedActionSchema0.author_id', 'getOptionLabel'));
     }
 }

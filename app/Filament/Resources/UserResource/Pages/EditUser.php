@@ -24,7 +24,7 @@ class EditUser extends EditRecord
         return [
             ViewAction::make(),
             DeleteAction::make()
-                ->form([ConfirmPassword::field()]),
+                ->schema([ConfirmPassword::field()]),
         ];
     }
 

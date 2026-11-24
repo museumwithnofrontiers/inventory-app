@@ -83,21 +83,31 @@ class FilamentConventionsTest extends TestCase
         );
     }
 
-    public function test_filament_admin_vite_theme_includes_tailwind_and_filament_sources(): void
+    public function test_filament_admin_vite_theme_builds_on_filaments_theme_and_scans_the_apps_sources(): void
     {
         $themePath = resource_path('css/filament/admin/theme.css');
         $themeCss = File::get($themePath);
 
         $this->assertStringContainsString(
-            "@import 'tailwindcss';",
+            "@import '../../../../vendor/filament/filament/resources/css/theme.css';",
             $themeCss,
-            'The Filament admin Vite theme must load Tailwind styles.',
+            "The Filament admin Vite theme must build on Filament's own theme, which loads Tailwind.",
         );
 
         $this->assertStringContainsString(
-            "@source '../../../../vendor/filament/**/*.blade.php';",
+            "@source '../../../../app/**/*.php';",
             $themeCss,
-            'The Filament admin Vite theme must scan Filament Blade sources so panel utilities are generated.',
+            'The Filament admin Vite theme must scan the classes the PHP code names.',
         );
+
+        $this->assertStringContainsString(
+            "@source '../../../../resources/views/**/*.blade.php';",
+            $themeCss,
+            "The Filament admin Vite theme must scan the panel's own views.",
+        );
+
+        // Filament's theme brings its own classes; scanning its views again
+        // is what its upgrade guide says not to do
+        $this->assertStringNotContainsString("@source '../../../../vendor/filament", $themeCss);
     }
 }

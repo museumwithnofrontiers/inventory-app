@@ -12,7 +12,7 @@ Use this map to find the part of the repository that owns a task.
 | Path | Purpose |
 |---|---|
 | `app/Models/` | Laravel models for Inventory entities. |
-| `app/Filament/` | Filament `/admin` resources, pages, widgets, and auth pages. |
+| `app/Filament/` | Filament 5 `/admin` resources, pages, widgets, and auth pages. |
 | `app/Policies/` | Record-level authorization policies. |
 | `app/Http/Controllers/` | Management API controllers, plus the panel's file and e-mail verification controllers (`Filament/`) and `/pub` (`Pub/`). |
 | `app/Http/Resources/` | API response resource classes. |
