@@ -12,14 +12,14 @@ use App\Models\Item;
 use App\Models\ItemDocument;
 use App\Models\Language;
 use App\Support\FileSize;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -82,7 +82,7 @@ class DocumentsRelationManager extends RelationManager
                     ->label('Upload document')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
-                    ->form([
+                    ->schema([
                         FileUpload::make('file')
                             ->label('Document file')
                             ->disk(Config::string('localstorage.uploads.documents.disk'))
@@ -148,7 +148,7 @@ class DocumentsRelationManager extends RelationManager
                             ->send();
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('download')
                     ->label('Download')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -159,7 +159,7 @@ class DocumentsRelationManager extends RelationManager
                         'itemDocument' => $record,
                     ])),
                 EditAction::make()
-                    ->form([
+                    ->schema([
                         TextInput::make('title')
                             ->maxLength(255)
                             ->nullable(),

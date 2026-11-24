@@ -25,6 +25,6 @@ Then use these pages by task:
 
 ## Current development posture
 
-The Filament 3 panel at `/admin` is the application's only UI, and `/` redirects to it. Back-office work, including sign-in, registration and account pages, belongs there.
+The Filament 5 panel at `/admin` is the application's only UI, and `/` redirects to it. Back-office work, including sign-in, registration and account pages, belongs there.
 
 The management API remains maintained. The read-only API is a future design area and should not be confused with the current authenticated management API.

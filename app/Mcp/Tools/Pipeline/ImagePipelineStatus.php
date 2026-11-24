@@ -84,14 +84,13 @@ class ImagePipelineStatus extends PipelineTool
     private function uploads(): array
     {
         $disk = Storage::disk(Config::string('localstorage.uploads.images.disk'));
-        $directory = trim(Config::string('localstorage.uploads.images.directory'), '/');
         $uploads = ImageUpload::query()->get(['id', 'path', 'created_at']);
 
         return [
             'pending' => $uploads->count(),
             'stuck' => $uploads->filter(fn (ImageUpload $upload): bool => $upload->created_at !== null
                 && $upload->created_at->lt(Carbon::now()->subMinutes(self::STUCK_AFTER_MINUTES)))->count(),
-            'files_missing' => $uploads->reject(fn (ImageUpload $upload): bool => $disk->exists($directory.'/'.$upload->path))->count(),
+            'files_missing' => $uploads->reject(fn (ImageUpload $upload): bool => ($path = $upload->storagePath()) !== null && $disk->exists($path))->count(),
         ];
     }
 

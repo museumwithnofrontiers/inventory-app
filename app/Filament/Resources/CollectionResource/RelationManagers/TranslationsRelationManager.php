@@ -7,9 +7,9 @@ use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Collection;
+use Filament\Actions\Action;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 

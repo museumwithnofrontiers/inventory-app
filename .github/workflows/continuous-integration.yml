@@ -61,8 +61,9 @@ jobs:
             echo "openapi=false" >> $GITHUB_OUTPUT
           fi
 
-          # The Filament theme: its stylesheet, and the views Tailwind scans for classes
-          if echo "$CHANGED" | grep -qE '^(resources/css|resources/views)/|^(vite\.config\.js|postcss\.config\.js|package\.json|package-lock\.json|tsconfig\.json)$'; then
+          # The Filament theme: its stylesheet, the views and PHP classes Tailwind
+          # scans for classes, and Filament's own theme in vendor/ (composer)
+          if echo "$CHANGED" | grep -qE '^(app|resources/css|resources/views)/|^(vite\.config\.js|postcss\.config\.js|package\.json|package-lock\.json|tsconfig\.json|composer\.json|composer\.lock)$'; then
             echo "root-frontend=true" >> $GITHUB_OUTPUT
           else
             echo "root-frontend=false" >> $GITHUB_OUTPUT
@@ -315,6 +316,12 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
+
+      # The theme imports Filament's theme.css from vendor/filament
+      - name: "Setup > Backend (vendor/ only)"
+        uses: ./.github/actions/setup-backend
+        with:
+          prepare-laravel-env: "false"
 
       - name: "Setup > Node Project"
         uses: ./.github/actions/setup-node-project

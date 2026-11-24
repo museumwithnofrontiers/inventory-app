@@ -6,7 +6,7 @@ use App\Filament\Resources\TimelineResource\Pages\CreateTimeline;
 use App\Filament\Resources\TimelineResource\Pages\EditTimeline;
 use App\Filament\Resources\TimelineResource\Pages\ListTimeline;
 use App\Models\Timeline;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

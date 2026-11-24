@@ -26,6 +26,7 @@ class SynonymsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('reverseSynonyms')
             ->defaultSort('internal_name', 'asc')
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)
@@ -54,11 +55,11 @@ class SynonymsRelationManager extends RelationManager
                     fn (Builder $query): Builder => $query->where('id', '!=', $this->getOwnerRecord()->getKey()),
                 ),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(GlossaryResource::class),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

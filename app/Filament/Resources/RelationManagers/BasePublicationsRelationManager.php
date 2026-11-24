@@ -74,12 +74,12 @@ abstract class BasePublicationsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::PUBLICATIONS, PublicationPivot::formFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(PublicationResource::class),
                 $this->pivotEditAction(PublicationPivot::formFields()),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

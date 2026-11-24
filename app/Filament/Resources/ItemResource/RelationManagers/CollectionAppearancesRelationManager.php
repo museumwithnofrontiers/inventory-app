@@ -14,8 +14,9 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Item;
+use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
+use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -92,7 +93,7 @@ class CollectionAppearancesRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::COLLECTIONS, CollectionItemAppearance::pivotFormFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(CollectionResource::class),
                 $this->pivotEditAction(CollectionItemAppearance::pivotFormFields()),
                 $this->pivotDetachAction(),
@@ -107,13 +108,13 @@ class CollectionAppearancesRelationManager extends RelationManager
                         return ViewCollectionItemAppearance::getAppearanceUrl($record, $item);
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }
 
     /**
-     * @param  class-string<\Filament\Resources\Resource>  $resourceClass
+     * @param  class-string<resource>  $resourceClass
      */
     private function getAuthorizedUrl(mixed $record, string $resourceClass): ?string
     {

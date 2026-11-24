@@ -4,14 +4,14 @@ namespace App\Filament\Concerns;
 
 use App\Filament\Support\RecordSelect;
 use Closure;
-use Filament\Forms\Components\Component;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\AttachAction;
+use Filament\Actions\DetachAction;
+use Filament\Actions\DetachBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\AssociateAction;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Component;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -71,7 +71,7 @@ trait PivotRelationActions
      * The row `view` action: navigates to the related record's own Resource
      * View page instead of opening ViewAction's default read-only modal.
      *
-     * @param  class-string<\Filament\Resources\Resource>  $relatedResourceClass
+     * @param  class-string<resource>  $relatedResourceClass
      */
     protected function pivotViewAction(string $relatedResourceClass): ViewAction
     {
@@ -95,7 +95,7 @@ trait PivotRelationActions
     {
         return EditAction::make()
             ->modalHeading('Edit pivot details')
-            ->form($pivotFields);
+            ->schema($pivotFields);
     }
 
     protected function pivotDetachAction(): DetachAction

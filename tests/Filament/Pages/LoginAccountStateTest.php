@@ -89,7 +89,7 @@ class LoginAccountStateTest extends TestCase
 
         $this->attempt($user)
             ->assertHasErrors(['data.email'])
-            ->assertSee(__('filament-panels::pages/auth/login.messages.failed'));
+            ->assertSee(__('filament-panels::auth/pages/login.messages.failed'));
 
         $this->assertGuest();
     }

@@ -5,11 +5,11 @@ namespace App\Filament\Support;
 use App\Models\CollectionItemExploreMonument;
 use App\Models\Partner;
 use App\Support\Markdown\MarkdownText;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\Fieldset;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Fieldset;
 use Illuminate\Database\Eloquent\Builder;
 
 /**

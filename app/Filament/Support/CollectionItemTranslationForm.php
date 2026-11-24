@@ -3,13 +3,12 @@
 namespace App\Filament\Support;
 
 use App\Models\CollectionItemTranslation;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
 use Illuminate\Validation\Rules\Unique;
 
 /**
@@ -89,12 +88,12 @@ final class CollectionItemTranslationForm
     }
 
     /**
-     * @return array<int, InfolistSection>
+     * @return array<int, Section>
      */
     public static function entries(): array
     {
         return [
-            InfolistSection::make('Texts')
+            Section::make('Texts')
                 ->schema([
                     TextEntry::make('language.internal_name')->label('Language'),
                     TranslationInfolistSchema::rtlTextEntry('title'),
@@ -102,7 +101,7 @@ final class CollectionItemTranslationForm
                     TranslationInfolistSchema::rtlTextEntry('caption'),
                 ])
                 ->columns(2),
-            InfolistSection::make('Caption of the item')
+            Section::make('Caption of the item')
                 ->schema([
                     TranslationInfolistSchema::rtlTextEntry('item_name', 'Name'),
                     TranslationInfolistSchema::rtlTextEntry('item_date', 'Date'),
@@ -113,14 +112,14 @@ final class CollectionItemTranslationForm
                     TranslationInfolistSchema::rtlTextEntry('item_material', 'Material'),
                 ])
                 ->columns(2),
-            InfolistSection::make('Justifications')
+            Section::make('Justifications')
                 ->schema([
                     TranslationInfolistSchema::markdownEntry('curator_justification', 'Curator'),
                     TranslationInfolistSchema::markdownEntry('partner_justification', 'Partner'),
                     TranslationInfolistSchema::markdownEntry('justification', 'National Context', columnSpanFull: true),
                 ])
                 ->columns(2),
-            InfolistSection::make('Legacy')
+            Section::make('Legacy')
                 ->schema([
                     TextEntry::make('backward_compatibility')->label('Legacy ID')->placeholder('—'),
                 ]),

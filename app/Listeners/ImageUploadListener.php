@@ -43,7 +43,11 @@ class ImageUploadListener
     {
         $file = $event->imageUpload;
 
-        if ($file->path === null) {
+        // The file in the uploads directory, whether `path` holds its
+        // filename (API) or the directory too (panel)
+        $uploadPath = $file->storagePath();
+
+        if ($uploadPath === null) {
             Log::error('ImageUpload has no path.', ['id' => $file->id]);
 
             return;
@@ -53,25 +57,25 @@ class ImageUploadListener
         $uploadDisk = Config::string('localstorage.uploads.images.disk');
 
         // Check if the file exists on the upload disk
-        if (! Storage::disk($uploadDisk)->exists($file->path)) {
+        if (! Storage::disk($uploadDisk)->exists($uploadPath)) {
             Log::error('Uploaded file does not exist.', [
                 'disk' => $uploadDisk,
                 'name' => $file->name,
-                'path' => $file->path,
+                'path' => $uploadPath,
             ]);
 
             return;
         }
 
         // Get the file contents for image validation and processing
-        $fileContents = Storage::disk($uploadDisk)->get($file->path);
+        $fileContents = Storage::disk($uploadDisk)->get($uploadPath);
 
         // Check if contents were successfully retrieved
         if ($fileContents === null) {
             Log::error('Failed to retrieve file contents.', [
                 'disk' => $uploadDisk,
                 'name' => $file->name,
-                'path' => $file->path,
+                'path' => $uploadPath,
             ]);
 
             return;
@@ -121,7 +125,7 @@ class ImageUploadListener
             $availableImageDirectory = Config::string('localstorage.available.images.directory');
 
             // Get just the filename (without directory)
-            $filename = basename($file->path);
+            $filename = basename($uploadPath);
 
             // Store file in configured directory on disk
             $storagePath = $availableImageDirectory.'/'.$filename;
@@ -138,7 +142,7 @@ class ImageUploadListener
             }
 
             // Clean up the original upload file
-            Storage::disk($uploadDisk)->delete($file->path);
+            Storage::disk($uploadDisk)->delete($uploadPath);
 
             // Store only filename in database (no directory), preserving upload metadata
             $availableImage = new AvailableImage([
@@ -157,12 +161,12 @@ class ImageUploadListener
 
         } catch (\Exception $e) {
             // If the file is not a valid image or processing failed, delete it
-            Storage::disk($uploadDisk)->delete($file->path);
+            Storage::disk($uploadDisk)->delete($uploadPath);
 
             Log::error('Failed to process uploaded image.', [
                 'disk' => $uploadDisk,
                 'name' => $file->name,
-                'path' => $file->path,
+                'path' => $uploadPath,
                 'error' => $e->getMessage(),
             ]);
         }

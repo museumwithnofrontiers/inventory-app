@@ -1,0 +1,240 @@
+{
+    "tables": {
+        "collection_item": {
+            "keys": {
+                "contextual_descriptions": 0,
+                "curator_status": 0,
+                "desc_types": 0,
+                "detail_justification": 0,
+                "detail_n": 0,
+                "detail_name": 0,
+                "explore_geo": 0,
+                "explore_mn_desc": 0,
+                "explore_monument_id": 0,
+                "explore_monument_ids": 0,
+                "explore_museums": 0,
+                "image_captions": 0,
+                "item_artist": 0,
+                "item_date": 0,
+                "item_dynasty": 0,
+                "item_location": 0,
+                "item_material": 0,
+                "item_museum": 0,
+                "item_name": 0,
+                "justifications": 0,
+                "location_id": 0,
+                "membership": 58,
+                "mn_order": 0,
+                "n": 0,
+                "n2": 0,
+                "parent_n2": 0,
+                "picture": 0,
+                "source_bc_by_language": 0,
+                "tr_mn_desc": 0,
+                "vm_mn_desc": 0
+            }
+        },
+        "collection_translations": {
+            "keys": {
+                "about": 11,
+                "additional_regions": 0,
+                "author": 0,
+                "bibliography": 13,
+                "contact": 0,
+                "contacts": 1,
+                "country_ids": 0,
+                "country_texts": 3,
+                "cover_images": 0,
+                "credits": 0,
+                "curated_by": 0,
+                "description_2": 233,
+                "disabled_bibliography": 3,
+                "duration": 0,
+                "et_introduction": 0,
+                "et_title": 0,
+                "exhibition_i18n": 0,
+                "hb_general_type": 0,
+                "hb_type": 0,
+                "how_to_reach": 0,
+                "image_captions": 0,
+                "info": 0,
+                "intro_text": 0,
+                "introd_type": 0,
+                "introduction": 0,
+                "legacy_exhibition": 0,
+                "legacy_status": 0,
+                "local_coordinator": 0,
+                "local_team": 0,
+                "location_ids": 0,
+                "map_descriptions": 0,
+                "photo_by": 0,
+                "prepared_by": 0,
+                "region_territory": 11,
+                "remark": 3,
+                "showOnMonument": 0,
+                "subtitle": 0,
+                "territory_ids": 0,
+                "territory_level": 0,
+                "theme_ids": 0,
+                "thg_gallery": 0,
+                "thg_gallery_lang": 0,
+                "travels_author": 0
+            }
+        },
+        "collections": {
+            "keys": {
+                "days": 0,
+                "explore_home": 0,
+                "explore_itinerary": 0,
+                "explore_travel": 0,
+                "further_readings": 3,
+                "historical_background": 0,
+                "logos": 0,
+                "thg_gallery": 0,
+                "thg_theme": 0
+            }
+        },
+        "item_documents": {
+            "keys": {
+                "img_count": 23
+            }
+        },
+        "item_translations": {
+            "keys": {
+                "architects": 0,
+                "archival": 0,
+                "artist": 0,
+                "artist_birthdate": 0,
+                "artist_birthplace": 0,
+                "artist_deathdate": 0,
+                "artist_deathplace": 0,
+                "binding_desc": 72,
+                "catalogue_holding_link": 0,
+                "contact": 0,
+                "copyright": 0,
+                "country_id_present_days": 22,
+                "credits_as_written": 0,
+                "datation_method": 0,
+                "description2": 0,
+                "dimensions": 0,
+                "dynasty": 0,
+                "external_sources": 0,
+                "further_readings": 42,
+                "history": 0,
+                "holding_institution_org": 0,
+                "how_to_reach": 0,
+                "info": 0,
+                "keywords": 0,
+                "legacy_display_status": 0,
+                "legacy_type": 0,
+                "linkcatalogs": 0,
+                "materials": 0,
+                "monument_contact": 0,
+                "name2": 1,
+                "note": 1,
+                "notice": 0,
+                "notice_c": 0,
+                "patrons": 0,
+                "period_activity": 0,
+                "photographer": 0,
+                "prepared_by": 0,
+                "province": 0,
+                "responsible_institution_org": 38,
+                "scriber": 0,
+                "second_name": 0,
+                "sh_display_status": 466,
+                "structured_bibliography": 98,
+                "third_name": 0,
+                "workshop": 0
+            }
+        },
+        "links": {
+            "keys": {
+                "overview_page": 19
+            }
+        },
+        "partner_images": {
+            "keys": {
+                "copyright": 0,
+                "photographer": 0
+            }
+        },
+        "partner_translations": {
+            "keys": {
+                "city": 0,
+                "contact_person_1": 0,
+                "contact_person_2": 0,
+                "ex_description": 2,
+                "ex_name": 0,
+                "fax": 0,
+                "how_to_reach": 0,
+                "opening_hours": 0,
+                "partner_category": 0,
+                "portal_display": 0,
+                "region": 7,
+                "region_id": 21,
+                "source": 0,
+                "urls": 0
+            }
+        },
+        "publication_editions": {
+            "keys": {
+                "legacy_texts": 76,
+                "shop_links": 0
+            }
+        },
+        "publication_images": {
+            "keys": {
+                "photographer": 0
+            }
+        },
+        "publication_item": {
+            "keys": {
+                "linkcatalogs": 156
+            }
+        },
+        "publication_translations": {
+            "keys": {
+                "remarks_1": 2
+            }
+        },
+        "publications": {
+            "keys": {
+                "date": 0,
+                "legacy_category": 0,
+                "region": 3
+            }
+        },
+        "timeline_event_item": {
+            "keys": {
+                "texts": 16
+            }
+        },
+        "timeline_event_translations": {
+            "keys": {
+                "organisers": 8,
+                "rea_cities": 8,
+                "rea_countries": 8,
+                "remarks": 1
+            }
+        },
+        "timeline_events": {
+            "keys": {
+                "ongoing": 8
+            }
+        },
+        "timelines": {
+            "keys": {
+                "bibliography": 16,
+                "description": 1,
+                "disabled_bibliography": 1,
+                "organisers": 1,
+                "rea_countries": 1,
+                "rea_from_year": 1,
+                "rea_to_year": 1,
+                "sponsors": 1,
+                "title": 1
+            }
+        }
+    }
+}

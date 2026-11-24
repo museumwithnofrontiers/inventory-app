@@ -6,7 +6,7 @@ use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Models\Item;
 use App\Models\Partner;
-use Filament\Actions\MountableAction;
+use Filament\Actions\Action;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -243,12 +243,12 @@ class OwnedItemsRelationManagerTest extends TestCase
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function headerAction(Testable $component, string $name): MountableAction
+    private function headerAction(Testable $component, string $name): Action
     {
         $table = $component->instance()->getTable();
 
         foreach ($table->getHeaderActions() as $action) {
-            if ($action instanceof MountableAction && $action->getName() === $name) {
+            if ($action instanceof Action && $action->getName() === $name) {
                 return $action;
             }
         }

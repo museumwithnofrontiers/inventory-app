@@ -11,7 +11,7 @@
         "test:yml": "node ./scripts/validate-workflows.cjs"
     },
     "dependencies": {
-        "glob": "^13.0.6"
+        "glob": "^14.0.6"
     },
     "devDependencies": {
         "@tailwindcss/postcss": "^4.3.3",
@@ -23,9 +23,9 @@
         "form-data": "^4.0.6",
         "laravel-vite-plugin": "^3.2.0",
         "postcss": "^8.5.32",
-        "prettier": "^3.9.9",
-        "stylelint": "^17.15.0",
-        "stylelint-config-standard": "^40.0.0",
+        "prettier": "^3.10.1",
+        "stylelint": "^18.1.0",
+        "stylelint-config-standard": "^41.1.0",
         "tailwindcss": "^4.3.3",
         "vite": "^8.3.1"
     },

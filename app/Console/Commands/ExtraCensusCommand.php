@@ -12,7 +12,8 @@ class ExtraCensusCommand extends Command
 {
     protected $signature = 'inventory:extra-census
                             {--json : Print the census as JSON, for comparisons and baselines}
-                            {--expect= : A JSON file of key ceilings (same shape as --json); fail when a key is on more rows}';
+                            {--expect= : A JSON file of key ceilings (same shape as --json); fail when a key is on more rows}
+                            {--strict : With --expect, also fail on a key the file does not list}';
 
     protected $description = 'Count the rows that carry extra JSON, per table and per top-level key (item translations also per item type)';
 
@@ -20,6 +21,11 @@ class ExtraCensusCommand extends Command
     {
         $expected = null;
         $expectFile = $this->option('expect');
+        if ($this->option('strict') && (! is_string($expectFile) || $expectFile === '')) {
+            $this->error('--strict needs --expect <file>.');
+
+            return Command::FAILURE;
+        }
         if (is_string($expectFile) && $expectFile !== '') {
             $expected = $this->readExpectation($expectFile);
             if ($expected === null) {
@@ -40,9 +46,14 @@ class ExtraCensusCommand extends Command
         }
 
         $failures = $census->exceeding($report, $expected);
+        if ($this->option('strict')) {
+            $failures = [...$failures, ...$census->unlisted($report, $expected)];
+        }
         if ($failures === []) {
             if (! $this->option('json')) {
-                $this->info('Every key is within its expected ceiling.');
+                $this->info($this->option('strict')
+                    ? 'Every key is listed and within its expected ceiling.'
+                    : 'Every key is within its expected ceiling.');
             }
 
             return Command::SUCCESS;

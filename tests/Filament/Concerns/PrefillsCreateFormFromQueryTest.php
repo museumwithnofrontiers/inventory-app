@@ -141,7 +141,7 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ->withQueryParams(['parent_id' => $parent->id, 'partner_id' => $partner->id])
             ->test(CreateItem::class);
 
-        $form = $component->instance()->getForm('form');
+        $form = $component->instance()->getSchema('form');
 
         $this->assertSame('root-item', $form->getFlatFields()['parent_id']->getOptionLabel());
         $this->assertSame('Jordan Museum', $form->getFlatFields()['partner_id']->getOptionLabel());
@@ -191,7 +191,7 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ->withQueryParams(['parent_id' => $parent->id])
             ->test(CreateCollection::class);
 
-        $form = $component->instance()->getForm('form');
+        $form = $component->instance()->getSchema('form');
 
         $this->assertSame('root-collection', $form->getFlatFields()['parent_id']->getOptionLabel());
     }
@@ -283,7 +283,7 @@ class PrefillsCreateFormFromQueryTest extends TestCase
             ->withQueryParams(['timeline_id' => $timeline->id])
             ->test(CreateTimelineEvent::class);
 
-        $form = $component->instance()->getForm('form');
+        $form = $component->instance()->getSchema('form');
 
         $this->assertSame('Islamic Timeline', $form->getFlatFields()['timeline_id']->getOptionLabel());
     }

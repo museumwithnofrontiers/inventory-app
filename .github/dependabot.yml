@@ -51,7 +51,12 @@ updates:
         dependency-type: "production"
 
   # Node tooling directly under scripts/ — currently importer, site-i18n,
-  # parity and data-packages-mcp.
+  # parity, data-packages-mcp and search.
+  #
+  # scripts/search holds only the pin of @museumwnf/search-data (ADR 005).
+  # Merging a bump of that pin runs deploy-search-ovh.yml, which loads the
+  # new version into the live index, the same as the pull request propagate
+  # opens after a publish.
   #
   # Listed rather than globbed, and this is the one place the glob scheme does
   # not reach. `/scripts/*` here made the WHOLE FILE invalid: Dependabot
@@ -73,6 +78,7 @@ updates:
       - "/scripts/site-i18n"
       - "/scripts/parity"
       - "/scripts/data-packages-mcp"
+      - "/scripts/search"
     schedule:
       interval: "weekly"
     labels:

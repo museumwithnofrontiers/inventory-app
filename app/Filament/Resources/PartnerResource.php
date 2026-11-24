@@ -28,25 +28,25 @@ use App\Filament\Support\PartnerDisplayLabel;
 use App\Models\Country;
 use App\Models\Partner;
 use App\Models\Project;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\Section as FiltersSection;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 class PartnerResource extends Resource
 {
@@ -60,9 +60,9 @@ class PartnerResource extends Resource
 
     protected static ?string $model = Partner::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-building-library';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-library';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 5;
 
@@ -73,9 +73,9 @@ class PartnerResource extends Resource
         return ['id', 'internal_name', 'backward_compatibility', 'translations.name', 'country.internal_name', 'project.internal_name'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -83,11 +83,11 @@ class PartnerResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                FiltersSection::make('Core information')
+        return $schema
+            ->components([
+                Section::make('Core information')
                     ->schema([
                         Select::make('type')
                             ->options([
@@ -132,7 +132,7 @@ class PartnerResource extends Resource
                             ->maxLength(255),
                     ])
                     ->columns(2),
-                FiltersSection::make('Technical identification')
+                Section::make('Technical identification')
                     ->description('System metadata used for technical identification and legacy imports.')
                     ->schema([
                         TextInput::make('internal_name')
@@ -220,7 +220,7 @@ class PartnerResource extends Resource
             ->filtersFormSchema(function (array $filters): array {
                 /** @var array<string, Component> $filters */
                 return [
-                    FiltersSection::make('Translation Coverage')
+                    Section::make('Translation Coverage')
                         ->schema([
                             $filters['has_fallback_translation'],
                             $filters['missing_fallback_translation'],
@@ -230,7 +230,7 @@ class PartnerResource extends Resource
                             $filters['translation_context_missing'],
                         ])
                         ->columns(2),
-                    FiltersSection::make('Partner Filters')
+                    Section::make('Partner Filters')
                         ->schema([
                             $filters['country_id'],
                             $filters['project_id'],
@@ -238,19 +238,19 @@ class PartnerResource extends Resource
                         ->columns(2),
                 ];
             })
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('type'),
                         TextEntry::make('country.internal_name')
@@ -284,7 +284,7 @@ class PartnerResource extends Resource
                             ->label('Map zoom'),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')

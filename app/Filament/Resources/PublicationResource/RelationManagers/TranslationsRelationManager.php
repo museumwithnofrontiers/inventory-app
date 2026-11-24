@@ -7,8 +7,8 @@ use App\Filament\Resources\PublicationTranslationResource;
 use App\Filament\Resources\RelationManagers\BaseOwnerTranslationsRelationManager;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Publication;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Actions\Action;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 

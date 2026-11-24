@@ -64,7 +64,7 @@ The full reimport of 2026-11-20 (G1, #2655) left **962 rows** with `extra`, agai
 
 - Every M16 story moves its keys into columns, links or models, with the panel fields to edit them. A key that leaves `extra` without a field in the panel is not done.
 - The exporters read the new homes, and every data package comes out identical, apart from any difference a story names.
-- `inventory:extra-census` measures the result. `--expect <file>` fails when a moved key reappears; each epic commits the file it expects.
+- `inventory:extra-census` measures the result. `--expect <file>` fails when a moved key reappears; each epic commits the file it expects. Since 2026-11-24, [`extra-census.json`](../models/extra-census.json) lists every key at its count, and `--strict` also fails on a key the file doesn't list, so a new key gets a decision before it stays.
 - After M16, about 3,400 rows should keep `extra`. The keys that stay are listed in #2625, for example Sharing History's own picture fields, `binding_desc` and `structured_bibliography`.
 - A new importer step that needs a place for a legacy field adds a column or a link. It doesn't write `extra`, unless the field is a true one-off under rule 5.
 - The four item types (object, monument, detail, picture) keep one `items` table and one item translation table; [Item types and their translation columns](../models/item-types) says which columns serve which type.

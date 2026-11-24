@@ -7,13 +7,13 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\Language;
 use App\Models\TimelineEvent;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -29,12 +29,12 @@ class TranslationsRelationManager extends RelationManager
 
     protected static ?string $title = 'Translations';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
         $ownerRecord = $this->ownerTimelineEvent();
 
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TranslationFormSchema::languageField()
                     ->unique(
                         table: 'timeline_event_translations',
@@ -108,7 +108,7 @@ class TranslationsRelationManager extends RelationManager
                         'language_id' => Language::default()->first()?->id,
                     ]),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

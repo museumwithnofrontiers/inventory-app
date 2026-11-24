@@ -7,12 +7,12 @@ use App\Models\CollectionItem;
 use App\Models\Item;
 use App\Models\Language;
 use App\Support\Markdown\MarkdownText;
-use Filament\Forms\Components\Component;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Tables\Actions\Action;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -61,12 +61,10 @@ class CollectionItemAppearance
                     ? $query->where('type', ItemType::PICTURE)->where('parent_id', $record->id)
                     : $query->where('type', ItemType::PICTURE),
             ),
+            // Yes, no, or not given (null)
             Select::make('curator_selected')
                 ->label('Curator selection')
-                ->options(['1' => 'Selected', '0' => 'Not selected'])
-                ->placeholder('Not given')
-                ->formatStateUsing(fn (mixed $state): ?string => $state === null ? null : ((bool) $state ? '1' : '0'))
-                ->dehydrateStateUsing(fn (mixed $state): ?bool => $state === null || $state === '' ? null : $state === '1' || $state === 1 || $state === true),
+                ->boolean('Selected', 'Not selected', 'Not given'),
             ExtraJsonField::formComponent(),
         ];
     }
@@ -188,7 +186,7 @@ class CollectionItemAppearance
             ->modalHeading('Appearance text')
             ->modalSubmitAction(false)
             ->modalCancelActionLabel('Close')
-            ->infolist(function (Model $record): array {
+            ->schema(function (Model $record): array {
                 $pivot = $record->getAttribute('pivot');
                 if (! ($pivot instanceof CollectionItem)) {
                     return [];

@@ -77,12 +77,12 @@ class TimelineEventsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::TIMELINE_EVENTS, TimelineEventItemPivot::pivotFormFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(TimelineEventResource::class),
                 $this->pivotEditAction(TimelineEventItemPivot::pivotFormFields()),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

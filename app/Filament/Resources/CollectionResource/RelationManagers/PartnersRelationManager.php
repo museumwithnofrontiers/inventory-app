@@ -71,13 +71,13 @@ class PartnersRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::PARTNERS, CollectionPartnerPivot::attachFormFields(CollectionPartnerPivot::OWNER_COLLECTION)),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(PartnerResource::class),
                 $this->pivotEditAction(CollectionPartnerPivot::pivotFormFields(CollectionPartnerPivot::OWNER_COLLECTION)),
                 $this->pivotDetachAction()
                     ->after(fn (Model $record) => $this->clearParentReferencesTo([$record->getKey()])),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction()
                     ->after(fn (EloquentCollection $records) => $this->clearParentReferencesTo($records->modelKeys())),
             ]);

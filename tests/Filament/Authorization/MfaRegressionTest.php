@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use Livewire\Livewire;
 use Mockery;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Tests\TestCase;
 use Tests\Traits\CreatesTwoFactorUsers;
 
@@ -227,7 +229,7 @@ class MfaRegressionTest extends TestCase
                 continue;
             }
 
-            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($tree));
+            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tree));
 
             foreach ($files as $file) {
                 if (! $file->isFile() || $file->getExtension() !== 'php') {

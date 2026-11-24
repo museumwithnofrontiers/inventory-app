@@ -6,12 +6,12 @@ use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\CountryTranslation;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -26,10 +26,10 @@ class TranslationsRelationManager extends RelationManager
 
     protected static ?string $title = 'Translations';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TranslationFormSchema::languageField(),
                 TextInput::make('name')
                     ->required()
@@ -71,7 +71,7 @@ class TranslationsRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make(),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

@@ -11,7 +11,7 @@ use App\Models\Glossary;
 use App\Models\GlossaryTranslation;
 use App\Models\Item;
 use App\Models\ItemItemLink;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

@@ -5,6 +5,7 @@ namespace App\Models;
 use Database\Factories\CountryFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 
@@ -28,6 +29,20 @@ class Country extends Model
         'internal_name',
         'backward_compatibility',
     ];
+
+    /**
+     * Get the collections that name this country: the way back from
+     * Collection::countries(), which the panel's Attach action uses to leave
+     * out the collection's countries.
+     *
+     * @return BelongsToMany<Collection, $this>
+     */
+    public function collections(): BelongsToMany
+    {
+        return $this->belongsToMany(Collection::class, 'collection_country')
+            ->withPivot('display_order')
+            ->withTimestamps();
+    }
 
     /**
      * Get the items belonging to this country.

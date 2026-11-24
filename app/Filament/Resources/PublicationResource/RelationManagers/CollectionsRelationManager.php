@@ -67,12 +67,12 @@ class CollectionsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::COLLECTIONS, PublicationPivot::formFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(CollectionResource::class),
                 $this->pivotEditAction(PublicationPivot::formFields()),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

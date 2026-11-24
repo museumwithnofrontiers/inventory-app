@@ -13,13 +13,12 @@ use App\Models\Collection;
 use App\Models\CollectionItem;
 use App\Models\CollectionItemTranslation;
 use App\Models\Item;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction as PageEditAction;
-use Filament\Infolists\Infolist;
+use Filament\Actions\ViewAction;
 use Filament\Pages\Page;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
@@ -39,7 +38,7 @@ class ViewCollectionItemAppearance extends Page implements HasTable
 
     protected static bool $shouldRegisterNavigation = false;
 
-    protected static string $view = 'filament.pages.view-collection-item-appearance';
+    protected string $view = 'filament.pages.view-collection-item-appearance';
 
     public Collection $collection;
 
@@ -139,15 +138,15 @@ class ViewCollectionItemAppearance extends Page implements HasTable
                 CreateAction::make()
                     ->label('Add a language')
                     ->modalHeading('Add the texts of a language')
-                    ->form(CollectionItemTranslationForm::fields($this->placementId))
-                    ->mutateFormDataUsing(fn (array $data): array => [...$data, 'collection_item_id' => $this->placementId])
+                    ->schema(CollectionItemTranslationForm::fields($this->placementId))
+                    ->mutateDataUsing(fn (array $data): array => [...$data, 'collection_item_id' => $this->placementId])
                     ->visible(fn (): bool => $this->canChangeTexts()),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make()
-                    ->infolist(fn (Infolist $infolist): Infolist => $infolist->schema(CollectionItemTranslationForm::entries())),
-                EditAction::make()
-                    ->form(CollectionItemTranslationForm::fields($this->placementId))
+                    ->schema(fn (Schema $schema): Schema => $schema->components(CollectionItemTranslationForm::entries())),
+                PageEditAction::make()
+                    ->schema(CollectionItemTranslationForm::fields($this->placementId))
                     ->visible(fn (): bool => $this->canChangeTexts()),
                 DeleteAction::make()
                     ->visible(fn (): bool => $this->canChangeTexts()),
@@ -171,7 +170,7 @@ class ViewCollectionItemAppearance extends Page implements HasTable
                 ->modalHeading('Explore monuments')
                 ->modalDescription('The Explore monuments this placement stands for, in order.')
                 ->record(fn (): CollectionItem => $this->placement())
-                ->form(CollectionItemExploreMonumentForm::fields())
+                ->schema(CollectionItemExploreMonumentForm::fields())
                 ->visible(fn (): bool => $this->canChangeTexts()),
         ];
     }

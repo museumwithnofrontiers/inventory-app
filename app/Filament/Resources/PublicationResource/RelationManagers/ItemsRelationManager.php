@@ -74,12 +74,12 @@ class ItemsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::ITEMS, PublicationPivot::formFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(ItemResource::class),
                 $this->pivotEditAction(PublicationPivot::formFields()),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

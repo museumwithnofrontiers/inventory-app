@@ -58,12 +58,12 @@ class CountriesRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::COUNTRIES, $this->pivotFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(CountryResource::class),
                 $this->pivotEditAction($this->pivotFields()),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

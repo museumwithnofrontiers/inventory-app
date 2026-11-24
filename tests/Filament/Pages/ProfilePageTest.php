@@ -80,7 +80,7 @@ class ProfilePageTest extends TestCase
 
         $this->setPanel();
 
-        $panelMenuItems = Filament::getCurrentPanel()->getUserMenuItems();
+        $panelMenuItems = Filament::getCurrentOrDefaultPanel()->getUserMenuItems();
 
         $profileItem = collect($panelMenuItems)->first(
             fn ($item) => str_contains((string) $item->getUrl(), 'profile')

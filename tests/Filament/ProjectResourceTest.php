@@ -14,7 +14,7 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Project;
 use App\Models\User;
-use Filament\Tables\Actions\DeleteAction;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

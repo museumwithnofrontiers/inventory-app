@@ -34,28 +34,28 @@ use App\Models\Country;
 use App\Models\Partner;
 use App\Models\Project;
 use App\Support\Markdown\MarkdownText;
-use Filament\Forms\Components\Component;
-use Filament\Forms\Components\Section as FiltersSection;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 
 class CollectionResource extends Resource
 {
@@ -145,9 +145,9 @@ class CollectionResource extends Resource
         return CollectionDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : '');
     }
 
-    protected static ?string $navigationIcon = 'heroicon-o-archive-box';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-archive-box';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 4;
 
@@ -175,9 +175,9 @@ class CollectionResource extends Resource
         return ['id', 'internal_name', 'backward_compatibility', 'translations.title', 'parent.internal_name', 'country.internal_name'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -185,11 +185,11 @@ class CollectionResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                FiltersSection::make('Core information')
+        return $schema
+            ->components([
+                Section::make('Core information')
                     ->schema([
                         Select::make('type')
                             ->options(self::TYPE_OPTIONS)
@@ -238,14 +238,14 @@ class CollectionResource extends Resource
                             ->maxValue(365),
                     ])
                     ->columns(2),
-                FiltersSection::make('Publishing')
+                Section::make('Publishing')
                     ->description('Whether the collection is ready for the sites. How a site shows it belongs to the site.')
                     ->schema([
                         Toggle::make('draft')
                             ->helperText('Not ready for the sites: no site shows it or anything under it.')
                             ->default(true),
                     ]),
-                FiltersSection::make('Technical identification')
+                Section::make('Technical identification')
                     ->description('System metadata used for technical identification and legacy imports.')
                     ->schema([
                         TextInput::make('internal_name')
@@ -404,7 +404,7 @@ class CollectionResource extends Resource
             ->filtersFormSchema(function (array $filters): array {
                 /** @var array<string, Component> $filters */
                 return [
-                    FiltersSection::make('Translation Coverage')
+                    Section::make('Translation Coverage')
                         ->schema([
                             $filters['has_fallback_translation'],
                             $filters['missing_fallback_translation'],
@@ -414,7 +414,7 @@ class CollectionResource extends Resource
                             $filters['translation_context_missing'],
                         ])
                         ->columns(2),
-                    FiltersSection::make('Collection Filters')
+                    Section::make('Collection Filters')
                         ->schema([
                             $filters['type'],
                             $filters['purpose'],
@@ -427,23 +427,23 @@ class CollectionResource extends Resource
                         ->columns(2),
                 ];
             })
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 static::changeParentAction(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 static::moveToParentAction(),
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('type'),
                         TextEntry::make('purpose')
@@ -487,7 +487,7 @@ class CollectionResource extends Resource
                             ->boolean(),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')

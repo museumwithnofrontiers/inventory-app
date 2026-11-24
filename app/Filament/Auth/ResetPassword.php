@@ -2,14 +2,15 @@
 
 namespace App\Filament\Auth;
 
+use App\Filament\Auth\Concerns\RendersAuthForm;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
+use Filament\Panel;
+use Filament\Schemas\Schema;
 use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Config;
@@ -17,11 +18,12 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Validation\ValidationException;
 
+/**
+ * @property-read Schema $form
+ */
 class ResetPassword extends SimplePage
 {
-    use InteractsWithFormActions;
-
-    protected static string $view = 'filament.auth.reset-password';
+    use RendersAuthForm;
 
     /**
      * @var array<string, mixed>|null
@@ -40,53 +42,41 @@ class ResetPassword extends SimplePage
 
         $this->token = $token;
 
-        $this->getForm('form')?->fill([
+        $this->form->fill([
             'email' => request()->query('email', ''),
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form;
-    }
-
-    /**
-     * @return array<int|string, string|Form>
-     */
-    protected function getForms(): array
-    {
-        return [
-            'form' => $this->form(
-                $this->makeForm()
-                    ->schema([
-                        TextInput::make('email')
-                            ->label(__('Email address'))
-                            ->email()
-                            ->required()
-                            ->readOnly(),
-                        TextInput::make('password')
-                            ->label(__('New password'))
-                            ->password()
-                            ->revealable()
-                            ->required()
-                            ->minLength(8)
-                            ->confirmed()
-                            ->extraInputAttributes(['tabindex' => 1]),
-                        TextInput::make('password_confirmation')
-                            ->label(__('Confirm new password'))
-                            ->password()
-                            ->revealable()
-                            ->required()
-                            ->extraInputAttributes(['tabindex' => 2]),
-                    ])
-                    ->statePath('data'),
-            ),
-        ];
+        return $schema
+            ->components([
+                TextInput::make('email')
+                    ->label(__('Email address'))
+                    ->email()
+                    ->required()
+                    ->readOnly(),
+                TextInput::make('password')
+                    ->label(__('New password'))
+                    ->password()
+                    ->revealable()
+                    ->required()
+                    ->minLength(8)
+                    ->confirmed()
+                    ->extraInputAttributes(['tabindex' => 1]),
+                TextInput::make('password_confirmation')
+                    ->label(__('Confirm new password'))
+                    ->password()
+                    ->revealable()
+                    ->required()
+                    ->extraInputAttributes(['tabindex' => 2]),
+            ])
+            ->statePath('data');
     }
 
     public function submit(): void
     {
-        $data = $this->getForm('form')?->getState() ?? [];
+        $data = $this->form->getState();
 
         $user = User::where('email', $data['email'])->first();
 
@@ -117,7 +107,7 @@ class ResetPassword extends SimplePage
             session()->put('filament.admin.password_reset.token', $this->token);
 
             $this->redirect(
-                Filament::getCurrentPanel()?->route('auth.password.reset.mfa') ?? '/'
+                Filament::getCurrentOrDefaultPanel()?->route('auth.password.reset.mfa') ?? '/'
             );
 
             return;
@@ -164,11 +154,6 @@ class ResetPassword extends SimplePage
         ];
     }
 
-    protected function hasFullWidthFormActions(): bool
-    {
-        return true;
-    }
-
     public function getTitle(): string|Htmlable
     {
         return __('Reset Password');
@@ -179,12 +164,12 @@ class ResetPassword extends SimplePage
         return __('Reset your password');
     }
 
-    public static function getSlug(): string
+    public static function getSlug(?Panel $panel = null): string
     {
         return 'reset-password';
     }
 
-    public static function getRelativeRouteName(): string
+    public static function getRelativeRouteName(Panel $panel): string
     {
         return 'auth.password.reset';
     }

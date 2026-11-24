@@ -58,12 +58,12 @@ class ItemsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::ITEMS, TimelineEventItemPivot::pivotFormFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(ItemResource::class),
                 $this->pivotEditAction(TimelineEventItemPivot::pivotFormFields()),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

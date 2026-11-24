@@ -9,14 +9,14 @@ use App\Filament\Support\ExtraJsonField;
 use App\Filament\Support\MarkdownState;
 use App\Models\Link;
 use App\Models\PublicationEdition;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -54,10 +54,10 @@ class LinksRelationManager extends RelationManager
         return $this->ownerRecordCanBeUpdated();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Select::make('type')
                     ->options(LinkType::options())
                     ->required(),
@@ -160,7 +160,7 @@ class LinksRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make(),
             ])
-            ->actions([
+            ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
             ]);

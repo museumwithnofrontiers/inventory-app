@@ -29,7 +29,9 @@ use App\Http\Middleware\Filament\EnsureTwoFactorEnrolled;
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Support\Markdown\MarkdownText;
 use Filament\Enums\ThemeMode;
+use Filament\Forms\Components\Field;
 use Filament\Forms\Components\MarkdownEditor;
+use Filament\Forms\Components\Radio;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -38,6 +40,9 @@ use Filament\Navigation\MenuItem;
 use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Schemas\Components\Fieldset;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Support\Colors\Color;
 use Filament\Tables\Table;
 use Illuminate\Auth\Notifications\VerifyEmail;
@@ -65,6 +70,8 @@ class AdminPanelProvider extends PanelProvider
         Livewire::component('app.filament.auth.reset-password', ResetPassword::class);
         Livewire::component('app.filament.auth.password-reset-mfa-challenge', PasswordResetMfaChallenge::class);
 
+        $this->keepFilament3Defaults();
+
         // Stored text is Markdown (see MarkdownText). A table's record title,
         // which action headings, confirmations and notifications print, reads
         // the title attribute as plain text. A table that sets its own
@@ -79,13 +86,14 @@ class AdminPanelProvider extends PanelProvider
         });
 
         // A Markdown field never takes a file: an attached picture would be
-        // written to a disk outside the image pipeline. Removing the button
-        // only hides it, since Filament still stores an upload sent to any
-        // MarkdownEditor, so the upload itself is refused as well.
+        // written to a disk outside the image pipeline. Attachments are off
+        // (Filament stores nothing then) and the button is gone; should they
+        // ever be turned on, the upload itself is refused as well.
         MarkdownEditor::configureUsing(function (MarkdownEditor $editor): void {
             $editor
+                ->fileAttachments(false)
                 ->disableToolbarButtons(['attachFiles'])
-                ->saveUploadedFileAttachmentsUsing(static function (): never {
+                ->saveUploadedFileAttachmentUsing(static function (): never {
                     abort(403);
                 });
         });
@@ -101,6 +109,32 @@ class AdminPanelProvider extends PanelProvider
                 'hash' => sha1($notifiable->getEmailForVerification()),
             ],
         ));
+    }
+
+    /**
+     * Filament 4 changed these defaults; the panel keeps Filament 3's (#2325),
+     * so forms, tables and validation behave as they did before the upgrade.
+     */
+    private function keepFilament3Defaults(): void
+    {
+        // Layout components span the whole row, not one column
+        Section::configureUsing(fn (Section $section) => $section->columnSpanFull());
+        Grid::configureUsing(fn (Grid $grid) => $grid->columnSpanFull());
+        Fieldset::configureUsing(fn (Fieldset $fieldset) => $fieldset->columnSpanFull());
+
+        Table::configureUsing(fn (Table $table) => $table
+            // A filter applies as soon as it is changed
+            ->deferFilters(false)
+            // The page size offers "all" again
+            ->paginationPageOptions([5, 10, 25, 50, 'all'])
+            // No primary-key sort added behind a table's own sort
+            ->defaultKeySort(false));
+
+        // unique() checks every record unless a field says ignoreRecord: true
+        Field::configureUsing(fn (Field $field) => $field->uniqueValidationIgnoresRecordByDefault(false));
+
+        // An inline radio puts its label inline too
+        Radio::configureUsing(fn (Radio $radio) => $radio->inlineLabel(fn (): bool => $radio->isInline()));
     }
 
     private const LIGHT_LOGO_CLASSES = 'h-full w-auto text-blue-900';
@@ -169,23 +203,23 @@ class AdminPanelProvider extends PanelProvider
                 EnsureTwoFactorEnrolled::class,
             ])
             ->routes(function (): void {
-                Route::get('/two-factor-challenge', TwoFactorChallenge::class)
+                Route::livewire('/two-factor-challenge', TwoFactorChallenge::class)
                     ->name('auth.two-factor-challenge');
-                Route::get('/forgot-password', RequestPasswordReset::class)
+                Route::livewire('/forgot-password', RequestPasswordReset::class)
                     ->name('auth.password.request');
-                Route::get('/reset-password/{token}', ResetPassword::class)
+                Route::livewire('/reset-password/{token}', ResetPassword::class)
                     ->name('auth.password.reset');
-                Route::get('/reset-password-mfa', PasswordResetMfaChallenge::class)
+                Route::livewire('/reset-password-mfa', PasswordResetMfaChallenge::class)
                     ->name('auth.password.reset.mfa');
                 Route::get('/email-verification/verify/{id}/{hash}', VerifyEmailController::class)
                     ->middleware(['signed', 'throttle:6,1'])
                     ->name('auth.verify-email');
             })
             ->authenticatedRoutes(function (): void {
-                Route::get('/two-factor-setup', TwoFactorSetup::class)
+                Route::livewire('/two-factor-setup', TwoFactorSetup::class)
                     ->name('auth.two-factor-setup');
 
-                Route::get('/collections/{collection}/items/{item}/appearance', ViewCollectionItemAppearance::class)
+                Route::livewire('/collections/{collection}/items/{item}/appearance', ViewCollectionItemAppearance::class)
                     ->name('collection-item.appearance');
 
                 Route::get('/available-images/{availableImage}/view', [FilamentAvailableImageController::class, 'view'])

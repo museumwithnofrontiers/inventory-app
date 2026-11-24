@@ -2,6 +2,14 @@
 
 namespace App\Filament\Concerns;
 
+use Filament\Actions\Action;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\AttachAction;
+use Filament\Actions\DetachAction;
+use Filament\Actions\DetachBulkAction;
+use Filament\Actions\DissociateAction;
+use Filament\Actions\DissociateBulkAction;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Gate;
 
@@ -21,9 +29,11 @@ use Illuminate\Support\Facades\Gate;
  * pivot-only relations such as tags/artists/dynasties) has nothing
  * further to check, so host `update` alone governs it.
  *
- * These hooks only govern Filament's own built-in actions (CreateAction,
- * EditAction, DeleteAction, AttachAction, DetachAction, AssociateAction,
- * DissociateAction and their bulk variants). A relation manager that defines
+ * These hooks are Filament's `get*AuthorizationResponse()` methods, which its
+ * own `can*()` methods and built-in actions read (Filament 4 no longer calls a
+ * `can*()` override). They only govern Filament's own built-in actions
+ * (CreateAction, EditAction, DeleteAction, AttachAction, DetachAction,
+ * AssociateAction, DissociateAction and their bulk variants). A relation manager that defines
  * a custom `Action::make(...)` for a mutation (e.g. BaseImagesRelationManager's
  * `attach`/`detach`, or a `Action::make('editTranslation')` link to another
  * Resource's edit page) must gate it explicitly with `hostRecordCanBeUpdated()`
@@ -31,67 +41,93 @@ use Illuminate\Support\Facades\Gate;
  */
 trait AuthorizesRelationMutations
 {
-    protected function canCreate(): bool
+    protected function getCreateAuthorizationResponse(): Response
     {
-        return $this->hostRecordCanBeUpdated()
-            && $this->relatedEntityAllows('create', $this->getTable()->getModel());
+        return $this->respond($this->hostRecordCanBeUpdated()
+            && $this->relatedEntityAllows('create', $this->getTable()->getModel()));
     }
 
-    protected function canEdit(Model $record): bool
+    protected function getEditAuthorizationResponse(Model $record): Response
     {
-        return $this->hostRecordCanBeUpdated()
-            && $this->relatedEntityAllows('update', $record);
+        return $this->respond($this->hostRecordCanBeUpdated()
+            && $this->relatedEntityAllows('update', $record));
     }
 
-    protected function canDelete(Model $record): bool
+    protected function getDeleteAuthorizationResponse(Model $record): Response
     {
-        return $this->hostRecordCanBeUpdated()
-            && $this->relatedEntityAllows('delete', $record);
+        return $this->respond($this->hostRecordCanBeUpdated()
+            && $this->relatedEntityAllows('delete', $record));
     }
 
-    protected function canDeleteAny(): bool
+    protected function getDeleteAnyAuthorizationResponse(): Response
     {
-        return $this->hostRecordCanBeUpdated()
-            && $this->relatedEntityAllows('deleteAny', $this->getTable()->getModel());
+        return $this->respond($this->hostRecordCanBeUpdated()
+            && $this->relatedEntityAllows('deleteAny', $this->getTable()->getModel()));
     }
 
-    protected function canAttach(): bool
+    protected function getAttachAuthorizationResponse(): Response
     {
-        return $this->hostRecordCanBeUpdated();
+        return $this->respond($this->hostRecordCanBeUpdated());
     }
 
-    protected function canDetach(Model $record): bool
+    protected function getDetachAuthorizationResponse(Model $record): Response
     {
-        return $this->hostRecordCanBeUpdated();
+        return $this->respond($this->hostRecordCanBeUpdated());
     }
 
-    protected function canDetachAny(): bool
+    protected function getDetachAnyAuthorizationResponse(): Response
     {
-        return $this->hostRecordCanBeUpdated();
+        return $this->respond($this->hostRecordCanBeUpdated());
     }
 
     /**
      * Reordering (a `reorderable()` table) rewrites the order of the host's
      * relation, like editing a pivot, so host `update` governs it.
      */
-    protected function canReorder(): bool
+    protected function getReorderAuthorizationResponse(): Response
     {
-        return $this->hostRecordCanBeUpdated();
+        return $this->respond($this->hostRecordCanBeUpdated());
     }
 
-    protected function canAssociate(): bool
+    protected function getAssociateAuthorizationResponse(): Response
     {
-        return $this->hostRecordCanBeUpdated();
+        return $this->respond($this->hostRecordCanBeUpdated());
     }
 
-    protected function canDissociate(Model $record): bool
+    protected function getDissociateAuthorizationResponse(Model $record): Response
     {
-        return $this->hostRecordCanBeUpdated();
+        return $this->respond($this->hostRecordCanBeUpdated());
     }
 
-    protected function canDissociateAny(): bool
+    protected function getDissociateAnyAuthorizationResponse(): Response
     {
-        return $this->hostRecordCanBeUpdated();
+        return $this->respond($this->hostRecordCanBeUpdated());
+    }
+
+    /**
+     * Filament 4 authorizes Attach, Detach, Associate and Dissociate (and
+     * their bulk variants) with isReadOnly() alone, which this concern turns
+     * off; Filament 3 asked canAttach() and the others. They go through the
+     * host `update` check above again, as they did then. Every other built-in
+     * action keeps Filament's mapping to the methods above.
+     */
+    public function getDefaultActionAuthorizationResponse(Action $action): ?Response
+    {
+        $record = $action->getRecord();
+
+        return match (true) {
+            $action instanceof AttachAction => $this->getAttachAuthorizationResponse(),
+            $action instanceof DetachAction => $record instanceof Model
+                ? $this->getDetachAuthorizationResponse($record)
+                : $this->getDetachAnyAuthorizationResponse(),
+            $action instanceof DetachBulkAction => $this->getDetachAnyAuthorizationResponse(),
+            $action instanceof AssociateAction => $this->getAssociateAuthorizationResponse(),
+            $action instanceof DissociateAction => $record instanceof Model
+                ? $this->getDissociateAuthorizationResponse($record)
+                : $this->getDissociateAnyAuthorizationResponse(),
+            $action instanceof DissociateBulkAction => $this->getDissociateAnyAuthorizationResponse(),
+            default => parent::getDefaultActionAuthorizationResponse($action),
+        };
     }
 
     /**
@@ -141,5 +177,10 @@ trait AuthorizesRelationMutations
         $user = auth()->user();
 
         return $user !== null && $user->can($ability, $subject);
+    }
+
+    private function respond(bool $allowed): Response
+    {
+        return $allowed ? Response::allow() : Response::deny();
     }
 }
