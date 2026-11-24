@@ -118,6 +118,81 @@ class ExtraCensusCommandTest extends TestCase
             ->assertExitCode(0);
     }
 
+    public function test_expect_alone_ignores_a_key_the_file_does_not_list(): void
+    {
+        $this->seedExtra();
+        $this->writeExpectation(['item_translations' => ['keys' => ['dimensions' => 2]]]);
+
+        $this->artisan('inventory:extra-census', ['--expect' => $this->expectFile])
+            ->expectsOutputToContain('Every key is within its expected ceiling.')
+            ->assertExitCode(0);
+    }
+
+    public function test_strict_fails_on_a_key_the_file_does_not_list(): void
+    {
+        $this->seedExtra();
+        $this->writeExpectation(['item_translations' => ['keys' => ['dimensions' => 2]]]);
+
+        $this->artisan('inventory:extra-census', ['--expect' => $this->expectFile, '--strict' => true])
+            ->expectsOutputToContain('item_translations.extra.prepared_by: 1 rows, not listed in the expectation')
+            ->expectsOutputToContain('collection_item.extra.mn_order: 1 rows, not listed in the expectation')
+            ->expectsOutputToContain('collections.extra.thg_gallery: 1 rows, not listed in the expectation')
+            ->assertExitCode(1);
+    }
+
+    public function test_strict_passes_when_every_key_is_listed_and_within_its_ceiling(): void
+    {
+        $this->seedExtra();
+        $this->writeExpectation([
+            'item_translations' => ['keys' => ['dimensions' => 2, 'prepared_by' => 1, 'datation_method' => 0]],
+            'collection_item' => ['keys' => ['mn_order' => 1]],
+            'collections' => ['keys' => ['thg_gallery' => 1]],
+        ]);
+
+        $this->artisan('inventory:extra-census', ['--expect' => $this->expectFile, '--strict' => true])
+            ->expectsOutputToContain('Every key is listed and within its expected ceiling.')
+            ->assertExitCode(0);
+    }
+
+    public function test_strict_still_fails_on_a_key_above_its_ceiling(): void
+    {
+        $this->seedExtra();
+        $this->writeExpectation([
+            'item_translations' => ['keys' => ['dimensions' => 1, 'prepared_by' => 1]],
+            'collection_item' => ['keys' => ['mn_order' => 1]],
+            'collections' => ['keys' => ['thg_gallery' => 1]],
+        ]);
+
+        $this->artisan('inventory:extra-census', ['--expect' => $this->expectFile, '--strict' => true])
+            ->expectsOutputToContain('item_translations.extra.dimensions: 2 rows, at most 1 expected')
+            ->assertExitCode(1);
+    }
+
+    public function test_strict_needs_an_expectation_file(): void
+    {
+        $this->artisan('inventory:extra-census', ['--strict' => true])
+            ->expectsOutputToContain('--strict needs --expect')
+            ->assertExitCode(1);
+    }
+
+    public function test_the_committed_expectation_lists_integer_ceilings_only(): void
+    {
+        $file = base_path('docs/models/extra-census.json');
+        $this->assertFileExists($file);
+
+        $expected = json_decode((string) file_get_contents($file), true);
+        $this->assertIsArray($expected);
+        $this->assertIsArray($expected['tables'] ?? null);
+
+        foreach ($expected['tables'] as $table => $expectation) {
+            $this->assertIsArray($expectation['keys'] ?? null, "{$table} has no keys");
+            foreach ($expectation['keys'] as $key => $ceiling) {
+                $this->assertIsInt($ceiling, "{$table}.{$key} is not an integer ceiling");
+                $this->assertGreaterThanOrEqual(0, $ceiling, "{$table}.{$key} is negative");
+            }
+        }
+    }
+
     public function test_expect_rejects_a_missing_or_malformed_file(): void
     {
         $this->artisan('inventory:extra-census', ['--expect' => '/nonexistent/census.json'])

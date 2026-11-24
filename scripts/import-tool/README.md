@@ -281,6 +281,18 @@ host, `php artisan tinker --execute=…` in the app directory, with
 growth where curators edit live legacy (the-hijaz-railway) is normal; a group
 that shrinks or disappears is not — reset staging and stage again.
 
+**Check `extra` against its expectation** ([ADR 006](../../docs/adr/006-what-goes-in-extra.md),
+[Extra census](../../docs/models/extra-census.md)). Every key must be listed and within its ceiling:
+
+```bash
+docker compose run --rm staging-migrate php artisan inventory:extra-census --expect docs/models/extra-census.json --strict
+```
+
+Run the same command on the server (read only) before shipping. `ship` replaces
+production, so a key an editor typed into `extra` in the panel would be lost
+without anyone seeing it. A failure on either side is reviewed under ADR 006:
+the key gets a decision, and the expectation file changes in its own pull request.
+
 ### 6. Send it to the server
 
 DESTRUCTIVE — wipes and rebuilds the deployed app. First snapshot the deployed
