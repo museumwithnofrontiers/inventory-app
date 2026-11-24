@@ -7,6 +7,7 @@
   "scripts": {
     "build": "tsc",
     "export": "tsx src/cli/export.ts",
+    "check": "tsx src/cli/check.ts",
     "test": "vitest run",
     "type-check": "tsc --noEmit",
     "lint": "eslint . --fix",
