@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Schemas\Components\Section;
 use App\Enums\ItemType;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
@@ -13,14 +18,8 @@ use App\Filament\Resources\ItemItemLinkResource\RelationManagers\TranslationsRel
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Models\ItemItemLink;
-use Filament\Forms\Form;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -33,9 +32,9 @@ class ItemItemLinkResource extends Resource
 
     protected static ?string $model = ItemItemLink::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-link';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-link';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 7;
 
@@ -53,10 +52,10 @@ class ItemItemLinkResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TranslationFormSchema::itemSelectField(name: 'source_id', label: 'Source item'),
                 TranslationFormSchema::itemSelectField(name: 'target_id', label: 'Target item'),
                 TranslationFormSchema::contextSelectField(required: false),
@@ -117,19 +116,19 @@ class ItemItemLinkResource extends Resource
                     ->relationship('context', 'internal_name')
                     ->searchable(),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Link Details')
+            ->components([
+                Section::make('Link Details')
                     ->schema([
                         TextEntry::make('source.internal_name')
                             ->formatStateUsing(MarkdownState::inline())
@@ -150,7 +149,7 @@ class ItemItemLinkResource extends Resource
                                 : null),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         ...static::timestampsInfolistEntries(),

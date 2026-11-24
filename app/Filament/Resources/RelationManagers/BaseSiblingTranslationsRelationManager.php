@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\RelationManagers;
 
+use Filament\Actions\Action;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
@@ -9,7 +10,6 @@ use App\Models\Context;
 use App\Models\Language;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -27,7 +27,7 @@ abstract class BaseSiblingTranslationsRelationManager extends RelationManager
     /**
      * Returns the FQCN of the translation Filament resource (e.g. ItemTranslationResource::class).
      *
-     * @return class-string<\Filament\Resources\Resource>
+     * @return class-string<Resource>
      */
     abstract protected static function translationResource(): string;
 
@@ -106,7 +106,7 @@ abstract class BaseSiblingTranslationsRelationManager extends RelationManager
                     ->tooltip(fn (Model $r): string => is_scalar($r->getKey()) ? (string) $r->getKey() : '')
                     ->fontFamily('mono'),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('viewTranslation')
                     ->label('View')
                     ->icon('heroicon-o-eye')

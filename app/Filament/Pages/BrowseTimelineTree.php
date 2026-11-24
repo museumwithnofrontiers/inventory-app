@@ -11,15 +11,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BrowseTimelineTree extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clock';
 
     protected static ?string $navigationLabel = 'Browse timeline tree';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 10;
 
-    protected static string $view = 'filament.pages.browse-timeline-tree';
+    protected string $view = 'filament.pages.browse-timeline-tree';
 
     public static function canAccess(): bool
     {

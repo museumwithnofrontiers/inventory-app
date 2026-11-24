@@ -10,7 +10,6 @@ use App\Filament\Support\CollectionDisplayLabel;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Support\Markdown\MarkdownText;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -70,18 +69,18 @@ class RelatedCollectionsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::COLLECTIONS, $this->pivotFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(CollectionResource::class),
                 $this->pivotEditAction([$this->orderField()]),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }
 
     /**
-     * @return array<int, Component>
+     * @return array<int, \Filament\Schemas\Components\Component>
      */
     private function pivotFields(): array
     {

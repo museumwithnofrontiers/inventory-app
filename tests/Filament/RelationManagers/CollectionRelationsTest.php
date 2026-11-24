@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\RelationManagers;
 
+use Filament\Actions\DetachAction;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\Pages\ViewCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\CountriesRelationManager;
@@ -15,7 +16,6 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerLogo;
-use Filament\Tables\Actions\DetachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

@@ -2,11 +2,11 @@
 
 namespace App\Filament\Auth;
 
+use Filament\Schemas\Schema;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
@@ -21,7 +21,7 @@ class ResetPassword extends SimplePage
 {
     use InteractsWithFormActions;
 
-    protected static string $view = 'filament.auth.reset-password';
+    protected string $view = 'filament.auth.reset-password';
 
     /**
      * @var array<string, mixed>|null
@@ -45,20 +45,20 @@ class ResetPassword extends SimplePage
         ]);
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form;
+        return $schema;
     }
 
     /**
-     * @return array<int|string, string|Form>
+     * @return array<int|string, string|\Filament\Schemas\Schema>
      */
     protected function getForms(): array
     {
         return [
             'form' => $this->form(
                 $this->makeForm()
-                    ->schema([
+                    ->components([
                         TextInput::make('email')
                             ->label(__('Email address'))
                             ->email()
@@ -117,7 +117,7 @@ class ResetPassword extends SimplePage
             session()->put('filament.admin.password_reset.token', $this->token);
 
             $this->redirect(
-                Filament::getCurrentPanel()?->route('auth.password.reset.mfa') ?? '/'
+                Filament::getCurrentOrDefaultPanel()?->route('auth.password.reset.mfa') ?? '/'
             );
 
             return;

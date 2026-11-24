@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources\PartnerResource\RelationManagers;
 
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\MarkdownState;
 use App\Models\PartnerLogo;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -61,7 +61,7 @@ class LogosRelationManager extends RelationManager
                     ->label('MIME type')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('view_image')
                     ->label('View image')
                     ->icon('heroicon-o-eye')
@@ -74,7 +74,7 @@ class LogosRelationManager extends RelationManager
                     ->color('gray')
                     ->url(fn (PartnerLogo $record): string => route('filament.admin.partner-logo.download', $this->routeParameters($record))),
                 EditAction::make()
-                    ->form([
+                    ->schema([
                         TextInput::make('logo_type')
                             ->label('Type')
                             ->required()

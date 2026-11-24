@@ -2,12 +2,12 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Actions\Action;
 use App\Enums\Permission;
 use App\Models\User;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Tables\Actions\Action as TableAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -33,7 +33,7 @@ class ConnectedAppsPage extends Page implements HasTable
 
     protected static ?string $title = 'Connected apps';
 
-    protected static string $view = 'filament.pages.connected-apps-page';
+    protected string $view = 'filament.pages.connected-apps-page';
 
     protected static bool $shouldRegisterNavigation = false;
 
@@ -90,8 +90,8 @@ class ConnectedAppsPage extends Page implements HasTable
                     ->since()
                     ->state(fn (Client $record): ?Carbon => $this->tokensOf($record)->max('created_at')),
             ])
-            ->actions([
-                TableAction::make('revoke')
+            ->recordActions([
+                Action::make('revoke')
                     ->label('Revoke')
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')

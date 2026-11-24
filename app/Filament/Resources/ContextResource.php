@@ -2,6 +2,12 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkAction;
+use Filament\Schemas\Components\Section;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasTimestampsColumns;
@@ -12,17 +18,10 @@ use App\Filament\Resources\ContextResource\Pages\ListContext;
 use App\Filament\Resources\ContextResource\Pages\ViewContext;
 use App\Models\Context;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -38,9 +37,9 @@ class ContextResource extends Resource
 
     protected static ?string $model = Context::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static ?string $navigationGroup = 'Shared Data';
+    protected static string | \UnitEnum | null $navigationGroup = 'Shared Data';
 
     protected static ?int $navigationSort = 1;
 
@@ -61,10 +60,10 @@ class ContextResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('internal_name')
                     ->required()
                     ->maxLength(255),
@@ -99,12 +98,12 @@ class ContextResource extends Resource
                         blank: fn (Builder $query): Builder => $query,
                     ),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkAction::make('setDefault')
                     ->label('Set as default')
                     ->requiresConfirmation()
@@ -132,12 +131,12 @@ class ContextResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('internal_name'),
                         IconEntry::make('is_default')
@@ -145,7 +144,7 @@ class ContextResource extends Resource
                             ->boolean(),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('backward_compatibility')

@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Resources\TagResource\Pages\CreateTag;
 use App\Filament\Resources\TagResource\Pages\EditTag;
@@ -9,7 +10,6 @@ use App\Filament\Resources\TagResource\Pages\ListTag;
 use App\Filament\Support\EntityColor;
 use App\Models\Language;
 use App\Models\Tag;
-use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

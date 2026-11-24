@@ -2,11 +2,11 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\ContextResource\Pages\CreateContext;
 use App\Filament\Resources\ContextResource\Pages\EditContext;
 use App\Filament\Resources\ContextResource\Pages\ListContext;
 use App\Models\Context;
-use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

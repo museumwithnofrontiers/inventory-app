@@ -2,6 +2,8 @@
 
 namespace Tests\Filament\RelationManagers;
 
+use Filament\Actions\ViewAction;
+use Filament\Actions\DetachAction;
 use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\ArtistsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\DynastiesRelationManager;
@@ -12,8 +14,6 @@ use App\Models\Dynasty;
 use App\Models\Item;
 use App\Models\Tag;
 use App\Models\User;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\ViewAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

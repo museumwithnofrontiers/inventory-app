@@ -2,6 +2,12 @@
 
 namespace App\Filament\Resources\ItemItemLinkResource\RelationManagers;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Actions\CreateAction;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
 use App\Filament\Support\MarkdownState;
@@ -13,15 +19,8 @@ use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -38,10 +37,10 @@ class TranslationsRelationManager extends RelationManager
 
     protected static ?string $title = 'Translations';
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Select::make('language_id')
                     ->label('Language')
                     ->required()
@@ -81,10 +80,10 @@ class TranslationsRelationManager extends RelationManager
      * The view shows the texts rendered by MarkdownText, raw HTML escaped,
      * as every other view does, not the form's read-only Markdown preview.
      */
-    public function infolist(Infolist $infolist): Infolist
+    public function infolist(Schema $schema): Schema
     {
-        return $infolist
-            ->schema([
+        return $schema
+            ->components([
                 TextEntry::make('language.internal_name')
                     ->label('Language'),
                 TranslationInfolistSchema::markdownEntry('description', 'Description (source → target)', columnSpanFull: true),
@@ -147,7 +146,7 @@ class TranslationsRelationManager extends RelationManager
                         'language_id' => Language::where('is_default', true)->first()?->id,
                     ]),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),

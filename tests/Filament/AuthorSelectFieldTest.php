@@ -2,6 +2,7 @@
 
 namespace Tests\Filament;
 
+use Filament\Actions\EditAction;
 use App\Filament\Resources\DynastyResource\Pages\ViewDynasty;
 use App\Filament\Resources\DynastyResource\RelationManagers\TranslationsRelationManager;
 use App\Filament\Resources\ItemTranslationResource\Pages\EditItemTranslation;
@@ -12,7 +13,6 @@ use App\Models\DynastyTranslation;
 use App\Models\Item;
 use App\Models\ItemTranslation;
 use App\Models\Language;
-use Filament\Tables\Actions\EditAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

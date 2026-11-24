@@ -2,22 +2,21 @@
 
 namespace App\Filament\Resources\RelationManagers;
 
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Schemas\Components\Section;
+use Filament\Actions\DeleteAction;
 use App\Contracts\DetachableImage;
 use App\Contracts\StreamableImageFile;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -59,7 +58,7 @@ abstract class BaseImagesRelationManager extends RelationManager
      * both the attach and the edit form (PublicationImage: its kind and
      * edition). None by default.
      *
-     * @return array<int, Component>
+     * @return array<int, \Filament\Schemas\Components\Component>
      */
     protected function extraImageFormFields(): array
     {
@@ -135,7 +134,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                     ->label('Attach image')
                     ->icon('heroicon-o-paper-clip')
                     ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
-                    ->form([
+                    ->schema([
                         Select::make('available_image_id')
                             ->label('Available image')
                             ->required()
@@ -188,7 +187,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                             ->send();
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('view_image')
                     ->label('View image')
                     ->icon('heroicon-o-eye')
@@ -201,7 +200,7 @@ abstract class BaseImagesRelationManager extends RelationManager
                     ->color('gray')
                     ->url(fn (Model $record): string => route($this->imageDownloadRouteName(), $this->imageRouteParameters($record))),
                 EditAction::make()
-                    ->form([
+                    ->schema([
                         TextInput::make('alt_text')
                             ->label('Alt text')
                             ->maxLength(255)

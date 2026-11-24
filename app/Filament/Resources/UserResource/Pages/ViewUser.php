@@ -17,7 +17,7 @@ class ViewUser extends ViewRecord
         return [
             EditAction::make(),
             DeleteAction::make()
-                ->form([ConfirmPassword::field()]),
+                ->schema([ConfirmPassword::field()]),
         ];
     }
 }

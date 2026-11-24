@@ -2,12 +2,13 @@
 
 namespace App\Filament\Concerns;
 
+use Filament\Actions\Action;
+use RuntimeException;
+use Filament\Actions\BulkAction;
 use App\Filament\Support\RecordSelect;
 use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Database\Eloquent\Model;
@@ -77,7 +78,7 @@ trait HasChangeParentAction
             ->icon('heroicon-o-arrow-uturn-up')
             ->visible(fn (Model $record): bool => auth()->user()?->can('update', $record) ?? false)
             ->authorize(fn (Model $record): bool => auth()->user()?->can('update', $record) ?? false)
-            ->form(fn (Model $record): array => [
+            ->schema(fn (Model $record): array => [
                 Select::make('parent_id')
                     ->label(static::changeParentSelectLabel())
                     ->nullable()
@@ -99,7 +100,7 @@ trait HasChangeParentAction
                         ->success()
                         ->title('Parent updated')
                         ->send();
-                } catch (\RuntimeException $e) {
+                } catch (RuntimeException $e) {
                     logger()->warning($resourceName.': changeParent failed', [
                         $idKey => $record->getKey(),
                         'new_parent_id' => $data['parent_id'] ?? null,
@@ -146,7 +147,7 @@ trait HasChangeParentAction
                     try {
                         $record->setAttribute('parent_id', $data['parent_id'] ?? null);
                         $record->save();
-                    } catch (\RuntimeException $e) {
+                    } catch (RuntimeException $e) {
                         logger()->warning($resourceName.': moveToParent failed', [
                             $idKey => $record->getKey(),
                             'new_parent_id' => $data['parent_id'] ?? null,

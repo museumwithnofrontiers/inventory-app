@@ -2,6 +2,13 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkAction;
+use Filament\Schemas\Components\Section;
 use App\Enums\Role as RoleEnum;
 use App\Filament\Resources\UserResource\Pages\CreateUser;
 use App\Filament\Resources\UserResource\Pages\EditUser;
@@ -14,18 +21,10 @@ use App\Services\UserPasswordResetService;
 use App\Support\Authorization\UserRoles;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -49,9 +48,9 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static string | \UnitEnum | null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 1;
 
@@ -72,10 +71,10 @@ class UserResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('name')
                     ->required()
                     ->maxLength(255),
@@ -209,7 +208,7 @@ class UserResource extends Resource
                     ->label('Suspended')
                     ->query(fn (Builder $query): Builder => $query->whereNotNull('suspended_at')),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 Action::make('resendVerification')
@@ -268,7 +267,7 @@ class UserResource extends Resource
                     ->visible(fn (User $record): bool => static::roleOptions($record) !== [])
                     ->authorize(fn (User $record): bool => static::allows('assignRole', $record))
                     ->fillForm(fn (User $record): array => ['role' => $record->currentRole()?->value])
-                    ->form(fn (User $record): array => [
+                    ->schema(fn (User $record): array => [
                         Select::make('role')
                             ->label('Role')
                             ->placeholder('No role')
@@ -287,7 +286,7 @@ class UserResource extends Resource
                     ->authorize(fn (User $record): bool => static::allows('resetTwoFactor', $record))
                     ->modalHeading('Disable Two-Factor Authentication')
                     ->modalDescription('This will disable two-factor authentication for this user. Use this as an admin recovery action when the user has lost their device.')
-                    ->form([ConfirmPassword::field()])
+                    ->schema([ConfirmPassword::field()])
                     ->action(function (User $record): void {
                         app(DisableTwoFactorAuthentication::class)($record);
                         Notification::make()->success()->title('Two-factor authentication disabled')->send();
@@ -311,7 +310,7 @@ class UserResource extends Resource
                     ->authorize(fn (User $record): bool => static::allows('suspend', $record))
                     ->modalHeading('Suspend user')
                     ->modalDescription('The user can no longer sign in, and their sessions and connected apps are signed out at once.')
-                    ->form([ConfirmPassword::field()])
+                    ->schema([ConfirmPassword::field()])
                     ->action(function (User $record): void {
                         $record->forceFill(['suspended_at' => now()])->save();
                         Notification::make()->success()->title('User suspended')->send();
@@ -322,15 +321,15 @@ class UserResource extends Resource
                     ->color('success')
                     ->visible(fn (User $record): bool => $record->suspended_at !== null && static::allows('reactivate', $record))
                     ->authorize(fn (User $record): bool => static::allows('reactivate', $record))
-                    ->form([ConfirmPassword::field()])
+                    ->schema([ConfirmPassword::field()])
                     ->action(function (User $record): void {
                         $record->forceFill(['suspended_at' => null])->save();
                         Notification::make()->success()->title('User reactivated')->send();
                     }),
                 DeleteAction::make()
-                    ->form([ConfirmPassword::field()]),
+                    ->schema([ConfirmPassword::field()]),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 BulkAction::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check')
@@ -393,12 +392,12 @@ class UserResource extends Resource
         return auth()->user()?->can($ability, $record ?? User::class) ?? false;
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Account Details')
+            ->components([
+                Section::make('Account Details')
                     ->schema([
                         TextEntry::make('name'),
                         TextEntry::make('email'),
@@ -416,7 +415,7 @@ class UserResource extends Resource
                             ->getStateUsing(fn (User $record): bool => $record->hasEnabledTwoFactorAuthentication()),
                     ])
                     ->columns(2),
-                InfolistSection::make('Account Status')
+                Section::make('Account Status')
                     ->schema([
                         TextEntry::make('approved_at')
                             ->label('Approved')

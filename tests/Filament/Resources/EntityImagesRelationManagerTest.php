@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ImagesRelationManager as CollectionImagesRelationManager;
 use App\Filament\Resources\ItemResource\Pages\EditItem;
@@ -17,7 +18,6 @@ use App\Models\ItemImage;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerImage;
-use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;

@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Schemas\Components\Section;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -21,17 +26,10 @@ use App\Models\Language;
 use App\Models\Project;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section as FiltersSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
@@ -47,9 +45,9 @@ class ProjectResource extends Resource
 
     protected static ?string $model = Project::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-folder';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-folder';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 6;
 
@@ -70,10 +68,10 @@ class ProjectResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TextInput::make('internal_name')
                     ->required()
                     ->maxLength(255),
@@ -140,7 +138,7 @@ class ProjectResource extends Resource
                 static::uuidColumn(),
                 ...static::timestampsColumns(),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
@@ -177,7 +175,7 @@ class ProjectResource extends Resource
             ->filtersFormSchema(function (array $filters): array {
                 /** @var array<string, Component> $filters */
                 return [
-                    FiltersSection::make('Project Filters')
+                    Section::make('Project Filters')
                         ->schema([
                             $filters['context_id'],
                             $filters['language_id'],
@@ -187,12 +185,12 @@ class ProjectResource extends Resource
             });
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline()),
                         TextEntry::make('launch_date')
@@ -210,7 +208,7 @@ class ProjectResource extends Resource
                                 : null),
                     ])
                     ->columns(2),
-                InfolistSection::make('Links')
+                Section::make('Links')
                     ->schema([
                         TextEntry::make('site_url')
                             ->label('Public site URL')
@@ -229,7 +227,7 @@ class ProjectResource extends Resource
                             ->placeholder('—'),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('backward_compatibility')

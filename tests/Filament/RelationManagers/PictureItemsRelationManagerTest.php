@@ -2,12 +2,12 @@
 
 namespace Tests\Filament\RelationManagers;
 
+use Filament\Actions\Action;
 use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\BaseChildItemsRelationManager;
 use App\Filament\Resources\ItemResource\RelationManagers\PictureItemsRelationManager;
 use App\Models\Item;
 use App\Models\Partner;
-use Filament\Actions\MountableAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -280,12 +280,12 @@ class PictureItemsRelationManagerTest extends TestCase
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function headerAction(Testable $component, string $name): MountableAction
+    private function headerAction(Testable $component, string $name): Action
     {
         $table = $component->instance()->getTable();
 
         foreach ($table->getHeaderActions() as $action) {
-            if ($action instanceof MountableAction && $action->getName() === $name) {
+            if ($action instanceof Action && $action->getName() === $name) {
                 return $action;
             }
         }

@@ -2,6 +2,9 @@
 
 namespace Tests\Filament;
 
+use Filament\Actions\AssociateAction;
+use Filament\Actions\AttachAction;
+use Filament\Actions\Action;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ArtistResource\Pages\EditArtist;
 use App\Filament\Resources\ArtistResource\RelationManagers\ItemsRelationManager as ArtistItemsRelationManager;
@@ -112,12 +115,9 @@ use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\User;
 use Filament\Actions\ActionGroup as BaseActionGroup;
-use Filament\Actions\MountableAction;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\AssociateAction;
-use Filament\Tables\Actions\AttachAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -466,7 +466,7 @@ class RelationManagerConventionTest extends TestCase
      * exactly via glob() so it stays in sync automatically as resources are
      * added or removed.
      *
-     * @return array<int, class-string<\Filament\Resources\Resource>>
+     * @return array<int, class-string<Resource>>
      */
     private static function allResources(): array
     {
@@ -973,14 +973,13 @@ class RelationManagerConventionTest extends TestCase
     }
 
     // ── Action introspection helpers ─────────────────────────────────────────
-
     /**
      * Flattens header/row/bulk action definitions, expanding any
      * ActionGroup/BulkActionGroup in place, mirroring how Filament's own
      * `assertTableActionsExistInOrder()` flattens groups before comparing.
      *
      * @param  array<int|string, mixed>  $definitions
-     * @return array<int, MountableAction>
+     * @return array<int, Action>
      */
     private function flattenActions(array $definitions): array
     {
@@ -1002,7 +1001,7 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * @param  array<int, MountableAction>  $actions
+     * @param  array<int, Action>  $actions
      * @return array<int, string>
      */
     private function namesOf(array $actions): array
@@ -1011,7 +1010,7 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * @return array<int, AttachAction|AssociateAction>
+     * @return array<int, \Filament\Actions\AttachAction|\Filament\Actions\AssociateAction>
      */
     private function attachOrAssociateActions(Table $table): array
     {
@@ -1028,7 +1027,7 @@ class RelationManagerConventionTest extends TestCase
      * property directly proves intent to navigate without risking a
      * TypeError from an unresolved closure parameter.
      */
-    private function assertActionHasUrl(MountableAction $action, string $message): void
+    private function assertActionHasUrl(Action $action, string $message): void
     {
         $property = new ReflectionProperty($action, 'url');
         $property->setAccessible(true);

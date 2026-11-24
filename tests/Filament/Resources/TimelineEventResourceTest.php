@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Resources\TimelineEventResource\Pages\CreateTimelineEvent;
 use App\Filament\Resources\TimelineEventResource\Pages\EditTimelineEvent;
@@ -15,7 +16,6 @@ use App\Models\Language;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventImage;
-use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;

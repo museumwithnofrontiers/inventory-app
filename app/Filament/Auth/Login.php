@@ -2,13 +2,13 @@
 
 namespace App\Filament\Auth;
 
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
+use Filament\Schemas\Components\Component;
 use App\Models\User;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
-use Filament\Http\Responses\Auth\Contracts\LoginResponse as FilamentLoginResponse;
 use Filament\Models\Contracts\FilamentUser;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Support\Facades\Blade;
@@ -17,7 +17,7 @@ use Illuminate\Support\HtmlString;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Features;
 
-class Login extends \Filament\Pages\Auth\Login
+class Login extends \Filament\Auth\Pages\Login
 {
     private const int VERIFICATION_RESEND_SECONDS = 300;
 
@@ -27,7 +27,7 @@ class Login extends \Filament\Pages\Auth\Login
      */
     protected static string $view = 'filament.auth.login';
 
-    public function authenticate(): ?FilamentLoginResponse
+    public function authenticate(): ?LoginResponse
     {
         try {
             $this->rateLimit(5);
@@ -55,7 +55,7 @@ class Login extends \Filament\Pages\Auth\Login
             $this->throwFailureValidationException();
         }
 
-        $panel = Filament::getCurrentPanel();
+        $panel = Filament::getCurrentOrDefaultPanel();
 
         // A self-registered account goes through these two states before it
         // can enter: the password is right, so its owner learns which one
@@ -97,7 +97,7 @@ class Login extends \Filament\Pages\Auth\Login
             return null;
         }
 
-        return app(FilamentLoginResponse::class);
+        return app(LoginResponse::class);
     }
 
     /**
@@ -126,7 +126,7 @@ class Login extends \Filament\Pages\Auth\Login
 
     protected function getForgotPasswordUrl(): ?string
     {
-        return Filament::getCurrentPanel()?->route('auth.password.request');
+        return Filament::getCurrentOrDefaultPanel()?->route('auth.password.request');
     }
 
     protected function getPasswordFormComponent(): Component

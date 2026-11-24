@@ -2,11 +2,11 @@
 
 namespace App\Filament\Auth;
 
+use Filament\Schemas\Schema;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
 use Illuminate\Contracts\Support\Htmlable;
@@ -19,7 +19,7 @@ class TwoFactorSetup extends SimplePage
 {
     use InteractsWithFormActions;
 
-    protected static string $view = 'filament.auth.two-factor-setup';
+    protected string $view = 'filament.auth.two-factor-setup';
 
     /**
      * @var array<string, mixed>|null
@@ -58,20 +58,20 @@ class TwoFactorSetup extends SimplePage
         $this->setupKey = is_string($decrypted) ? $decrypted : '';
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form;
+        return $schema;
     }
 
     /**
-     * @return array<int|string, string|Form>
+     * @return array<int|string, string|\Filament\Schemas\Schema>
      */
     protected function getForms(): array
     {
         return [
             'form' => $this->form(
                 $this->makeForm()
-                    ->schema([
+                    ->components([
                         TextInput::make('code')
                             ->label(__('Authenticator Code'))
                             ->placeholder('000 000')

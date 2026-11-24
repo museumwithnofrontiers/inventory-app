@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -15,16 +20,9 @@ use App\Filament\Resources\ArtistResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Support\MarkdownState;
 use App\Models\Artist;
 use App\Policies\ArtistPolicy;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -48,9 +46,9 @@ class ArtistResource extends Resource
 
     protected static ?string $model = Artist::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-paint-brush';
 
-    protected static ?string $navigationGroup = 'Shared Data';
+    protected static string | \UnitEnum | null $navigationGroup = 'Shared Data';
 
     protected static ?int $navigationSort = 5;
 
@@ -71,10 +69,10 @@ class ArtistResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Core information')
                     ->schema([
                         TextInput::make('name')
@@ -150,7 +148,7 @@ class ArtistResource extends Resource
                 static::uuidColumn(),
                 ...static::timestampsColumns(),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make()
@@ -158,12 +156,12 @@ class ArtistResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('name')->formatStateUsing(MarkdownState::inline()),
                         TextEntry::make('period_of_activity')
@@ -186,7 +184,7 @@ class ArtistResource extends Resource
                             ->placeholder('—'),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')

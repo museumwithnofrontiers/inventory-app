@@ -2,6 +2,11 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -22,16 +27,9 @@ use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -47,9 +45,9 @@ class TimelineEventResource extends Resource
 
     protected static ?string $model = TimelineEvent::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 9;
 
@@ -70,10 +68,10 @@ class TimelineEventResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 Section::make('Core information')
                     ->schema([
                         RecordSelect::forTimelines(),
@@ -162,7 +160,7 @@ class TimelineEventResource extends Resource
                     ->label('Internal name')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
@@ -184,12 +182,12 @@ class TimelineEventResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('timeline.internal_name')
                             ->formatStateUsing(MarkdownState::inline())
@@ -212,7 +210,7 @@ class TimelineEventResource extends Resource
                             ->label('Display order'),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')
@@ -225,7 +223,7 @@ class TimelineEventResource extends Resource
                     ->columns(2)
                     ->collapsible()
                     ->collapsed(),
-                InfolistSection::make('Metadata')
+                Section::make('Metadata')
                     ->schema([
                         ExtraJsonField::infolistEntry(),
                     ])

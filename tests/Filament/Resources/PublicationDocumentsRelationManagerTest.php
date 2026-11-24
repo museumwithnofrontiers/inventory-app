@@ -2,13 +2,13 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
 use App\Filament\Resources\PublicationResource\Pages\EditPublication;
 use App\Filament\Resources\PublicationResource\Pages\ViewPublication;
 use App\Filament\Resources\PublicationResource\RelationManagers\DocumentsRelationManager;
 use App\Models\Publication;
 use App\Models\PublicationDocument;
 use App\Models\PublicationEdition;
-use Filament\Tables\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Config;

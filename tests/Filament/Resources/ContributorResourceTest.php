@@ -2,6 +2,8 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use App\Filament\Resources\CollectionResource\Pages\ViewCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ContributorsRelationManager;
 use App\Filament\Resources\ContributorResource;
@@ -15,8 +17,6 @@ use App\Models\Context;
 use App\Models\Contributor;
 use App\Models\ContributorImage;
 use App\Models\Language;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

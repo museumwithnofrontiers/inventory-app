@@ -2,6 +2,9 @@
 
 namespace App\Filament\Resources\PublicationResource\RelationManagers;
 
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Enums\PublicationDocumentKind;
 use App\Events\DocumentUploadEvent;
 use App\Filament\Concerns\AuthorizesRelationMutations;
@@ -18,9 +21,6 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -96,7 +96,7 @@ class DocumentsRelationManager extends RelationManager
                     ->label('Upload document')
                     ->icon('heroicon-o-arrow-up-tray')
                     ->visible(fn (): bool => $this->hostRecordCanBeUpdated())
-                    ->form([
+                    ->schema([
                         FileUpload::make('file')
                             ->label('Document file')
                             ->disk(Config::string('localstorage.uploads.documents.disk'))
@@ -145,7 +145,7 @@ class DocumentsRelationManager extends RelationManager
                             ->send();
                     }),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('download')
                     ->label('Download')
                     ->icon('heroicon-o-arrow-down-tray')
@@ -156,7 +156,7 @@ class DocumentsRelationManager extends RelationManager
                         'publicationDocument' => $record,
                     ])),
                 EditAction::make()
-                    ->form([
+                    ->schema([
                         ...$this->metadataFields(),
                         ExtraJsonField::formComponent(),
                     ]),

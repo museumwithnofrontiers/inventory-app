@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\RelationManagers;
 
+use Filament\Actions\DetachAction;
 use App\Enums\CreditRole;
 use App\Filament\Resources\ItemTranslationResource\Pages\ViewItemTranslation;
 use App\Filament\Resources\ItemTranslationResource\RelationManagers\AuthorCreditsRelationManager;
@@ -9,7 +10,6 @@ use App\Filament\Resources\ItemTranslationResource\RelationManagers\TranslatorCr
 use App\Models\Author;
 use App\Models\ItemTranslation;
 use App\Models\User;
-use Filament\Tables\Actions\DetachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

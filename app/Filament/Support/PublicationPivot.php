@@ -2,7 +2,6 @@
 
 namespace App\Filament\Support;
 
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\TextColumn;
 
@@ -13,7 +12,7 @@ use Filament\Tables\Columns\TextColumn;
 class PublicationPivot
 {
     /**
-     * @return array<int, Component>
+     * @return array<int, \Filament\Schemas\Components\Component>
      */
     public static function formFields(): array
     {

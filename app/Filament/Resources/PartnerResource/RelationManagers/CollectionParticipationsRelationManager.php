@@ -86,7 +86,7 @@ class CollectionParticipationsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::COLLECTIONS, CollectionPartnerPivot::attachFormFields(CollectionPartnerPivot::OWNER_PARTNER)),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(CollectionResource::class),
                 $this->pivotEditAction(CollectionPartnerPivot::pivotFormFields(CollectionPartnerPivot::OWNER_PARTNER))
                     ->visible(fn (Model $record): bool => self::isCollectionLink($record)),
@@ -97,7 +97,7 @@ class CollectionParticipationsRelationManager extends RelationManager
                         $this->clearParentReferencesTo([$record->getKey()]);
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction()
                     ->using(function (EloquentCollection $records): void {
                         $this->collectionLinks()->detach($records->modelKeys());

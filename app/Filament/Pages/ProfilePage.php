@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Auth\Pages\EditProfile;
 use App\Actions\DeleteUser;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
@@ -10,9 +11,7 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
-use Filament\Pages\Auth\EditProfile;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -39,7 +38,7 @@ class ProfilePage extends EditProfile
      * Only show name and email on the main profile form.
      * Password change is handled via a dedicated modal action.
      *
-     * @return array<int|string, string|Form>
+     * @return array<int|string, string|\Filament\Schemas\Schema>
      */
     protected function getForms(): array
     {
@@ -100,7 +99,7 @@ class ProfilePage extends EditProfile
             ->icon('heroicon-o-key')
             ->color('warning')
             ->modalHeading('Change Password')
-            ->form([
+            ->schema([
                 TextInput::make('current_password')
                     ->label('Current Password')
                     ->password()
@@ -153,7 +152,7 @@ class ProfilePage extends EditProfile
             ->color('success')
             ->modalHeading('Enable Two-Factor Authentication')
             ->modalSubmitActionLabel('Enable & Confirm')
-            ->form(function (): array {
+            ->schema(function (): array {
                 /** @var User $user */
                 $user = $this->getUser();
 
@@ -292,7 +291,7 @@ class ProfilePage extends EditProfile
             ->color('gray')
             ->modalHeading('Log Out Other Browser Sessions')
             ->modalDescription('Please enter your password to confirm you would like to log out of your other browser sessions across all of your devices.')
-            ->form([
+            ->schema([
                 TextInput::make('password')
                     ->label('Password')
                     ->password()
@@ -336,7 +335,7 @@ class ProfilePage extends EditProfile
             ->modalHeading('Delete Account')
             ->modalDescription('Once your account is deleted, all of its resources and data will be permanently deleted. This action cannot be undone.')
             ->modalSubmitActionLabel('Permanently Delete Account')
-            ->form([
+            ->schema([
                 TextInput::make('password')
                     ->label('Password')
                     ->password()

@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use InvalidArgumentException;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
 use App\Filament\Resources\CollectionTranslationResource;
@@ -1109,7 +1110,7 @@ class TranslationNavigationTest extends TestCase
                 ]);
             $this->fail('Expected an exception to be thrown for invalid parentType.');
         } catch (ViewException $e) {
-            $this->assertInstanceOf(\InvalidArgumentException::class, $e->getPrevious());
+            $this->assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
             $this->assertStringContainsString('Unsupported parentType', $e->getMessage());
         }
     }
@@ -1130,7 +1131,7 @@ class TranslationNavigationTest extends TestCase
                 ]);
             $this->fail('Expected an exception to be thrown for empty parentId.');
         } catch (ViewException $e) {
-            $this->assertInstanceOf(\InvalidArgumentException::class, $e->getPrevious());
+            $this->assertInstanceOf(InvalidArgumentException::class, $e->getPrevious());
             $this->assertStringContainsString('non-empty parentId', $e->getMessage());
         }
     }

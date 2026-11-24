@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use Filament\Actions\ViewAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\ArtistResource;
@@ -10,7 +11,6 @@ use App\Filament\Support\RecordSelect;
 use App\Models\Artist;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -60,7 +60,7 @@ class ArtistsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::ARTISTS, []),
             ])
-            ->actions([
+            ->recordActions([
                 // Like TagsRelationManager's pivotViewAction(), this opens
                 // ArtistResource's View page, for a user who may open that
                 // resource. Anyone else allowed to view the artist keeps the
@@ -68,7 +68,7 @@ class ArtistsRelationManager extends RelationManager
                 ViewAction::make()
                     ->url(fn (Artist $record): ?string => self::artistUrl($record))
                     ->modalHeading('Artist')
-                    ->infolist(fn (Artist $record): array => [
+                    ->schema(fn (Artist $record): array => [
                         TextEntry::make('name')->formatStateUsing(MarkdownState::inline())->label('Name'),
                         TextEntry::make('internal_name')->formatStateUsing(MarkdownState::inline())->label('Internal name'),
                         TextEntry::make('period_of_activity')->formatStateUsing(MarkdownState::inline())->label('Period of activity'),
@@ -80,7 +80,7 @@ class ArtistsRelationManager extends RelationManager
                     ]),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

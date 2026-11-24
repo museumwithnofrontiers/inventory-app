@@ -54,11 +54,11 @@ class SynonymsRelationManager extends RelationManager
                     fn (Builder $query): Builder => $query->where('id', '!=', $this->getOwnerRecord()->getKey()),
                 ),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(GlossaryResource::class),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

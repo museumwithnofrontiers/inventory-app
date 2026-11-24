@@ -7,7 +7,6 @@ use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\AuthorResource;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
@@ -48,18 +47,18 @@ abstract class BaseCreditsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::AUTHORS, self::pivotFormFields()),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(AuthorResource::class),
                 $this->pivotEditAction(self::pivotFormFields()),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }
 
     /**
-     * @return array<int, Component>
+     * @return array<int, \Filament\Schemas\Components\Component>
      */
     private static function pivotFormFields(): array
     {

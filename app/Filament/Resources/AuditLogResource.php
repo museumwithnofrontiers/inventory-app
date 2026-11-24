@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Actions\ViewAction;
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use App\Filament\Resources\AuditLogResource\Pages\ListAuditLog;
 use App\Filament\Resources\AuditLogResource\Pages\ViewAuditLog;
 use App\Models\AuditLog;
 use App\Policies\AuditLogPolicy;
 use Filament\Infolists\Components\KeyValueEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -24,9 +24,9 @@ class AuditLogResource extends Resource
 {
     protected static ?string $model = AuditLog::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static string | \UnitEnum | null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 5;
 
@@ -74,17 +74,17 @@ class AuditLogResource extends Resource
                 SelectFilter::make('channel')
                     ->options(['panel' => 'panel', 'api' => 'api', 'mcp' => 'mcp', 'console' => 'console', 'system' => 'system']),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Entry')
+            ->components([
+                Section::make('Entry')
                     ->schema([
                         TextEntry::make('occurred_at')->label('When')->dateTime(),
                         TextEntry::make('actor_label')->label('Who'),
@@ -96,7 +96,7 @@ class AuditLogResource extends Resource
                         TextEntry::make('subject_id')->label('Subject id')->placeholder('—'),
                     ])
                     ->columns(2),
-                InfolistSection::make('Changes')
+                Section::make('Changes')
                     ->schema([
                         KeyValueEntry::make('changes')
                             ->hiddenLabel()

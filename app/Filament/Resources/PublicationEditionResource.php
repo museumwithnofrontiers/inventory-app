@@ -2,14 +2,14 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
 use App\Enums\PublicationFormat;
 use App\Filament\Resources\PublicationEditionResource\Pages\ViewPublicationEdition;
 use App\Filament\Resources\RelationManagers\LinksRelationManager;
 use App\Filament\Support\MarkdownState;
 use App\Models\PublicationEdition;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Illuminate\Database\Eloquent\Model;
 
@@ -23,7 +23,7 @@ class PublicationEditionResource extends Resource
 {
     protected static ?string $model = PublicationEdition::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-book-open';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-book-open';
 
     protected static ?string $modelLabel = 'Publication edition';
 
@@ -58,12 +58,12 @@ class PublicationEditionResource extends Resource
         return false;
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Edition')
+            ->components([
+                Section::make('Edition')
                     ->schema([
                         TextEntry::make('publication.internal_name')
                             ->formatStateUsing(MarkdownState::inline())

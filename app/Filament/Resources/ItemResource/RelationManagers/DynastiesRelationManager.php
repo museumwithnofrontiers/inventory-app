@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use Filament\Actions\ViewAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\DynastyResource;
@@ -11,7 +12,6 @@ use App\Filament\Support\RecordSelect;
 use App\Models\Dynasty;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -65,14 +65,14 @@ class DynastiesRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::DYNASTIES, []),
             ])
-            ->actions([
+            ->recordActions([
                 // Opens DynastyResource's View page for a user who may open
                 // it; anyone else allowed to view the dynasty keeps the
                 // read-only modal. See ArtistsRelationManager's row 'view'.
                 ViewAction::make()
                     ->url(fn (Dynasty $record): ?string => self::dynastyUrl($record))
                     ->modalHeading('Dynasty')
-                    ->infolist(fn (Dynasty $record): array => [
+                    ->schema(fn (Dynasty $record): array => [
                         TextEntry::make('display_label')->formatStateUsing(MarkdownState::inline())->label('Dynasty'),
                         TextEntry::make('from_ad')->label('From (AD)'),
                         TextEntry::make('to_ad')->label('To (AD)'),
@@ -82,7 +82,7 @@ class DynastiesRelationManager extends RelationManager
                     ]),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

@@ -2,6 +2,8 @@
 
 namespace Tests\Filament\Authorization;
 
+use RecursiveIteratorIterator;
+use RecursiveDirectoryIterator;
 use Filament\Pages\Page;
 use Filament\Resources\Resource;
 use Filament\Widgets\Widget;
@@ -55,7 +57,7 @@ class FilamentTier2ArchitectureTest extends TestCase
 
         $classes = [];
 
-        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory)) as $file) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator($directory)) as $file) {
             if (! $file->isFile() || $file->getExtension() !== 'php') {
                 continue;
             }

@@ -2,16 +2,15 @@
 
 namespace App\Filament\Concerns;
 
+use Filament\Actions\AttachAction;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DetachAction;
+use Filament\Actions\DetachBulkAction;
 use App\Filament\Support\RecordSelect;
 use Closure;
-use Filament\Forms\Components\Component;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\AssociateAction;
-use Filament\Tables\Actions\AttachAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\DetachBulkAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -56,7 +55,7 @@ trait PivotRelationActions
      * — and is passed straight through to
      * {@see RecordSelect::recordSelectFor()}.
      *
-     * @param  array<int, Component>  $pivotFields
+     * @param  array<int, \Filament\Schemas\Components\Component>  $pivotFields
      */
     protected function pivotAttachAction(string $recordSelectEntity, array $pivotFields, ?Closure $scope = null): AttachAction|AssociateAction
     {
@@ -71,7 +70,7 @@ trait PivotRelationActions
      * The row `view` action: navigates to the related record's own Resource
      * View page instead of opening ViewAction's default read-only modal.
      *
-     * @param  class-string<\Filament\Resources\Resource>  $relatedResourceClass
+     * @param  class-string<Resource>  $relatedResourceClass
      */
     protected function pivotViewAction(string $relatedResourceClass): ViewAction
     {
@@ -89,13 +88,13 @@ trait PivotRelationActions
      * never the related record's own columns. See this trait's docblock for
      * why Filament's own EditAction already guarantees that split.
      *
-     * @param  array<int, Component>  $pivotFields
+     * @param  array<int, \Filament\Schemas\Components\Component>  $pivotFields
      */
     protected function pivotEditAction(array $pivotFields): EditAction
     {
         return EditAction::make()
             ->modalHeading('Edit pivot details')
-            ->form($pivotFields);
+            ->schema($pivotFields);
     }
 
     protected function pivotDetachAction(): DetachAction

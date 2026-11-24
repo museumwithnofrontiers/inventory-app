@@ -63,11 +63,11 @@ class TagsRelationManager extends RelationManager
             ->headerActions([
                 $this->pivotAttachAction(RecordSelect::TAGS, []),
             ])
-            ->actions([
+            ->recordActions([
                 $this->pivotViewAction(TagResource::class),
                 $this->pivotDetachAction(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 $this->pivotDetachBulkAction(),
             ]);
     }

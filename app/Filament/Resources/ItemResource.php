@@ -2,6 +2,12 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Section;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\BulkAction;
 use App\Enums\ItemType;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasChangeParentAction;
@@ -41,22 +47,14 @@ use App\Models\Project;
 use App\Models\Tag;
 use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Component;
-use Filament\Forms\Components\Section as FiltersSection;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\BulkAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
@@ -129,9 +127,9 @@ class ItemResource extends Resource
         return ItemDisplayLabel::resolveLabel($value) ?: (is_scalar($value) ? (string) $value : '');
     }
 
-    protected static ?string $navigationIcon = 'heroicon-o-cube';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cube';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 1;
 
@@ -171,11 +169,11 @@ class ItemResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
-                FiltersSection::make('Core information')
+        return $schema
+            ->components([
+                Section::make('Core information')
                     ->schema([
                         Select::make('type')
                             ->options(
@@ -229,7 +227,7 @@ class ItemResource extends Resource
                             ->nullable(),
                     ])
                     ->columns(2),
-                FiltersSection::make('Technical identification')
+                Section::make('Technical identification')
                     ->description('System metadata used for technical identification and legacy imports.')
                     ->schema([
                         TextInput::make('internal_name')
@@ -432,7 +430,7 @@ class ItemResource extends Resource
             ->filtersFormSchema(function (array $filters): array {
                 /** @var array<string, Component> $filters */
                 return [
-                    FiltersSection::make('Translation Coverage')
+                    Section::make('Translation Coverage')
                         ->schema([
                             $filters['has_fallback_translation'],
                             $filters['missing_fallback_translation'],
@@ -442,7 +440,7 @@ class ItemResource extends Resource
                             $filters['translation_context_missing'],
                         ])
                         ->columns(2),
-                    FiltersSection::make('Item Filters')
+                    Section::make('Item Filters')
                         ->schema([
                             $filters['type'],
                             $filters['partner_id'],
@@ -456,13 +454,13 @@ class ItemResource extends Resource
                         ->columns(2),
                 ];
             })
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 EditAction::make(),
                 static::changeParentAction(),
                 DeleteAction::make(),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 static::moveToParentAction(),
                 BulkAction::make('attachToCollection')
                     ->label('Attach to collection')
@@ -515,12 +513,12 @@ class ItemResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Core Information')
+            ->components([
+                Section::make('Core Information')
                     ->schema([
                         TextEntry::make('type')
                             ->formatStateUsing(fn (?ItemType $state): ?string => $state?->label()),
@@ -560,7 +558,7 @@ class ItemResource extends Resource
                             ->label('Map zoom'),
                     ])
                     ->columns(2),
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         static::uuidInfolistEntry(),
                         TextEntry::make('internal_name')

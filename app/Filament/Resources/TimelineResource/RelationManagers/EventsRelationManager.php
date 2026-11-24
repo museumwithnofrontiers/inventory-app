@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources\TimelineResource\RelationManagers;
 
+use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\ResourceCreateUrl;
 use App\Models\TimelineEvent;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -76,7 +76,7 @@ class EventsRelationManager extends RelationManager
                     ]))
                     ->visible(fn (): bool => $this->canCreate()),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make()
                     ->url(fn (TimelineEvent $record): ?string => auth()->user()?->can('view', $record)
                         ? TimelineEventResource::getUrl('view', ['record' => $record])
@@ -85,6 +85,6 @@ class EventsRelationManager extends RelationManager
                     ->url(fn (TimelineEvent $record): string => TimelineEventResource::getUrl('edit', ['record' => $record])),
                 DeleteAction::make(),
             ])
-            ->bulkActions([]);
+            ->toolbarActions([]);
     }
 }

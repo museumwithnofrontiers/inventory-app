@@ -164,7 +164,7 @@ class PasswordResetTest extends TestCase
             ->set('data.password', 'NewPassword1!')
             ->set('data.password_confirmation', 'NewPassword1!')
             ->call('submit')
-            ->assertRedirect(Filament::getCurrentPanel()->route('auth.password.reset.mfa'));
+            ->assertRedirect(Filament::getCurrentOrDefaultPanel()->route('auth.password.reset.mfa'));
 
         $this->assertNotNull(session('filament.admin.password_reset.user_id'));
         $this->assertNotNull(session('filament.admin.password_reset.password_hash'));

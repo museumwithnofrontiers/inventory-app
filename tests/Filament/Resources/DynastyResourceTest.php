@@ -2,6 +2,11 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
+use Filament\Actions\CreateAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DetachAction;
+use Filament\Actions\ViewAction;
 use App\Enums\Permission;
 use App\Filament\Resources\DynastyResource;
 use App\Filament\Resources\DynastyResource\Pages\CreateDynasty;
@@ -18,11 +23,6 @@ use App\Models\DynastyTranslation;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\User;
-use Filament\Tables\Actions\CreateAction;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\DetachAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

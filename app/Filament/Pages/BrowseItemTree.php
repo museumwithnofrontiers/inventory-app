@@ -10,15 +10,15 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BrowseItemTree extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-cube';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cube';
 
     protected static ?string $navigationLabel = 'Browse item tree';
 
-    protected static ?string $navigationGroup = 'Inventory';
+    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 11;
 
-    protected static string $view = 'filament.pages.browse-item-tree';
+    protected string $view = 'filament.pages.browse-item-tree';
 
     public static function canAccess(): bool
     {

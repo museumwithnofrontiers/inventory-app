@@ -2,6 +2,7 @@
 
 namespace App\Filament\Auth;
 
+use Filament\Schemas\Schema;
 use App\Models\User;
 use App\Notifications\AdminPasswordResetNotification;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
@@ -9,7 +10,6 @@ use DanHarrin\LivewireRateLimiting\WithRateLimiting;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
@@ -23,7 +23,7 @@ class RequestPasswordReset extends SimplePage
     use InteractsWithFormActions;
     use WithRateLimiting;
 
-    protected static string $view = 'filament.auth.request-password-reset';
+    protected string $view = 'filament.auth.request-password-reset';
 
     /**
      * @var array<string, mixed>|null
@@ -41,20 +41,20 @@ class RequestPasswordReset extends SimplePage
         $this->getForm('form')?->fill();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form;
+        return $schema;
     }
 
     /**
-     * @return array<int|string, string|Form>
+     * @return array<int|string, string|\Filament\Schemas\Schema>
      */
     protected function getForms(): array
     {
         return [
             'form' => $this->form(
                 $this->makeForm()
-                    ->schema([
+                    ->components([
                         TextInput::make('email')
                             ->label(__('Email address'))
                             ->email()

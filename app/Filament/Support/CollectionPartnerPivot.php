@@ -2,16 +2,15 @@
 
 namespace App\Filament\Support;
 
+use Filament\Schemas\Components\Utilities\Get;
 use App\Enums\PartnerLevel;
 use App\Models\CollectionPartner;
 use App\Models\Partner;
 use App\Support\Markdown\MarkdownText;
 use Closure;
-use Filament\Forms\Components\Component;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Get;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -39,7 +38,7 @@ class CollectionPartnerPivot
      * partner — shared by both managers' Attach and Edit-pivot forms.
      *
      * @param  self::OWNER_*  $owner  which side of the pivot the manager sits on
-     * @return array<int, Component>
+     * @return array<int, \Filament\Schemas\Components\Component>
      */
     public static function pivotFormFields(string $owner): array
     {
@@ -63,7 +62,7 @@ class CollectionPartnerPivot
      * Edit-pivot form: it's set once, at attach time, not user-editable.
      *
      * @param  self::OWNER_*  $owner
-     * @return array<int, Component>
+     * @return array<int, \Filament\Schemas\Components\Component>
      */
     public static function attachFormFields(string $owner): array
     {

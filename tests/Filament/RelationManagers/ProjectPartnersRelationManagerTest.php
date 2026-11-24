@@ -2,12 +2,12 @@
 
 namespace Tests\Filament\RelationManagers;
 
+use Filament\Actions\Action;
 use App\Filament\Resources\PartnerResource\Pages\CreatePartner;
 use App\Filament\Resources\ProjectResource\Pages\ViewProject;
 use App\Filament\Resources\ProjectResource\RelationManagers\PartnersRelationManager;
 use App\Models\Partner;
 use App\Models\Project;
-use Filament\Actions\MountableAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -178,12 +178,12 @@ class ProjectPartnersRelationManagerTest extends TestCase
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function headerAction(Testable $component, string $name): MountableAction
+    private function headerAction(Testable $component, string $name): Action
     {
         $table = $component->instance()->getTable();
 
         foreach ($table->getHeaderActions() as $action) {
-            if ($action instanceof MountableAction && $action->getName() === $name) {
+            if ($action instanceof Action && $action->getName() === $name) {
                 return $action;
             }
         }

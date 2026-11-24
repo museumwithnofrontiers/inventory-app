@@ -2,16 +2,16 @@
 
 namespace App\Filament\Auth;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Actions;
+use RuntimeException;
 use App\Models\User;
 use App\Services\Filament\Auth\EmailTwoFactorCodeService;
 use Filament\Actions\Action;
 use Filament\Facades\Filament;
-use Filament\Forms\Components\Actions\Action as FormAction;
-use Filament\Forms\Components\Actions as FormActions;
 use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Notifications\Notification;
 use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
@@ -26,7 +26,7 @@ class TwoFactorChallenge extends SimplePage
 {
     use InteractsWithFormActions;
 
-    protected static string $view = 'filament.auth.two-factor-challenge';
+    protected string $view = 'filament.auth.two-factor-challenge';
 
     /**
      * @var array<string, mixed>|null
@@ -44,20 +44,20 @@ class TwoFactorChallenge extends SimplePage
         $this->getForm('form')?->fill();
     }
 
-    public function form(Form $form): Form
+    public function form(Schema $schema): Schema
     {
-        return $form;
+        return $schema;
     }
 
     /**
-     * @return array<int|string, string|Form>
+     * @return array<int|string, string|\Filament\Schemas\Schema>
      */
     protected function getForms(): array
     {
         return [
             'form' => $this->form(
                 $this->makeForm()
-                    ->schema([
+                    ->components([
                         Radio::make('method')
                             ->label(__('Verification method'))
                             ->options([
@@ -89,8 +89,8 @@ class TwoFactorChallenge extends SimplePage
                             ->hint(__('Enter the code sent to your email address.'))
                             ->hidden(fn (Get $get): bool => $get('method') !== 'email')
                             ->extraInputAttributes(['tabindex' => 3]),
-                        FormActions::make([
-                            FormAction::make('sendEmailCode')
+                        Actions::make([
+                            Action::make('sendEmailCode')
                                 ->label(__('Send code to my email'))
                                 ->color('gray')
                                 ->outlined()
@@ -131,7 +131,7 @@ class TwoFactorChallenge extends SimplePage
                 ->success()
                 ->title(__('Verification code sent to your email address.'))
                 ->send();
-        } catch (\RuntimeException) {
+        } catch (RuntimeException) {
             throw ValidationException::withMessages([
                 'data.email_code' => [__('Unable to send verification code. Please try a different verification method.')],
             ]);

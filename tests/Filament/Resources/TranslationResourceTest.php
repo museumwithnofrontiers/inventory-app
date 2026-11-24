@@ -2,6 +2,8 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
+use Filament\Actions\ViewAction;
 use App\Filament\Resources\CollectionTranslationResource\Pages\CreateCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\Pages\EditCollectionTranslation;
 use App\Filament\Resources\CollectionTranslationResource\Pages\ListCollectionTranslation;
@@ -23,8 +25,6 @@ use App\Models\ItemTranslation;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\PartnerTranslation;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\ViewAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

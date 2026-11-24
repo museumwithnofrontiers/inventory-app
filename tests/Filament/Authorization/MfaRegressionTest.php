@@ -2,6 +2,8 @@
 
 namespace Tests\Filament\Authorization;
 
+use RecursiveIteratorIterator;
+use RecursiveDirectoryIterator;
 use App\Enums\Permission;
 use App\Filament\Auth\Login as AdminLogin;
 use App\Filament\Auth\TwoFactorChallenge;
@@ -227,7 +229,7 @@ class MfaRegressionTest extends TestCase
                 continue;
             }
 
-            $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($tree));
+            $files = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($tree));
 
             foreach ($files as $file) {
                 if (! $file->isFile() || $file->getExtension() !== 'php') {

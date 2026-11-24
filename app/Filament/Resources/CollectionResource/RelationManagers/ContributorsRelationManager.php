@@ -2,16 +2,16 @@
 
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
+use Filament\Actions\Action;
+use Filament\Actions\ViewAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContributorResource;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Contributor;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
@@ -68,7 +68,7 @@ class ContributorsRelationManager extends RelationManager
                     ]))
                     ->visible(fn (): bool => $this->canCreate()),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make()
                     ->url(fn (Contributor $record): ?string => auth()->user()?->can('view', $record)
                         ? ContributorResource::getUrl('view', ['record' => $record])
@@ -77,6 +77,6 @@ class ContributorsRelationManager extends RelationManager
                     ->url(fn (Contributor $record): string => ContributorResource::getUrl('edit', ['record' => $record])),
                 DeleteAction::make(),
             ])
-            ->bulkActions([]);
+            ->toolbarActions([]);
     }
 }

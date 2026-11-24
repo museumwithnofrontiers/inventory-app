@@ -2,6 +2,13 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Schemas\Schema;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Section;
+use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
+use Filament\Actions\EditAction;
+use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Resources\ItemTranslationResource\Pages\CreateItemTranslation;
@@ -18,22 +25,13 @@ use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\ItemTranslation;
 use Filament\Forms\Components\MarkdownEditor;
-use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Forms\Form;
-use Filament\Forms\Get;
 use Filament\Infolists\Components\IconEntry;
-use Filament\Infolists\Components\Section as InfolistSection;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Infolist;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\Resource;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
-use Filament\Tables\Actions\EditAction;
-use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -50,9 +48,9 @@ class ItemTranslationResource extends Resource
 
     protected static ?string $model = ItemTranslation::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-language';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-language';
 
-    protected static ?string $navigationGroup = 'Translations';
+    protected static string | \UnitEnum | null $navigationGroup = 'Translations';
 
     protected static ?string $navigationLabel = 'Item Translations';
 
@@ -70,10 +68,10 @@ class ItemTranslationResource extends Resource
         return static::canViewAny();
     }
 
-    public static function form(Form $form): Form
+    public static function form(Schema $schema): Schema
     {
-        return $form
-            ->schema([
+        return $schema
+            ->components([
                 TranslationFormSchema::itemSelectField(includeIdInSearch: true),
                 Select::make('language_id')
                     ->label('Language')
@@ -301,12 +299,12 @@ class ItemTranslationResource extends Resource
             ]);
     }
 
-    public static function infolist(Infolist $infolist): Infolist
+    public static function infolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->inlineLabel()
-            ->schema([
-                InfolistSection::make('Translation For')
+            ->components([
+                Section::make('Translation For')
                     ->schema([
                         TextEntry::make('item.internal_name')
                             ->formatStateUsing(MarkdownState::inline())
@@ -329,7 +327,7 @@ class ItemTranslationResource extends Resource
                     ])
                     ->columns(2),
 
-                InfolistSection::make('Basic Text')
+                Section::make('Basic Text')
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('name'),
                         TranslationInfolistSchema::rtlTextEntry('alternate_name', 'Alternate name'),
@@ -338,7 +336,7 @@ class ItemTranslationResource extends Resource
                     ])
                     ->columns(2),
 
-                InfolistSection::make('Object Details')
+                Section::make('Object Details')
                     ->schema([
                         TranslationInfolistSchema::rtlTextEntry('type'),
                         TranslationInfolistSchema::rtlTextEntry('dates'),
@@ -357,7 +355,7 @@ class ItemTranslationResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Research & Provenance')
+                Section::make('Research & Provenance')
                     ->schema([
                         TranslationInfolistSchema::markdownEntry('method_for_datation', 'Method for datation'),
                         TranslationInfolistSchema::markdownEntry('method_for_provenance', 'Method for provenance'),
@@ -370,14 +368,14 @@ class ItemTranslationResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Monument')
+                Section::make('Monument')
                     ->schema([
                         TranslationInfolistSchema::markdownEntry('history', columnSpanFull: true),
                     ])
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Artist')
+                Section::make('Artist')
                     ->schema([
                         TranslationInfolistSchema::markdownEntry('artist'),
                         TranslationInfolistSchema::markdownEntry('artist_period_of_activity', 'Period of activity'),
@@ -394,7 +392,7 @@ class ItemTranslationResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Notices and rights')
+                Section::make('Notices and rights')
                     ->schema([
                         TranslationInfolistSchema::markdownEntry('notice'),
                         TranslationInfolistSchema::markdownEntry('external_notice', 'External notice'),
@@ -408,7 +406,7 @@ class ItemTranslationResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Contributors')
+                Section::make('Contributors')
                     ->schema([
                         TextEntry::make('author.name')
                             ->label('Author')
@@ -441,14 +439,14 @@ class ItemTranslationResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('Extra Data')
+                Section::make('Extra Data')
                     ->schema([
                         TranslationInfolistSchema::extraEntry(),
                     ])
                     ->collapsible()
                     ->collapsed(),
 
-                InfolistSection::make('System Information')
+                Section::make('System Information')
                     ->schema([
                         TextEntry::make('id')->label('UUID')->copyable(),
                         TextEntry::make('backward_compatibility')->label('Legacy code'),
@@ -564,7 +562,7 @@ class ItemTranslationResource extends Resource
                     ->label('Recently updated (30 days)')
                     ->query(fn (Builder $query): Builder => $query->where('updated_at', '>=', now()->subDays(30))),
             ])
-            ->actions([
+            ->recordActions([
                 ViewAction::make(),
                 Action::make('viewItem')
                     ->label('View item')

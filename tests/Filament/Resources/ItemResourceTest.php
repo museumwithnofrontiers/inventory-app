@@ -2,6 +2,8 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
 use App\Enums\ItemType;
 use App\Enums\Permission;
 use App\Filament\Pages\BrowseItemTree;
@@ -31,8 +33,6 @@ use App\Models\Partner;
 use App\Models\Project;
 use App\Models\Tag;
 use App\Models\User;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

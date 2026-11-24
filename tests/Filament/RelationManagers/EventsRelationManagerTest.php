@@ -2,12 +2,12 @@
 
 namespace Tests\Filament\RelationManagers;
 
+use Filament\Actions\Action;
 use App\Filament\Resources\TimelineEventResource;
 use App\Filament\Resources\TimelineResource\Pages\ViewTimeline;
 use App\Filament\Resources\TimelineResource\RelationManagers\EventsRelationManager;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
-use Filament\Actions\MountableAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;
@@ -174,12 +174,12 @@ class EventsRelationManagerTest extends TestCase
 
     // ── Helpers ──────────────────────────────────────────────────────────────
 
-    private function headerAction(Testable $component, string $name): MountableAction
+    private function headerAction(Testable $component, string $name): Action
     {
         $table = $component->instance()->getTable();
 
         foreach ($table->getHeaderActions() as $action) {
-            if ($action instanceof MountableAction && $action->getName() === $name) {
+            if ($action instanceof Action && $action->getName() === $name) {
                 return $action;
             }
         }

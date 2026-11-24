@@ -2,6 +2,8 @@
 
 namespace App\Filament\Support;
 
+use Filament\Actions\AttachAction;
+use Filament\Actions\AssociateAction;
 use App\Models\Artist;
 use App\Models\Author;
 use App\Models\Collection;
@@ -17,8 +19,6 @@ use App\Models\TimelineEvent;
 use App\Support\Markdown\MarkdownText;
 use Closure;
 use Filament\Forms\Components\Select;
-use Filament\Tables\Actions\AssociateAction;
-use Filament\Tables\Actions\AttachAction;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;

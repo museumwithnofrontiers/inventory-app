@@ -2,6 +2,8 @@
 
 namespace Tests\Filament\Resources;
 
+use Filament\Actions\DeleteAction;
+use Filament\Actions\Action;
 use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource\Pages\CreateCollection;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
@@ -21,8 +23,6 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Partner;
 use App\Models\User;
-use Filament\Tables\Actions\Action;
-use Filament\Tables\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;

@@ -2,10 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use Filament\Actions\Action;
 use App\Models\User;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
@@ -16,15 +16,15 @@ class PendingRegistrationsPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clock';
 
     protected static ?string $navigationLabel = 'Pending Registrations';
 
-    protected static ?string $navigationGroup = 'Administration';
+    protected static string | \UnitEnum | null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 2;
 
-    protected static string $view = 'filament.pages.pending-registrations-page';
+    protected string $view = 'filament.pages.pending-registrations-page';
 
     protected static ?string $title = 'Pending Registrations';
 
@@ -55,7 +55,7 @@ class PendingRegistrationsPage extends Page implements HasTable
                     ->dateTime()
                     ->sortable(),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('approve')
                     ->label('Approve')
                     ->icon('heroicon-o-check')

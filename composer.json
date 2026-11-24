@@ -8,7 +8,7 @@
     "require": {
         "php": "^8.5",
         "dedoc/scramble": "^0.13.6",
-        "filament/filament": "^3.3",
+        "filament/filament": "^4.0",
         "intervention/image": "^4.3.3",
         "laravel/fortify": "^1.39.0",
         "laravel/framework": "^12.40.2",
@@ -24,6 +24,7 @@
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
+        "filament/upgrade": "^4.0",
         "larastan/larastan": "^3.0",
         "laravel/pail": "^1.2.4",
         "laravel/pint": "^1.26.0",
