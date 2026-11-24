@@ -2,12 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\Action;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use App\Events\ImageUploadEvent;
 use App\Filament\Resources\AvailableImageResource\Pages\EditAvailableImage;
 use App\Filament\Resources\AvailableImageResource\Pages\ListAvailableImage;
@@ -15,25 +9,33 @@ use App\Filament\Resources\AvailableImageResource\Pages\ViewAvailableImage;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
 use App\Models\ImageUpload;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\ImageEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class AvailableImageResource extends Resource
 {
     protected static ?string $model = AvailableImage::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-photo';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-photo';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Available Images';
+    protected static string|\UnitEnum|null $navigationGroup = 'Available Images';
 
     protected static ?int $navigationSort = 1;
 
@@ -44,14 +46,14 @@ class AvailableImageResource extends Resource
         return ['path', 'original_name', 'comment'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
-    public static function canCreate(): bool
+    public static function getCreateAuthorizationResponse(): Response
     {
-        return false;
+        return Response::deny();
     }
 
     public static function shouldRegisterNavigation(): bool

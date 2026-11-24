@@ -2,11 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -25,13 +20,20 @@ use App\Models\Collection;
 use App\Models\Country;
 use App\Models\Timeline;
 use App\Support\Markdown\MarkdownText;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 
 class TimelineResource extends Resource
 {
@@ -43,9 +45,9 @@ class TimelineResource extends Resource
 
     protected static ?string $model = Timeline::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clock';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 8;
 
@@ -56,9 +58,9 @@ class TimelineResource extends Resource
         return ['id', 'internal_name', 'backward_compatibility'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

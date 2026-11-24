@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\PartnerResource\RelationManagers;
 
-use Filament\Schemas\Components\Utilities\Get;
 use App\Enums\ItemType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\HasManyChildActions;
@@ -16,6 +15,8 @@ use App\Filament\Support\RecordSelect;
 use App\Models\Item;
 use Filament\Forms\Components\Placeholder;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -68,7 +69,7 @@ class OwnedItemsRelationManager extends RelationManager
     }
 
     /**
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     protected function hasManyChildAssociateFormExtra(): array
     {

@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
-use Filament\Actions\Action;
-use Filament\Resources\Resource;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Pages\ViewCollectionItemAppearance;
@@ -16,7 +14,9 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Item;
+use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -114,7 +114,7 @@ class CollectionAppearancesRelationManager extends RelationManager
     }
 
     /**
-     * @param  class-string<Resource>  $resourceClass
+     * @param  class-string<resource>  $resourceClass
      */
     private function getAuthorizedUrl(mixed $record, string $resourceClass): ?string
     {

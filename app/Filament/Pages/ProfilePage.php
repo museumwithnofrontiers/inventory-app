@@ -2,16 +2,17 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Auth\Pages\EditProfile;
 use App\Actions\DeleteUser;
 use App\Actions\Fortify\UpdateUserPassword;
 use App\Actions\Fortify\UpdateUserProfileInformation;
 use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Auth\Pages\EditProfile;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Schema;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
@@ -37,24 +38,14 @@ class ProfilePage extends EditProfile
     /**
      * Only show name and email on the main profile form.
      * Password change is handled via a dedicated modal action.
-     *
-     * @return array<int|string, string|\Filament\Schemas\Schema>
      */
-    protected function getForms(): array
+    public function form(Schema $schema): Schema
     {
-        return [
-            'form' => $this->form(
-                $this->makeForm()
-                    ->schema([
-                        $this->getNameFormComponent(),
-                        $this->getEmailFormComponent(),
-                    ])
-                    ->operation('edit')
-                    ->model($this->getUser())
-                    ->statePath('data')
-                    ->inlineLabel(! static::isSimple()),
-            ),
-        ];
+        return $schema
+            ->components([
+                $this->getNameFormComponent(),
+                $this->getEmailFormComponent(),
+            ]);
     }
 
     /**

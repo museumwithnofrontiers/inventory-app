@@ -2,11 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Schemas\Components\Section;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -23,14 +18,21 @@ use App\Filament\Resources\GlossaryResource\RelationManagers\TranslationsRelatio
 use App\Filament\Support\MarkdownState;
 use App\Models\Glossary;
 use App\Models\Language;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Filters\BaseFilter;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 class GlossaryResource extends Resource
 {
@@ -43,9 +45,9 @@ class GlossaryResource extends Resource
 
     protected static ?string $model = Glossary::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-book-open';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-book-open';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Shared Data';
+    protected static string|\UnitEnum|null $navigationGroup = 'Shared Data';
 
     protected static ?int $navigationSort = 4;
 
@@ -56,9 +58,9 @@ class GlossaryResource extends Resource
         return ['id', 'internal_name', 'backward_compatibility'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

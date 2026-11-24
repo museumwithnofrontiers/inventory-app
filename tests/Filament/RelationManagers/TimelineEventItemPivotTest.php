@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\RelationManagers;
 
-use Filament\Actions\DetachAction;
 use App\Filament\Resources\ItemResource\Pages\ViewItem;
 use App\Filament\Resources\ItemResource\RelationManagers\TimelineEventsRelationManager;
 use App\Filament\Resources\TimelineEventResource\Pages\ViewTimelineEvent;
@@ -10,6 +9,7 @@ use App\Filament\Resources\TimelineEventResource\RelationManagers\ItemsRelationM
 use App\Models\Item;
 use App\Models\TimelineEvent;
 use App\Models\TimelineEventItem;
+use Filament\Actions\DetachAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

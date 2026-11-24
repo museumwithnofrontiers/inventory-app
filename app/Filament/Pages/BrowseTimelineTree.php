@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Collection;
 
 class BrowseTimelineTree extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clock';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
 
     protected static ?string $navigationLabel = 'Browse timeline tree';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 10;
 

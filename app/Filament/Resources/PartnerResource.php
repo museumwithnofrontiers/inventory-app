@@ -2,11 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use App\Enums\ItemType;
 use App\Enums\PartnerCategory;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
@@ -33,18 +28,25 @@ use App\Filament\Support\PartnerDisplayLabel;
 use App\Models\Country;
 use App\Models\Partner;
 use App\Models\Project;
-use Filament\Forms\Components\Component;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 class PartnerResource extends Resource
 {
@@ -58,9 +60,9 @@ class PartnerResource extends Resource
 
     protected static ?string $model = Partner::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-building-library';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-building-library';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 5;
 
@@ -71,9 +73,9 @@ class PartnerResource extends Resource
         return ['id', 'internal_name', 'backward_compatibility', 'translations.name', 'country.internal_name', 'project.internal_name'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

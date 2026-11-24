@@ -2,13 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Resources\CollectionTranslationResource\Pages\CreateCollectionTranslation;
@@ -20,17 +13,26 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\TranslationFormSchema;
 use App\Filament\Support\TranslationInfolistSchema;
 use App\Models\CollectionTranslation;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rules\Unique;
 
 class CollectionTranslationResource extends Resource
@@ -40,9 +42,9 @@ class CollectionTranslationResource extends Resource
 
     protected static ?string $model = CollectionTranslation::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-language';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-language';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Translations';
+    protected static string|\UnitEnum|null $navigationGroup = 'Translations';
 
     protected static ?string $navigationLabel = 'Collection Translations';
 
@@ -50,9 +52,9 @@ class CollectionTranslationResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'title';
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

@@ -2,11 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use Filament\Schemas\Components\Section;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -18,11 +13,18 @@ use App\Filament\Resources\AuthorResource\Pages\ListAuthor;
 use App\Filament\Resources\AuthorResource\Pages\ViewAuthor;
 use App\Filament\Support\MarkdownState;
 use App\Models\Author;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 
 class AuthorResource extends Resource
 {
@@ -34,9 +36,9 @@ class AuthorResource extends Resource
 
     protected static ?string $model = Author::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-user-circle';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Shared Data';
+    protected static string|\UnitEnum|null $navigationGroup = 'Shared Data';
 
     protected static ?int $navigationSort = 3;
 
@@ -47,9 +49,9 @@ class AuthorResource extends Resource
         return ['name', 'internal_name', 'backward_compatibility'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

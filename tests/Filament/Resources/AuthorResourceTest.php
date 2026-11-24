@@ -2,11 +2,11 @@
 
 namespace Tests\Filament\Resources;
 
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\AuthorResource\Pages\CreateAuthor;
 use App\Filament\Resources\AuthorResource\Pages\EditAuthor;
 use App\Filament\Resources\AuthorResource\Pages\ListAuthor;
 use App\Models\Author;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

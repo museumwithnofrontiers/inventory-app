@@ -2,12 +2,13 @@
 
 namespace App\Filament\Support;
 
-use Filament\Schemas\Components\Section;
 use App\Models\CollectionItemTranslation;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
 use Illuminate\Validation\Rules\Unique;
 
 /**
@@ -19,7 +20,7 @@ final class CollectionItemTranslationForm
 {
     /**
      * @param  string  $placementId  the placement the texts belong to
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     public static function fields(string $placementId): array
     {
@@ -87,7 +88,7 @@ final class CollectionItemTranslationForm
     }
 
     /**
-     * @return array<int, \Filament\Schemas\Components\Section>
+     * @return array<int, Section>
      */
     public static function entries(): array
     {

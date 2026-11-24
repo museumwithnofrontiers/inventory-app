@@ -11,11 +11,11 @@ use Illuminate\Database\Eloquent\Builder;
 
 class BrowseCollectionTree extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-archive-box';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-archive-box';
 
     protected static ?string $navigationLabel = 'Browse collection tree';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Inventory';
+    protected static string|\UnitEnum|null $navigationGroup = 'Inventory';
 
     protected static ?int $navigationSort = 0;
 

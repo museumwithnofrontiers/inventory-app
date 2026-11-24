@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Actions\Action;
 use App\Filament\Pages\PendingRegistrationsPage;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;

@@ -26,6 +26,7 @@ class SynonymsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('reverseSynonyms')
             ->defaultSort('internal_name', 'asc')
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)

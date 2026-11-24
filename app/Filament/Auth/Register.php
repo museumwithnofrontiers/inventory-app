@@ -2,13 +2,13 @@
 
 namespace App\Filament\Auth;
 
-use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
-use Filament\Schemas\Components\Component;
 use App\Models\Setting;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
+use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Component;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\Contracts\CreatesNewUsers;

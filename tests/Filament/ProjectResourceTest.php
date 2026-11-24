@@ -2,7 +2,6 @@
 
 namespace Tests\Filament;
 
-use Filament\Actions\DeleteAction;
 use App\Enums\Permission;
 use App\Filament\Resources\ProjectResource\Pages\CreateProject;
 use App\Filament\Resources\ProjectResource\Pages\EditProject;
@@ -15,6 +14,7 @@ use App\Models\Item;
 use App\Models\Language;
 use App\Models\Project;
 use App\Models\User;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

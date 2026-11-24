@@ -2,11 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -20,12 +15,19 @@ use App\Filament\Resources\ArtistResource\RelationManagers\ItemsRelationManager;
 use App\Filament\Support\MarkdownState;
 use App\Models\Artist;
 use App\Policies\ArtistPolicy;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The artists items are linked to (the item's "Origin" tab). An artist is
@@ -46,9 +48,9 @@ class ArtistResource extends Resource
 
     protected static ?string $model = Artist::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-paint-brush';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-paint-brush';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Shared Data';
+    protected static string|\UnitEnum|null $navigationGroup = 'Shared Data';
 
     protected static ?int $navigationSort = 5;
 
@@ -59,9 +61,9 @@ class ArtistResource extends Resource
         return ['id', 'name', 'internal_name', 'backward_compatibility'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

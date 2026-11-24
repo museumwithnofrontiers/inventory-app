@@ -13,6 +13,7 @@ use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -37,6 +38,7 @@ class RelatedCollectionsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship('relatingCollections')
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)
             ->columns([
@@ -80,7 +82,7 @@ class RelatedCollectionsRelationManager extends RelationManager
     }
 
     /**
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     private function pivotFields(): array
     {

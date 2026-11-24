@@ -2,9 +2,9 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Actions\Action;
 use App\Enums\Permission;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;

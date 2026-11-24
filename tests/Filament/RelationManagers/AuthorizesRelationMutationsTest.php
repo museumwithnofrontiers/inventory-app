@@ -95,6 +95,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $collection = $this->makeCollection();
         $item = Item::factory()->Object()->create();
+        $collection->attachedItems()->attach($item);
         $user = $this->createViewOnlyUser();
 
         $this->setCurrentPanel();
@@ -113,6 +114,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $collection = $this->makeCollection();
         $item = Item::factory()->Object()->create();
+        $collection->attachedItems()->attach($item);
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();
@@ -133,6 +135,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $collection = $this->makeCollection();
         $partner = Partner::factory()->create();
+        $collection->partners()->attach($partner->id, ['collection_type' => 'collection', 'level' => 'partner']);
         $user = $this->createViewOnlyUser();
 
         $this->setCurrentPanel();
@@ -151,6 +154,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $collection = $this->makeCollection();
         $partner = Partner::factory()->create();
+        $collection->partners()->attach($partner->id, ['collection_type' => 'collection', 'level' => 'partner']);
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();
@@ -222,6 +226,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $item = Item::factory()->Object()->create();
         $tag = Tag::factory()->create();
+        $item->tags()->attach($tag);
         $user = $this->createViewOnlyUser();
 
         $this->setCurrentPanel();
@@ -240,6 +245,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $item = Item::factory()->Object()->create();
         $tag = Tag::factory()->create();
+        $item->tags()->attach($tag);
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();
@@ -263,6 +269,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $item = Item::factory()->Object()->create();
         $tag = Tag::factory()->create();
+        $item->tags()->attach($tag);
         $user = $this->createCrudUser();
         Gate::before(fn (User $actor, string $ability, array $arguments): ?bool => $ability === 'update' && ($arguments[0] ?? null) instanceof Item ? false : null);
 
@@ -284,6 +291,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $item = Item::factory()->Object()->create();
         $artist = Artist::factory()->create();
+        $item->artists()->attach($artist);
         $user = $this->createViewOnlyUser();
 
         $this->setCurrentPanel();
@@ -302,6 +310,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $item = Item::factory()->Object()->create();
         $artist = Artist::factory()->create();
+        $item->artists()->attach($artist);
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();
@@ -322,6 +331,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $item = Item::factory()->Object()->create();
         $dynasty = Dynasty::factory()->create();
+        $item->dynasties()->attach($dynasty);
         $user = $this->createViewOnlyUser();
 
         $this->setCurrentPanel();
@@ -340,6 +350,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $item = Item::factory()->Object()->create();
         $dynasty = Dynasty::factory()->create();
+        $item->dynasties()->attach($dynasty);
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();
@@ -634,6 +645,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $timelineEvent = TimelineEvent::factory()->create();
         $item = Item::factory()->Object()->create();
+        $timelineEvent->items()->attach($item);
         $user = $this->createViewOnlyUser();
 
         $this->setCurrentPanel();
@@ -652,6 +664,7 @@ class AuthorizesRelationMutationsTest extends TestCase
     {
         $timelineEvent = TimelineEvent::factory()->create();
         $item = Item::factory()->Object()->create();
+        $timelineEvent->items()->attach($item);
         $user = $this->createCrudUser();
 
         $this->setCurrentPanel();

@@ -2,8 +2,6 @@
 
 namespace App\Filament\Resources\RelationManagers;
 
-use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContextResource;
 use App\Filament\Resources\LanguageResource;
@@ -11,9 +9,12 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\ResourceCreateUrl;
 use App\Models\Context;
 use App\Models\Language;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -59,7 +60,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
     protected static ?string $title = 'Translations';
 
     /**
-     * @return class-string<Resource>
+     * @return class-string<resource>
      */
     abstract protected static function translationResource(): string;
 
@@ -84,7 +85,7 @@ abstract class BaseOwnerTranslationsRelationManager extends RelationManager
     /**
      * The one-click createDefaultTranslation action's form fields.
      *
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     abstract protected static function defaultTranslationFormFields(): array;
 

@@ -32,13 +32,6 @@
             <span class="font-mono">{{ $setupKey }}</span>
         </div>
 
-        <x-filament-panels::form id="form" wire:submit="confirm">
-            {{ $this->form }}
-
-            <x-filament-panels::form.actions
-                :actions="$this->getCachedFormActions()"
-                :full-width="$this->hasFullWidthFormActions()"
-            />
-        </x-filament-panels::form>
+        {{ $this->content }}
     @endif
 </x-filament-panels::page.simple>

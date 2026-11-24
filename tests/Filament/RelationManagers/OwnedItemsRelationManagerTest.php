@@ -2,11 +2,11 @@
 
 namespace Tests\Filament\RelationManagers;
 
-use Filament\Actions\Action;
 use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\OwnedItemsRelationManager;
 use App\Models\Item;
 use App\Models\Partner;
+use Filament\Actions\Action;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Features\SupportTesting\Testable;
 use Livewire\Livewire;

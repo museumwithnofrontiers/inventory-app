@@ -9,6 +9,7 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -24,9 +25,16 @@ abstract class BaseCreditsRelationManager extends RelationManager
 
     protected static ?string $recordTitleAttribute = 'name';
 
+    /**
+     * The Author relation back to the translation in this manager's role,
+     * so Attach leaves out the people already credited in it.
+     */
+    protected static string $inverseCreditRelationship;
+
     public function table(Table $table): Table
     {
         return $table
+            ->inverseRelationship(static::$inverseCreditRelationship)
             ->defaultSort('item_translation_author.display_order', 'asc')
             ->paginated([25, 50, 100])
             ->defaultPaginationPageOption(25)
@@ -58,7 +66,7 @@ abstract class BaseCreditsRelationManager extends RelationManager
     }
 
     /**
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     private static function pivotFormFields(): array
     {

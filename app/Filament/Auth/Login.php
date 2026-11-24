@@ -2,15 +2,16 @@
 
 namespace App\Filament\Auth;
 
-use Filament\Auth\Http\Responses\Contracts\LoginResponse;
-use Filament\Schemas\Components\Component;
 use App\Models\User;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Actions\Action;
+use Filament\Auth\Http\Responses\Contracts\LoginResponse;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Schemas\Components\Component;
 use Illuminate\Auth\SessionGuard;
+use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\HtmlString;
@@ -20,12 +21,6 @@ use Laravel\Fortify\Features;
 class Login extends \Filament\Auth\Pages\Login
 {
     private const int VERIFICATION_RESEND_SECONDS = 300;
-
-    /**
-     * Filament's login view, with the "sign up" line shown only while
-     * self-registration is open.
-     */
-    protected static string $view = 'filament.auth.login';
 
     public function authenticate(): ?LoginResponse
     {
@@ -124,6 +119,18 @@ class Login extends \Filament\Auth\Pages\Login
         return parent::registerAction()->visible(fn (): bool => Register::isOpen());
     }
 
+    /**
+     * The "sign up" line, shown only while self-registration is open.
+     */
+    public function getSubheading(): string|Htmlable|null
+    {
+        if (! Register::isOpen()) {
+            return null;
+        }
+
+        return parent::getSubheading();
+    }
+
     protected function getForgotPasswordUrl(): ?string
     {
         return Filament::getCurrentOrDefaultPanel()?->route('auth.password.request');
@@ -134,8 +141,8 @@ class Login extends \Filament\Auth\Pages\Login
         $url = $this->getForgotPasswordUrl();
 
         return TextInput::make('password')
-            ->label(__('filament-panels::pages/auth/login.form.password.label'))
-            ->hint($url ? new HtmlString(Blade::render('<x-filament::link :href="$url" tabindex="3"> {{ __(\'filament-panels::pages/auth/login.actions.request_password_reset.label\') }}</x-filament::link>', ['url' => $url])) : null)
+            ->label(__('filament-panels::auth/pages/login.form.password.label'))
+            ->hint($url ? new HtmlString(Blade::render('<x-filament::link :href="$url" tabindex="3"> {{ __(\'filament-panels::auth/pages/login.actions.request_password_reset.label\') }}</x-filament::link>', ['url' => $url])) : null)
             ->password()
             ->revealable(filament()->arePasswordsRevealable())
             ->autocomplete('current-password')

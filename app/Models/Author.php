@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\CreditRole;
 use Database\Factories\AuthorFactory;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
@@ -89,5 +91,45 @@ class Author extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(AuthorTranslation::class);
+    }
+
+    /**
+     * Get the item translations crediting this person in one role: the way
+     * back from ItemTranslation::creditsAs(), which the panel's Attach action
+     * uses to leave out the people already credited in that role.
+     *
+     * @return BelongsToMany<ItemTranslation, $this, ItemTranslationAuthor>
+     */
+    public function itemTranslationsCreditedAs(CreditRole $role): BelongsToMany
+    {
+        return $this->belongsToMany(ItemTranslation::class, 'item_translation_author')
+            ->using(ItemTranslationAuthor::class)
+            ->withPivot('role', 'display_order')
+            ->withPivotValue('role', $role->value)
+            ->withTimestamps();
+    }
+
+    /** @return BelongsToMany<ItemTranslation, $this, ItemTranslationAuthor> */
+    public function itemTranslationsCreditedAsAuthor(): BelongsToMany
+    {
+        return $this->itemTranslationsCreditedAs(CreditRole::AUTHOR);
+    }
+
+    /** @return BelongsToMany<ItemTranslation, $this, ItemTranslationAuthor> */
+    public function itemTranslationsCreditedAsTextCopyEditor(): BelongsToMany
+    {
+        return $this->itemTranslationsCreditedAs(CreditRole::TEXT_COPY_EDITOR);
+    }
+
+    /** @return BelongsToMany<ItemTranslation, $this, ItemTranslationAuthor> */
+    public function itemTranslationsCreditedAsTranslator(): BelongsToMany
+    {
+        return $this->itemTranslationsCreditedAs(CreditRole::TRANSLATOR);
+    }
+
+    /** @return BelongsToMany<ItemTranslation, $this, ItemTranslationAuthor> */
+    public function itemTranslationsCreditedAsTranslationCopyEditor(): BelongsToMany
+    {
+        return $this->itemTranslationsCreditedAs(CreditRole::TRANSLATION_COPY_EDITOR);
     }
 }

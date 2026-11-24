@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use Filament\Actions\DeleteAction;
 use App\Events\AvailableImageEvent;
 use App\Events\ImageUploadEvent;
 use App\Filament\Resources\AvailableImageResource\Pages\EditAvailableImage;
@@ -11,6 +10,7 @@ use App\Listeners\AvailableImageListener;
 use App\Listeners\ImageUploadListener;
 use App\Models\AvailableImage;
 use App\Models\ImageUpload;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Storage;

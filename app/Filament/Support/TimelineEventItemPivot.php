@@ -4,6 +4,7 @@ namespace App\Filament\Support;
 
 use App\Models\TimelineEventItem;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Model;
 
@@ -21,7 +22,7 @@ class TimelineEventItemPivot
      * both managers' Attach and Edit-pivot forms. backward_compatibility is
      * deliberately never included here: it is importer-owned.
      *
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     public static function pivotFormFields(): array
     {

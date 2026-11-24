@@ -2,25 +2,27 @@
 
 namespace App\Filament\Resources\RelationManagers;
 
-use Filament\Actions\Action;
-use Filament\Actions\EditAction;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\DeleteAction;
 use App\Contracts\DetachableImage;
 use App\Contracts\StreamableImageFile;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Support\MarkdownState;
 use App\Models\AvailableImage;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\Column;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Database\Eloquent\Model;
 
 abstract class BaseImagesRelationManager extends RelationManager
@@ -31,14 +33,14 @@ abstract class BaseImagesRelationManager extends RelationManager
 
     protected static ?string $title = 'Images';
 
-    protected function canCreate(): bool
+    protected function getCreateAuthorizationResponse(): Response
     {
-        return false;
+        return Response::deny();
     }
 
-    protected function canDeleteAny(): bool
+    protected function getDeleteAnyAuthorizationResponse(): Response
     {
-        return false;
+        return Response::deny();
     }
 
     abstract protected function imageModelClass(): string;
@@ -58,7 +60,7 @@ abstract class BaseImagesRelationManager extends RelationManager
      * both the attach and the edit form (PublicationImage: its kind and
      * edition). None by default.
      *
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     protected function extraImageFormFields(): array
     {

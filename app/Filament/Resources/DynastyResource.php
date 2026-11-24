@@ -2,11 +2,6 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasTimestampsColumns;
 use App\Filament\Concerns\HasUuidColumn;
@@ -21,14 +16,21 @@ use App\Filament\Support\MarkdownState;
 use App\Models\Dynasty;
 use App\Policies\DynastyPolicy;
 use App\Support\Markdown\MarkdownText;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The dynasties items are linked to (the item's "Origin" tab). A dynasty is
@@ -49,9 +51,9 @@ class DynastyResource extends Resource
 
     protected static ?string $model = Dynasty::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-flag';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-flag';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Shared Data';
+    protected static string|\UnitEnum|null $navigationGroup = 'Shared Data';
 
     protected static ?int $navigationSort = 6;
 
@@ -69,7 +71,10 @@ class DynastyResource extends Resource
      */
     public static function getGlobalSearchEloquentQuery(): Builder
     {
-        return parent::getGlobalSearchEloquentQuery()->with('translations');
+        /** @var Builder<Dynasty> $query */
+        $query = parent::getGlobalSearchEloquentQuery();
+
+        return $query->with('translations');
     }
 
     /**
@@ -93,9 +98,9 @@ class DynastyResource extends Resource
         return $label !== '' ? $label : (string) $record->getKey();
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

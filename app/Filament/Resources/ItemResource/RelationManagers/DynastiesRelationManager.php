@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
-use Filament\Actions\ViewAction;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\DynastyResource;
@@ -10,6 +9,7 @@ use App\Filament\Support\DynastyDisplayLabel;
 use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Dynasty;
+use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;

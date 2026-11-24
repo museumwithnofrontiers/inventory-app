@@ -2,8 +2,6 @@
 
 namespace Tests\Filament\Authorization;
 
-use RecursiveIteratorIterator;
-use RecursiveDirectoryIterator;
 use App\Enums\Permission;
 use App\Filament\Auth\Login as AdminLogin;
 use App\Filament\Auth\TwoFactorChallenge;
@@ -15,6 +13,8 @@ use Illuminate\Support\Facades\Hash;
 use Laravel\Fortify\Contracts\TwoFactorAuthenticationProvider;
 use Livewire\Livewire;
 use Mockery;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Tests\TestCase;
 use Tests\Traits\CreatesTwoFactorUsers;
 

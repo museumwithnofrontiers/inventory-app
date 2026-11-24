@@ -2,13 +2,14 @@
 
 namespace App\Filament\Support;
 
-use Filament\Schemas\Components\Fieldset;
 use App\Models\CollectionItemExploreMonument;
 use App\Models\Partner;
 use App\Support\Markdown\MarkdownText;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Fieldset;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
@@ -19,7 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 final class CollectionItemExploreMonumentForm
 {
     /**
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     public static function fields(): array
     {

@@ -2,7 +2,7 @@
 
 namespace App\Filament\Auth;
 
-use Filament\Schemas\Schema;
+use App\Filament\Auth\Concerns\RendersAuthForm;
 use App\Models\User;
 use App\Notifications\AdminPasswordResetNotification;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
@@ -11,19 +11,21 @@ use Filament\Actions\Action;
 use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
-use Filament\Pages\Concerns\InteractsWithFormActions;
 use Filament\Pages\SimplePage;
+use Filament\Panel;
+use Filament\Schemas\Schema;
 use Illuminate\Auth\Passwords\PasswordBroker;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Password;
 
+/**
+ * @property-read Schema $form
+ */
 class RequestPasswordReset extends SimplePage
 {
-    use InteractsWithFormActions;
+    use RendersAuthForm;
     use WithRateLimiting;
-
-    protected string $view = 'filament.auth.request-password-reset';
 
     /**
      * @var array<string, mixed>|null
@@ -38,33 +40,21 @@ class RequestPasswordReset extends SimplePage
             return;
         }
 
-        $this->getForm('form')?->fill();
+        $this->form->fill();
     }
 
     public function form(Schema $schema): Schema
     {
-        return $schema;
-    }
-
-    /**
-     * @return array<int|string, string|\Filament\Schemas\Schema>
-     */
-    protected function getForms(): array
-    {
-        return [
-            'form' => $this->form(
-                $this->makeForm()
-                    ->components([
-                        TextInput::make('email')
-                            ->label(__('Email address'))
-                            ->email()
-                            ->required()
-                            ->autocomplete('email')
-                            ->autofocus(),
-                    ])
-                    ->statePath('data'),
-            ),
-        ];
+        return $schema
+            ->components([
+                TextInput::make('email')
+                    ->label(__('Email address'))
+                    ->email()
+                    ->required()
+                    ->autocomplete('email')
+                    ->autofocus(),
+            ])
+            ->statePath('data');
     }
 
     public function submit(): void
@@ -74,7 +64,7 @@ class RequestPasswordReset extends SimplePage
         } catch (TooManyRequestsException $exception) {
             $seconds = is_numeric($exception->secondsUntilAvailable) ? (int) $exception->secondsUntilAvailable : 0;
             Notification::make()
-                ->title(__('filament-panels::pages/auth/login.notifications.throttled.title', [
+                ->title(__('filament-panels::auth/pages/login.notifications.throttled.title', [
                     'seconds' => $seconds,
                     'minutes' => (int) ceil($seconds / 60),
                 ]))
@@ -84,7 +74,7 @@ class RequestPasswordReset extends SimplePage
             return;
         }
 
-        $data = $this->getForm('form')?->getState() ?? [];
+        $data = $this->form->getState();
 
         $user = User::query()->where('email', $data['email'])->first();
 
@@ -103,7 +93,7 @@ class RequestPasswordReset extends SimplePage
             ->success()
             ->send();
 
-        $this->getForm('form')?->fill();
+        $this->form->fill();
     }
 
     /**
@@ -123,11 +113,6 @@ class RequestPasswordReset extends SimplePage
         ];
     }
 
-    protected function hasFullWidthFormActions(): bool
-    {
-        return true;
-    }
-
     public function getTitle(): string|Htmlable
     {
         return __('Reset Password');
@@ -138,12 +123,12 @@ class RequestPasswordReset extends SimplePage
         return __('Forgot your password?');
     }
 
-    public static function getSlug(): string
+    public static function getSlug(?Panel $panel = null): string
     {
         return 'forgot-password';
     }
 
-    public static function getRelativeRouteName(): string
+    public static function getRelativeRouteName(Panel $panel): string
     {
         return 'auth.password.request';
     }

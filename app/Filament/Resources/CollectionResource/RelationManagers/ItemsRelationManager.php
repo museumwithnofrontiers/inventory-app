@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
-use Filament\Actions\Action;
 use App\Enums\ItemType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
@@ -16,6 +15,7 @@ use App\Filament\Support\MarkdownState;
 use App\Filament\Support\RecordSelect;
 use App\Models\Collection;
 use App\Models\Item;
+use Filament\Actions\Action;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;

@@ -2,11 +2,6 @@
 
 namespace App\Filament\Resources\PublicationResource\RelationManagers;
 
-use Filament\Schemas\Schema;
-use Filament\Actions\CreateAction;
-use Filament\Actions\Action;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
 use App\Enums\PublicationFormat;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\LanguageResource;
@@ -14,10 +9,15 @@ use App\Filament\Resources\PublicationEditionResource;
 use App\Filament\Support\ExtraJsonField;
 use App\Filament\Support\MarkdownState;
 use App\Models\PublicationEdition;
+use Filament\Actions\Action;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;

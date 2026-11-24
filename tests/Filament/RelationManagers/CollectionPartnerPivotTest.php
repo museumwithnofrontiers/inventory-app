@@ -2,8 +2,6 @@
 
 namespace Tests\Filament\RelationManagers;
 
-use Filament\Actions\DetachAction;
-use Filament\Actions\DetachBulkAction;
 use App\Filament\Resources\CollectionResource\Pages\ViewCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
@@ -12,6 +10,8 @@ use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Language;
 use App\Models\Partner;
+use Filament\Actions\DetachAction;
+use Filament\Actions\DetachBulkAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

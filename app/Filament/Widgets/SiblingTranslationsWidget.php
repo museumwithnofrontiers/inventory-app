@@ -2,8 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use InvalidArgumentException;
-use Filament\Actions\Action;
 use App\Filament\Resources\CollectionTranslationResource;
 use App\Filament\Resources\ItemTranslationResource;
 use App\Filament\Resources\PartnerTranslationResource;
@@ -11,11 +9,13 @@ use App\Filament\Support\MarkdownState;
 use App\Models\CollectionTranslation;
 use App\Models\ItemTranslation;
 use App\Models\PartnerTranslation;
+use Filament\Actions\Action;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Database\Eloquent\Builder;
+use InvalidArgumentException;
 
 class SiblingTranslationsWidget extends BaseWidget
 {

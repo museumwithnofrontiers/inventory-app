@@ -2,11 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use Filament\Actions\DeleteAction;
-use Filament\Actions\CreateAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DetachAction;
-use Filament\Actions\ViewAction;
 use App\Enums\Permission;
 use App\Filament\Resources\DynastyResource;
 use App\Filament\Resources\DynastyResource\Pages\CreateDynasty;
@@ -23,6 +18,11 @@ use App\Models\DynastyTranslation;
 use App\Models\Item;
 use App\Models\Language;
 use App\Models\User;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DetachAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
@@ -211,7 +211,8 @@ class DynastyResourceTest extends TestCase
 
         $this->assertCount(1, $results);
         $this->assertSame('Umayyads', (string) $results->first()?->title);
-        $this->assertSame(DynastyResource::getUrl('edit', ['record' => $dynasty]), $results->first()?->url);
+        // Filament 4 opens a result on its View page, where every entry point lands
+        $this->assertSame(DynastyResource::getUrl('view', ['record' => $dynasty]), $results->first()?->url);
     }
 
     public function test_deleting_a_dynasty_removes_its_translations_and_links_but_keeps_the_items(): void
@@ -226,7 +227,7 @@ class DynastyResourceTest extends TestCase
         Livewire::actingAs($user)
             ->test(ListDynasty::class)
             ->mountTableAction(DeleteAction::class, $dynasty)
-            ->assertSee('This dynasty is linked to 1 item.')
+            ->assertMountedActionModalSee('This dynasty is linked to 1 item.')
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors();
 

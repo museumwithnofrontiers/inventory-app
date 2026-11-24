@@ -2,8 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use Filament\Actions\DetachAction;
-use Filament\Actions\ViewAction;
 use App\Enums\Permission;
 use App\Filament\Resources\ArtistResource;
 use App\Filament\Resources\ArtistResource\Pages\CreateArtist;
@@ -17,6 +15,8 @@ use App\Models\Artist;
 use App\Models\Item;
 use App\Models\User;
 use Filament\Actions\DeleteAction as PageDeleteAction;
+use Filament\Actions\DetachAction;
+use Filament\Actions\ViewAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
@@ -206,7 +206,7 @@ class ArtistResourceTest extends TestCase
         Livewire::actingAs($user)
             ->test(ListArtist::class)
             ->mountTableAction(PageDeleteAction::class, $artist)
-            ->assertSee('This artist is linked to 1 item.')
+            ->assertMountedActionModalSee('This artist is linked to 1 item.')
             ->callMountedTableAction()
             ->assertHasNoTableActionErrors();
 
@@ -313,6 +313,6 @@ class ArtistResourceTest extends TestCase
             ->test(ArtistsRelationManager::class, ['ownerRecord' => $item, 'pageClass' => ViewItem::class])
             ->assertTableActionVisible(ViewAction::class, $artist->getKey())
             ->mountTableAction(ViewAction::class, $artist->getKey())
-            ->assertSee('Place of birth');
+            ->assertMountedActionModalSee('Place of birth');
     }
 }

@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use Filament\Actions\DeleteAction;
 use App\Enums\Permission;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\PublicationsRelationManager as CollectionPublicationsRelationManager;
@@ -31,6 +30,7 @@ use App\Models\PublicationImage;
 use App\Models\PublicationTranslation;
 use App\Models\Tag;
 use App\Models\User;
+use Filament\Actions\DeleteAction;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;

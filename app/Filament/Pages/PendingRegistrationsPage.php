@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Actions\Action;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\TextColumn;
@@ -16,11 +16,11 @@ class PendingRegistrationsPage extends Page implements HasTable
 {
     use InteractsWithTable;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clock';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
 
     protected static ?string $navigationLabel = 'Pending Registrations';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Administration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 2;
 

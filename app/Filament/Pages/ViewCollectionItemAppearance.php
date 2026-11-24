@@ -2,10 +2,6 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Actions\CreateAction;
-use Filament\Actions\ViewAction;
-use Filament\Schemas\Schema;
-use Filament\Actions\DeleteAction;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
 use App\Filament\Support\CollectionDisplayLabel;
@@ -17,8 +13,12 @@ use App\Models\Collection;
 use App\Models\CollectionItem;
 use App\Models\CollectionItemTranslation;
 use App\Models\Item;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction as PageEditAction;
+use Filament\Actions\ViewAction;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;

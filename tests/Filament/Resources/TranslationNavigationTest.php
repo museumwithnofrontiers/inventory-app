@@ -2,7 +2,6 @@
 
 namespace Tests\Filament\Resources;
 
-use InvalidArgumentException;
 use App\Filament\Resources\CollectionResource\Pages\EditCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\TranslationsRelationManager as CollectionTranslationsRelationManager;
 use App\Filament\Resources\CollectionTranslationResource;
@@ -35,6 +34,7 @@ use App\Models\Partner;
 use App\Models\PartnerTranslation;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\View\ViewException;
+use InvalidArgumentException;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
@@ -979,7 +979,7 @@ class TranslationNavigationTest extends TestCase
 
         $livewire = Livewire::actingAs($user)
             ->test(EditItemTranslation::class, ['record' => $translation->getRouteKey()]);
-        $label = $livewire->instance()->getFormSelectOptionLabel('data.item_id');
+        $label = $livewire->instance()->callSchemaComponentMethod('form.item_id', 'getOptionLabel');
 
         // The selector now shows the resolved display label (translated name) instead of
         // the legacy internal_name [backward_compatibility] format.
@@ -1030,7 +1030,7 @@ class TranslationNavigationTest extends TestCase
 
         $livewire = Livewire::actingAs($user)
             ->test(EditCollectionTranslation::class, ['record' => $translation->getRouteKey()]);
-        $label = $livewire->instance()->getFormSelectOptionLabel('data.collection_id');
+        $label = $livewire->instance()->callSchemaComponentMethod('form.collection_id', 'getOptionLabel');
 
         // The selector now shows the resolved display label (translated title) instead of
         // the legacy internal_name [backward_compatibility] format.
@@ -1076,7 +1076,7 @@ class TranslationNavigationTest extends TestCase
 
         $livewire = Livewire::actingAs($user)
             ->test(EditPartnerTranslation::class, ['record' => $translation->getRouteKey()]);
-        $label = $livewire->instance()->getFormSelectOptionLabel('data.partner_id');
+        $label = $livewire->instance()->callSchemaComponentMethod('form.partner_id', 'getOptionLabel');
 
         // The selector now shows the resolved display label (translated name) instead of
         // the legacy internal_name [backward_compatibility] format.

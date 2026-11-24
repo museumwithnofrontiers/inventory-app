@@ -2,10 +2,10 @@
 
 namespace App\Filament\Concerns;
 
-use Filament\Schemas\Components\Section;
 use App\Services\LegacyUrlResolver;
 use App\Support\LegacyLinks\LegacyLink;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\HtmlString;
 

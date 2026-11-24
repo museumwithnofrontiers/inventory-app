@@ -2,20 +2,20 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Schemas\Schema;
 use App\Models\Setting;
 use App\Models\User;
 use Filament\Forms\Components\Toggle;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 
 class SelfRegistrationSettingsPage extends Page
 {
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-cog-6-tooth';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
     protected static ?string $navigationLabel = 'Self-Registration';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Administration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 3;
 

@@ -2,17 +2,19 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Actions\ViewAction;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use App\Filament\Resources\RoleResource\Pages\ListRole;
 use App\Filament\Resources\RoleResource\Pages\ViewRole;
 use App\Filament\Resources\RoleResource\RelationManagers\PermissionsRelationManager;
 use App\Filament\Resources\RoleResource\RelationManagers\UsersRelationManager;
+use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 use Spatie\Permission\Models\Role;
 
 /**
@@ -23,9 +25,9 @@ class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-shield-check';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-shield-check';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Administration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 4;
 
@@ -36,9 +38,9 @@ class RoleResource extends Resource
         return ['name'];
     }
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

@@ -2,19 +2,21 @@
 
 namespace App\Filament\Resources;
 
-use Filament\Actions\ViewAction;
-use Filament\Schemas\Schema;
-use Filament\Schemas\Components\Section;
 use App\Filament\Resources\AuditLogResource\Pages\ListAuditLog;
 use App\Filament\Resources\AuditLogResource\Pages\ViewAuditLog;
 use App\Models\AuditLog;
 use App\Policies\AuditLogPolicy;
+use Filament\Actions\ViewAction;
 use Filament\Infolists\Components\KeyValueEntry;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 
 /**
  * The audit log, read-only: user managers read it, nobody edits or deletes
@@ -24,9 +26,9 @@ class AuditLogResource extends Resource
 {
     protected static ?string $model = AuditLog::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clipboard-document-list';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Administration';
+    protected static string|\UnitEnum|null $navigationGroup = 'Administration';
 
     protected static ?int $navigationSort = 5;
 
@@ -36,9 +38,9 @@ class AuditLogResource extends Resource
 
     protected static ?string $pluralModelLabel = 'audit log';
 
-    public static function canViewAny(): bool
+    public static function getViewAnyAuthorizationResponse(): Response
     {
-        return auth()->user()?->can('viewAny', static::getModel()) ?? false;
+        return Gate::inspect('viewAny', static::getModel());
     }
 
     public static function shouldRegisterNavigation(): bool

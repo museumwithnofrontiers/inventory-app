@@ -32,7 +32,7 @@ class FormRecordSelectsTest extends TestCase
         $this->setCurrentPanel();
 
         $component = Livewire::actingAs($this->createCrudUser())->test(CreateTimelineEvent::class);
-        $select = $this->field($component->instance()->getForm('form')?->getFlatFields() ?? [], 'timeline_id');
+        $select = $this->field($component->instance()->getSchema('form')?->getFlatFields() ?? [], 'timeline_id');
 
         $this->assertFalse($select->isPreloaded());
         $this->assertTrue($select->isRequired());
@@ -49,7 +49,7 @@ class FormRecordSelectsTest extends TestCase
         $this->setCurrentPanel();
 
         $component = Livewire::actingAs($this->createCrudUser())->test(CreateTimeline::class);
-        $select = $this->field($component->instance()->getForm('form')?->getFlatFields() ?? [], 'collection_id');
+        $select = $this->field($component->instance()->getSchema('form')?->getFlatFields() ?? [], 'collection_id');
 
         $this->assertFalse($select->isPreloaded());
         $this->assertFalse($select->isRequired());

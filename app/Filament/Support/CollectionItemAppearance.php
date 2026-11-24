@@ -2,16 +2,17 @@
 
 namespace App\Filament\Support;
 
-use Filament\Actions\Action;
-use Filament\Schemas\Components\Section;
 use App\Enums\ItemType;
 use App\Models\CollectionItem;
 use App\Models\Item;
 use App\Models\Language;
 use App\Support\Markdown\MarkdownText;
+use Filament\Actions\Action;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Component;
+use Filament\Schemas\Components\Section;
 use Filament\Tables\Columns\TextColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -33,7 +34,7 @@ class CollectionItemAppearance
      * CollectionAppearancesRelationManager's Attach and Edit-pivot forms (M7
      * story A2.1, #1900; M16 C1, #2641).
      *
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     public static function pivotFormFields(): array
     {
@@ -60,12 +61,10 @@ class CollectionItemAppearance
                     ? $query->where('type', ItemType::PICTURE)->where('parent_id', $record->id)
                     : $query->where('type', ItemType::PICTURE),
             ),
+            // Yes, no, or not given (null)
             Select::make('curator_selected')
                 ->label('Curator selection')
-                ->options(['1' => 'Selected', '0' => 'Not selected'])
-                ->placeholder('Not given')
-                ->formatStateUsing(fn (mixed $state): ?string => $state === null ? null : ((bool) $state ? '1' : '0'))
-                ->dehydrateStateUsing(fn (mixed $state): ?bool => $state === null || $state === '' ? null : $state === '1' || $state === 1 || $state === true),
+                ->boolean('Selected', 'Not selected', 'Not given'),
             ExtraJsonField::formComponent(),
         ];
     }

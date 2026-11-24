@@ -2,9 +2,6 @@
 
 namespace Tests\Filament;
 
-use Filament\Actions\AssociateAction;
-use Filament\Actions\AttachAction;
-use Filament\Actions\Action;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ArtistResource\Pages\EditArtist;
 use App\Filament\Resources\ArtistResource\RelationManagers\ItemsRelationManager as ArtistItemsRelationManager;
@@ -114,7 +111,10 @@ use App\Models\PublicationTranslation;
 use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Models\User;
+use Filament\Actions\Action;
 use Filament\Actions\ActionGroup as BaseActionGroup;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\AttachAction;
 use Filament\Resources\RelationManagers\RelationGroup;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
@@ -466,7 +466,7 @@ class RelationManagerConventionTest extends TestCase
      * exactly via glob() so it stays in sync automatically as resources are
      * added or removed.
      *
-     * @return array<int, class-string<Resource>>
+     * @return array<int, class-string<resource>>
      */
     private static function allResources(): array
     {
@@ -1010,7 +1010,7 @@ class RelationManagerConventionTest extends TestCase
     }
 
     /**
-     * @return array<int, \Filament\Actions\AttachAction|\Filament\Actions\AssociateAction>
+     * @return array<int, AttachAction|AssociateAction>
      */
     private function attachOrAssociateActions(Table $table): array
     {

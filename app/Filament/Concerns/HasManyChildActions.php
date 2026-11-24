@@ -2,16 +2,17 @@
 
 namespace App\Filament\Concerns;
 
-use Filament\Actions\AssociateAction;
-use Filament\Actions\Action;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DissociateAction;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DissociateBulkAction;
 use App\Filament\Support\RecordSelect;
 use App\Filament\Support\ResourceCreateUrl;
+use Filament\Actions\Action;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DissociateAction;
+use Filament\Actions\DissociateBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Resources\Resource;
+use Filament\Schemas\Components\Component;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -53,7 +54,7 @@ trait HasManyChildActions
      * The child Resource class the header `Create`/row `View`/`Edit` actions
      * navigate to (e.g. CollectionResource::class).
      *
-     * @return class-string<Resource>
+     * @return class-string<resource>
      */
     abstract protected static function hasManyChildResource(): string;
 
@@ -123,7 +124,7 @@ trait HasManyChildActions
      * it. When non-empty, the select is additionally marked `->live()` so the
      * extra components can react to it via `Get`.
      *
-     * @return array<int, \Filament\Schemas\Components\Component>
+     * @return array<int, Component>
      */
     protected function hasManyChildAssociateFormExtra(): array
     {
@@ -131,7 +132,7 @@ trait HasManyChildActions
     }
 
     /**
-     * @return array<int, Action|\Filament\Actions\AssociateAction>
+     * @return array<int, Action|AssociateAction>
      */
     protected function hasManyChildHeaderActions(): array
     {
@@ -191,7 +192,7 @@ trait HasManyChildActions
     }
 
     /**
-     * @return array<int, \Filament\Actions\DissociateBulkAction>
+     * @return array<int, DissociateBulkAction>
      */
     protected function hasManyChildBulkActions(): array
     {

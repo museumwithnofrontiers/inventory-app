@@ -2,8 +2,6 @@
 
 namespace App\Filament\Support;
 
-use Filament\Actions\AttachAction;
-use Filament\Actions\AssociateAction;
 use App\Models\Artist;
 use App\Models\Author;
 use App\Models\Collection;
@@ -18,6 +16,8 @@ use App\Models\Timeline;
 use App\Models\TimelineEvent;
 use App\Support\Markdown\MarkdownText;
 use Closure;
+use Filament\Actions\AssociateAction;
+use Filament\Actions\AttachAction;
 use Filament\Forms\Components\Select;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
