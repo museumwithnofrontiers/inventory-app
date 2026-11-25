@@ -5,7 +5,8 @@ import { UnifiedTracker } from '../../src/core/tracker.js';
 import type { ImportContext, ILegacyDatabase, ILogger } from '../../src/core/base-importer.js';
 import type { IWriteStrategy } from '../../src/core/strategy.js';
 import {
-  COLLECTION_CREDIT_KEYS,
+  COLLECTION_CREDITS,
+  COLLECTION_CREDIT_EXTRA_KEYS,
   splitCollectionCredits,
 } from '../../src/utils/collection-credits.js';
 
@@ -27,7 +28,7 @@ describe('splitCollectionCredits', () => {
   it('moves an empty travels_author, which says the text names nobody', () => {
     const { extra, credits } = splitCollectionCredits({ travels_author: '' });
     expect(extra).toBeNull();
-    expect(credits.map((c) => [c.credit.category, c.text])).toEqual([['travels_author', '']]);
+    expect(credits.map((c) => [c.credit.category, c.text])).toEqual([['source_text_author', '']]);
   });
 
   it('leaves a value that is not a text in extra', () => {
@@ -38,7 +39,7 @@ describe('splitCollectionCredits', () => {
   });
 
   it('covers the eight keys of the story', () => {
-    expect([...COLLECTION_CREDIT_KEYS].sort()).toEqual(
+    expect([...COLLECTION_CREDIT_EXTRA_KEYS].sort()).toEqual(
       [
         'author',
         'travels_author',
@@ -50,6 +51,21 @@ describe('splitCollectionCredits', () => {
         'local_team',
       ].sort()
     );
+  });
+});
+
+describe('credit categories (#2795)', () => {
+  it('gives the two legacy keys whose names are unclear a clearer category', () => {
+    expect(COLLECTION_CREDITS.map((c) => [c.extraKey, c.category])).toEqual([
+      ['author', 'author'],
+      ['travels_author', 'source_text_author'],
+      ['prepared_by', 'prepared_by'],
+      ['curated_by', 'curated_by'],
+      ['credits', 'exhibition_credits'],
+      ['local_coordinator', 'local_coordinator'],
+      ['local_team', 'local_team'],
+      ['photo_by', 'photo_by'],
+    ]);
   });
 });
 
@@ -124,7 +140,7 @@ describe('CollectionCreditsImporter', () => {
     expect(writeContributorMock).toHaveBeenCalledWith({
       collection_id: 'collection-uuid',
       category: 'curated_by',
-      display_order: COLLECTION_CREDIT_KEYS.indexOf('curated_by') + 1,
+      display_order: COLLECTION_CREDITS.findIndex((c) => c.category === 'curated_by') + 1,
       visible: true,
       backward_compatibility: 'mwnf3_travels:trails:ISL;eg;1#credit:curated_by',
       internal_name: 'Curated by',
@@ -181,5 +197,19 @@ describe('CollectionCreditsImporter', () => {
 
     expect(writeContributorMock).not.toHaveBeenCalled();
     expect(upsertMock.mock.calls[0]![0].contributor_id).toBe('existing-uuid');
+  });
+
+  it('writes a renamed credit under its category, keyed by its legacy extra key', async () => {
+    findMock.mockResolvedValue([row('eng', { credits: 'Concept: Ana' })]);
+
+    await new CollectionCreditsImporter(context).import();
+
+    expect(writeContributorMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        category: 'exhibition_credits',
+        backward_compatibility: 'mwnf3_travels:trails:ISL;eg;1#credit:credits',
+        internal_name: 'Exhibition credits',
+      })
+    );
   });
 });

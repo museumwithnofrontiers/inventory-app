@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
 import {
-  COLLECTION_CREDIT_KEYS,
+  COLLECTION_CREDIT_CATEGORIES,
   creditKey,
   loadCollectionCredits,
   mysqlJsonOrder,
@@ -38,17 +38,18 @@ describe('loadCollectionCredits', () => {
   it('reads the visible credit contributors, by translation', async () => {
     const query = vi.fn().mockResolvedValue([
       { collection_id: 'c1', language_id: 'eng', context_id: 'x', category: 'author', name: 'Ana', description: null },
-      { collection_id: 'c1', language_id: 'eng', context_id: 'x', category: 'credits', name: null, description: 'Text: Ana' },
-      { collection_id: 'c1', language_id: 'fra', context_id: 'x', category: 'travels_author', name: null, description: null },
+      { collection_id: 'c1', language_id: 'eng', context_id: 'x', category: 'exhibition_credits', name: null, description: 'Text: Ana' },
+      { collection_id: 'c1', language_id: 'fra', context_id: 'x', category: 'source_text_author', name: null, description: null },
     ])
 
     const credits = await loadCollectionCredits(query, ['c1'])
 
-    expect(credits.get(creditKey('c1', 'eng', 'x'))).toEqual({ author: 'Ana', credits: 'Text: Ana' })
-    expect(credits.get(creditKey('c1', 'fra', 'x'))).toEqual({ travels_author: '' })
+    // The two renamed credits ship under their new key and their former one (#2795).
+    expect(credits.get(creditKey('c1', 'eng', 'x'))).toEqual({ author: 'Ana', exhibition_credits: 'Text: Ana', credits: 'Text: Ana' })
+    expect(credits.get(creditKey('c1', 'fra', 'x'))).toEqual({ source_text_author: '', travels_author: '' })
     const [sql, params] = query.mock.calls[0] as [string, string[]]
     expect(sql).toContain('c.visible = 1')
-    expect(params).toEqual(['c1', ...COLLECTION_CREDIT_KEYS])
+    expect(params).toEqual(['c1', ...COLLECTION_CREDIT_CATEGORIES])
   })
 
   it('asks nothing for no collection', async () => {

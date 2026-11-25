@@ -2,29 +2,51 @@
 /**
  * Collection credits (M16 I5, inventory-app#2648): the people behind a
  * collection's texts are Contributors of the collection, one per credit, with
- * the credit's `extra` key as their `category`. The importer moved them out of
+ * their `category`. The importer moved them out of
  * `collection_translations.extra` (CollectionCreditsImporter); the packages
- * still ship them there, so an exporter puts each one back under its key.
+ * still ship them there, so an exporter puts each one back under its package
+ * key (`creditPackageKeys`).
  *
  * A Contributor translation gives the text of its language and context: its
  * `name`, else its `description`, else an empty text (an empty
- * `travels_author` says the text names nobody). A hidden Contributor is left
+ * `source_text_author` says the text names nobody). A hidden Contributor is left
  * out.
  *
  * Types are in `credits.d.mts`.
  */
 
-/** The credit keys, in display order (the importer's COLLECTION_CREDITS). */
-export const COLLECTION_CREDIT_KEYS = Object.freeze([
+/**
+ * The credit categories (`App\Enums\ContributorCategory`'s collection
+ * credits, #2795), in display order (the importer's COLLECTION_CREDITS).
+ */
+export const COLLECTION_CREDIT_CATEGORIES = Object.freeze([
   'author',
-  'travels_author',
+  'source_text_author',
   'prepared_by',
   'curated_by',
-  'credits',
+  'exhibition_credits',
   'local_coordinator',
   'local_team',
   'photo_by',
 ])
+
+/**
+ * The package keys a credit ships under: its category, and for the two
+ * renamed credits (#2795) also their former key, until the sites read the
+ * new one.
+ *
+ * @type {Readonly<Record<string, readonly string[]>>}
+ */
+export const CREDIT_PACKAGE_KEYS = Object.freeze({
+  source_text_author: Object.freeze(['source_text_author', 'travels_author']),
+  exhibition_credits: Object.freeze(['exhibition_credits', 'credits']),
+})
+
+/**
+ * @param {string} category
+ * @returns {readonly string[]}
+ */
+export const creditPackageKeys = category => CREDIT_PACKAGE_KEYS[category] ?? [category]
 
 const CHUNK = 500
 
@@ -56,16 +78,17 @@ export async function loadCollectionCredits(query, collectionIds) {
          FROM contributors c
          JOIN contributor_translations t ON t.contributor_id = c.id
          WHERE c.collection_id IN (${marks(ids)})
-           AND c.category IN (${marks([...COLLECTION_CREDIT_KEYS])})
+           AND c.category IN (${marks([...COLLECTION_CREDIT_CATEGORIES])})
            AND c.visible = 1
          ORDER BY c.collection_id, t.language_id, t.context_id, c.display_order, c.category`,
-        [...ids, ...COLLECTION_CREDIT_KEYS]
+        [...ids, ...COLLECTION_CREDIT_CATEGORIES]
       )
     )
     for (const row of rows) {
       const key = creditKey(row.collection_id, row.language_id, row.context_id)
       const texts = credits.get(key) ?? {}
-      texts[row.category] = row.name ?? row.description ?? ''
+      const text = row.name ?? row.description ?? ''
+      for (const key of creditPackageKeys(row.category)) texts[key] = text
       credits.set(key, texts)
     }
   }

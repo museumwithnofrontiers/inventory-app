@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
+use App\Enums\ContributorCategory;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\ContributorResource;
 use App\Filament\Support\MarkdownState;
@@ -44,7 +45,7 @@ class ContributorsRelationManager extends RelationManager
             ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('category')
-                    ->formatStateUsing(fn (string $state): string => ContributorResource::CREDIT_CATEGORIES[$state] ?? $state)
+                    ->formatStateUsing(fn (?ContributorCategory $state): ?string => $state?->label())
                     ->badge()
                     ->sortable(),
                 TextColumn::make('internal_name')

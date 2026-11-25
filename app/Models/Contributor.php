@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ContributorCategory;
 use App\Traits\HasDisplayOrder;
 use Database\Factories\ContributorFactory;
 use Illuminate\Database\Eloquent\Builder;
@@ -11,6 +12,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/**
+ * @property ContributorCategory $category
+ */
 class Contributor extends Model
 {
     /** @use HasFactory<ContributorFactory> */
@@ -28,6 +32,7 @@ class Contributor extends Model
     protected $casts = [
         'display_order' => 'integer',
         'visible' => 'boolean',
+        'category' => ContributorCategory::class,
     ];
 
     /**

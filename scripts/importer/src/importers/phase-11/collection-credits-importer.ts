@@ -27,7 +27,8 @@
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import {
-  COLLECTION_CREDIT_KEYS,
+  COLLECTION_CREDITS,
+  COLLECTION_CREDIT_EXTRA_KEYS,
   collectionCreditKey,
   splitCollectionCredits,
 } from '../../utils/collection-credits.js';
@@ -46,7 +47,7 @@ export class CollectionCreditsImporter extends BaseImporter {
         'Moving collection credits from collection_translations.extra to Contributors...'
       );
       const rows =
-        await this.context.strategy.findCollectionTranslationsWithExtraKeys(COLLECTION_CREDIT_KEYS);
+        await this.context.strategy.findCollectionTranslationsWithExtraKeys(COLLECTION_CREDIT_EXTRA_KEYS);
       this.logInfo(`Found ${rows.length} collection translation(s) with credits`);
 
       for (const row of rows) {
@@ -74,13 +75,13 @@ export class CollectionCreditsImporter extends BaseImporter {
 
           const collectionKey = row.collection_backward_compatibility ?? row.collection_id;
           for (const { credit, text } of credits) {
-            const contributorKey = collectionCreditKey(collectionKey, credit.category);
+            const contributorKey = collectionCreditKey(collectionKey, credit.extraKey);
             let contributorId = await this.getEntityUuidAsync(contributorKey, 'contributor');
             if (!contributorId) {
               contributorId = await this.context.strategy.writeContributor({
                 collection_id: row.collection_id,
                 category: credit.category,
-                display_order: COLLECTION_CREDIT_KEYS.indexOf(credit.category) + 1,
+                display_order: COLLECTION_CREDITS.indexOf(credit) + 1,
                 visible: true,
                 backward_compatibility: contributorKey,
                 internal_name: credit.label,

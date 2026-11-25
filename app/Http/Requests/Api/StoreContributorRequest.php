@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\ContributorCategory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreContributorRequest extends FormRequest
 {
@@ -20,7 +22,7 @@ class StoreContributorRequest extends FormRequest
         return [
             'id' => ['prohibited'],
             'collection_id' => ['required', 'uuid', 'exists:collections,id'],
-            'category' => ['required', 'string', 'max:50'],
+            'category' => ['required', Rule::enum(ContributorCategory::class)],
             'display_order' => ['sometimes', 'integer', 'min:0'],
             'visible' => ['sometimes', 'boolean'],
             'backward_compatibility' => ['nullable', 'string'],
