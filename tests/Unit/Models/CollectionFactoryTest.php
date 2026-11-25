@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Models;
 
+use App\Enums\CollectionType;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Language;
@@ -22,7 +23,7 @@ class CollectionFactoryTest extends TestCase
         $this->assertInstanceOf(Collection::class, $collection);
         $this->assertNotEmpty($collection->id);
         $this->assertNotEmpty($collection->internal_name);
-        $this->assertContains($collection->type, ['collection', 'exhibition', 'gallery', 'theme', 'exhibition trail', 'itinerary', 'location', 'subtheme', 'region']);
+        $this->assertInstanceOf(CollectionType::class, $collection->type);
     }
 
     public function test_factory_states_produce_correct_types(): void
@@ -31,9 +32,9 @@ class CollectionFactoryTest extends TestCase
         $exhibition = Collection::factory()->exhibition()->create();
         $gallery = Collection::factory()->gallery()->create();
 
-        $this->assertEquals('collection', $collection->type);
-        $this->assertEquals('exhibition', $exhibition->type);
-        $this->assertEquals('gallery', $gallery->type);
+        $this->assertSame(CollectionType::COLLECTION, $collection->type);
+        $this->assertSame(CollectionType::EXHIBITION, $exhibition->type);
+        $this->assertSame(CollectionType::GALLERY, $gallery->type);
     }
 
     public function test_factory_creates_with_context_and_language_relationships(): void

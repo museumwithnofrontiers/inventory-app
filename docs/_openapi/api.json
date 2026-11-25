@@ -2058,18 +2058,7 @@
                         "in": "query",
                         "required": true,
                         "schema": {
-                            "type": "string",
-                            "enum": [
-                                "collection",
-                                "exhibition",
-                                "gallery",
-                                "theme",
-                                "exhibition trail",
-                                "itinerary",
-                                "location",
-                                "subtheme",
-                                "region"
-                            ]
+                            "$ref": "#/components/schemas/CollectionType"
                         }
                     },
                     {
@@ -31044,6 +31033,25 @@
                 ],
                 "title": "CollectionItemTranslationResource"
             },
+            "CollectionPurpose": {
+                "type": "string",
+                "description": "A collection's functional role within its context (`collections.purpose`, #2794). Orthogonal to its type ({@see CollectionType}), which describes its presentation shape; null for an ordinary collection. Two kinds of value: - section anchors (`*-root`), unique per context: one per context at most; - roles that repeat, such as `national-context`, any number per context.\n",
+                "enum": [
+                    "exhibitions-root",
+                    "artistic-introduction-root",
+                    "historical-profiles-root",
+                    "historical-background-root",
+                    "topics-root",
+                    "galleries-root",
+                    "travels-root",
+                    "explore-root",
+                    "explore-themes-root",
+                    "explore-countries-root",
+                    "explore-itineraries-root",
+                    "national-context"
+                ],
+                "title": "CollectionPurpose"
+            },
             "CollectionResource": {
                 "type": "object",
                 "properties": {
@@ -31056,15 +31064,19 @@
                         "description": "A name for this resource, for internal use only."
                     },
                     "type": {
-                        "type": "string",
-                        "description": "The type of collection: 'collection', 'exhibition', or 'gallery'"
+                        "description": "The type of collection, a CollectionType value (e.g. 'collection', 'exhibition', 'gallery')",
+                        "$ref": "#/components/schemas/CollectionType"
                     },
                     "purpose": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "description": "The functional purpose of the collection within its context (e.g. 'exhibitions-root'), null for ordinary collections"
+                        "anyOf": [
+                            {
+                                "description": "The functional purpose of the collection within its context, a CollectionPurpose value (e.g. 'exhibitions-root'), null for ordinary collections",
+                                "$ref": "#/components/schemas/CollectionPurpose"
+                            },
+                            {
+                                "type": "null"
+                            }
+                        ]
                     },
                     "language_id": {
                         "type": "string",
@@ -31419,6 +31431,22 @@
                     "updated_at"
                 ],
                 "title": "CollectionTranslationResource"
+            },
+            "CollectionType": {
+                "type": "string",
+                "description": "A collection's presentation shape (`collections.type`, #2794). Orthogonal to its purpose ({@see CollectionPurpose}), which says what role it plays in its context.\n",
+                "enum": [
+                    "collection",
+                    "exhibition",
+                    "gallery",
+                    "theme",
+                    "exhibition trail",
+                    "itinerary",
+                    "location",
+                    "subtheme",
+                    "region"
+                ],
+                "title": "CollectionType"
             },
             "ContextResource": {
                 "type": "object",
@@ -35914,38 +35942,16 @@
                         "maxLength": 255
                     },
                     "type": {
-                        "type": "string",
-                        "enum": [
-                            "collection",
-                            "exhibition",
-                            "gallery",
-                            "theme",
-                            "exhibition trail",
-                            "itinerary",
-                            "location",
-                            "subtheme",
-                            "region"
-                        ]
+                        "$ref": "#/components/schemas/CollectionType"
                     },
                     "purpose": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "enum": [
-                            "exhibitions-root",
-                            "artistic-introduction-root",
-                            "historical-profiles-root",
-                            "historical-background-root",
-                            "topics-root",
-                            "galleries-root",
-                            "travels-root",
-                            "explore-root",
-                            "explore-themes-root",
-                            "explore-countries-root",
-                            "explore-itineraries-root",
-                            "national-context",
-                            null
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CollectionPurpose"
+                            },
+                            {
+                                "type": "null"
+                            }
                         ]
                     },
                     "language_id": {
@@ -39743,38 +39749,16 @@
                         "maxLength": 255
                     },
                     "type": {
-                        "type": "string",
-                        "enum": [
-                            "collection",
-                            "exhibition",
-                            "gallery",
-                            "theme",
-                            "exhibition trail",
-                            "itinerary",
-                            "location",
-                            "subtheme",
-                            "region"
-                        ]
+                        "$ref": "#/components/schemas/CollectionType"
                     },
                     "purpose": {
-                        "type": [
-                            "string",
-                            "null"
-                        ],
-                        "enum": [
-                            "exhibitions-root",
-                            "artistic-introduction-root",
-                            "historical-profiles-root",
-                            "historical-background-root",
-                            "topics-root",
-                            "galleries-root",
-                            "travels-root",
-                            "explore-root",
-                            "explore-themes-root",
-                            "explore-countries-root",
-                            "explore-itineraries-root",
-                            "national-context",
-                            null
+                        "anyOf": [
+                            {
+                                "$ref": "#/components/schemas/CollectionPurpose"
+                            },
+                            {
+                                "type": "null"
+                            }
                         ]
                     },
                     "language_id": {

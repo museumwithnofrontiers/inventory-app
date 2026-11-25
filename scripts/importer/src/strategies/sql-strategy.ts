@@ -10,6 +10,7 @@
  * is used. See sanitizeAllStrings() in utils/html-to-markdown.ts.
  */
 
+import type { CollectionPurpose } from '../domain/collection-vocabulary.js';
 import { v4 as uuidv4 } from 'uuid';
 import { deterministicUuid } from '../utils/deterministic-uuid.js';
 import { ITEM_TRANSLATION_COLUMNS } from '../utils/item-translation-columns.js';
@@ -3304,7 +3305,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
     return (rows[0].purpose as string | null) ?? null;
   }
 
-  async updateCollectionPurpose(collectionId: string, purpose: string): Promise<void> {
+  async updateCollectionPurpose(collectionId: string, purpose: CollectionPurpose): Promise<void> {
     await this.db.execute(`UPDATE collections SET purpose = ?, updated_at = ? WHERE id = ?`, [
       purpose,
       this.now,
@@ -3314,7 +3315,7 @@ export class SqlWriteStrategy implements IWriteStrategy {
 
   async backfillCollectionPurposeByBackwardCompatibility(
     bcPattern: string,
-    purpose: string
+    purpose: CollectionPurpose
   ): Promise<number> {
     const [result] = await this.db.execute<ResultSetHeader>(
       `UPDATE collections SET purpose = ?, updated_at = ?

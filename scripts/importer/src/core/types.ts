@@ -1,3 +1,5 @@
+import type { CollectionPurpose, CollectionType } from '../domain/collection-vocabulary.js';
+
 /**
  * Core Types and Interfaces for the Unified Import Architecture
  *
@@ -159,8 +161,8 @@ export interface CollectionData extends BaseEntityData {
   context_id: string;
   language_id: string; // Required: ISO 639-3 code
   parent_id?: string | null;
-  type?: string | null; // collection, exhibition, gallery, theme, exhibition trail, itinerary, location
-  purpose?: string | null; // functional role within the context (e.g. exhibitions-root); null for ordinary collections
+  type?: CollectionType | null; // presentation shape (collection-vocabulary.ts)
+  purpose?: CollectionPurpose | null; // functional role within the context (collection-vocabulary.ts); null for ordinary collections
   extra?: string | null; // JSON-encoded collection-level attributes (not per-language)
   display_order?: number | null;
   // GPS Location (optional)

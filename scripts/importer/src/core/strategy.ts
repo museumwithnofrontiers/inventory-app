@@ -9,6 +9,7 @@
  * abstraction rather than concrete implementations.
  */
 
+import type { CollectionPurpose } from '../domain/collection-vocabulary.js';
 import type {
   LanguageData,
   LanguageTranslationData,
@@ -1238,7 +1239,7 @@ export interface IWriteStrategy {
   /**
    * Set a collection's purpose (functional role within its context, #1505).
    */
-  updateCollectionPurpose(collectionId: string, purpose: string): Promise<void>;
+  updateCollectionPurpose(collectionId: string, purpose: CollectionPurpose): Promise<void>;
 
   /**
    * Backfill purpose on collections matched by a backward_compatibility
@@ -1247,7 +1248,7 @@ export interface IWriteStrategy {
    */
   backfillCollectionPurposeByBackwardCompatibility(
     bcPattern: string,
-    purpose: string
+    purpose: CollectionPurpose
   ): Promise<number>;
 
   /**

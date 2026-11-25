@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PartnerResource\RelationManagers;
 
+use App\Enums\CollectionType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CollectionResource;
@@ -71,6 +72,7 @@ class CollectionParticipationsRelationManager extends RelationManager
                 CollectionPartnerPivot::visibleColumn(),
                 CollectionPartnerPivot::parentPartnerColumn(),
                 TextColumn::make('type')
+                    ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('internal_name')
                     ->formatStateUsing(MarkdownState::inline())

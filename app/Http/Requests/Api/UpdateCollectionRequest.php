@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Api;
 
+use App\Enums\CollectionPurpose;
+use App\Enums\CollectionType;
 use App\Models\Collection;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -29,14 +31,13 @@ class UpdateCollectionRequest extends FormRequest
 
         return [
             'internal_name' => ['sometimes', 'required', 'string', 'max:255', Rule::unique('collections', 'internal_name')->ignore($collection?->id)],
-            'type' => ['sometimes', 'required', 'in:collection,exhibition,gallery,theme,exhibition trail,itinerary,location,subtheme,region'],
+            'type' => ['sometimes', 'required', Rule::enum(CollectionType::class)],
             'purpose' => [
                 'nullable',
-                'string',
-                Rule::in(Collection::PURPOSES),
+                Rule::enum(CollectionPurpose::class),
                 // Section anchors ('*-root') are unique per context
                 Rule::when(
-                    str_ends_with((string) $this->input('purpose'), '-root'),
+                    CollectionPurpose::tryFrom((string) $this->input('purpose'))?->isSectionRoot() === true,
                     [
                         Rule::unique('collections', 'purpose')
                             ->where('context_id', $this->input('context_id', $collection?->context_id))

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CollectionPurpose;
+use App\Enums\CollectionType;
 use App\Enums\PartnerLevel;
 use App\Traits\HasDisplayOrder;
 use App\Traits\HasJsonFields;
@@ -25,8 +27,8 @@ use Illuminate\Support\Carbon;
  *
  * @property string $id
  * @property string $internal_name
- * @property string $type
- * @property string|null $purpose
+ * @property CollectionType $type
+ * @property CollectionPurpose|null $purpose
  * @property string|null $parent_id
  * @property string|null $context_id
  * @property string|null $backward_compatibility
@@ -44,91 +46,6 @@ class Collection extends Model
     use HasDisplayOrder, HasFactory, HasJsonFields, HasUuids;
 
     use HasLinks;
-
-    // Type constants
-    public const TYPE_COLLECTION = 'collection';
-
-    public const TYPE_EXHIBITION = 'exhibition';
-
-    public const TYPE_GALLERY = 'gallery';
-
-    public const TYPE_THEME = 'theme';
-
-    public const TYPE_EXHIBITION_TRAIL = 'exhibition trail';
-
-    public const TYPE_ITINERARY = 'itinerary';
-
-    public const TYPE_LOCATION = 'location';
-
-    public const TYPE_SUBTHEME = 'subtheme';
-
-    public const TYPE_REGION = 'region';
-
-    /**
-     * All valid collection types.
-     *
-     * @var list<string>
-     */
-    public const TYPES = [
-        self::TYPE_COLLECTION,
-        self::TYPE_EXHIBITION,
-        self::TYPE_GALLERY,
-        self::TYPE_THEME,
-        self::TYPE_EXHIBITION_TRAIL,
-        self::TYPE_ITINERARY,
-        self::TYPE_LOCATION,
-        self::TYPE_SUBTHEME,
-        self::TYPE_REGION,
-    ];
-
-    // Purpose constants: machine-readable functional role of a collection within
-    // its context (section anchors, editorial overlays). Orthogonal to `type`,
-    // which describes the presentation shape. Null for ordinary collections.
-    public const PURPOSE_EXHIBITIONS_ROOT = 'exhibitions-root';
-
-    public const PURPOSE_ARTISTIC_INTRODUCTION_ROOT = 'artistic-introduction-root';
-
-    public const PURPOSE_HISTORICAL_PROFILES_ROOT = 'historical-profiles-root';
-
-    public const PURPOSE_HISTORICAL_BACKGROUND_ROOT = 'historical-background-root';
-
-    public const PURPOSE_TOPICS_ROOT = 'topics-root';
-
-    public const PURPOSE_GALLERIES_ROOT = 'galleries-root';
-
-    public const PURPOSE_TRAVELS_ROOT = 'travels-root';
-
-    public const PURPOSE_EXPLORE_ROOT = 'explore-root';
-
-    public const PURPOSE_EXPLORE_THEMES_ROOT = 'explore-themes-root';
-
-    public const PURPOSE_EXPLORE_COUNTRIES_ROOT = 'explore-countries-root';
-
-    public const PURPOSE_EXPLORE_ITINERARIES_ROOT = 'explore-itineraries-root';
-
-    public const PURPOSE_NATIONAL_CONTEXT = 'national-context';
-
-    /**
-     * Controlled vocabulary for the `purpose` column.
-     * `*-root` values are unique per context (one section anchor per context);
-     * `national-context` may occur many times per context.
-     *
-     * @var list<string>
-     */
-    public const PURPOSES = [
-        self::PURPOSE_EXHIBITIONS_ROOT,
-        self::PURPOSE_ARTISTIC_INTRODUCTION_ROOT,
-        self::PURPOSE_HISTORICAL_PROFILES_ROOT,
-        self::PURPOSE_HISTORICAL_BACKGROUND_ROOT,
-        self::PURPOSE_TOPICS_ROOT,
-        self::PURPOSE_GALLERIES_ROOT,
-        self::PURPOSE_TRAVELS_ROOT,
-        self::PURPOSE_EXPLORE_ROOT,
-        self::PURPOSE_EXPLORE_THEMES_ROOT,
-        self::PURPOSE_EXPLORE_COUNTRIES_ROOT,
-        self::PURPOSE_EXPLORE_ITINERARIES_ROOT,
-        self::PURPOSE_NATIONAL_CONTEXT,
-    ];
 
     /**
      * The attributes that are mass assignable.
@@ -173,6 +90,8 @@ class Collection extends Model
         'map_zoom' => 'integer',
         'days' => 'integer',
         'draft' => 'boolean',
+        'type' => CollectionType::class,
+        'purpose' => CollectionPurpose::class,
     ];
 
     /**
@@ -374,7 +293,7 @@ class Collection extends Model
      */
     public function scopeCollections(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_COLLECTION);
+        return $query->where('type', CollectionType::COLLECTION->value);
     }
 
     /**
@@ -385,7 +304,7 @@ class Collection extends Model
      */
     public function scopeExhibitions(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_EXHIBITION);
+        return $query->where('type', CollectionType::EXHIBITION->value);
     }
 
     /**
@@ -396,7 +315,7 @@ class Collection extends Model
      */
     public function scopeGalleries(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_GALLERY);
+        return $query->where('type', CollectionType::GALLERY->value);
     }
 
     /**
@@ -407,7 +326,7 @@ class Collection extends Model
      */
     public function scopeThemes(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_THEME);
+        return $query->where('type', CollectionType::THEME->value);
     }
 
     /**
@@ -418,7 +337,7 @@ class Collection extends Model
      */
     public function scopeExhibitionTrails(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_EXHIBITION_TRAIL);
+        return $query->where('type', CollectionType::EXHIBITION_TRAIL->value);
     }
 
     /**
@@ -429,7 +348,7 @@ class Collection extends Model
      */
     public function scopeItineraries(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_ITINERARY);
+        return $query->where('type', CollectionType::ITINERARY->value);
     }
 
     /**
@@ -440,7 +359,7 @@ class Collection extends Model
      */
     public function scopeLocations(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_LOCATION);
+        return $query->where('type', CollectionType::LOCATION->value);
     }
 
     /**
@@ -451,7 +370,7 @@ class Collection extends Model
      */
     public function scopeSubthemes(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_SUBTHEME);
+        return $query->where('type', CollectionType::SUBTHEME->value);
     }
 
     /**
@@ -462,7 +381,7 @@ class Collection extends Model
      */
     public function scopeRegions(Builder $query): Builder
     {
-        return $query->where('type', self::TYPE_REGION);
+        return $query->where('type', CollectionType::REGION->value);
     }
 
     /**

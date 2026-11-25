@@ -29,9 +29,9 @@ class CollectionResource extends JsonResource
             'id' => $this->id,
             // A name for this resource, for internal use only.
             'internal_name' => $this->internal_name,
-            // The type of collection: 'collection', 'exhibition', or 'gallery'
+            // The type of collection, a CollectionType value (e.g. 'collection', 'exhibition', 'gallery')
             'type' => $this->type,
-            // The functional purpose of the collection within its context (e.g. 'exhibitions-root'), null for ordinary collections
+            // The functional purpose of the collection within its context, a CollectionPurpose value (e.g. 'exhibitions-root'), null for ordinary collections
             'purpose' => $this->purpose,
             // The language this collection belongs to (LanguageResource id)
             'language_id' => $this->language_id,

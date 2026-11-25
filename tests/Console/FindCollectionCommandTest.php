@@ -2,6 +2,7 @@
 
 namespace Tests\Console;
 
+use App\Enums\CollectionType;
 use App\Models\Collection;
 use App\Models\CollectionTranslation;
 use App\Models\Context;
@@ -65,7 +66,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_a_gallery_by_legacy_numeric_id(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Carpets'
@@ -79,7 +80,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_a_gallery_by_exact_english_title(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Carpets'
@@ -93,7 +94,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_title_match_is_case_sensitive(): void
     {
         $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Carpets'
@@ -107,7 +108,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_a_thg_exhibition_by_legacy_numeric_id(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_EXHIBITION,
+            CollectionType::EXHIBITION->value,
             'mwnf3_thematic_gallery:thg_gallery:47',
             'exhibition_the_use_of_colours_in_art',
             'The Use of Colours in Art'
@@ -121,7 +122,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_a_sharing_history_exhibition_by_legacy_numeric_id(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_EXHIBITION,
+            CollectionType::EXHIBITION->value,
             'mwnf3_sharing_history:sh_exhibitions:1',
             'exhibition_sh_1',
             'A Sharing History Exhibition'
@@ -138,7 +139,7 @@ class FindCollectionCommandTest extends TestCase
         // kind=exhibition must not find it even though the numeric id matches
         // the same legacy table.
         $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Carpets'
@@ -152,7 +153,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_an_mwnf3_project_by_legacy_key(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_COLLECTION,
+            CollectionType::COLLECTION->value,
             'mwnf3:projects:ISL',
             'Discover Islamic Art',
             'Discover Islamic Art'
@@ -166,7 +167,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_a_sharing_history_project_by_legacy_key(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_COLLECTION,
+            CollectionType::COLLECTION->value,
             'mwnf3_sharing_history:sh_projects:awe',
             'A World of Sharing History',
             'A World of Sharing History'
@@ -180,7 +181,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_a_project_by_exact_english_title_when_key_does_not_match(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_COLLECTION,
+            CollectionType::COLLECTION->value,
             'mwnf3:projects:ISL',
             'Discover Islamic Art',
             'Discover Islamic Art'
@@ -197,7 +198,7 @@ class FindCollectionCommandTest extends TestCase
         // (galleries-root, artintro-root, ...) — none of those must satisfy a
         // kind=project lookup just because the type matches.
         $this->createCollectionWithTitle(
-            Collection::TYPE_COLLECTION,
+            CollectionType::COLLECTION->value,
             'mwnf3_thematic_gallery:galleries_root',
             'thg_galleries_root',
             'Galleries'
@@ -218,13 +219,13 @@ class FindCollectionCommandTest extends TestCase
     public function test_reports_ambiguous_matches_and_lists_candidates(): void
     {
         $first = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Duplicate Title'
         );
         $second = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:10',
             'gallery_amulets',
             'Duplicate Title'
@@ -240,13 +241,13 @@ class FindCollectionCommandTest extends TestCase
     public function test_outputs_parent_titles_and_backward_compatibility_as_json(): void
     {
         $root = $this->createCollectionWithTitle(
-            Collection::TYPE_COLLECTION,
+            CollectionType::COLLECTION->value,
             'mwnf3_thematic_gallery:galleries_root',
             'thg_galleries_root',
             'Galleries'
         );
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Carpets',
@@ -275,7 +276,7 @@ class FindCollectionCommandTest extends TestCase
     public function test_resolves_a_gallery_by_legacy_slug(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Carpets',
@@ -295,7 +296,7 @@ class FindCollectionCommandTest extends TestCase
         // ("the-use-of-colours-in-art") must be matched verbatim, not the
         // underscored internal_name form.
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_EXHIBITION,
+            CollectionType::EXHIBITION->value,
             'mwnf3_thematic_gallery:thg_gallery:47',
             'exhibition_the_use_of_colours_in_art',
             'The Use of Colours in Art',
@@ -313,7 +314,7 @@ class FindCollectionCommandTest extends TestCase
         // Title deliberately differs from the slug so this isolates slug
         // case-sensitivity rather than incidentally matching by title.
         $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Handwoven Carpets',
@@ -333,7 +334,7 @@ class FindCollectionCommandTest extends TestCase
         // kind=gallery slug lookup from matching the exhibition, and vice
         // versa, so this must resolve cleanly rather than report ambiguity.
         $gallery = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_shared_slug',
             'Carpets',
@@ -341,7 +342,7 @@ class FindCollectionCommandTest extends TestCase
             'shared-slug'
         );
         $this->createCollectionWithTitle(
-            Collection::TYPE_EXHIBITION,
+            CollectionType::EXHIBITION->value,
             'mwnf3_thematic_gallery:thg_gallery:47',
             'exhibition_shared_slug',
             'Colours',
@@ -361,13 +362,13 @@ class FindCollectionCommandTest extends TestCase
         // slug + title, merged, deduplicated by collection) must treat this
         // as genuinely ambiguous rather than only trying the numeric form.
         $byId = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_by_id',
             'Carpets'
         );
         $bySlug = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:4',
             'gallery_by_slug',
             'Amulets',

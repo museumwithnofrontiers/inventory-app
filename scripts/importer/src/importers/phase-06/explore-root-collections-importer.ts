@@ -31,6 +31,7 @@
  * - "Explore by Itinerary" → type: 'itinerary'
  */
 
+import type { CollectionPurpose } from '../../domain/collection-vocabulary.js';
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 
@@ -41,7 +42,7 @@ interface RootCollectionConfig {
   internal_name: string;
   backward_compatibility: string;
   type: 'collection' | 'itinerary';
-  purpose: string;
+  purpose: CollectionPurpose;
   /** The dictionary word that titles it, or null for no translation at all. */
   titleWord: string | null;
   /** The site root has none; each section root sits under the site root. */

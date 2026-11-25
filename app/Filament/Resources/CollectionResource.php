@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\CollectionPurpose;
+use App\Enums\CollectionType;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasChangeParentAction;
 use App\Filament\Concerns\HasInternalNameColumn;
@@ -69,33 +71,6 @@ class CollectionResource extends Resource
     use HasTimestampsColumns;
     use HasTranslationCoverageFilters;
     use HasUuidColumn;
-
-    private const TYPE_OPTIONS = [
-        'collection' => 'Collection',
-        'exhibition' => 'Exhibition',
-        'gallery' => 'Gallery',
-        'theme' => 'Theme',
-        'exhibition trail' => 'Exhibition trail',
-        'itinerary' => 'Itinerary',
-        'location' => 'Location',
-        'subtheme' => 'Subtheme',
-        'region' => 'Region',
-    ];
-
-    private const PURPOSE_OPTIONS = [
-        'exhibitions-root' => 'Exhibitions root',
-        'artistic-introduction-root' => 'Artistic introduction root',
-        'historical-profiles-root' => 'Historical profiles root',
-        'historical-background-root' => 'Historical background root',
-        'topics-root' => 'Topics root',
-        'galleries-root' => 'Galleries root',
-        'travels-root' => 'Travels root',
-        'explore-root' => 'Explore root',
-        'explore-themes-root' => 'Explore themes root',
-        'explore-countries-root' => 'Explore countries root',
-        'explore-itineraries-root' => 'Explore itineraries root',
-        'national-context' => 'National context',
-    ];
 
     protected static ?string $model = Collection::class;
 
@@ -192,10 +167,10 @@ class CollectionResource extends Resource
                 Section::make('Core information')
                     ->schema([
                         Select::make('type')
-                            ->options(self::TYPE_OPTIONS)
+                            ->options(CollectionType::options())
                             ->required(),
                         Select::make('purpose')
-                            ->options(self::PURPOSE_OPTIONS)
+                            ->options(CollectionPurpose::options())
                             ->nullable(),
                         Select::make('language_id')
                             ->label('Language')
@@ -283,9 +258,11 @@ class CollectionResource extends Resource
                 static::fallbackTranslationColumn(),
                 TextColumn::make('type')
                     ->badge()
+                    ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('purpose')
                     ->badge()
+                    ->formatStateUsing(fn (?CollectionPurpose $state): ?string => $state?->label())
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('parent_display_label')
@@ -327,9 +304,9 @@ class CollectionResource extends Resource
             ->filters([
                 ...static::translationCoverageFilters(),
                 SelectFilter::make('type')
-                    ->options(self::TYPE_OPTIONS),
+                    ->options(CollectionType::options()),
                 SelectFilter::make('purpose')
-                    ->options(self::PURPOSE_OPTIONS),
+                    ->options(CollectionPurpose::options()),
                 SelectFilter::make('parent_id')
                     ->label('Parent')
                     ->relationship('parent', 'internal_name')
@@ -445,8 +422,10 @@ class CollectionResource extends Resource
             ->components([
                 Section::make('Core Information')
                     ->schema([
-                        TextEntry::make('type'),
+                        TextEntry::make('type')
+                            ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label()),
                         TextEntry::make('purpose')
+                            ->formatStateUsing(fn (?CollectionPurpose $state): ?string => $state?->label())
                             ->placeholder('None'),
                         TextEntry::make('parent_display_label')
                             ->label('Parent')

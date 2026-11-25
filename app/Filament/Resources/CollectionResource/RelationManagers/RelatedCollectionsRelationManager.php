@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\CollectionResource\RelationManagers;
 
 use App\Enums\CollectionRelationKind;
+use App\Enums\CollectionType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CollectionResource;
@@ -56,6 +57,7 @@ class RelatedCollectionsRelationManager extends RelationManager
                         ? CollectionResource::getUrl('view', ['record' => $record])
                         : null),
                 TextColumn::make('type')
+                    ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label())
                     ->badge(),
                 TextColumn::make('backward_compatibility')
                     ->label('Legacy code')

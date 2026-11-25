@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PublicationResource\RelationManagers;
 
+use App\Enums\CollectionType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Resources\CollectionResource;
@@ -46,6 +47,7 @@ class CollectionsRelationManager extends RelationManager
                         ? CollectionResource::getUrl('view', ['record' => $record])
                         : null),
                 TextColumn::make('type')
+                    ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label())
                     ->badge()
                     ->sortable(),
                 PublicationPivot::displayOrderColumn(),

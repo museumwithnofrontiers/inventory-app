@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\CollectionType;
 use App\Http\Requests\Api\AttachItemCollectionRequest;
 use App\Http\Requests\Api\AttachItemsCollectionRequest;
 use App\Http\Requests\Api\ByTypeCollectionRequest;
@@ -101,35 +102,8 @@ class CollectionController extends Controller
 
         $query = Collection::query()->with($includes);
 
-        switch ($type) {
-            case 'collection':
-                $query->collections();
-                break;
-            case 'exhibition':
-                $query->exhibitions();
-                break;
-            case 'gallery':
-                $query->galleries();
-                break;
-            case 'theme':
-                $query->themes();
-                break;
-            case 'exhibition trail':
-                $query->exhibitionTrails();
-                break;
-            case 'itinerary':
-                $query->itineraries();
-                break;
-            case 'location':
-                $query->locations();
-                break;
-            case 'subtheme':
-                $query->subthemes();
-                break;
-            case 'region':
-                $query->regions();
-                break;
-        }
+        // The request has validated the type against CollectionType.
+        $query->where('type', CollectionType::from($type)->value);
 
         $collections = $query->get();
 

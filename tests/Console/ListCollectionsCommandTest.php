@@ -2,6 +2,7 @@
 
 namespace Tests\Console;
 
+use App\Enums\CollectionType;
 use App\Models\Collection;
 use App\Models\CollectionTranslation;
 use App\Models\Context;
@@ -70,8 +71,8 @@ class ListCollectionsCommandTest extends TestCase
 
     public function test_lists_every_gallery_with_its_selectors(): void
     {
-        $this->createCollectionWithTitle(Collection::TYPE_GALLERY, 'mwnf3_thematic_gallery:thg_gallery:9', 'gallery_carpets', 'Carpets');
-        $this->createCollectionWithTitle(Collection::TYPE_GALLERY, 'mwnf3_thematic_gallery:thg_gallery:4', 'gallery_amulets', 'Amulets');
+        $this->createCollectionWithTitle(CollectionType::GALLERY->value, 'mwnf3_thematic_gallery:thg_gallery:9', 'gallery_carpets', 'Carpets');
+        $this->createCollectionWithTitle(CollectionType::GALLERY->value, 'mwnf3_thematic_gallery:thg_gallery:4', 'gallery_amulets', 'Amulets');
 
         // A table row writes multiple columns through a single console write
         // call, so several expectsOutputToContain() assertions against
@@ -90,9 +91,9 @@ class ListCollectionsCommandTest extends TestCase
 
     public function test_excludes_collections_of_other_types_and_unrelated_project_roots(): void
     {
-        $this->createCollectionWithTitle(Collection::TYPE_GALLERY, 'mwnf3_thematic_gallery:thg_gallery:9', 'gallery_carpets', 'Carpets');
-        $this->createCollectionWithTitle(Collection::TYPE_COLLECTION, 'mwnf3_thematic_gallery:galleries_root', 'thg_galleries_root', 'Galleries');
-        $this->createCollectionWithTitle(Collection::TYPE_EXHIBITION, 'mwnf3_thematic_gallery:thg_gallery:47', 'exhibition_colours', 'Colours');
+        $this->createCollectionWithTitle(CollectionType::GALLERY->value, 'mwnf3_thematic_gallery:thg_gallery:9', 'gallery_carpets', 'Carpets');
+        $this->createCollectionWithTitle(CollectionType::COLLECTION->value, 'mwnf3_thematic_gallery:galleries_root', 'thg_galleries_root', 'Galleries');
+        $this->createCollectionWithTitle(CollectionType::EXHIBITION->value, 'mwnf3_thematic_gallery:thg_gallery:47', 'exhibition_colours', 'Colours');
 
         $this->artisan('importer:list-collections', ['kind' => 'gallery'])
             ->assertExitCode(0)
@@ -103,9 +104,9 @@ class ListCollectionsCommandTest extends TestCase
 
     public function test_lists_only_recognised_project_roots_when_kind_is_project(): void
     {
-        $this->createCollectionWithTitle(Collection::TYPE_COLLECTION, 'mwnf3:projects:ISL', 'Discover Islamic Art', 'Discover Islamic Art');
-        $this->createCollectionWithTitle(Collection::TYPE_COLLECTION, 'mwnf3_sharing_history:sh_projects:awe', 'A World of Sharing History', 'A World of Sharing History');
-        $this->createCollectionWithTitle(Collection::TYPE_COLLECTION, 'mwnf3_thematic_gallery:galleries_root', 'thg_galleries_root', 'Galleries');
+        $this->createCollectionWithTitle(CollectionType::COLLECTION->value, 'mwnf3:projects:ISL', 'Discover Islamic Art', 'Discover Islamic Art');
+        $this->createCollectionWithTitle(CollectionType::COLLECTION->value, 'mwnf3_sharing_history:sh_projects:awe', 'A World of Sharing History', 'A World of Sharing History');
+        $this->createCollectionWithTitle(CollectionType::COLLECTION->value, 'mwnf3_thematic_gallery:galleries_root', 'thg_galleries_root', 'Galleries');
 
         $this->artisan('importer:list-collections', ['kind' => 'project'])
             ->assertExitCode(0)
@@ -117,7 +118,7 @@ class ListCollectionsCommandTest extends TestCase
     public function test_outputs_legacy_selector_slug_title_uuid_and_internal_name_as_json(): void
     {
         $collection = $this->createCollectionWithTitle(
-            Collection::TYPE_GALLERY,
+            CollectionType::GALLERY->value,
             'mwnf3_thematic_gallery:thg_gallery:9',
             'gallery_carpets',
             'Carpets',
@@ -146,7 +147,7 @@ class ListCollectionsCommandTest extends TestCase
         // Should not happen for real importer data (every gallery/exhibition
         // carries the thg_gallery pattern), but the command must not crash on
         // one that, for whatever reason, doesn't.
-        $this->createCollectionWithTitle(Collection::TYPE_GALLERY, null, 'gallery_orphan', 'Orphan Gallery');
+        $this->createCollectionWithTitle(CollectionType::GALLERY->value, null, 'gallery_orphan', 'Orphan Gallery');
 
         $exitCode = Artisan::call('importer:list-collections', ['kind' => 'gallery', '--json' => true]);
         $rows = json_decode(Artisan::output(), true);
@@ -162,7 +163,7 @@ class ListCollectionsCommandTest extends TestCase
     public function test_shows_the_legacy_slug_in_the_table_listing(): void
     {
         $this->createCollectionWithTitle(
-            Collection::TYPE_EXHIBITION,
+            CollectionType::EXHIBITION->value,
             'mwnf3_thematic_gallery:thg_gallery:47',
             'exhibition_the_use_of_colours_in_art',
             'The Use of Colours in Art',

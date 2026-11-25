@@ -323,7 +323,7 @@ const UPDATED_AT = 'updated_at';
 |--------|------|----------|---------|-------|
 | `id` | char | Unknown | Unknown |  |
 | `internal_name` | varchar | Unknown | Unknown |  |
-| `type` | enum | Unknown | Unknown |  |
+| `type` | varchar | Unknown | Unknown |  |
 | `purpose` | varchar | Unknown | Unknown |  |
 | `language_id` | varchar | Unknown | Unknown |  |
 | `context_id` | char | Unknown | Unknown |  |
@@ -358,33 +358,12 @@ const UPDATED_AT = 'updated_at';
 | `map_zoom` | `integer` |
 | `days` | `integer` |
 | `draft` | `boolean` |
+| `type` | `App\Enums\CollectionType` |
+| `purpose` | `App\Enums\CollectionPurpose` |
 
 ### Model Constants
 
 ```php
-const TYPE_COLLECTION = 'collection';
-const TYPE_EXHIBITION = 'exhibition';
-const TYPE_GALLERY = 'gallery';
-const TYPE_THEME = 'theme';
-const TYPE_EXHIBITION_TRAIL = 'exhibition trail';
-const TYPE_ITINERARY = 'itinerary';
-const TYPE_LOCATION = 'location';
-const TYPE_SUBTHEME = 'subtheme';
-const TYPE_REGION = 'region';
-const TYPES = null;
-const PURPOSE_EXHIBITIONS_ROOT = 'exhibitions-root';
-const PURPOSE_ARTISTIC_INTRODUCTION_ROOT = 'artistic-introduction-root';
-const PURPOSE_HISTORICAL_PROFILES_ROOT = 'historical-profiles-root';
-const PURPOSE_HISTORICAL_BACKGROUND_ROOT = 'historical-background-root';
-const PURPOSE_TOPICS_ROOT = 'topics-root';
-const PURPOSE_GALLERIES_ROOT = 'galleries-root';
-const PURPOSE_TRAVELS_ROOT = 'travels-root';
-const PURPOSE_EXPLORE_ROOT = 'explore-root';
-const PURPOSE_EXPLORE_THEMES_ROOT = 'explore-themes-root';
-const PURPOSE_EXPLORE_COUNTRIES_ROOT = 'explore-countries-root';
-const PURPOSE_EXPLORE_ITINERARIES_ROOT = 'explore-itineraries-root';
-const PURPOSE_NATIONAL_CONTEXT = 'national-context';
-const PURPOSES = null;
 const CREATED_AT = 'created_at';
 const UPDATED_AT = 'updated_at';
 ```

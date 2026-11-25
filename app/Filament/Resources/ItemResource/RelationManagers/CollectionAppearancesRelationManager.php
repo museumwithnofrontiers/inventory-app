@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ItemResource\RelationManagers;
 
+use App\Enums\CollectionType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
 use App\Filament\Pages\ViewCollectionItemAppearance;
@@ -51,6 +52,7 @@ class CollectionAppearancesRelationManager extends RelationManager
                     ->url(fn (Collection $record): ?string => $this->getAuthorizedUrl($record, CollectionResource::class)),
                 TextColumn::make('type')
                     ->badge()
+                    ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('parent.internal_name')
                     ->formatStateUsing(MarkdownState::inline())

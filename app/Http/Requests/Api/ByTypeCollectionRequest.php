@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests\Api;
 
-use App\Models\Collection;
+use App\Enums\CollectionType;
 use App\Rules\IncludeRule;
 use App\Support\Includes\AllowList;
 use App\Support\Includes\IncludeParser;
@@ -36,7 +36,7 @@ class ByTypeCollectionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'type' => ['required', Rule::in(Collection::TYPES)],
+            'type' => ['required', Rule::enum(CollectionType::class)],
             'include' => ['sometimes', 'string', new IncludeRule('collection')],
         ];
     }
