@@ -14,6 +14,7 @@
  * Run standalone with `--only collection-purpose-backfill`.
  */
 
+import type { CollectionPurpose } from '../../domain/collection-vocabulary.js';
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 
@@ -27,7 +28,7 @@ interface PurposeBackfillRule {
   literal: string;
   /** When false, any suffix is matched (prefix rule). */
   exact: boolean;
-  purpose: string;
+  purpose: CollectionPurpose;
 }
 
 const BACKFILL_RULES: PurposeBackfillRule[] = [

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Widgets;
 
+use App\Enums\CollectionType;
 use App\Enums\ItemType;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ItemResource;
@@ -97,6 +98,7 @@ class MissingImagesWidget extends BaseWidget
                     ->url(fn (Collection $record): string => CollectionResource::getUrl('view', ['record' => $record])),
                 TextColumn::make('type')
                     ->badge()
+                    ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label())
                     ->sortable(false),
                 TextColumn::make('internal_name')
                     ->formatStateUsing(MarkdownState::inline())

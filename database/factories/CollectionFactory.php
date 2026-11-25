@@ -2,6 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Enums\CollectionPurpose;
+use App\Enums\CollectionType;
 use App\Enums\PartnerLevel;
 use App\Models\Collection;
 use App\Models\Context;
@@ -31,7 +33,7 @@ class CollectionFactory extends Factory
     {
         return [
             'internal_name' => $this->faker->unique()->slug(2),
-            'type' => $this->faker->randomElement(['collection', 'exhibition', 'gallery', 'theme', 'exhibition trail', 'itinerary', 'location', 'subtheme', 'region']),
+            'type' => $this->faker->randomElement(CollectionType::cases()),
             // Functional purpose (nullable by default; null is the norm)
             'purpose' => null,
             'language_id' => Language::factory(),
@@ -117,7 +119,7 @@ class CollectionFactory extends Factory
     public function collection(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'collection',
+            'type' => CollectionType::COLLECTION,
         ]);
     }
 
@@ -127,7 +129,7 @@ class CollectionFactory extends Factory
     public function exhibition(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'exhibition',
+            'type' => CollectionType::EXHIBITION,
         ]);
     }
 
@@ -137,7 +139,7 @@ class CollectionFactory extends Factory
     public function gallery(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'gallery',
+            'type' => CollectionType::GALLERY,
         ]);
     }
 
@@ -147,7 +149,7 @@ class CollectionFactory extends Factory
     public function theme(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'theme',
+            'type' => CollectionType::THEME,
         ]);
     }
 
@@ -157,7 +159,7 @@ class CollectionFactory extends Factory
     public function exhibitionTrail(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'exhibition trail',
+            'type' => CollectionType::EXHIBITION_TRAIL,
         ]);
     }
 
@@ -167,7 +169,7 @@ class CollectionFactory extends Factory
     public function itinerary(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'itinerary',
+            'type' => CollectionType::ITINERARY,
         ]);
     }
 
@@ -177,7 +179,7 @@ class CollectionFactory extends Factory
     public function location(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'location',
+            'type' => CollectionType::LOCATION,
         ]);
     }
 
@@ -187,7 +189,7 @@ class CollectionFactory extends Factory
     public function subtheme(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'subtheme',
+            'type' => CollectionType::SUBTHEME,
         ]);
     }
 
@@ -197,14 +199,14 @@ class CollectionFactory extends Factory
     public function region(): Factory
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'region',
+            'type' => CollectionType::REGION,
         ]);
     }
 
     /**
-     * Configure the factory with a functional purpose (see Collection::PURPOSES).
+     * Configure the factory with a functional purpose.
      */
-    public function withPurpose(string $purpose): Factory
+    public function withPurpose(CollectionPurpose $purpose): Factory
     {
         return $this->state(fn (array $attributes) => [
             'purpose' => $purpose,

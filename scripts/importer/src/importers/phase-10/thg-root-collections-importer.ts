@@ -17,14 +17,15 @@
  * - LanguageImporter (for default language)
  */
 
+import type { CollectionPurpose, CollectionType } from '../../domain/collection-vocabulary.js';
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 
 interface RootCollectionConfig {
   internalName: string;
   backwardCompat: string;
-  type: string;
-  purpose: string;
+  type: CollectionType;
+  purpose: CollectionPurpose;
   title: string;
   description: string;
 }

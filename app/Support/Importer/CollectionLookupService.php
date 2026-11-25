@@ -2,6 +2,7 @@
 
 namespace App\Support\Importer;
 
+use App\Enums\CollectionType;
 use App\Models\Collection;
 use App\Models\CollectionTranslation;
 use Illuminate\Database\Eloquent\Builder;
@@ -97,9 +98,9 @@ class CollectionLookupService
     public static function collectionType(string $kind): string
     {
         return match ($kind) {
-            self::KIND_GALLERY => Collection::TYPE_GALLERY,
-            self::KIND_EXHIBITION => Collection::TYPE_EXHIBITION,
-            self::KIND_PROJECT => Collection::TYPE_COLLECTION,
+            self::KIND_GALLERY => CollectionType::GALLERY->value,
+            self::KIND_EXHIBITION => CollectionType::EXHIBITION->value,
+            self::KIND_PROJECT => CollectionType::COLLECTION->value,
             default => throw new \InvalidArgumentException("Unknown collection kind '{$kind}'."),
         };
     }
@@ -334,7 +335,7 @@ class CollectionLookupService
         return [
             'id' => $collection->id,
             'internal_name' => $collection->internal_name,
-            'type' => $collection->type,
+            'type' => $collection->type->value,
             'parent_id' => $collection->parent_id,
             'parent_internal_name' => $collection->parent?->internal_name,
             'backward_compatibility' => $collection->backward_compatibility,

@@ -2,8 +2,10 @@
 
 namespace Tests\Unit\Models;
 
+use App\Enums\CollectionType;
 use App\Models\Collection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class CollectionTypeTest extends TestCase
@@ -14,28 +16,28 @@ class CollectionTypeTest extends TestCase
     {
         $collection = Collection::factory()->theme()->create();
 
-        $this->assertEquals('theme', $collection->type);
+        $this->assertSame(CollectionType::THEME, $collection->type);
     }
 
     public function test_factory_creates_exhibition_trail_type(): void
     {
         $collection = Collection::factory()->exhibitionTrail()->create();
 
-        $this->assertEquals('exhibition trail', $collection->type);
+        $this->assertSame(CollectionType::EXHIBITION_TRAIL, $collection->type);
     }
 
     public function test_factory_creates_itinerary_type(): void
     {
         $collection = Collection::factory()->itinerary()->create();
 
-        $this->assertEquals('itinerary', $collection->type);
+        $this->assertSame(CollectionType::ITINERARY, $collection->type);
     }
 
     public function test_factory_creates_location_type(): void
     {
         $collection = Collection::factory()->location()->create();
 
-        $this->assertEquals('location', $collection->type);
+        $this->assertSame(CollectionType::LOCATION, $collection->type);
     }
 
     public function test_scope_themes_returns_only_theme_type(): void
@@ -47,7 +49,7 @@ class CollectionTypeTest extends TestCase
         $themes = Collection::themes()->get();
 
         $this->assertCount(1, $themes);
-        $this->assertEquals('theme', $themes->first()->type);
+        $this->assertSame(CollectionType::THEME, $themes->first()?->type);
     }
 
     public function test_scope_exhibition_trails_returns_only_exhibition_trail_type(): void
@@ -58,7 +60,7 @@ class CollectionTypeTest extends TestCase
         $trails = Collection::exhibitionTrails()->get();
 
         $this->assertCount(1, $trails);
-        $this->assertEquals('exhibition trail', $trails->first()->type);
+        $this->assertSame(CollectionType::EXHIBITION_TRAIL, $trails->first()?->type);
     }
 
     public function test_scope_itineraries_returns_only_itinerary_type(): void
@@ -69,7 +71,7 @@ class CollectionTypeTest extends TestCase
         $itineraries = Collection::itineraries()->get();
 
         $this->assertCount(1, $itineraries);
-        $this->assertEquals('itinerary', $itineraries->first()->type);
+        $this->assertSame(CollectionType::ITINERARY, $itineraries->first()?->type);
     }
 
     public function test_scope_locations_returns_only_location_type(): void
@@ -80,25 +82,43 @@ class CollectionTypeTest extends TestCase
         $locations = Collection::locations()->get();
 
         $this->assertCount(1, $locations);
-        $this->assertEquals('location', $locations->first()->type);
+        $this->assertSame(CollectionType::LOCATION, $locations->first()?->type);
     }
 
-    public function test_all_type_constants_are_valid(): void
+    public function test_the_enum_holds_the_types_in_use(): void
     {
-        $types = [
-            Collection::TYPE_COLLECTION,
-            Collection::TYPE_EXHIBITION,
-            Collection::TYPE_GALLERY,
-            Collection::TYPE_THEME,
-            Collection::TYPE_EXHIBITION_TRAIL,
-            Collection::TYPE_ITINERARY,
-            Collection::TYPE_LOCATION,
-            Collection::TYPE_SUBTHEME,
-            Collection::TYPE_REGION,
-        ];
+        $this->assertSame(
+            ['collection', 'exhibition', 'gallery', 'theme', 'exhibition trail', 'itinerary', 'location', 'subtheme', 'region'],
+            array_column(CollectionType::cases(), 'value')
+        );
+    }
 
-        $expected = ['collection', 'exhibition', 'gallery', 'theme', 'exhibition trail', 'itinerary', 'location', 'subtheme', 'region'];
+    public function test_options_give_every_type_a_label(): void
+    {
+        $options = CollectionType::options();
 
-        $this->assertEquals($expected, $types);
+        $this->assertSame(array_column(CollectionType::cases(), 'value'), array_keys($options));
+        $this->assertSame('Exhibition trail', $options['exhibition trail']);
+    }
+
+    public function test_type_is_stored_as_its_string_value_and_read_back_as_the_enum(): void
+    {
+        $collection = Collection::factory()->create(['type' => 'exhibition trail']);
+
+        $this->assertSame('exhibition trail', DB::table('collections')->where('id', $collection->id)->value('type'));
+        $this->assertSame(CollectionType::EXHIBITION_TRAIL, $collection->fresh()?->type);
+    }
+
+    public function test_type_defaults_to_collection_in_the_database(): void
+    {
+        $collection = Collection::factory()->create();
+        DB::table('collections')->insert([
+            'id' => '00000000-0000-0000-0000-000000002794',
+            'internal_name' => 'default-type-2794',
+            'language_id' => $collection->language_id,
+            'context_id' => $collection->context_id,
+        ]);
+
+        $this->assertSame(CollectionType::COLLECTION, Collection::find('00000000-0000-0000-0000-000000002794')?->type);
     }
 }

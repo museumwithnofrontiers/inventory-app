@@ -39,6 +39,7 @@
  * - ShProjectImporter (project root collection + context must exist)
  */
 
+import type { CollectionPurpose } from '../../domain/collection-vocabulary.js';
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
@@ -258,7 +259,7 @@ export class ShHbGeneralImporter extends BaseImporter {
       contextId: string;
       defaultLanguageId: string;
       displayOrder: number;
-      purpose?: string;
+      purpose?: CollectionPurpose;
       translations: Array<{
         lang: string;
         title: string;

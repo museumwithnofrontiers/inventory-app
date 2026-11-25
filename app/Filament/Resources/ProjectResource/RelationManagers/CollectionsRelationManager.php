@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
+use App\Enums\CollectionType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Resources\CollectionResource;
 use App\Filament\Resources\ContextResource;
@@ -45,6 +46,7 @@ class CollectionsRelationManager extends RelationManager
                         ? CollectionResource::getUrl('view', ['record' => $record])
                         : null),
                 TextColumn::make('type')
+                    ->formatStateUsing(fn (?CollectionType $state): ?string => $state?->label())
                     ->sortable(),
                 TextColumn::make('context.internal_name')
                     ->label('Context')

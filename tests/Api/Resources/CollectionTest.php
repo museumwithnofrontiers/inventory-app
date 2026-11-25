@@ -2,6 +2,8 @@
 
 namespace Tests\Api\Resources;
 
+use App\Enums\CollectionPurpose;
+use App\Enums\CollectionType;
 use App\Models\Collection;
 use App\Models\Context;
 use App\Models\Country;
@@ -30,16 +32,16 @@ class CollectionTest extends TestCase
     public function test_can_create_collection_with_purpose(): void
     {
         $data = Collection::factory()->make()->toArray();
-        $data['purpose'] = Collection::PURPOSE_EXHIBITIONS_ROOT;
+        $data['purpose'] = CollectionPurpose::EXHIBITIONS_ROOT->value;
 
         $response = $this->postJson(route('collection.store'), $data);
 
         $response->assertCreated()
-            ->assertJsonPath('data.purpose', Collection::PURPOSE_EXHIBITIONS_ROOT);
+            ->assertJsonPath('data.purpose', CollectionPurpose::EXHIBITIONS_ROOT->value);
 
         $this->assertDatabaseHas('collections', [
             'internal_name' => $data['internal_name'],
-            'purpose' => Collection::PURPOSE_EXHIBITIONS_ROOT,
+            'purpose' => CollectionPurpose::EXHIBITIONS_ROOT->value,
         ]);
     }
 
@@ -59,11 +61,11 @@ class CollectionTest extends TestCase
         $context = Context::factory()->create();
         Collection::factory()
             ->withContext($context->id)
-            ->withPurpose(Collection::PURPOSE_EXHIBITIONS_ROOT)
+            ->withPurpose(CollectionPurpose::EXHIBITIONS_ROOT)
             ->create();
 
         $data = Collection::factory()->make(['context_id' => $context->id])->toArray();
-        $data['purpose'] = Collection::PURPOSE_EXHIBITIONS_ROOT;
+        $data['purpose'] = CollectionPurpose::EXHIBITIONS_ROOT->value;
 
         $response = $this->postJson(route('collection.store'), $data);
 
@@ -74,16 +76,16 @@ class CollectionTest extends TestCase
     public function test_same_root_purpose_is_allowed_in_different_contexts(): void
     {
         Collection::factory()
-            ->withPurpose(Collection::PURPOSE_EXHIBITIONS_ROOT)
+            ->withPurpose(CollectionPurpose::EXHIBITIONS_ROOT)
             ->create();
 
         $data = Collection::factory()->make()->toArray();
-        $data['purpose'] = Collection::PURPOSE_EXHIBITIONS_ROOT;
+        $data['purpose'] = CollectionPurpose::EXHIBITIONS_ROOT->value;
 
         $response = $this->postJson(route('collection.store'), $data);
 
         $response->assertCreated()
-            ->assertJsonPath('data.purpose', Collection::PURPOSE_EXHIBITIONS_ROOT);
+            ->assertJsonPath('data.purpose', CollectionPurpose::EXHIBITIONS_ROOT->value);
     }
 
     public function test_national_context_purpose_may_repeat_within_a_context(): void
@@ -91,16 +93,16 @@ class CollectionTest extends TestCase
         $context = Context::factory()->create();
         Collection::factory()
             ->withContext($context->id)
-            ->withPurpose(Collection::PURPOSE_NATIONAL_CONTEXT)
+            ->withPurpose(CollectionPurpose::NATIONAL_CONTEXT)
             ->create();
 
         $data = Collection::factory()->make(['context_id' => $context->id])->toArray();
-        $data['purpose'] = Collection::PURPOSE_NATIONAL_CONTEXT;
+        $data['purpose'] = CollectionPurpose::NATIONAL_CONTEXT->value;
 
         $response = $this->postJson(route('collection.store'), $data);
 
         $response->assertCreated()
-            ->assertJsonPath('data.purpose', Collection::PURPOSE_NATIONAL_CONTEXT);
+            ->assertJsonPath('data.purpose', CollectionPurpose::NATIONAL_CONTEXT->value);
     }
 
     public function test_can_update_collection_purpose_and_clear_it(): void
@@ -108,11 +110,11 @@ class CollectionTest extends TestCase
         $collection = Collection::factory()->create();
 
         $response = $this->putJson(route('collection.update', $collection), [
-            'purpose' => Collection::PURPOSE_HISTORICAL_PROFILES_ROOT,
+            'purpose' => CollectionPurpose::HISTORICAL_PROFILES_ROOT->value,
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.purpose', Collection::PURPOSE_HISTORICAL_PROFILES_ROOT);
+            ->assertJsonPath('data.purpose', CollectionPurpose::HISTORICAL_PROFILES_ROOT->value);
 
         $response = $this->putJson(route('collection.update', $collection), [
             'purpose' => null,
@@ -202,8 +204,8 @@ class CollectionTest extends TestCase
 
     public function test_by_type_accepts_every_type_in_the_vocabulary(): void
     {
-        foreach (Collection::TYPES as $type) {
-            $this->getJson(route('collection.byType', ['type' => $type]))->assertOk();
+        foreach (CollectionType::cases() as $type) {
+            $this->getJson(route('collection.byType', ['type' => $type->value]))->assertOk();
         }
     }
 
@@ -218,16 +220,16 @@ class CollectionTest extends TestCase
     public function test_updating_a_root_purpose_collection_does_not_collide_with_itself(): void
     {
         $collection = Collection::factory()
-            ->withPurpose(Collection::PURPOSE_EXHIBITIONS_ROOT)
+            ->withPurpose(CollectionPurpose::EXHIBITIONS_ROOT)
             ->create();
 
         $response = $this->putJson(route('collection.update', $collection), [
-            'purpose' => Collection::PURPOSE_EXHIBITIONS_ROOT,
+            'purpose' => CollectionPurpose::EXHIBITIONS_ROOT->value,
             'display_order' => 5,
         ]);
 
         $response->assertOk()
-            ->assertJsonPath('data.purpose', Collection::PURPOSE_EXHIBITIONS_ROOT);
+            ->assertJsonPath('data.purpose', CollectionPurpose::EXHIBITIONS_ROOT->value);
     }
 
     /**
