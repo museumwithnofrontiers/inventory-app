@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\CollectionPartnerType;
 use App\Enums\PartnerLevel;
 use App\Models\Collection;
 use App\Models\CollectionTranslation;
@@ -81,7 +82,7 @@ class CollectionSeeder extends Seeder
 
                 foreach ($partners as $index => $partner) {
                     $collection->partners()->attach($partner->id, [
-                        'collection_type' => 'collection',
+                        'collection_type' => CollectionPartnerType::COLLECTION->value,
                         'level' => $levels[$index % count($levels)]->value,
                     ]);
                 }

@@ -29,6 +29,7 @@
  * - PartnerImporter (creates partners from institutions)
  */
 
+import type { PartnerLevel } from '../../domain/partner-link-vocabulary.js';
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
@@ -191,7 +192,7 @@ export class InstitutionHierarchyImporter extends BaseImporter {
     projectId: string,
     institutionId: string,
     countryId: string,
-    level: string
+    level: PartnerLevel
   ): Promise<ProjectLink | null> {
     // Resolve collection from project
     const collectionBackwardCompat = formatBackwardCompatibility({

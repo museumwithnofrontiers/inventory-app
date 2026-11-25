@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Enums\CollectionPartnerType;
+use App\Enums\PartnerLevel;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
@@ -12,6 +14,9 @@ use Illuminate\Support\Facades\DB;
  *
  * Represents the many-to-many relationship between Collections and Partners
  * with additional pivot data including partner contribution level.
+ *
+ * @property CollectionPartnerType $collection_type
+ * @property PartnerLevel|null $level
  */
 class CollectionPartner extends Pivot
 {
@@ -51,7 +56,8 @@ class CollectionPartner extends Pivot
      * @var array<string, string>
      */
     protected $casts = [
-        'level' => 'string',
+        'level' => PartnerLevel::class,
+        'collection_type' => CollectionPartnerType::class,
         'visible' => 'boolean',
     ];
 
@@ -107,7 +113,7 @@ class CollectionPartner extends Pivot
     {
         return DB::table($this->table)
             ->where('collection_id', $this->collection_id)
-            ->where('collection_type', $this->collection_type)
+            ->where('collection_type', $this->collection_type->value)
             ->where('partner_id', $this->partner_id)
             ->delete();
     }

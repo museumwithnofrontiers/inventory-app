@@ -14,6 +14,7 @@
  * legacy data, in its collection's `extra`, and no logo is an inventory image.
  */
 
+import type { PartnerLevel } from '../../domain/partner-link-vocabulary.js';
 import path from 'path';
 
 import { BaseImporter } from '../../core/base-importer.js';
@@ -220,17 +221,13 @@ function mapContentType(legacyType: string | null): 'audio' | 'video' | 'documen
   return null;
 }
 
-function mapPartnerLevel(categoryId: number): string | null {
-  switch (categoryId) {
-    case 1:
-      return 'full_partner';
-    case 2:
-      return 'co_organiser';
-    case 3:
-      return 'other_contributor';
-    default:
-      return null;
-  }
+/**
+ * Legacy's exhibition_partner_category → the partner's level (#2796). Legacy
+ * defines a single category, 3 "Other contributor" ("Has made their material
+ * available"); any other id is reported and the row skipped.
+ */
+function mapPartnerLevel(categoryId: number): PartnerLevel | null {
+  return categoryId === 3 ? 'material_provider' : null;
 }
 
 function isTruthyFlag(value: number | boolean | string | null): boolean {

@@ -2,17 +2,22 @@
 
 namespace Tests\Filament\RelationManagers;
 
+use App\Enums\CollectionPartnerType;
+use App\Enums\PartnerLevel;
 use App\Filament\Resources\CollectionResource\Pages\ViewCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\PartnersRelationManager;
 use App\Filament\Resources\PartnerResource\Pages\ViewPartner;
 use App\Filament\Resources\PartnerResource\RelationManagers\CollectionParticipationsRelationManager;
 use App\Models\Collection;
+use App\Models\CollectionPartner;
 use App\Models\Context;
 use App\Models\Language;
 use App\Models\Partner;
 use Filament\Actions\DetachAction;
 use Filament\Actions\DetachBulkAction;
+use Illuminate\Database\Migrations\Migration;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 use Tests\Filament\Concerns\InteractsWithAdminPanel;
 use Tests\TestCase;
@@ -269,10 +274,77 @@ class CollectionPartnerPivotTest extends TestCase
                 'pageClass' => ViewPartner::class,
             ])
             ->assertCanSeeTableRecords([$projectRoot])
-            ->assertTableColumnStateSet('pivot.collection_type', 'project', $projectRoot->getKey())
+            ->assertTableColumnFormattedStateSet('pivot.collection_type', 'Project', $projectRoot->getKey())
             ->assertTableActionVisible('view', $projectRoot->getKey())
             ->assertTableActionHidden('edit', $projectRoot->getKey())
             ->assertTableActionHidden('detach', $projectRoot->getKey());
+    }
+
+    /**
+     * #2796: a thematic gallery exhibition partner's link (gallery /
+     * xhibition, level material_provider) is listed on the partner with
+     * readable labels; the level column used to throw on legacy's
+     * other_contributor.
+     */
+    public function test_a_thematic_gallery_link_is_listed_with_its_labels(): void
+    {
+        $partner = Partner::factory()->create();
+        $gallery = $this->makeCollection();
+        $partner->collections()->attach($gallery->id, [
+            'collection_type' => CollectionPartnerType::GALLERY->value,
+            'level' => PartnerLevel::MATERIAL_PROVIDER->value,
+        ]);
+        $user = $this->createCrudUser();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CollectionParticipationsRelationManager::class, [
+                'ownerRecord' => $partner,
+                'pageClass' => ViewPartner::class,
+            ])
+            ->assertCanSeeTableRecords([$gallery])
+            ->assertTableColumnFormattedStateSet('pivot.collection_type', 'Gallery', $gallery->getKey())
+            ->assertTableColumnFormattedStateSet('pivot.level', 'Material provider', $gallery->getKey())
+            ->assertTableActionHidden('edit', $gallery->getKey())
+            ->assertTableActionHidden('detach', $gallery->getKey());
+    }
+
+    public function test_the_pivot_casts_level_and_link_type(): void
+    {
+        $partner = Partner::factory()->create();
+        $collection = $this->makeCollection();
+        $partner->collections()->attach($collection->id, ['collection_type' => 'exhibition', 'level' => 'material_provider']);
+
+        $pivot = $partner->collections()->first()?->getRelation('pivot');
+
+        $this->assertInstanceOf(CollectionPartner::class, $pivot);
+        $this->assertSame(CollectionPartnerType::EXHIBITION, $pivot->collection_type);
+        $this->assertSame(PartnerLevel::MATERIAL_PROVIDER, $pivot->level);
+    }
+
+    public function test_the_migration_renames_other_contributor_and_stops_on_unknown_values(): void
+    {
+        $partner = Partner::factory()->create();
+        $collection = $this->makeCollection();
+        DB::table('collection_partner')->insert([
+            'collection_id' => $collection->id,
+            'collection_type' => 'gallery',
+            'partner_id' => $partner->id,
+            'level' => 'other_contributor',
+        ]);
+        /** @var Migration $migration */
+        $migration = require database_path('migrations/2026_11_25_120000_collection_partner_level_material_provider.php');
+
+        $migration->up();
+
+        $this->assertDatabaseHas('collection_partner', ['partner_id' => $partner->id, 'level' => 'material_provider']);
+
+        DB::table('collection_partner')->where('partner_id', $partner->id)->update(['level' => 'co_organiser']);
+        $this->expectException(\RuntimeException::class);
+        $this->expectExceptionMessage('co_organiser');
+
+        $migration->up();
     }
 
     public function test_a_project_link_shows_the_partner_it_belongs_to(): void

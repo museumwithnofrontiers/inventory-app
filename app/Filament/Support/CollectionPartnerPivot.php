@@ -2,6 +2,7 @@
 
 namespace App\Filament\Support;
 
+use App\Enums\CollectionPartnerType;
 use App\Enums\PartnerLevel;
 use App\Models\CollectionPartner;
 use App\Models\Partner;
@@ -69,7 +70,7 @@ class CollectionPartnerPivot
     {
         return [
             ...self::pivotFormFields($owner),
-            Hidden::make('collection_type')->default('collection'),
+            Hidden::make('collection_type')->default(CollectionPartnerType::COLLECTION->value),
         ];
     }
 
@@ -132,7 +133,7 @@ class CollectionPartnerPivot
             ->whereIn('partners.id', CollectionPartner::query()
                 ->select('partner_id')
                 ->where('collection_id', $collectionId)
-                ->where('collection_type', 'collection'))
+                ->where('collection_type', CollectionPartnerType::COLLECTION->value))
             ->when($partnerId !== null, fn (Builder $query): Builder => $query->whereKeyNot($partnerId));
     }
 
@@ -150,7 +151,7 @@ class CollectionPartnerPivot
 
         CollectionPartner::query()
             ->where('collection_id', $collectionId)
-            ->where('collection_type', 'collection')
+            ->where('collection_type', CollectionPartnerType::COLLECTION->value)
             ->whereIn('parent_partner_id', $partnerIds)
             ->update(['parent_partner_id' => null]);
     }
@@ -179,7 +180,7 @@ class CollectionPartnerPivot
     {
         return TextColumn::make('pivot.level')
             ->label('Level')
-            ->formatStateUsing(fn (?string $state): ?string => $state ? PartnerLevel::from($state)->label() : null)
+            ->formatStateUsing(fn (?PartnerLevel $state): ?string => $state?->label())
             ->sortable();
     }
 

@@ -11,6 +11,7 @@
  */
 
 import type { CollectionPurpose } from '../domain/collection-vocabulary.js';
+import type { CollectionPartnerType, PartnerLevel } from '../domain/partner-link-vocabulary.js';
 import { v4 as uuidv4 } from 'uuid';
 import { deterministicUuid } from '../utils/deterministic-uuid.js';
 import { ITEM_TRANSLATION_COLUMNS } from '../utils/item-translation-columns.js';
@@ -879,8 +880,8 @@ export class SqlWriteStrategy implements IWriteStrategy {
   async attachPartnerToCollectionWithLevel(
     collectionId: string,
     partnerId: string,
-    collectionType: string,
-    level: string
+    collectionType: CollectionPartnerType,
+    level: PartnerLevel
   ): Promise<void> {
     try {
       await this.db.execute(

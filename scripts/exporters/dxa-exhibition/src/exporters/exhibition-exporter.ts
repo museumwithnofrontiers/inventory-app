@@ -212,8 +212,8 @@ export class ExhibitionExporter extends BaseExporter {
   /**
    * `exhibition_partner` → `collection_partner`, the partner strip legacy
    * renders on every page. `level` is the legacy category — an exhibition's
-   * strip can include an `other_contributor` (an institution) alongside its
-   * museum partners, not just museums.
+   * strip can include a `material_provider` (legacy's "Other contributor", an
+   * institution) alongside its museum partners, not just museums (#2796).
    */
   private async exportPartnerStrip(): Promise<unknown[]> {
     const rows = await this.db.query<PartnerStripRow>(
