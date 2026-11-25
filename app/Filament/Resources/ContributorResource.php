@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ContributorCategory;
 use App\Filament\Concerns\HasBackwardCompatibilityColumn;
 use App\Filament\Concerns\HasInternalNameColumn;
 use App\Filament\Concerns\HasPlainTextRecordTitle;
@@ -51,21 +52,6 @@ class ContributorResource extends Resource
     use HasTimestampsColumns;
     use HasUuidColumn;
 
-    /**
-     * The collection credits the packages ship, under these keys, in the
-     * collection translation's `extra` (scripts/exporters/shared/credits.mjs).
-     */
-    public const CREDIT_CATEGORIES = [
-        'author' => 'Author',
-        'travels_author' => 'Travels author',
-        'prepared_by' => 'Prepared by',
-        'curated_by' => 'Curated by',
-        'credits' => 'Credits',
-        'local_coordinator' => 'Local coordinator',
-        'local_team' => 'Local team',
-        'photo_by' => 'Photo by',
-    ];
-
     protected static ?string $model = Contributor::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-group';
@@ -91,25 +77,6 @@ class ContributorResource extends Resource
         return static::canViewAny();
     }
 
-    /**
-     * The credit categories, then any other category a contributor already has
-     * (the thematic galleries' own), so an existing value is never lost.
-     *
-     * @return array<string, string>
-     */
-    public static function categoryOptions(): array
-    {
-        $options = self::CREDIT_CATEGORIES;
-
-        foreach (Contributor::query()->distinct()->orderBy('category')->pluck('category') as $category) {
-            if (is_string($category) && ! array_key_exists($category, $options)) {
-                $options[$category] = $category;
-            }
-        }
-
-        return $options;
-    }
-
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -118,7 +85,7 @@ class ContributorResource extends Resource
                     ->schema([
                         RecordSelect::forCollections(),
                         Select::make('category')
-                            ->options(fn (): array => static::categoryOptions())
+                            ->options(ContributorCategory::options())
                             ->required()
                             ->searchable()
                             ->helperText('The collection credits are shipped under their category, in the collection\'s texts.'),
@@ -163,7 +130,7 @@ class ContributorResource extends Resource
                     ->label('Collection')
                     ->sortable(),
                 TextColumn::make('category')
-                    ->formatStateUsing(fn (string $state): string => self::CREDIT_CATEGORIES[$state] ?? $state)
+                    ->formatStateUsing(fn (?ContributorCategory $state): ?string => $state?->label())
                     ->badge()
                     ->sortable(),
                 TextColumn::make('display_order')
@@ -182,7 +149,7 @@ class ContributorResource extends Resource
             ])
             ->filters([
                 SelectFilter::make('category')
-                    ->options(fn (): array => static::categoryOptions()),
+                    ->options(ContributorCategory::options()),
             ]);
     }
 
@@ -200,7 +167,7 @@ class ContributorResource extends Resource
                                 ? CollectionResource::getUrl('view', ['record' => $record->collection_id])
                                 : null),
                         TextEntry::make('category')
-                            ->formatStateUsing(fn (string $state): string => self::CREDIT_CATEGORIES[$state] ?? $state),
+                            ->formatStateUsing(fn (?ContributorCategory $state): ?string => $state?->label()),
                         TextEntry::make('display_order')
                             ->label('Display order'),
                         IconEntry::make('visible')

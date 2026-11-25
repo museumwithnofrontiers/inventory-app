@@ -23,13 +23,17 @@ import type {
   ThgLegacyContributorCategory,
   ThgLegacyContributorI18n,
 } from '../../domain/types/index.js';
+import {
+  THEMATIC_GALLERY_CATEGORY_BY_LEGACY_KEY,
+  type ContributorCategory,
+} from '../../domain/contributor-category.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
 import { convertHtmlToMarkdown } from '../../utils/html-to-markdown.js';
 import path from 'path';
 
 export class ThgContributorImporter extends BaseImporter {
   private defaultContextId!: string;
-  private categoryMap = new Map<string, string>();
+  private categoryMap = new Map<string, ContributorCategory>();
 
   getName(): string {
     return 'ThgContributorImporter';
@@ -70,8 +74,15 @@ export class ThgContributorImporter extends BaseImporter {
     const categories = await this.context.legacyDb.query<ThgLegacyContributorCategory>(
       'SELECT * FROM mwnf3_thematic_gallery.contributor_category'
     );
+    // Each legacy key maps to its own category, named for what the contributor
+    // did (#2795); never built from the display label.
     for (const cat of categories) {
-      this.categoryMap.set(cat.category_id, cat.label.toLowerCase().replace(/\s+/g, '_'));
+      const category = THEMATIC_GALLERY_CATEGORY_BY_LEGACY_KEY[cat.category_id];
+      if (category) {
+        this.categoryMap.set(cat.category_id, category);
+      } else {
+        this.logWarning(`Unknown contributor category '${cat.category_id}' ('${cat.label}'): its contributors are skipped`);
+      }
     }
     this.logInfo(`Loaded ${this.categoryMap.size} contributor categories`);
   }
@@ -125,7 +136,15 @@ export class ThgContributorImporter extends BaseImporter {
         }
 
         // Resolve category
-        const category = this.categoryMap.get(legacy.category_id) || 'partner';
+        const category = this.categoryMap.get(legacy.category_id);
+        if (!category) {
+          this.logWarning(
+            `Contributor ${legacy.contributor_id}: unknown category '${legacy.category_id}', skipping`
+          );
+          result.skipped++;
+          this.showSkipped();
+          continue;
+        }
 
         const internalName = legacy.context
           ? convertHtmlToMarkdown(legacy.context)

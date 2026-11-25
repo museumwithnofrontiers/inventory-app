@@ -2,6 +2,7 @@
 
 namespace Tests\Filament\Resources;
 
+use App\Enums\ContributorCategory;
 use App\Filament\Resources\CollectionResource\Pages\ViewCollection;
 use App\Filament\Resources\CollectionResource\RelationManagers\ContributorsRelationManager;
 use App\Filament\Resources\ContributorResource;
@@ -112,7 +113,7 @@ class ContributorResourceTest extends TestCase
     {
         $user = $this->createCrudUser();
         $collection = Collection::factory()->create();
-        $own = Contributor::factory()->create(['collection_id' => $collection->id, 'category' => 'credits']);
+        $own = Contributor::factory()->create(['collection_id' => $collection->id, 'category' => 'exhibition_credits']);
         $other = Contributor::factory()->create();
 
         $this->setCurrentPanel();
@@ -127,6 +128,52 @@ class ContributorResourceTest extends TestCase
             ->assertTableActionVisible('create')
             ->assertTableActionHasUrl('create', ContributorResource::getUrl('create', ['collection_id' => $collection->id]))
             ->assertTableActionHasUrl(EditAction::class, ContributorResource::getUrl('edit', ['record' => $own]), $own);
+    }
+
+    public function test_every_category_shows_its_label_in_the_list_and_on_the_collection(): void
+    {
+        $user = $this->createCrudUser();
+        $collection = Collection::factory()->create();
+        $cooperator = Contributor::factory()->create([
+            'collection_id' => $collection->id,
+            'category' => ContributorCategory::IN_COOPERATION_WITH,
+            'internal_name' => 'UNAOC',
+        ]);
+
+        $this->actingAs($user)->get(ContributorResource::getUrl('index'))
+            ->assertOk()
+            ->assertSee('In cooperation with');
+        $this->actingAs($user)->get(ContributorResource::getUrl('view', ['record' => $cooperator]))
+            ->assertOk()
+            ->assertSee('In cooperation with');
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(ContributorsRelationManager::class, [
+                'ownerRecord' => $collection,
+                'pageClass' => ViewCollection::class,
+            ])
+            ->assertSee('In cooperation with');
+    }
+
+    public function test_the_form_offers_exactly_the_enum_categories(): void
+    {
+        $user = $this->createCrudUser();
+        Contributor::factory()->create();
+
+        $this->setCurrentPanel();
+
+        Livewire::actingAs($user)
+            ->test(CreateContributor::class)
+            ->fillForm([
+                'collection_id' => Collection::factory()->create()->id,
+                'category' => 'not-a-category',
+                'display_order' => 0,
+                'internal_name' => 'Unknown',
+            ])
+            ->call('create')
+            ->assertHasFormErrors(['category']);
     }
 
     public function test_a_view_only_user_sees_no_create_on_the_collection(): void
@@ -149,7 +196,7 @@ class ContributorResourceTest extends TestCase
         $user = $this->createCrudUser();
         $language = Language::factory()->create(['id' => 'eng', 'internal_name' => 'English']);
         $context = Context::factory()->create();
-        $contributor = Contributor::factory()->create(['category' => 'credits']);
+        $contributor = Contributor::factory()->create(['category' => 'exhibition_credits']);
 
         $this->setCurrentPanel();
 

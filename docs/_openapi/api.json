@@ -31497,6 +31497,25 @@
                 ],
                 "title": "ContextResource"
             },
+            "ContributorCategory": {
+                "type": "string",
+                "description": "What a contributor did for its collection (`contributors.category`, #2795). Two groups, one value per legacy case: - the collection credits, the people behind a collection's texts (M16 I5).   The exporters ship each one in the collection's texts under its value; - the thematic galleries' contributors, one per category of legacy's   `mwnf3_thematic_gallery.contributor_category`, labelled as legacy does.\n| |\n|---|\n| `author` <br/>  |\n| `source_text_author` <br/> The author of a text the collection reuses, such as a Travels itinerary text shown by Explore. |\n| `prepared_by` <br/>  |\n| `curated_by` <br/>  |\n| `exhibition_credits` <br/> An exhibition's block of credit lines. |\n| `local_coordinator` <br/>  |\n| `local_team` <br/>  |\n| `photo_by` <br/>  |\n| `in_cooperation_with` <br/> Legacy category `cooperator`. |\n| `on_the_occasion_of` <br/> Legacy category `occasion`. |\n| `main_contributors` <br/> Legacy category `partner`. |\n| `with_the_support_of` <br/> Legacy category `sponsor`. |",
+                "enum": [
+                    "author",
+                    "source_text_author",
+                    "prepared_by",
+                    "curated_by",
+                    "exhibition_credits",
+                    "local_coordinator",
+                    "local_team",
+                    "photo_by",
+                    "in_cooperation_with",
+                    "on_the_occasion_of",
+                    "main_contributors",
+                    "with_the_support_of"
+                ],
+                "title": "ContributorCategory"
+            },
             "ContributorImageResource": {
                 "type": "object",
                 "properties": {
@@ -31587,7 +31606,7 @@
                         "type": "string"
                     },
                     "category": {
-                        "type": "string"
+                        "$ref": "#/components/schemas/ContributorCategory"
                     },
                     "display_order": {
                         "type": "integer"
@@ -36190,8 +36209,7 @@
                         "format": "uuid"
                     },
                     "category": {
-                        "type": "string",
-                        "maxLength": 50
+                        "$ref": "#/components/schemas/ContributorCategory"
                     },
                     "display_order": {
                         "type": "integer",
@@ -39999,8 +40017,7 @@
                         "format": "uuid"
                     },
                     "category": {
-                        "type": "string",
-                        "maxLength": 50
+                        "$ref": "#/components/schemas/ContributorCategory"
                     },
                     "display_order": {
                         "type": "integer",

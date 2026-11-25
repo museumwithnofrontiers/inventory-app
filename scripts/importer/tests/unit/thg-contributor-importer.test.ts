@@ -45,7 +45,7 @@ describe('ThgContributorImporter', () => {
     queryMock = vi.fn(async (sql: string) => {
       if (sql.includes('FROM mwnf3_thematic_gallery.contributor_category')) {
         return [
-          { category_id: 'A', label: 'Main contributors' },
+          { category_id: 'partner', label: 'Main contributors' },
         ];
       }
       if (sql.includes('FROM mwnf3_thematic_gallery.contributor_i18n')) {
@@ -60,7 +60,7 @@ describe('ThgContributorImporter', () => {
             contributor_id: 14,
             gallery_id: 7,
             theme_id: 0,
-            category_id: 'A',
+            category_id: 'partner',
             context: 'Contributor Name',
             src: 'logos/contrib14.png',
             href: 'https://example.com',
@@ -123,7 +123,7 @@ describe('ThgContributorImporter', () => {
     it('skips translation when language_id is empty (null/undefined)', async () => {
       queryMock = vi.fn(async (sql: string) => {
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor_category')) {
-          return [{ category_id: 'A', label: 'Main contributors' }];
+          return [{ category_id: 'partner', label: 'Main contributors' }];
         }
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor_i18n')) {
           return [
@@ -133,7 +133,7 @@ describe('ThgContributorImporter', () => {
         }
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor')) {
           return [
-            { contributor_id: 14, gallery_id: 7, theme_id: 0, category_id: 'A',
+            { contributor_id: 14, gallery_id: 7, theme_id: 0, category_id: 'partner',
               context: 'Name', src: '', href: '', alt: '', display_order: 1 },
           ];
         }
@@ -155,7 +155,7 @@ describe('ThgContributorImporter', () => {
     it('skips translation when language_id is unknown', async () => {
       queryMock = vi.fn(async (sql: string) => {
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor_category')) {
-          return [{ category_id: 'A', label: 'Main contributors' }];
+          return [{ category_id: 'partner', label: 'Main contributors' }];
         }
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor_i18n')) {
           return [
@@ -164,7 +164,7 @@ describe('ThgContributorImporter', () => {
         }
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor')) {
           return [
-            { contributor_id: 14, gallery_id: 7, theme_id: 0, category_id: 'A',
+            { contributor_id: 14, gallery_id: 7, theme_id: 0, category_id: 'partner',
               context: 'Name', src: '', href: '', alt: '', display_order: 1 },
           ];
         }
@@ -182,11 +182,48 @@ describe('ThgContributorImporter', () => {
     });
   });
 
+  describe('contributor categories (#2795)', () => {
+    it('maps each legacy key to its own category and skips an unknown one', async () => {
+      queryMock = vi.fn(async (sql: string) => {
+        if (sql.includes('FROM mwnf3_thematic_gallery.contributor_category')) {
+          return [
+            { category_id: 'cooperator', label: 'In cooperation with' },
+            { category_id: 'occasion', label: 'On the occasion of' },
+            { category_id: 'partner', label: 'Main contributors' },
+            { category_id: 'sponsor', label: 'With the support of' },
+            { category_id: 'patron', label: 'Under the patronage of' },
+          ];
+        }
+        if (sql.includes('FROM mwnf3_thematic_gallery.contributor_i18n')) return [];
+        if (sql.includes('FROM mwnf3_thematic_gallery.contributor')) {
+          return ['cooperator', 'occasion', 'partner', 'sponsor', 'patron'].map((key, i) => ({
+            contributor_id: 20 + i, gallery_id: 7, theme_id: 0, category_id: key,
+            context: `Name ${i}`, src: '', href: '', alt: '', display_order: i,
+          }));
+        }
+        return [];
+      });
+      context = { ...context, legacyDb: { ...legacyDb, query: queryMock as ILegacyDatabase['query'] } };
+
+      const result = await new ThgContributorImporter(context).import();
+
+      const categories = (writeContributorMock.mock.calls as { category: string }[][]).map(
+        (args) => args[0]!.category
+      );
+      expect(categories).toEqual([
+        'in_cooperation_with',
+        'on_the_occasion_of',
+        'main_contributors',
+        'with_the_support_of',
+      ]);
+      expect(result.errors).toHaveLength(0);
+    });
+  });
   describe('contributor BC key uses correct theme table name', () => {
     it('resolves theme collection with mwnf3_thematic_gallery:theme: prefix — not thg_theme:', async () => {
       queryMock = vi.fn(async (sql: string) => {
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor_category')) {
-          return [{ category_id: 'A', label: 'Main contributors' }];
+          return [{ category_id: 'partner', label: 'Main contributors' }];
         }
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor_i18n')) {
           return [{ contributor_id: 15, language_id: 'en', context: 'Name' }];
@@ -194,7 +231,7 @@ describe('ThgContributorImporter', () => {
         if (sql.includes('FROM mwnf3_thematic_gallery.contributor')) {
           return [
             // theme_id=3 — should look up mwnf3_thematic_gallery:theme:7:3
-            { contributor_id: 15, gallery_id: 7, theme_id: 3, category_id: 'A',
+            { contributor_id: 15, gallery_id: 7, theme_id: 3, category_id: 'partner',
               context: 'Name', src: '', href: '', alt: '', display_order: 1 },
           ];
         }

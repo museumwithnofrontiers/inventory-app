@@ -1,4 +1,5 @@
 import type { CollectionPurpose, CollectionType } from '../domain/collection-vocabulary.js';
+import type { ContributorCategory } from '../domain/contributor-category.js';
 
 /**
  * Core Types and Interfaces for the Unified Import Architecture
@@ -640,7 +641,7 @@ export interface ItemDocumentData {
 export interface ContributorData {
   id?: string;
   collection_id: string;
-  category: string;
+  category: ContributorCategory;
   display_order: number;
   visible: boolean;
   backward_compatibility?: string | null;
