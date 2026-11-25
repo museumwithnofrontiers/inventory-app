@@ -541,6 +541,8 @@ regressions. None of the 14 regressions above is left:
 
 It counts 24 real differences, as before, with no regression. Two of the 88 sites, theatre and the package check, ran out of memory on the first pass, so the whole run was repeated on a warm cache. Reimport 21 (M17) exported all 89 packages unchanged, so this baseline also covers it.
 
+`baselines/2026-11-25` is the run after reimport 22 (data-packages#39, 75 packages) and its propagation to 95 sites and templates. That reimport carried the strict code enums (#2794, #2795, #2796): the collection credits `source_text_author` and `exhibition_credits` (for `travels_author` and `credits`, which the packages still carry until the next export), and `material_provider` for `other_contributor` on four exhibitions. It also carried live legacy text fixes, some newer than the cached legacy answers: the Zimmermann semicolon (#2729), EPM Mus21;12 (#2769), the "." obtention and initial owner of `objects:epm:uk:mus21:12` and `objects:isl:uk:mus03:1`, Sharing History `awe:pt:58`'s materials, and Water in Islam `galex6:ma:mon81:5`'s text moved from dates to description. Their 19 cached answers were moved aside (`tmp/parity/cache-stale-2026-11-25`) and read again. It counts 24 real differences, as before, with no regression.
+
 ## The global search box
 
 Legacy sites that link to the overall database search (legacy's `goToFullSearch`, "Search Overall MWNF Database", or
