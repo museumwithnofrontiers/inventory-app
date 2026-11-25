@@ -3,10 +3,6 @@ import type { Query } from './sites.mjs'
 
 export const COLLECTION_CREDIT_CATEGORIES: readonly string[]
 
-export const CREDIT_PACKAGE_KEYS: Readonly<Record<string, readonly string[]>>
-
-export function creditPackageKeys(category: string): readonly string[]
-
 export function creditKey(collectionId: string, languageId: string, contextId: string): string
 
 export function loadCollectionCredits(

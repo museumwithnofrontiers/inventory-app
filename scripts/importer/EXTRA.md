@@ -102,8 +102,8 @@ collection by `importers/phase-11/collection-credits-importer.ts` (M16 I5, #2648
 Contributor's `category` (except `travels_author` → `source_text_author` and `credits` →
 `exhibition_credits`, #2795) and the text as written in its translation. None stays after a full import.
 After re-running one of their writers on its own, run `--only collection-credits` again. The exporters give
-the credits back to the packages (`scripts/exporters/shared/credits.mjs`), the two renamed ones under both
-their new and their former key until the sites read the new one.
+the credits back to the packages (`scripts/exporters/shared/credits.mjs`) under their category, the two
+renamed ones under their new key only.
 
 Four texts below are written here first, then moved to columns of their own by
 `importers/phase-11/collection-translation-columns-importer.ts` (M16 E1, #2647), the text as written:

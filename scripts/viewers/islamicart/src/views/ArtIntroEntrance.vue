@@ -29,7 +29,7 @@ const themeList = computed(() =>
     <div class="content-box intro-box">
       <h2 v-if="rootText.extra?.subtitle" class="intro-subtitle" v-html="mdInline(rootText.extra.subtitle)" />
       <div v-if="rootText.description" class="prose" v-html="md(rootText.description)" />
-      <p v-if="rootText.extra?.credits" class="intro-credits" v-html="mdInline(rootText.extra.credits)" />
+      <p v-if="rootText.extra?.exhibition_credits || rootText.extra?.credits" class="intro-credits" v-html="mdInline(rootText.extra.exhibition_credits || rootText.extra.credits)" />
     </div>
 
     <div class="content-box">
