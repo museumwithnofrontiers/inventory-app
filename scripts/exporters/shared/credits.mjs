@@ -4,8 +4,9 @@
  * collection's texts are Contributors of the collection, one per credit, with
  * their `category`. The importer moved them out of
  * `collection_translations.extra` (CollectionCreditsImporter); the packages
- * still ship them there, so an exporter puts each one back under its package
- * key (`creditPackageKeys`).
+ * still ship them there, so an exporter puts each one back under its
+ * category. The two renamed credits (#2795) ship under their new key only:
+ * the sites read `source_text_author` and `exhibition_credits`.
  *
  * A Contributor translation gives the text of its language and context: its
  * `name`, else its `description`, else an empty text (an empty
@@ -29,24 +30,6 @@ export const COLLECTION_CREDIT_CATEGORIES = Object.freeze([
   'local_team',
   'photo_by',
 ])
-
-/**
- * The package keys a credit ships under: its category, and for the two
- * renamed credits (#2795) also their former key, until the sites read the
- * new one.
- *
- * @type {Readonly<Record<string, readonly string[]>>}
- */
-export const CREDIT_PACKAGE_KEYS = Object.freeze({
-  source_text_author: Object.freeze(['source_text_author', 'travels_author']),
-  exhibition_credits: Object.freeze(['exhibition_credits', 'credits']),
-})
-
-/**
- * @param {string} category
- * @returns {readonly string[]}
- */
-export const creditPackageKeys = category => CREDIT_PACKAGE_KEYS[category] ?? [category]
 
 const CHUNK = 500
 
@@ -88,7 +71,7 @@ export async function loadCollectionCredits(query, collectionIds) {
       const key = creditKey(row.collection_id, row.language_id, row.context_id)
       const texts = credits.get(key) ?? {}
       const text = row.name ?? row.description ?? ''
-      for (const key of creditPackageKeys(row.category)) texts[key] = text
+      texts[row.category] = text
       credits.set(key, texts)
     }
   }

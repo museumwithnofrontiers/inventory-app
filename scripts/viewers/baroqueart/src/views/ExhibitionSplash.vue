@@ -54,7 +54,7 @@ function back() {
     <div class="content-box intro-box">
       <h2 v-if="text.extra?.subtitle" class="intro-subtitle" v-html="mdInline(text.extra.subtitle)" />
       <div v-if="text.description" class="prose" v-html="md(text.description)" />
-      <p v-if="text.extra?.credits" class="intro-credits" v-html="mdInline(text.extra.credits)" />
+      <p v-if="text.extra?.exhibition_credits || text.extra?.credits" class="intro-credits" v-html="mdInline(text.extra.exhibition_credits || text.extra.credits)" />
     </div>
 
     <div class="content-box">

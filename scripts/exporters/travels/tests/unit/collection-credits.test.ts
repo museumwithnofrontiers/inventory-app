@@ -18,7 +18,7 @@ describe('withCollectionCredits', () => {
   })
 
   it('makes an extra when the translation has only credits', () => {
-    expect(withCollectionCredits(null, { travels_author: '' })).toEqual({ travels_author: '' })
+    expect(withCollectionCredits(null, { source_text_author: '' })).toEqual({ source_text_author: '' })
   })
 
   it('leaves extra as it is without credits', () => {
@@ -44,9 +44,9 @@ describe('loadCollectionCredits', () => {
 
     const credits = await loadCollectionCredits(query, ['c1'])
 
-    // The two renamed credits ship under their new key and their former one (#2795).
-    expect(credits.get(creditKey('c1', 'eng', 'x'))).toEqual({ author: 'Ana', exhibition_credits: 'Text: Ana', credits: 'Text: Ana' })
-    expect(credits.get(creditKey('c1', 'fra', 'x'))).toEqual({ source_text_author: '', travels_author: '' })
+    // The two renamed credits ship under their new key only (#2795).
+    expect(credits.get(creditKey('c1', 'eng', 'x'))).toEqual({ author: 'Ana', exhibition_credits: 'Text: Ana' })
+    expect(credits.get(creditKey('c1', 'fra', 'x'))).toEqual({ source_text_author: '' })
     const [sql, params] = query.mock.calls[0] as [string, string[]]
     expect(sql).toContain('c.visible = 1')
     expect(params).toEqual(['c1', ...COLLECTION_CREDIT_CATEGORIES])
