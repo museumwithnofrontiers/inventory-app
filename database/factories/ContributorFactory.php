@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\ContributorCategory;
 use App\Models\Collection;
 use App\Models\Contributor;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -16,7 +17,7 @@ class ContributorFactory extends Factory
         return [
             'id' => $this->faker->unique()->uuid(),
             'collection_id' => Collection::factory(),
-            'category' => $this->faker->randomElement(['partner', 'cooperator', 'occasion', 'sponsor', 'full_partner', 'co_organiser', 'other_contributor']),
+            'category' => $this->faker->randomElement(ContributorCategory::cases()),
             'display_order' => $this->faker->numberBetween(0, 10),
             'visible' => $this->faker->boolean(80),
             'backward_compatibility' => $this->faker->bothify('???_##'),
@@ -24,52 +25,10 @@ class ContributorFactory extends Factory
         ];
     }
 
-    public function partner(): self
+    public function category(ContributorCategory $category): self
     {
         return $this->state(fn (array $attributes) => [
-            'category' => 'partner',
-        ]);
-    }
-
-    public function cooperator(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'cooperator',
-        ]);
-    }
-
-    public function occasion(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'occasion',
-        ]);
-    }
-
-    public function sponsor(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'sponsor',
-        ]);
-    }
-
-    public function fullPartner(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'full_partner',
-        ]);
-    }
-
-    public function coOrganiser(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'co_organiser',
-        ]);
-    }
-
-    public function otherContributor(): self
-    {
-        return $this->state(fn (array $attributes) => [
-            'category' => 'other_contributor',
+            'category' => $category,
         ]);
     }
 }
