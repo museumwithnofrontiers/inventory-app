@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CollectionPartnerType;
 use App\Enums\CollectionPurpose;
 use App\Enums\CollectionType;
 use App\Enums\PartnerLevel;
@@ -414,7 +415,7 @@ class Collection extends Model
     public function partners(): BelongsToMany
     {
         return $this->belongsToMany(Partner::class, 'collection_partner', 'collection_id', 'partner_id')
-            ->wherePivot('collection_type', '=', 'collection')
+            ->wherePivot('collection_type', '=', CollectionPartnerType::COLLECTION->value)
             ->withPivot(['collection_type', 'level', 'visible', 'parent_partner_id'])
             ->withTimestamps()
             ->using(CollectionPartner::class);

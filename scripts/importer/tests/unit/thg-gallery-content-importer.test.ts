@@ -430,7 +430,7 @@ describe('ThgGalleryContentImporter', () => {
             {
               partner_id: 2,
               gallery_id: 5,
-              category_id: 1,
+              category_id: 3,
               display_order: 3,
               entity_name: 'UN Alliance of Civilisations',
               entity_location: null,
@@ -473,7 +473,7 @@ describe('ThgGalleryContentImporter', () => {
         'collection-uuid-5',
         'partner-uuid',
         'exhibition',
-        'full_partner'
+        'material_provider'
       );
       expect(writePartnerLogoMock).toHaveBeenCalledWith(
         expect.objectContaining({

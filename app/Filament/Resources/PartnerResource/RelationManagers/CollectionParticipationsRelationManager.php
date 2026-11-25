@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\PartnerResource\RelationManagers;
 
+use App\Enums\CollectionPartnerType;
 use App\Enums\CollectionType;
 use App\Filament\Concerns\AuthorizesRelationMutations;
 use App\Filament\Concerns\PivotRelationActions;
@@ -25,10 +26,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  * A partner's rows in `collection_partner`, the other side of Collection's
  * PartnersRelationManager (M7 story A2.2, #1901).
  *
- * The pivot's `collection_type` holds two kinds of link: `collection` (the
- * partner takes part in a collection, what the Collection side manages) and
- * `project` (the importer's link from a partner to a project's root
- * collection). Pascal decided on 2026-09-27 that this manager lists both,
+ * The pivot's `collection_type` holds four kinds of link (CollectionPartnerType):
+ * `collection` (the partner takes part in a collection, what the Collection
+ * side manages), `project` (the importer's link from a partner to a project's
+ * root collection), and `gallery` / `exhibition` (a thematic gallery's
+ * exhibition partners). Pascal decided on 2026-09-27 that this manager lists them all,
  * with the type shown, but only ever changes `collection` links: Attach
  * writes one, and Edit and Detach are offered on `collection` rows only.
  * Detach goes through {@see self::collectionLinks()}, so it can never
@@ -38,8 +40,6 @@ class CollectionParticipationsRelationManager extends RelationManager
 {
     use AuthorizesRelationMutations;
     use PivotRelationActions;
-
-    private const COLLECTION_LINK = 'collection';
 
     protected static string $relationship = 'collections';
 
@@ -67,6 +67,7 @@ class CollectionParticipationsRelationManager extends RelationManager
                 TextColumn::make('pivot.collection_type')
                     ->label('Collection type')
                     ->badge()
+                    ->formatStateUsing(fn (?CollectionPartnerType $state): ?string => $state?->label())
                     ->sortable(),
                 CollectionPartnerPivot::levelColumn(),
                 CollectionPartnerPivot::visibleColumn(),
@@ -139,13 +140,13 @@ class CollectionParticipationsRelationManager extends RelationManager
         /** @var Partner $partner */
         $partner = $this->getOwnerRecord();
 
-        return $partner->collections()->wherePivot('collection_type', self::COLLECTION_LINK);
+        return $partner->collections()->wherePivot('collection_type', CollectionPartnerType::COLLECTION->value);
     }
 
     private static function isCollectionLink(Model $record): bool
     {
         $pivot = $record->relationLoaded('pivot') ? $record->getRelation('pivot') : null;
 
-        return $pivot instanceof Model && $pivot->getAttribute('collection_type') === self::COLLECTION_LINK;
+        return $pivot instanceof Model && $pivot->getAttribute('collection_type') === CollectionPartnerType::COLLECTION;
     }
 }

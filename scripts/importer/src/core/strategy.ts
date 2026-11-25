@@ -10,6 +10,7 @@
  */
 
 import type { CollectionPurpose } from '../domain/collection-vocabulary.js';
+import type { CollectionPartnerType, PartnerLevel } from '../domain/partner-link-vocabulary.js';
 import type {
   LanguageData,
   LanguageTranslationData,
@@ -290,8 +291,8 @@ export interface IWriteStrategy {
   attachPartnerToCollectionWithLevel(
     collectionId: string,
     partnerId: string,
-    collectionType: string,
-    level: string
+    collectionType: CollectionPartnerType,
+    level: PartnerLevel
   ): Promise<void>;
 
   /**

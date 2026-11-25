@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\CollectionPartnerType;
 use App\Enums\CollectionPurpose;
 use App\Enums\CollectionType;
 use App\Enums\PartnerLevel;
@@ -106,7 +107,7 @@ class CollectionFactory extends Factory
             $partners = Partner::factory()->count($count)->create();
             foreach ($partners as $partner) {
                 $collection->partners()->attach($partner->id, [
-                    'collection_type' => 'collection',
+                    'collection_type' => CollectionPartnerType::COLLECTION->value,
                     'level' => PartnerLevel::PARTNER->value,
                 ]);
             }

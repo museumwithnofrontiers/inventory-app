@@ -24,6 +24,7 @@
  * - PartnerImporter (creates partners from museums)
  */
 
+import type { PartnerLevel } from '../../domain/partner-link-vocabulary.js';
 import { BaseImporter } from '../../core/base-importer.js';
 import type { ImportResult } from '../../core/types.js';
 import { formatBackwardCompatibility } from '../../utils/backward-compatibility.js';
@@ -257,7 +258,7 @@ export class PartnerHierarchyImporter extends BaseImporter {
     projectId: string,
     museumId: string,
     countryId: string,
-    level: string
+    level: PartnerLevel
   ): Promise<ProjectLink | null> {
     // Resolve collection from project
     const collectionBackwardCompat = formatBackwardCompatibility({
